@@ -2,7 +2,10 @@
   <div class="app" :data-theme="theme">
     <div v-if="banner" class="banner" :class="banner.kind">
       <span>{{ banner.message }}</span>
-      <button class="banner-x" @click="banner = null" aria-label="Dismiss">×</button>
+      <div class="banner-actions">
+        <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel }}</button>
+        <button class="banner-x" @click="banner = null" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
+      </div>
     </div>
 
 
@@ -14,7 +17,8 @@
           <div class="hero-copy">
             <div class="hero-kicker">Focused hifz system</div>
             <h1 class="hero-title">Memorise and retain Quran intelligently.</h1>
-            <p class="hero-sub">Structured memorisation, automatic revision, and retention tracking in one focused system.</p>
+            <p class="hero-sub">Structured memorisation, automatic revision, and retention tracking in one focused
+              system.</p>
           </div>
           <div class="hero-flow">
             <div class="hero-step"><span>1</span><strong>Read</strong></div>
@@ -23,13 +27,17 @@
             <div class="hero-step"><span>4</span><strong>Retain</strong></div>
           </div>
           <div class="hero-points">
-            <div class="hero-point"><i class="bi bi-shield-check"></i><span>Weak ayahs are tracked automatically.</span></div>
-            <div class="hero-point"><i class="bi bi-clock-history"></i><span>Reviews appear before forgetting.</span></div>
+            <div class="hero-point"><i class="bi bi-shield-check"></i><span>Weak ayahs are tracked automatically.</span>
+            </div>
+            <div class="hero-point"><i class="bi bi-clock-history"></i><span>Reviews appear before forgetting.</span>
+            </div>
             <div class="hero-point"><i class="bi bi-magic"></i><span>Sessions are generated automatically.</span></div>
           </div>
           <div class="hero-actions">
-            <button class="cta cta-primary" @click="beginPlan"><i class="bi bi-play-circle"></i><span>{{ onboardingPrimaryLabel }}</span></button>
-            <button class="cta cta-ghost" @click="showTools = true"><i class="bi bi-sliders"></i><span>Open setup</span></button>
+            <button class="cta cta-primary" @click="beginPlan"><i class="bi bi-play-circle"></i><span>{{
+                onboardingPrimaryLabel }}</span></button>
+            <button class="cta cta-ghost" @click="showTools = true"><i class="bi bi-sliders"></i><span>Open
+                setup</span></button>
           </div>
         </section>
 
@@ -38,13 +46,18 @@
             <div class="session-rail-copy">
               <div class="session-rail-kicker">Current session</div>
               <div class="session-rail-title">{{ currentChapter.name_simple }}</div>
-              <div class="session-rail-meta">Ayah {{ currentPosition }}/{{ totalVerses }} · Remaining {{ remainingAyahs }} · {{ sessionTypeInfo.label }} · {{ progressPercent }}%</div>
+              <div class="session-rail-meta">Ayah {{ currentPosition }}/{{ totalVerses }} · Remaining {{ remainingAyahs
+                }} · {{ sessionTypeInfo.label }} · {{ progressPercent }}%</div>
             </div>
             <div class="session-rail-actions">
-              <button class="rail-btn rail-btn-ghost" @click="showTools = true"><i class="bi bi-layout-sidebar-inset"></i><span>Plan</span></button>
-              <button class="rail-btn" @click="prev" :disabled="!canPrev"><i class="bi bi-skip-backward"></i><span>Prev</span></button>
-              <button class="rail-btn rail-btn-primary" @click="handlePrimaryAction"><i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i><span>{{ railPrimaryLabel }}</span></button>
-              <button class="rail-btn" @click="next" :disabled="!canNext"><i class="bi bi-skip-forward"></i><span>Next</span></button>
+              <button class="rail-btn rail-btn-ghost" @click="showTools = true"><i
+                  class="bi bi-layout-sidebar-inset"></i><span>Plan</span></button>
+              <button class="rail-btn" @click="prev" :disabled="!canPrev"><i
+                  class="bi bi-skip-backward"></i><span>Prev</span></button>
+              <button class="rail-btn rail-btn-primary" @click="handlePrimaryAction"><i class="bi"
+                  :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i><span>{{ railPrimaryLabel }}</span></button>
+              <button class="rail-btn" @click="next" :disabled="!canNext"><i
+                  class="bi bi-skip-forward"></i><span>Next</span></button>
             </div>
           </div>
           <div class="session-rail-stats">
@@ -58,6 +71,31 @@
           </div>
         </div>
 
+        <div v-if="verses.length" class="reading-toolbar">
+          <div class="reading-toolbar-group">
+            <button class="toolbar-chip" :class="{ active: showTranslation }" @click="toggleReadingOption('translation')">
+              <i class="bi bi-translate"></i><span>Translation</span>
+            </button>
+            <button class="toolbar-chip" :class="{ active: showTransliteration }" @click="toggleReadingOption('transliteration')">
+              <i class="bi bi-type"></i><span>Transliteration</span>
+            </button>
+            <button class="toolbar-chip" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')">
+              <i class="bi bi-grid-3x2-gap"></i><span>Word by word</span>
+            </button>
+            <button class="toolbar-chip" :class="{ active: wordByWordAudioEnabled }" @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
+              <i class="bi bi-volume-up"></i><span>Word audio</span>
+            </button>
+          </div>
+          <div class="reading-toolbar-group">
+            <button class="toolbar-chip" :class="{ active: script === 'uthmani' }" @click="setScriptMode('uthmani')">
+              <i class="bi bi-file-earmark-richtext"></i><span>Quranic text</span>
+            </button>
+            <button class="toolbar-chip" :class="{ active: script === 'tajweed' }" @click="setScriptMode('tajweed')">
+              <i class="bi bi-palette"></i><span>Tajweed</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Empty State -->
         <div v-if="!verses.length && !showOnboarding" class="empty">
           <div class="empty-card">
@@ -65,8 +103,10 @@
             <h3>Begin your journey</h3>
             <p>{{ nextActionDescription }}</p>
             <div class="empty-actions">
-              <button class="cta cta-primary" @click="beginPlan"><i class="bi bi-play-circle"></i><span>{{ emptyPrimaryLabel }}</span></button>
-              <button class="cta cta-ghost" @click="showTools = true"><i class="bi bi-sliders"></i><span>Open setup</span></button>
+              <button class="cta cta-primary" @click="beginPlan"><i class="bi bi-play-circle"></i><span>{{
+                  emptyPrimaryLabel }}</span></button>
+              <button class="cta cta-ghost" @click="showTools = true"><i class="bi bi-sliders"></i><span>Open
+                  setup</span></button>
             </div>
           </div>
         </div>
@@ -80,18 +120,51 @@
                 <span class="verse-ref">{{ verse.key }}</span>
               </div>
               <div class="verse-actions">
-                <button class="action-btn" @click="playVerse(verse)">▶</button>
-                <button class="action-btn" @click="setActive(verse.key)">◎</button>
+                <button class="action-btn" @click="playVerse(verse)"><i class="bi bi-play-fill"></i></button>
+                <button class="action-btn" @click="setActive(verse.key)"><i class="bi bi-bullseye"></i></button>
               </div>
             </div>
-            <div class="verse-arabic" dir="rtl" v-html="verse.arabic"></div>
+            <div class="verse-arabic" dir="rtl" :style="{ fontSize: `${fontScale}em` }" v-html="verse.arabic"></div>
+            <div v-if="showTransliteration && verse.transliteration" class="verse-transliteration">{{ verse.transliteration }}</div>
             <div v-if="showTranslation && verse.translation" class="verse-translation">{{ verse.translation }}</div>
             <div v-if="showWordByWord && verse.words?.length" class="verse-words">
-              <span v-for="(w, i) in verse.words" :key="i" class="word">
+              <span
+                v-for="(w, i) in verse.words"
+                :key="i"
+                class="word"
+                :class="{ active: activeWordAudio === `${verse.key}:${i}` }"
+                @mouseenter="openWordTooltip(verse, w, i)"
+                @mouseleave="closeWordTooltip"
+                @focusin="openWordTooltip(verse, w, i)"
+                @focusout="closeWordTooltip"
+                @click="toggleWordTooltip(verse, w, i)"
+              >
                 <span class="word-ar" dir="rtl">{{ w.ar }}</span>
                 <span class="word-en">{{ w.en }}</span>
-                <button v-if="w.audio" class="word-play" @click="playWordAudio(w.audio)">🔊</button>
+                <button v-if="w.audio && wordByWordAudioEnabled" class="word-play" @click="playWordAudio(w.audio, `${verse.key}:${i}`)"><i
+                    class="bi bi-volume-up"></i></button>
+                <span
+                  v-if="isTooltipOpen(verse.key, i)"
+                  class="word-tooltip"
+                  role="tooltip"
+                >
+                  <span class="word-tooltip-ar" dir="rtl">{{ w.ar }}</span>
+                  <span class="word-tooltip-en">{{ w.en || 'No translation' }}</span>
+                </span>
               </span>
+            </div>
+            <div class="verse-footer">
+              <div class="verse-footer-side">
+                <button class="verse-tool-btn" @click="decFont" aria-label="Decrease font"><i class="bi bi-dash-lg"></i></button>
+                <button class="verse-tool-btn" @click="incFont" aria-label="Increase font"><i class="bi bi-plus-lg"></i></button>
+              </div>
+              <div class="verse-footer-side verse-footer-side-right">
+                <button class="verse-tool-btn" @click="toggleBookmark(verse)" :class="{ active: bookmarks.includes(verse.key) }" aria-label="Bookmark ayah"><i class="bi bi-bookmark"></i></button>
+                <button class="verse-tool-btn" @click="togglePin(verse)" :class="{ active: pins.includes(verse.key) }" aria-label="Pin ayah"><i class="bi bi-pin-angle"></i></button>
+                <button class="verse-tool-btn" @click="shareWhatsApp(verse)" aria-label="Share on WhatsApp"><i class="bi bi-whatsapp"></i></button>
+                <button class="verse-tool-btn" @click="downloadAyah(verse)" aria-label="Download ayah"><i class="bi bi-download"></i></button>
+                <button class="verse-tool-btn" @click="playVerse(verse)" aria-label="Play audio"><i class="bi bi-play-circle"></i></button>
+              </div>
             </div>
           </div>
         </div>
@@ -102,7 +175,8 @@
         <div class="tools-top">
           <div class="tools-topbar">
             <div class="tools-title">{{ toolsHeaderTitle }}</div>
-            <button class="tools-x" @click="showTools = false" aria-label="Close panel"><i class="bi bi-x-lg"></i></button>
+            <button class="tools-x" @click="showTools = false" aria-label="Close panel"><i
+                class="bi bi-x-lg"></i></button>
           </div>
           <div class="tools-context">{{ contextLabel }}</div>
           <div class="tools-tabs">
@@ -131,16 +205,17 @@
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('beginner_setup')" type="button">
                 <span class="st-left">
-                  <span class="st-ico">A</span>
+                  <span class="st-ico"><i class="bi bi-book"></i></span>
                   <span class="st-txt">
                     <span class="st-title">Setup</span>
                     <span class="st-sub">Surah, reciter, range</span>
                   </span>
                 </span>
-                <span class="st-chev" :class="{ open: sectionOpen.beginner_setup }">⌄</span>
+                <span class="st-chev" :class="{ open: sectionOpen.beginner_setup }"><i
+                    class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.beginner_setup">
-                <div class="field-grid">
+                <div class="field-stack">
                   <div class="field">
                     <label>Surah</label>
                     <select v-model="chapterId" @change="loadChapter" class="select">
@@ -148,26 +223,26 @@
                       <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.id }}. {{ c.name_simple }}</option>
                     </select>
                   </div>
-
                   <div class="field">
                     <label>Reciter</label>
                     <select v-model="reciterId" @change="refreshVerses" class="select">
                       <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
                     </select>
                   </div>
-                </div>
-
-                <div class="field">
+                  <div class="field">
                   <label>Ayah range</label>
-                  <div class="range range-compact">
-                    <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
-                    <span>to</span>
-                    <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
+                    <div class="range range-compact range-single">
+                      <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
+                      <span>to</span>
+                      <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
+                    </div>
                   </div>
-                </div>
-                <div class="cta-row">
-                  <button class="cta cta-primary" @click="beginPlan"><i class="bi bi-play-circle"></i><span>{{ beginnerPrimaryLabel }}</span></button>
-                  <button class="cta cta-ghost" @click="tab='analytics'"><i class="bi bi-bar-chart"></i><span>See plan</span></button>
+                  <div class="cta-row cta-row-split">
+                    <button class="cta cta-primary" @click="beginPlan"><i class="bi bi-play-circle"></i><span>{{
+                        beginnerPrimaryLabel }}</span></button>
+                    <button class="cta cta-ghost" @click="tab = 'analytics'"><i class="bi bi-bar-chart"></i><span>See
+                        plan</span></button>
+                  </div>
                 </div>
               </div>
             </section>
@@ -175,37 +250,35 @@
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('beginner_playback')" type="button">
                 <span class="st-left">
-                  <span class="st-ico">B</span>
+                  <span class="st-ico"><i class="bi bi-repeat"></i></span>
                   <span class="st-txt">
                     <span class="st-title">Playback</span>
                     <span class="st-sub">Speed, delay, repeats, mode</span>
                   </span>
                 </span>
-                <span class="st-chev" :class="{ open: sectionOpen.beginner_playback }">⌄</span>
+                <span class="st-chev" :class="{ open: sectionOpen.beginner_playback }"><i
+                    class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.beginner_playback">
-                <div class="field-grid">
+                <div class="field-stack">
                   <div class="field">
                     <label>Speed</label>
                     <select v-model.number="speed" @change="applySpeed" class="select select-prominent">
                       <option v-for="s in speedOptions" :key="`sp-${s}`" :value="s">{{ s }}x</option>
                     </select>
                   </div>
-
                   <div class="field">
                     <label>Delay</label>
                     <select v-model.number="delay" class="select">
                       <option v-for="d in delayOptions" :key="`dl-${d}`" :value="d">{{ d }}s</option>
                     </select>
                   </div>
-
                   <div class="field">
                     <label>Repeat</label>
                     <select v-model.number="repeats" @change="rebuildQueue" class="select">
                       <option v-for="r in repeatOptions" :key="`rp-${r}`" :value="r">{{ r }}</option>
                     </select>
                   </div>
-
                   <div class="field">
                     <label>Mode</label>
                     <div class="radio-group radio-group-tight">
@@ -233,16 +306,17 @@
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
                 <span class="st-left">
-                  <span class="st-ico">🧭</span>
+                  <span class="st-ico"><i class="bi bi-compass"></i></span>
                   <span class="st-txt">
                     <span class="st-title">Setup</span>
                     <span class="st-sub">Surah • Range • Reciter • Playback</span>
                   </span>
                 </span>
-                <span class="st-chev" :class="{ open: sectionOpen.advanced_setup }">⌄</span>
+                <span class="st-chev" :class="{ open: sectionOpen.advanced_setup }"><i
+                    class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.advanced_setup">
-                <div class="field-grid">
+                <div class="field-stack">
                   <div class="field">
                     <label>Surah</label>
                     <select v-model="chapterId" @change="loadChapter" class="select">
@@ -250,7 +324,6 @@
                       <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.id }}. {{ c.name_simple }}</option>
                     </select>
                   </div>
-
                   <div class="field">
                     <label>Study</label>
                     <select v-model="studyMode" class="select">
@@ -259,7 +332,6 @@
                       <option value="hybrid">Hybrid</option>
                     </select>
                   </div>
-
                   <div class="field" v-if="studyMode === 'quiz'">
                     <label>Quiz type</label>
                     <select v-model="quizType" class="select">
@@ -270,67 +342,61 @@
                       <option value="blank">Fill blank</option>
                     </select>
                   </div>
-
                   <div class="field">
                     <label>Reciter</label>
                     <select v-model="reciterId" @change="refreshVerses" class="select">
                       <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
                     </select>
                   </div>
-
-                  <div class="field field-span-2">
+                  <div class="field">
                     <label>Ayah range</label>
-                    <div class="range range-compact">
+                    <div class="range range-compact range-single">
                       <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
                       <span>to</span>
                       <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
                     </div>
                   </div>
-
                   <div class="field">
                     <label>Speed</label>
                     <select v-model.number="speed" @change="applySpeed" class="select select-prominent">
                       <option v-for="s in speedOptions" :key="`asp-${s}`" :value="s">{{ s }}x</option>
                     </select>
                   </div>
-
                   <div class="field">
                     <label>Delay</label>
                     <select v-model.number="delay" class="select">
                       <option v-for="d in delayOptions" :key="`adl-${d}`" :value="d">{{ d }}s</option>
                     </select>
                   </div>
-
                   <div class="field">
                     <label>Repeat</label>
                     <select v-model.number="repeats" @change="rebuildQueue" class="select">
                       <option v-for="r in repeatOptions" :key="`arp-${r}`" :value="r">{{ r }}</option>
                     </select>
                   </div>
-
                   <div class="field">
                     <label>Mode</label>
                     <div class="radio-group radio-group-tight">
-                      
-                  <label class="radio">
-                    <input type="radio" value="auto" v-model="playMode">
-                    <span>Auto</span>
-                  </label>
-                  <label class="radio">
-                    <input type="radio" value="manual" v-model="playMode">
-                    <span>Manual</span>
-                  </label>
-                  <label class="radio">
-                    <input type="radio" value="loop" v-model="playMode">
-                    <span>Loop</span>
-                  </label>
+                      <label class="radio">
+                        <input type="radio" value="auto" v-model="playMode">
+                        <span>Auto</span>
+                      </label>
+                      <label class="radio">
+                        <input type="radio" value="manual" v-model="playMode">
+                        <span>Manual</span>
+                      </label>
+                      <label class="radio">
+                        <input type="radio" value="loop" v-model="playMode">
+                        <span>Loop</span>
+                      </label>
                     </div>
                   </div>
-                </div>
-
-                <div class="cta-row">
-                  <button class="cta cta-ghost" @click="tab='analytics'"><i class="bi bi-bar-chart"></i><span>See progress</span></button>
-                  <button class="cta cta-primary" @click="startSession"><i class="bi bi-play-circle"></i><span>{{ advancedPrimaryLabel }}</span></button>
+                  <div class="cta-row cta-row-split">
+                    <button class="cta cta-ghost" @click="tab = 'analytics'"><i class="bi bi-bar-chart"></i><span>See
+                        progress</span></button>
+                    <button class="cta cta-primary" @click="startSession"><i class="bi bi-play-circle"></i><span>{{
+                        advancedPrimaryLabel }}</span></button>
+                  </div>
                 </div>
               </div>
             </section>
@@ -338,16 +404,17 @@
             <section class="sheet-section sheet-section-accent">
               <button class="sheet-toggle" @click="toggleSection('advanced_practice')" type="button">
                 <span class="st-left">
-                  <span class="st-ico">✨</span>
+                  <span class="st-ico"><i class="bi bi-stars"></i></span>
                   <span class="st-txt">
                     <span class="st-title">Practice</span>
                     <span class="st-sub">Chaining • Focus • Looping</span>
                   </span>
                 </span>
-                <span class="st-chev" :class="{ open: sectionOpen.advanced_practice }">⌄</span>
+                <span class="st-chev" :class="{ open: sectionOpen.advanced_practice }"><i
+                    class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.advanced_practice">
-                <div class="field-grid">
+                <div class="field-stack">
                   <div class="field">
                     <label>Chaining</label>
                     <select v-model="order" @change="rebuildQueue" class="select">
@@ -357,14 +424,12 @@
                       <option value="chain">A-A/B-B</option>
                     </select>
                   </div>
-
                   <div class="field">
                     <label>Loop delay</label>
                     <select v-model.number="rangeLoopDelay" class="select">
                       <option v-for="d in delayOptions" :key="`rld-${d}`" :value="d">{{ d }}s</option>
                     </select>
                   </div>
-
                   <div class="field">
                     <label>Blur context</label>
                     <label class="switch">
@@ -373,7 +438,6 @@
                       <span class="switch-text">Reduce distraction</span>
                     </label>
                   </div>
-
                   <div class="field">
                     <label>Focus mode</label>
                     <label class="switch">
@@ -389,13 +453,14 @@
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('advanced_saved')" type="button">
                 <span class="st-left">
-                  <span class="st-ico">💾</span>
+                  <span class="st-ico"><i class="bi bi-save"></i></span>
                   <span class="st-txt">
                     <span class="st-title">Saved sessions</span>
                     <span class="st-sub">Save • Load • Delete</span>
                   </span>
                 </span>
-                <span class="st-chev" :class="{ open: sectionOpen.advanced_saved }">⌄</span>
+                <span class="st-chev" :class="{ open: sectionOpen.advanced_saved }"><i
+                    class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.advanced_saved">
                 <div class="field">
@@ -407,9 +472,12 @@
                 </div>
 
                 <div class="action-grid-3">
-                  <button class="mini-btn" :disabled="!selectedSessionId" @click="loadSession(selectedSessionId)"><i class="bi bi-folder2-open"></i><span>Load</span></button>
-                  <button class="mini-btn danger" :disabled="!selectedSessionId" @click="deleteSession(selectedSessionId)"><i class="bi bi-trash3"></i><span>Delete</span></button>
-                  <button class="mini-btn" @click="tab='analytics'"><i class="bi bi-graph-up"></i><span>Stats</span></button>
+                  <button class="mini-btn" :disabled="!selectedSessionId" @click="loadSession(selectedSessionId)"><i
+                      class="bi bi-folder2-open"></i><span>Load</span></button>
+                  <button class="mini-btn danger" :disabled="!selectedSessionId"
+                    @click="deleteSession(selectedSessionId)"><i class="bi bi-trash3"></i><span>Delete</span></button>
+                  <button class="mini-btn" @click="tab = 'analytics'"><i
+                      class="bi bi-graph-up"></i><span>Stats</span></button>
                 </div>
 
                 <div class="field">
@@ -428,13 +496,14 @@
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('analytics_overview')" type="button">
                 <span class="st-left">
-                  <span class="st-ico">📊</span>
+                  <span class="st-ico"><i class="bi bi-bar-chart"></i></span>
                   <span class="st-txt">
                     <span class="st-title">Overview</span>
                     <span class="st-sub">Due • Accuracy • Streak</span>
                   </span>
                 </span>
-                <span class="st-chev" :class="{ open: sectionOpen.analytics_overview }">⌄</span>
+                <span class="st-chev" :class="{ open: sectionOpen.analytics_overview }"><i
+                    class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.analytics_overview">
                 <div class="stat-grid">
@@ -455,7 +524,8 @@
                   </div>
                   <div class="stat">
                     <div class="stat-k">Weekly lift</div>
-                    <div class="stat-v">{{ retentionStats.weeklyRetentionImprovement > 0 ? '+' : '' }}{{ retentionStats.weeklyRetentionImprovement }}%</div>
+                    <div class="stat-v">{{ retentionStats.weeklyRetentionImprovement > 0 ? '+' : '' }}{{
+                      retentionStats.weeklyRetentionImprovement }}%</div>
                     <div class="stat-s">Retention change</div>
                   </div>
                 </div>
@@ -470,8 +540,10 @@
                 </div>
 
                 <div class="cta-row">
-                  <button class="cta cta-primary" @click="beginPlannerSession"><i class="bi bi-play-circle"></i><span>{{ plannerPrimaryCta }}</span></button>
-                  <button class="cta cta-ghost" @click="tab='beginner'"><i class="bi bi-arrow-left-circle"></i><span>Back to setup</span></button>
+                  <button class="cta cta-primary" @click="beginPlannerSession"><i class="bi bi-play-circle"></i><span>{{
+                      plannerPrimaryCta }}</span></button>
+                  <button class="cta cta-ghost" @click="tab = 'beginner'"><i
+                      class="bi bi-arrow-left-circle"></i><span>Back to setup</span></button>
                 </div>
               </div>
             </section>
@@ -485,7 +557,8 @@
                     <span class="st-sub">Read only</span>
                   </span>
                 </span>
-                <span class="st-chev" :class="{ open: sectionOpen.analytics_retention }">⌄</span>
+                <span class="st-chev" :class="{ open: sectionOpen.analytics_retention }"><i
+                    class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.analytics_retention">
                 <div class="read-list">
@@ -503,7 +576,8 @@
                   </div>
                   <div class="read-row">
                     <span>Weekly improvement</span>
-                    <strong>{{ retentionStats.weeklyRetentionImprovement > 0 ? '+' : '' }}{{ retentionStats.weeklyRetentionImprovement }}%</strong>
+                    <strong>{{ retentionStats.weeklyRetentionImprovement > 0 ? '+' : '' }}{{
+                      retentionStats.weeklyRetentionImprovement }}%</strong>
                   </div>
                 </div>
               </div>
@@ -512,13 +586,14 @@
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('analytics_leeches')" type="button">
                 <span class="st-left">
-                  <span class="st-ico">🧲</span>
+                  <span class="st-ico"><i class="bi bi-magnet"></i></span>
                   <span class="st-txt">
                     <span class="st-title">Leeches</span>
                     <span class="st-sub">Stuck cards</span>
                   </span>
                 </span>
-                <span class="st-chev" :class="{ open: sectionOpen.analytics_leeches }">⌄</span>
+                <span class="st-chev" :class="{ open: sectionOpen.analytics_leeches }"><i
+                    class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.analytics_leeches">
                 <div v-if="leeches.length === 0" class="empty-mini">
@@ -539,19 +614,20 @@
             <section class="sheet-section sheet-section-accent">
               <button class="sheet-toggle" @click="toggleSection('analytics_trends')" type="button">
                 <span class="st-left">
-                  <span class="st-ico">📈</span>
+                  <span class="st-ico"><i class="bi bi-graph-up-arrow"></i></span>
                   <span class="st-txt">
                     <span class="st-title">Trends</span>
                     <span class="st-sub">Last 14 days</span>
                   </span>
                 </span>
-                <span class="st-chev" :class="{ open: sectionOpen.analytics_trends }">⌄</span>
+                <span class="st-chev" :class="{ open: sectionOpen.analytics_trends }"><i
+                    class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.analytics_trends">
                 <div class="chart">
                   <div class="chart-title">Grades per day</div>
                   <div class="bars">
-                    <div v-for="(v,i) in stats.grades14d" :key="`g-${i}`" class="bar-col">
+                    <div v-for="(v, i) in stats.grades14d" :key="`g-${i}`" class="bar-col">
                       <div class="bar" :style="{ height: chartBarHeight(stats.grades14d, v) }"></div>
                     </div>
                   </div>
@@ -559,7 +635,7 @@
                 <div class="chart">
                   <div class="chart-title">Average quality</div>
                   <div class="bars bars-soft">
-                    <div v-for="(v,i) in stats.avgQuality14d" :key="`q-${i}`" class="bar-col">
+                    <div v-for="(v, i) in stats.avgQuality14d" :key="`q-${i}`" class="bar-col">
                       <div class="bar" :style="{ height: chartBarHeight(stats.avgQuality14d, v) }"></div>
                     </div>
                   </div>
@@ -567,7 +643,7 @@
                 <div class="chart">
                   <div class="chart-title">Weak ayah trend</div>
                   <div class="bars bars-danger">
-                    <div v-for="(v,i) in retentionStats.weakTrend14d" :key="`w-${i}`" class="bar-col">
+                    <div v-for="(v, i) in retentionStats.weakTrend14d" :key="`w-${i}`" class="bar-col">
                       <div class="bar" :style="{ height: chartBarHeight(retentionStats.weakTrend14d, v) }"></div>
                     </div>
                   </div>
@@ -578,13 +654,14 @@
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('analytics_planner')" type="button">
                 <span class="st-left">
-                  <span class="st-ico">🗓</span>
+                  <span class="st-ico"><i class="bi bi-calendar3"></i></span>
                   <span class="st-txt">
                     <span class="st-title">Planner</span>
                     <span class="st-sub">Daily targets</span>
                   </span>
                 </span>
-                <span class="st-chev" :class="{ open: sectionOpen.analytics_planner }">⌄</span>
+                <span class="st-chev" :class="{ open: sectionOpen.analytics_planner }"><i
+                    class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.analytics_planner">
                 <div class="field">
@@ -598,20 +675,23 @@
 
                 <div class="field">
                   <label>Planner settings</label>
-                  <div class="planner-settings">
-                    <div class="pill-input">
+                  <div class="planner-settings planner-settings-stack">
+                    <div class="pill-input pill-input-row">
                       <span>New</span>
-                      <input class="input" type="number" min="0" v-model.number="plannerState.settings.newAyat" @change="persistPlanner">
+                      <input class="input" type="number" min="0" v-model.number="plannerState.settings.newAyat"
+                        @change="persistPlanner">
                     </div>
-                    <div class="pill-input">
+                    <div class="pill-input pill-input-row">
                       <span>Review</span>
-                      <input class="input" type="number" min="0" v-model.number="plannerState.settings.reviewCards" @change="persistPlanner">
+                      <input class="input" type="number" min="0" v-model.number="plannerState.settings.reviewCards"
+                        @change="persistPlanner">
                     </div>
-                    <div class="pill-input">
+                    <div class="pill-input pill-input-row">
                       <span>Min</span>
-                      <input class="input" type="number" min="5" v-model.number="plannerState.settings.dailyMinutes" @change="persistPlanner">
+                      <input class="input" type="number" min="5" v-model.number="plannerState.settings.dailyMinutes"
+                        @change="persistPlanner">
                     </div>
-                    <div class="pill-input">
+                    <div class="pill-input pill-input-row">
                       <span>Mode</span>
                       <select class="select" v-model="plannerState.settings.mode" @change="persistPlanner">
                         <option value="hybrid">Hybrid</option>
@@ -619,13 +699,15 @@
                         <option value="recite">Recite</option>
                       </select>
                     </div>
-                    <div class="pill-input">
+                    <div class="pill-input pill-input-row">
                       <span>From</span>
-                      <input class="input" type="number" min="1" max="114" v-model.number="plannerState.settings.startSurah" @change="persistPlanner">
+                      <input class="input" type="number" min="1" max="114"
+                        v-model.number="plannerState.settings.startSurah" @change="persistPlanner">
                     </div>
-                    <div class="pill-input">
+                    <div class="pill-input pill-input-row">
                       <span>To</span>
-                      <input class="input" type="number" min="1" max="114" v-model.number="plannerState.settings.endSurah" @change="persistPlanner">
+                      <input class="input" type="number" min="1" max="114"
+                        v-model.number="plannerState.settings.endSurah" @change="persistPlanner">
                     </div>
                   </div>
                 </div>
@@ -656,8 +738,10 @@
                   </div>
                 </div>
                 <div class="tools-inline-actions">
-                  <button class="tools-btn tools-btn-ghost" @click="generateTodayPlan"><i class="bi bi-magic"></i><span>Generate plan</span></button>
-                  <button class="tools-btn tools-btn-primary" @click="applyTodayPlan"><i class="bi bi-play-circle"></i><span>Begin plan</span></button>
+                  <button class="tools-btn tools-btn-ghost" @click="generateTodayPlan"><i
+                      class="bi bi-magic"></i><span>Generate plan</span></button>
+                  <button class="tools-btn tools-btn-primary" @click="applyTodayPlan"><i
+                      class="bi bi-play-circle"></i><span>Begin plan</span></button>
                 </div>
               </div>
             </section>
@@ -665,9 +749,12 @@
         </div>
 
         <div class="tools-footer">
-          <button class="tools-btn tools-btn-ghost" @click="resetControls"><i class="bi bi-arrow-counterclockwise"></i><span>Reset</span></button>
-          <button class="tools-btn tools-btn-ghost" @click="showTools = false"><i class="bi bi-x-circle"></i><span>Close</span></button>
-          <button class="tools-btn tools-btn-primary" @click="footerPrimaryAction"><i class="bi bi-play-circle"></i><span>{{ footerPrimaryLabel }}</span></button>
+          <button class="tools-btn tools-btn-ghost" @click="resetControls"><i
+              class="bi bi-arrow-counterclockwise"></i><span>Reset</span></button>
+          <button class="tools-btn tools-btn-ghost" @click="showTools = false"><i
+              class="bi bi-x-circle"></i><span>Close</span></button>
+          <button class="tools-btn tools-btn-primary" @click="footerPrimaryAction"><i
+              class="bi bi-play-circle"></i><span>{{ footerPrimaryLabel }}</span></button>
         </div>
       </aside>
     </div>
@@ -676,7 +763,7 @@
       <div class="quiz-card">
         <div class="quiz-top">
           <div class="quiz-title">Quiz</div>
-          <button class="quiz-x" @click="stopQuiz">×</button>
+          <button class="quiz-x" @click="stopQuiz"><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="quiz-meta">{{ quizIndex + 1 }} / {{ quizQueue.length }} • {{ quizCard?.key }}</div>
 
@@ -718,8 +805,10 @@
 
         <div class="quiz-actions">
           <button class="tools-btn tools-btn-ghost" @click="stopQuiz">Stop</button>
-          <button class="tools-btn tools-btn-ghost" v-if="quizCard?.type === 'flashcard' && !quizRevealed" @click="quizRevealed = true">Reveal</button>
-          <button class="tools-btn tools-btn-primary" v-if="quizCard?.type !== 'flashcard'" @click="submitQuiz()">Next</button>
+          <button class="tools-btn tools-btn-ghost" v-if="quizCard?.type === 'flashcard' && !quizRevealed"
+            @click="quizRevealed = true">Reveal</button>
+          <button class="tools-btn tools-btn-primary" v-if="quizCard?.type !== 'flashcard'"
+            @click="submitQuiz()">Next</button>
           <div class="quiz-grade" v-else>
             <button class="qg" @click="submitQuiz(2)">Again</button>
             <button class="qg" @click="submitQuiz(3)">Hard</button>
@@ -733,7 +822,7 @@
     <div v-if="confettiActive" class="confetti" :key="confettiSeed" aria-hidden="true">
       <span v-for="n in 26" :key="n" class="confetti-piece" :style="{
         left: (Math.random() * 100) + '%',
-        background: ['#8b5e3c','#1f7a8c','#f4d35e','#ee964b','#2a9d8f'][n % 5],
+        background: ['#8b5e3c', '#1f7a8c', '#f4d35e', '#ee964b', '#2a9d8f'][n % 5],
         transform: `rotate(${Math.random() * 360}deg)`,
         animationDelay: (Math.random() * 0.2) + 's'
       }"></span>
@@ -751,14 +840,17 @@
         <div class="player-time left">{{ formatTime(currentTime) }}</div>
 
         <div class="player-center">
-          <button class="player-icon" @click="togglePlayerMenu" aria-label="Menu">⋯</button>
-          <button class="player-icon" @click="applySpeed" aria-label="Speed">{{ speed }}x</button>
-          <button class="player-icon" @click="prev" :disabled="!canPrev" aria-label="Previous">⏮</button>
+          <button class="player-icon" @click="togglePlayerMenu" aria-label="Menu"><i
+              class="bi bi-three-dots"></i></button>
+          <button class="player-icon player-speed" @click="applySpeed" aria-label="Speed">{{ speed }}x</button>
+          <button class="player-icon" @click="prev" :disabled="!canPrev" aria-label="Previous"><i
+              class="bi bi-skip-backward-fill"></i></button>
           <button class="player-icon play" @click="togglePlay" aria-label="Play">
-            {{ isPlaying ? '⏸' : '▶' }}
+            <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
           </button>
-          <button class="player-icon" @click="next" :disabled="!canNext" aria-label="Next">⏭</button>
-          <button class="player-icon" @click="closePlayer" aria-label="Close">×</button>
+          <button class="player-icon" @click="next" :disabled="!canNext" aria-label="Next"><i
+              class="bi bi-skip-forward-fill"></i></button>
+          <button class="player-icon" @click="closePlayer" aria-label="Close"><i class="bi bi-x-lg"></i></button>
         </div>
 
         <div class="player-time right">{{ formatTime(duration) }}</div>
@@ -767,7 +859,7 @@
       <div v-if="playerMenuOpen" class="player-menu-overlay" @click="playerMenuOpen = false">
         <div class="player-menu" @click.stop>
           <button class="player-menu-item" @click="downloadCurrentAudio">
-            <span class="pm-ico">↓</span>
+            <span class="pm-ico"><i class="bi bi-download"></i></span>
             <span>Download</span>
           </button>
           <button class="player-menu-item" @click="tab = 'advanced'; showTools = true; playerMenuOpen = false">
@@ -796,10 +888,13 @@
 
 <script>
 import axios from 'axios'
-import { getEditions, getSurahEdition } from '../lib/quranApis'
+import { getEditions, getSurahEdition, getSurahTransliteration } from '../lib/quranApis'
 
 export default {
   name: 'TelawaApp',
+  props: {
+    auth: { type: Object, default: () => ({ check: false, id: null }) }
+  },
   data() {
     return {
       theme: 'light',
@@ -846,14 +941,27 @@ export default {
       todayPlan: null,
       planRun: null,
       banner: null,
+      bannerTimer: null,
       metrics: null,
+      networkOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+      currentVersePlaybackKey: '',
+      currentPlaybackMode: 'verse',
+      wordSequence: null,
+      playbackStartedAt: 0,
       onboardingDismissed: false,
       restoredAudioState: null,
-      
+
       script: 'uthmani',
       showTranslation: true,
+      showTransliteration: false,
       showWordByWord: false,
+      wordByWordAudioEnabled: true,
+      activeWordAudio: '',
+      activeWordTooltip: null,
       compactMode: false,
+      fontScale: 1,
+      bookmarks: [],
+      pins: [],
 
       playMode: 'auto',
       speed: 1,
@@ -876,19 +984,22 @@ export default {
       playerMenuOpen: false,
       sectionOpen: {
         beginner_setup: true,
-        beginner_playback: true,
+        beginner_playback: false,
         advanced_setup: true,
-        advanced_practice: true,
-        advanced_saved: true,
+        advanced_practice: false,
+        advanced_saved: false,
         analytics_overview: true,
-        analytics_retention: true,
-        analytics_trends: true,
+        analytics_retention: false,
+        analytics_trends: false,
         analytics_planner: true
-        ,analytics_leeches: false
+        , analytics_leeches: false
       }
     }
   },
   computed: {
+    isLoggedIn() {
+      return !!this.auth?.check
+    },
     themeIcon() {
       return this.theme === 'dark' ? '☾' : this.theme === 'sepia' ? '◐' : '☀'
     },
@@ -908,7 +1019,8 @@ export default {
       return Math.round((this.currentPosition / this.totalVerses) * 100)
     },
     etaLabel() {
-      const seconds = Math.max(0, this.remainingAyahs * this.estimateAyahSeconds())
+      const remainingQueue = (this.queue || []).slice(this.queueIndex).map(v => v?.key).filter(Boolean)
+      const seconds = this.estimateKeysSeconds(remainingQueue)
       const minutes = Math.max(1, Math.ceil(seconds / 60))
       return `${minutes} min`
     },
@@ -1046,7 +1158,7 @@ export default {
       return 'Guided session setup'
     },
     todayPlanEtaLabel() {
-      const estimate = Number(this.todayPlan?.estimate?.capacityAyat || 0) * this.estimateAyahSeconds()
+      const estimate = Number(this.todayPlan?.estimate?.totalSeconds || 0) || this.estimateKeysSeconds(this.todayPlan?.quizKeys || [])
       return `${Math.max(1, Math.ceil(estimate / 60))} min`
     },
     stats() {
@@ -1096,9 +1208,9 @@ export default {
         const [verseKey, skill] = String(key).split('::')
         const skillLabel =
           skill === 'recite_text' ? 'Text' :
-          skill === 'audio_recall' ? 'Audio' :
-          skill === 'meaning' ? 'Meaning' :
-          skill || 'Skill'
+            skill === 'audio_recall' ? 'Audio' :
+              skill === 'meaning' ? 'Meaning' :
+                skill || 'Skill'
         return { key, verseKey, skill, skillLabel, lapses: v?.lapses || 0 }
       }).sort((a, b) => (b.lapses - a.lapses)).slice(0, 50)
     },
@@ -1119,11 +1231,18 @@ export default {
     this.loadPlanner()
     this.loadMetrics()
     this.initAudio()
-    document.documentElement.setAttribute('data-theme', this.theme)
+    this.theme = document.documentElement.getAttribute('data-theme') || this.theme
+    this.loadBookmarksPins()
+    window.addEventListener('online', this.handleOnline)
+    window.addEventListener('offline', this.handleOffline)
     window.addEventListener('beforeunload', this.persistAllState)
   },
   beforeUnmount() {
+    window.removeEventListener('online', this.handleOnline)
+    window.removeEventListener('offline', this.handleOffline)
     window.removeEventListener('beforeunload', this.persistAllState)
+    if (this.bannerTimer) clearTimeout(this.bannerTimer)
+    this.flushPlaybackTime()
     this.persistAllState()
   },
   watch: {
@@ -1143,6 +1262,13 @@ export default {
     focusMode: 'persistUiState',
     studyMode: 'persistUiState',
     quizType: 'persistUiState',
+    showTranslation: 'persistUiState',
+    showTransliteration: 'persistUiState',
+    showWordByWord: 'persistUiState',
+    wordByWordAudioEnabled: 'persistUiState',
+    fontScale: 'persistUiState',
+    script: 'persistUiState',
+    onboardingDismissed: 'persistUiState',
     activeKey: 'persistSessionState',
     queueIndex: 'persistSessionState',
     playerVisible: 'persistAudioState',
@@ -1151,6 +1277,114 @@ export default {
     sectionOpen: { handler: 'persistUiState', deep: true }
   },
   methods: {
+    userStorageKey(suffix) {
+      const uid = this.auth?.id || 'guest'
+      return `telawa.${suffix}.${uid}`
+    },
+    loadBookmarksPins() {
+      try { this.bookmarks = JSON.parse(localStorage.getItem(this.userStorageKey('bookmarks')) || '[]') } catch { this.bookmarks = [] }
+      try { this.pins = JSON.parse(localStorage.getItem(this.userStorageKey('pins')) || '[]') } catch { this.pins = [] }
+    },
+    persistBookmarksPins() {
+      try { localStorage.setItem(this.userStorageKey('bookmarks'), JSON.stringify((this.bookmarks || []).slice(0, 500))) } catch (e) {}
+      try { localStorage.setItem(this.userStorageKey('pins'), JSON.stringify((this.pins || []).slice(0, 500))) } catch (e) {}
+    },
+    buildUiStatePayload() {
+      return {
+        theme: this.theme,
+        showTools: this.showTools,
+        tab: this.tab,
+        chapterId: this.chapterId,
+        rangeStart: this.rangeStart,
+        rangeEnd: this.rangeEnd,
+        reciterId: this.reciterId,
+        speed: this.speed,
+        delay: this.delay,
+        repeats: this.repeats,
+        playMode: this.playMode,
+        order: this.order,
+        blurAdjacent: this.blurAdjacent,
+        focusMode: this.focusMode,
+        studyMode: this.studyMode,
+        quizType: this.quizType,
+        showTranslation: this.showTranslation,
+        showTransliteration: this.showTransliteration,
+        showWordByWord: this.showWordByWord,
+        wordByWordAudioEnabled: this.wordByWordAudioEnabled,
+        fontScale: this.fontScale,
+        script: this.script,
+        sectionOpen: this.sectionOpen,
+        onboardingDismissed: this.onboardingDismissed
+      }
+    },
+    handleOnline() {
+      this.networkOnline = true
+      this.showBanner('Back online. Live APIs are available again.', 'success', 2400)
+    },
+    handleOffline() {
+      this.networkOnline = false
+      this.showBanner('Offline mode active. Reading falls back to cached ranges.', 'info', 3200)
+    },
+    openWordTooltip(verse, word, index) {
+      if (!word?.ar && !word?.en) return
+      this.activeWordTooltip = { verseKey: verse.key, index }
+    },
+    toggleWordTooltip(verse, word, index) {
+      if (this.isTooltipOpen(verse.key, index)) this.activeWordTooltip = null
+      else this.openWordTooltip(verse, word, index)
+    },
+    closeWordTooltip() {
+      this.activeWordTooltip = null
+    },
+    isTooltipOpen(verseKey, index) {
+      return this.activeWordTooltip?.verseKey === verseKey && this.activeWordTooltip?.index === index
+    },
+    toggleReadingOption(kind) {
+      if (kind === 'translation') this.showTranslation = !this.showTranslation
+      if (kind === 'transliteration') this.showTransliteration = !this.showTransliteration
+      if (kind === 'wbw') this.showWordByWord = !this.showWordByWord
+      this.loadVerses()
+    },
+    setScriptMode(mode) {
+      this.script = mode
+      this.loadVerses()
+    },
+    toggleBookmark(verse) {
+      if (!this.isLoggedIn) { this.showBanner('Login required to bookmark', 'info', 2800); return }
+      const key = verse.key
+      const idx = (this.bookmarks || []).indexOf(key)
+      if (idx >= 0) this.bookmarks.splice(idx, 1)
+      else this.bookmarks.unshift(key)
+      this.persistBookmarksPins()
+    },
+    togglePin(verse) {
+      if (!this.isLoggedIn) { this.showBanner('Login required to pin', 'info', 2800); return }
+      const key = verse.key
+      const idx = (this.pins || []).indexOf(key)
+      if (idx >= 0) this.pins.splice(idx, 1)
+      else this.pins.unshift(key)
+      this.persistBookmarksPins()
+    },
+    shareWhatsApp(verse) {
+      const deepLink = `${window.location.origin}${window.location.pathname}#${verse.key}`
+      const text = `${this.currentChapter?.name_simple || ''} ${verse.key}\n\n${this.normalizeTextForQuiz(verse.arabic)}\n\n${this.normalizeTextForQuiz(verse.translation)}\n\n${deepLink}`
+      const url = `https://wa.me/?text=${encodeURIComponent(text)}`
+      window.open(url, '_blank', 'noopener,noreferrer')
+    },
+    downloadAyah(verse) {
+      const src = verse.audio
+      if (!src) return
+      const a = document.createElement('a')
+      a.href = src
+      a.target = '_blank'
+      a.rel = 'noopener noreferrer'
+      a.download = ''
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+    },
+    incFont() { this.fontScale = Math.min(1.4, Math.round((this.fontScale + 0.05) * 100) / 100) },
+    decFont() { this.fontScale = Math.max(0.85, Math.round((this.fontScale - 0.05) * 100) / 100) },
     buildWeakWordClusters(weakAyahs) {
       const set = new Set(weakAyahs)
       const counts = {}
@@ -1184,6 +1418,12 @@ export default {
         this.focusMode = state.focusMode ?? this.focusMode
         this.studyMode = state.studyMode || this.studyMode
         this.quizType = state.quizType || this.quizType
+        this.showTranslation = state.showTranslation ?? this.showTranslation
+        this.showTransliteration = state.showTransliteration ?? this.showTransliteration
+        this.showWordByWord = state.showWordByWord ?? this.showWordByWord
+        this.wordByWordAudioEnabled = state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
+        this.fontScale = state.fontScale ?? this.fontScale
+        this.script = state.script || this.script
         this.sectionOpen = { ...this.sectionOpen, ...(state.sectionOpen || {}) }
         this.onboardingDismissed = state.onboardingDismissed ?? false
       } catch (e) { console.error(e) }
@@ -1203,26 +1443,7 @@ export default {
     },
     persistUiState() {
       try {
-        localStorage.setItem('telawa.uiState', JSON.stringify({
-          theme: this.theme,
-          showTools: this.showTools,
-          tab: this.tab,
-          chapterId: this.chapterId,
-          rangeStart: this.rangeStart,
-          rangeEnd: this.rangeEnd,
-          reciterId: this.reciterId,
-          speed: this.speed,
-          delay: this.delay,
-          repeats: this.repeats,
-          playMode: this.playMode,
-          order: this.order,
-          blurAdjacent: this.blurAdjacent,
-          focusMode: this.focusMode,
-          studyMode: this.studyMode,
-          quizType: this.quizType,
-          sectionOpen: this.sectionOpen,
-          onboardingDismissed: this.onboardingDismissed
-        }))
+        localStorage.setItem('telawa.uiState', JSON.stringify(this.buildUiStatePayload()))
       } catch (e) { console.error(e) }
     },
     persistSessionState() {
@@ -1256,10 +1477,10 @@ export default {
     loadMetrics() {
       try {
         const raw = localStorage.getItem('telawa.metrics')
-        this.metrics = raw ? JSON.parse(raw) : { avgAyahSeconds: 10 }
+        this.metrics = raw ? JSON.parse(raw) : { avgAyahSeconds: 10, durationsByVerse: {} }
       } catch (e) {
         console.error(e)
-        this.metrics = { avgAyahSeconds: 10 }
+        this.metrics = { avgAyahSeconds: 10, durationsByVerse: {} }
       }
     },
     persistMetrics() {
@@ -1277,7 +1498,7 @@ export default {
           const events = JSON.parse(eventsRaw)
           if (Array.isArray(events)) localStorage.setItem('telawa.events', JSON.stringify(events.slice(-2000)))
         }
-      } catch {}
+      } catch { }
       localStorage.setItem(key, String(current))
     },
     dayKey(ts = Date.now()) {
@@ -1296,11 +1517,59 @@ export default {
         this.events = []
       }
     },
-    showBanner(message, kind = 'info', ttlMs = 3500) {
-      this.banner = { message, kind, at: Date.now() }
-      setTimeout(() => {
+    showBanner(message, kind = 'info', ttlMs = 3500, action = null) {
+      if (this.bannerTimer) clearTimeout(this.bannerTimer)
+      this.banner = { message, kind, at: Date.now(), actionKey: action?.key || '', actionLabel: action?.label || '' }
+      this.bannerTimer = setTimeout(() => {
         if (this.banner && Date.now() - this.banner.at >= ttlMs) this.banner = null
       }, ttlMs + 50)
+    },
+    runBannerAction() {
+      const key = this.banner?.actionKey
+      this.banner = null
+      if (!key) return
+      if (key === 'retry-verses') this.loadVerses()
+      if (key === 'retry-transliteration') this.loadVerses()
+      if (key === 'retry-tajweed') this.loadVerses()
+      if (key === 'reload-plan') this.generateTodayPlan()
+    },
+    describeNetworkError(error) {
+      const status = error?.response?.status
+      const message = error?.response?.data?.message || error?.message || ''
+      if (status) return `${status}${message ? ` ${message}` : ''}`.trim()
+      if (!this.networkOnline) return 'offline'
+      return message || ''
+    },
+    verseCacheKey(chapterId = this.chapterId) {
+      return [
+        'telawa.verses',
+        chapterId,
+        this.rangeStart,
+        this.rangeEnd,
+        this.script,
+        this.showTranslation ? 'tr' : 'no-tr',
+        this.showTransliteration ? 'tl' : 'no-tl',
+        this.showWordByWord ? 'wbw' : 'no-wbw',
+        this.reciterId
+      ].join('.')
+    },
+    writeVerseCache(chapterId, verses) {
+      if (!chapterId || !Array.isArray(verses) || !verses.length) return
+      try {
+        localStorage.setItem(this.verseCacheKey(chapterId), JSON.stringify({
+          savedAt: Date.now(),
+          verses
+        }))
+      } catch (e) { }
+    },
+    readVerseCache(chapterId = this.chapterId) {
+      try {
+        const raw = localStorage.getItem(this.verseCacheKey(chapterId))
+        const parsed = raw ? JSON.parse(raw) : null
+        return Array.isArray(parsed?.verses) ? parsed.verses : []
+      } catch (e) {
+        return []
+      }
     },
     logEvent(evt) {
       const safe = { ...evt, at: Date.now(), day: this.dayKey() }
@@ -1366,6 +1635,17 @@ export default {
       const speedFactor = Math.max(0.5, Number(this.speed) || 1)
       return (base / speedFactor) + (Number(this.delay) || 0)
     },
+    estimateVerseSeconds(verseKey) {
+      const durations = this.metrics?.durationsByVerse || {}
+      const known = Number(durations?.[verseKey] || 0)
+      if (known > 0) return known + (Number(this.delay) || 0)
+      return this.estimateAyahSeconds()
+    },
+    estimateKeysSeconds(keys = []) {
+      const list = Array.isArray(keys) ? keys : []
+      if (!list.length) return Math.max(0, this.remainingAyahs * this.estimateAyahSeconds())
+      return list.reduce((sum, verseKey) => sum + this.estimateVerseSeconds(verseKey), 0)
+    },
     estimateCapacityAyat(minutes) {
       const sec = Math.max(5, Number(minutes) || 0) * 60
       const per = Math.max(3, this.estimateAyahSeconds())
@@ -1394,14 +1674,14 @@ export default {
           translations: this.showTranslation ? '131' : undefined,
           words: false,
           audio: this.reciterId,
-          fields: this.script === 'tajweed' ? 'text_uthmani_tajweed' : 'text_uthmani'
+          fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs'
         }
         const res = await axios.get(`https://api.quran.com/api/v4/verses/by_chapter/${chapterId}`, { params })
         const all = res.data?.verses || []
         return all.map(v => ({
           key: v.verse_key,
           number: v.verse_number,
-          arabic: v.text_uthmani_tajweed || v.text_uthmani || '',
+          arabic: v.text_qpc_hafs || v.text_uthmani_tajweed || v.text_uthmani || '',
           translation: v.translations?.[0]?.text || '',
           audio: this.normalizeAudioUrl(v.audio?.url || '')
         }))
@@ -1475,9 +1755,9 @@ export default {
         }).length
         const sessionType =
           weakReviewCount && !newVerseKeys.length ? 'recovery' :
-          dueVerseKeys.length && newVerseKeys.length ? 'mixed' :
-          dueVerseKeys.length ? 'revision' :
-          'memorisation'
+            dueVerseKeys.length && newVerseKeys.length ? 'mixed' :
+              dueVerseKeys.length ? 'revision' :
+                'memorisation'
 
         this.todayPlan = {
           day,
@@ -1494,7 +1774,13 @@ export default {
           newKeys: newVerseKeys,
           sessionType,
           segments,
-          estimate: { capacityAyat, reviewCap, newCap, secondsPerAyah: this.estimateAyahSeconds() }
+          estimate: {
+            capacityAyat,
+            reviewCap,
+            newCap,
+            secondsPerAyah: this.estimateAyahSeconds(),
+            totalSeconds: this.estimateKeysSeconds(quizKeys)
+          }
         }
         this.persistTodayPlan()
       })()
@@ -1514,8 +1800,8 @@ export default {
 
       const plannerMode =
         this.todayPlan.sessionType === 'memorisation' ? 'recite' :
-        this.todayPlan.sessionType === 'revision' ? 'quiz' :
-        'hybrid'
+          this.todayPlan.sessionType === 'revision' ? 'quiz' :
+            'hybrid'
       this.studyMode = plannerMode
       if (this.todayPlan.sessionType === 'recovery') this.order = 'chain'
       this.quizType = 'mixed'
@@ -1534,14 +1820,14 @@ export default {
         translations: this.showTranslation ? '131' : undefined,
         words: this.showWordByWord,
         audio: this.reciterId,
-        fields: this.script === 'tajweed' ? 'text_uthmani_tajweed' : 'text_uthmani'
+        fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs'
       }
       const res = await axios.get(`https://api.quran.com/api/v4/verses/by_chapter/${seg.chapterId}`, { params })
       const all = res.data?.verses || []
       const mapped = all.map(v => ({
         key: v.verse_key,
         number: v.verse_number,
-        arabic: v.text_uthmani_tajweed || v.text_uthmani || '',
+        arabic: v.text_qpc_hafs || v.text_uthmani_tajweed || v.text_uthmani || '',
         translation: v.translations?.[0]?.text || '',
         audio: this.normalizeAudioUrl(v.audio?.url || ''),
         words: (v.words || []).map(w => ({
@@ -1705,6 +1991,36 @@ export default {
         .replace(/\s+/g, ' ')
         .trim()
       return text
+    },
+    normalizeTajweedText(text) {
+      const raw = String(text || '')
+      if (!raw) return ''
+      if (raw.includes('<tajweed')) return raw
+      const classMap = {
+        h: 'ham_wasl',
+        s: 'slnt',
+        l: 'laam_shamsiyah',
+        n: 'madda_normal',
+        p: 'madda_permissible',
+        m: 'madda_necessary',
+        q: 'qlqla',
+        o: 'madda_obligatory',
+        c: 'ikhafa',
+        f: 'ghunnah',
+        w: 'idgham_wo_ghunnah',
+        i: 'iqlab',
+        a: 'idgham_ghunnah',
+        u: 'idgham_shafawi',
+        d: 'ikhafa_shafawi',
+        b: 'waqf',
+        g: 'ghunnah'
+      }
+      return raw
+        .replace(/\[([a-z_]+)(?::[^\]]+)?\[([^\]]+)\]/gi, (_, code, inner) => {
+          const klass = classMap[String(code).toLowerCase()] || String(code).toLowerCase()
+          return `<tajweed class="${klass}">${inner}</tajweed>`
+        })
+        .replace(/\]/g, '')
     },
     quizMakePrompt(verse) {
       const src = this.normalizeTextForQuiz(verse.translation || verse.arabic)
@@ -1922,33 +2238,53 @@ export default {
         translations: this.showTranslation ? '131' : undefined,
         words: this.showWordByWord,
         audio: this.reciterId,
-        fields: this.script === 'tajweed' ? 'text_uthmani_tajweed' : 'text_uthmani'
+        fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs'
       }
       try {
         const res = await axios.get(`https://api.quran.com/api/v4/verses/by_chapter/${this.chapterId}`, { params })
         const all = res.data?.verses || []
         const start = this.rangeStart, end = this.rangeEnd
-        this.verses = all.filter(v => v.verse_number >= start && v.verse_number <= end).map(v => ({
+        let mappedVerses = all.filter(v => v.verse_number >= start && v.verse_number <= end).map(v => ({
           key: v.verse_key,
           number: v.verse_number,
-          arabic: v.text_uthmani_tajweed || v.text_uthmani || '',
+          arabic: v.text_qpc_hafs || v.text_uthmani_tajweed || v.text_uthmani || '',
           translation: v.translations?.[0]?.text || '',
+          transliteration: '',
           audio: this.normalizeAudioUrl(v.audio?.url || ''),
           words: (v.words || []).map(w => ({
             ar: w.text_uthmani || w.text || '',
             en: w.translation?.text || '',
+            tooltip: `${w.text_uthmani || w.text || ''} • ${w.translation?.text || ''}`.trim(),
             audio: this.normalizeAudioUrl(w.audio_url)
           }))
         }))
+
+        if (this.showTransliteration) {
+          try {
+            const translitRes = await getSurahTransliteration(this.chapterId, 'en.transliteration')
+            const translitAyahs = translitRes.data?.data?.ayahs || []
+            const byNumber = new Map(translitAyahs.map(a => [a.numberInSurah, a.text]))
+            mappedVerses = mappedVerses.map(v => ({ ...v, transliteration: byNumber.get(v.number) || '' }))
+          } catch (e) {
+            console.error(e)
+            this.showBanner('Transliteration failed to load.', 'info', 5000, { key: 'retry-transliteration', label: 'Retry' })
+          }
+        }
 
         if (this.script === 'tajweed') {
           try {
             const tajweedRes = await getSurahEdition(this.chapterId, 'quran-tajweed')
             const ayahs = tajweedRes.data?.data?.ayahs || []
-            const byNumber = new Map(ayahs.map(a => [a.numberInSurah, a.text]))
-            this.verses = this.verses.map(v => ({ ...v, arabic: byNumber.get(v.number) || v.arabic }))
-          } catch (e) { console.error(e) }
+            const byNumber = new Map(ayahs.map(a => [a.numberInSurah, this.normalizeTajweedText(a.text)]))
+            mappedVerses = mappedVerses.map(v => ({ ...v, arabic: byNumber.get(v.number) || v.arabic }))
+          } catch (e) {
+            console.error(e)
+            this.showBanner('Tajweed text failed to load. Showing standard text.', 'info', 5000, { key: 'retry-tajweed', label: 'Retry' })
+          }
         }
+
+        this.verses = mappedVerses
+        this.writeVerseCache(this.chapterId, mappedVerses)
 
         if (this.verses.length && !this.activeKey) this.activeKey = this.verses[0].key
         this.buildQueue()
@@ -1958,7 +2294,16 @@ export default {
         }
       } catch (e) {
         console.error(e)
-        this.showBanner('Failed to load verses. Check connection.', 'error', 4500)
+        const cached = this.readVerseCache(this.chapterId)
+        if (cached.length) {
+          this.verses = cached
+          if (this.verses.length && !this.activeKey) this.activeKey = this.verses[0].key
+          this.buildQueue()
+          this.showBanner('Offline copy loaded for this range.', 'info', 4500, { key: 'retry-verses', label: 'Retry' })
+          return
+        }
+        const detail = this.describeNetworkError(e)
+        this.showBanner(`Failed to load verses${detail ? `: ${detail}` : ''}.`, 'error', 6000, { key: 'retry-verses', label: 'Retry' })
       }
     },
     refreshVerses() { this.loadVerses() },
@@ -2050,8 +2395,8 @@ export default {
         : this.quizType
       const skill =
         type === 'audio_mcq' ? 'audio_recall' :
-        type === 'blank' ? 'meaning' :
-        'recite_text'
+          type === 'blank' ? 'meaning' :
+            'recite_text'
       this.quizSkill = skill
       this.quizCard = { ...verse, type, skill }
       this.quizAnswer = ''
@@ -2158,29 +2503,147 @@ export default {
       setTimeout(() => { this.confettiActive = false }, 1600)
     },
     setActive(key) { this.activeKey = key },
+    shouldUseWordSequence(verse) {
+      return !!(this.showWordByWord && this.wordByWordAudioEnabled && verse?.words?.length && verse.words.every(word => !!word.audio))
+    },
+    markPlaybackStart() {
+      this.playbackStartedAt = Date.now()
+    },
+    flushPlaybackTime() {
+      if (!this.playbackStartedAt) return
+      const seconds = Math.max(0, Math.round((Date.now() - this.playbackStartedAt) / 1000))
+      this.playbackStartedAt = 0
+      if (seconds > 0) this.logEvent({ type: 'listening_time', seconds })
+    },
+    storeVerseDuration(verseKey, seconds) {
+      if (!verseKey || !seconds || !isFinite(seconds) || seconds <= 0) return
+      const durationsByVerse = { ...(this.metrics?.durationsByVerse || {}) }
+      durationsByVerse[verseKey] = Number(seconds.toFixed(2))
+      const avg = Number(this.metrics?.avgAyahSeconds || 10)
+      const nextAvg = avg * 0.88 + Number(seconds) * 0.12
+      this.metrics = {
+        ...(this.metrics || {}),
+        avgAyahSeconds: Number(nextAvg.toFixed(2)),
+        durationsByVerse
+      }
+      this.persistMetrics()
+    },
+    async playAudioSrc(src) {
+      this.audioElement.src = src
+      this.audioElement.load()
+      this.audioElement.playbackRate = this.speed
+      await this.audioElement.play()
+      this.playerVisible = true
+      this.isPlaying = true
+      this.markPlaybackStart()
+      this.persistAudioState()
+    },
+    async startWordSequence(verse) {
+      if (!this.audioElement) this.audioElement = this.$refs.audio
+      if (!this.audioElement) return
+      this.currentPlaybackMode = 'word-sequence'
+      this.currentVersePlaybackKey = verse.key
+      this.activeKey = verse.key
+      this.wordSequence = {
+        verseKey: verse.key,
+        words: verse.words.filter(word => !!word.audio),
+        index: 0,
+        totalSeconds: 0
+      }
+      this.activeWordAudio = `${verse.key}:0`
+      const first = this.wordSequence.words[0]
+      if (!first?.audio) return
+      this.lastAudioDebug = { at: Date.now(), key: verse.key, src: first.audio, phase: 'word-sequence-start' }
+      try {
+        await this.playAudioSrc(first.audio)
+      } catch (e) {
+        console.error(e)
+        this.activeWordAudio = ''
+        this.wordSequence = null
+        this.currentPlaybackMode = 'verse'
+        this.showBanner('Word audio could not start. Falling back to ayah audio.', 'info', 4000)
+        this.playVerse({ ...verse, words: [] })
+      }
+    },
+    async advanceWordSequence() {
+      const sequence = this.wordSequence
+      if (!sequence) return
+      const currentClip = sequence.words[sequence.index]
+      if (this.duration && isFinite(this.duration)) sequence.totalSeconds += Number(this.duration)
+      sequence.index += 1
+      if (sequence.index >= sequence.words.length) {
+        this.activeWordAudio = ''
+        this.storeVerseDuration(sequence.verseKey, sequence.totalSeconds || this.duration || 0)
+        this.wordSequence = null
+        this.finishVersePlayback()
+        return
+      }
+      const nextWord = sequence.words[sequence.index]
+      this.activeWordAudio = `${sequence.verseKey}:${sequence.index}`
+      try {
+        await this.playAudioSrc(nextWord.audio)
+      } catch (e) {
+        console.error(e)
+        this.activeWordAudio = ''
+        this.wordSequence = null
+        this.finishVersePlayback()
+      }
+    },
+    finishVersePlayback() {
+      this.flushPlaybackTime()
+      this.isPlaying = false
+      if (this.playMode === 'loop') {
+        setTimeout(() => {
+          const verse = this.verses.find(item => item.key === this.activeKey)
+          if (verse) this.playVerse(verse)
+        }, (this.delay || 0) * 1000)
+        return
+      }
+      if (this.studyMode === 'hybrid') {
+        const key = this.activeKey
+        const verse = this.verses.find(v => v.key === key)
+        if (verse) {
+          this.hybridPendingKey = key
+          this.quizQueue = [verse]
+          this.quizIndex = 0
+          this.quizType = 'mixed'
+          this.quizActive = true
+          this.nextQuizCard()
+          return
+        }
+      }
+      if (this.playMode === 'auto') {
+        setTimeout(() => this.next(), this.delay * 1000)
+      }
+    },
     playVerse(verse) {
       if (!verse.audio) { console.warn('Missing verse audio url', verse); return }
       this.activeKey = verse.key
       if (!this.audioElement) this.audioElement = this.$refs.audio
       if (!this.audioElement) return
-      this.audioElement.src = verse.audio
+      this.currentVersePlaybackKey = verse.key
+      this.currentPlaybackMode = 'verse'
+      this.wordSequence = null
+      this.activeWordAudio = ''
+      if (this.shouldUseWordSequence(verse)) {
+        this.startWordSequence(verse)
+        return
+      }
       this.lastAudioDebug = { at: Date.now(), key: verse.key, src: verse.audio, phase: 'set-src' }
-      this.audioElement.load()
-      this.audioElement.playbackRate = this.speed
-      this.audioElement.play().catch((e) => {
+      this.playAudioSrc(verse.audio).catch((e) => {
         console.error(e)
         this.lastAudioDebug = { at: Date.now(), key: verse.key, src: verse.audio, phase: 'play-catch', error: String(e?.message || e) }
         this.isPlaying = false
       })
-      this.playerVisible = true
-      this.isPlaying = true
       this.logEvent({ type: 'audio_play', key: verse.key })
-      this.persistAudioState()
     },
-    playWordAudio(url) {
+    playWordAudio(url, key = '') {
       if (!url) return
+      this.activeWordAudio = key
       const a = new Audio(url)
-      a.play().catch(() => { })
+      a.addEventListener('ended', () => { if (this.activeWordAudio === key) this.activeWordAudio = '' })
+      a.addEventListener('error', () => { if (this.activeWordAudio === key) this.activeWordAudio = '' })
+      a.play().catch(() => { this.activeWordAudio = '' })
     },
     initAudio() {
       this.audioElement = this.$refs.audio
@@ -2191,10 +2654,12 @@ export default {
         this.currentTime = Number(this.restoredAudioState.currentTime || 0)
       }
       let lastSrc = null
-      let startedAt = 0
       this.audioElement.addEventListener('play', () => {
         lastSrc = this.audioElement.currentSrc || this.audioElement.src
-        startedAt = Date.now()
+        this.markPlaybackStart()
+      })
+      this.audioElement.addEventListener('pause', () => {
+        this.flushPlaybackTime()
       })
       this.audioElement.addEventListener('timeupdate', () => {
         this.currentTime = this.audioElement.currentTime
@@ -2204,8 +2669,12 @@ export default {
         if (this.restoredAudioState?.currentTime && Math.abs(this.audioElement.currentTime || 0) < 0.2) {
           try { this.audioElement.currentTime = Number(this.restoredAudioState.currentTime || 0) } catch (e) { console.error(e) }
         }
+        if (this.currentPlaybackMode === 'verse' && this.currentVersePlaybackKey && this.audioElement.duration && isFinite(this.audioElement.duration)) {
+          this.storeVerseDuration(this.currentVersePlaybackKey, this.audioElement.duration)
+        }
       })
       this.audioElement.addEventListener('error', () => {
+        this.flushPlaybackTime()
         const err = this.audioElement?.error
         const payload = {
           src: this.audioElement?.src,
@@ -2220,37 +2689,15 @@ export default {
         }
       })
       this.audioElement.addEventListener('ended', () => {
-        this.isPlaying = false
-        const src = this.audioElement.currentSrc || this.audioElement.src
-        if (src && lastSrc === src && startedAt && this.duration && isFinite(this.duration) && this.duration > 1 && this.duration < 120) {
-          const avg = Number(this.metrics?.avgAyahSeconds || 10)
-          const nextAvg = avg * 0.9 + Number(this.duration) * 0.1
-          this.metrics = { ...(this.metrics || {}), avgAyahSeconds: Number(nextAvg.toFixed(2)) }
-          this.persistMetrics()
-        }
-        if (this.playMode === 'loop') {
-          setTimeout(() => {
-            this.audioElement.currentTime = 0
-            this.audioElement.play().catch(() => {})
-          }, (this.delay || 0) * 1000)
+        if (this.currentPlaybackMode === 'word-sequence' && this.wordSequence) {
+          this.advanceWordSequence()
           return
         }
-        if (this.studyMode === 'hybrid') {
-          const key = this.activeKey
-          const verse = this.verses.find(v => v.key === key)
-          if (verse) {
-            this.hybridPendingKey = key
-            this.quizQueue = [verse]
-            this.quizIndex = 0
-            this.quizType = 'mixed'
-            this.quizActive = true
-            this.nextQuizCard()
-            return
-          }
+        const src = this.audioElement.currentSrc || this.audioElement.src
+        if (src && lastSrc === src && this.currentVersePlaybackKey && this.duration && isFinite(this.duration) && this.duration > 1 && this.duration < 120) {
+          this.storeVerseDuration(this.currentVersePlaybackKey, this.duration)
         }
-        if (this.playMode === 'auto') {
-          setTimeout(() => this.next(), this.delay * 1000)
-        }
+        this.finishVersePlayback()
       })
     },
     applySpeed() {
@@ -2258,8 +2705,13 @@ export default {
     },
     togglePlay() {
       if (!this.audioElement.src) return
-      if (this.audioElement.paused) this.audioElement.play()
-      else this.audioElement.pause()
+      if (this.audioElement.paused) {
+        this.audioElement.play()
+        this.isPlaying = true
+      } else {
+        this.audioElement.pause()
+        this.isPlaying = false
+      }
     },
     skipBack() {
       if (this.audioElement) this.audioElement.currentTime = Math.max(0, this.audioElement.currentTime - 10)
@@ -2302,7 +2754,10 @@ export default {
     },
     updateAudioReciter() { this.loadVerses() },
     closePlayer() {
+      this.flushPlaybackTime()
       if (this.audioElement) { this.audioElement.pause(); this.audioElement.src = '' }
+      this.wordSequence = null
+      this.activeWordAudio = ''
       this.playerVisible = false
       this.isPlaying = false
       this.playerMenuOpen = false
@@ -2337,7 +2792,7 @@ export default {
   --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);
   --radius: 16px;
   --navbar-offset: 56px;
-  --font-ar: 'Amiri', 'Times New Roman', serif;
+  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;
   --font-ui: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -2382,8 +2837,8 @@ body {
   background: var(--bg);
   color: var(--text);
   background-image:
-    radial-gradient(circle at top left, rgba(255,255,255,0.55), transparent 34%),
-    linear-gradient(180deg, rgba(255,255,255,0.12), transparent 30%);
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.55), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 30%);
 }
 
 .app {
@@ -2450,7 +2905,7 @@ body {
   width: 34px;
   height: 34px;
   border-radius: 12px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.82), rgba(255,255,255,0.58));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.58));
   border: 1px solid var(--border);
   cursor: pointer;
   color: var(--text-muted);
@@ -2465,12 +2920,52 @@ body {
 }
 
 .main.tools-open {
-  padding-right: 400px;
+  padding-right: 360px;
+}
+
+.main.tools-open .content {
+  max-width: min(980px, calc(100vw - 470px));
 }
 
 .content {
-  max-width: 900px;
+  max-width: 1120px;
   margin: 0 auto;
+}
+
+.reading-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.reading-toolbar-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toolbar-chip {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: var(--shadow-sm);
+}
+
+.toolbar-chip.active {
+  background: var(--accent);
+  color: #fff;
 }
 
 .hero-card {
@@ -2478,7 +2973,7 @@ body {
   padding: 18px 18px 16px;
   border-radius: 22px;
   border: 1px solid var(--border);
-  background: linear-gradient(135deg, rgba(255,255,255,0.94), rgba(245,236,226,0.92));
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 236, 226, 0.92));
   box-shadow: var(--shadow-md);
   display: grid;
   gap: 14px;
@@ -2516,7 +3011,7 @@ body {
   padding: 10px 12px;
   border-radius: 16px;
   border: 1px solid var(--border);
-  background: rgba(255,255,255,0.62);
+  background: rgba(255, 255, 255, 0.62);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -2624,7 +3119,7 @@ body {
 .rail-stat {
   padding: 8px 10px;
   border-radius: 14px;
-  background: rgba(255,255,255,0.58);
+  background: rgba(255, 255, 255, 0.58);
   border: 1px solid rgba(78, 58, 38, 0.07);
   display: flex;
   flex-direction: column;
@@ -2648,7 +3143,7 @@ body {
   padding: 0 12px;
   border-radius: 13px;
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,255,255,0.68));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));
   color: var(--text);
   font-size: 12px;
   font-weight: 450;
@@ -2748,7 +3243,7 @@ body {
 .verses {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 18px;
 }
 
 .verses.compact .verse {
@@ -2758,16 +3253,15 @@ body {
 .verse {
   background: linear-gradient(180deg, var(--surface-strong), var(--surface));
   border-radius: 18px;
-  padding: 14px;
-  border: 1px solid var(--border);
+  padding: 18px 20px;
+  border: 0;
   transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-lg);
 }
 
 .verse.active {
-  border-left: 3px solid var(--accent);
   background: linear-gradient(180deg, var(--surface-strong), var(--accent-wash));
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 26px 60px rgba(63, 39, 18, 0.22);
 }
 
 .verse-head {
@@ -2814,21 +3308,29 @@ body {
 
 .verse-arabic {
   font-family: var(--font-ar);
-  font-size: 1.12rem;
-  line-height: 1.7;
+  font-size: 1.45rem;
+  line-height: 2.1;
   text-align: right;
   direction: rtl;
-  background: linear-gradient(180deg, rgba(255,255,255,0.32), rgba(255,255,255,0.08));
-  padding: 10px;
-  border-radius: 14px;
-  margin: 8px 0;
+  margin: 12px 0 10px;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "liga" 1, "calt" 1;
+  font-variant-ligatures: contextual common-ligatures;
+  unicode-bidi: plaintext;
+}
+
+.verse-transliteration {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  line-height: 1.8;
+  margin-top: 6px;
 }
 
 .verse-translation {
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   color: var(--text-muted);
   padding-top: 8px;
-  border-top: 1px solid var(--border);
+  line-height: 1.85;
 }
 
 .verse-words {
@@ -2846,6 +3348,13 @@ body {
   align-items: center;
   gap: 6px;
   font-size: 0.7rem;
+  position: relative;
+  cursor: default;
+}
+
+.word.active {
+  background: var(--accent);
+  color: #fff;
 }
 
 .word-ar {
@@ -2863,14 +3372,125 @@ body {
   font-size: 0.65rem;
 }
 
+.word-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  min-width: 132px;
+  max-width: 220px;
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(24, 27, 33, 0.96);
+  color: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 14px 34px rgba(10, 12, 18, 0.24);
+  white-space: normal;
+  z-index: 8;
+  animation: fadeLift 140ms ease-out;
+}
+
+.word-tooltip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 10px;
+  height: 10px;
+  transform: translateX(-50%) rotate(45deg);
+  background: rgba(24, 27, 33, 0.96);
+}
+
+.word-tooltip-ar {
+  font-family: var(--font-ar);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  text-align: right;
+}
+
+.word-tooltip-en {
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.verse-footer {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.verse-footer-side {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.verse-tool-btn {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text-muted);
+  box-shadow: var(--shadow-sm);
+}
+
+.verse-tool-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.verse-arabic tajweed,
+.verse-arabic .tajweed {
+  font-family: inherit;
+}
+
+.verse-arabic tajweed.ham_wasl,
+.verse-arabic .ham_wasl { color: #9c27b0; }
+.verse-arabic tajweed.ghunnah,
+.verse-arabic .ghunnah { color: #1f7a8c; }
+.verse-arabic tajweed.idgham_ghunnah,
+.verse-arabic .idgham_ghunnah { color: #1f7a8c; }
+.verse-arabic tajweed.idgham_wo_ghunnah,
+.verse-arabic .idgham_wo_ghunnah { color: #0f766e; }
+.verse-arabic tajweed.iqlab,
+.verse-arabic .iqlab { color: #2563eb; }
+.verse-arabic tajweed.ikhafa,
+.verse-arabic .ikhafa { color: #f59e0b; }
+.verse-arabic tajweed.qlqla,
+.verse-arabic .qlqla,
+.verse-arabic tajweed.qalqalah,
+.verse-arabic .qalqalah { color: #ef4444; }
+.verse-arabic tajweed.madda_normal,
+.verse-arabic .madda_normal,
+.verse-arabic tajweed.madda_permissible,
+.verse-arabic .madda_permissible,
+.verse-arabic tajweed.madda_necessary,
+.verse-arabic .madda_necessary { color: #8b5cf6; }
+.verse-arabic tajweed.idgham_shafawi,
+.verse-arabic .idgham_shafawi,
+.verse-arabic tajweed.ikhafa_shafawi,
+.verse-arabic .ikhafa_shafawi { color: #db2777; }
+.verse-arabic tajweed.slnt,
+.verse-arabic .slnt,
+.verse-arabic tajweed.waqf,
+.verse-arabic .waqf { color: #6b7280; }
+
 /* Tools Panel */
 .tools {
   position: fixed;
   top: 0;
   right: 0;
   bottom: 0;
-  width: 460px;
-  background: linear-gradient(180deg, rgba(255,250,243,0.96), rgba(247,240,231,0.92));
+  width: 380px;
+  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));
   border-left: 1px solid var(--border);
   backdrop-filter: blur(14px);
   transform: translateX(100%);
@@ -2898,14 +3518,28 @@ body {
     right: 0;
     width: 100%;
   }
+
+  .main.tools-open {
+    padding-right: 24px;
+  }
+}
+
+@media (max-width: 1180px) {
+  .main.tools-open {
+    padding-right: 24px;
+  }
+
+  .main.tools-open .content {
+    max-width: 1120px;
+  }
 }
 
 .tools-top {
   padding: 18px 18px 12px;
   border-bottom: 1px solid var(--border);
   background:
-    radial-gradient(circle at top right, rgba(154,103,56,0.12), transparent 36%),
-    linear-gradient(180deg, rgba(255,255,255,0.25), transparent 100%);
+    radial-gradient(circle at top right, rgba(154, 103, 56, 0.12), transparent 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.25), transparent 100%);
 }
 
 [data-theme="dark"] .tools-top {
@@ -2977,7 +3611,7 @@ body {
 }
 
 .tools-tabs button.active {
-  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.84));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));
   box-shadow: var(--shadow-sm);
   color: rgba(0, 0, 0, 0.85);
 }
@@ -3001,18 +3635,18 @@ body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 14px 14px 104px;
+  padding: 20px 20px 168px;
 }
 
 .sheet {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 18px;
 }
 
 .sheet-section {
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,248,242,0.62));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));
   border-radius: 18px;
   padding: 0;
   overflow: hidden;
@@ -3038,13 +3672,13 @@ body {
   gap: 10px;
   padding: 10px 12px;
   border: none;
-  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,250,245,0.78));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));
   cursor: pointer;
   transition: background 140ms ease, transform 140ms ease;
 }
 
 [data-theme="dark"] .sheet-toggle {
-  background: linear-gradient(180deg, rgba(30,30,40,0.85), rgba(30,30,40,0.45));
+  background: linear-gradient(180deg, rgba(30, 30, 40, 0.85), rgba(30, 30, 40, 0.45));
 }
 
 .st-left {
@@ -3120,28 +3754,28 @@ body {
 }
 
 .sheet-content {
-  padding: 12px;
+  padding: 16px 16px 18px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .tools-footer {
-  position: absolute;
+  position: sticky;
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 12px 14px 14px;
+  padding: 14px 16px 16px;
   border-top: 1px solid var(--border);
-  background: linear-gradient(to top, rgba(255,255,255,0.98), rgba(255,255,255,0.78), rgba(255,255,255,0));
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));
   display: flex;
-  gap: 12px;
+  gap: 10px;
   justify-content: space-between;
 }
 
 [data-theme="dark"] .tools-footer {
   border-top-color: rgba(255, 255, 255, 0.08);
-  background: linear-gradient(to top, rgba(18,18,18,0.98), rgba(18,18,18,0.78), rgba(18,18,18,0));
+  background: linear-gradient(to top, rgba(18, 18, 18, 0.98), rgba(18, 18, 18, 0.78), rgba(18, 18, 18, 0));
 }
 
 .tools-btn {
@@ -3151,7 +3785,7 @@ body {
   font-weight: 450;
   border: 1px solid rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,255,255,0.68));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));
   box-shadow: var(--shadow-sm);
   transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
   display: inline-flex;
@@ -3177,11 +3811,11 @@ body {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-  padding: 10px 12px;
+  padding: 12px 14px 0;
 }
 
 .guide-copy {
-  padding: 0 12px 12px;
+  padding: 0 14px 14px;
 }
 
 .guide-title {
@@ -3212,14 +3846,10 @@ body {
   color: var(--accent);
 }
 
-.field-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.field-span-2 {
-  grid-column: 1 / -1;
+.field-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .action-grid-3 {
@@ -3229,7 +3859,7 @@ body {
 }
 
 @media (max-width: 640px) {
-  .field-grid,
+
   .action-grid-3,
   .radio-group-tight {
     grid-template-columns: 1fr;
@@ -3239,6 +3869,23 @@ body {
   .session-rail-stats,
   .flow-strip {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .reading-toolbar {
+    padding: 10px 12px;
+  }
+
+  .reading-toolbar-group {
+    width: 100%;
+  }
+
+  .toolbar-chip {
+    flex: 1 1 calc(50% - 8px);
+    justify-content: center;
+  }
+
+  .verse {
+    padding: 16px 14px;
   }
 
   .session-rail-top {
@@ -3257,12 +3904,14 @@ body {
 }
 
 @media (max-width: 520px) {
-  .stat-grid { grid-template-columns: 1fr; }
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .stat {
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255,255,255,0.84), rgba(255,250,243,0.62));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 243, 0.62));
   border-radius: 14px;
   padding: 10px;
   box-shadow: var(--shadow-sm);
@@ -3300,7 +3949,7 @@ body {
   padding: 8px 10px;
   border-radius: 14px;
   border: 1px solid rgba(0, 0, 0, 0.10);
-  background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,255,255,0.68));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));
   cursor: pointer;
   font-weight: 450;
   font-size: 11px;
@@ -3316,7 +3965,7 @@ body {
 
 .chart {
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255,255,255,0.84), rgba(255,250,243,0.62));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 243, 0.62));
   border-radius: 14px;
   padding: 10px;
   box-shadow: var(--shadow-sm);
@@ -3354,15 +4003,15 @@ body {
   width: 100%;
   min-height: 6px;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(139,94,60,0.95), rgba(139,94,60,0.32));
+  background: linear-gradient(180deg, rgba(139, 94, 60, 0.95), rgba(139, 94, 60, 0.32));
 }
 
 .bars-soft .bar {
-  background: linear-gradient(180deg, rgba(31,122,140,0.95), rgba(31,122,140,0.30));
+  background: linear-gradient(180deg, rgba(31, 122, 140, 0.95), rgba(31, 122, 140, 0.30));
 }
 
 .bars-danger .bar {
-  background: linear-gradient(180deg, rgba(190,73,73,0.95), rgba(190,73,73,0.28));
+  background: linear-gradient(180deg, rgba(190, 73, 73, 0.95), rgba(190, 73, 73, 0.28));
 }
 
 .planner-row {
@@ -3372,24 +4021,24 @@ body {
 }
 
 .planner-settings {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-@media (max-width: 520px) {
-  .planner-settings { grid-template-columns: 1fr; }
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .pill-input {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   border-radius: 14px;
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255,255,255,0.82), rgba(255,249,241,0.62));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 249, 241, 0.62));
   box-shadow: var(--shadow-sm);
+}
+
+.pill-input-row {
+  justify-content: space-between;
 }
 
 [data-theme="dark"] .pill-input {
@@ -3400,7 +4049,7 @@ body {
 .pill-input span {
   font-weight: 450;
   color: rgba(0, 0, 0, 0.6);
-  min-width: 52px;
+  min-width: 64px;
   font-size: 11px;
 }
 
@@ -3435,7 +4084,7 @@ body {
   padding: 12px;
   border-radius: 16px;
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255,255,255,0.82), rgba(255,249,241,0.62));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 249, 241, 0.62));
   box-shadow: var(--shadow-sm);
 }
 
@@ -3459,7 +4108,7 @@ body {
   padding: 8px 10px;
   border-radius: 999px;
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255,255,255,0.84), rgba(255,250,243,0.62));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 243, 0.62));
   font-weight: 450;
   color: rgba(0, 0, 0, 0.75);
   font-size: 11px;
@@ -3475,6 +4124,7 @@ body {
 .tools-inline-actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .read-list {
@@ -3488,19 +4138,27 @@ body {
   gap: 10px;
   padding: 10px 12px;
   border-radius: 14px;
-  background: rgba(255,255,255,0.58);
+  background: rgba(255, 255, 255, 0.58);
   border: 1px solid rgba(78, 58, 38, 0.07);
   font-size: 0.76rem;
+  align-items: center;
 }
 
 .read-row strong {
   font-weight: 500;
+  text-align: right;
+  overflow-wrap: anywhere;
 }
 
 .cta-row {
   display: flex;
   gap: 10px;
   margin-top: 2px;
+  flex-wrap: wrap;
+}
+
+.cta-row-split .cta {
+  min-height: 46px;
 }
 
 .cta {
@@ -3526,7 +4184,7 @@ body {
 }
 
 .cta-ghost {
-  background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,255,255,0.68));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));
   box-shadow: var(--shadow-sm);
 }
 
@@ -3543,7 +4201,7 @@ body {
 
 .quiz-card {
   width: min(520px, 100%);
-  background: linear-gradient(180deg, rgba(255,255,255,0.97), rgba(250,245,239,0.95));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(250, 245, 239, 0.95));
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 22px;
   box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);
@@ -3703,14 +4361,44 @@ body {
   animation: riseSoft 220ms ease-out;
 }
 
-.banner.success { border-color: rgba(0, 150, 90, 0.25); }
-.banner.error { border-color: rgba(200, 0, 50, 0.25); }
-.banner.info { border-color: rgba(0, 0, 0, 0.10); }
+.banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.banner-action {
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  padding: 9px 12px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.banner.success {
+  border-color: rgba(0, 150, 90, 0.25);
+}
+
+.banner.error {
+  border-color: rgba(200, 0, 50, 0.25);
+}
+
+.banner.info {
+  border-color: rgba(0, 0, 0, 0.10);
+}
 
 [data-theme="dark"] .banner {
   background: rgba(18, 18, 18, 0.88);
   border-color: rgba(255, 255, 255, 0.12);
   color: rgba(255, 255, 255, 0.92);
+}
+
+[data-theme="dark"] .banner-action {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
 }
 
 .banner-x {
@@ -3746,26 +4434,49 @@ body {
   border-radius: 3px;
   opacity: 0.9;
   animation: confetti-fall 1.35s ease-in forwards;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+}
+
+@keyframes fadeLift {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 @keyframes confetti-fall {
-  0% { transform: translateY(-20px) rotate(0deg); opacity: 0; }
-  10% { opacity: 0.95; }
-  100% { transform: translateY(110vh) rotate(480deg); opacity: 0; }
+  0% {
+    transform: translateY(-20px) rotate(0deg);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 0.95;
+  }
+
+  100% {
+    transform: translateY(110vh) rotate(480deg);
+    opacity: 0;
+  }
 }
 
 .row {
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .mini-btn {
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(255,255,255,0.68));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.68));
   cursor: pointer;
   font-size: 0.72rem;
   color: var(--text);
@@ -3843,7 +4554,8 @@ body {
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .field label {
@@ -3856,7 +4568,9 @@ body {
 
 .select,
 .input {
-  padding: 8px 10px;
+  width: 100%;
+  min-width: 0;
+  padding: 11px 12px;
   border-radius: 13px;
   border: 1px solid rgba(0, 0, 0, 0.10);
   background: rgba(255, 255, 255, 0.85);
@@ -3890,8 +4604,14 @@ body {
   gap: 8px;
 }
 
-.range-compact > * {
+.range-compact>* {
   flex: 1;
+}
+
+.range-single {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
 }
 
 .range span {
@@ -3916,20 +4636,31 @@ body {
 }
 
 .radio-group-tight {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+}
+
+.radio-group-tight .radio {
+  flex: 1 1 110px;
+  justify-content: center;
 }
 
 .row .select {
   flex: 1;
 }
 
+.row .input,
+.row .select,
+.row .mini-btn {
+  min-width: 0;
+}
+
 .switch {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 10px;
+  padding: 11px 12px;
   border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.10);
   background: rgba(255, 255, 255, 0.75);
@@ -3976,11 +4707,11 @@ body {
   transition: transform 0.15s ease, background 0.15s ease;
 }
 
-.switch input:checked + .switch-ui {
+.switch input:checked+.switch-ui {
   background: rgba(139, 94, 60, 0.45);
 }
 
-.switch input:checked + .switch-ui::after {
+.switch input:checked+.switch-ui::after {
   transform: translateX(18px);
 }
 
@@ -4070,7 +4801,7 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,242,234,0.96));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 242, 234, 0.96));
   border-top: 1px solid var(--border);
   backdrop-filter: blur(14px);
   padding: 6px 12px 8px;
@@ -4127,7 +4858,9 @@ body {
   color: rgba(73, 58, 45, 0.64);
 }
 
-.player-time.right { text-align: right; }
+.player-time.right {
+  text-align: right;
+}
 
 .player-center {
   display: flex;
@@ -4137,7 +4870,7 @@ body {
 }
 
 .player-icon {
-  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.66));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.66));
   border: 1px solid var(--border);
   padding: 6px;
   font-size: 16px;
@@ -4174,7 +4907,7 @@ body {
   transform: translateX(-50%);
   bottom: 58px;
   width: min(420px, calc(100vw - 24px));
-  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,242,234,0.96));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 242, 234, 0.96));
   border: 1px solid var(--border);
   border-radius: 18px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.14);
@@ -4289,18 +5022,39 @@ body {
 }
 
 @keyframes appFade {
-  0% { opacity: 0; transform: translateY(4px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes railIn {
-  0% { opacity: 0; transform: translateY(-8px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes riseSoft {
-  0% { opacity: 0; transform: translateY(8px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Responsive */

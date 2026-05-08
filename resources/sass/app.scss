@@ -1,8 +1,66 @@
 // Fonts
 @import url('https://fonts.bunny.net/css?family=Nunito');
+@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap');
+
+@font-face {
+  font-family: 'UthmanicHafs';
+  src: url('https://verses.quran.foundation/fonts/quran/hafs/uthmanic_hafs/UthmanicHafs1Ver18.woff2') format('woff2');
+  font-display: swap;
+}
 
 // Variables
 @import 'variables';
 
 // Bootstrap
 @import 'bootstrap/scss/bootstrap';
+
+/* Global theme tokens (light/sepia/dark) */
+:root {
+  --bg: #f6f3ee;
+  --surface: rgba(255, 255, 255, 0.82);
+  --surface-strong: rgba(255, 255, 255, 0.92);
+  --border: rgba(78, 58, 38, 0.10);
+  --text: #1f1a17;
+  --text-muted: rgba(31, 26, 23, 0.62);
+  --accent: #8b5e3c;
+  --accent-strong: #a86a3f;
+  --accent-light: rgba(139, 94, 60, 0.12);
+  --shadow-sm: 0 10px 22px rgba(45, 32, 20, 0.08);
+  --shadow-md: 0 18px 44px rgba(45, 32, 20, 0.12);
+  --shadow-lg: -40px 0 120px rgba(0, 0, 0, 0.18);
+  --radius: 16px;
+  --font-ui: "Avenir Next", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --font-ar: "UthmanicHafs", "Amiri", "Noto Naskh Arabic", serif;
+}
+
+html[data-theme="sepia"] {
+  --bg: #f1e7d8;
+  --surface: rgba(255, 250, 243, 0.86);
+  --surface-strong: rgba(255, 255, 255, 0.92);
+  --border: rgba(78, 58, 38, 0.14);
+  --text: #201812;
+  --text-muted: rgba(32, 24, 18, 0.62);
+  --accent: #8b5e3c;
+  --accent-strong: #a86a3f;
+}
+
+html[data-theme="dark"] {
+  --bg: #0f1115;
+  --surface: rgba(18, 18, 18, 0.78);
+  --surface-strong: rgba(18, 18, 18, 0.92);
+  --border: rgba(255, 255, 255, 0.10);
+  --text: rgba(255, 255, 255, 0.92);
+  --text-muted: rgba(255, 255, 255, 0.62);
+  --accent: #c49a6c;
+  --accent-strong: #e0b07f;
+  --accent-light: rgba(196, 154, 108, 0.14);
+  --shadow-sm: 0 10px 22px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 18px 44px rgba(0, 0, 0, 0.45);
+  --shadow-lg: -40px 0 120px rgba(0, 0, 0, 0.55);
+}
+
+body {
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--text);
+}

@@ -7,6 +7,7 @@
 
     <title>{{ config('app.name', 'Mutqin') }}</title>
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="{{ mix('css/app.css') }}" rel="stylesheet">
 </head>
 <body>
@@ -34,6 +35,11 @@
                     </ul>
 
                     <ul class="navbar-nav ms-auto">
+                        <li class="nav-item d-flex align-items-center me-2">
+                            <button id="globalThemeToggle" class="btn btn-outline-secondary btn-sm" type="button" aria-label="Theme">
+                                <i class="bi bi-sun"></i>
+                            </button>
+                        </li>
                         @guest
                             @if (Route::has('login'))
                                 <li class="nav-item">

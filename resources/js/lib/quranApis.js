@@ -1,17 +1,25 @@
 import axios from 'axios'
 
-const ALQURAN_PROXY_BASE = '/api/alquran'
+const alquranClient = axios.create({
+  baseURL: 'https://api.alquran.cloud/v1',
+  headers: {
+    Accept: 'application/json'
+  }
+})
+
+delete alquranClient.defaults.headers.common['X-Requested-With']
+delete alquranClient.defaults.headers.common['X-CSRF-TOKEN']
 
 export function getAyahTajweed(ayahNumber) {
-  return axios.get(`${ALQURAN_PROXY_BASE}/ayah/${ayahNumber}/quran-tajweed`)
+  return alquranClient.get(`/ayah/${ayahNumber}/quran-tajweed`)
 }
 
 export function getEditions(params = {}) {
-  return axios.get(`${ALQURAN_PROXY_BASE}/edition`, { params })
+  return alquranClient.get('/edition', { params })
 }
 
 export function getEditionsByLanguage(language, params = {}) {
-  return axios.get(`${ALQURAN_PROXY_BASE}/edition/language/${language}`, { params })
+  return alquranClient.get(`/edition/language/${language}`, { params })
 }
 
 export function getChapterRecitation(recitationId, normalizedSurah) {
@@ -19,18 +27,18 @@ export function getChapterRecitation(recitationId, normalizedSurah) {
 }
 
 export function getSurahEdition(surahNumber, edition) {
-  return axios.get(`${ALQURAN_PROXY_BASE}/surah/${surahNumber}/${edition}`)
+  return alquranClient.get(`/surah/${surahNumber}/${edition}`)
 }
 
 export function getSurahEditions(surahNumber, reciterEdition) {
   const editions = `${reciterEdition},quran-tajweed`
-  return axios.get(`${ALQURAN_PROXY_BASE}/surah/${surahNumber}/editions/${editions}`)
+  return alquranClient.get(`/surah/${surahNumber}/editions/${editions}`)
 }
 
 export function getSurahTransliteration(surahNumber, transliterationIdentifier) {
-  return axios.get(`${ALQURAN_PROXY_BASE}/surah/${surahNumber}/${transliterationIdentifier}`)
+  return alquranClient.get(`/surah/${surahNumber}/${transliterationIdentifier}`)
 }
 
 export function getQuranEdition(edition) {
-  return axios.get(`${ALQURAN_PROXY_BASE}/quran/${edition}`)
+  return alquranClient.get(`/quran/${edition}`)
 }
