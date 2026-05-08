@@ -34,6 +34,8 @@
             <div class="hero-point"><i class="bi bi-magic"></i><span>Sessions are generated automatically.</span></div>
           </div>
           <div class="hero-actions">
+            <button class="cta cta-ghost" @click="tab = 'analytics'"><i class="bi bi-bar-chart"></i><span>See
+              stats</span></button>
             <button class="cta cta-primary" @click="beginPlan"><i class="bi bi-play-circle"></i><span>{{
                 onboardingPrimaryLabel }}</span></button>
             <button class="cta cta-ghost" @click="showTools = true"><i class="bi bi-sliders"></i><span>Open
@@ -52,12 +54,13 @@
             <div class="session-rail-actions">
               <button class="rail-btn rail-btn-ghost" @click="showTools = true"><i
                   class="bi bi-layout-sidebar-inset"></i><span>Plan</span></button>
-              <button class="rail-btn" @click="prev" :disabled="!canPrev"><i
-                  class="bi bi-skip-backward"></i><span>Prev</span></button>
+                  
+              <!-- <button class="rail-btn" @click="prev" :disabled="!canPrev"><i
+                  class="bi bi-skip-backward"></i><span>Prev</span></button> -->
               <button class="rail-btn rail-btn-primary" @click="handlePrimaryAction"><i class="bi"
                   :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i><span>{{ railPrimaryLabel }}</span></button>
-              <button class="rail-btn" @click="next" :disabled="!canNext"><i
-                  class="bi bi-skip-forward"></i><span>Next</span></button>
+              <!-- <button class="rail-btn" @click="next" :disabled="!canNext"><i
+                  class="bi bi-skip-forward"></i><span>Next</span></button> -->
             </div>
           </div>
           <div class="session-rail-stats">
@@ -79,17 +82,32 @@
             <button class="toolbar-chip" :class="{ active: showTransliteration }" @click="toggleReadingOption('transliteration')">
               <i class="bi bi-type"></i><span>Transliteration</span>
             </button>
-            <button class="toolbar-chip" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')">
+            <!-- <button class="toolbar-chip" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')">
               <i class="bi bi-grid-3x2-gap"></i><span>Word by word</span>
             </button>
             <button class="toolbar-chip" :class="{ active: wordByWordAudioEnabled }" @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
               <i class="bi bi-volume-up"></i><span>Word audio</span>
-            </button>
+            </button> -->
           </div>
           <div class="reading-toolbar-group">
-            <button class="toolbar-chip" :class="{ active: script === 'uthmani' }" @click="setScriptMode('uthmani')">
+            <div class="toolbar-font-wrap">
+              <button class="toolbar-chip" :class="{ active: script === 'uthmani' || fontPickerOpen }" @click="toggleFontPicker">
+                <i class="bi bi-file-earmark-richtext"></i><span>Quranic fonts</span>
+              </button>
+              <div v-if="fontPickerOpen" class="toolbar-font-menu">
+                <button
+                  v-for="font in quranFontOptions"
+                  :key="font.value"
+                  class="toolbar-font-option"
+                  :class="{ active: quranFont === font.value }"
+                  @click="setQuranFont(font.value)">
+                  <span>{{ font.label }}</span>
+                </button>
+              </div>
+            </div>
+            <!-- <button class="toolbar-chip" :class="{ active: script === 'uthmani' }" @click="setScriptMode('uthmani')">
               <i class="bi bi-file-earmark-richtext"></i><span>Quranic text</span>
-            </button>
+            </button> -->
             <button class="toolbar-chip" :class="{ active: script === 'tajweed' }" @click="setScriptMode('tajweed')">
               <i class="bi bi-palette"></i><span>Tajweed</span>
             </button>
@@ -113,7 +131,7 @@
 
         <!-- Verses -->
         <div v-else class="verses" :class="{ compact: compactMode, focus: focusMode }">
-          <div v-for="(verse, i) in verses" :key="verse.key" class="verse" :class="verseClasses(verse, i)">
+          <div v-for="(verse, i) in verses" :key="verse.key" class="verse" :data-verse-key="verse.key" :class="verseClasses(verse, i)">
             <div class="verse-head">
               <div class="verse-badge">
                 <span class="verse-num">Ayah {{ verse.number }}</span>
@@ -121,10 +139,9 @@
               </div>
               <div class="verse-actions">
                 <button class="action-btn" @click="playVerse(verse)"><i class="bi bi-play-fill"></i></button>
-                <button class="action-btn" @click="setActive(verse.key)"><i class="bi bi-bullseye"></i></button>
               </div>
             </div>
-            <div class="verse-arabic" dir="rtl" :style="{ fontSize: `${fontScale}em` }" v-html="verse.arabic"></div>
+            <div class="verse-arabic" dir="rtl" :style="verseArabicStyle" v-html="verse.arabic"></div>
             <div v-if="showTransliteration && verse.transliteration" class="verse-transliteration">{{ verse.transliteration }}</div>
             <div v-if="showTranslation && verse.translation" class="verse-translation">{{ verse.translation }}</div>
             <div v-if="showWordByWord && verse.words?.length" class="verse-words">
@@ -139,7 +156,7 @@
                 @focusout="closeWordTooltip"
                 @click="toggleWordTooltip(verse, w, i)"
               >
-                <span class="word-ar" dir="rtl">{{ w.ar }}</span>
+                <span class="word-ar" dir="rtl" :style="wordArabicStyle">{{ w.ar }}</span>
                 <span class="word-en">{{ w.en }}</span>
                 <button v-if="w.audio && wordByWordAudioEnabled" class="word-play" @click="playWordAudio(w.audio, `${verse.key}:${i}`)"><i
                     class="bi bi-volume-up"></i></button>
@@ -148,22 +165,22 @@
                   class="word-tooltip"
                   role="tooltip"
                 >
-                  <span class="word-tooltip-ar" dir="rtl">{{ w.ar }}</span>
+                  <span class="word-tooltip-ar" dir="rtl" :style="wordArabicStyle">{{ w.ar }}</span>
                   <span class="word-tooltip-en">{{ w.en || 'No translation' }}</span>
                 </span>
               </span>
             </div>
             <div class="verse-footer">
-              <div class="verse-footer-side">
+              <!-- <div class="verse-footer-side">
                 <button class="verse-tool-btn" @click="decFont" aria-label="Decrease font"><i class="bi bi-dash-lg"></i></button>
                 <button class="verse-tool-btn" @click="incFont" aria-label="Increase font"><i class="bi bi-plus-lg"></i></button>
-              </div>
+              </div> -->
               <div class="verse-footer-side verse-footer-side-right">
-                <button class="verse-tool-btn" @click="toggleBookmark(verse)" :class="{ active: bookmarks.includes(verse.key) }" aria-label="Bookmark ayah"><i class="bi bi-bookmark"></i></button>
-                <button class="verse-tool-btn" @click="togglePin(verse)" :class="{ active: pins.includes(verse.key) }" aria-label="Pin ayah"><i class="bi bi-pin-angle"></i></button>
-                <button class="verse-tool-btn" @click="shareWhatsApp(verse)" aria-label="Share on WhatsApp"><i class="bi bi-whatsapp"></i></button>
-                <button class="verse-tool-btn" @click="downloadAyah(verse)" aria-label="Download ayah"><i class="bi bi-download"></i></button>
-                <button class="verse-tool-btn" @click="playVerse(verse)" aria-label="Play audio"><i class="bi bi-play-circle"></i></button>
+                <!-- <button class="verse-tool-btn" @click="toggleBookmark(verse)" :class="{ active: bookmarks.includes(verse.key) }" aria-label="Bookmark ayah"><i class="bi bi-bookmark"></i></button> -->
+                <!-- <button class="verse-tool-btn" @click="togglePin(verse)" :class="{ active: pins.includes(verse.key) }" aria-label="Pin ayah"><i class="bi bi-pin-angle"></i></button> -->
+                <!-- <button class="verse-tool-btn" @click="shareWhatsApp(verse)" aria-label="Share on WhatsApp"><i class="bi bi-whatsapp"></i></button> -->
+                <!-- <button class="verse-tool-btn" @click="downloadAyah(verse)" aria-label="Download ayah"><i class="bi bi-download"></i></button> -->
+                <!-- <button class="verse-tool-btn" @click="playVerse(verse)" aria-label="Play audio"><i class="bi bi-play-circle"></i></button> -->
               </div>
             </div>
           </div>
@@ -230,7 +247,7 @@
                     </select>
                   </div>
                   <div class="field">
-                  <label>Ayah range</label>
+                    <label>Ayah range</label>
                     <div class="range range-compact range-single">
                       <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
                       <span>to</span>
@@ -356,25 +373,25 @@
                       <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
                     </div>
                   </div>
-                  <div class="field">
+                  <div class="field" v-if="showAdvancedPlaybackFields">
                     <label>Speed</label>
                     <select v-model.number="speed" @change="applySpeed" class="select select-prominent">
                       <option v-for="s in speedOptions" :key="`asp-${s}`" :value="s">{{ s }}x</option>
                     </select>
                   </div>
-                  <div class="field">
+                  <div class="field" v-if="showAdvancedPlaybackFields">
                     <label>Delay</label>
                     <select v-model.number="delay" class="select">
                       <option v-for="d in delayOptions" :key="`adl-${d}`" :value="d">{{ d }}s</option>
                     </select>
                   </div>
-                  <div class="field">
+                  <div class="field" v-if="showAdvancedPlaybackFields">
                     <label>Repeat</label>
                     <select v-model.number="repeats" @change="rebuildQueue" class="select">
                       <option v-for="r in repeatOptions" :key="`arp-${r}`" :value="r">{{ r }}</option>
                     </select>
                   </div>
-                  <div class="field">
+                  <div class="field" v-if="showAdvancedPlaybackFields">
                     <label>Mode</label>
                     <div class="radio-group radio-group-tight">
                       <label class="radio">
@@ -401,7 +418,7 @@
               </div>
             </section>
 
-            <section class="sheet-section sheet-section-accent">
+            <section v-if="showAdvancedPractice" class="sheet-section sheet-section-accent">
               <button class="sheet-toggle" @click="toggleSection('advanced_practice')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-stars"></i></span>
@@ -506,36 +523,48 @@
                     class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.analytics_overview">
+                <div v-if="!events.length" class="analytics-empty">
+                  <div class="skeleton-row"></div>
+                  <div class="skeleton-grid">
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                  </div>
+                  <div class="analytics-empty-copy">
+                    No stats yet. Start a session and your progress appears here.
+                  </div>
+                </div>
                 <div class="stat-grid">
                   <div class="stat">
-                    <div class="stat-k">Retention</div>
-                    <div class="stat-v">{{ retentionStats.overallRetention }}%</div>
-                    <div class="stat-s">Overall retention</div>
+                    <div class="stat-k">Streak</div>
+                    <div class="stat-v">{{ stats.streakDays }}</div>
+                    <div class="stat-s">Current run</div>
                   </div>
                   <div class="stat">
-                    <div class="stat-k">Mastery</div>
-                    <div class="stat-v">{{ retentionStats.surahMastery }}%</div>
-                    <div class="stat-s">Current surah</div>
+                    <div class="stat-k">Sessions</div>
+                    <div class="stat-v">{{ savedSessions.length }}</div>
+                    <div class="stat-s">Saved setups</div>
                   </div>
                   <div class="stat">
-                    <div class="stat-k">Weak ayahs</div>
-                    <div class="stat-v">{{ retentionStats.weakAyahs.length }}</div>
-                    <div class="stat-s">Needs support</div>
+                    <div class="stat-k">Reviewed</div>
+                    <div class="stat-v">{{ stats.gradedToday }}</div>
+                    <div class="stat-s">Graded today</div>
                   </div>
                   <div class="stat">
-                    <div class="stat-k">Weekly lift</div>
-                    <div class="stat-v">{{ retentionStats.weeklyRetentionImprovement > 0 ? '+' : '' }}{{
-                      retentionStats.weeklyRetentionImprovement }}%</div>
-                    <div class="stat-s">Retention change</div>
+                    <div class="stat-k">Mistakes</div>
+                    <div class="stat-v">{{ globalWeakCount }}</div>
+                    <div class="stat-s">Weak ayahs</div>
                   </div>
                 </div>
 
                 <div class="field" style="margin-top:12px">
-                  <label>Due by skill</label>
-                  <div class="planner-row">
-                    <div class="pill">Text: <strong>{{ stats.dueBySkill.recite_text }}</strong></div>
-                    <div class="pill">Audio: <strong>{{ stats.dueBySkill.audio_recall }}</strong></div>
-                    <div class="pill">Meaning: <strong>{{ stats.dueBySkill.meaning }}</strong></div>
+                  <label>Current weak ayahs</label>
+                  <div class="read-list">
+                    <div class="read-row">
+                      <span>Needs review</span>
+                      <strong>{{ weakAyahSummary }}</strong>
+                    </div>
                   </div>
                 </div>
 
@@ -548,7 +577,7 @@
               </div>
             </section>
 
-            <section class="sheet-section">
+            <section v-if="false" class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('analytics_retention')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-journal-check"></i></span>
@@ -583,7 +612,7 @@
               </div>
             </section>
 
-            <section class="sheet-section">
+            <section v-if="false" class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('analytics_leeches')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-magnet"></i></span>
@@ -611,7 +640,7 @@
               </div>
             </section>
 
-            <section class="sheet-section sheet-section-accent">
+            <section v-if="false" class="sheet-section sheet-section-accent">
               <button class="sheet-toggle" @click="toggleSection('analytics_trends')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-graph-up-arrow"></i></span>
@@ -667,8 +696,8 @@
                 <div class="field">
                   <label>Daily goals</label>
                   <div class="planner-row">
-                    <div class="pill">Ayah target: <strong>{{ planner.settings.newAyat }}</strong></div>
-                    <div class="pill">Review target: <strong>{{ planner.settings.reviewCards }}</strong></div>
+                    <div class="pill">New: <strong>{{ planner.settings.newAyat }}</strong></div>
+                    <div class="pill">Review: <strong>{{ planner.settings.reviewCards }}</strong></div>
                     <div class="pill">Streak: <strong>{{ stats.streakDays }}</strong></div>
                   </div>
                 </div>
@@ -677,37 +706,19 @@
                   <label>Planner settings</label>
                   <div class="planner-settings planner-settings-stack">
                     <div class="pill-input pill-input-row">
-                      <span>New</span>
+                      <span>New ayahs</span>
                       <input class="input" type="number" min="0" v-model.number="plannerState.settings.newAyat"
                         @change="persistPlanner">
                     </div>
                     <div class="pill-input pill-input-row">
-                      <span>Review</span>
+                      <span>Review target</span>
                       <input class="input" type="number" min="0" v-model.number="plannerState.settings.reviewCards"
                         @change="persistPlanner">
                     </div>
                     <div class="pill-input pill-input-row">
-                      <span>Min</span>
+                      <span>Min minutes</span>
                       <input class="input" type="number" min="5" v-model.number="plannerState.settings.dailyMinutes"
                         @change="persistPlanner">
-                    </div>
-                    <div class="pill-input pill-input-row">
-                      <span>Mode</span>
-                      <select class="select" v-model="plannerState.settings.mode" @change="persistPlanner">
-                        <option value="hybrid">Hybrid</option>
-                        <option value="quiz">Quiz</option>
-                        <option value="recite">Recite</option>
-                      </select>
-                    </div>
-                    <div class="pill-input pill-input-row">
-                      <span>From</span>
-                      <input class="input" type="number" min="1" max="114"
-                        v-model.number="plannerState.settings.startSurah" @change="persistPlanner">
-                    </div>
-                    <div class="pill-input pill-input-row">
-                      <span>To</span>
-                      <input class="input" type="number" min="1" max="114"
-                        v-model.number="plannerState.settings.endSurah" @change="persistPlanner">
                     </div>
                   </div>
                 </div>
@@ -759,23 +770,86 @@
       </aside>
     </div>
 
-    <div v-if="quizActive" class="quiz-overlay">
+    <!-- <div v-if="!quizActive" class="quiz-overlay">
       <div class="quiz-card">
         <div class="quiz-top">
-          <div class="quiz-title">Quiz</div>
+          <div class="quiz-title-wrap">
+            <div class="quiz-title">Retention check</div>
+            <div class="quiz-title-sub">{{ quizContextLabel }}</div>
+          </div>
           <button class="quiz-x" @click="stopQuiz"><i class="bi bi-x-lg"></i></button>
         </div>
-        <div class="quiz-meta">{{ quizIndex + 1 }} / {{ quizQueue.length }} • {{ quizCard?.key }}</div>
+        <div class="quiz-meta" v-if="!quizSummaryActive">
+          <span class="quiz-chip"><i class="bi bi-ui-checks-grid"></i>{{ quizIndex + 1 }} / {{ quizQueue.length }}</span>
+          <span class="quiz-chip"><i class="bi bi-diagram-3"></i>{{ quizCardTypeLabel }}</span>
+          <span class="quiz-chip"><i class="bi bi-bookmark"></i>{{ quizCard?.key }}</span>
+        </div>
 
-        <div class="quiz-body" v-if="quizCard">
+        <div class="quiz-body" v-if="quizSummaryActive">
+          <div class="quiz-summary-title">Session complete</div>
+          <div class="quiz-summary-grid">
+            <div class="quiz-summary-item">
+              <div class="quiz-summary-k">Score</div>
+              <div class="quiz-summary-v">{{ quizSummary.correct }} / {{ quizSummary.total }}</div>
+            </div>
+            <div class="quiz-summary-item">
+              <div class="quiz-summary-k">Accuracy</div>
+              <div class="quiz-summary-v">{{ quizSummary.accuracy }}%</div>
+            </div>
+            <div class="quiz-summary-item">
+              <div class="quiz-summary-k">Avg grade</div>
+              <div class="quiz-summary-v">{{ quizSummary.avgQuality }}</div>
+            </div>
+            <div class="quiz-summary-item">
+              <div class="quiz-summary-k">Time</div>
+              <div class="quiz-summary-v">{{ quizSummary.timeSpent }}</div>
+            </div>
+            <div class="quiz-summary-item">
+              <div class="quiz-summary-k">Plan progress</div>
+              <div class="quiz-summary-v">{{ quizSummary.planProgress }}</div>
+            </div>
+            <div class="quiz-summary-item">
+              <div class="quiz-summary-k">Best skill</div>
+              <div class="quiz-summary-v">{{ quizSummary.bestSkill }}</div>
+            </div>
+          </div>
+          <div v-if="quizSummary.skills.length" class="quiz-summary-skill-grid">
+            <div v-for="skill in quizSummary.skills" :key="skill.key" class="quiz-summary-skill">
+              <div class="quiz-summary-k">{{ skill.label }}</div>
+              <div class="quiz-summary-v">{{ skill.correct }}/{{ skill.total }}</div>
+              <div class="quiz-summary-s">{{ skill.accuracy }}% accuracy</div>
+            </div>
+          </div>
+          <div class="quiz-summary-explain">
+            <div class="quiz-summary-k">What to do next</div>
+            <div class="quiz-summary-s">{{ quizSummary.explanation }}</div>
+          </div>
+          <div class="quiz-summary-explain">
+            <div class="quiz-summary-k">Engine sync</div>
+            <div class="quiz-summary-s">{{ quizSummary.engineLink }}</div>
+          </div>
+          <div v-if="quizSummary.mistakes?.length" class="quiz-summary-mistakes">
+            <div class="quiz-summary-k">Mistakes</div>
+            <div class="quiz-summary-tags">
+              <span v-for="m in quizSummary.mistakes.slice(0,6)" :key="m" class="quiz-tag">{{ m }}</span>
+            </div>
+          </div>
+          <div class="quiz-actions">
+            <button class="tools-btn tools-btn-ghost" @click="stopQuiz">Close</button>
+            <button class="tools-btn tools-btn-primary" @click="restartQuiz">Start again</button>
+          </div>
+        </div>
+
+        <div class="quiz-body" v-else-if="quizCard">
           <div v-if="quizCard.type === 'flashcard'">
+            <div class="quiz-section-label"><i class="bi bi-layers"></i><span>Recall the next ayah</span></div>
             <div class="quiz-prompt" dir="rtl" v-html="quizCard.arabic"></div>
-            <button class="quiz-reveal" v-if="!quizRevealed" @click="quizRevealed = true">Show answer</button>
+            <button class="quiz-reveal" v-if="!quizRevealed" @click="quizRevealed = true"><i class="bi bi-eye"></i><span>Show answer</span></button>
             <div v-if="quizRevealed" class="quiz-hint">{{ quizCard.translation || 'Grade yourself' }}</div>
           </div>
 
           <div v-else-if="quizCard.type === 'mcq'">
-            <div class="quiz-prompt">Which ayah is this?</div>
+            <div class="quiz-section-label"><i class="bi bi-list-check"></i><span>Pick the matching ayah</span></div>
             <div class="quiz-prompt" dir="rtl" v-html="quizCard.arabic"></div>
             <div class="quiz-options">
               <label v-for="opt in quizOptions" :key="opt.key" class="quiz-opt">
@@ -786,8 +860,8 @@
           </div>
 
           <div v-else-if="quizCard.type === 'audio_mcq'">
-            <div class="quiz-prompt">Listen, then choose the ayah</div>
-            <button class="quiz-reveal" @click="playVerse(quizCard)">Replay audio</button>
+            <div class="quiz-section-label"><i class="bi bi-ear"></i><span>Listen, then choose</span></div>
+            <button class="quiz-reveal" @click="playVerse(quizCard)"><i class="bi bi-arrow-repeat"></i><span>Replay audio</span></button>
             <div class="quiz-options">
               <label v-for="opt in quizOptions" :key="opt.key" class="quiz-opt">
                 <input type="radio" name="amcq" :value="opt.key" v-model="quizAnswer">
@@ -797,23 +871,23 @@
           </div>
 
           <div v-else>
-            <div class="quiz-prompt">Fill the blank</div>
+            <div class="quiz-section-label"><i class="bi bi-pencil-square"></i><span>Fill the missing word</span></div>
             <div class="quiz-prompt">{{ quizCard.prompt }}</div>
             <input class="input" v-model="quizAnswer" placeholder="Type missing word">
           </div>
         </div>
 
-        <div class="quiz-actions">
-          <button class="tools-btn tools-btn-ghost" @click="stopQuiz">Stop</button>
+        <div class="quiz-actions" v-if="!quizSummaryActive">
+          <button class="quiz-action quiz-action-ghost" @click="stopQuiz"><i class="bi bi-stop-circle"></i><span>Stop</span></button>
           <button class="tools-btn tools-btn-ghost" v-if="quizCard?.type === 'flashcard' && !quizRevealed"
-            @click="quizRevealed = true">Reveal</button>
-          <button class="tools-btn tools-btn-primary" v-if="quizCard?.type !== 'flashcard'"
-            @click="submitQuiz()">Next</button>
+            @click="quizRevealed = true"><i class="bi bi-eye"></i><span>Reveal</span></button>
+          <button class="quiz-action quiz-action-primary" v-if="quizCard?.type !== 'flashcard'"
+            @click="submitQuiz()"><i class="bi bi-arrow-right-circle"></i><span>Next</span></button>
           <div class="quiz-grade" v-else>
-            <button class="qg" @click="submitQuiz(2)">Again</button>
-            <button class="qg" @click="submitQuiz(3)">Hard</button>
-            <button class="qg primary" @click="submitQuiz(4)">Good</button>
-            <button class="qg" @click="submitQuiz(5)">Easy</button>
+            <button class="qg" @click="submitQuiz(2)"><i class="bi bi-arrow-counterclockwise"></i><span>Again</span></button>
+            <button class="qg" @click="submitQuiz(3)"><i class="bi bi-slash-circle"></i><span>Hard</span></button>
+            <button class="qg primary" @click="submitQuiz(4)"><i class="bi bi-check2-circle"></i><span>Good</span></button>
+            <button class="qg" @click="submitQuiz(5)"><i class="bi bi-stars"></i><span>Easy</span></button>
           </div>
         </div>
       </div>
@@ -826,7 +900,7 @@
         transform: `rotate(${Math.random() * 360}deg)`,
         animationDelay: (Math.random() * 0.2) + 's'
       }"></span>
-    </div>
+    </div> -->
 
     <!-- Audio Player -->
     <div class="player-bar" v-if="playerVisible">
@@ -836,7 +910,17 @@
         <div class="player-handle" :style="{ left: seekPercent + '%' }"></div>
       </div>
 
-      <div class="player-controls">
+      <div class="player-collapsed-meta" v-if="playerCollapsed">
+        <div class="player-collapsed-copy">
+          <div class="player-collapsed-title">{{ collapsedPlayerTitle }}</div>
+          <div class="player-collapsed-sub">{{ collapsedPlayerSubtitle }}</div>
+        </div>
+        <button class="player-icon play" @click="togglePlay" aria-label="Play">
+          <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+        </button>
+      </div>
+
+      <div class="player-controls" v-show="!playerCollapsed">
         <div class="player-time left">{{ formatTime(currentTime) }}</div>
 
         <div class="player-center">
@@ -855,6 +939,10 @@
 
         <div class="player-time right">{{ formatTime(duration) }}</div>
       </div>
+
+      <button class="player-collapse" @click="togglePlayerCollapsed" :aria-label="playerCollapsed ? 'Expand player' : 'Collapse player'">
+        <i class="bi" :class="playerCollapsed ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+      </button>
 
       <div v-if="playerMenuOpen" class="player-menu-overlay" @click="playerMenuOpen = false">
         <div class="player-menu" @click.stop>
@@ -898,7 +986,7 @@ export default {
   data() {
     return {
       theme: 'light',
-      showTools: true,
+      showTools: false,
       tab: 'beginner',
 
       chapters: [],
@@ -931,6 +1019,9 @@ export default {
       quizAnswer: '',
       quizRevealed: false,
       quizLastResult: null,
+      quizSummaryActive: false,
+      quizSessionStats: null,
+      sessionCompleted: false,
       hybridPendingKey: null,
       quizSkill: 'recite_text',
       confettiActive: false,
@@ -952,6 +1043,15 @@ export default {
       restoredAudioState: null,
 
       script: 'uthmani',
+      quranFont: 'uthmanic',
+      fontPickerOpen: false,
+      quranFontOptions: [
+        { value: 'uthmanic', label: 'Uthmanic Hafs' },
+        { value: 'amiri', label: 'Amiri Quran' },
+        { value: 'naskh', label: 'Noto Naskh Arabic' },
+        { value: 'scheherazade', label: 'Scheherazade New' },
+        { value: 'lateef', label: 'Lateef' }
+      ],
       showTranslation: true,
       showTransliteration: false,
       showWordByWord: false,
@@ -982,6 +1082,7 @@ export default {
       audioElement: null,
       lastAudioDebug: null,
       playerMenuOpen: false,
+      playerCollapsed: true,
       sectionOpen: {
         beginner_setup: true,
         beginner_playback: false,
@@ -1033,6 +1134,98 @@ export default {
     },
     canNext() {
       return this.queueIndex < this.queue.length - 1
+    },
+    quizSummary() {
+      const s = this.quizSessionStats || { total: 0, correct: 0, qualitySum: 0, mistakes: [] }
+      const total = Math.max(0, Number(s.total || 0))
+      const correct = Math.max(0, Number(s.correct || 0))
+      const accuracy = total ? Math.round((correct / total) * 100) : 0
+      const avgQuality = total ? Math.round((Number(s.qualitySum || 0) / total) * 10) / 10 : 0
+      const durationMs = Math.max(0, Number(s.durationMs || 0))
+      const timeSpent = this.formatTime(Math.round(durationMs / 1000))
+      const perSkill = Object.entries(s.skillTotals || {}).map(([key, value]) => {
+        const totalAnswers = Math.max(0, Number(value?.total || 0))
+        const skillCorrect = Math.max(0, Number(value?.correct || 0))
+        const skillAccuracy = totalAnswers ? Math.round((skillCorrect / totalAnswers) * 100) : 0
+        const labels = {
+          recite_text: 'Recite',
+          audio_recall: 'Audio',
+          meaning: 'Meaning'
+        }
+        return { key, label: labels[key] || key, total: totalAnswers, correct: skillCorrect, accuracy: skillAccuracy }
+      })
+      const bestSkill = perSkill.slice().sort((a, b) => b.accuracy - a.accuracy || b.correct - a.correct)[0]?.label || 'None'
+      const planTarget = this.todayPlan?.quizKeys?.length || this.todayPlan?.reviewKeys?.length || total
+      const planProgress = `${Math.min(total, planTarget)} / ${planTarget}`
+      const explanation = accuracy >= 85
+        ? 'Strong recall. Keep the same pace for the next session.'
+        : accuracy >= 60
+          ? 'A few ayahs need another pass. Review the weak ones first.'
+          : 'Recall is still fragile. Repeat the range, then review again.'
+      const engineLink = this.todayPlan
+        ? 'These grades already update SM-2, retention, and the next planner session.'
+        : this.order === 'chain'
+          ? 'These grades update SM-2 and keep the current chain review aligned with weak links.'
+          : 'These grades update SM-2 and feed the next review cycle automatically.'
+      return { total, correct, accuracy, avgQuality, mistakes: s.mistakes || [], skills: perSkill, bestSkill, timeSpent, planProgress, explanation, engineLink }
+    },
+    quizContextLabel() {
+      if (this.todayPlan) return `${this.sessionTypeInfo.label} plan`
+      if (this.order === 'chain') return 'Chain review'
+      return 'Focused review'
+    },
+    quizCardTypeLabel() {
+      const map = {
+        flashcard: 'Flashcard',
+        mcq: 'Multiple choice',
+        audio_mcq: 'Audio choose',
+        blank: 'Fill blank'
+      }
+      return map[this.quizCard?.type] || 'Question'
+    },
+    collapsedPlayerTitle() {
+      const verse = this.verses.find(v => v.key === this.activeKey)
+      if (!verse) return this.currentChapter?.name_simple || 'Now playing'
+      return `${this.currentChapter?.name_simple || 'Session'} · Ayah ${verse.number}`
+    },
+    collapsedPlayerSubtitle() {
+      const verse = this.verses.find(v => v.key === this.activeKey)
+      if (!verse) return `${this.sessionTypeInfo.label} · ${this.progressPercent}% complete`
+      return `${this.sessionTypeInfo.label} · ${this.queueIndex + 1}/${this.queue.length} · ${this.formatTime(this.currentTime)} / ${this.formatTime(this.duration)}`
+    },
+    showAdvancedPlaybackFields() {
+      return this.studyMode !== 'quiz'
+    },
+    showAdvancedPractice() {
+      return this.studyMode !== 'quiz'
+    },
+    quranFontFamily() {
+      if (this.quranFont === 'amiri') return "'Amiri', 'Noto Naskh Arabic', serif"
+      if (this.quranFont === 'naskh') return "'Noto Naskh Arabic', 'Amiri', serif"
+      if (this.quranFont === 'scheherazade') return "'Scheherazade New', 'Noto Naskh Arabic', serif"
+      if (this.quranFont === 'lateef') return "'Lateef', 'Amiri', serif"
+      return "'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif"
+    },
+    verseArabicStyle() {
+      return {
+        fontSize: `${this.fontScale}em`,
+        fontFamily: this.quranFontFamily
+      }
+    },
+    wordArabicStyle() {
+      return { fontFamily: this.quranFontFamily }
+    },
+    globalWeakCount() {
+      return this.globalWeakAyahKeys.length
+    },
+    globalWeakAyahKeys() {
+      const weakKeys = new Set()
+      Object.entries(this.sm2 || {}).forEach(([key, card]) => {
+        if (!card) return
+        if ((card.lapses || 0) < 3 && !card.suspended) return
+        weakKeys.add(String(key).split('::')[0])
+      })
+      return Array.from(weakKeys)
     },
     primaryLabel() {
       if (!this.chapterId) return 'Start'
@@ -1138,8 +1331,11 @@ export default {
       return { overallRetention, surahMastery, weakAyahs, weakClusters, weakTrend14d, weeklyRetentionImprovement, forgettingTrend }
     },
     weakAyahSummary() {
-      if (!this.retentionStats.weakAyahs.length) return 'None'
-      return this.retentionStats.weakAyahs.slice(0, 4).map(n => `Ayah ${n}`).join(', ')
+      if (!this.globalWeakAyahKeys.length) return 'None'
+      return this.globalWeakAyahKeys.slice(0, 4).map(key => {
+        const ayah = String(key).split(':')[1] || key
+        return `Ayah ${ayah}`
+      }).join(', ')
     },
     weakWordSummary() {
       return this.retentionStats.weakClusters.length ? this.retentionStats.weakClusters.join(', ') : 'No clear cluster'
@@ -1236,11 +1432,15 @@ export default {
     window.addEventListener('online', this.handleOnline)
     window.addEventListener('offline', this.handleOffline)
     window.addEventListener('beforeunload', this.persistAllState)
+    document.addEventListener('pointerdown', this.handleGlobalPointerDown)
+    window.addEventListener('keydown', this.handleGlobalKeydown)
   },
   beforeUnmount() {
     window.removeEventListener('online', this.handleOnline)
     window.removeEventListener('offline', this.handleOffline)
     window.removeEventListener('beforeunload', this.persistAllState)
+    document.removeEventListener('pointerdown', this.handleGlobalPointerDown)
+    window.removeEventListener('keydown', this.handleGlobalKeydown)
     if (this.bannerTimer) clearTimeout(this.bannerTimer)
     this.flushPlaybackTime()
     this.persistAllState()
@@ -1267,6 +1467,7 @@ export default {
     showWordByWord: 'persistUiState',
     wordByWordAudioEnabled: 'persistUiState',
     fontScale: 'persistUiState',
+    quranFont: 'persistUiState',
     script: 'persistUiState',
     onboardingDismissed: 'persistUiState',
     activeKey: 'persistSessionState',
@@ -1312,6 +1513,7 @@ export default {
         showWordByWord: this.showWordByWord,
         wordByWordAudioEnabled: this.wordByWordAudioEnabled,
         fontScale: this.fontScale,
+        quranFont: this.quranFont,
         script: this.script,
         sectionOpen: this.sectionOpen,
         onboardingDismissed: this.onboardingDismissed
@@ -1340,14 +1542,41 @@ export default {
       return this.activeWordTooltip?.verseKey === verseKey && this.activeWordTooltip?.index === index
     },
     toggleReadingOption(kind) {
-      if (kind === 'translation') this.showTranslation = !this.showTranslation
-      if (kind === 'transliteration') this.showTransliteration = !this.showTransliteration
-      if (kind === 'wbw') this.showWordByWord = !this.showWordByWord
-      this.loadVerses()
+      if (kind === 'translation') {
+        this.showTranslation = !this.showTranslation
+        if (this.showTranslation && this.verses.some(verse => !verse.translation)) this.loadVerses()
+      }
+      if (kind === 'transliteration') {
+        this.showTransliteration = !this.showTransliteration
+        if (this.showTransliteration) this.loadVerses()
+      }
+      if (kind === 'wbw') {
+        this.showWordByWord = !this.showWordByWord
+        if (this.showWordByWord && this.verses.some(verse => !verse.words?.length)) this.loadVerses()
+      }
+    },
+    toggleFontPicker() {
+      this.fontPickerOpen = !this.fontPickerOpen
+      if (this.fontPickerOpen) this.script = 'uthmani'
+    },
+    setQuranFont(font) {
+      this.quranFont = font
+      this.script = 'uthmani'
+      this.fontPickerOpen = false
+      this.persistUiState()
     },
     setScriptMode(mode) {
       this.script = mode
+      if (mode !== 'uthmani') this.fontPickerOpen = false
       this.loadVerses()
+    },
+    handleGlobalPointerDown(event) {
+      if (!this.fontPickerOpen) return
+      const insideMenu = event.target?.closest?.('.toolbar-font-wrap')
+      if (!insideMenu) this.fontPickerOpen = false
+    },
+    handleGlobalKeydown(event) {
+      if (event.key === 'Escape' && this.fontPickerOpen) this.fontPickerOpen = false
     },
     toggleBookmark(verse) {
       if (!this.isLoggedIn) { this.showBanner('Login required to bookmark', 'info', 2800); return }
@@ -1423,6 +1652,7 @@ export default {
         this.showWordByWord = state.showWordByWord ?? this.showWordByWord
         this.wordByWordAudioEnabled = state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
         this.fontScale = state.fontScale ?? this.fontScale
+        this.quranFont = state.quranFont || this.quranFont
         this.script = state.script || this.script
         this.sectionOpen = { ...this.sectionOpen, ...(state.sectionOpen || {}) }
         this.onboardingDismissed = state.onboardingDismissed ?? false
@@ -1532,6 +1762,11 @@ export default {
       if (key === 'retry-transliteration') this.loadVerses()
       if (key === 'retry-tajweed') this.loadVerses()
       if (key === 'reload-plan') this.generateTodayPlan()
+      if (key === 'start-quiz') {
+        this.sessionCompleted = false
+        this.studyMode = 'quiz'
+        this.startQuiz()
+      }
     },
     describeNetworkError(error) {
       const status = error?.response?.status
@@ -1671,7 +1906,7 @@ export default {
       const fetchChapterVerses = async (chapterId) => {
         const params = {
           per_page: 300,
-          translations: this.showTranslation ? '131' : undefined,
+          translations: this.shouldRequestTranslations() ? '131' : undefined,
           words: false,
           audio: this.reciterId,
           fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs'
@@ -1817,8 +2052,8 @@ export default {
       // Load full segment keys and show only them (avoid range reload races)
       const params = {
         per_page: 300,
-        translations: this.showTranslation ? '131' : undefined,
-        words: this.showWordByWord,
+        translations: this.shouldRequestTranslations() ? '131' : undefined,
+        words: this.shouldRequestWords(),
         audio: this.reciterId,
         fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs'
       }
@@ -1889,7 +2124,7 @@ export default {
       try { localStorage.setItem('telawa.sm2', JSON.stringify(this.sm2)) } catch (e) { console.error(e) }
     },
     resetSm2All() {
-      if (!confirm('Reset all SM-2 progress?')) return
+      if (!confirm('Reset all SM-2 progress? This cannot be undone.')) return
       this.sm2 = {}
       try { localStorage.setItem('telawa.sm2', JSON.stringify({})) } catch (e) { console.error(e) }
       this.showBanner('SM-2 reset', 'info')
@@ -1901,7 +2136,7 @@ export default {
       this.showBanner('Card unsuspended', 'success')
     },
     clearEvents() {
-      if (!confirm('Clear analytics stats?')) return
+      if (!confirm('Clear analytics stats? This cannot be undone.')) return
       this.events = []
       try { localStorage.setItem('telawa.events', JSON.stringify([])) } catch (e) { console.error(e) }
       this.showBanner('Stats cleared', 'info')
@@ -2035,6 +2270,7 @@ export default {
       this.sectionOpen[key] = !this.sectionOpen[key]
     },
     resetControls() {
+      if (!confirm('Reset session settings?')) return
       this.rangeStart = 1
       this.rangeEnd = 7
       this.speed = 1
@@ -2054,6 +2290,7 @@ export default {
     beginPlan() {
       this.onboardingDismissed = true
       this.showTools = true
+      this.sectionOpen = { ...this.sectionOpen, beginner_setup: true, beginner_playback: false }
       if (this.todayPlan) this.tab = 'analytics'
       else this.tab = 'beginner'
     },
@@ -2135,12 +2372,16 @@ export default {
       this.persistAllState()
     },
     deleteSession(id) {
+      if (!confirm('Delete this saved session? This cannot be undone.')) return
       this.savedSessions = this.savedSessions.filter(x => x.id !== id)
       if (this.selectedSessionId === id) this.selectedSessionId = ''
       this.persistSavedSessions()
     },
     togglePlayerMenu() {
       this.playerMenuOpen = !this.playerMenuOpen
+    },
+    togglePlayerCollapsed() {
+      this.playerCollapsed = !this.playerCollapsed
     },
     downloadCurrentAudio() {
       const src = this.audioElement?.currentSrc || this.audioElement?.src
@@ -2181,6 +2422,12 @@ export default {
       if (url.startsWith('/')) return `https://verses.quran.com${url}`
       if (/^[A-Za-z0-9_-]+\/mp3\//.test(url)) return `https://verses.quran.com/${url}`
       return url
+    },
+    shouldRequestTranslations() {
+      return !!(this.showTranslation || this.studyMode === 'quiz' || this.studyMode === 'hybrid' || this.quizActive || this.quizType === 'flashcard' || this.quizType === 'blank')
+    },
+    shouldRequestWords() {
+      return !!(this.showWordByWord || (this.quizActive && this.quizType === 'blank'))
     },
     formatTime(sec) {
       const t = Math.max(0, Math.floor(sec || 0))
@@ -2235,8 +2482,8 @@ export default {
       if (!this.chapterId) return
       const params = {
         per_page: 300,
-        translations: this.showTranslation ? '131' : undefined,
-        words: this.showWordByWord,
+        translations: this.shouldRequestTranslations() ? '131' : undefined,
+        words: this.shouldRequestWords(),
         audio: this.reciterId,
         fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs'
       }
@@ -2341,6 +2588,7 @@ export default {
     rebuildQueue() { this.buildQueue() },
     async startSession() {
       this.onboardingDismissed = true
+      this.sessionCompleted = false
       if (!this.chapterId) { this.showTools = true; return }
       if (!this.verses.length) await this.loadVerses()
       if (!this.verses.length) { this.showBanner('No verses loaded yet', 'error'); this.showTools = true; return }
@@ -2359,10 +2607,12 @@ export default {
       this.persistAllState()
     },
     startQuiz() {
+      this.sessionCompleted = false
       const now = Date.now()
       const skill = this.quizSkill || 'recite_text'
-      const due = this.verses.filter(v => (this.sm2Get(this.sm2CardKey(v.key, skill)).due || 0) <= now)
-      const rest = this.verses.filter(v => !due.includes(v))
+      const source = this.getQuizSourceVerses()
+      const due = source.filter(v => (this.sm2Get(this.sm2CardKey(v.key, skill)).due || 0) <= now)
+      const rest = source.filter(v => !due.includes(v))
       const base = [...due, ...rest]
       // de-duplicate and limit
       const seen = new Set()
@@ -2371,23 +2621,59 @@ export default {
         if (seen.has(v.key)) continue
         seen.add(v.key)
         pool.push(v)
-        if (pool.length >= 20) break
+        if (pool.length >= 6) break
       }
       this.quizQueue = pool
       this.quizIndex = 0
       this.quizActive = true
       this.quizRevealed = false
       this.quizLastResult = null
+      this.quizSummaryActive = false
+      this.quizSessionStats = {
+        total: pool.length,
+        correct: 0,
+        qualitySum: 0,
+        answers: [],
+        mistakes: [],
+        skillTotals: {},
+        startedAt: Date.now(),
+        durationMs: 0
+      }
       this.nextQuizCard()
+    },
+    getQuizSourceVerses() {
+      const byKey = new Map((this.verses || []).map(verse => [verse.key, verse]))
+      const orderedQueue = []
+      for (const item of this.queue || []) {
+        if (!item?.key || !byKey.has(item.key) || orderedQueue.some(verse => verse.key === item.key)) continue
+        orderedQueue.push(byKey.get(item.key))
+      }
+      if (this.planRun && this.todayPlan?.segments?.length) {
+        const seg = this.todayPlan.segments[this.planRun.segmentIndex || 0]
+        const segmentVerses = (seg?.keys || []).map(key => byKey.get(key)).filter(Boolean)
+        if (segmentVerses.length) return segmentVerses
+      }
+      if (this.todayPlan?.quizKeys?.length) {
+        const planned = this.todayPlan.quizKeys.map(key => byKey.get(key)).filter(Boolean)
+        if (planned.length) return planned
+      }
+      if (this.order === 'chain' && orderedQueue.length) return orderedQueue
+      return orderedQueue.length ? orderedQueue : [...this.verses]
+    },
+    restartQuiz() {
+      this.quizSummaryActive = false
+      this.quizIndex = 0
+      this.quizSessionStats = null
+      this.startQuiz()
     },
     nextQuizCard() {
       const verse = this.quizQueue[this.quizIndex]
       if (!verse) {
-        this.quizActive = false
-        if (this.studyMode !== 'hybrid') {
-          this.triggerConfetti()
-          this.showBanner('Quiz complete', 'success', 4500)
+        if (this.quizSessionStats) {
+          this.quizSessionStats.durationMs = Math.max(0, Date.now() - Number(this.quizSessionStats.startedAt || Date.now()))
         }
+        this.quizSummaryActive = true
+        if (this.studyMode !== 'hybrid') this.triggerConfetti()
         return
       }
       const type = this.quizType === 'mixed'
@@ -2471,6 +2757,21 @@ export default {
       }
       const sm2Key = this.sm2CardKey(card.key, card.skill || this.quizSkill || 'recite_text')
       this.sm2Grade(sm2Key, quality)
+      if (this.quizSessionStats) {
+        const skillKey = card.skill || this.quizSkill || 'recite_text'
+        const skillTotals = { ...(this.quizSessionStats.skillTotals || {}) }
+        const currentSkill = skillTotals[skillKey] || { total: 0, correct: 0 }
+        this.quizSessionStats.qualitySum += quality
+        const isCorrect = quality >= 4
+        if (isCorrect) this.quizSessionStats.correct += 1
+        else this.quizSessionStats.mistakes.push(card.key)
+        this.quizSessionStats.answers.push({ key: card.key, quality, type: card.type })
+        currentSkill.total += 1
+        if (isCorrect) currentSkill.correct += 1
+        skillTotals[skillKey] = currentSkill
+        this.quizSessionStats.skillTotals = skillTotals
+        this.quizSessionStats.durationMs = Math.max(0, Date.now() - Number(this.quizSessionStats.startedAt || Date.now()))
+      }
       this.quizLastResult = { at: Date.now(), key: card.key, quality, skill: card.skill }
       this.quizIndex += 1
       this.nextQuizCard()
@@ -2495,14 +2796,27 @@ export default {
       this.quizOptions = []
       this.quizRevealed = false
       this.quizLastResult = null
+      this.quizSummaryActive = false
+      this.quizSessionStats = null
+      this.sessionCompleted = false
       this.hybridPendingKey = null
     },
     triggerConfetti() {
       this.confettiSeed = (this.confettiSeed + 1) % 1000000
       this.confettiActive = true
-      setTimeout(() => { this.confettiActive = false }, 1600)
+      setTimeout(() => { this.confettiActive = false }, 4000)
     },
-    setActive(key) { this.activeKey = key },
+    setActive(key) {
+      this.activeKey = key
+      const idx = this.queue.findIndex(v => v?.key === key)
+      if (idx >= 0) this.queueIndex = idx
+      this.$nextTick(() => {
+        try {
+          const el = document.querySelector(`.verse[data-verse-key="${key}"]`)
+          if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        } catch (e) { }
+      })
+    },
     shouldUseWordSequence(verse) {
       return !!(this.showWordByWord && this.wordByWordAudioEnabled && verse?.words?.length && verse.words.every(word => !!word.audio))
     },
@@ -2613,7 +2927,22 @@ export default {
         }
       }
       if (this.playMode === 'auto') {
-        setTimeout(() => this.next(), this.delay * 1000)
+        setTimeout(() => {
+          if (this.canNext) this.next()
+          else this.handleSessionComplete()
+        }, this.delay * 1000)
+      } else {
+        this.handleSessionComplete()
+      }
+    },
+    handleSessionComplete() {
+      if (!this.verses.length) return
+      this.sessionCompleted = true
+      // Keep it simple: one clear CTA to start the quiz when a recite session ends.
+      if (!this.quizActive && this.studyMode === 'recite') {
+        this.showBanner('Session complete. Ready to review?', 'success', 7000, { key: 'start-quiz', label: 'Start quiz' })
+      } else {
+        this.showBanner('Session complete', 'success', 4500)
       }
     },
     playVerse(verse) {
@@ -2721,16 +3050,20 @@ export default {
     },
     prev() {
       if (!this.canPrev) return
+      this.sessionCompleted = false
       this.queueIndex--
       const v = this.queue[this.queueIndex]
       if (v) this.playVerse(v)
     },
     next() {
-      if (!this.canNext) return
-      this.queueIndex++
-      const v = this.queue[this.queueIndex]
-      if (v) this.playVerse(v)
-      else if (this.planRun && this.todayPlan?.segments?.length) {
+      if (this.canNext) {
+        this.sessionCompleted = false
+        this.queueIndex++
+        const v = this.queue[this.queueIndex]
+        if (v) this.playVerse(v)
+        return
+      }
+      if (this.planRun && this.todayPlan?.segments?.length) {
         // move to next segment automatically
         const nextIndex = (this.planRun.segmentIndex || 0) + 1
         if (nextIndex < this.todayPlan.segments.length) {
@@ -2742,9 +3075,12 @@ export default {
             if (first) this.playVerse(first)
           })
         } else {
+          this.handleSessionComplete()
           this.showBanner('Plan complete for today', 'success', 4500)
         }
+        return
       }
+      this.handleSessionComplete()
     },
     seek(e) {
       if (!this.audioElement || !this.duration) return
@@ -2758,10 +3094,12 @@ export default {
       if (this.audioElement) { this.audioElement.pause(); this.audioElement.src = '' }
       this.wordSequence = null
       this.activeWordAudio = ''
+      const completedAtEnd = !this.canNext && !!this.activeKey && !this.quizActive
       this.playerVisible = false
       this.isPlaying = false
       this.playerMenuOpen = false
       this.persistAudioState()
+      if (completedAtEnd) this.handleSessionComplete()
     },
     handlePrimaryAction() {
       if (!this.chapterId) this.showTools = true
@@ -2792,6 +3130,8 @@ export default {
   --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);
   --radius: 16px;
   --navbar-offset: 56px;
+  --tools-width: 440px;
+  --tools-footer-h: 78px;
   --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;
   --font-ui: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
@@ -2920,11 +3260,11 @@ body {
 }
 
 .main.tools-open {
-  padding-right: 360px;
+  padding-right: var(--tools-width);
 }
 
 .main.tools-open .content {
-  max-width: min(980px, calc(100vw - 470px));
+  max-width: min(980px, calc(100vw - var(--tools-width) - 80px));
 }
 
 .content {
@@ -2948,6 +3288,43 @@ body {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.toolbar-font-wrap {
+  position: relative;
+}
+
+.toolbar-font-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 180px;
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-strong);
+  box-shadow: var(--shadow-md);
+  z-index: 12;
+}
+
+.toolbar-font-option {
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.toolbar-font-option.active,
+.toolbar-font-option:hover {
+  background: var(--accent-light);
 }
 
 .toolbar-chip {
@@ -3252,16 +3629,17 @@ body {
 
 .verse {
   background: linear-gradient(180deg, var(--surface-strong), var(--surface));
-  border-radius: 18px;
-  padding: 18px 20px;
+  border-radius: 22px;
+  padding: 22px 24px;
   border: 0;
   transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
 }
 
 .verse.active {
   background: linear-gradient(180deg, var(--surface-strong), var(--accent-wash));
-  box-shadow: 0 26px 60px rgba(63, 39, 18, 0.22);
+  box-shadow: 0 30px 70px rgba(63, 39, 18, 0.24);
+  outline: 2px solid rgba(154, 103, 56, 0.18);
 }
 
 .verse-head {
@@ -3308,8 +3686,8 @@ body {
 
 .verse-arabic {
   font-family: var(--font-ar);
-  font-size: 1.45rem;
-  line-height: 2.1;
+  font-size: 1.7rem;
+  line-height: 2.25;
   text-align: right;
   direction: rtl;
   margin: 12px 0 10px;
@@ -3320,56 +3698,75 @@ body {
 }
 
 .verse-transliteration {
-  font-size: 0.84rem;
+  font-size: 0.94rem;
   color: var(--text-muted);
   line-height: 1.8;
   margin-top: 6px;
 }
 
 .verse-translation {
-  font-size: 0.9rem;
-  color: var(--text-muted);
+  font-size: 1rem;
+  color: var(--text);
   padding-top: 8px;
-  line-height: 1.85;
+  line-height: 1.9;
+  font-weight: 500;
 }
 
 .verse-words {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, max-content));
+  gap: 10px 8px;
   margin-top: 10px;
+  align-items: start;
 }
 
 .word {
   background: var(--accent-light);
-  padding: 4px 10px;
-  border-radius: 20px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.7rem;
+  padding: 8px 10px 10px;
+  border-radius: 16px;
+  display: inline-grid;
+  justify-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
   position: relative;
   cursor: default;
+  min-width: 84px;
 }
 
 .word.active {
   background: var(--accent);
   color: #fff;
+  box-shadow: 0 10px 24px rgba(154, 103, 56, 0.22);
 }
 
 .word-ar {
   font-family: var(--font-ar);
+  font-size: 1.12rem;
+  line-height: 1.7;
+  color: var(--text);
 }
 
 .word-en {
   color: var(--text-muted);
+  font-size: 0.66rem;
+  line-height: 1.35;
+  text-align: center;
+  max-width: 100%;
+  word-break: break-word;
 }
 
 .word-play {
-  background: none;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 999px;
+  width: 22px;
+  height: 22px;
   border: none;
   cursor: pointer;
-  font-size: 0.65rem;
+  font-size: 0.62rem;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  margin-top: 3px;
 }
 
 .word-tooltip {
@@ -3489,7 +3886,7 @@ body {
   top: 0;
   right: 0;
   bottom: 0;
-  width: 380px;
+  width: min(var(--tools-width), 100vw);
   background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));
   border-left: 1px solid var(--border);
   backdrop-filter: blur(14px);
@@ -3500,6 +3897,7 @@ body {
   flex-direction: column;
   overflow-x: hidden;
   box-shadow: var(--shadow-lg);
+  isolation: isolate;
 }
 
 [data-theme="dark"] .tools {
@@ -3554,17 +3952,17 @@ body {
 }
 
 .tools-title {
-  font-size: 0.92rem;
-  font-weight: 450;
+  font-size: 1rem;
+  font-weight: 700;
   letter-spacing: -0.2px;
   color: var(--text);
 }
 
 .tools-context {
   margin-top: 8px;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
-  font-weight: 400;
+  font-weight: 600;
 }
 
 .tools-x {
@@ -3603,7 +4001,7 @@ body {
   border-radius: 12px;
   background: transparent;
   border: none;
-  font-size: 0.74rem;
+  font-size: 0.82rem;
   cursor: pointer;
   color: rgba(0, 0, 0, 0.55);
   font-weight: 450;
@@ -3635,7 +4033,7 @@ body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 20px 20px 168px;
+  padding: 20px 20px calc(var(--tools-footer-h) + 26px);
 }
 
 .sheet {
@@ -3761,16 +4159,18 @@ body {
 }
 
 .tools-footer {
-  position: sticky;
+  position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 14px 16px 16px;
+  height: var(--tools-footer-h);
+  padding: 12px 16px 14px;
   border-top: 1px solid var(--border);
   background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));
   display: flex;
   gap: 10px;
   justify-content: space-between;
+  align-items: center;
 }
 
 [data-theme="dark"] .tools-footer {
@@ -3780,9 +4180,10 @@ body {
 
 .tools-btn {
   flex: 1;
-  padding: 9px 10px;
+  min-height: 44px;
+  padding: 10px 10px;
   border-radius: 15px;
-  font-weight: 450;
+  font-weight: 500;
   border: 1px solid rgba(0, 0, 0, 0.1);
   cursor: pointer;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));
@@ -3792,6 +4193,11 @@ body {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  line-height: 1;
+}
+
+.tools-btn span {
+  white-space: nowrap;
 }
 
 [data-theme="dark"] .tools-btn {
@@ -3819,13 +4225,13 @@ body {
 }
 
 .guide-title {
-  font-size: 0.8rem;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 .guide-sub {
   margin-top: 4px;
-  font-size: 0.72rem;
+  font-size: 0.84rem;
   color: var(--text-muted);
 }
 
@@ -3932,8 +4338,8 @@ body {
 
 .stat-v {
   margin-top: 6px;
-  font-size: 0.98rem;
-  font-weight: 450;
+  font-size: 1.18rem;
+  font-weight: 700;
   color: var(--text);
 }
 
@@ -3981,6 +4387,49 @@ body {
   color: var(--text);
   margin-bottom: 8px;
   font-size: 0.74rem;
+}
+
+.analytics-empty {
+  display: grid;
+  gap: 12px;
+}
+
+.analytics-empty-copy {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.skeleton-row {
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.06));
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.skeleton-card {
+  height: 58px;
+  border-radius: 16px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.06));
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+[data-theme="dark"] .skeleton-row,
+[data-theme="dark"] .skeleton-card {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.08));
+}
+
+@keyframes shimmer {
+  0% { background-position: 0% 0; }
+  100% { background-position: 200% 0; }
 }
 
 .bars {
@@ -4184,7 +4633,7 @@ body {
 }
 
 .cta-ghost {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));
+  background: rgba(255, 255, 255, 0.58);
   box-shadow: var(--shadow-sm);
 }
 
@@ -4200,7 +4649,7 @@ body {
 }
 
 .quiz-card {
-  width: min(520px, 100%);
+  width: min(680px, 100%);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(250, 245, 239, 0.95));
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 22px;
@@ -4217,7 +4666,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 16px;
+  padding: 18px 22px 14px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
@@ -4225,9 +4674,19 @@ body {
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
+.quiz-title-wrap {
+  display: grid;
+  gap: 4px;
+}
+
 .quiz-title {
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
+}
+
+.quiz-title-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
 .quiz-x {
@@ -4247,26 +4706,167 @@ body {
 }
 
 .quiz-meta {
-  padding: 10px 16px 0;
+  padding: 14px 22px 0;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.quiz-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--border);
   color: var(--text-muted);
-  font-size: 0.76rem;
+  font-size: 0.73rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .quiz-body {
-  padding: 14px 16px 18px;
+  padding: 18px 22px 22px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+}
+
+.quiz-summary-title {
+  font-size: 1.18rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.quiz-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.quiz-summary-skill-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quiz-summary-skill,
+.quiz-summary-explain {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .quiz-summary-skill,
+[data-theme="dark"] .quiz-summary-explain {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(30, 30, 40, 0.45);
+}
+
+.quiz-summary-s {
+  margin-top: 4px;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.quiz-summary-item {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 10px 10px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .quiz-summary-item {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(30, 30, 40, 0.45);
+}
+
+.quiz-summary-k {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.quiz-summary-v {
+  margin-top: 6px;
+  font-size: 1.08rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.quiz-summary-mistakes {
+  margin-top: 6px;
+  display: grid;
+  gap: 8px;
+}
+
+.quiz-summary-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quiz-tag {
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(190, 73, 73, 0.10);
+  border: 1px solid rgba(190, 73, 73, 0.18);
+  color: rgba(140, 30, 30, 0.9);
+  font-weight: 500;
+  font-size: 0.72rem;
+}
+
+[data-theme="dark"] .quiz-tag {
+  background: rgba(190, 73, 73, 0.18);
+  color: rgba(255, 255, 255, 0.86);
+}
+
+@media (max-width: 520px) {
+  .quiz-summary-grid,
+  .quiz-summary-skill-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quiz-top,
+  .quiz-body,
+  .quiz-meta,
+  .quiz-actions {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .quiz-grade,
+  .quiz-actions {
+    flex-direction: column;
+  }
 }
 
 .quiz-prompt {
-  font-size: 0.96rem;
+  font-size: 1.02rem;
   color: var(--text);
+  line-height: 1.7;
+}
+
+.quiz-section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
 .quiz-hint {
   color: var(--text-muted);
-  font-size: 0.78rem;
+  font-size: 0.88rem;
+  line-height: 1.7;
 }
 
 .quiz-options {
@@ -4278,14 +4878,16 @@ body {
 .quiz-opt {
   display: flex;
   gap: 10px;
-  align-items: center;
-  padding: 10px 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
   border-radius: 14px;
   border: 1px solid rgba(0, 0, 0, 0.10);
   background: rgba(255, 255, 255, 0.8);
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+  font-size: 0.86rem;
+  line-height: 1.55;
 }
 
 [data-theme="dark"] .quiz-opt {
@@ -4294,9 +4896,10 @@ body {
 }
 
 .quiz-actions {
-  padding: 12px 16px 16px;
+  padding: 0 22px 22px;
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .quiz-reveal {
@@ -4308,6 +4911,9 @@ body {
   font-weight: 450;
   box-shadow: var(--shadow-sm);
   transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 [data-theme="dark"] .quiz-reveal {
@@ -4316,22 +4922,54 @@ body {
   color: rgba(255, 255, 255, 0.9);
 }
 
+.quiz-action {
+  min-height: 42px;
+  padding: 9px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  font-weight: 450;
+  font-size: 0.82rem;
+  box-shadow: var(--shadow-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.quiz-action-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: white;
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+.quiz-action-ghost {
+  color: var(--text);
+}
+
 .quiz-grade {
   flex: 1;
   display: flex;
   gap: 10px;
   justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .qg {
-  padding: 12px 12px;
+  min-height: 42px;
+  padding: 9px 12px;
   border-radius: 14px;
   border: 1px solid rgba(0, 0, 0, 0.10);
   background: rgba(255, 255, 255, 0.78);
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 450;
+  font-size: 0.82rem;
   box-shadow: var(--shadow-sm);
   transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .qg.primary {
@@ -4537,12 +5175,12 @@ body {
 }
 
 .verses.focus .verse.dim {
-  opacity: 0.35;
+  opacity: 0.22;
 }
 
 .verse.blur {
-  filter: blur(2px);
-  opacity: 0.55;
+  filter: blur(4px);
+  opacity: 0.38;
 }
 
 .group {
@@ -4560,7 +5198,7 @@ body {
 
 .field label {
   font-size: 0.62rem;
-  font-weight: 450;
+  font-weight: 700;
   text-transform: uppercase;
   color: var(--text-muted);
   letter-spacing: 0.5px;
@@ -4807,6 +5445,63 @@ body {
   padding: 6px 12px 8px;
   z-index: 25;
   box-shadow: 0 -20px 44px rgba(91, 74, 57, 0.12);
+  transition: right 0.25s ease;
+}
+
+.main.tools-open .player-bar {
+  right: var(--tools-width);
+}
+
+.player-collapsed-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 42px 2px 0;
+}
+
+.player-collapsed-copy {
+  min-width: 0;
+}
+
+.player-collapsed-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-collapsed-sub {
+  margin-top: 2px;
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-collapse {
+  position: absolute;
+  right: 12px;
+  top: 6px;
+  width: 34px;
+  height: 28px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: rgba(73, 58, 45, 0.76);
+}
+
+[data-theme="dark"] .player-collapse {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(30, 30, 40, 0.45);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .player-progress {
@@ -5071,6 +5766,10 @@ body {
     padding-right: 16px;
   }
 
+  .main.tools-open .player-bar {
+    right: 0;
+  }
+
   .session-meta {
     display: none;
   }
@@ -5085,6 +5784,16 @@ body {
 
   .player-select {
     display: none;
+  }
+}
+
+@media (min-width: 1500px) {
+  .content {
+    max-width: 1220px;
+  }
+
+  .main.tools-open .content {
+    max-width: min(1180px, calc(100vw - var(--tools-width) - 120px));
   }
 }
 </style>

@@ -1,6 +1,6 @@
 // Fonts
 @import url('https://fonts.bunny.net/css?family=Nunito');
-@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600;700&family=Scheherazade+New:wght@400;700&family=Lateef:wght@400;500&display=swap');
 
 @font-face {
   font-family: 'UthmanicHafs';
@@ -63,4 +63,180 @@ body {
   font-family: var(--font-ui);
   background: var(--bg);
   color: var(--text);
+}
+
+.app-navbar {
+  background: rgba(255, 255, 255, 0.82);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+}
+
+html[data-theme="dark"] .app-navbar {
+  background: rgba(18, 18, 18, 0.82);
+}
+
+.app-navbar-logo {
+  height: 52px;
+}
+
+.app-navbar-brand-text {
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.app-navbar .nav-link {
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 0.75rem 0.95rem;
+  border-radius: 999px;
+}
+
+.app-navbar .nav-link.active,
+.app-navbar .nav-link:hover {
+  color: var(--text);
+  background: var(--accent-light);
+}
+
+.app-theme-toggle {
+  border-color: var(--border);
+  color: var(--text);
+  background: var(--surface-strong);
+  border-radius: 999px;
+}
+
+.app-user-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.app-user-avatar {
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.auth-shell {
+  min-height: calc(100vh - 140px);
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem;
+}
+
+.auth-card {
+  width: min(960px, 100%);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(255, 248, 239, 0.72), rgba(241, 232, 219, 0.58));
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+}
+
+.auth-card-sm {
+  width: min(720px, 100%);
+  grid-template-columns: 1fr;
+}
+
+.auth-copy {
+  padding: 0.5rem;
+}
+
+.auth-kicker {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.auth-title {
+  margin-top: 0.75rem;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 500;
+  line-height: 1.05;
+}
+
+.auth-subtitle {
+  margin-top: 0.8rem;
+  color: var(--text-muted);
+  font-size: 1rem;
+  max-width: 30rem;
+}
+
+.auth-form-wrap {
+  padding: 1.25rem;
+  border-radius: 24px;
+  background: rgba(255, 248, 239, 0.28);
+  box-shadow: none;
+  border: 1px solid var(--border);
+}
+
+.auth-form-wrap .form-control {
+  border-radius: 16px;
+  padding: 0.95rem 1rem;
+  border-color: var(--border);
+  background: rgba(255, 248, 239, 0.52);
+}
+
+.auth-form-wrap .form-label {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.auth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.auth-btn-primary,
+.auth-btn-ghost {
+  border-radius: 16px;
+  padding: 0.9rem 1.25rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.auth-btn-primary {
+  border: 0;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+}
+
+.auth-btn-ghost,
+.auth-btn-link {
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border);
+}
+
+.auth-alert {
+  border-radius: 16px;
+}
+
+@media (max-width: 767.98px) {
+  .app-navbar .navbar-collapse {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 20px;
+    background: var(--surface-strong);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .auth-card {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
 }

@@ -12,49 +12,52 @@
 </head>
 <body>
     <div id="app">
-        <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
+        <nav class="navbar navbar-expand-md app-navbar">
             <div class="container">
-                <div class="d-flex align-items-center">
-                    <img src="{{ asset('images/logo7.png') }}" alt="Logo" class="me-2" style="height: 60px;">
-                </div>
-                <!-- <a class="navbar-brand" href="{{ url('/') }}">
-                    {{ config('app.name', 'Mutqin') }}
-                </a> -->
+                <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url('/') }}">
+                    <img src="{{ asset('images/logo7.png') }}" alt="Logo" class="app-navbar-logo">
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav m-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url('/') }}">Home</a>
+                        <li class="nav-item pr-4">
+                            <a class="nav-link pr-4 {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ url('/') }}">Home</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url('/memorisation') }}">Memorisation</a>
+                        <li class="nav-item ml-5">
+                            <a class="nav-link {{ request()->routeIs('memorisation') ? 'active' : '' }}" href="{{ url('/memorisation') }}">Memorisation</a>
                         </li>
+                        <!-- @auth
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Dashboard</a>
+                            </li>
+                        @endauth -->
                     </ul>
 
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item d-flex align-items-center me-2">
-                            <button id="globalThemeToggle" class="btn btn-outline-secondary btn-sm" type="button" aria-label="Theme">
+                            <button id="globalThemeToggle" class="btn app-theme-toggle btn-sm" type="button" aria-label="Theme">
                                 <i class="bi bi-sun"></i>
                             </button>
                         </li>
                         @guest
                             @if (Route::has('login'))
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
+                                    <a class="nav-link {{ request()->routeIs('login') ? 'active' : '' }}" href="{{ route('login') }}">{{ __('Login') }}</a>
                                 </li>
                             @endif
                             @if (Route::has('register'))
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
+                                    <a class="nav-link {{ request()->routeIs('register') ? 'active' : '' }}" href="{{ route('register') }}">{{ __('Register') }}</a>
                                 </li>
                             @endif
                         @else
                             <li class="nav-item dropdown">
-                                <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    {{ Auth::user()->name }}
+                                <a id="navbarDropdown" class="nav-link dropdown-toggle app-user-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <span class="app-user-avatar">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                                    <span>{{ Auth::user()->name }}</span>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                                     <a class="dropdown-item" href="{{ route('logout') }}"
@@ -72,7 +75,7 @@
             </div>
         </nav>
 
-        <main class="py-4">
+        <main>
             @yield('content')
         </main>
     </div>
