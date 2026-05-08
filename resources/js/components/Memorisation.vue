@@ -28,8 +28,8 @@
         </div>
 
         <!-- Verses -->
-        <div v-else class="verses" :class="{ compact: compactMode }">
-          <div v-for="verse in verses" :key="verse.key" class="verse" :class="{ active: activeKey === verse.key }">
+        <div v-else class="verses" :class="{ compact: compactMode, focus: focusMode }">
+          <div v-for="(verse, i) in verses" :key="verse.key" class="verse" :class="verseClasses(verse, i)">
             <div class="verse-head">
               <div class="verse-badge">
                 <span class="verse-num">Ayah {{ verse.number }}</span>
@@ -55,111 +55,235 @@
 
       <!-- Tools Panel -->
       <aside class="tools" :class="{ open: showTools }">
-        <div class="tools-head">
-          <span class="tools-title">Controls</span>
-          <button class="close-btn" @click="showTools = false">×</button>
+        <div class="tools-top">
+          <div class="tools-topbar">
+            <div class="tools-title">Session</div>
+            <button class="tools-x" @click="showTools = false" aria-label="Close panel">×</button>
+          </div>
+          <div class="tools-tabs">
+            <button :class="{ active: tab === 'beginner' }" @click="tab = 'beginner'">Beginner</button>
+            <button :class="{ active: tab === 'advanced' }" @click="tab = 'advanced'">Advanced</button>
+          </div>
         </div>
-        <div class="tools-tabs">
-          <button :class="{ active: tab === 'setup' }" @click="tab = 'setup'">Setup</button>
-          <button :class="{ active: tab === 'playback' }" @click="tab = 'playback'">Playback</button>
-          <button :class="{ active: tab === 'display' }" @click="tab = 'display'">Display</button>
-        </div>
+
         <div class="tools-body">
-          <!-- Setup Tab -->
-          <div v-if="tab === 'setup'" class="group">
-            <div class="field">
-              <label>Surah</label>
-              <select v-model="chapterId" @change="loadChapter" class="select">
-                <option :value="0">Choose a surah...</option>
-                <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.id }}. {{ c.name_simple }}</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Range</label>
-              <div class="range">
-                <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
-                <span>→</span>
-                <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
+          <!-- Beginner Tab -->
+          <div v-if="tab === 'beginner'" class="sheet">
+            <section class="sheet-section">
+              <header class="sheet-h">
+                <div class="sheet-h-title">Setup</div>
+                <div class="sheet-h-sub">Pick surah, range, reciter.</div>
+              </header>
+
+              <div class="field">
+                <label>Surah</label>
+                <select v-model="chapterId" @change="loadChapter" class="select">
+                  <option :value="0">Choose a surah...</option>
+                  <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.id }}. {{ c.name_simple }}</option>
+                </select>
               </div>
-            </div>
-            <div class="field">
-              <label>Reciter</label>
-              <select v-model="reciterId" @change="refreshVerses" class="select">
-                <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Audio source</label>
-              <select v-model="audioSource" @change="refreshVerses" class="select">
-                <option value="qurancom">Quran.com</option>
-                <option value="alquran">AlQuran Cloud</option>
-              </select>
-            </div>
-            <div class="field" v-if="audioSource === 'alquran'">
-              <label>AlQuran edition</label>
-              <select v-model="alquranEdition" @change="refreshVerses" class="select">
-                <option v-for="e in alquranAudioEditions" :key="e.identifier" :value="e.identifier">
-                  {{ e.name }} ({{ e.identifier }})
-                </option>
-              </select>
-            </div>
-            <button class="primary-btn full" @click="startSession">▶ Start session</button>
+
+              <div class="field">
+                <label>Reciter</label>
+                <select v-model="reciterId" @change="refreshVerses" class="select">
+                  <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Ayah range</label>
+                <div class="range">
+                  <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
+                  <span>→</span>
+                  <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
+                </div>
+              </div>
+            </section>
+
+            <section class="sheet-section">
+              <header class="sheet-h">
+                <div class="sheet-h-title">Playback</div>
+                <div class="sheet-h-sub">Speed, delay, repeats, mode.</div>
+              </header>
+
+              <div class="field">
+                <label>Speed</label>
+                <select v-model.number="speed" @change="applySpeed" class="select">
+                  <option v-for="s in speedOptions" :key="`sp-${s}`" :value="s">{{ s }}x</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Delay</label>
+                <select v-model.number="delay" class="select">
+                  <option v-for="d in delayOptions" :key="`dl-${d}`" :value="d">{{ d }}s</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Repetition</label>
+                <select v-model.number="repeats" @change="rebuildQueue" class="select">
+                  <option v-for="r in repeatOptions" :key="`rp-${r}`" :value="r">{{ r }}</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Playback mode</label>
+                <div class="radio-group">
+                  <label class="radio">
+                    <input type="radio" value="auto" v-model="playMode">
+                    <span>Auto</span>
+                  </label>
+                  <label class="radio">
+                    <input type="radio" value="manual" v-model="playMode">
+                    <span>Manual</span>
+                  </label>
+                  <label class="radio">
+                    <input type="radio" value="loop" v-model="playMode">
+                    <span>Loop</span>
+                  </label>
+                </div>
+              </div>
+            </section>
           </div>
 
-          <!-- Playback Tab -->
-          <div v-if="tab === 'playback'" class="group">
-            <div class="field">
-              <label>Mode</label>
-              <div class="toggle">
-                <button :class="{ active: playMode === 'auto' }" @click="playMode = 'auto'">Auto</button>
-                <button :class="{ active: playMode === 'manual' }" @click="playMode = 'manual'">Manual</button>
-              </div>
-            </div>
-            <div class="field">
-              <label>Speed <span class="value">{{ speed }}x</span></label>
-              <input type="range" class="slider" min="0.5" max="1.5" step="0.1" v-model.number="speed"
-                @input="applySpeed">
-            </div>
-            <div class="field">
-              <label>Delay <span class="value">{{ delay }}s</span></label>
-              <input type="range" class="slider" min="0" max="10" step="0.5" v-model.number="delay">
-            </div>
-            <div class="field">
-              <label>Repeats <span class="value">{{ repeats }}</span></label>
-              <input type="range" class="slider" min="1" max="10" step="1" v-model.number="repeats"
-                @change="rebuildQueue">
-            </div>
-            <div class="field">
-              <label>Order</label>
-              <select v-model="order" @change="rebuildQueue" class="select">
-                <option value="seq">Sequential</option>
-                <option value="cum">Cumulative</option>
-                <option value="rand">Random</option>
-              </select>
-            </div>
-          </div>
+          <!-- Advanced Tab -->
+          <div v-if="tab === 'advanced'" class="sheet">
+            <section class="sheet-section">
+              <header class="sheet-h">
+                <div class="sheet-h-title">Setup</div>
+                <div class="sheet-h-sub">Same basics, plus extras.</div>
+              </header>
 
-          <!-- Display Tab -->
-          <div v-if="tab === 'display'" class="group">
-            <div class="field">
-              <label>Script</label>
-              <div class="toggle">
-                <button :class="{ active: script === 'uthmani' }"
-                  @click="script = 'uthmani'; refreshVerses()">Uthmani</button>
-                <button :class="{ active: script === 'tajweed' }"
-                  @click="script = 'tajweed'; refreshVerses()">Tajweed</button>
+              <div class="field">
+                <label>Surah</label>
+                <select v-model="chapterId" @change="loadChapter" class="select">
+                  <option :value="0">Choose a surah...</option>
+                  <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.id }}. {{ c.name_simple }}</option>
+                </select>
               </div>
-            </div>
-            <div class="field check">
-              <label><input type="checkbox" v-model="showTranslation" @change="refreshVerses"> Translation</label>
-            </div>
-            <div class="field check">
-              <label><input type="checkbox" v-model="showWordByWord" @change="refreshVerses"> Word by word</label>
-            </div>
-            <div class="field check">
-              <label><input type="checkbox" v-model="compactMode"> Compact view</label>
-            </div>
+
+              <div class="field">
+                <label>Reciter</label>
+                <select v-model="reciterId" @change="refreshVerses" class="select">
+                  <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Ayah range</label>
+                <div class="range">
+                  <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
+                  <span>→</span>
+                  <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Speed</label>
+                <select v-model.number="speed" @change="applySpeed" class="select">
+                  <option v-for="s in speedOptions" :key="`asp-${s}`" :value="s">{{ s }}x</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Delay</label>
+                <select v-model.number="delay" class="select">
+                  <option v-for="d in delayOptions" :key="`adl-${d}`" :value="d">{{ d }}s</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Repetition</label>
+                <select v-model.number="repeats" @change="rebuildQueue" class="select">
+                  <option v-for="r in repeatOptions" :key="`arp-${r}`" :value="r">{{ r }}</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Playback mode</label>
+                <div class="radio-group">
+                  <label class="radio">
+                    <input type="radio" value="auto" v-model="playMode">
+                    <span>Auto</span>
+                  </label>
+                  <label class="radio">
+                    <input type="radio" value="manual" v-model="playMode">
+                    <span>Manual</span>
+                  </label>
+                  <label class="radio">
+                    <input type="radio" value="loop" v-model="playMode">
+                    <span>Loop</span>
+                  </label>
+                </div>
+              </div>
+            </section>
+
+            <section class="sheet-section sheet-section-accent">
+              <header class="sheet-h">
+                <div class="sheet-h-title">Practice</div>
+                <div class="sheet-h-sub">Chaining, focus, looping.</div>
+              </header>
+
+              <div class="field">
+                <label>Chaining method</label>
+                <select v-model="order" @change="rebuildQueue" class="select">
+                  <option value="seq">Sequential</option>
+                  <option value="cum">Cumulative</option>
+                  <option value="rand">Random</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Range loop delay</label>
+                <select v-model.number="rangeLoopDelay" class="select">
+                  <option v-for="d in delayOptions" :key="`rld-${d}`" :value="d">{{ d }}s</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Focus & clarity</label>
+                <div class="help">Reduce distractions</div>
+                <div class="checkline">
+                  <label><input type="checkbox" v-model="blurAdjacent"> Blur non-adjacent ayat</label>
+                  <label><input type="checkbox" v-model="focusMode"> Focus mode (dim everything except active)</label>
+                </div>
+              </div>
+            </section>
+
+            <section class="sheet-section">
+              <header class="sheet-h">
+                <div class="sheet-h-title">Saved sessions</div>
+                <div class="sheet-h-sub">Save, load, delete.</div>
+              </header>
+
+              <div class="field">
+                <label>Load / delete</label>
+                <div class="row">
+                  <select v-model="selectedSessionId" class="select">
+                    <option value="">Select saved session…</option>
+                    <option v-for="s in savedSessions" :key="s.id" :value="s.id">{{ s.name }}</option>
+                  </select>
+                  <button class="mini-btn" :disabled="!selectedSessionId" @click="loadSession(selectedSessionId)">Load</button>
+                  <button class="mini-btn danger" :disabled="!selectedSessionId" @click="deleteSession(selectedSessionId)">Delete</button>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Save current</label>
+                <div class="row">
+                  <input class="input" v-model.trim="sessionName" placeholder="Session name (e.g. Fatiha morning)">
+                  <button class="mini-btn" @click="saveSession">Save</button>
+                </div>
+              </div>
+            </section>
           </div>
+        </div>
+
+        <div class="tools-footer">
+          <button class="tools-btn tools-btn-ghost" @click="resetControls">↺ Reset</button>
+          <button class="tools-btn tools-btn-ghost" @click="showTools = false">✕ Close</button>
+          <button class="tools-btn tools-btn-primary" @click="startSession">▶ Start</button>
         </div>
       </aside>
     </div>
@@ -212,21 +336,6 @@
               <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
             </select>
           </div>
-          <div class="player-menu-row">
-            <span class="pm-label">Audio</span>
-            <select v-model="audioSource" @change="refreshVerses" class="pm-select">
-              <option value="qurancom">Quran.com</option>
-              <option value="alquran">AlQuran Cloud</option>
-            </select>
-          </div>
-          <div class="player-menu-row" v-if="audioSource === 'alquran'">
-            <span class="pm-label">Edition</span>
-            <select v-model="alquranEdition" @change="refreshVerses" class="pm-select">
-              <option v-for="e in alquranAudioEditions" :key="e.identifier" :value="e.identifier">
-                {{ e.name }}
-              </option>
-            </select>
-          </div>
         </div>
       </div>
     </div>
@@ -244,7 +353,7 @@ export default {
     return {
       theme: 'light',
       showTools: true,
-      tab: 'setup',
+      tab: 'beginner',
 
       chapters: [],
       chapterId: 0,
@@ -254,9 +363,18 @@ export default {
 
       reciters: [{ id: 7, name: 'Alafasy' }],
       reciterId: 7,
-      audioSource: 'qurancom',
       alquranAudioEditions: [],
       alquranEdition: '',
+
+      speedOptions: [0.5, 0.75, 1, 1.25, 1.5],
+      delayOptions: [0, 0.5, 1, 2, 3, 5, 7, 10],
+      repeatOptions: [1, 2, 3, 4, 5, 7, 10],
+      rangeLoopDelay: 1,
+      blurAdjacent: false,
+      focusMode: false,
+      sessionName: '',
+      savedSessions: [],
+      selectedSessionId: '',
       
       script: 'uthmani',
       showTranslation: true,
@@ -326,11 +444,92 @@ export default {
   mounted() {
     this.loadChapters()
     this.loadReciters()
-    this.loadAlquranAudioEditions()
+    this.loadSavedSessions()
     this.initAudio()
     document.documentElement.setAttribute('data-theme', this.theme)
   },
   methods: {
+    resetControls() {
+      this.rangeStart = 1
+      this.rangeEnd = 7
+      this.speed = 1
+      this.delay = 1
+      this.repeats = 1
+      this.playMode = 'auto'
+      this.order = 'seq'
+      this.blurAdjacent = false
+      this.focusMode = false
+      this.rangeLoopDelay = 1
+      this.selectedSessionId = ''
+      this.sessionName = ''
+      this.applySpeed()
+      this.rebuildQueue()
+    },
+    loadSavedSessions() {
+      try {
+        const raw = localStorage.getItem('telawa.savedSessions')
+        this.savedSessions = raw ? JSON.parse(raw) : []
+      } catch (e) {
+        console.error(e)
+        this.savedSessions = []
+      }
+    },
+    persistSavedSessions() {
+      try { localStorage.setItem('telawa.savedSessions', JSON.stringify(this.savedSessions)) } catch (e) { console.error(e) }
+    },
+    saveSession() {
+      const name = (this.sessionName || '').trim()
+      if (!name) return
+      const payload = {
+        id: String(Date.now()),
+        name,
+        savedAt: Date.now(),
+        settings: {
+          chapterId: this.chapterId,
+          rangeStart: this.rangeStart,
+          rangeEnd: this.rangeEnd,
+          reciterId: this.reciterId,
+          speed: this.speed,
+          delay: this.delay,
+          repeats: this.repeats,
+          playMode: this.playMode,
+          order: this.order,
+          blurAdjacent: this.blurAdjacent,
+          focusMode: this.focusMode,
+          rangeLoopDelay: this.rangeLoopDelay
+        }
+      }
+      this.savedSessions = [payload, ...this.savedSessions].slice(0, 20)
+      this.persistSavedSessions()
+      this.sessionName = ''
+      this.selectedSessionId = payload.id
+    },
+    async loadSession(id) {
+      const s = this.savedSessions.find(x => x.id === id)
+      if (!s) return
+      const set = s.settings || {}
+      this.chapterId = set.chapterId || 0
+      this.rangeStart = set.rangeStart || 1
+      this.rangeEnd = set.rangeEnd || 7
+      this.reciterId = set.reciterId || this.reciterId
+      this.speed = set.speed ?? this.speed
+      this.delay = set.delay ?? this.delay
+      this.repeats = set.repeats ?? this.repeats
+      this.playMode = set.playMode || this.playMode
+      this.order = set.order || this.order
+      this.blurAdjacent = set.blurAdjacent ?? this.blurAdjacent
+      this.focusMode = set.focusMode ?? this.focusMode
+      this.rangeLoopDelay = set.rangeLoopDelay ?? this.rangeLoopDelay
+
+      await this.loadChapter()
+      this.refreshVerses()
+      this.applySpeed()
+    },
+    deleteSession(id) {
+      this.savedSessions = this.savedSessions.filter(x => x.id !== id)
+      if (this.selectedSessionId === id) this.selectedSessionId = ''
+      this.persistSavedSessions()
+    },
     togglePlayerMenu() {
       this.playerMenuOpen = !this.playerMenuOpen
     },
@@ -378,6 +577,15 @@ export default {
       const t = Math.max(0, Math.floor(sec || 0))
       return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`
     },
+    verseClasses(verse, idx) {
+      const active = this.activeKey === verse.key
+      if (!this.blurAdjacent && !this.focusMode) return { active }
+      const activeIdx = this.verses.findIndex(v => v.key === this.activeKey)
+      const isNeighbor = activeIdx >= 0 && Math.abs(idx - activeIdx) === 1
+      const dim = this.focusMode && !active
+      const blur = this.blurAdjacent && !active && !isNeighbor
+      return { active, dim, blur }
+    },
     cycleTheme() {
       const themes = ['light', 'sepia', 'dark']
       const idx = themes.indexOf(this.theme)
@@ -413,12 +621,11 @@ export default {
     },
     async loadVerses() {
       if (!this.chapterId) return
-      if (this.audioSource === 'alquran') await this.ensureAlquranEdition()
       const params = {
         per_page: 300,
         translations: this.showTranslation ? '131' : undefined,
         words: this.showWordByWord,
-        audio: this.audioSource === 'qurancom' ? this.reciterId : undefined,
+        audio: this.reciterId,
         fields: this.script === 'tajweed' ? 'text_uthmani_tajweed' : 'text_uthmani'
       }
       try {
@@ -437,15 +644,6 @@ export default {
             audio: this.normalizeAudioUrl(w.audio_url)
           }))
         }))
-
-        if (this.audioSource === 'alquran' && this.alquranEdition) {
-          try {
-            const audioRes = await getSurahEdition(this.chapterId, this.alquranEdition)
-            const ayahs = audioRes.data?.data?.ayahs || []
-            const byNumberAudio = new Map(ayahs.map(a => [a.numberInSurah, a.audio]))
-            this.verses = this.verses.map(v => ({ ...v, audio: byNumberAudio.get(v.number) || v.audio }))
-          } catch (e) { console.error(e) }
-        }
 
         if (this.script === 'tajweed') {
           try {
@@ -538,6 +736,13 @@ export default {
       })
       this.audioElement.addEventListener('ended', () => {
         this.isPlaying = false
+        if (this.playMode === 'loop') {
+          setTimeout(() => {
+            this.audioElement.currentTime = 0
+            this.audioElement.play().catch(() => {})
+          }, (this.delay || 0) * 1000)
+          return
+        }
         if (this.playMode === 'auto') {
           setTimeout(() => this.next(), this.delay * 1000)
         }
@@ -603,6 +808,7 @@ export default {
   --accent: #8b5e3c;
   --accent-light: rgba(139, 94, 60, 0.08);
   --radius: 14px;
+  --navbar-offset: 56px;
   --font-ar: 'Amiri', 'Times New Roman', serif;
   --font-ui: -apple-system, 'Inter', sans-serif;
 }
@@ -918,18 +1124,26 @@ body {
 /* Tools Panel */
 .tools {
   position: fixed;
-  top: 65px;
+  top: 0;
   right: 0;
   bottom: 0;
-  width: 360px;
-  background: var(--surface);
-  border-left: 1px solid var(--border);
-  backdrop-filter: blur(10px);
+  width: 440px;
+  background: rgba(255, 255, 255, 0.92);
+  border-left: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(14px);
   transform: translateX(100%);
   transition: transform 0.25s ease;
-  z-index: 15;
+  z-index: 60;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  box-shadow: -40px 0 120px rgba(0, 0, 0, 0.22);
+}
+
+[data-theme="dark"] .tools {
+  background: rgba(18, 18, 18, 0.9);
+  border-left-color: rgba(255, 255, 255, 0.08);
+  box-shadow: -40px 0 120px rgba(0, 0, 0, 0.55);
 }
 
 .tools.open {
@@ -938,65 +1152,250 @@ body {
 
 @media (max-width: 768px) {
   .tools {
-    width: calc(100% - 32px);
-    right: 16px;
-    left: 16px;
-    border-radius: var(--radius);
-    transform: translateY(100%);
-    top: auto;
-    bottom: 16px;
-    height: auto;
-    max-height: 70vh;
+    left: 0;
+    right: 0;
+    width: 100%;
   }
 }
 
-.tools-head {
+.tools-top {
+  padding: 18px 18px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .tools-top {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.tools-topbar {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--border);
+  gap: 12px;
 }
 
 .tools-title {
-  font-weight: 500;
-  font-size: 0.85rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--text);
 }
 
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 1.2rem;
+.tools-x {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.55);
   cursor: pointer;
-  color: var(--text-muted);
+  font-size: 20px;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="dark"] .tools-x {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(30, 30, 40, 0.35);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .tools-tabs {
   display: flex;
-  gap: 4px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
+  gap: 8px;
+  margin-top: 12px;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 14px;
+  padding: 6px;
 }
 
 .tools-tabs button {
   flex: 1;
-  padding: 8px;
-  border-radius: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
   background: transparent;
   border: none;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   cursor: pointer;
-  color: var(--text-muted);
+  color: rgba(0, 0, 0, 0.55);
+  font-weight: 650;
 }
 
 .tools-tabs button.active {
-  background: var(--accent-light);
-  color: var(--accent);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.85);
+}
+
+[data-theme="dark"] .tools-tabs {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .tools-tabs button {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .tools-tabs button.active {
+  background: rgba(30, 30, 40, 0.9);
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
 }
 
 .tools-body {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  overflow-x: hidden;
+  padding: 16px 18px 110px;
+}
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sheet-section {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.66);
+  border-radius: 16px;
+  padding: 14px;
+}
+
+[data-theme="dark"] .sheet-section {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(30, 30, 40, 0.45);
+}
+
+.sheet-section-accent {
+  border-color: rgba(139, 94, 60, 0.18);
+  background: rgba(139, 94, 60, 0.06);
+}
+
+.sheet-h {
+  margin-bottom: 10px;
+}
+
+.sheet-h-title {
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+
+.sheet-h-sub {
+  margin-top: 2px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.tools-footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 14px 18px 18px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: linear-gradient(to top, rgba(255,255,255,0.98), rgba(255,255,255,0.78), rgba(255,255,255,0));
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+[data-theme="dark"] .tools-footer {
+  border-top-color: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(to top, rgba(18,18,18,0.98), rgba(18,18,18,0.78), rgba(18,18,18,0));
+}
+
+.tools-btn {
+  flex: 1;
+  padding: 12px 12px;
+  border-radius: 14px;
+  font-weight: 750;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+[data-theme="dark"] .tools-btn {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(30, 30, 40, 0.45);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tools-btn-primary {
+  background: var(--accent);
+  border-color: rgba(0, 0, 0, 0.05);
+  color: white;
+  box-shadow: 0 14px 34px rgba(139, 94, 60, 0.28);
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.mini-btn {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.mini-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mini-btn.danger {
+  border-color: rgba(255, 0, 0, 0.2);
+  color: #b00020;
+}
+
+.radio-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.radio {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text);
+  user-select: none;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+[data-theme="dark"] .radio {
+  background: rgba(30, 30, 40, 0.4);
+}
+
+.radio input {
+  margin: 0;
+}
+
+.checkline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.verses.focus .verse.dim {
+  opacity: 0.35;
+}
+
+.verse.blur {
+  filter: blur(2px);
+  opacity: 0.55;
 }
 
 .group {
