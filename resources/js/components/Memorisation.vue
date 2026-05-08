@@ -165,42 +165,69 @@
     </div>
 
     <!-- Audio Player -->
-    <div class="player" v-if="playerVisible">
-      <div class="player-seek" @click="seek($event)">
+    <div class="player-bar" v-if="playerVisible">
+      <div class="player-progress" @click="seek($event)">
         <div class="player-track"></div>
         <div class="player-fill" :style="{ width: seekPercent + '%' }"></div>
         <div class="player-handle" :style="{ left: seekPercent + '%' }"></div>
       </div>
-      <div class="player-row">
-        <span class="time">{{ formatTime(currentTime) }}</span>
-        <div class="player-buttons">
-          <button class="player-btn" @click="skipBack">↺10</button>
-          <button class="player-btn" @click="prev" :disabled="!canPrev">⏮</button>
-          <button class="play-pause" @click="togglePlay">{{ isPlaying ? '⏸' : '▶' }}</button>
-          <button class="player-btn" @click="next" :disabled="!canNext">⏭</button>
-          <button class="player-btn" @click="skipFwd">10↻</button>
+
+      <div class="player-controls">
+        <div class="player-time left">{{ formatTime(currentTime) }}</div>
+
+        <div class="player-center">
+          <button class="player-icon" @click="togglePlayerMenu" aria-label="Menu">⋯</button>
+          <button class="player-icon" @click="applySpeed" aria-label="Speed">{{ speed }}x</button>
+          <button class="player-icon" @click="prev" :disabled="!canPrev" aria-label="Previous">⏮</button>
+          <button class="player-icon play" @click="togglePlay" aria-label="Play">
+            {{ isPlaying ? '⏸' : '▶' }}
+          </button>
+          <button class="player-icon" @click="next" :disabled="!canNext" aria-label="Next">⏭</button>
+          <button class="player-icon" @click="closePlayer" aria-label="Close">×</button>
         </div>
-        <div class="player-meta">
-          <select v-model="reciterId" @change="updateAudioReciter" class="player-select">
-            <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
-          </select>
-          <select v-model="playMode" class="player-select">
-            <option value="auto">Auto</option>
-            <option value="manual">Manual</option>
-          </select>
-          <button class="player-close" @click="closePlayer">×</button>
-        </div>
-        <span class="time">{{ formatTime(duration) }}</span>
+
+        <div class="player-time right">{{ formatTime(duration) }}</div>
       </div>
-      <div v-if="lastAudioDebug" class="audio-debug">
-        <div><strong>Audio debug:</strong> {{ new Date(lastAudioDebug.at).toLocaleTimeString() }} ({{
-          lastAudioDebug.phase }})</div>
-        <div v-if="lastAudioDebug.key"><strong>Ayah:</strong> {{ lastAudioDebug.key }}</div>
-        <div v-if="lastAudioDebug.src"><strong>Src:</strong> {{ lastAudioDebug.src }}</div>
-        <div v-if="lastAudioDebug.currentSrc"><strong>Current:</strong> {{ lastAudioDebug.currentSrc }}</div>
-        <div v-if="lastAudioDebug.code"><strong>Code:</strong> {{ lastAudioDebug.code }}</div>
-        <div v-if="lastAudioDebug.message"><strong>Msg:</strong> {{ lastAudioDebug.message }}</div>
-        <div v-if="lastAudioDebug.error"><strong>Error:</strong> {{ lastAudioDebug.error }}</div>
+
+      <div v-if="playerMenuOpen" class="player-menu-overlay" @click="playerMenuOpen = false">
+        <div class="player-menu" @click.stop>
+          <button class="player-menu-item" @click="downloadCurrentAudio">
+            <span class="pm-ico">↓</span>
+            <span>Download</span>
+          </button>
+          <button class="player-menu-item" @click="tab = 'playback'; showTools = true; playerMenuOpen = false">
+            <span class="pm-ico">↺</span>
+            <span>Manage repeat settings</span>
+          </button>
+          <div class="player-menu-sep"></div>
+          <div class="player-menu-row">
+            <span class="pm-label">Speed</span>
+            <input class="pm-range" type="range" min="0.5" max="1.5" step="0.1" v-model.number="speed"
+              @input="applySpeed">
+            <span class="pm-value">{{ speed }}x</span>
+          </div>
+          <div class="player-menu-row">
+            <span class="pm-label">Reciter</span>
+            <select v-model="reciterId" @change="updateAudioReciter" class="pm-select">
+              <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
+            </select>
+          </div>
+          <div class="player-menu-row">
+            <span class="pm-label">Audio</span>
+            <select v-model="audioSource" @change="refreshVerses" class="pm-select">
+              <option value="qurancom">Quran.com</option>
+              <option value="alquran">AlQuran Cloud</option>
+            </select>
+          </div>
+          <div class="player-menu-row" v-if="audioSource === 'alquran'">
+            <span class="pm-label">Edition</span>
+            <select v-model="alquranEdition" @change="refreshVerses" class="pm-select">
+              <option v-for="e in alquranAudioEditions" :key="e.identifier" :value="e.identifier">
+                {{ e.name }}
+              </option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
     <audio ref="audio" preload="auto" style="display:none"></audio>
@@ -253,7 +280,8 @@ export default {
       duration: 0,
 
       audioElement: null,
-      lastAudioDebug: null
+      lastAudioDebug: null,
+      playerMenuOpen: false
     }
   },
   computed: {
@@ -303,6 +331,22 @@ export default {
     document.documentElement.setAttribute('data-theme', this.theme)
   },
   methods: {
+    togglePlayerMenu() {
+      this.playerMenuOpen = !this.playerMenuOpen
+    },
+    downloadCurrentAudio() {
+      const src = this.audioElement?.currentSrc || this.audioElement?.src
+      if (!src) return
+      const a = document.createElement('a')
+      a.href = src
+      a.target = '_blank'
+      a.rel = 'noopener noreferrer'
+      a.download = ''
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      this.playerMenuOpen = false
+    },
     async loadAlquranAudioEditions() {
       try {
         const res = await getEditions({ format: 'audio', type: 'versebyverse' })
@@ -536,6 +580,7 @@ export default {
       if (this.audioElement) { this.audioElement.pause(); this.audioElement.src = '' }
       this.playerVisible = false
       this.isPlaying = false
+      this.playerMenuOpen = false
     },
     handlePrimaryAction() {
       if (!this.chapterId) this.showTools = true
@@ -1060,129 +1105,179 @@ body {
 }
 
 /* Audio Player */
-.player {
+.player-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  backdrop-filter: blur(12px);
-  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(8px);
+  padding: 8px 16px 10px;
   z-index: 25;
 }
 
-.player-seek {
+.player-progress {
   position: relative;
-  height: 24px;
+  height: 18px;
   cursor: pointer;
   margin-bottom: 6px;
 }
 
 .player-track {
   position: absolute;
-  top: 10px;
+  top: 8px;
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--border);
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 2px;
 }
 
 .player-fill {
   position: absolute;
-  top: 10px;
+  top: 8px;
   left: 0;
   height: 2px;
-  background: var(--accent);
+  background: rgba(0, 0, 0, 0.55);
   border-radius: 2px;
 }
 
 .player-handle {
   position: absolute;
-  top: 6px;
+  top: 4px;
   width: 10px;
   height: 10px;
-  background: var(--accent);
+  background: rgba(0, 0, 0, 0.55);
   border-radius: 50%;
   transform: translateX(-50%);
 }
 
-.player-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.audio-debug {
-  margin-top: 10px;
-  padding: 10px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  border-radius: 10px;
-  font-size: 12px;
-  color: var(--text-muted);
-  word-break: break-all;
-}
-
-.time {
-  font-family: monospace;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  min-width: 45px;
-}
-
-.player-buttons {
-  display: flex;
-  gap: 6px;
+.player-controls {
+  display: grid;
+  grid-template-columns: 56px 1fr 56px;
   align-items: center;
 }
 
-.player-btn {
+.player-time {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.player-time.right { text-align: right; }
+
+.player-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.player-icon {
   background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
-
-.play-pause {
-  width: 40px;
-  height: 40px;
-  border-radius: 40px;
-  background: var(--accent);
   border: none;
-  color: white;
+  padding: 6px;
+  font-size: 20px;
+  line-height: 1;
   cursor: pointer;
-  font-size: 1rem;
+  color: rgba(0, 0, 0, 0.65);
 }
 
-.player-meta {
+.player-icon:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.player-icon.play {
+  font-size: 22px;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.player-menu-overlay {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  z-index: 30;
+}
+
+.player-menu {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 58px;
+  width: min(420px, calc(100vw - 24px));
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  padding: 8px;
+}
+
+.player-menu-item {
+  width: 100%;
   display: flex;
-  gap: 8px;
   align-items: center;
-}
-
-.player-select {
-  padding: 6px 10px;
-  border-radius: 20px;
-  border: 1px solid var(--border);
+  gap: 10px;
+  padding: 10px;
+  border: none;
   background: transparent;
-  font-size: 0.7rem;
-  color: var(--text);
-}
-
-.player-close {
-  width: 32px;
-  height: 32px;
-  border-radius: 20px;
-  background: transparent;
-  border: 1px solid var(--border);
   cursor: pointer;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.85);
+  text-align: left;
+  border-radius: 8px;
+}
+
+.player-menu-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.pm-ico {
+  width: 18px;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.player-menu-sep {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.08);
+  margin: 6px 2px;
+}
+
+.player-menu-row {
+  display: grid;
+  grid-template-columns: 70px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+}
+
+.pm-label {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.pm-value {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.75);
+  min-width: 40px;
+  text-align: right;
+}
+
+.pm-range {
+  width: 100%;
+}
+
+.pm-select {
+  grid-column: 2 / span 2;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: white;
+  font-size: 13px;
 }
 
 /* Responsive */
