@@ -7,12 +7,12 @@ const openFaq = ref(null);
 
 const faqs = ref([
     {
-        question: 'I forget verses I memorised years ago. Can Telawa really help?',
-        answer: "Yes — and that's exactly what we built this for. Our system identifies weak verses based on your recall patterns and schedules revision to rebuild those foundations. Many users have recovered 'lost' juz within weeks.",
+        question: 'I forget verses I memorised years ago. Can Mutqin really help?',
+        answer: "Yes and that's exactly what we built this for. Our system identifies weak verses based on your recall patterns and schedules revision to rebuild those foundations. Many users have recovered 'lost' juz within weeks.",
     },
     {
         question: 'How is this different from Anki or other flashcard apps?',
-        answer: "Anki is generic spaced repetition. Telawa is built specifically for Qur'an memorisation — with features like ayah-level tracking, proper Arabic script, tajweed markers, and revision schedules designed by huffadh, not generalists.",
+        answer: "Anki is generic spaced repetition. Mutqin is built specifically for Qur'an memorisation with features like ayah-level tracking, proper Arabic script, tajweed markers, and revision schedules designed by huffadh, not generalists.",
     },
     {
         question: 'I only have 10 minutes a day. Is that enough?',
@@ -20,11 +20,11 @@ const faqs = ref([
     },
     {
         question: 'What if I skip a few days?',
-        answer: 'Life happens — we get it. The algorithm adjusts when you return, prioritising the verses most at risk. No guilt, no punishments. Just a smart system that meets you where you are.',
+        answer: 'Life happens we get it. The algorithm adjusts when you return, prioritising the verses most at risk. No guilt, no punishments. Just a smart system that meets you where you are.',
     },
     {
         question: 'Do I need to be tech-savvy to use this?',
-        answer: "Not at all. The interface is clean and simple. If you can send an email, you can use Telawa. We've tested it with users aged 12 to 75.",
+        answer: "Not at all. The interface is clean and simple. If you can send an email, you can use Mutqin. We've tested it with users aged 12 to 75.",
     },
 ]);
 
@@ -60,7 +60,7 @@ function startJourney() {
 
 function showDemo() {
     closeMobileMenu();
-    alert('Watch how Telawa finds your weak spots before you forget them. Request a demo: support@telawa.com');
+    alert('Watch how Mutqin finds your weak spots before you forget them. Request a demo: support@Mutqin.com');
 }
 
 function startMonthly() {
@@ -116,7 +116,7 @@ onBeforeUnmount(() => {
                             <span class="highlight">Then you forgot.</span>
                         </h1>
                         <p class="hero-description">
-                            We get it. Months — maybe years — of Hifz. Then life happened. Work. Kids. Exams. <br />
+                            We get it. Months maybe years of Hifz. Then life happened. Work. Kids. Exams. <br />
                             And slowly, those āyāt slipped away.
                         </p>
                         <div class="pain-solution">
@@ -191,12 +191,12 @@ onBeforeUnmount(() => {
                                     <span class="revision-value">37 days</span>
                                 </div>
                             </div>
-                            <div class="dashboard-note">“The best among you are those who learn the Qur'an and teach it.” — ﷺ</div>
+                            <div class="dashboard-note">“The best among you are those who learn the Qur'an and teach it.” ﷺ</div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="scroll-prompt">↓ Keep scrolling — this gets real ↓</div>
+            <div class="scroll-prompt">↓ Keep scrolling this gets real ↓</div>
         </section>
 
         <!-- TESTIMONIALS SECTION -->
@@ -210,21 +210,21 @@ onBeforeUnmount(() => {
                     <div class="testimonial-card">
                         <div class="testimonial-quote">"</div>
                         <p class="testimonial-text">
-                            After 8 years of Hifz, I was forgetting faster than I could revise. Telawa changed that. My retention went from 60% to 89% in 4 months. Alhamdulillah.
+                            After 8 years of Hifz, I was forgetting faster than I could revise. Mutqin changed that. My retention went from 60% to 89% in 4 months. Alhamdulillah.
                         </p>
                         <div class="testimonial-author">— Abu Abdullah, Hafiz &amp; Teacher</div>
                     </div>
                     <div class="testimonial-card">
                         <div class="testimonial-quote">"</div>
                         <p class="testimonial-text">
-                            As a working mother of three, I barely had time to revise. Telawa's 15-minute sessions fit perfectly into my day. I've finally stopped forgetting what I memorised years ago.
+                            As a working mother of three, I barely had time to revise. Mutqin's 15-minute sessions fit perfectly into my day. I've finally stopped forgetting what I memorised years ago.
                         </p>
                         <div class="testimonial-author">— Fatima, Mother &amp; Hafiza</div>
                     </div>
                     <div class="testimonial-card">
                         <div class="testimonial-quote">"</div>
                         <p class="testimonial-text">
-                            I started my Hifz journey at university. Other apps overwhelmed me. Telawa's gentle approach gave me confidence. I've now completed 5 juz and remember them all.
+                            I started my Hifz journey at university. Other apps overwhelmed me. Mutqin's gentle approach gave me confidence. I've now completed 5 juz and remember them all.
                         </p>
                         <div class="testimonial-author">— Aisha, University Student</div>
                     </div>
@@ -237,7 +237,7 @@ onBeforeUnmount(() => {
             <div class="container">
                 <div class="difference-header">
                     <div class="section-label">Here's what makes us different</div>
-                    <h2 class="section-title">Other apps vs. Telawa</h2>
+                    <h2 class="section-title">Other apps vs. Mutqin</h2>
                 </div>
                 <div class="difference-grid">
                     <div class="other-card">
@@ -251,11 +251,11 @@ onBeforeUnmount(() => {
                         </ul>
                     </div>
                     <div class="vs-divider">VS</div>
-                    <div class="telawa-card">
-                        <h3>Telawa</h3>
+                    <div class="Mutqin-card">
+                        <h3>Mutqin</h3>
                         <ul>
                             <li>Focus on what you KEEP forever</li>
-                            <li>No gamification — sincere progress</li>
+                            <li>No gamification sincere progress</li>
                             <li>Adaptive to YOUR recall</li>
                             <li>Flags weak verses BEFORE they fade</li>
                             <li>Shows what you're about to forget</li>
@@ -269,7 +269,7 @@ onBeforeUnmount(() => {
         <section id="how-it-works" class="how-it-works">
             <div class="container">
                 <div class="section-header text-center">
-                    <div class="section-label">The Telawa method</div>
+                    <div class="section-label">The Mutqin method</div>
                     <h2 class="section-title">Three steps. Zero forgetfulness.</h2>
                     <p class="section-subtitle">No fluff. No gimmicks. A system that actually works.</p>
                 </div>
@@ -283,7 +283,7 @@ onBeforeUnmount(() => {
                             </svg>
                         </div>
                         <h3>Tell us what you know</h3>
-                        <p>Import your Hifz or start fresh. We don't judge weak spots — we hunt them down so you can fix them.</p>
+                        <p>Import your Hifz or start fresh. We don't judge weak spots we hunt them down so you can fix them.</p>
                         <div class="step-result">Personalised map of your forgetting risks</div>
                     </div>
                     <div class="step-card">
@@ -306,7 +306,7 @@ onBeforeUnmount(() => {
                             </svg>
                         </div>
                         <h3>Never lose an ayah again</h3>
-                        <p>Weak verses are flagged in advance. You'll always know what needs attention — no surprises.</p>
+                        <p>Weak verses are flagged in advance. You'll always know what needs attention no surprises.</p>
                         <div class="step-result">Peace of mind. Your Hifz is protected.</div>
                     </div>
                 </div>
@@ -314,11 +314,11 @@ onBeforeUnmount(() => {
             </div>
         </section>
 
-        <!-- WHY TELAWA -->
+        <!-- WHY Mutqin -->
         <section id="why-us" class="why-us">
             <div class="container">
                 <div class="section-header text-center">
-                    <div class="section-label">Why Telawa?</div>
+                    <div class="section-label">Why Mutqin?</div>
                     <h2 class="section-title">Because forgetting the Qur'an hurts.</h2>
                     <p class="section-subtitle">We've been there. Here's how we solve what others ignore.</p>
                 </div>
@@ -336,12 +336,12 @@ onBeforeUnmount(() => {
                     </div>
                     <div class="pain-point">
                         <div class="pain-emoji">🎮</div>
-                        <div class="pain-question">"Apps feel like games — not serious"</div>
+                        <div class="pain-question">"Apps feel like games not serious"</div>
                         <div class="our-solution">No badges. No leaderboards. Just clear metrics and honest feedback.</div>
                     </div>
                     <div class="pain-point">
                         <div class="pain-emoji">📚</div>
-                        <div class="pain-question">"I memorised years ago — now it's gone"</div>
+                        <div class="pain-question">"I memorised years ago now it's gone"</div>
                         <div class="our-solution">Our system rebuilds weak foundations. You CAN get it back.</div>
                     </div>
                 </div>
@@ -447,13 +447,13 @@ onBeforeUnmount(() => {
                     <div class="contact-left">
                         <div class="contact-emoji">📬</div>
                         <h3>We'd love to hear from you</h3>
-                        <p>Whether you have a question about Telawa, need help with your Hifz journey, or just want to share your story — our team is here for you.</p>
+                        <p>Whether you have a question about Mutqin, need help with your Hifz journey, or just want to share your story our team is here for you.</p>
                         <div class="contact-detail">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                                 <polyline points="22,6 12,13 2,6" />
                             </svg>
-                            support@telawa.com
+                            support@Mutqin.com
                         </div>
                         <div class="contact-detail">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -462,7 +462,7 @@ onBeforeUnmount(() => {
                             </svg>
                             Response within 24 hours
                         </div>
-                        <div class="contact-dua">“And when My servants ask you concerning Me — indeed I am near.” — Qur'an 2:186</div>
+                        <div class="contact-dua">“And when My servants ask you concerning Me indeed I am near.” Qur'an 2:186</div>
                     </div>
                     <form class="contact-right" @submit.prevent="submitContact">
                         <input type="text" placeholder="Your name" class="form-input" required />
@@ -479,7 +479,7 @@ onBeforeUnmount(() => {
             <div class="container">
                 <div class="footer-grid">
                     <div class="footer-brand">
-                        <div class="footer-logo">Telawa — نور على نور</div>
+                        <div class="footer-logo">Mutqin نور على نور</div>
                         <p class="footer-tagline">Preserving the Qur'an in hearts, one ayah at a time.</p>
                     </div>
                     <div class="footer-links-group">
@@ -497,11 +497,11 @@ onBeforeUnmount(() => {
                     </div>
                     <div class="footer-links-group">
                         <h4>Connect</h4>
-                        <a href="#">support@telawa.com</a>
+                        <a href="#">support@Mutqin.com</a>
                     </div>
                 </div>
                 <div class="footer-bottom">
-                    <p>© 2025 Telawa. Made with رحمة for the Ummah.</p>
+                    <p>© 2025 Mutqin. Made with رحمة for the Ummah.</p>
                 </div>
             </div>
         </footer>
@@ -1046,7 +1046,7 @@ onBeforeUnmount(() => {
 }
 
 .other-card,
-.telawa-card {
+.Mutqin-card {
     flex: 1;
     min-width: 280px;
     background: white;
@@ -1057,19 +1057,19 @@ onBeforeUnmount(() => {
 }
 
 .other-card h3,
-.telawa-card h3 {
+.Mutqin-card h3 {
     font-size: 1.3rem;
     margin-bottom: 24px;
     letter-spacing: -0.3px;
 }
 
 .other-card ul,
-.telawa-card ul {
+.Mutqin-card ul {
     list-style: none;
 }
 
 .other-card li,
-.telawa-card li {
+.Mutqin-card li {
     padding: 12px 0;
     font-size: 0.9rem;
     border-bottom: 1px solid rgba(160, 120, 76, 0.08);
@@ -1089,7 +1089,7 @@ onBeforeUnmount(() => {
     border-radius: 60px;
 }
 
-.telawa-card {
+.Mutqin-card {
     border: 1px solid #a0784c;
     background: linear-gradient(135deg, white, rgba(160, 120, 76, 0.02));
 }
