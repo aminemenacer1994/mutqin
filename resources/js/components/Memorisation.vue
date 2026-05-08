@@ -1,107 +1,1218 @@
 <template>
-  <div class="mq" :data-theme="theme">
-    <main class="mq-main" :style="mainStyle">
-      <section v-if="showResumePrompt" class="mq-resume">
-        <p>Resume your last session?</p>
-        <div class="icon-row">
-          <button class="icon-btn" @click="resumeSavedSession" aria-label="resume"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          <button class="icon-btn" @click="discardSavedSession" aria-label="new"><svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.5L21 10l-4.5 4.3 1 6.2L12 17.6 6.5 20.5l1-6.2L3 10l6.3-1.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></button>
+  <div class="app" :data-theme="theme">
+
+
+    <!-- Main Content -->
+    <div class="main" :class="{ 'tools-open': showTools }">
+
+      <div class="content">
+        <!-- Progress & CTA -->
+        <div class="progress-row" v-if="currentChapter && verses.length">
+          <div class="progress-bar">
+            <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
+          </div>
+          <button class="cta-btn" @click="handlePrimaryAction">
+            <span>{{ primaryLabel }}</span>
+            <span>{{ primaryIcon }}</span>
+          </button>
         </div>
-      </section>
 
-      <header class="mq-progress" v-if="verses.length">
-        <div class="mq-progress-meta">
-          <strong>{{ chapterTitle || 'Surah' }}</strong>
-          <span>Ayah {{ currentAyahNumber }} / {{ totalAyahs }}</span>
-          <span>Remaining: {{ remainingAyahs }}</span>
-          <span>Progress: {{ progressPercent }}%</span>
-          <span>ETA: {{ etaText }}</span>
-          <span>{{ sessionType }}</span>
-          <button class="icon-btn" @click="scrollToActiveAyah" aria-label="jump to current"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+        <!-- Empty State -->
+        <div v-if="!verses.length" class="empty">
+          <div class="empty-card">
+            <div class="empty-icon">﴿</div>
+            <h3>Begin your journey</h3>
+            <p>Select a surah, choose your range, and press Start.</p>
+            <button class="outline-btn" @click="showTools = true">Open controls →</button>
+          </div>
         </div>
-        <div class="mq-progress-track"><div class="mq-progress-fill" :style="{ width: progressPercent + '%' }"/></div>
-      </header>
 
-      <section class="mq-reading">
-        <div v-if="loading" class="mq-state">Loading…</div>
-        <div v-else-if="errorMessage" class="mq-state mq-state-error"><span>{{ errorMessage }}</span><button class="icon-btn" @click="loadLookups" aria-label="retry"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
-        <article v-for="v in verses" :key="v.key" class="mq-ayah" :class="{ active: v.key===activeVerseKey }" @click="setActive(v)">
-          <div class="mq-ayah-head"><span>{{ v.number }}</span><button class="icon-btn" @click.stop="playVerse(v)" aria-label="play"><svg viewBox="0 0 24 24"><path d="M8 6v12l10-6z" fill="currentColor"/></svg></button></div>
-          <div class="mq-arabic" dir="rtl" v-html="v.arabic"></div>
-          <p class="mq-trans">{{ v.translation }}</p>
-        </article>
-      </section>
-    </main>
-
-    <div v-if="showOffcanvas" class="mq-backdrop" :style="{ top: navbarHeight + 'px' }" @click="showOffcanvas=false"></div>
-    <aside class="mq-panel" :class="{ open: showOffcanvas }" :style="panelStyle" @keydown.esc="showOffcanvas=false">
-      <div class="mq-panel-head"><button class="icon-btn" @click="showOffcanvas=false" aria-label="close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
-      <div class="mq-controls">
-        <label>Theme</label><select v-model="theme"><option value="light">Light</option><option value="sepia">Sepia</option><option value="dark">Dark</option></select>
-        <label>Mode</label><select v-model="activeMode"><option value="beginner">Beginner</option><option value="advanced">Advanced</option></select>
-        <label>Surah</label><select v-model.number="chapterId" @change="loadVerses"><option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.id }}. {{ c.name_simple }}</option></select>
-        <label>Reciter</label><select v-model.number="reciterId" @change="loadVerses"><option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option></select>
-        <label>Ayah range</label><div class="range"><input type="number" v-model.number="rangeStart" min="1"><input type="number" v-model.number="rangeEnd" :max="maxAyahNumber"></div>
-        <p v-if="validationError" class="mq-validation">{{ validationError }}</p>
-
-        <template v-if="activeMode==='beginner'">
-          <label>Playback mode</label><select v-model="settings.playMode"><option value="continuous">Continuous</option><option value="manual">Manual</option></select>
-          <label>Ayah repeats</label><input type="number" min="1" max="5" v-model.number="settings.ayahRepeats">
-        </template>
-        <template v-else>
-          <label>Playback mode</label><select v-model="settings.playMode"><option value="continuous">Continuous</option><option value="repeat">Repeat</option><option value="manual">Manual</option></select>
-          <label>Chain mode</label><select v-model="settings.chainMode"><option value="sequential">Sequential</option><option value="cumulative">Cumulative</option></select>
-          <label>Ayah repeats</label><input type="number" min="1" max="10" v-model.number="settings.ayahRepeats">
-          <label>Range repeats</label><input type="number" min="1" max="10" v-model.number="settings.rangeRepeats">
-          <label>Range loop delay (sec)</label><input type="number" min="0" max="30" step="1" v-model.number="settings.rangeLoopDelaySec">
-        </template>
-
-        <div class="icon-row">
-          <button class="icon-btn" @click="startSession" :disabled="!!validationError" aria-label="start"><svg viewBox="0 0 24 24"><path d="M8 6v12l10-6z" fill="currentColor"/></svg></button>
-          <button class="icon-btn" @click="resetByMode" aria-label="reset"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
-          <button class="icon-btn" @click="showOffcanvas=false" aria-label="close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+        <!-- Verses -->
+        <div v-else class="verses" :class="{ compact: compactMode }">
+          <div v-for="verse in verses" :key="verse.key" class="verse" :class="{ active: activeKey === verse.key }">
+            <div class="verse-head">
+              <div class="verse-badge">
+                <span class="verse-num">Ayah {{ verse.number }}</span>
+                <span class="verse-ref">{{ verse.key }}</span>
+              </div>
+              <div class="verse-actions">
+                <button class="action-btn" @click="playVerse(verse)">▶</button>
+                <button class="action-btn" @click="setActive(verse.key)">◎</button>
+              </div>
+            </div>
+            <div class="verse-arabic" dir="rtl" v-html="verse.arabic"></div>
+            <div v-if="showTranslation && verse.translation" class="verse-translation">{{ verse.translation }}</div>
+            <div v-if="showWordByWord && verse.words?.length" class="verse-words">
+              <span v-for="(w, i) in verse.words" :key="i" class="word">
+                <span class="word-ar" dir="rtl">{{ w.ar }}</span>
+                <span class="word-en">{{ w.en }}</span>
+                <button v-if="w.audio" class="word-play" @click="playWordAudio(w.audio)">🔊</button>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="mq-retention"><div class="mq-retention-head"><h4>Retention Dashboard</h4><button class="icon-btn" @click="resetRetentionHistory" aria-label="reset retention history"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div><p>Overall retention: {{ retentionMetrics.overall }}%</p><p>Surah mastery: {{ retentionMetrics.mastery }}%</p><p>Weak ayahs: {{ retentionMetrics.weakAyahs }}</p><p>Weak clusters: {{ retentionMetrics.weakClusters }}</p><p>Trend: {{ retentionMetrics.trend }}</p><p>Weekly improvement: {{ retentionMetrics.weekly }}%</p><small>{{ dueExplanation }}</small></div>
-    </aside>
 
-    <footer class="mq-player" v-if="activeAudioSrc">
-      <span>{{ currentTimeText }}</span>
-      <input type="range" min="0" :max="duration || 0" step="0.1" :value="currentTime" @input="seekAudio">
-      <span>{{ durationText }}</span>
-      <button class="icon-btn" @click="skip(-10)" aria-label="back 10"><svg viewBox="0 0 24 24"><path d="M11 7l-6 5 6 5V7zm8 0l-6 5 6 5V7z" fill="currentColor"/></svg></button>
-      <button class="icon-btn" @click="togglePlay" :aria-label="isPlaying ? 'pause' : 'play'"><svg v-if="!isPlaying" viewBox="0 0 24 24"><path d="M8 6v12l10-6z" fill="currentColor"/></svg><svg v-else viewBox="0 0 24 24"><path d="M8 6h3v12H8zm5 0h3v12h-3z" fill="currentColor"/></svg></button>
-      <button class="icon-btn" @click="skip(10)" aria-label="forward 10"><svg viewBox="0 0 24 24"><path d="M13 7l6 5-6 5V7zM5 7l6 5-6 5V7z" fill="currentColor"/></svg></button>
-      <button class="icon-btn" @click="showOffcanvas = !showOffcanvas" aria-label="panel"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
-      <audio ref="audio" preload="auto" :src="activeAudioSrc" @timeupdate="onTime" @loadedmetadata="onMeta" @ended="onEnded" @error="onAudioError"></audio>
-    </footer>
+      <!-- Tools Panel -->
+      <aside class="tools" :class="{ open: showTools }">
+        <div class="tools-head">
+          <span class="tools-title">Controls</span>
+          <button class="close-btn" @click="showTools = false">×</button>
+        </div>
+        <div class="tools-tabs">
+          <button :class="{ active: tab === 'setup' }" @click="tab = 'setup'">Setup</button>
+          <button :class="{ active: tab === 'playback' }" @click="tab = 'playback'">Playback</button>
+          <button :class="{ active: tab === 'display' }" @click="tab = 'display'">Display</button>
+        </div>
+        <div class="tools-body">
+          <!-- Setup Tab -->
+          <div v-if="tab === 'setup'" class="group">
+            <div class="field">
+              <label>Surah</label>
+              <select v-model="chapterId" @change="loadChapter" class="select">
+                <option :value="0">Choose a surah...</option>
+                <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.id }}. {{ c.name_simple }}</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Range</label>
+              <div class="range">
+                <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
+                <span>→</span>
+                <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
+              </div>
+            </div>
+            <div class="field">
+              <label>Reciter</label>
+              <select v-model="reciterId" @change="refreshVerses" class="select">
+                <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Audio source</label>
+              <select v-model="audioSource" @change="refreshVerses" class="select">
+                <option value="qurancom">Quran.com</option>
+                <option value="alquran">AlQuran Cloud</option>
+              </select>
+            </div>
+            <div class="field" v-if="audioSource === 'alquran'">
+              <label>AlQuran edition</label>
+              <select v-model="alquranEdition" @change="refreshVerses" class="select">
+                <option v-for="e in alquranAudioEditions" :key="e.identifier" :value="e.identifier">
+                  {{ e.name }} ({{ e.identifier }})
+                </option>
+              </select>
+            </div>
+            <button class="primary-btn full" @click="startSession">▶ Start session</button>
+          </div>
+
+          <!-- Playback Tab -->
+          <div v-if="tab === 'playback'" class="group">
+            <div class="field">
+              <label>Mode</label>
+              <div class="toggle">
+                <button :class="{ active: playMode === 'auto' }" @click="playMode = 'auto'">Auto</button>
+                <button :class="{ active: playMode === 'manual' }" @click="playMode = 'manual'">Manual</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>Speed <span class="value">{{ speed }}x</span></label>
+              <input type="range" class="slider" min="0.5" max="1.5" step="0.1" v-model.number="speed"
+                @input="applySpeed">
+            </div>
+            <div class="field">
+              <label>Delay <span class="value">{{ delay }}s</span></label>
+              <input type="range" class="slider" min="0" max="10" step="0.5" v-model.number="delay">
+            </div>
+            <div class="field">
+              <label>Repeats <span class="value">{{ repeats }}</span></label>
+              <input type="range" class="slider" min="1" max="10" step="1" v-model.number="repeats"
+                @change="rebuildQueue">
+            </div>
+            <div class="field">
+              <label>Order</label>
+              <select v-model="order" @change="rebuildQueue" class="select">
+                <option value="seq">Sequential</option>
+                <option value="cum">Cumulative</option>
+                <option value="rand">Random</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Display Tab -->
+          <div v-if="tab === 'display'" class="group">
+            <div class="field">
+              <label>Script</label>
+              <div class="toggle">
+                <button :class="{ active: script === 'uthmani' }"
+                  @click="script = 'uthmani'; refreshVerses()">Uthmani</button>
+                <button :class="{ active: script === 'tajweed' }"
+                  @click="script = 'tajweed'; refreshVerses()">Tajweed</button>
+              </div>
+            </div>
+            <div class="field check">
+              <label><input type="checkbox" v-model="showTranslation" @change="refreshVerses"> Translation</label>
+            </div>
+            <div class="field check">
+              <label><input type="checkbox" v-model="showWordByWord" @change="refreshVerses"> Word by word</label>
+            </div>
+            <div class="field check">
+              <label><input type="checkbox" v-model="compactMode"> Compact view</label>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Audio Player -->
+    <div class="player" v-if="playerVisible">
+      <div class="player-seek" @click="seek($event)">
+        <div class="player-track"></div>
+        <div class="player-fill" :style="{ width: seekPercent + '%' }"></div>
+        <div class="player-handle" :style="{ left: seekPercent + '%' }"></div>
+      </div>
+      <div class="player-row">
+        <span class="time">{{ formatTime(currentTime) }}</span>
+        <div class="player-buttons">
+          <button class="player-btn" @click="skipBack">↺10</button>
+          <button class="player-btn" @click="prev" :disabled="!canPrev">⏮</button>
+          <button class="play-pause" @click="togglePlay">{{ isPlaying ? '⏸' : '▶' }}</button>
+          <button class="player-btn" @click="next" :disabled="!canNext">⏭</button>
+          <button class="player-btn" @click="skipFwd">10↻</button>
+        </div>
+        <div class="player-meta">
+          <select v-model="reciterId" @change="updateAudioReciter" class="player-select">
+            <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
+          </select>
+          <select v-model="playMode" class="player-select">
+            <option value="auto">Auto</option>
+            <option value="manual">Manual</option>
+          </select>
+          <button class="player-close" @click="closePlayer">×</button>
+        </div>
+        <span class="time">{{ formatTime(duration) }}</span>
+      </div>
+      <div v-if="lastAudioDebug" class="audio-debug">
+        <div><strong>Audio debug:</strong> {{ new Date(lastAudioDebug.at).toLocaleTimeString() }} ({{
+          lastAudioDebug.phase }})</div>
+        <div v-if="lastAudioDebug.key"><strong>Ayah:</strong> {{ lastAudioDebug.key }}</div>
+        <div v-if="lastAudioDebug.src"><strong>Src:</strong> {{ lastAudioDebug.src }}</div>
+        <div v-if="lastAudioDebug.currentSrc"><strong>Current:</strong> {{ lastAudioDebug.currentSrc }}</div>
+        <div v-if="lastAudioDebug.code"><strong>Code:</strong> {{ lastAudioDebug.code }}</div>
+        <div v-if="lastAudioDebug.message"><strong>Msg:</strong> {{ lastAudioDebug.message }}</div>
+        <div v-if="lastAudioDebug.error"><strong>Error:</strong> {{ lastAudioDebug.error }}</div>
+      </div>
+    </div>
+    <audio ref="audio" preload="auto" style="display:none"></audio>
   </div>
 </template>
 
 <script>
-import axios from 'axios';
+import axios from 'axios'
+import { getEditions, getSurahEdition } from '../lib/quranApis'
+
 export default {
-  data(){return{theme:localStorage.getItem('mq_theme')||'light',showOffcanvas:JSON.parse(localStorage.getItem('mq_offcanvas')??'true'),navbarHeight:72,chapters:[],reciters:[],verses:[],chapterId:1,reciterId:7,rangeStart:1,rangeEnd:7,activeVerseKey:null,activeAudioSrc:'',isPlaying:false,currentTime:0,duration:0,queue:[],queueIndex:0,currentRangeLoop:1,pendingRangeTimer:null,showResumePrompt:false,loading:false,errorMessage:'',activeMode:'beginner',modeSettings:{beginner:{playMode:'continuous',chainMode:'sequential',ayahRepeats:1,rangeRepeats:1,rangeLoopDelaySec:0},advanced:{playMode:'continuous',chainMode:'cumulative',ayahRepeats:2,rangeRepeats:2,rangeLoopDelaySec:2}},retentionHistory:JSON.parse(localStorage.getItem('mq_retention_history')||'[]')}},
-  computed:{settings(){return this.modeSettings[this.activeMode]},panelStyle(){return{top:`${this.navbarHeight}px`,right:0,bottom:0}},mainStyle(){return{marginRight:this.showOffcanvas?'420px':'0'}},maxAyahNumber(){return this.chapters.find(c=>c.id===this.chapterId)?.verses_count||286},totalAyahs(){return this.verses.length},currentAyahNumber(){return this.verses.find(v=>v.key===this.activeVerseKey)?.number||this.rangeStart},remainingAyahs(){return Math.max(this.rangeEnd-this.currentAyahNumber,0)},progressPercent(){const t=Math.max(this.rangeEnd-this.rangeStart+1,1);return Math.min(100,Math.round(((this.currentAyahNumber-this.rangeStart+1)/t)*100))},etaText(){return `${Math.max(this.remainingAyahs*0.6,1).toFixed(0)} min`},chapterTitle(){return this.chapters.find(c=>c.id===this.chapterId)?.name_simple||''},retentionMetrics(){const items=this.retentionHistory; if(!items.length) return {overall:0,mastery:0,weakAyahs:0,weakClusters:0,trend:'stable',weekly:0}; const last=items[items.length-1]; const weekAgo=Date.now()-7*24*60*60*1000; const weekItems=items.filter(i=>i.timestamp>=weekAgo); const weeklyBase=weekItems.length?weekItems[0].retentionScore:items[0].retentionScore; const weekly=((last.retentionScore-weeklyBase)); const trend=weekly>2?'improving':weekly<-2?'declining':'stable'; const weakMap={}; for(const s of items){for(const [k,v] of Object.entries(s.mistakes||{})){weakMap[k]=(weakMap[k]||0)+v;}} const weakAyahs=Object.values(weakMap).filter(v=>v>=2).length; const clusters={}; Object.entries(weakMap).forEach(([k,v])=>{const surah=k.split(':')[0];clusters[surah]=(clusters[surah]||0)+(v>=2?1:0);}); const weakClusters=Object.values(clusters).filter(v=>v>=2).length; return {overall:Math.max(0,Math.min(100,Math.round(last.retentionScore))),mastery:Math.max(0,Math.min(100,Math.round(100-(weakAyahs*2)))),weakAyahs,weakClusters,trend,weekly:Math.round(weekly)};},sessionType(){if(this.settings.chainMode==='cumulative')return 'Memorisation';if(this.retentionMetrics.weakAyahs>10)return 'Recovery';if(this.progressPercent>40)return 'Mixed';return 'Revision'},dueExplanation(){if(this.retentionMetrics.weakAyahs>10)return 'weak recall detected';if(this.settings.chainMode==='cumulative')return 'chain instability detected';return 'review interval reached'},currentTimeText(){return this.format(this.currentTime)},durationText(){return this.format(this.duration)},validationError(){if(this.rangeStart<1||this.rangeEnd<this.rangeStart)return 'Invalid ayah range.';if(this.rangeEnd>this.maxAyahNumber)return `End ayah exceeds ${this.maxAyahNumber}.`;if(!this.reciterId)return 'Select a reciter.';return ''}},
-  mounted(){this.restoreState();this.setNavbarOffset();this.loadLookups();window.addEventListener('resize',this.setNavbarOffset);window.addEventListener('keydown',this.onKeydown)},
-  beforeUnmount(){window.removeEventListener('resize',this.setNavbarOffset);window.removeEventListener('keydown',this.onKeydown)},
-  methods:{apiGet(url){return axios.get(url).catch(()=>axios.get(`/api/proxy?url=${encodeURIComponent(url)}`))},sanitizeTajweed(text){if(!text) return '';return text.replace(/<(?!\/?(span|b|i)\b)[^>]*>/gi,'').replace(/\[(.*?)\]/g,'<span class="tw">$1</span>')},format(sec){if(!sec)return'00:00';const m=String(Math.floor(sec/60)).padStart(2,'0');const s=String(Math.floor(sec%60)).padStart(2,'0');return `${m}:${s}`},setNavbarOffset(){const nav=document.querySelector('nav,.navbar,header');this.navbarHeight=nav?Math.ceil(nav.getBoundingClientRect().height):72},saveState(){localStorage.setItem('mq_state',JSON.stringify({theme:this.theme,showOffcanvas:this.showOffcanvas,chapterId:this.chapterId,reciterId:this.reciterId,rangeStart:this.rangeStart,rangeEnd:this.rangeEnd,activeMode:this.activeMode,modeSettings:this.modeSettings,activeVerseKey:this.activeVerseKey,activeAudioSrc:this.activeAudioSrc,queueIndex:this.queueIndex,currentRangeLoop:this.currentRangeLoop,currentTime:this.currentTime}));localStorage.setItem('mq_retention_history',JSON.stringify(this.retentionHistory.slice(-120)))},restoreState(){const raw=localStorage.getItem('mq_state');if(!raw)return;try{Object.assign(this,JSON.parse(raw));this.showResumePrompt=!!(this.activeAudioSrc||this.activeVerseKey)}catch(_){}},resetRetentionHistory(){this.retentionHistory=[];localStorage.setItem('mq_retention_history','[]');},recordMistake(verseKey){const now=Date.now();const sessionId=`${this.chapterId}:${this.rangeStart}-${this.rangeEnd}:${new Date().toISOString().slice(0,10)}`;let snapshot=this.retentionHistory[this.retentionHistory.length-1];if(!snapshot||snapshot.sessionId!==sessionId){snapshot={sessionId,timestamp:now,mistakes:{},retentionScore:100};this.retentionHistory.push(snapshot);}snapshot.mistakes[verseKey]=(snapshot.mistakes[verseKey]||0)+1;snapshot.retentionScore=Math.max(0,snapshot.retentionScore-2);this.saveState();},finishSessionRetention(){const now=Date.now();const rangeSize=Math.max(1,this.rangeEnd-this.rangeStart+1);const completion=this.progressPercent/100;const errorLoad=(this.retentionHistory[this.retentionHistory.length-1]?.mistakes?Object.values(this.retentionHistory[this.retentionHistory.length-1].mistakes).reduce((a,b)=>a+b,0):0);const score=Math.max(0,Math.min(100,Math.round((completion*100)-Math.min(40,errorLoad*2))));this.retentionHistory.push({sessionId:`${this.chapterId}:${this.rangeStart}-${this.rangeEnd}:${now}`,timestamp:now,mistakes:{},retentionScore:score,rangeSize});this.retentionHistory=this.retentionHistory.slice(-120);this.saveState();},async loadLookups(){try{this.loading=true;this.errorMessage='';const [c,r]=await Promise.all([this.apiGet('https://api.quran.com/api/v4/chapters?language=en'),this.apiGet('https://api.quran.com/api/v4/resources/recitations')]);this.chapters=c.data?.chapters||[];this.reciters=r.data?.recitations||[];await this.loadVerses();this.loading=false}catch(_){this.loading=false;this.errorMessage='Could not load Quran data. Retry.'}},async loadVerses(){try{const res=await this.apiGet(`https://api.quran.com/api/v4/verses/by_chapter/${this.chapterId}?language=en&words=true&fields=text_uthmani_tajweed,verse_key&translations=131&audio=${this.reciterId}&per_page=300`);const all=res.data?.verses||[];this.verses=all.filter(v=>v.verse_number>=this.rangeStart&&v.verse_number<=this.rangeEnd).map(v=>({key:v.verse_key,number:v.verse_number,arabic:this.sanitizeTajweed(v.text_uthmani_tajweed)||v.text_uthmani,translation:v.translations?.[0]?.text?.replace(/<[^>]+>/g,'')||'',audio:v.audio?.url?(v.audio.url.startsWith('http')?v.audio.url:`https://verses.quran.com/${v.audio.url}`):''}));this.rebuildQueue();if(!this.activeVerseKey) this.activeVerseKey=this.verses[0]?.key||null;this.errorMessage='';this.saveState()}catch(_){this.errorMessage='Could not load verses/audio for this selection.'}},rebuildQueue(){const base=[];const reps=Math.max(1,Number(this.settings.ayahRepeats)||1);if(this.settings.chainMode==='cumulative'){for(let i=0;i<this.verses.length;i+=1){for(let j=0;j<=i;j+=1){for(let k=0;k<reps;k+=1)base.push(this.verses[j])}}}else{for(const verse of this.verses){for(let k=0;k<reps;k+=1)base.push(verse)}}this.queue=base;this.queueIndex=Math.min(this.queueIndex,Math.max(this.queue.length-1,0))},setActive(v){this.activeVerseKey=v.key;this.saveState()},startSession(){if(this.validationError)return;this.rebuildQueue();this.queueIndex=0;this.playVerse(this.queue[0])},resetByMode(){this.modeSettings[this.activeMode]=this.activeMode==='beginner'?{playMode:'continuous',chainMode:'sequential',ayahRepeats:1,rangeRepeats:1,rangeLoopDelaySec:0}:{playMode:'continuous',chainMode:'cumulative',ayahRepeats:2,rangeRepeats:2,rangeLoopDelaySec:2};this.resetSession();this.rebuildQueue();this.saveState()},resetSession(){this.isPlaying=false;this.currentTime=0;if(this.pendingRangeTimer){clearTimeout(this.pendingRangeTimer);this.pendingRangeTimer=null}const a=this.$refs.audio;if(a){a.pause();a.currentTime=0}},playVerse(v){if(!v||!v.audio)return;this.activeVerseKey=v.key;this.activeAudioSrc=v.audio;this.$nextTick(()=>{const a=this.$refs.audio;if(!a)return;a.src=this.activeAudioSrc;a.load();a.play().then(()=>{this.isPlaying=true;this.preloadNext();this.scrollToActiveAyah();this.saveState()}).catch(()=>{this.errorMessage='Audio failed to play for this ayah.';this.recordMistake(v.key)})})},preloadNext(){const n=this.queue[this.queueIndex+1];if(!n?.audio) return;const p=new Audio();p.preload='auto';p.src=n.audio},onAudioError(){const current=this.queue[this.queueIndex];if(current?.key) this.recordMistake(current.key);const fallback=this.reciters.find(r=>r.id!==this.reciterId);if(fallback){this.reciterId=fallback.id;this.loadVerses();}},togglePlay(){const a=this.$refs.audio;if(!a)return;if(a.paused){a.play();this.isPlaying=true}else{a.pause();this.isPlaying=false}},seekAudio(e){const a=this.$refs.audio;if(!a)return;a.currentTime=Number(e.target.value||0);this.currentTime=a.currentTime;this.saveState()},skip(d){const a=this.$refs.audio;if(!a)return;a.currentTime=Math.max(0,Math.min((a.duration||0),a.currentTime+d))},onTime(e){this.currentTime=e.target.currentTime||0},onMeta(e){this.duration=e.target.duration||0;if(this.currentTime>0)e.target.currentTime=Math.min(this.currentTime,this.duration||this.currentTime)},onEnded(){this.isPlaying=false;if(this.settings.playMode==='manual')return;if(this.settings.playMode==='repeat'){this.playVerse(this.queue[this.queueIndex]);return}this.queueIndex+=1;if(this.queue[this.queueIndex]){this.playVerse(this.queue[this.queueIndex]);return}const loops=Math.max(1,Number(this.settings.rangeRepeats)||1);if(this.currentRangeLoop<loops){this.currentRangeLoop+=1;const ms=Math.max(0,Number(this.settings.rangeLoopDelaySec)||0)*1000;this.pendingRangeTimer=setTimeout(()=>{this.queueIndex=0;this.playVerse(this.queue[0])},ms)}else{this.finishSessionRetention()}this.saveState()},playNextAyah(){if(!this.queue.length)return;this.queueIndex=Math.min(this.queueIndex+1,this.queue.length-1);this.playVerse(this.queue[this.queueIndex])},playPreviousAyah(){if(!this.queue.length)return;this.queueIndex=Math.max(this.queueIndex-1,0);this.playVerse(this.queue[this.queueIndex])},scrollToActiveAyah(){this.$nextTick(()=>{const t=this.$el?.querySelector('.mq-ayah.active');if(t)t.scrollIntoView({behavior:'smooth',block:'center'})})},onKeydown(e){if(e.key===' '){e.preventDefault();this.togglePlay()}if(e.key==='ArrowRight')this.skip(10);if(e.key==='ArrowLeft')this.skip(-10);if(e.key.toLowerCase()==='k')this.playNextAyah();if(e.key.toLowerCase()==='j')this.playPreviousAyah()},resumeSavedSession(){this.showResumePrompt=false;const c=this.queue[this.queueIndex]||this.verses.find(v=>v.key===this.activeVerseKey)||this.queue[0];if(c)this.playVerse(c)},discardSavedSession(){localStorage.removeItem('mq_state');this.showResumePrompt=false;this.resetSession();this.activeAudioSrc='';this.activeVerseKey=this.verses[0]?.key||null}},
-  watch:{theme(){this.saveState()},showOffcanvas(v){localStorage.setItem('mq_offcanvas',JSON.stringify(v));this.saveState()},activeMode(){this.rebuildQueue();this.saveState()},modeSettings:{handler(){this.rebuildQueue();this.saveState()},deep:true},chapterId(){this.loadVerses();this.saveState()},reciterId(){this.loadVerses();this.saveState()},rangeStart(){this.loadVerses();this.saveState()},rangeEnd(){this.loadVerses();this.saveState()}}
+  name: 'TelawaApp',
+  data() {
+    return {
+      theme: 'light',
+      showTools: true,
+      tab: 'setup',
+
+      chapters: [],
+      chapterId: 0,
+      currentChapter: null,
+      rangeStart: 1,
+      rangeEnd: 7,
+
+      reciters: [{ id: 7, name: 'Alafasy' }],
+      reciterId: 7,
+      audioSource: 'qurancom',
+      alquranAudioEditions: [],
+      alquranEdition: '',
+      
+      script: 'uthmani',
+      showTranslation: true,
+      showWordByWord: false,
+      compactMode: false,
+
+      playMode: 'auto',
+      speed: 1,
+      delay: 1,
+      repeats: 1,
+      order: 'seq',
+
+      verses: [],
+      activeKey: null,
+      queue: [],
+      queueIndex: 0,
+
+      playerVisible: false,
+      isPlaying: false,
+      currentTime: 0,
+      duration: 0,
+
+      audioElement: null,
+      lastAudioDebug: null
+    }
+  },
+  computed: {
+    themeIcon() {
+      return this.theme === 'dark' ? '☾' : this.theme === 'sepia' ? '◐' : '☀'
+    },
+    totalVerses() {
+      return Math.max(0, this.rangeEnd - this.rangeStart + 1)
+    },
+    currentPosition() {
+      if (!this.activeKey) return 1
+      const num = parseInt(this.activeKey.split(':')[1])
+      return Math.max(1, num - this.rangeStart + 1)
+    },
+    progressPercent() {
+      if (!this.totalVerses) return 0
+      return Math.round((this.currentPosition / this.totalVerses) * 100)
+    },
+    seekPercent() {
+      if (!this.duration) return 0
+      return (this.currentTime / this.duration) * 100
+    },
+    canPrev() {
+      return this.queueIndex > 0
+    },
+    canNext() {
+      return this.queueIndex < this.queue.length - 1
+    },
+    primaryLabel() {
+      if (!this.chapterId) return 'Start'
+      if (!this.verses.length) return 'Start'
+      if (!this.isPlaying) return 'Continue'
+      return 'Controls'
+    },
+    primaryIcon() {
+      if (!this.chapterId) return '→'
+      if (!this.verses.length) return '▶'
+      if (!this.isPlaying) return '▶'
+      return '⚙'
+    }
+  },
+  mounted() {
+    this.loadChapters()
+    this.loadReciters()
+    this.loadAlquranAudioEditions()
+    this.initAudio()
+    document.documentElement.setAttribute('data-theme', this.theme)
+  },
+  methods: {
+    async loadAlquranAudioEditions() {
+      try {
+        const res = await getEditions({ format: 'audio', type: 'versebyverse' })
+        const list = res.data?.data || []
+        this.alquranAudioEditions = list.map(e => ({
+          identifier: e.identifier,
+          name: e.englishName || e.name || e.identifier,
+          language: e.language,
+          type: e.type,
+          format: e.format
+        }))
+        if (!this.alquranEdition && this.alquranAudioEditions.length) this.alquranEdition = this.alquranAudioEditions[0].identifier
+      } catch (e) { console.error(e) }
+    },
+    async ensureAlquranEdition() {
+      if (this.alquranEdition) return
+      if (!this.alquranAudioEditions.length) await this.loadAlquranAudioEditions()
+      if (!this.alquranEdition && this.alquranAudioEditions.length) this.alquranEdition = this.alquranAudioEditions[0].identifier
+    },
+    normalizeAudioUrl(url) {
+      if (!url) return ''
+      if (url.startsWith('http://') || url.startsWith('https://')) return url
+      if (url.startsWith('//')) return `https:${url}`
+      if (url.startsWith('/')) return `https://verses.quran.com${url}`
+      if (/^[A-Za-z0-9_-]+\/mp3\//.test(url)) return `https://verses.quran.com/${url}`
+      return url
+    },
+    formatTime(sec) {
+      const t = Math.max(0, Math.floor(sec || 0))
+      return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`
+    },
+    cycleTheme() {
+      const themes = ['light', 'sepia', 'dark']
+      const idx = themes.indexOf(this.theme)
+      this.theme = themes[(idx + 1) % themes.length]
+      document.documentElement.setAttribute('data-theme', this.theme)
+    },
+    async loadChapters() {
+      try {
+        const res = await axios.get('https://api.quran.com/api/v4/chapters', { params: { language: 'en' } })
+        this.chapters = res.data?.chapters || []
+      } catch (e) { console.error(e) }
+    },
+    async loadReciters() {
+      try {
+        const res = await axios.get('https://api.quran.com/api/v4/resources/recitations', { params: { per_page: 30 } })
+        const list = res.data?.recitations || []
+        if (list.length) this.reciters = list.map(r => ({ id: r.id, name: r.reciter_name }))
+      } catch (e) { console.error(e) }
+    },
+    async loadChapter() {
+      if (!this.chapterId) { this.currentChapter = null; this.verses = []; return }
+      this.currentChapter = this.chapters.find(c => c.id === this.chapterId)
+      const max = this.currentChapter?.verses_count || 286
+      this.rangeEnd = Math.min(this.rangeEnd, max)
+      this.rangeStart = Math.max(1, this.rangeStart)
+      await this.loadVerses()
+    },
+    adjustRange() {
+      const max = this.currentChapter?.verses_count || 286
+      this.rangeStart = Math.max(1, Math.min(this.rangeStart, max))
+      this.rangeEnd = Math.max(this.rangeStart, Math.min(this.rangeEnd, max))
+      this.loadVerses()
+    },
+    async loadVerses() {
+      if (!this.chapterId) return
+      if (this.audioSource === 'alquran') await this.ensureAlquranEdition()
+      const params = {
+        per_page: 300,
+        translations: this.showTranslation ? '131' : undefined,
+        words: this.showWordByWord,
+        audio: this.audioSource === 'qurancom' ? this.reciterId : undefined,
+        fields: this.script === 'tajweed' ? 'text_uthmani_tajweed' : 'text_uthmani'
+      }
+      try {
+        const res = await axios.get(`https://api.quran.com/api/v4/verses/by_chapter/${this.chapterId}`, { params })
+        const all = res.data?.verses || []
+        const start = this.rangeStart, end = this.rangeEnd
+        this.verses = all.filter(v => v.verse_number >= start && v.verse_number <= end).map(v => ({
+          key: v.verse_key,
+          number: v.verse_number,
+          arabic: v.text_uthmani_tajweed || v.text_uthmani || '',
+          translation: v.translations?.[0]?.text || '',
+          audio: this.normalizeAudioUrl(v.audio?.url || ''),
+          words: (v.words || []).map(w => ({
+            ar: w.text_uthmani || w.text || '',
+            en: w.translation?.text || '',
+            audio: this.normalizeAudioUrl(w.audio_url)
+          }))
+        }))
+
+        if (this.audioSource === 'alquran' && this.alquranEdition) {
+          try {
+            const audioRes = await getSurahEdition(this.chapterId, this.alquranEdition)
+            const ayahs = audioRes.data?.data?.ayahs || []
+            const byNumberAudio = new Map(ayahs.map(a => [a.numberInSurah, a.audio]))
+            this.verses = this.verses.map(v => ({ ...v, audio: byNumberAudio.get(v.number) || v.audio }))
+          } catch (e) { console.error(e) }
+        }
+
+        if (this.script === 'tajweed') {
+          try {
+            const tajweedRes = await getSurahEdition(this.chapterId, 'quran-tajweed')
+            const ayahs = tajweedRes.data?.data?.ayahs || []
+            const byNumber = new Map(ayahs.map(a => [a.numberInSurah, a.text]))
+            this.verses = this.verses.map(v => ({ ...v, arabic: byNumber.get(v.number) || v.arabic }))
+          } catch (e) { console.error(e) }
+        }
+
+        if (this.verses.length && !this.activeKey) this.activeKey = this.verses[0].key
+        this.buildQueue()
+      } catch (e) { console.error(e) }
+    },
+    refreshVerses() { this.loadVerses() },
+    buildQueue() {
+      const q = []
+      const base = this.verses
+      const rep = Math.max(1, this.repeats)
+      const ord = this.order
+      for (let r = 0; r < rep; r++) {
+        if (ord === 'seq') q.push(...base)
+        else if (ord === 'cum') {
+          for (let i = 0; i < base.length; i++)
+            for (let j = 0; j <= i; j++) q.push(base[j])
+        } else if (ord === 'rand') {
+          const shuffled = [...base]
+          for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1))
+              ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+          }
+          q.push(...shuffled)
+        }
+      }
+      this.queue = q
+      this.queueIndex = 0
+    },
+    rebuildQueue() { this.buildQueue() },
+    async startSession() {
+      if (!this.chapterId) { this.showTools = true; return }
+      if (!this.verses.length) await this.loadVerses()
+      if (!this.verses.length) return
+      if (!this.queue.length) this.buildQueue()
+      this.queueIndex = 0
+      const first = this.queue[0] || this.verses[0]
+      this.showTools = false
+      await this.$nextTick()
+      if (first) this.playVerse(first)
+    },
+    setActive(key) { this.activeKey = key },
+    playVerse(verse) {
+      if (!verse.audio) { console.warn('Missing verse audio url', verse); return }
+      this.activeKey = verse.key
+      if (!this.audioElement) this.audioElement = this.$refs.audio
+      if (!this.audioElement) return
+      this.audioElement.src = verse.audio
+      this.lastAudioDebug = { at: Date.now(), key: verse.key, src: verse.audio, phase: 'set-src' }
+      this.audioElement.load()
+      this.audioElement.playbackRate = this.speed
+      this.audioElement.play().catch((e) => {
+        console.error(e)
+        this.lastAudioDebug = { at: Date.now(), key: verse.key, src: verse.audio, phase: 'play-catch', error: String(e?.message || e) }
+        this.isPlaying = false
+      })
+      this.playerVisible = true
+      this.isPlaying = true
+    },
+    playWordAudio(url) {
+      if (!url) return
+      const a = new Audio(url)
+      a.play().catch(() => { })
+    },
+    initAudio() {
+      this.audioElement = this.$refs.audio
+      if (!this.audioElement) return
+      this.audioElement.addEventListener('timeupdate', () => {
+        this.currentTime = this.audioElement.currentTime
+        this.duration = this.audioElement.duration
+      })
+      this.audioElement.addEventListener('error', () => {
+        const err = this.audioElement?.error
+        const payload = {
+          src: this.audioElement?.src,
+          currentSrc: this.audioElement?.currentSrc,
+          code: err?.code,
+          message: err?.message
+        }
+        console.error('Audio element error', payload)
+        this.lastAudioDebug = { at: Date.now(), phase: 'audio-error', ...payload }
+      })
+      this.audioElement.addEventListener('ended', () => {
+        this.isPlaying = false
+        if (this.playMode === 'auto') {
+          setTimeout(() => this.next(), this.delay * 1000)
+        }
+      })
+    },
+    applySpeed() {
+      if (this.audioElement) this.audioElement.playbackRate = this.speed
+    },
+    togglePlay() {
+      if (!this.audioElement.src) return
+      if (this.audioElement.paused) this.audioElement.play()
+      else this.audioElement.pause()
+    },
+    skipBack() {
+      if (this.audioElement) this.audioElement.currentTime = Math.max(0, this.audioElement.currentTime - 10)
+    },
+    skipFwd() {
+      if (this.audioElement && this.duration) this.audioElement.currentTime = Math.min(this.duration, this.audioElement.currentTime + 10)
+    },
+    prev() {
+      if (!this.canPrev) return
+      this.queueIndex--
+      const v = this.queue[this.queueIndex]
+      if (v) this.playVerse(v)
+    },
+    next() {
+      if (!this.canNext) return
+      this.queueIndex++
+      const v = this.queue[this.queueIndex]
+      if (v) this.playVerse(v)
+    },
+    seek(e) {
+      if (!this.audioElement || !this.duration) return
+      const rect = e.currentTarget.getBoundingClientRect()
+      const percent = (e.clientX - rect.left) / rect.width
+      this.audioElement.currentTime = percent * this.duration
+    },
+    updateAudioReciter() { this.loadVerses() },
+    closePlayer() {
+      if (this.audioElement) { this.audioElement.pause(); this.audioElement.src = '' }
+      this.playerVisible = false
+      this.isPlaying = false
+    },
+    handlePrimaryAction() {
+      if (!this.chapterId) this.showTools = true
+      else if (!this.verses.length) this.startSession()
+      else if (!this.audioElement?.src) this.startSession()
+      else if (!this.isPlaying) this.togglePlay()
+      else this.showTools = true
+    }
+  }
 }
 </script>
 
-<style scoped>
-:root{--bg:#f4f7f5;--card:#fff;--ink:#153b35;--muted:#57726b;--line:#dce8e3;--brand:#0f7a6c}
-.mq[data-theme="dark"]{--bg:#0f1716;--card:#182321;--ink:#edf6f3;--muted:#9cb8b0;--line:#2f4540}
-.mq[data-theme="sepia"]{--bg:#f8f2e7;--card:#fffaf2;--ink:#47351e;--muted:#725c41;--line:#e9dbc6}
-.mq{min-height:100vh;background:var(--bg);color:var(--ink);font-family:Inter,"Amiri","Noto Sans Arabic",system-ui,sans-serif}
-.mq-main{padding:1rem 1rem 6rem;transition:margin-right .25s ease}.mq-resume{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;margin-bottom:1rem;border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb,var(--card) 85%,#caa15d 15%)}
-.mq-progress,.mq-ayah,.mq-panel,.mq-player,.mq-retention{border:1px solid var(--line);border-radius:18px;background:var(--card);box-shadow:0 10px 30px rgba(9,34,30,.06)}
-.mq-progress{padding:1rem;margin-bottom:1rem}.mq-progress-meta{display:flex;gap:.75rem;flex-wrap:wrap;color:var(--muted);align-items:center}.mq-progress-track{height:8px;background:#e6efeb;border-radius:99px;margin-top:.75rem;overflow:hidden}.mq-progress-fill{height:100%;background:linear-gradient(90deg,#0f7a6c,#caa15d);transition:width .35s ease}
-.mq-reading{display:grid;gap:1rem}.mq-state{padding:1rem;border:1px dashed var(--line);border-radius:14px}.mq-state-error{display:flex;justify-content:space-between;align-items:center}.mq-ayah{padding:1rem;transition:transform .2s ease,border-color .2s ease}.mq-ayah:hover{transform:translateY(-2px)}.mq-ayah.active{border-color:#caa15d}.mq-arabic{font-size:2.1rem;line-height:2.2;margin:.6rem 0;color:var(--ink)}.mq-trans{color:var(--muted)}.mq-ayah-head{display:flex;justify-content:space-between;align-items:center;position:sticky;top:.4rem;background:var(--card)}
-.icon-btn{border:1px solid var(--line);background:color-mix(in srgb,var(--card) 70%,#d8eee6 30%);border-radius:12px;padding:.45rem .6rem;cursor:pointer;transition:all .2s ease}.icon-btn:hover{transform:translateY(-1px)}.icon-btn:focus-visible{outline:2px solid #6ca0ff;outline-offset:2px}.icon-btn:disabled{opacity:.5;cursor:not-allowed}.icon-btn svg{width:18px;height:18px;display:block}
-.mq-backdrop{position:fixed;left:0;right:0;bottom:0;background:rgba(7,20,18,.35);z-index:60}.mq-panel{position:fixed;width:420px;max-width:92vw;transform:translateX(100%);transition:transform .25s ease;background:var(--bg);z-index:70;overflow:auto}.mq-panel.open{transform:translateX(0)}
-.mq-panel-head{display:flex;justify-content:flex-end;padding:.75rem}.mq-controls{padding:0 1rem 1rem;display:grid;gap:.55rem}.mq-controls select,.mq-controls input{border:1px solid var(--line);border-radius:12px;padding:.65rem .7rem;background:var(--card);color:var(--ink)}.mq-validation{color:#c74747;font-size:.9rem}.range{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}.icon-row{display:flex;gap:.5rem;justify-content:flex-end}
-.mq-retention{margin:0 1rem 1rem;padding:1rem}.mq-player{position:fixed;left:1rem;right:1rem;bottom:.75rem;z-index:80;display:flex;gap:.55rem;align-items:center;padding:.45rem .75rem}.mq-player input[type='range']{flex:1}
-@media (max-width:1100px){.mq-main{margin-right:0!important}}
+<style>
+:root {
+  --bg: #f7f5f0;
+  --surface: rgba(255, 255, 255, 0.9);
+  --border: rgba(0, 0, 0, 0.06);
+  --text: #1a1a2e;
+  --text-muted: #6b6b80;
+  --accent: #8b5e3c;
+  --accent-light: rgba(139, 94, 60, 0.08);
+  --radius: 14px;
+  --font-ar: 'Amiri', 'Times New Roman', serif;
+  --font-ui: -apple-system, 'Inter', sans-serif;
+}
+
+[data-theme="dark"] {
+  --bg: #121212;
+  --surface: rgba(30, 30, 40, 0.9);
+  --border: rgba(255, 255, 255, 0.06);
+  --text: #e8e8e8;
+  --text-muted: #a0a0b0;
+  --accent: #c49a6c;
+  --accent-light: rgba(196, 154, 108, 0.1);
+}
+
+[data-theme="sepia"] {
+  --bg: #f8f0e0;
+  --surface: rgba(255, 248, 235, 0.9);
+  --text: #3d2b1a;
+  --text-muted: #7a684a;
+  --accent: #c49a6c;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  min-height: 100vh;
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-mark {
+  font-size: 1.4rem;
+  color: var(--accent);
+}
+
+.brand-name {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.session-name {
+  font-size: 0.85rem;
+  font-weight: 450;
+}
+
+.session-meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.header-right {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+/* Main */
+.main {
+  transition: padding-right 0.25s ease;
+  padding: 20px 24px 100px;
+}
+
+.main.tools-open {
+  padding-right: 400px;
+}
+
+.content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Progress */
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 3px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s;
+}
+
+.cta-btn {
+  padding: 6px 18px;
+  border-radius: 40px;
+  background: var(--accent);
+  border: none;
+  color: white;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Empty */
+.empty {
+  padding: 40px 0;
+}
+
+.empty-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 32px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+
+.empty-icon {
+  font-family: var(--font-ar);
+  font-size: 2.2rem;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.empty-card h3 {
+  font-weight: 450;
+  margin-bottom: 6px;
+  font-size: 1rem;
+}
+
+.empty-card p {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-bottom: 16px;
+}
+
+.outline-btn {
+  padding: 6px 16px;
+  border-radius: 40px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+/* Verses */
+.verses {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.verses.compact .verse {
+  padding: 12px;
+}
+
+.verse {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px;
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+}
+
+.verse.active {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-light);
+}
+
+.verse-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.verse-badge {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.verse-num {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  background: var(--accent-light);
+  border-radius: 20px;
+  color: var(--accent);
+}
+
+.verse-ref {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+.verse-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.action-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+}
+
+.verse-arabic {
+  font-family: var(--font-ar);
+  font-size: 1.2rem;
+  line-height: 1.7;
+  text-align: right;
+  direction: rtl;
+  background: rgba(0, 0, 0, 0.02);
+  padding: 10px;
+  border-radius: 10px;
+  margin: 8px 0;
+}
+
+.verse-translation {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.verse-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.word {
+  background: var(--accent-light);
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+}
+
+.word-ar {
+  font-family: var(--font-ar);
+}
+
+.word-en {
+  color: var(--text-muted);
+}
+
+.word-play {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.65rem;
+}
+
+/* Tools Panel */
+.tools {
+  position: fixed;
+  top: 65px;
+  right: 0;
+  bottom: 0;
+  width: 360px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+}
+
+.tools.open {
+  transform: translateX(0);
+}
+
+@media (max-width: 768px) {
+  .tools {
+    width: calc(100% - 32px);
+    right: 16px;
+    left: 16px;
+    border-radius: var(--radius);
+    transform: translateY(100%);
+    top: auto;
+    bottom: 16px;
+    height: auto;
+    max-height: 70vh;
+  }
+}
+
+.tools-head {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tools-title {
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.tools-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tools-tabs button {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  font-size: 0.75rem;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.tools-tabs button.active {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.tools-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.select,
+.input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
+.range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.range input {
+  flex: 1;
+}
+
+.toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.toggle button {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+}
+
+.toggle button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.slider {
+  width: 100%;
+  height: 3px;
+  -webkit-appearance: none;
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+
+.value {
+  color: var(--accent);
+  margin-left: 4px;
+}
+
+.check label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: normal;
+  text-transform: none;
+}
+
+.primary-btn {
+  padding: 12px;
+  border-radius: 40px;
+  background: var(--accent);
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-weight: 450;
+}
+
+.full {
+  width: 100%;
+}
+
+/* Audio Player */
+.player {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  padding: 10px 20px;
+  z-index: 25;
+}
+
+.player-seek {
+  position: relative;
+  height: 24px;
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+
+.player-track {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--border);
+  border-radius: 2px;
+}
+
+.player-fill {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+.player-handle {
+  position: absolute;
+  top: 6px;
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+.player-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.audio-debug {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  word-break: break-all;
+}
+
+.time {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  min-width: 45px;
+}
+
+.player-buttons {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.player-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.play-pause {
+  width: 40px;
+  height: 40px;
+  border-radius: 40px;
+  background: var(--accent);
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.player-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.player-select {
+  padding: 6px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  font-size: 0.7rem;
+  color: var(--text);
+}
+
+.player-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 20px;
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 10px 16px;
+  }
+
+  .main {
+    padding: 16px 16px 100px;
+  }
+
+  .main.tools-open {
+    padding-right: 16px;
+  }
+
+  .session-meta {
+    display: none;
+  }
+
+  .player-row {
+    gap: 8px;
+  }
+
+  .player-btn {
+    padding: 4px 8px;
+  }
+
+  .player-select {
+    display: none;
+  }
+}
 </style>
