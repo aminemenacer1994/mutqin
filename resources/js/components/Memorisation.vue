@@ -4,7 +4,7 @@
       <span>{{ banner.message }}</span>
       <div class="banner-actions">
         <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
-          }}</button>
+        }}</button>
         <button class="banner-x" @click="banner = null" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
@@ -50,17 +50,16 @@
               <div class="session-rail-kicker">Current session</div>
               <div class="session-rail-title">{{ currentChapter.name_simple }}</div>
               <div class="session-rail-meta">Ayah {{ currentPosition }}/{{ totalVerses }} · Remaining {{ remainingAyahs
-              }} · {{ sessionTypeInfo.label }} · {{ progressPercent }}%</div>
+                }} · {{ sessionTypeInfo.label }} · {{ progressPercent }}%</div>
             </div>
             <div class="session-rail-actions">
-              <button class="rail-btn rail-btn-ghost" @click="showTools = true"><i
-                  class="bi bi-layout-sidebar-inset"></i><span>Plan</span></button>
-              <!-- <button class="rail-btn" @click="prev" :disabled="!canPrev"><i
-                  class="bi bi-skip-backward"></i><span>Prev</span></button> -->
-              <button class="rail-btn rail-btn-primary" @click="handlePrimaryAction"><i class="bi"
-                  :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i><span>{{ railPrimaryLabel }}</span></button>
-              <!-- <button class="rail-btn" @click="next" :disabled="!canNext"><i
-                  class="bi bi-skip-forward"></i><span>Next</span></button> -->
+              <button class="rail-btn rail-btn-ghost" @click="showTools = true">
+                <i class="bi bi-layout-sidebar-inset"></i><span>Plan</span>
+              </button>
+              <button class="rail-btn rail-btn-primary" @click="handlePrimaryAction">
+                <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                <span>{{ railPrimaryLabel }}</span>
+              </button>
             </div>
           </div>
           <div class="session-rail-stats">
@@ -133,11 +132,12 @@
         </div>
 
         <!-- Verses Grid -->
+        <!-- Replace the verses-grid section (around line 165) with this: -->
         <div v-else-if="hasVerses" class="verses-grid">
           <div v-for="verse in verses" :key="verse.key" class="verse-card" :class="{
             active: activeVerseKey === verse.key,
             'focus-mode': focusMode && activeVerseKey !== verse.key,
-            blurred: blurAdjacent && activeVerseKey !== verse.key && Math.abs(verse.number - (activeVerseKey?.split(':')[1] || 0)) > 1
+            blurred: blurAdjacent && activeVerseKey !== verse.key && !isAdjacentVerse(verse)
           }">
             <div class="verse-header">
               <div class="verse-badges">
@@ -148,13 +148,12 @@
                 <button class="verse-play-btn" @click="playVerse(verse)" title="Play verse">
                   <i class="bi bi-play-fill"></i>
                 </button>
-
               </div>
             </div>
 
             <div class="verse-arabic" dir="rtl" lang="ar" v-html="verse.arabic"></div>
 
-            <!-- TRANSLATION - Fixed conditional -->
+            <!-- TRANSLATION -->
             <div v-if="showTranslation && verse.translation" class="verse-translation">
               {{ verse.translation }}
             </div>
@@ -856,22 +855,31 @@ export default {
   },
 
   computed: {
-    
+    currentVerseNumber() {
+      if (!this.activeVerseKey) return 0
+      const parts = this.activeVerseKey.split(':')
+      return parseInt(parts[1]) || 0
+    },
+    getActiveVerseNumber() {
+      if (!this.activeVerseKey) return 0
+      const parts = this.activeVerseKey.split(':')
+      return parts.length > 1 ? parseInt(parts[1]) : 0
+    },
     currentConfig() {
       return this.currentMode === 'beginner' ? this.beginner : this.advanced
     },
     hasVerses() {
-    return this.currentMode === 'beginner' 
-      ? (this.beginner.verses?.length > 0)
-      : (this.advanced.verses?.length > 0)
-  },
+      return this.currentMode === 'beginner'
+        ? (this.beginner.verses?.length > 0)
+        : (this.advanced.verses?.length > 0)
+    },
 
-  hasSelectedSurah() {
-    const chapterId = this.currentMode === 'beginner' 
-      ? this.beginner.chapterId 
-      : this.advanced.chapterId
-    return chapterId && chapterId > 0
-  },
+    hasSelectedSurah() {
+      const chapterId = this.currentMode === 'beginner'
+        ? this.beginner.chapterId
+        : this.advanced.chapterId
+      return chapterId && chapterId > 0
+    },
     // Computed properties that use current mode
     chapterId: {
       get() {
@@ -1457,6 +1465,12 @@ export default {
     },
   },
   methods: {
+    isAdjacentVerse(verse) {
+      if (!this.activeVerseKey) return false
+      const activeNumber = parseInt(this.activeVerseKey.split(':')[1])
+      const verseNumber = verse.number
+      return Math.abs(verseNumber - activeNumber) === 1
+    },
     onChapterChange(event) {
       const val = parseInt(event.target.value)
       console.log('Chapter changed to:', val, 'currentMode:', this.currentMode)
@@ -2836,13 +2850,12 @@ export default {
 
     async startSession() {
       console.log('=== startSession called ===');
-      console.log('currentMode:', this.currentMode);
       console.log('chapterId:', this.chapterId);
 
       this.onboardingDismissed = true;
       this.sessionCompleted = false;
 
-      // Fix: Check if a surah is selected (chapterId > 0, not just truthy)
+      // Check if a surah is selected (chapterId > 0)
       if (!this.chapterId || this.chapterId === 0) {
         console.log('No chapter selected');
         this.showTools = true;
@@ -2850,6 +2863,7 @@ export default {
         return;
       }
 
+      // Load verses if not loaded
       if (!this.verses.length) {
         console.log('Loading verses...');
         await this.loadVerses();
@@ -2862,11 +2876,12 @@ export default {
         return;
       }
 
+      // Initialize audio if needed
       if (!this.audioElement) {
-        console.log('Initializing audio...');
         this.initAudio();
       }
 
+      // Build queue if empty
       if (!this.queue.length) {
         console.log('Building queue...');
         this.buildQueue();
@@ -2879,6 +2894,7 @@ export default {
         return;
       }
 
+      // Reset to start of queue
       this.queueIndex = 0;
       const first = this.queue[0];
       console.log('First verse:', first?.key);
@@ -2888,11 +2904,10 @@ export default {
         this.activeVerseKey = first.key;
 
         await this.$nextTick();
-        console.log('Calling playVerse...');
         await this.playVerse(first);
-        console.log('playVerse completed');
       }
 
+      // Close tools panel after starting
       this.showTools = false;
       console.log('=== startSession completed ===');
     },
@@ -3364,11 +3379,22 @@ export default {
       if (completedAtEnd) this.handleSessionComplete()
     },
     handlePrimaryAction() {
-      if (!this.chapterId) this.showTools = true
-      else if (!this.verses.length) this.startSession()
-      else if (!this.audioElement?.src) this.startSession()
-      else if (!this.isPlaying) this.togglePlay()
-      else this.showTools = true
+      if (!this.chapterId || this.chapterId === 0) {
+        this.showTools = true;
+        this.showBanner('Please select a surah first', 'info', 3000);
+      } else if (!this.verses.length) {
+        this.startSession();
+      } else if (this.isPlaying) {
+        // If playing, pause audio - don't open tools
+        this.togglePlay();
+      } else {
+        // If paused or session not active, start/continue
+        if (!this.audioElement?.src || this.audioElement.paused) {
+          this.startSession();
+        } else {
+          this.togglePlay();
+        }
+      }
     }
   }
 }
@@ -3596,7 +3622,7 @@ body {
 
 .start-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .start-btn:disabled {
