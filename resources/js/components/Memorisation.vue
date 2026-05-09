@@ -4,7 +4,7 @@
       <span>{{ banner.message }}</span>
       <div class="banner-actions">
         <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
-        }}</button>
+          }}</button>
         <button class="banner-x" @click="banner = null" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
@@ -50,7 +50,7 @@
               <div class="session-rail-kicker">Current session</div>
               <div class="session-rail-title">{{ currentChapter.name_simple }}</div>
               <div class="session-rail-meta">Ayah {{ currentPosition }}/{{ totalVerses }} · Remaining {{ remainingAyahs
-                }} · {{ sessionTypeInfo.label }} · {{ progressPercent }}%</div>
+              }} · {{ sessionTypeInfo.label }} · {{ progressPercent }}%</div>
             </div>
             <div class="session-rail-actions">
               <button class="rail-btn rail-btn-ghost" @click="showTools = true">
@@ -146,9 +146,13 @@
                 <span class="verse-number">Ayah {{ verse.number }}</span>
                 <span class="verse-ref">{{ verse.key }}</span>
               </div>
+
               <div class="verse-actions">
+                <button class="verse-play-btn" @click="downloadOfflineVerses" title="Download for offline reading">
+                  <i class="bi bi-save"></i>
+                </button>
                 <button class="verse-play-btn" @click="playVerse(verse)" title="Play verse">
-                  <i class="bi bi-play-fill"></i>
+                  <i class="bi bi-play"></i>
                 </button>
               </div>
             </div>
@@ -1228,7 +1232,63 @@ export default {
   },
 
   methods: {
+    async downloadOfflineVerses() {
+      // Check if we have verses loaded
+      if (!this.verses || !this.verses.length) {
+        this.showBanner('Load a surah first before downloading', 'info', 3000);
+        this.showTools = true;
+        return;
+      }
 
+      try {
+        // Get surah info from the first verse if chapterId is not set
+        let surahId = this.chapterId;
+        let surahName = this.currentChapter?.name_simple;
+
+        if (!surahId && this.verses[0]?.key) {
+          surahId = parseInt(this.verses[0].key.split(':')[0]);
+          // Try to find surah name from chapters list
+          const found = this.chapters.find(c => c.id === surahId);
+          surahName = found?.name_simple || `Surah ${surahId}`;
+        }
+
+        if (!surahId) {
+          this.showBanner('Could not identify surah', 'error', 3000);
+          return;
+        }
+
+        const offlineData = {
+          metadata: {
+            surah: surahName,
+            surahId: surahId,
+            rangeStart: this.rangeStart,
+            rangeEnd: this.rangeEnd,
+            reciterId: this.reciterId,
+            downloadedAt: new Date().toISOString(),
+            totalVerses: this.verses.length
+          },
+          verses: this.verses.map(v => ({
+            key: v.key,
+            number: v.number,
+            arabic: v.arabic,
+            translation: v.translation || '',
+            transliteration: v.transliteration || '',
+            audio: v.audio || ''
+          }))
+        };
+
+        const storageKey = `offline_surah_${surahId}_${this.rangeStart}_${this.rangeEnd}`;
+        localStorage.setItem(storageKey, JSON.stringify(offlineData));
+
+        this.showBanner(`✓ Saved ${this.verses.length} verses from ${surahName} for offline reading!`, 'success', 3000);
+        this.confettiActive = true;
+        setTimeout(() => { this.confettiActive = false; }, 1200);
+
+      } catch (err) {
+        console.error('Download failed:', err);
+        this.showBanner('Failed to download verses', 'error', 3000);
+      }
+    },
     splitArabicIntoWords(arabicText, verseKey) {
       if (!arabicText || !this.wordByWordAudioEnabled) {
         return arabicText
@@ -1642,7 +1702,26 @@ export default {
     // ==================== VERSE METHODS ====================
 
     async loadVerses() {
-      if (!this.chapterId) return
+      if (!this.chapterId) {
+        console.warn('No chapterId set, skipping loadVerses')
+        return
+      }
+
+      console.log('=== LOAD VERSES START ===')
+      console.log('Chapter ID:', this.chapterId)
+      console.log('Range:', this.rangeStart, '-', this.rangeEnd)
+      console.log('Reciter ID:', this.reciterId)
+      console.log('Current Mode:', this.currentMode)
+
+      // Test if we can reach the API at all
+      try {
+        const testRes = await axios.get('https://api.quran.com/api/v4/chapters/1', { timeout: 5000 })
+        console.log('API Connectivity Test: OK', testRes.status)
+      } catch (testErr) {
+        console.error('API Connectivity Test FAILED:', testErr.message)
+        this.showBanner('Cannot reach Quran.com API. Check your internet or try a VPN.', 'error', 10000)
+        return
+      }
 
       const params = {
         per_page: 300,
@@ -1652,25 +1731,79 @@ export default {
         fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs'
       }
 
-      try {
-        const res = await axios.get(`https://api.quran.com/api/v4/verses/by_chapter/${this.chapterId}`, { params })
-        const all = res.data?.verses || []
-        const start = this.rangeStart, end = this.rangeEnd
+      console.log('Request params:', JSON.stringify(params, null, 2))
 
-        let mappedVerses = all.filter(v => v.verse_number >= start && v.verse_number <= end).map(v => ({
-          key: v.verse_key,
-          number: v.verse_number,
-          arabic: v.text_qpc_hafs || v.text_uthmani_tajweed || v.text_uthmani || '',
-          translation: v.translations?.[0]?.text || '',
-          transliteration: '',
-          audio: this.normalizeAudioUrl(v.audio?.url || ''),
-          words: (v.words || []).map(w => ({
-            ar: w.text_uthmani || w.text || '',
-            en: w.translation?.text || '',
-            tooltip: `${w.text_uthmani || w.text || ''} • ${w.translation?.text || ''}`.trim(),
-            audio: this.normalizeAudioUrl(w.audio_url)
-          }))
-        }))
+      try {
+        const url = `https://api.quran.com/api/v4/verses/by_chapter/${this.chapterId}`
+        console.log('Fetching:', url)
+
+        const res = await axios.get(url, {
+          params,
+          timeout: 15000,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        })
+
+        console.log('Response status:', res.status)
+        console.log('Response headers:', res.headers)
+
+        // Check if response has data
+        if (!res.data) {
+          console.error('Response has no data property')
+          this.showBanner('Invalid response from server', 'error', 5000)
+          return
+        }
+
+        console.log('Response data type:', typeof res.data)
+        console.log('Response data keys:', Object.keys(res.data))
+
+        const all = res.data?.verses || []
+        console.log('All verses count:', all.length)
+
+        if (all.length === 0) {
+          console.error('API returned 0 verses for chapter:', this.chapterId)
+          this.showBanner(`No verses found for Surah ${this.chapterId}. Try another surah.`, 'error', 5000)
+          return
+        }
+
+        // Log first verse to check structure
+        console.log('First verse sample:', JSON.stringify(all[0], null, 2))
+
+        const start = this.rangeStart, end = this.rangeEnd
+        console.log(`Filtering verses ${start}-${end}`)
+
+        let mappedVerses = all.filter(v => v.verse_number >= start && v.verse_number <= end).map(v => {
+          const audio = this.normalizeAudioUrl(v.audio?.url || '')
+          console.log(`Verse ${v.verse_number} audio URL:`, audio || 'NO AUDIO')
+
+          return {
+            key: v.verse_key,
+            number: v.verse_number,
+            arabic: v.text_qpc_hafs || v.text_uthmani_tajweed || v.text_uthmani || '',
+            translation: v.translations?.[0]?.text || '',
+            transliteration: '',
+            audio: audio,
+            words: (v.words || []).map(w => ({
+              ar: w.text_uthmani || w.text || '',
+              en: w.translation?.text || '',
+              tooltip: `${w.text_uthmani || w.text || ''} • ${w.translation?.text || ''}`.trim(),
+              audio: this.normalizeAudioUrl(w.audio_url)
+            }))
+          }
+        })
+
+        console.log('Mapped verses count:', mappedVerses.length)
+
+        if (mappedVerses.length === 0) {
+          console.error('Filter returned 0 verses. Check range:', start, '-', end, 'vs available:', all.length)
+          this.showBanner(`Range ${start}-${end} is outside this surah (has ${all.length} verses)`, 'error', 5000)
+          return
+        }
+
+        // Log first mapped verse
+        console.log('First mapped verse:', JSON.stringify(mappedVerses[0], null, 2))
 
         if (this.script === 'tajweed') {
           try {
@@ -1679,61 +1812,163 @@ export default {
             const byNumber = new Map(ayahs.map(a => [a.numberInSurah, this.normalizeTajweedText(a.text)]))
             mappedVerses = mappedVerses.map(v => ({ ...v, arabic: byNumber.get(v.number) || v.arabic }))
           } catch (e) {
-            console.error(e)
+            console.error('Tajweed load failed:', e)
           }
         }
 
+        // Assign verses
         if (this.currentMode === 'beginner') {
           this.beginner.verses = mappedVerses
-          if (this.beginner.verses.length && !this.beginner.activeKey) {
-            this.beginner.activeKey = this.beginner.verses[0].key
+          if (!this.beginner.activeKey && mappedVerses.length) {
+            this.beginner.activeKey = mappedVerses[0].key
           }
+          console.log('Beginner verses set:', this.beginner.verses.length)
         } else {
           this.advanced.verses = mappedVerses
-          if (this.advanced.verses.length && !this.advanced.activeKey) {
-            this.advanced.activeKey = this.advanced.verses[0].key
+          if (!this.advanced.activeKey && mappedVerses.length) {
+            this.advanced.activeKey = mappedVerses[0].key
           }
+          console.log('Advanced verses set:', this.advanced.verses.length)
+        }
+
+        // Update chapter info
+        if (!this.currentChapter) {
+          this.currentChapter = this.chapters.find(c => c.id === this.chapterId)
+          console.log('Current chapter set to:', this.currentChapter?.name_simple)
         }
 
         this.buildQueue()
+        console.log('Queue built with', this.queue.length, 'items')
+        console.log('=== LOAD VERSES COMPLETE ===')
+
       } catch (e) {
-        console.error('API Error:', e)
-        this.showBanner(`Failed to load verses: ${e.message || 'Network error'}`, 'error', 5000)
+        console.error('=== LOAD VERSES ERROR ===')
+        console.error('Error type:', e.constructor.name)
+        console.error('Error message:', e.message)
+        console.error('Error code:', e.code)
+
+        if (e.response) {
+          console.error('Response status:', e.response.status)
+          console.error('Response data:', e.response.data)
+          console.error('Response headers:', e.response.headers)
+
+          if (e.response.status === 404) {
+            this.showBanner(`Surah ${this.chapterId} not found`, 'error', 5000)
+          } else if (e.response.status === 429) {
+            this.showBanner('Rate limited. Wait 30 seconds and try again.', 'error', 5000)
+          } else {
+            this.showBanner(`Server error ${e.response.status}`, 'error', 5000)
+          }
+        } else if (e.request) {
+          console.error('No response received. Network issue?')
+          console.error('Request:', e.request)
+          this.showBanner('Network error. Check your connection or try VPN.', 'error', 8000)
+        } else {
+          console.error('Error config:', e.config)
+          this.showBanner(`Error: ${e.message}`, 'error', 5000)
+        }
+
+        // Clear verses on error
+        if (this.currentMode === 'beginner') {
+          this.beginner.verses = []
+        } else {
+          this.advanced.verses = []
+        }
+
+        console.error('=== LOAD VERSES ERROR END ===')
       }
     },
-
     buildQueue() {
-      const q = []
-      const base = this.verses
+      console.log('=== BUILD QUEUE START ===')
+      console.log('Current mode:', this.currentMode)
 
-      let rep = 1
-      if (this.currentMode === 'beginner') {
-        rep = this.beginner.repeats
-      } else if (this.currentMode === 'advanced') {
-        rep = this.advanced.repeatAndLoopAudio ? (this.advanced.advancedRepeats || 1) : 1
+      // GET VERSES DIRECTLY - don't use computed property
+      const verses = this.currentMode === 'beginner'
+        ? this.beginner.verses
+        : this.advanced.verses
+
+      console.log('Verses count:', verses?.length)
+      console.log('beginner.verses length:', this.beginner.verses?.length)
+      console.log('advanced.verses length:', this.advanced.verses?.length)
+
+      if (!verses || verses.length === 0) {
+        console.error('No verses available to build queue')
+        // Clear queues
+        this.beginner.queue = []
+        this.advanced.queue = []
+        this.queue = []
+        this.queueIndex = 0
+        return
       }
 
-      const ord = this.order
+      // Determine repeat count
+      let rep = 1  // ALWAYS default to at least 1
 
+      if (this.currentMode === 'beginner') {
+        rep = this.beginner.repeats || 1
+        console.log('Using beginner repeats:', rep)
+      } else if (this.currentMode === 'advanced') {
+        if (this.advanced.repeatAndLoopAudio) {
+          rep = this.advanced.advancedRepeats || 1
+          console.log('Using advanced loop repeats:', rep)
+        } else {
+          rep = 1
+          console.log('Advanced loop not enabled, using 1 repeat')
+        }
+      }
+
+      // Determine order
+      const ord = this.order || 'seq'
+      console.log('Order:', ord, '| Repeats:', rep, '| Verses source length:', verses.length)
+
+      const q = []
+
+      // Build queue based on order
       if (ord === 'seq') {
-        for (let r = 0; r < rep; r++) q.push(...base)
+        for (let r = 0; r < rep; r++) {
+          q.push(...verses)
+        }
       } else if (ord === 'cum') {
         for (let r = 0; r < rep; r++) {
-          for (let i = 0; i < base.length; i++) {
-            for (let j = 0; j <= i; j++) q.push(base[j])
+          for (let i = 0; i < verses.length; i++) {
+            for (let j = 0; j <= i; j++) {
+              q.push(verses[j])
+            }
           }
         }
       } else if (ord === 'rand') {
-        const shuffled = [...base]
-        for (let i = shuffled.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+        for (let r = 0; r < rep; r++) {
+          const shuffled = [...verses]
+          for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+          }
+          q.push(...shuffled)
         }
-        for (let r = 0; r < rep; r++) q.push(...shuffled)
+      } else {
+        console.warn('Unknown order, defaulting to sequential')
+        for (let r = 0; r < rep; r++) {
+          q.push(...verses)
+        }
       }
 
+      console.log('Queue built with', q.length, 'items')
+
+      // Store queue in BOTH the mode-specific and the current config
+      if (this.currentMode === 'beginner') {
+        this.beginner.queue = q
+        this.beginner.queueIndex = 0
+      } else {
+        this.advanced.queue = q
+        this.advanced.queueIndex = 0
+      }
+
+      // Also update the computed/reactive properties
       this.queue = q
       this.queueIndex = 0
+
+      console.log('Queue assigned. this.queue.length:', this.queue?.length)
+      console.log('=== BUILD QUEUE END ===')
     },
 
     rebuildQueue() {
@@ -1741,38 +1976,80 @@ export default {
     },
 
     async startSession() {
+      console.log('=== START SESSION ===')
+      console.log('chapterId:', this.chapterId)
+      console.log('currentMode:', this.currentMode)
+
+      // Check verses directly from the mode-specific storage
+      const currentVerses = this.currentMode === 'beginner'
+        ? this.beginner.verses
+        : this.advanced.verses
+
+      console.log('Direct verses check - length:', currentVerses?.length)
+      console.log('Computed verses - length:', this.verses?.length)
+
       if (!this.chapterId || this.chapterId === 0) {
         this.showTools = true
         this.showBanner('Please select a surah first', 'info', 3000)
         return
       }
 
-      if (!this.verses.length) {
+      if (!currentVerses || currentVerses.length === 0) {
+        console.log('No verses found, calling loadVerses...')
         await this.loadVerses()
       }
 
-      if (!this.verses.length) {
+      // Check again after loading
+      const updatedVerses = this.currentMode === 'beginner'
+        ? this.beginner.verses
+        : this.advanced.verses
+
+      console.log('After load - verses length:', updatedVerses?.length)
+
+      if (!updatedVerses || updatedVerses.length === 0) {
+        console.error('Still no verses after loading')
         this.showBanner('No verses loaded. Check your network connection.', 'error')
         return
       }
 
       if (!this.audioElement) {
+        console.log('Initializing audio...')
         this.initAudio()
       }
 
-      if (!this.queue.length) {
+      // Check queue directly
+      const currentQueue = this.currentMode === 'beginner'
+        ? this.beginner.queue
+        : this.advanced.queue
+
+      console.log('Current queue length:', currentQueue?.length)
+
+      if (!currentQueue || currentQueue.length === 0) {
+        console.log('Building queue...')
         this.buildQueue()
       }
 
-      if (!this.queue.length) {
-        this.showBanner('Nothing to play. Check range settings.', 'error')
+      // Get queue again after building
+      const builtQueue = this.currentMode === 'beginner'
+        ? this.beginner.queue
+        : this.advanced.queue
+
+      console.log('Queue after build - length:', builtQueue?.length)
+
+      if (!builtQueue || builtQueue.length === 0) {
+        console.error('Queue is still empty!')
+        this.showBanner('Nothing to play. Check repeat/loop settings.', 'error')
         return
       }
 
+      console.log('Setting queue index to 0')
       this.queueIndex = 0
-      const first = this.queue[0]
+
+      const first = builtQueue[0]
+      console.log('First queue item:', first?.key)
 
       if (first) {
+        console.log('Playing first verse:', first.key)
         this.activeKey = first.key
         this.activeVerseKey = first.key
         await this.$nextTick()
@@ -1780,6 +2057,7 @@ export default {
       }
 
       this.showTools = false
+      console.log('=== START SESSION COMPLETE ===')
     },
 
     // ==================== UTILITY METHODS ====================
@@ -1863,11 +2141,11 @@ export default {
         this.showBanner('Please select a surah first', 'info', 3000)
         return
       }
-      
+
       if (!this.verses.length) {
         return this.startSession()
       }
-      
+
       // For loaded verses - handle play/pause state
       this.handlePlayPause()
     },
@@ -1876,18 +2154,18 @@ export default {
       if (this.isPlaying) {
         return this.togglePlay()
       }
-      
+
       // Start or resume
       if (!this.audioElement?.src || this.audioElement.paused) {
         return this.startSession()
       }
-      
+
       return this.togglePlay()
     },
 
 
 
-    
+
 
     // ==================== UI METHODS ====================
 
