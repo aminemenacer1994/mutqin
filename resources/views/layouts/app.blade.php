@@ -22,12 +22,12 @@
                 </button>
 
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav m-auto">
+                    <ul class="navbar-nav ml-5">
                         <li class="nav-item pr-4">
                             <a class="nav-link pr-4 {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ url('/') }}">Home</a>
                         </li>
                         <li class="nav-item ml-5">
-                            <a class="nav-link {{ request()->routeIs('memorisation') ? 'active' : '' }}" href="{{ url('/memorisation') }}">Memorisation</a>
+                            <a class="nav-link ml-5 {{ request()->routeIs('memorisation') ? 'active' : '' }}" href="{{ url('/memorisation') }}">Memorisation</a>
                         </li>
                         <!-- @auth
                             <li class="nav-item">

@@ -3,7 +3,8 @@
     <div v-if="banner" class="banner" :class="banner.kind">
       <span>{{ banner.message }}</span>
       <div class="banner-actions">
-        <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel }}</button>
+        <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
+          }}</button>
         <button class="banner-x" @click="banner = null" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
@@ -35,26 +36,25 @@
           </div>
           <div class="hero-actions">
             <button class="cta cta-ghost" @click="tab = 'analytics'"><i class="bi bi-bar-chart"></i><span>See
-              stats</span></button>
+                stats</span></button>
             <button class="cta cta-primary" @click="beginPlan"><i class="bi bi-play-circle"></i><span>{{
-                onboardingPrimaryLabel }}</span></button>
+              onboardingPrimaryLabel }}</span></button>
             <button class="cta cta-ghost" @click="showTools = true"><i class="bi bi-sliders"></i><span>Open
                 setup</span></button>
           </div>
         </section>
 
-        <div class="session-rail" v-if="currentChapter && verses.length">
+        <div class="session-rail" v-if="currentChapter && hasVerses">
           <div class="session-rail-top">
             <div class="session-rail-copy">
               <div class="session-rail-kicker">Current session</div>
               <div class="session-rail-title">{{ currentChapter.name_simple }}</div>
               <div class="session-rail-meta">Ayah {{ currentPosition }}/{{ totalVerses }} · Remaining {{ remainingAyahs
-                }} · {{ sessionTypeInfo.label }} · {{ progressPercent }}%</div>
+              }} · {{ sessionTypeInfo.label }} · {{ progressPercent }}%</div>
             </div>
             <div class="session-rail-actions">
               <button class="rail-btn rail-btn-ghost" @click="showTools = true"><i
                   class="bi bi-layout-sidebar-inset"></i><span>Plan</span></button>
-                  
               <!-- <button class="rail-btn" @click="prev" :disabled="!canPrev"><i
                   class="bi bi-skip-backward"></i><span>Prev</span></button> -->
               <button class="rail-btn rail-btn-primary" @click="handlePrimaryAction"><i class="bi"
@@ -69,17 +69,23 @@
             <div class="rail-stat"><span>Remaining</span><strong>{{ remainingAyahs }}</strong></div>
             <div class="rail-stat"><span>ETA</span><strong>{{ etaLabel }}</strong></div>
           </div>
+          <div class="mode-indicator" v-if="currentMode === 'advanced' && repeatAndLoopAudio">
+            <i class="bi bi-arrow-repeat"></i>
+            Loop Mode: {{ advancedRepeats }}x per Ayah
+          </div>
           <div class="progress-bar progress-bar-wide">
             <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
           </div>
         </div>
 
-        <div v-if="verses.length" class="reading-toolbar">
+        <div v-if="hasVerses" class="reading-toolbar">
           <div class="reading-toolbar-group">
-            <button class="toolbar-chip" :class="{ active: showTranslation }" @click="toggleReadingOption('translation')">
+            <button class="toolbar-chip" :class="{ active: showTranslation }"
+              @click="toggleReadingOption('translation')">
               <i class="bi bi-translate"></i><span>Translation</span>
             </button>
-            <button class="toolbar-chip" :class="{ active: showTransliteration }" @click="toggleReadingOption('transliteration')">
+            <button class="toolbar-chip" :class="{ active: showTransliteration }"
+              @click="toggleReadingOption('transliteration')">
               <i class="bi bi-type"></i><span>Transliteration</span>
             </button>
             <!-- <button class="toolbar-chip" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')">
@@ -91,16 +97,13 @@
           </div>
           <div class="reading-toolbar-group">
             <div class="toolbar-font-wrap">
-              <button class="toolbar-chip" :class="{ active: script === 'uthmani' || fontPickerOpen }" @click="toggleFontPicker">
+              <!-- <button class="toolbar-chip" :class="{ active: script === 'uthmani' || fontPickerOpen }"
+                @click="toggleFontPicker">
                 <i class="bi bi-file-earmark-richtext"></i><span>Quranic fonts</span>
-              </button>
+              </button> -->
               <div v-if="fontPickerOpen" class="toolbar-font-menu">
-                <button
-                  v-for="font in quranFontOptions"
-                  :key="font.value"
-                  class="toolbar-font-option"
-                  :class="{ active: quranFont === font.value }"
-                  @click="setQuranFont(font.value)">
+                <button v-for="font in quranFontOptions" :key="font.value" class="toolbar-font-option"
+                  :class="{ active: quranFont === font.value }" @click="setQuranFont(font.value)">
                   <span>{{ font.label }}</span>
                 </button>
               </div>
@@ -115,76 +118,65 @@
         </div>
 
         <!-- Empty State -->
-        <div v-if="!verses.length && !showOnboarding" class="empty">
+        <div v-if="!hasVerses && !showOnboarding" class="empty">
           <div class="empty-card">
             <div class="empty-icon">﴿</div>
             <h3>Begin your journey</h3>
             <p>{{ nextActionDescription }}</p>
             <div class="empty-actions">
               <button class="cta cta-primary" @click="beginPlan"><i class="bi bi-play-circle"></i><span>{{
-                  emptyPrimaryLabel }}</span></button>
+                emptyPrimaryLabel }}</span></button>
               <button class="cta cta-ghost" @click="showTools = true"><i class="bi bi-sliders"></i><span>Open
                   setup</span></button>
             </div>
           </div>
         </div>
 
-        <!-- Verses -->
-        <div v-else class="verses" :class="{ compact: compactMode, focus: focusMode }">
-          <div v-for="(verse, i) in verses" :key="verse.key" class="verse" :data-verse-key="verse.key" :class="verseClasses(verse, i)">
-            <div class="verse-head">
-              <div class="verse-badge">
-                <span class="verse-num">Ayah {{ verse.number }}</span>
+        <!-- Verses Grid -->
+        <div v-else-if="hasVerses" class="verses-grid">
+          <div v-for="verse in verses" :key="verse.key" class="verse-card" :class="{
+            active: activeVerseKey === verse.key,
+            'focus-mode': focusMode && activeVerseKey !== verse.key,
+            blurred: blurAdjacent && activeVerseKey !== verse.key && Math.abs(verse.number - (activeVerseKey?.split(':')[1] || 0)) > 1
+          }">
+            <div class="verse-header">
+              <div class="verse-badges">
+                <span class="verse-number">Ayah {{ verse.number }}</span>
                 <span class="verse-ref">{{ verse.key }}</span>
               </div>
               <div class="verse-actions">
-                <button class="action-btn" @click="playVerse(verse)"><i class="bi bi-play-fill"></i></button>
+                <button class="verse-play-btn" @click="playVerse(verse)" title="Play verse">
+                  <i class="bi bi-play-fill"></i>
+                </button>
+
               </div>
             </div>
-            <div class="verse-arabic" dir="rtl" :style="verseArabicStyle" v-html="verse.arabic"></div>
-            <div v-if="showTransliteration && verse.transliteration" class="verse-transliteration">{{ verse.transliteration }}</div>
-            <div v-if="showTranslation && verse.translation" class="verse-translation">{{ verse.translation }}</div>
-            <div v-if="showWordByWord && verse.words?.length" class="verse-words">
-              <span
-                v-for="(w, i) in verse.words"
-                :key="i"
-                class="word"
-                :class="{ active: activeWordAudio === `${verse.key}:${i}` }"
-                @mouseenter="openWordTooltip(verse, w, i)"
-                @mouseleave="closeWordTooltip"
-                @focusin="openWordTooltip(verse, w, i)"
-                @focusout="closeWordTooltip"
-                @click="toggleWordTooltip(verse, w, i)"
-              >
-                <span class="word-ar" dir="rtl" :style="wordArabicStyle">{{ w.ar }}</span>
-                <span class="word-en">{{ w.en }}</span>
-                <button v-if="w.audio && wordByWordAudioEnabled" class="word-play" @click="playWordAudio(w.audio, `${verse.key}:${i}`)"><i
-                    class="bi bi-volume-up"></i></button>
-                <span
-                  v-if="isTooltipOpen(verse.key, i)"
-                  class="word-tooltip"
-                  role="tooltip"
-                >
-                  <span class="word-tooltip-ar" dir="rtl" :style="wordArabicStyle">{{ w.ar }}</span>
-                  <span class="word-tooltip-en">{{ w.en || 'No translation' }}</span>
-                </span>
-              </span>
+
+            <div class="verse-arabic" dir="rtl" lang="ar" v-html="verse.arabic"></div>
+
+            <!-- TRANSLATION - Fixed conditional -->
+            <div v-if="showTranslation && verse.translation" class="verse-translation">
+              {{ verse.translation }}
             </div>
-            <div class="verse-footer">
-              <!-- <div class="verse-footer-side">
-                <button class="verse-tool-btn" @click="decFont" aria-label="Decrease font"><i class="bi bi-dash-lg"></i></button>
-                <button class="verse-tool-btn" @click="incFont" aria-label="Increase font"><i class="bi bi-plus-lg"></i></button>
-              </div> -->
-              <div class="verse-footer-side verse-footer-side-right">
-                <!-- <button class="verse-tool-btn" @click="toggleBookmark(verse)" :class="{ active: bookmarks.includes(verse.key) }" aria-label="Bookmark ayah"><i class="bi bi-bookmark"></i></button> -->
-                <!-- <button class="verse-tool-btn" @click="togglePin(verse)" :class="{ active: pins.includes(verse.key) }" aria-label="Pin ayah"><i class="bi bi-pin-angle"></i></button> -->
-                <!-- <button class="verse-tool-btn" @click="shareWhatsApp(verse)" aria-label="Share on WhatsApp"><i class="bi bi-whatsapp"></i></button> -->
-                <!-- <button class="verse-tool-btn" @click="downloadAyah(verse)" aria-label="Download ayah"><i class="bi bi-download"></i></button> -->
-                <!-- <button class="verse-tool-btn" @click="playVerse(verse)" aria-label="Play audio"><i class="bi bi-play-circle"></i></button> -->
+
+            <div v-if="showTransliteration && verse.transliteration" class="verse-transliteration">
+              {{ verse.transliteration }}
+            </div>
+
+            <div v-if="showWordByWord && verse.words?.length" class="verse-words">
+              <div v-for="(word, wi) in verse.words" :key="wi" class="word-item">
+                <span class="word-arabic" dir="rtl">{{ word.ar }}</span>
+                <span class="word-meaning">{{ word.en }}</span>
+                <button v-if="word.audio && wordByWordAudioEnabled" class="word-audio-btn"
+                  @click="playWordAudio(word.audio)">
+                  <i class="bi bi-volume-up"></i>
+                </button>
               </div>
             </div>
           </div>
         </div>
+
+
       </div>
 
       <!-- Tools Panel -->
@@ -199,33 +191,20 @@
           <div class="tools-tabs">
             <button :class="{ active: tab === 'beginner' }" @click="tab = 'beginner'">Beginner</button>
             <button :class="{ active: tab === 'advanced' }" @click="tab = 'advanced'">Advanced</button>
-            <button :class="{ active: tab === 'analytics' }" @click="tab = 'analytics'">Analytics</button>
           </div>
         </div>
 
         <div class="tools-body">
-          <!-- Beginner Tab -->
+          <!-- Beginner Tab - Simplified -->
           <div v-if="tab === 'beginner'" class="sheet">
-            <section class="sheet-section sheet-section-guide">
-              <div class="flow-strip">
-                <div class="flow-step" :class="{ active: onboardingStep === 1 }">1. Read</div>
-                <div class="flow-step" :class="{ active: onboardingStep === 2 }">2. Repeat</div>
-                <div class="flow-step" :class="{ active: onboardingStep === 3 }">3. Review</div>
-                <div class="flow-step" :class="{ active: onboardingStep === 4 }">4. Retain</div>
-              </div>
-              <div class="guide-copy">
-                <div class="guide-title">{{ beginnerGuide.title }}</div>
-                <div class="guide-sub">{{ beginnerGuide.text }}</div>
-              </div>
-            </section>
-
+            <!-- Quick Setup Section -->
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('beginner_setup')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-book"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">Setup</span>
-                    <span class="st-sub">Surah, reciter, range</span>
+                    <span class="st-title">1. What to Memorise</span>
+                    <span class="st-sub">Surah and verses</span>
                   </span>
                 </span>
                 <span class="st-chev" :class="{ open: sectionOpen.beginner_setup }"><i
@@ -235,11 +214,37 @@
                 <div class="field-stack">
                   <div class="field">
                     <label>Surah</label>
-                    <select v-model="chapterId" @change="loadChapter" class="select">
+                    <select :value="chapterId" @change="onChapterChange" class="select">
                       <option :value="0">Choose a surah...</option>
                       <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.id }}. {{ c.name_simple }}</option>
                     </select>
                   </div>
+                  <div class="field">
+                    <label>Verses</label>
+                    <div class="range range-single">
+                      <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
+                      <span>to</span>
+                      <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Audio Section -->
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('beginner_audio')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-mic"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">2. Audio Settings</span>
+                    <span class="st-sub">Reciter and playback</span>
+                  </span>
+                </span>
+
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.beginner_audio">
+                <div class="field-stack">
                   <div class="field">
                     <label>Reciter</label>
                     <select v-model="reciterId" @change="refreshVerses" class="select">
@@ -247,86 +252,48 @@
                     </select>
                   </div>
                   <div class="field">
-                    <label>Ayah range</label>
-                    <div class="range range-compact range-single">
-                      <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
-                      <span>to</span>
-                      <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
+                    <label>Speed</label>
+                    <div class="radio-group radio-group-tight">
+                      <label class="radio"><input type="radio" value="0.75" v-model="speed"> 0.75x</label>
+                      <label class="radio"><input type="radio" value="1" v-model="speed"> 1x</label>
+                      <label class="radio"><input type="radio" value="1.25" v-model="speed"> 1.25x</label>
+                      <label class="radio"><input type="radio" value="1.5" v-model="speed"> 1.5x</label>
                     </div>
                   </div>
-                  <div class="cta-row cta-row-split">
-                    <button class="cta cta-primary" @click="beginPlan"><i class="bi bi-play-circle"></i><span>{{
-                        beginnerPrimaryLabel }}</span></button>
-                    <button class="cta cta-ghost" @click="tab = 'analytics'"><i class="bi bi-bar-chart"></i><span>See
-                        plan</span></button>
+                  <div class="field">
+                    <label>Auto-advance</label>
+                    <div class="radio-group radio-group-tight">
+                      <label class="radio"><input type="radio" value="auto" v-model="playMode"> Yes</label>
+                      <label class="radio"><input type="radio" value="manual" v-model="playMode"> No (manual)</label>
+                    </div>
                   </div>
                 </div>
               </div>
             </section>
 
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('beginner_playback')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-repeat"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Playback</span>
-                    <span class="st-sub">Speed, delay, repeats, mode</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.beginner_playback }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.beginner_playback">
-                <div class="field-stack">
-                  <div class="field">
-                    <label>Speed</label>
-                    <select v-model.number="speed" @change="applySpeed" class="select select-prominent">
-                      <option v-for="s in speedOptions" :key="`sp-${s}`" :value="s">{{ s }}x</option>
-                    </select>
-                  </div>
-                  <div class="field">
-                    <label>Delay</label>
-                    <select v-model.number="delay" class="select">
-                      <option v-for="d in delayOptions" :key="`dl-${d}`" :value="d">{{ d }}s</option>
-                    </select>
-                  </div>
-                  <div class="field">
-                    <label>Repeat</label>
-                    <select v-model.number="repeats" @change="rebuildQueue" class="select">
-                      <option v-for="r in repeatOptions" :key="`rp-${r}`" :value="r">{{ r }}</option>
-                    </select>
-                  </div>
-                  <div class="field">
-                    <label>Mode</label>
-                    <div class="radio-group radio-group-tight">
-                      <label class="radio">
-                        <input type="radio" value="auto" v-model="playMode">
-                        <span>Auto</span>
-                      </label>
-                      <label class="radio">
-                        <input type="radio" value="manual" v-model="playMode">
-                        <span>Manual</span>
-                      </label>
-                      <label class="radio">
-                        <input type="radio" value="loop" v-model="playMode">
-                        <span>Loop</span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
+            <!-- Inside beginner tab, after Speed setting in Audio Settings section -->
+            <div class="field">
+              <label>Repetition Count</label>
+              <select v-model="beginnerRepeats" class="select">
+                <option v-for="n in repeatOptions" :key="n" :value="n">{{ n }} {{ n === 1 ? 'time' : 'times' }}</option>
+              </select>
+            </div>
+
+            <button class="start-btn" @click="startSession" :disabled="!hasSelectedSurah">
+              <i class="bi bi-play-fill"></i> Start Memorising
+            </button>
           </div>
 
-          <!-- Advanced Tab -->
+          <!-- Advanced Tab - Simplified -->
           <div v-if="tab === 'advanced'" class="sheet">
+            <!-- Setup Section -->
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-compass"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">Setup</span>
-                    <span class="st-sub">Surah • Range • Reciter • Playback</span>
+                    <span class="st-title">1. Session Setup</span>
+                    <span class="st-sub">Surah and verses</span>
                   </span>
                 </span>
                 <span class="st-chev" :class="{ open: sectionOpen.advanced_setup }"><i
@@ -342,22 +309,12 @@
                     </select>
                   </div>
                   <div class="field">
-                    <label>Study</label>
-                    <select v-model="studyMode" class="select">
-                      <option value="recite">Recite</option>
-                      <option value="quiz">Quiz</option>
-                      <option value="hybrid">Hybrid</option>
-                    </select>
-                  </div>
-                  <div class="field" v-if="studyMode === 'quiz'">
-                    <label>Quiz type</label>
-                    <select v-model="quizType" class="select">
-                      <option value="mixed">Mixed</option>
-                      <option value="flashcard">Flashcards</option>
-                      <option value="mcq">Multiple choice</option>
-                      <option value="audio_mcq">Audio choose</option>
-                      <option value="blank">Fill blank</option>
-                    </select>
+                    <label>Verses</label>
+                    <div class="range range-single">
+                      <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
+                      <span>to</span>
+                      <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
+                    </div>
                   </div>
                   <div class="field">
                     <label>Reciter</label>
@@ -365,66 +322,77 @@
                       <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
                     </select>
                   </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Playback Section -->
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('advanced_playback')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-repeat"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">2. Playback</span>
+                    <span class="st-sub">Speed, repeats, mode</span>
+                  </span>
+                </span>
+                <span class="st-chev" :class="{ open: sectionOpen.advanced_playback }"><i
+                    class="bi bi-chevron-down"></i></span>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.advanced_playback">
+                <div class="field-stack">
                   <div class="field">
-                    <label>Ayah range</label>
-                    <div class="range range-compact range-single">
-                      <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
-                      <span>to</span>
-                      <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
-                    </div>
-                  </div>
-                  <div class="field" v-if="showAdvancedPlaybackFields">
                     <label>Speed</label>
-                    <select v-model.number="speed" @change="applySpeed" class="select select-prominent">
-                      <option v-for="s in speedOptions" :key="`asp-${s}`" :value="s">{{ s }}x</option>
-                    </select>
-                  </div>
-                  <div class="field" v-if="showAdvancedPlaybackFields">
-                    <label>Delay</label>
-                    <select v-model.number="delay" class="select">
-                      <option v-for="d in delayOptions" :key="`adl-${d}`" :value="d">{{ d }}s</option>
-                    </select>
-                  </div>
-                  <div class="field" v-if="showAdvancedPlaybackFields">
-                    <label>Repeat</label>
-                    <select v-model.number="repeats" @change="rebuildQueue" class="select">
-                      <option v-for="r in repeatOptions" :key="`arp-${r}`" :value="r">{{ r }}</option>
-                    </select>
-                  </div>
-                  <div class="field" v-if="showAdvancedPlaybackFields">
-                    <label>Mode</label>
                     <div class="radio-group radio-group-tight">
-                      <label class="radio">
-                        <input type="radio" value="auto" v-model="playMode">
-                        <span>Auto</span>
-                      </label>
-                      <label class="radio">
-                        <input type="radio" value="manual" v-model="playMode">
-                        <span>Manual</span>
-                      </label>
-                      <label class="radio">
-                        <input type="radio" value="loop" v-model="playMode">
-                        <span>Loop</span>
-                      </label>
+                      <label class="radio"><input type="radio" value="0.75" v-model="speed"> 0.75x</label>
+                      <label class="radio"><input type="radio" value="1" v-model="speed"> 1x</label>
+                      <label class="radio"><input type="radio" value="1.25" v-model="speed"> 1.25x</label>
+                      <label class="radio"><input type="radio" value="1.5" v-model="speed"> 1.5x</label>
                     </div>
                   </div>
-                  <div class="cta-row cta-row-split">
-                    <button class="cta cta-ghost" @click="tab = 'analytics'"><i class="bi bi-bar-chart"></i><span>See
-                        progress</span></button>
-                    <button class="cta cta-primary" @click="startSession"><i class="bi bi-play-circle"></i><span>{{
-                        advancedPrimaryLabel }}</span></button>
+                  <div class="field">
+                    <label>Auto-advance</label>
+                    <div class="radio-group radio-group-tight">
+                      <label class="radio"><input type="radio" value="auto" v-model="playMode"> Yes</label>
+                      <label class="radio"><input type="radio" value="manual" v-model="playMode"> No (manual)</label>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label>Delay between verses</label>
+                    <select v-model.number="delay" class="select">
+                      <option v-for="d in [0, 1, 2, 3, 5]" :key="d" :value="d">{{ d }} second{{ d !== 1 ? 's' : '' }}
+                      </option>
+                    </select>
                   </div>
                 </div>
               </div>
             </section>
 
-            <section v-if="showAdvancedPractice" class="sheet-section sheet-section-accent">
+            <div class="field">
+              <label>Repetition Count</label>
+              <select v-model="advancedRepeats" class="select">
+                <option v-for="n in repeatOptions" :key="n" :value="n">{{ n }} {{ n === 1 ? 'time' : 'times' }}</option>
+              </select>
+
+              <input type="checkbox" v-model="repeatAndLoopAudio">
+            </div>
+            <div class="field checkbox">
+              <label class="switch">
+                <input type="checkbox" v-model="repeatAndLoopAudio">
+                <span class="switch-ui"></span>
+                <span class="switch-text">Repeat & Loop Audio (Āyah by Āyah)</span>
+              </label>
+              <small class="field-hint">Loop each ayah multiple times before advancing</small>
+            </div>
+
+            <!-- Practice Section -->
+            <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('advanced_practice')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-stars"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">Practice</span>
-                    <span class="st-sub">Chaining • Focus • Looping</span>
+                    <span class="st-title">3. Practice Mode</span>
+                    <span class="st-sub">Order and focus</span>
                   </span>
                 </span>
                 <span class="st-chev" :class="{ open: sectionOpen.advanced_practice }"><i
@@ -433,329 +401,69 @@
               <div class="sheet-content" v-show="sectionOpen.advanced_practice">
                 <div class="field-stack">
                   <div class="field">
-                    <label>Chaining</label>
-                    <select v-model="order" @change="rebuildQueue" class="select">
-                      <option value="seq">Sequential</option>
-                      <option value="cum">Cumulative</option>
-                      <option value="rand">Random</option>
-                      <option value="chain">A-A/B-B</option>
-                    </select>
+                    <label>Verse order</label>
+                    <div class="radio-group">
+                      <label class="radio"><input type="radio" value="seq" v-model="order"> Sequential
+                        (1,2,3...)</label>
+                      <label class="radio"><input type="radio" value="rand" v-model="order"> Random order</label>
+                      <label class="radio"><input type="radio" value="cum" v-model="order"> Cumulative
+                        (1,1-2,1-3...)</label>
+                    </div>
                   </div>
-                  <div class="field">
-                    <label>Loop delay</label>
-                    <select v-model.number="rangeLoopDelay" class="select">
-                      <option v-for="d in delayOptions" :key="`rld-${d}`" :value="d">{{ d }}s</option>
-                    </select>
-                  </div>
-                  <div class="field">
-                    <label>Blur context</label>
-                    <label class="switch">
-                      <input type="checkbox" v-model="blurAdjacent">
-                      <span class="switch-ui"></span>
-                      <span class="switch-text">Reduce distraction</span>
-                    </label>
-                  </div>
-                  <div class="field">
-                    <label>Focus mode</label>
+                  <div class="field checkbox">
                     <label class="switch">
                       <input type="checkbox" v-model="focusMode">
                       <span class="switch-ui"></span>
-                      <span class="switch-text">Highlight active ayah</span>
+                      <span class="switch-text">Focus mode (dim other verses)</span>
+                    </label>
+                  </div>
+                  <div class="field checkbox">
+                    <label class="switch">
+                      <input type="checkbox" v-model="blurAdjacent">
+                      <span class="switch-ui"></span>
+                      <span class="switch-text">Blur non-active verses (active recall)</span>
                     </label>
                   </div>
                 </div>
               </div>
             </section>
 
-            <section class="sheet-section">
+            <!-- Saved Sessions -->
+            <!-- In advanced tab, wrap saved sessions section with v-if -->
+            <section class="sheet-section" v-if="isLoggedIn">
               <button class="sheet-toggle" @click="toggleSection('advanced_saved')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-save"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">Saved sessions</span>
-                    <span class="st-sub">Save • Load • Delete</span>
+                    <span class="st-title">4. Saved Sessions</span>
+                    <span class="st-sub">Save, load, delete</span>
                   </span>
                 </span>
                 <span class="st-chev" :class="{ open: sectionOpen.advanced_saved }"><i
                     class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.advanced_saved">
-                <div class="field">
-                  <label>Saved sessions</label>
-                  <select v-model="selectedSessionId" class="select">
-                    <option value="">Select saved session…</option>
-                    <option v-for="s in savedSessions" :key="s.id" :value="s.id">{{ s.name }}</option>
-                  </select>
-                </div>
-
-                <div class="action-grid-3">
-                  <button class="mini-btn" :disabled="!selectedSessionId" @click="loadSession(selectedSessionId)"><i
-                      class="bi bi-folder2-open"></i><span>Load</span></button>
-                  <button class="mini-btn danger" :disabled="!selectedSessionId"
-                    @click="deleteSession(selectedSessionId)"><i class="bi bi-trash3"></i><span>Delete</span></button>
-                  <button class="mini-btn" @click="tab = 'analytics'"><i
-                      class="bi bi-graph-up"></i><span>Stats</span></button>
-                </div>
-
-                <div class="field">
-                  <label>Save current</label>
-                  <div class="row">
-                    <input class="input" v-model.trim="sessionName" placeholder="Session name">
-                    <button class="mini-btn" @click="saveSession">Save</button>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </div>
-
-          <!-- Analytics Tab -->
-          <div v-if="tab === 'analytics'" class="sheet">
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('analytics_overview')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-bar-chart"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Overview</span>
-                    <span class="st-sub">Due • Accuracy • Streak</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.analytics_overview }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.analytics_overview">
-                <div v-if="!events.length" class="analytics-empty">
-                  <div class="skeleton-row"></div>
-                  <div class="skeleton-grid">
-                    <div class="skeleton-card"></div>
-                    <div class="skeleton-card"></div>
-                    <div class="skeleton-card"></div>
-                    <div class="skeleton-card"></div>
-                  </div>
-                  <div class="analytics-empty-copy">
-                    No stats yet. Start a session and your progress appears here.
-                  </div>
-                </div>
-                <div class="stat-grid">
-                  <div class="stat">
-                    <div class="stat-k">Streak</div>
-                    <div class="stat-v">{{ stats.streakDays }}</div>
-                    <div class="stat-s">Current run</div>
-                  </div>
-                  <div class="stat">
-                    <div class="stat-k">Sessions</div>
-                    <div class="stat-v">{{ savedSessions.length }}</div>
-                    <div class="stat-s">Saved setups</div>
-                  </div>
-                  <div class="stat">
-                    <div class="stat-k">Reviewed</div>
-                    <div class="stat-v">{{ stats.gradedToday }}</div>
-                    <div class="stat-s">Graded today</div>
-                  </div>
-                  <div class="stat">
-                    <div class="stat-k">Mistakes</div>
-                    <div class="stat-v">{{ globalWeakCount }}</div>
-                    <div class="stat-s">Weak ayahs</div>
-                  </div>
-                </div>
-
-                <div class="field" style="margin-top:12px">
-                  <label>Current weak ayahs</label>
-                  <div class="read-list">
-                    <div class="read-row">
-                      <span>Needs review</span>
-                      <strong>{{ weakAyahSummary }}</strong>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="cta-row">
-                  <button class="cta cta-primary" @click="beginPlannerSession"><i class="bi bi-play-circle"></i><span>{{
-                      plannerPrimaryCta }}</span></button>
-                  <button class="cta cta-ghost" @click="tab = 'beginner'"><i
-                      class="bi bi-arrow-left-circle"></i><span>Back to setup</span></button>
-                </div>
+                <!-- existing saved sessions content -->
               </div>
             </section>
 
-            <section v-if="false" class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('analytics_retention')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-journal-check"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Retention</span>
-                    <span class="st-sub">Read only</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.analytics_retention }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.analytics_retention">
-                <div class="read-list">
-                  <div class="read-row">
-                    <span>Weak ayahs</span>
-                    <strong>{{ weakAyahSummary }}</strong>
-                  </div>
-                  <div class="read-row">
-                    <span>Weak word clusters</span>
-                    <strong>{{ weakWordSummary }}</strong>
-                  </div>
-                  <div class="read-row">
-                    <span>Forgetting trend</span>
-                    <strong>{{ retentionStats.forgettingTrend }}</strong>
-                  </div>
-                  <div class="read-row">
-                    <span>Weekly improvement</span>
-                    <strong>{{ retentionStats.weeklyRetentionImprovement > 0 ? '+' : '' }}{{
-                      retentionStats.weeklyRetentionImprovement }}%</strong>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section v-if="false" class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('analytics_leeches')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-magnet"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Leeches</span>
-                    <span class="st-sub">Stuck cards</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.analytics_leeches }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.analytics_leeches">
-                <div v-if="leeches.length === 0" class="empty-mini">
-                  No leeches. Keep going.
-                </div>
-                <div v-else class="leech-list">
-                  <div v-for="l in leeches" :key="l.key" class="leech">
-                    <div class="leech-main">
-                      <div class="leech-k">{{ l.verseKey }}</div>
-                      <div class="leech-s">{{ l.skillLabel }} • lapses {{ l.lapses }}</div>
-                    </div>
-                    <button class="mini-btn" @click="unsuspendLeech(l.key)">Unsuspend</button>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section v-if="false" class="sheet-section sheet-section-accent">
-              <button class="sheet-toggle" @click="toggleSection('analytics_trends')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-graph-up-arrow"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Trends</span>
-                    <span class="st-sub">Last 14 days</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.analytics_trends }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.analytics_trends">
-                <div class="chart">
-                  <div class="chart-title">Grades per day</div>
-                  <div class="bars">
-                    <div v-for="(v, i) in stats.grades14d" :key="`g-${i}`" class="bar-col">
-                      <div class="bar" :style="{ height: chartBarHeight(stats.grades14d, v) }"></div>
-                    </div>
-                  </div>
-                </div>
-                <div class="chart">
-                  <div class="chart-title">Average quality</div>
-                  <div class="bars bars-soft">
-                    <div v-for="(v, i) in stats.avgQuality14d" :key="`q-${i}`" class="bar-col">
-                      <div class="bar" :style="{ height: chartBarHeight(stats.avgQuality14d, v) }"></div>
-                    </div>
-                  </div>
-                </div>
-                <div class="chart">
-                  <div class="chart-title">Weak ayah trend</div>
-                  <div class="bars bars-danger">
-                    <div v-for="(v, i) in retentionStats.weakTrend14d" :key="`w-${i}`" class="bar-col">
-                      <div class="bar" :style="{ height: chartBarHeight(retentionStats.weakTrend14d, v) }"></div>
+            <!-- Add a message for logged out users -->
+            <section class="sheet-section" v-else>
+              <div class="sheet-content">
+                <div class="field-stack">
+                  <div class="field">
+                    <div class="pill" style="text-align: center; padding: 16px;">
+                      <i class="bi bi-person"></i>
+                      <span>Login to save and load sessions</span>
                     </div>
                   </div>
                 </div>
               </div>
             </section>
 
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('analytics_planner')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-calendar3"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Planner</span>
-                    <span class="st-sub">Daily targets</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.analytics_planner }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.analytics_planner">
-                <div class="field">
-                  <label>Daily goals</label>
-                  <div class="planner-row">
-                    <div class="pill">New: <strong>{{ planner.settings.newAyat }}</strong></div>
-                    <div class="pill">Review: <strong>{{ planner.settings.reviewCards }}</strong></div>
-                    <div class="pill">Streak: <strong>{{ stats.streakDays }}</strong></div>
-                  </div>
-                </div>
-
-                <div class="field">
-                  <label>Planner settings</label>
-                  <div class="planner-settings planner-settings-stack">
-                    <div class="pill-input pill-input-row">
-                      <span>New ayahs</span>
-                      <input class="input" type="number" min="0" v-model.number="plannerState.settings.newAyat"
-                        @change="persistPlanner">
-                    </div>
-                    <div class="pill-input pill-input-row">
-                      <span>Review target</span>
-                      <input class="input" type="number" min="0" v-model.number="plannerState.settings.reviewCards"
-                        @change="persistPlanner">
-                    </div>
-                    <div class="pill-input pill-input-row">
-                      <span>Min minutes</span>
-                      <input class="input" type="number" min="5" v-model.number="plannerState.settings.dailyMinutes"
-                        @change="persistPlanner">
-                    </div>
-                  </div>
-                </div>
-
-                <div class="field">
-                  <label>Why reviews are due</label>
-                  <div class="read-list">
-                    <div v-for="reason in reviewReasons" :key="reason" class="read-row">
-                      <span>{{ reason }}</span>
-                      <strong>Due</strong>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="field">
-                  <label>Today progress</label>
-                  <div class="planner-row">
-                    <div class="pill">Graded: <strong>{{ stats.gradedToday }}</strong></div>
-                    <div class="pill">Listened: <strong>{{ stats.listenedAyatToday }}</strong></div>
-                  </div>
-                </div>
-                <div class="field" v-if="todayPlan">
-                  <label>Today plan</label>
-                  <div class="planner-row">
-                    <div class="pill">Type: <strong>{{ sessionTypeInfo.label }}</strong></div>
-                    <div class="pill">Range: <strong>{{ todayPlan.rangeStart }}–{{ todayPlan.rangeEnd }}</strong></div>
-                    <div class="pill">ETA: <strong>{{ todayPlanEtaLabel }}</strong></div>
-                  </div>
-                </div>
-                <div class="tools-inline-actions">
-                  <button class="tools-btn tools-btn-ghost" @click="generateTodayPlan"><i
-                      class="bi bi-magic"></i><span>Generate plan</span></button>
-                  <button class="tools-btn tools-btn-primary" @click="applyTodayPlan"><i
-                      class="bi bi-play-circle"></i><span>Begin plan</span></button>
-                </div>
-              </div>
-            </section>
+            <button class="start-btn" @click="startSession" :disabled="!hasSelectedSurah">
+              <i class="bi bi-play-fill"></i> Start Session
+            </button>
           </div>
         </div>
 
@@ -764,130 +472,112 @@
               class="bi bi-arrow-counterclockwise"></i><span>Reset</span></button>
           <button class="tools-btn tools-btn-ghost" @click="showTools = false"><i
               class="bi bi-x-circle"></i><span>Close</span></button>
-          <button class="tools-btn tools-btn-primary" @click="footerPrimaryAction"><i
-              class="bi bi-play-circle"></i><span>{{ footerPrimaryLabel }}</span></button>
+          <!-- <button class="tools-btn tools-btn-primary" @click="footerPrimaryAction"><i
+              class="bi bi-play-circle"></i><span>{{ footerPrimaryLabel }}</span></button> -->
         </div>
       </aside>
     </div>
 
-    <!-- <div v-if="!quizActive" class="quiz-overlay">
+    <!-- Replace the entire quiz-overlay div section with this -->
+    <div v-if="quizActive" class="quiz-overlay">
       <div class="quiz-card">
-        <div class="quiz-top">
-          <div class="quiz-title-wrap">
-            <div class="quiz-title">Retention check</div>
-            <div class="quiz-title-sub">{{ quizContextLabel }}</div>
+        <div class="quiz-header">
+          <div>
+            <h3 class="quiz-title">Retention Check</h3>
+            <p class="quiz-subtitle">{{ quizContextLabel }}</p>
           </div>
-          <button class="quiz-x" @click="stopQuiz"><i class="bi bi-x-lg"></i></button>
-        </div>
-        <div class="quiz-meta" v-if="!quizSummaryActive">
-          <span class="quiz-chip"><i class="bi bi-ui-checks-grid"></i>{{ quizIndex + 1 }} / {{ quizQueue.length }}</span>
-          <span class="quiz-chip"><i class="bi bi-diagram-3"></i>{{ quizCardTypeLabel }}</span>
-          <span class="quiz-chip"><i class="bi bi-bookmark"></i>{{ quizCard?.key }}</span>
+          <button class="quiz-close" @click="stopQuiz">×</button>
         </div>
 
-        <div class="quiz-body" v-if="quizSummaryActive">
-          <div class="quiz-summary-title">Session complete</div>
-          <div class="quiz-summary-grid">
-            <div class="quiz-summary-item">
-              <div class="quiz-summary-k">Score</div>
-              <div class="quiz-summary-v">{{ quizSummary.correct }} / {{ quizSummary.total }}</div>
+        <!-- Quiz Progress -->
+        <div class="quiz-progress" v-if="!quizComplete">
+          <div class="quiz-progress-bar">
+            <div class="quiz-progress-fill" :style="{ width: ((quizIndex + 1) / quizQueue.length) * 100 + '%' }"></div>
+          </div>
+          <div class="quiz-stats">
+            <span>{{ quizIndex + 1 }} / {{ quizQueue.length }}</span>
+            <span>{{ quizCard?.type === 'flashcard' ? 'Flashcard' : quizCard?.type === 'mcq' ? 'Multiple Choice' :
+              'Question' }}</span>
+          </div>
+        </div>
+
+        <!-- Quiz Summary (Complete) -->
+        <div v-if="quizComplete" class="quiz-summary">
+          <div class="quiz-summary-icon">🎉</div>
+          <h3>Session Complete!</h3>
+          <div class="quiz-summary-stats">
+            <div class="stat">
+              <span class="stat-label">Score</span>
+              <span class="stat-value">{{ quizScore }}/{{ quizQueue.length }}</span>
             </div>
-            <div class="quiz-summary-item">
-              <div class="quiz-summary-k">Accuracy</div>
-              <div class="quiz-summary-v">{{ quizSummary.accuracy }}%</div>
-            </div>
-            <div class="quiz-summary-item">
-              <div class="quiz-summary-k">Avg grade</div>
-              <div class="quiz-summary-v">{{ quizSummary.avgQuality }}</div>
-            </div>
-            <div class="quiz-summary-item">
-              <div class="quiz-summary-k">Time</div>
-              <div class="quiz-summary-v">{{ quizSummary.timeSpent }}</div>
-            </div>
-            <div class="quiz-summary-item">
-              <div class="quiz-summary-k">Plan progress</div>
-              <div class="quiz-summary-v">{{ quizSummary.planProgress }}</div>
-            </div>
-            <div class="quiz-summary-item">
-              <div class="quiz-summary-k">Best skill</div>
-              <div class="quiz-summary-v">{{ quizSummary.bestSkill }}</div>
+            <div class="stat">
+              <span class="stat-label">Accuracy</span>
+              <span class="stat-value">{{ quizAccuracy }}%</span>
             </div>
           </div>
-          <div v-if="quizSummary.skills.length" class="quiz-summary-skill-grid">
-            <div v-for="skill in quizSummary.skills" :key="skill.key" class="quiz-summary-skill">
-              <div class="quiz-summary-k">{{ skill.label }}</div>
-              <div class="quiz-summary-v">{{ skill.correct }}/{{ skill.total }}</div>
-              <div class="quiz-summary-s">{{ skill.accuracy }}% accuracy</div>
-            </div>
-          </div>
-          <div class="quiz-summary-explain">
-            <div class="quiz-summary-k">What to do next</div>
-            <div class="quiz-summary-s">{{ quizSummary.explanation }}</div>
-          </div>
-          <div class="quiz-summary-explain">
-            <div class="quiz-summary-k">Engine sync</div>
-            <div class="quiz-summary-s">{{ quizSummary.engineLink }}</div>
-          </div>
-          <div v-if="quizSummary.mistakes?.length" class="quiz-summary-mistakes">
-            <div class="quiz-summary-k">Mistakes</div>
-            <div class="quiz-summary-tags">
-              <span v-for="m in quizSummary.mistakes.slice(0,6)" :key="m" class="quiz-tag">{{ m }}</span>
+          <div class="quiz-summary-mistakes" v-if="quizMistakes.length">
+            <p>Verses to review:</p>
+            <div class="mistake-tags">
+              <span v-for="m in quizMistakes" :key="m" class="mistake-tag">{{ m }}</span>
             </div>
           </div>
           <div class="quiz-actions">
-            <button class="tools-btn tools-btn-ghost" @click="stopQuiz">Close</button>
-            <button class="tools-btn tools-btn-primary" @click="restartQuiz">Start again</button>
+            <button class="btn-outline" @click="stopQuiz">Close</button>
+            <button class="btn-primary" @click="restartQuiz">Try Again</button>
           </div>
         </div>
 
-        <div class="quiz-body" v-else-if="quizCard">
+        <!-- Quiz Card -->
+        <div v-else-if="quizCard" class="quiz-body">
+          <!-- Flashcard Type -->
           <div v-if="quizCard.type === 'flashcard'">
-            <div class="quiz-section-label"><i class="bi bi-layers"></i><span>Recall the next ayah</span></div>
-            <div class="quiz-prompt" dir="rtl" v-html="quizCard.arabic"></div>
-            <button class="quiz-reveal" v-if="!quizRevealed" @click="quizRevealed = true"><i class="bi bi-eye"></i><span>Show answer</span></button>
-            <div v-if="quizRevealed" class="quiz-hint">{{ quizCard.translation || 'Grade yourself' }}</div>
+            <div class="quiz-question">Recite this verse:</div>
+            <div class="quiz-arabic" dir="rtl" v-html="quizCard.arabic"></div>
+            <button v-if="!quizRevealed" class="quiz-reveal-btn" @click="quizRevealed = true">
+              <i class="bi bi-eye"></i> Reveal Answer
+            </button>
+            <div v-if="quizRevealed" class="quiz-answer">
+              <div class="quiz-translation">{{ quizCard.translation }}</div>
+              <div class="quiz-grade-buttons">
+                <button class="grade-btn" @click="submitQuiz(2)">Again</button>
+                <button class="grade-btn" @click="submitQuiz(3)">Hard</button>
+                <button class="grade-btn primary" @click="submitQuiz(4)">Good</button>
+                <button class="grade-btn" @click="submitQuiz(5)">Easy</button>
+              </div>
+            </div>
           </div>
 
+          <!-- Multiple Choice Type -->
           <div v-else-if="quizCard.type === 'mcq'">
-            <div class="quiz-section-label"><i class="bi bi-list-check"></i><span>Pick the matching ayah</span></div>
-            <div class="quiz-prompt" dir="rtl" v-html="quizCard.arabic"></div>
-            <div class="quiz-options">
-              <label v-for="opt in quizOptions" :key="opt.key" class="quiz-opt">
-                <input type="radio" name="mcq" :value="opt.key" v-model="quizAnswer">
-                <span>{{ opt.label }}</span>
-              </label>
-            </div>
-          </div>
-
-          <div v-else-if="quizCard.type === 'audio_mcq'">
-            <div class="quiz-section-label"><i class="bi bi-ear"></i><span>Listen, then choose</span></div>
-            <button class="quiz-reveal" @click="playVerse(quizCard)"><i class="bi bi-arrow-repeat"></i><span>Replay audio</span></button>
-            <div class="quiz-options">
-              <label v-for="opt in quizOptions" :key="opt.key" class="quiz-opt">
-                <input type="radio" name="amcq" :value="opt.key" v-model="quizAnswer">
-                <span>{{ opt.label }}</span>
-              </label>
-            </div>
-          </div>
-
-          <div v-else>
-            <div class="quiz-section-label"><i class="bi bi-pencil-square"></i><span>Fill the missing word</span></div>
+            <div class="quiz-question">Which verse matches this meaning?</div>
             <div class="quiz-prompt">{{ quizCard.prompt }}</div>
-            <input class="input" v-model="quizAnswer" placeholder="Type missing word">
+            <div class="quiz-options">
+              <button v-for="opt in quizOptions" :key="opt.key" class="quiz-option"
+                @click="submitQuiz(opt.key === quizCard.key ? 4 : 2)">
+                {{ opt.label }}
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div class="quiz-actions" v-if="!quizSummaryActive">
-          <button class="quiz-action quiz-action-ghost" @click="stopQuiz"><i class="bi bi-stop-circle"></i><span>Stop</span></button>
-          <button class="tools-btn tools-btn-ghost" v-if="quizCard?.type === 'flashcard' && !quizRevealed"
-            @click="quizRevealed = true"><i class="bi bi-eye"></i><span>Reveal</span></button>
-          <button class="quiz-action quiz-action-primary" v-if="quizCard?.type !== 'flashcard'"
-            @click="submitQuiz()"><i class="bi bi-arrow-right-circle"></i><span>Next</span></button>
-          <div class="quiz-grade" v-else>
-            <button class="qg" @click="submitQuiz(2)"><i class="bi bi-arrow-counterclockwise"></i><span>Again</span></button>
-            <button class="qg" @click="submitQuiz(3)"><i class="bi bi-slash-circle"></i><span>Hard</span></button>
-            <button class="qg primary" @click="submitQuiz(4)"><i class="bi bi-check2-circle"></i><span>Good</span></button>
-            <button class="qg" @click="submitQuiz(5)"><i class="bi bi-stars"></i><span>Easy</span></button>
+          <!-- Audio MCQ Type -->
+          <div v-else-if="quizCard.type === 'audio_mcq'">
+            <div class="quiz-question">Listen and choose the correct verse</div>
+            <button class="quiz-play-audio" @click="playVerse(quizCard)">▶ Play Audio</button>
+            <div class="quiz-options">
+              <button v-for="opt in quizOptions" :key="opt.key" class="quiz-option"
+                @click="submitQuiz(opt.key === quizCard.key ? 4 : 2)">
+                {{ opt.label }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Fill Blank Type -->
+          <div v-else-if="quizCard.type === 'blank'">
+            <div class="quiz-question">Fill in the missing word:</div>
+            <div class="quiz-blank-prompt">{{ quizCard.prompt }}</div>
+            <input type="text" v-model="quizAnswer" class="quiz-input" placeholder="Type your answer"
+              @keyup.enter="submitQuiz()">
+            <button class="btn-primary" @click="submitQuiz()">Submit</button>
           </div>
         </div>
       </div>
@@ -900,7 +590,7 @@
         transform: `rotate(${Math.random() * 360}deg)`,
         animationDelay: (Math.random() * 0.2) + 's'
       }"></span>
-    </div> -->
+    </div>
 
     <!-- Audio Player -->
     <div class="player-bar" v-if="playerVisible">
@@ -940,9 +630,7 @@
         <div class="player-time right">{{ formatTime(duration) }}</div>
       </div>
 
-      <button class="player-collapse" @click="togglePlayerCollapsed" :aria-label="playerCollapsed ? 'Expand player' : 'Collapse player'">
-        <i class="bi" :class="playerCollapsed ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
-      </button>
+
 
       <div v-if="playerMenuOpen" class="player-menu-overlay" @click="playerMenuOpen = false">
         <div class="player-menu" @click.stop>
@@ -985,27 +673,94 @@ export default {
   },
   data() {
     return {
+      beginner: {
+        chapterId: 0,
+        rangeStart: 1,
+        rangeEnd: 7,
+        reciterId: 7,
+        speed: 1,
+        delay: 1,
+        playMode: 'auto',
+        repeats: 1,  // This is beginnerRepeats
+        order: 'seq',
+        focusMode: false,
+        blurAdjacent: false,
+        verses: [],
+        activeKey: null,
+        queue: [],
+        queueIndex: 0,
+        sessionActive: false
+      },
+      // Advanced mode specific state
+      advanced: {
+        chapterId: 0,
+        rangeStart: 1,
+        rangeEnd: 7,
+        reciterId: 7,
+        speed: 1,
+        delay: 1,
+        playMode: 'auto',
+        repeats: 1,
+        order: 'seq',
+        focusMode: false,
+        blurAdjacent: false,
+        repeatAndLoopAudio: false,
+        advancedRepeats: 1,  // Add this for advanced mode's repeat count
+        verses: [],
+        activeKey: null,
+        queue: [],
+        queueIndex: 0,
+        sessionActive: false
+      },
+
+      // Current active mode
+      currentMode: 'beginner',
+
+      // Shared state
       theme: 'light',
-      showTools: false,
       tab: 'beginner',
 
+      // Simplified planner data
+      dailyPlan: {
+        newVerses: 5,
+        reviewVerses: 10,
+        minutes: 20
+      },
+      todayPlanSummary: null,
+      simpleStats: {
+        streak: 0,
+        sessions: 0,
+        memorised: 0,
+        weak: 0
+      },
+
+      // REMOVE these duplicates - they are now in beginner/advanced objects:
+      // repeatAndLoopAudio: false,
+      // beginnerRepeats: 1,
+      // advancedRepeats: 1,
+
+      weakVersesList: [],
+      showTools: false,
+      activeVerseKey: null,
+      quizScore: 0,
+      quizMistakes: [],
+      quizComplete: false,
+
       chapters: [],
-      chapterId: 0,
       currentChapter: null,
-      rangeStart: 1,
-      rangeEnd: 7,
 
       reciters: [{ id: 7, name: 'Alafasy' }],
-      reciterId: 7,
       alquranAudioEditions: [],
       alquranEdition: '',
-
+      audioTimeUpdate: null,
+      audioEnded: null,
+      audioError: null,
+      currentVerseIndex: 0,
+      isAudioLoading: false,
       speedOptions: [0.5, 0.75, 1, 1.25, 1.5],
       delayOptions: [0, 0.5, 1, 2, 3, 5, 7, 10],
       repeatOptions: [1, 2, 3, 4, 5, 7, 10],
       rangeLoopDelay: 1,
-      blurAdjacent: false,
-      focusMode: false,
       sessionName: '',
       savedSessions: [],
       selectedSessionId: '',
@@ -1063,11 +818,14 @@ export default {
       bookmarks: [],
       pins: [],
 
+      // These are now controlled by computed properties
       playMode: 'auto',
       speed: 1,
       delay: 1,
       repeats: 1,
       order: 'seq',
+      blurAdjacent: false,
+      focusMode: false,
 
       verses: [],
       activeKey: null,
@@ -1085,19 +843,186 @@ export default {
       playerCollapsed: true,
       sectionOpen: {
         beginner_setup: true,
-        beginner_playback: false,
+        beginner_audio: false,
         advanced_setup: true,
+        advanced_playback: false,
         advanced_practice: false,
         advanced_saved: false,
         analytics_overview: true,
-        analytics_retention: false,
-        analytics_trends: false,
-        analytics_planner: true
-        , analytics_leeches: false
-      }
+        analytics_planner: true,
+        analytics_weak: false
+      },
     }
   },
+
   computed: {
+    
+    currentConfig() {
+      return this.currentMode === 'beginner' ? this.beginner : this.advanced
+    },
+    hasVerses() {
+    return this.currentMode === 'beginner' 
+      ? (this.beginner.verses?.length > 0)
+      : (this.advanced.verses?.length > 0)
+  },
+
+  hasSelectedSurah() {
+    const chapterId = this.currentMode === 'beginner' 
+      ? this.beginner.chapterId 
+      : this.advanced.chapterId
+    return chapterId && chapterId > 0
+  },
+    // Computed properties that use current mode
+    chapterId: {
+      get() {
+        const val = this.currentConfig.chapterId
+        return val || 0
+      },
+      set(val) {
+        const numVal = Number(val) || 0
+        if (this.currentMode === 'beginner') {
+          this.beginner.chapterId = numVal
+        } else {
+          this.advanced.chapterId = numVal
+        }
+      }
+    },
+
+    rangeStart: {
+      get() { return this.currentConfig.rangeStart },
+      set(val) {
+        if (this.currentMode === 'beginner') this.beginner.rangeStart = val
+        else this.advanced.rangeStart = val
+      }
+    },
+
+    rangeEnd: {
+      get() { return this.currentConfig.rangeEnd },
+      set(val) {
+        if (this.currentMode === 'beginner') this.beginner.rangeEnd = val
+        else this.advanced.rangeEnd = val
+      }
+    },
+
+    reciterId: {
+      get() { return this.currentConfig.reciterId },
+      set(val) {
+        if (this.currentMode === 'beginner') this.beginner.reciterId = val
+        else this.advanced.reciterId = val
+      }
+    },
+
+    speed: {
+      get() { return this.currentConfig.speed },
+      set(val) {
+        if (this.currentMode === 'beginner') this.beginner.speed = val
+        else this.advanced.speed = val
+      }
+    },
+
+    delay: {
+      get() { return this.currentConfig.delay },
+      set(val) {
+        if (this.currentMode === 'beginner') this.beginner.delay = val
+        else this.advanced.delay = val
+      }
+    },
+
+    playMode: {
+      get() { return this.currentConfig.playMode },
+      set(val) {
+        if (this.currentMode === 'beginner') this.beginner.playMode = val
+        else this.advanced.playMode = val
+      }
+    },
+
+    order: {
+      get() { return this.currentConfig.order },
+      set(val) {
+        if (this.currentMode === 'beginner') this.beginner.order = val
+        else this.advanced.order = val
+      }
+    },
+
+    focusMode: {
+      get() { return this.currentConfig.focusMode },
+      set(val) {
+        if (this.currentMode === 'beginner') this.beginner.focusMode = val
+        else this.advanced.focusMode = val
+      }
+    },
+
+    blurAdjacent: {
+      get() { return this.currentConfig.blurAdjacent },
+      set(val) {
+        if (this.currentMode === 'beginner') this.beginner.blurAdjacent = val
+        else this.advanced.blurAdjacent = val
+      }
+    },
+
+    verses: {
+      get() { return this.currentConfig.verses },
+      set(val) {
+        if (this.currentMode === 'beginner') this.beginner.verses = val
+        else this.advanced.verses = val
+      }
+    },
+
+    activeKey: {
+      get() { return this.currentConfig.activeKey },
+      set(val) {
+        if (this.currentMode === 'beginner') this.beginner.activeKey = val
+        else this.advanced.activeKey = val
+      }
+    },
+
+    queue: {
+      get() { return this.currentConfig.queue },
+      set(val) {
+        if (this.currentMode === 'beginner') this.beginner.queue = val
+        else this.advanced.queue = val
+      }
+    },
+
+    queueIndex: {
+      get() { return this.currentConfig.queueIndex },
+      set(val) {
+        if (this.currentMode === 'beginner') this.beginner.queueIndex = val
+        else this.advanced.queueIndex = val
+      }
+    },
+
+    // Advanced mode specific
+    repeatAndLoopAudio: {
+      get() { return this.advanced.repeatAndLoopAudio },
+      set(val) { this.advanced.repeatAndLoopAudio = val }
+    },
+
+    advancedRepeats: {
+      get() { return this.advanced.advancedRepeats },
+      set(val) { this.advanced.advancedRepeats = val }
+    },
+
+    beginnerRepeats: {
+      get() { return this.beginner.repeats },
+      set(val) { this.beginner.repeats = val }
+    },
+    activeVerseIndex() {
+      if (!this.activeVerseKey || !this.verses.length) return -1
+      return this.verses.findIndex(v => v.key === this.activeVerseKey)
+    },
+    canGoPrev() {
+      const idx = this.activeVerseIndex
+      return idx > 0
+    },
+    canGoNext() {
+      const idx = this.activeVerseIndex
+      return idx >= 0 && idx < this.verses.length - 1
+    },
+    quizAccuracy() {
+      if (!this.quizQueue.length) return 0
+      return Math.round((this.quizScore / this.quizQueue.length) * 100)
+    },
     isLoggedIn() {
       return !!this.auth?.check
     },
@@ -1240,7 +1165,12 @@ export default {
       return '⚙'
     },
     showOnboarding() {
-      return !this.onboardingDismissed && !this.chapterId && !this.activeKey && !this.quizActive
+      // Don't show onboarding if we have verses in current mode
+      const hasVersesInCurrentMode = this.currentMode === 'beginner'
+        ? (this.beginner.verses && this.beginner.verses.length > 0)
+        : (this.advanced.verses && this.advanced.verses.length > 0)
+
+      return !this.onboardingDismissed && !this.chapterId && !hasVersesInCurrentMode && !this.quizActive
     },
     onboardingStep() {
       if (!this.chapterId) return 1
@@ -1416,7 +1346,10 @@ export default {
       return `${surah}${range ? ` • ${range}` : ''} • ${this.sessionTypeInfo.label} • Next: ${this.footerPrimaryLabel}`
     }
   },
-  mounted() {
+  async mounted() {
+    this.$nextTick(() => {
+      this.collectSimpleStats()
+    })
     this.migrateLocalStorage()
     this.loadUiState()
     this.loadChapters()
@@ -1429,6 +1362,18 @@ export default {
     this.initAudio()
     this.theme = document.documentElement.getAttribute('data-theme') || this.theme
     this.loadBookmarksPins()
+
+    // Initialize based on current mode
+    if (this.currentMode === 'advanced' && this.advanced.chapterId) {
+      this.currentMode = 'advanced'
+      this.tab = 'advanced'
+      await this.loadVerses()
+    } else if (this.beginner.chapterId) {
+      this.currentMode = 'beginner'
+      this.tab = 'beginner'
+      await this.loadVerses()
+    }
+
     window.addEventListener('online', this.handleOnline)
     window.addEventListener('offline', this.handleOffline)
     window.addEventListener('beforeunload', this.persistAllState)
@@ -1475,9 +1420,188 @@ export default {
     playerVisible: 'persistAudioState',
     isPlaying: 'persistAudioState',
     currentTime: 'persistAudioState',
-    sectionOpen: { handler: 'persistUiState', deep: true }
+    sectionOpen: { handler: 'persistUiState', deep: true },
+
+    beginnerRepeats() {
+      if (this.tab === 'beginner') this.rebuildQueue()
+    },
+    advancedRepeats() {
+      if (this.tab === 'advanced' && this.repeatAndLoopAudio) this.rebuildQueue()
+    },
+    repeatAndLoopAudio() {
+      if (this.tab === 'advanced') this.rebuildQueue()
+    },
+    verses: {
+      handler(newVal) {
+        console.log('Verses changed:', newVal?.length, 'currentMode:', this.currentMode)
+      },
+      immediate: true,
+      deep: true
+    },
+    tab(newVal) {
+      // Don't change currentMode if it's already set correctly
+      if (newVal === 'beginner' && this.currentMode !== 'beginner') {
+        this.currentMode = 'beginner'
+        // Load beginner's verses if any
+        if (this.beginner.chapterId && this.beginner.verses.length === 0) {
+          this.loadVerses()
+        }
+      } else if (newVal === 'advanced' && this.currentMode !== 'advanced') {
+        this.currentMode = 'advanced'
+        // Load advanced's verses if any
+        if (this.advanced.chapterId && this.advanced.verses.length === 0) {
+          this.loadVerses()
+        }
+      }
+      this.persistUiState()
+    },
   },
   methods: {
+    onChapterChange(event) {
+      const val = parseInt(event.target.value)
+      console.log('Chapter changed to:', val, 'currentMode:', this.currentMode)
+      if (this.currentMode === 'beginner') {
+        this.beginner.chapterId = val
+      } else {
+        this.advanced.chapterId = val
+      }
+      this.loadChapter()
+    },
+    setActiveVerse(key) {
+      this.activeVerseKey = key
+      this.activeKey = key
+      // Scroll to verse
+      this.$nextTick(() => {
+        const el = document.querySelector(`.verse-card[data-verse-key="${key}"]`)
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      })
+    },
+
+    playCurrentVerse() {
+      const verse = this.verses.find(v => v.key === this.activeVerseKey)
+      if (verse) this.playVerse(verse)
+    },
+
+    prevVerse() {
+      if (!this.canGoPrev) return
+      const idx = this.activeVerseIndex
+      const prevVerse = this.verses[idx - 1]
+      if (prevVerse) this.playVerse(prevVerse)
+    },
+
+    nextVerse() {
+      if (!this.canGoNext) return
+      const idx = this.activeVerseIndex
+      const nextVerse = this.verses[idx + 1]
+      if (nextVerse) this.playVerse(nextVerse)
+    },
+    // Collect simple stats
+    collectSimpleStats() {
+      // Count sessions from saved sessions
+      const sessionCount = this.savedSessions.length || 0
+
+      // Count weak verses from SM2
+      const weak = Object.entries(this.sm2 || {})
+        .filter(([, card]) => card && (card.lapses >= 3 || card.suspended))
+        .map(([key]) => key.split('::')[0])
+      const uniqueWeak = [...new Set(weak)]
+
+      // Build weak verses list for display
+      this.weakVersesList = uniqueWeak.map(key => {
+        const textCard = this.sm2Get(this.sm2CardKey(key, 'recite_text'))
+        return { key, lapses: textCard.lapses || 0 }
+      }).sort((a, b) => b.lapses - a.lapses)
+
+      this.simpleStats = {
+        streak: this.computeStreak(this.events, Date.now()),
+        sessions: sessionCount,
+        memorised: this.verses.length || 0,
+        weak: uniqueWeak.length
+      }
+    },
+
+    // Generate a simple daily plan
+    generateSimplePlan() {
+      const now = Date.now()
+      const day = this.dayKey(now)
+
+      // Calculate target verses based on daily goals
+      const targetNew = Math.min(this.dailyPlan.newVerses, 20)
+      const targetReview = Math.min(this.dailyPlan.reviewVerses, 50)
+      const totalTarget = targetNew + targetReview
+
+      // Estimate time per verse (approx 45 seconds)
+      const estimatedSeconds = totalTarget * 45
+      const estimatedMinutes = Math.ceil(estimatedSeconds / 60)
+
+      // Determine session type based on weak verses and new verses
+      let sessionType = 'Memorisation'
+      let planRange = null
+
+      if (this.weakVersesList.length > 0 && this.weakVersesList.length > targetNew) {
+        sessionType = 'Revision (Recovery)'
+      } else if (this.weakVersesList.length > 0) {
+        sessionType = 'Mixed (Review + New)'
+      } else if (targetNew > 0) {
+        sessionType = 'New Memorisation'
+      } else {
+        sessionType = 'Review Session'
+      }
+
+      // Get current range from selected surah
+      if (this.currentChapter) {
+        planRange = `${this.currentChapter.name_simple} (${this.rangeStart}-${this.rangeEnd})`
+      }
+
+      this.todayPlanSummary = {
+        type: sessionType,
+        target: totalTarget,
+        eta: Math.max(estimatedMinutes, this.dailyPlan.minutes),
+        range: planRange,
+        newCount: targetNew,
+        reviewCount: targetReview,
+        day: day
+      }
+
+      this.showBanner('Plan generated! Press Start to begin.', 'success', 3000)
+    },
+
+    // Start the plan session
+    startPlanSession() {
+      if (!this.todayPlanSummary) {
+        this.generateSimplePlan()
+      }
+
+      // If we have a valid session, start it
+      if (this.chapterId && this.verses.length) {
+        this.startSession()
+      } else {
+        this.tab = 'beginner'
+        this.showTools = true
+        this.showBanner('Please select a surah and range first', 'info', 3000)
+      }
+    },
+
+    // Review a specific weak verse
+    reviewWeakVerse(verseKey) {
+      // Find the verse in current verses or load it
+      let verse = this.verses.find(v => v.key === verseKey)
+      if (!verse) {
+        // Try to load from chapter
+        const [chapterId] = verseKey.split(':')
+        if (chapterId) {
+          this.selectedChapterId = parseInt(chapterId)
+          this.loadChapter()
+          setTimeout(() => {
+            verse = this.verses.find(v => v.key === verseKey)
+            if (verse) this.playVerse(verse)
+          }, 500)
+        }
+      } else {
+        this.playVerse(verse)
+      }
+      this.showTools = false
+    },
     userStorageKey(suffix) {
       const uid = this.auth?.id || 'guest'
       return `telawa.${suffix}.${uid}`
@@ -1487,14 +1611,54 @@ export default {
       try { this.pins = JSON.parse(localStorage.getItem(this.userStorageKey('pins')) || '[]') } catch { this.pins = [] }
     },
     persistBookmarksPins() {
-      try { localStorage.setItem(this.userStorageKey('bookmarks'), JSON.stringify((this.bookmarks || []).slice(0, 500))) } catch (e) {}
-      try { localStorage.setItem(this.userStorageKey('pins'), JSON.stringify((this.pins || []).slice(0, 500))) } catch (e) {}
+      try { localStorage.setItem(this.userStorageKey('bookmarks'), JSON.stringify((this.bookmarks || []).slice(0, 500))) } catch (e) { }
+      try { localStorage.setItem(this.userStorageKey('pins'), JSON.stringify((this.pins || []).slice(0, 500))) } catch (e) { }
     },
     buildUiStatePayload() {
       return {
         theme: this.theme,
         showTools: this.showTools,
         tab: this.tab,
+        currentMode: this.currentMode,
+        // Save beginner mode state
+        beginner: {
+          chapterId: this.beginner.chapterId,
+          rangeStart: this.beginner.rangeStart,
+          rangeEnd: this.beginner.rangeEnd,
+          reciterId: this.beginner.reciterId,
+          speed: this.beginner.speed,
+          delay: this.beginner.delay,
+          playMode: this.beginner.playMode,
+          repeats: this.beginner.repeats,
+          order: this.beginner.order,
+          blurAdjacent: this.beginner.blurAdjacent,
+          focusMode: this.beginner.focusMode,
+          verses: [], // Don't persist verses to avoid storage issues
+          queue: [],
+          queueIndex: 0,
+          sessionActive: false
+        },
+        // Save advanced mode state
+        advanced: {
+          chapterId: this.advanced.chapterId,
+          rangeStart: this.advanced.rangeStart,
+          rangeEnd: this.advanced.rangeEnd,
+          reciterId: this.advanced.reciterId,
+          speed: this.advanced.speed,
+          delay: this.advanced.delay,
+          playMode: this.advanced.playMode,
+          repeats: this.advanced.repeats,
+          order: this.advanced.order,
+          blurAdjacent: this.advanced.blurAdjacent,
+          focusMode: this.advanced.focusMode,
+          repeatAndLoopAudio: this.advanced.repeatAndLoopAudio,
+          advancedRepeats: this.advanced.advancedRepeats,
+          verses: [],
+          queue: [],
+          queueIndex: 0,
+          sessionActive: false
+        },
+        // For backward compatibility
         chapterId: this.chapterId,
         rangeStart: this.rangeStart,
         rangeEnd: this.rangeEnd,
@@ -1544,15 +1708,14 @@ export default {
     toggleReadingOption(kind) {
       if (kind === 'translation') {
         this.showTranslation = !this.showTranslation
-        if (this.showTranslation && this.verses.some(verse => !verse.translation)) this.loadVerses()
+        // Force a re-render
+        this.$forceUpdate()
       }
       if (kind === 'transliteration') {
         this.showTransliteration = !this.showTransliteration
-        if (this.showTransliteration) this.loadVerses()
       }
       if (kind === 'wbw') {
         this.showWordByWord = !this.showWordByWord
-        if (this.showWordByWord && this.verses.some(verse => !verse.words?.length)) this.loadVerses()
       }
     },
     toggleFontPicker() {
@@ -1632,21 +1795,37 @@ export default {
         if (!raw) return
         const state = JSON.parse(raw)
         this.theme = state.theme || this.theme
-        this.showTools = state.showTools ?? this.showTools
+        // Don't restore showTools from storage if you want it closed by default
+        // this.showTools = state.showTools ?? this.showTools
+        this.showTools = false // Force closed on load
+
         this.tab = state.tab || this.tab
-        this.chapterId = state.chapterId || this.chapterId
-        this.rangeStart = state.rangeStart || this.rangeStart
-        this.rangeEnd = state.rangeEnd || this.rangeEnd
-        this.reciterId = state.reciterId || this.reciterId
-        this.speed = state.speed ?? this.speed
-        this.delay = state.delay ?? this.delay
-        this.repeats = state.repeats ?? this.repeats
-        this.playMode = state.playMode || this.playMode
-        this.order = state.order || this.order
-        this.blurAdjacent = state.blurAdjacent ?? this.blurAdjacent
-        this.focusMode = state.focusMode ?? this.focusMode
-        this.studyMode = state.studyMode || this.studyMode
-        this.quizType = state.quizType || this.quizType
+        this.currentMode = state.currentMode || 'beginner'
+
+        // Restore beginner mode settings
+        if (state.beginner) {
+          this.beginner = { ...this.beginner, ...state.beginner }
+        }
+
+        // Restore advanced mode settings
+        if (state.advanced) {
+          this.advanced = { ...this.advanced, ...state.advanced }
+        }
+
+        // For backward compatibility, also load from old flat state
+        if (state.chapterId !== undefined && this.currentMode === 'beginner') {
+          this.beginner.chapterId = state.chapterId
+          this.beginner.rangeStart = state.rangeStart || this.beginner.rangeStart
+          this.beginner.rangeEnd = state.rangeEnd || this.beginner.rangeEnd
+          this.beginner.reciterId = state.reciterId || this.beginner.reciterId
+          this.beginner.speed = state.speed ?? this.beginner.speed
+          this.beginner.delay = state.delay ?? this.beginner.delay
+          this.beginner.playMode = state.playMode || this.beginner.playMode
+          this.beginner.order = state.order || this.beginner.order
+          this.beginner.blurAdjacent = state.blurAdjacent ?? this.beginner.blurAdjacent
+          this.beginner.focusMode = state.focusMode ?? this.beginner.focusMode
+        }
+
         this.showTranslation = state.showTranslation ?? this.showTranslation
         this.showTransliteration = state.showTransliteration ?? this.showTransliteration
         this.showWordByWord = state.showWordByWord ?? this.showWordByWord
@@ -1657,6 +1836,7 @@ export default {
         this.sectionOpen = { ...this.sectionOpen, ...(state.sectionOpen || {}) }
         this.onboardingDismissed = state.onboardingDismissed ?? false
       } catch (e) { console.error(e) }
+
       try {
         const raw = localStorage.getItem('telawa.sessionState')
         if (raw) {
@@ -1666,6 +1846,7 @@ export default {
           this.planRun = state.planRun || null
         }
       } catch (e) { console.error(e) }
+
       try {
         const raw = localStorage.getItem('telawa.audioState')
         this.restoredAudioState = raw ? JSON.parse(raw) : null
@@ -2299,11 +2480,11 @@ export default {
       if (this.todayPlan) this.applyTodayPlan()
       else this.generateTodayPlan().then(() => this.applyTodayPlan())
     },
-    footerPrimaryAction() {
-      if (this.tab === 'analytics') this.beginPlannerSession()
-      else if (this.tab === 'beginner') this.beginPlanAndStart()
-      else this.startSession()
-    },
+    // footerPrimaryAction() {
+    //   if (this.tab === 'analytics') this.beginPlannerSession()
+    //   else if (this.tab === 'beginner') this.beginPlanAndStart()
+    //   else this.startSession()
+    // },
     beginPlanAndStart() {
       this.onboardingDismissed = true
       if (this.chapterId) this.startSession()
@@ -2328,19 +2509,38 @@ export default {
         id: String(Date.now()),
         name,
         savedAt: Date.now(),
+        mode: this.currentMode, // Save which mode this session is for
         settings: {
-          chapterId: this.chapterId,
-          rangeStart: this.rangeStart,
-          rangeEnd: this.rangeEnd,
-          reciterId: this.reciterId,
-          speed: this.speed,
-          delay: this.delay,
-          repeats: this.repeats,
-          playMode: this.playMode,
-          order: this.order,
-          blurAdjacent: this.blurAdjacent,
-          focusMode: this.focusMode,
-          rangeLoopDelay: this.rangeLoopDelay
+          // Beginner settings
+          beginner: {
+            chapterId: this.beginner.chapterId,
+            rangeStart: this.beginner.rangeStart,
+            rangeEnd: this.beginner.rangeEnd,
+            reciterId: this.beginner.reciterId,
+            speed: this.beginner.speed,
+            delay: this.beginner.delay,
+            repeats: this.beginner.repeats,
+            playMode: this.beginner.playMode,
+            order: this.beginner.order,
+            blurAdjacent: this.beginner.blurAdjacent,
+            focusMode: this.beginner.focusMode
+          },
+          // Advanced settings
+          advanced: {
+            chapterId: this.advanced.chapterId,
+            rangeStart: this.advanced.rangeStart,
+            rangeEnd: this.advanced.rangeEnd,
+            reciterId: this.advanced.reciterId,
+            speed: this.advanced.speed,
+            delay: this.advanced.delay,
+            repeats: this.advanced.repeats,
+            playMode: this.advanced.playMode,
+            order: this.advanced.order,
+            blurAdjacent: this.advanced.blurAdjacent,
+            focusMode: this.advanced.focusMode,
+            repeatAndLoopAudio: this.advanced.repeatAndLoopAudio,
+            advancedRepeats: this.advanced.advancedRepeats
+          }
         }
       }
       this.savedSessions = [payload, ...this.savedSessions].slice(0, 20)
@@ -2352,19 +2552,22 @@ export default {
     async loadSession(id) {
       const s = this.savedSessions.find(x => x.id === id)
       if (!s) return
-      const set = s.settings || {}
-      this.chapterId = set.chapterId || 0
-      this.rangeStart = set.rangeStart || 1
-      this.rangeEnd = set.rangeEnd || 7
-      this.reciterId = set.reciterId || this.reciterId
-      this.speed = set.speed ?? this.speed
-      this.delay = set.delay ?? this.delay
-      this.repeats = set.repeats ?? this.repeats
-      this.playMode = set.playMode || this.playMode
-      this.order = set.order || this.order
-      this.blurAdjacent = set.blurAdjacent ?? this.blurAdjacent
-      this.focusMode = set.focusMode ?? this.focusMode
-      this.rangeLoopDelay = set.rangeLoopDelay ?? this.rangeLoopDelay
+
+      // Restore beginner settings
+      if (s.settings.beginner) {
+        Object.assign(this.beginner, s.settings.beginner)
+      }
+
+      // Restore advanced settings
+      if (s.settings.advanced) {
+        Object.assign(this.advanced, s.settings.advanced)
+      }
+
+      // Switch to the saved mode
+      if (s.mode) {
+        this.currentMode = s.mode
+        this.tab = s.mode === 'beginner' ? 'beginner' : 'advanced'
+      }
 
       await this.loadChapter()
       this.refreshVerses()
@@ -2419,8 +2622,9 @@ export default {
       if (!url) return ''
       if (url.startsWith('http://') || url.startsWith('https://')) return url
       if (url.startsWith('//')) return `https:${url}`
+      // Fix for Quran.com audio paths
       if (url.startsWith('/')) return `https://verses.quran.com${url}`
-      if (/^[A-Za-z0-9_-]+\/mp3\//.test(url)) return `https://verses.quran.com/${url}`
+      if (url.includes('mp3')) return `https://verses.quran.com/${url}`
       return url
     },
     shouldRequestTranslations() {
@@ -2464,12 +2668,25 @@ export default {
       } catch (e) { console.error(e) }
     },
     async loadChapter() {
-      if (!this.chapterId) { this.currentChapter = null; this.verses = []; return }
+      const chapterId = this.chapterId
+      if (!chapterId) {
+        this.currentChapter = null
+        this.verses = []
+        return
+      }
       this.onboardingDismissed = true
-      this.currentChapter = this.chapters.find(c => c.id === this.chapterId)
+      this.currentChapter = this.chapters.find(c => c.id === chapterId)
       const max = this.currentChapter?.verses_count || 286
-      this.rangeEnd = Math.min(this.rangeEnd, max)
-      this.rangeStart = Math.max(1, this.rangeStart)
+
+      // Update range based on current mode
+      if (this.currentMode === 'beginner') {
+        this.beginner.rangeEnd = Math.min(this.beginner.rangeEnd, max)
+        this.beginner.rangeStart = Math.max(1, this.beginner.rangeStart)
+      } else {
+        this.advanced.rangeEnd = Math.min(this.advanced.rangeEnd, max)
+        this.advanced.rangeStart = Math.max(1, this.advanced.rangeStart)
+      }
+
       await this.loadVerses()
     },
     adjustRange() {
@@ -2480,6 +2697,9 @@ export default {
     },
     async loadVerses() {
       if (!this.chapterId) return
+
+      console.log('loadVerses called - chapterId:', this.chapterId, 'currentMode:', this.currentMode)
+
       const params = {
         per_page: 300,
         translations: this.shouldRequestTranslations() ? '131' : undefined,
@@ -2487,6 +2707,7 @@ export default {
         audio: this.reciterId,
         fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs'
       }
+
       try {
         const res = await axios.get(`https://api.quran.com/api/v4/verses/by_chapter/${this.chapterId}`, { params })
         const all = res.data?.verses || []
@@ -2530,277 +2751,246 @@ export default {
           }
         }
 
-        this.verses = mappedVerses
-        this.writeVerseCache(this.chapterId, mappedVerses)
+        // Assign to correct mode's verses
+        if (this.currentMode === 'beginner') {
+          this.beginner.verses = mappedVerses
+          if (this.beginner.verses.length && !this.beginner.activeKey) {
+            this.beginner.activeKey = this.beginner.verses[0].key
+          }
+        } else {
+          this.advanced.verses = mappedVerses
+          if (this.advanced.verses.length && !this.advanced.activeKey) {
+            this.advanced.activeKey = this.advanced.verses[0].key
+          }
+        }
 
-        if (this.verses.length && !this.activeKey) this.activeKey = this.verses[0].key
+        this.writeVerseCache(this.chapterId, mappedVerses)
         this.buildQueue()
-        if (this.restoredAudioState?.src && this.restoredAudioState?.src === (this.verses.find(v => v.key === this.activeKey)?.audio || this.restoredAudioState.src)) {
-          this.playerVisible = !!this.restoredAudioState.playerVisible
-          this.currentTime = Number(this.restoredAudioState.currentTime || 0)
-        }
+
+        console.log('Verses loaded. Length:', mappedVerses.length)
+
       } catch (e) {
-        console.error(e)
+        console.error('API Error:', e)
+        // Try to load from cache
         const cached = this.readVerseCache(this.chapterId)
-        if (cached.length) {
-          this.verses = cached
-          if (this.verses.length && !this.activeKey) this.activeKey = this.verses[0].key
+        if (cached && cached.length) {
+          console.log('Loading from cache:', cached.length)
+          if (this.currentMode === 'beginner') {
+            this.beginner.verses = cached
+            if (this.beginner.verses.length && !this.beginner.activeKey) {
+              this.beginner.activeKey = this.beginner.verses[0].key
+            }
+          } else {
+            this.advanced.verses = cached
+            if (this.advanced.verses.length && !this.advanced.activeKey) {
+              this.advanced.activeKey = this.advanced.verses[0].key
+            }
+          }
           this.buildQueue()
-          this.showBanner('Offline copy loaded for this range.', 'info', 4500, { key: 'retry-verses', label: 'Retry' })
-          return
+          this.showBanner('Loaded from offline cache', 'info', 3000)
+        } else {
+          this.showBanner(`Failed to load verses: ${e.message || 'Network error'}`, 'error', 5000)
         }
-        const detail = this.describeNetworkError(e)
-        this.showBanner(`Failed to load verses${detail ? `: ${detail}` : ''}.`, 'error', 6000, { key: 'retry-verses', label: 'Retry' })
       }
     },
     refreshVerses() { this.loadVerses() },
     buildQueue() {
       const q = []
       const base = this.verses
-      const rep = Math.max(1, this.repeats)
+
+      let rep = 1
+      if (this.currentMode === 'beginner') {
+        rep = this.beginner.repeats
+        console.log('Beginner repeats:', rep)
+      } else if (this.currentMode === 'advanced') {
+        rep = this.advanced.repeatAndLoopAudio ? (this.advanced.advancedRepeats || 1) : 1
+        console.log('Advanced repeats:', rep, 'repeatAndLoopAudio:', this.advanced.repeatAndLoopAudio)
+      }
+
       const ord = this.order
-      for (let r = 0; r < rep; r++) {
-        if (ord === 'seq') q.push(...base)
-        else if (ord === 'cum') {
-          for (let i = 0; i < base.length; i++)
-            for (let j = 0; j <= i; j++) q.push(base[j])
-        } else if (ord === 'rand') {
-          const shuffled = [...base]
-          for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1))
-              ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-          }
-          q.push(...shuffled)
-        } else if (ord === 'chain') {
-          // A → (A,B) → B → (B,C) → C ...
+
+      if (ord === 'seq') {
+        for (let r = 0; r < rep; r++) q.push(...base)
+      } else if (ord === 'cum') {
+        for (let r = 0; r < rep; r++) {
           for (let i = 0; i < base.length; i++) {
-            const a = base[i]
-            const b = base[i + 1]
-            if (!a) continue
-            q.push(a)
-            if (b) q.push(a, b)
+            for (let j = 0; j <= i; j++) q.push(base[j])
           }
         }
+      } else if (ord === 'rand') {
+        const shuffled = [...base]
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1))
+            ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+        }
+        for (let r = 0; r < rep; r++) q.push(...shuffled)
       }
+
       this.queue = q
       this.queueIndex = 0
+      console.log('Queue built with repeats:', rep, 'queue length:', q.length)
     },
-    rebuildQueue() { this.buildQueue() },
+    rebuildQueue() {
+      this.buildQueue()
+    },
+
     async startSession() {
-      this.onboardingDismissed = true
-      this.sessionCompleted = false
-      if (!this.chapterId) { this.showTools = true; return }
-      if (!this.verses.length) await this.loadVerses()
-      if (!this.verses.length) { this.showBanner('No verses loaded yet', 'error'); this.showTools = true; return }
-      if (this.studyMode === 'quiz') {
-        this.startQuiz()
-        this.showTools = false
-        return
+      console.log('=== startSession called ===');
+      console.log('currentMode:', this.currentMode);
+      console.log('chapterId:', this.chapterId);
+
+      this.onboardingDismissed = true;
+      this.sessionCompleted = false;
+
+      // Fix: Check if a surah is selected (chapterId > 0, not just truthy)
+      if (!this.chapterId || this.chapterId === 0) {
+        console.log('No chapter selected');
+        this.showTools = true;
+        this.showBanner('Please select a surah first', 'info', 3000);
+        return;
       }
-      if (!this.queue.length) this.buildQueue()
-      if (!this.queue.length) { this.showBanner('Nothing to play. Check range.', 'error'); this.showTools = true; return }
-      this.queueIndex = 0
-      const first = this.queue[0] || this.verses[0]
-      this.showTools = false
-      await this.$nextTick()
-      if (first) this.playVerse(first)
-      this.persistAllState()
+
+      if (!this.verses.length) {
+        console.log('Loading verses...');
+        await this.loadVerses();
+        console.log('Verses loaded:', this.verses.length);
+      }
+
+      if (!this.verses.length) {
+        console.log('Still no verses');
+        this.showBanner('No verses loaded. Check your network connection.', 'error');
+        return;
+      }
+
+      if (!this.audioElement) {
+        console.log('Initializing audio...');
+        this.initAudio();
+      }
+
+      if (!this.queue.length) {
+        console.log('Building queue...');
+        this.buildQueue();
+        console.log('Queue built:', this.queue.length);
+      }
+
+      if (!this.queue.length) {
+        console.log('Queue is empty');
+        this.showBanner('Nothing to play. Check range settings.', 'error');
+        return;
+      }
+
+      this.queueIndex = 0;
+      const first = this.queue[0];
+      console.log('First verse:', first?.key);
+
+      if (first) {
+        this.activeKey = first.key;
+        this.activeVerseKey = first.key;
+
+        await this.$nextTick();
+        console.log('Calling playVerse...');
+        await this.playVerse(first);
+        console.log('playVerse completed');
+      }
+
+      this.showTools = false;
+      console.log('=== startSession completed ===');
     },
+    ensureAudioPlays() {
+      return new Promise((resolve, reject) => {
+        if (!this.audioElement) reject('No audio element')
+
+        const timeout = setTimeout(() => reject('Timeout'), 10000)
+
+        this.audioElement.addEventListener('canplaythrough', () => {
+          clearTimeout(timeout)
+          resolve()
+        }, { once: true })
+
+        this.audioElement.load()
+      })
+    },
+    // Quiz Methods - Add these to your existing methods
     startQuiz() {
-      this.sessionCompleted = false
-      const now = Date.now()
-      const skill = this.quizSkill || 'recite_text'
-      const source = this.getQuizSourceVerses()
-      const due = source.filter(v => (this.sm2Get(this.sm2CardKey(v.key, skill)).due || 0) <= now)
-      const rest = source.filter(v => !due.includes(v))
-      const base = [...due, ...rest]
-      // de-duplicate and limit
-      const seen = new Set()
-      const pool = []
-      for (const v of base) {
-        if (seen.has(v.key)) continue
-        seen.add(v.key)
-        pool.push(v)
-        if (pool.length >= 6) break
-      }
-      this.quizQueue = pool
-      this.quizIndex = 0
-      this.quizActive = true
-      this.quizRevealed = false
-      this.quizLastResult = null
-      this.quizSummaryActive = false
-      this.quizSessionStats = {
-        total: pool.length,
-        correct: 0,
-        qualitySum: 0,
-        answers: [],
-        mistakes: [],
-        skillTotals: {},
-        startedAt: Date.now(),
-        durationMs: 0
-      }
-      this.nextQuizCard()
-    },
-    getQuizSourceVerses() {
-      const byKey = new Map((this.verses || []).map(verse => [verse.key, verse]))
-      const orderedQueue = []
-      for (const item of this.queue || []) {
-        if (!item?.key || !byKey.has(item.key) || orderedQueue.some(verse => verse.key === item.key)) continue
-        orderedQueue.push(byKey.get(item.key))
-      }
-      if (this.planRun && this.todayPlan?.segments?.length) {
-        const seg = this.todayPlan.segments[this.planRun.segmentIndex || 0]
-        const segmentVerses = (seg?.keys || []).map(key => byKey.get(key)).filter(Boolean)
-        if (segmentVerses.length) return segmentVerses
-      }
-      if (this.todayPlan?.quizKeys?.length) {
-        const planned = this.todayPlan.quizKeys.map(key => byKey.get(key)).filter(Boolean)
-        if (planned.length) return planned
-      }
-      if (this.order === 'chain' && orderedQueue.length) return orderedQueue
-      return orderedQueue.length ? orderedQueue : [...this.verses]
-    },
-    restartQuiz() {
-      this.quizSummaryActive = false
-      this.quizIndex = 0
-      this.quizSessionStats = null
-      this.startQuiz()
-    },
-    nextQuizCard() {
-      const verse = this.quizQueue[this.quizIndex]
-      if (!verse) {
-        if (this.quizSessionStats) {
-          this.quizSessionStats.durationMs = Math.max(0, Date.now() - Number(this.quizSessionStats.startedAt || Date.now()))
-        }
-        this.quizSummaryActive = true
-        if (this.studyMode !== 'hybrid') this.triggerConfetti()
+      if (!this.verses.length) {
+        this.showBanner('No verses to quiz on. Start a session first.', 'info', 3000)
         return
       }
-      const type = this.quizType === 'mixed'
-        ? (['flashcard', 'mcq', 'blank', 'audio_mcq'][this.quizIndex % 4])
-        : this.quizType
-      const skill =
-        type === 'audio_mcq' ? 'audio_recall' :
-          type === 'blank' ? 'meaning' :
-            'recite_text'
-      this.quizSkill = skill
-      this.quizCard = { ...verse, type, skill }
+
+      // Build quiz queue from current verses
+      const source = this.verses.slice(0, 10)
+      this.quizQueue = source.map(v => ({ ...v, type: this.getRandomQuizType() }))
+      this.quizIndex = 0
+      this.quizScore = 0
+      this.quizMistakes = []
+      this.quizComplete = false
+      this.quizRevealed = false
       this.quizAnswer = ''
-      this.quizOptions = []
-      this.quizRevealed = type === 'flashcard' ? false : true
-      this.quizLastResult = null
-      if (type === 'mcq') {
-        const options = new Set([verse.key])
-        const idx = this.verses.findIndex(v => v.key === verse.key)
-        const nearby = []
-        for (let i = Math.max(0, idx - 6); i <= Math.min(this.verses.length - 1, idx + 6); i++) {
-          if (i !== idx) nearby.push(this.verses[i].key)
-        }
-        while (options.size < 4 && nearby.length) {
-          const pick = nearby.splice(Math.floor(Math.random() * nearby.length), 1)[0]
-          options.add(pick)
-        }
-        while (options.size < 4 && this.verses.length > 3) {
-          const pick = this.verses[Math.floor(Math.random() * this.verses.length)]
-          options.add(pick.key)
-        }
-        this.quizOptions = [...options].sort(() => Math.random() - 0.5).map(k => {
-          const v = this.verses.find(x => x.key === k)
-          const n = v ? v.number : parseInt(k.split(':')[1])
-          const snippet = this.normalizeTextForQuiz((v?.arabic || '').replace(/<[^>]+>/g, '')).slice(0, 36)
-          return { key: k, label: `${k} • ${n} • ${snippet}`.trim() }
-        })
-      }
-      if (type === 'audio_mcq') {
-        const options = new Set([verse.key])
-        const idx = this.verses.findIndex(v => v.key === verse.key)
-        const nearby = []
-        for (let i = Math.max(0, idx - 6); i <= Math.min(this.verses.length - 1, idx + 6); i++) {
-          if (i !== idx) nearby.push(this.verses[i].key)
-        }
-        while (options.size < 4 && nearby.length) {
-          const pick = nearby.splice(Math.floor(Math.random() * nearby.length), 1)[0]
-          options.add(pick)
-        }
-        while (options.size < 4 && this.verses.length > 3) {
-          const pick = this.verses[Math.floor(Math.random() * this.verses.length)]
-          options.add(pick.key)
-        }
-        this.quizOptions = [...options].sort(() => Math.random() - 0.5).map(k => {
-          const v = this.verses.find(x => x.key === k)
-          const n = v ? v.number : parseInt(k.split(':')[1])
-          return { key: k, label: `${k} • Ayah ${n}` }
-        })
-      }
-      if (type === 'blank') {
-        const { prompt, missing } = this.quizMakePrompt(verse)
-        this.quizCard.prompt = prompt
-        this.quizCard.missing = missing
-      }
-      if (type === 'audio_mcq') {
-        // play audio cue
-        setTimeout(() => this.playVerse(verse), 50)
-      }
-    },
-    submitQuiz(qualityOverride = null) {
-      const card = this.quizCard
-      if (!card) return
-      let quality = 4
-      if (typeof qualityOverride === 'number') quality = qualityOverride
-      else if (card.type === 'mcq' || card.type === 'audio_mcq') quality = this.quizAnswer === card.key ? 4 : 2
-      else if (card.type === 'blank') {
-        const a = this.normalizeTextForQuiz(this.quizAnswer).toLowerCase()
-        const b = this.normalizeTextForQuiz(card.missing).toLowerCase()
-        if (a && b && a === b) quality = 4
-        else if (a && b && (b.startsWith(a) || a.startsWith(b))) quality = 3
-        else quality = 2
-      }
-      const sm2Key = this.sm2CardKey(card.key, card.skill || this.quizSkill || 'recite_text')
-      this.sm2Grade(sm2Key, quality)
-      if (this.quizSessionStats) {
-        const skillKey = card.skill || this.quizSkill || 'recite_text'
-        const skillTotals = { ...(this.quizSessionStats.skillTotals || {}) }
-        const currentSkill = skillTotals[skillKey] || { total: 0, correct: 0 }
-        this.quizSessionStats.qualitySum += quality
-        const isCorrect = quality >= 4
-        if (isCorrect) this.quizSessionStats.correct += 1
-        else this.quizSessionStats.mistakes.push(card.key)
-        this.quizSessionStats.answers.push({ key: card.key, quality, type: card.type })
-        currentSkill.total += 1
-        if (isCorrect) currentSkill.correct += 1
-        skillTotals[skillKey] = currentSkill
-        this.quizSessionStats.skillTotals = skillTotals
-        this.quizSessionStats.durationMs = Math.max(0, Date.now() - Number(this.quizSessionStats.startedAt || Date.now()))
-      }
-      this.quizLastResult = { at: Date.now(), key: card.key, quality, skill: card.skill }
-      this.quizIndex += 1
+      this.quizActive = true
+
       this.nextQuizCard()
-      if (this.studyMode === 'hybrid' && this.hybridPendingKey) {
-        const pending = this.hybridPendingKey
-        this.hybridPendingKey = null
-        this.quizActive = false
-        this.quizCard = null
-        this.quizQueue = []
-        this.quizIndex = 0
-        setTimeout(() => {
-          if (this.playMode === 'auto') this.next()
-        }, (this.delay || 0) * 1000)
+    },
+
+    getRandomQuizType() {
+      const types = ['flashcard', 'mcq', 'blank']
+      return types[Math.floor(Math.random() * types.length)]
+    },
+
+    nextQuizCard() {
+      if (this.quizIndex >= this.quizQueue.length) {
+        this.quizComplete = true
+        return
+      }
+
+      this.quizCard = this.quizQueue[this.quizIndex]
+      this.quizRevealed = false
+      this.quizAnswer = ''
+
+      // Generate MCQ options if needed
+      if (this.quizCard.type === 'mcq') {
+        this.quizOptions = this.generateMcqOptions(this.quizCard)
       }
     },
+
+    generateMcqOptions(correctVerse) {
+      const options = [{ key: correctVerse.key, label: `Ayah ${correctVerse.number}` }]
+      const otherVerses = this.verses.filter(v => v.key !== correctVerse.key).slice(0, 3)
+      otherVerses.forEach(v => options.push({ key: v.key, label: `Ayah ${v.number}` }))
+      return options.sort(() => Math.random() - 0.5)
+    },
+
+    submitQuiz(quality = 4) {
+      const isCorrect = quality >= 4
+
+      if (isCorrect) {
+        this.quizScore++
+      } else {
+        this.quizMistakes.push(`Ayah ${this.quizCard.number}`)
+      }
+
+      // Log SM2 grade
+      const sm2Key = this.sm2CardKey(this.quizCard.key, 'recite_text')
+      this.sm2Grade(sm2Key, quality)
+
+      this.quizIndex++
+      this.nextQuizCard()
+    },
+
+    restartQuiz() {
+      this.quizScore = 0
+      this.quizMistakes = []
+      this.quizComplete = false
+      this.quizIndex = 0
+      this.nextQuizCard()
+    },
+
     stopQuiz() {
       this.quizActive = false
       this.quizCard = null
       this.quizQueue = []
-      this.quizIndex = 0
-      this.quizAnswer = ''
-      this.quizOptions = []
-      this.quizRevealed = false
-      this.quizLastResult = null
-      this.quizSummaryActive = false
-      this.quizSessionStats = null
-      this.sessionCompleted = false
-      this.hybridPendingKey = null
+      this.quizComplete = false
     },
+
     triggerConfetti() {
       this.confettiSeed = (this.confettiSeed + 1) % 1000000
       this.confettiActive = true
@@ -2945,26 +3135,119 @@ export default {
         this.showBanner('Session complete', 'success', 4500)
       }
     },
-    playVerse(verse) {
-      if (!verse.audio) { console.warn('Missing verse audio url', verse); return }
-      this.activeKey = verse.key
-      if (!this.audioElement) this.audioElement = this.$refs.audio
-      if (!this.audioElement) return
-      this.currentVersePlaybackKey = verse.key
-      this.currentPlaybackMode = 'verse'
-      this.wordSequence = null
-      this.activeWordAudio = ''
-      if (this.shouldUseWordSequence(verse)) {
-        this.startWordSequence(verse)
-        return
+    async playVerse(verse) {
+      console.log('playVerse called with verse:', verse?.key);
+
+      if (!verse) {
+        console.error('No verse provided');
+        return;
       }
-      this.lastAudioDebug = { at: Date.now(), key: verse.key, src: verse.audio, phase: 'set-src' }
-      this.playAudioSrc(verse.audio).catch((e) => {
-        console.error(e)
-        this.lastAudioDebug = { at: Date.now(), key: verse.key, src: verse.audio, phase: 'play-catch', error: String(e?.message || e) }
-        this.isPlaying = false
-      })
-      this.logEvent({ type: 'audio_play', key: verse.key })
+
+      if (!verse.audio) {
+        console.error('No audio URL for verse:', verse.key);
+        this.showBanner(`Audio not available for verse ${verse.number}`, 'info', 2000);
+        return;
+      }
+
+      // Set active verse
+      this.activeKey = verse.key;
+      this.activeVerseKey = verse.key;
+
+      // Get or create audio element
+      if (!this.audioElement) {
+        this.audioElement = this.$refs.audio;
+        if (!this.audioElement) {
+          console.error('Audio element not found in DOM');
+          this.showBanner('Audio system not ready. Please refresh the page.', 'error', 3000);
+          return;
+        }
+      }
+
+      // Stop current playback
+      try {
+        this.audioElement.pause();
+      } catch (e) {
+        console.warn('Error pausing audio:', e);
+      }
+
+      const audioUrl = this.normalizeAudioUrl(verse.audio);
+      console.log('Playing audio URL:', audioUrl);
+
+      // Set up audio element
+      this.audioElement.src = audioUrl;
+      this.audioElement.load();
+
+      // Show player
+      this.playerVisible = true;
+
+      // Create a promise that resolves when audio starts playing
+      const playPromise = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          console.error('Audio timeout for verse:', verse.key);
+          this.showBanner('Audio loading timeout. Please try again.', 'error', 3000);
+          reject(new Error('Timeout'));
+        }, 10000);
+
+        const canPlayHandler = () => {
+          console.log('Audio can play event fired');
+          clearTimeout(timeout);
+
+          // Set speed
+          this.audioElement.playbackRate = this.speed;
+
+          // Play the audio
+          this.audioElement.play()
+            .then(() => {
+              console.log('Audio playing successfully');
+              this.isPlaying = true;
+              this.markPlaybackStart();
+              this.logEvent({ type: 'audio_play', key: verse.key });
+              resolve();
+            })
+            .catch(err => {
+              console.error('Audio play failed:', err);
+              this.isPlaying = false;
+              this.showBanner(`Cannot play audio: ${err.message}`, 'error', 3000);
+              reject(err);
+            });
+
+          this.audioElement.removeEventListener('canplay', canPlayHandler);
+        };
+
+        const errorHandler = (err) => {
+          console.error('Audio error event:', err);
+          clearTimeout(timeout);
+          this.isPlaying = false;
+          this.showBanner('Audio playback error', 'error', 3000);
+          reject(err);
+        };
+
+        this.audioElement.addEventListener('canplay', canPlayHandler);
+        this.audioElement.addEventListener('error', errorHandler, { once: true });
+      });
+
+      return playPromise.catch(err => {
+        console.error('playVerse failed:', err);
+        this.isPlaying = false;
+      });
+    },
+    testPlayback() {
+      console.log('=== TEST PLAYBACK ===');
+      console.log('Chapter:', this.chapterId);
+      console.log('Verses:', this.verses.length);
+
+      if (this.verses.length === 0) {
+        console.log('No verses, loading...');
+        this.loadVerses().then(() => {
+          if (this.verses.length > 0) {
+            console.log('Verses loaded, playing first verse');
+            this.playVerse(this.verses[0]);
+          }
+        });
+      } else {
+        console.log('Playing first verse');
+        this.playVerse(this.verses[0]);
+      }
     },
     playWordAudio(url, key = '') {
       if (!url) return
@@ -2977,58 +3260,37 @@ export default {
     initAudio() {
       this.audioElement = this.$refs.audio
       if (!this.audioElement) return
-      if (this.restoredAudioState?.src) {
-        this.audioElement.src = this.restoredAudioState.src
-        this.playerVisible = !!this.restoredAudioState.playerVisible
-        this.currentTime = Number(this.restoredAudioState.currentTime || 0)
-      }
-      let lastSrc = null
-      this.audioElement.addEventListener('play', () => {
-        lastSrc = this.audioElement.currentSrc || this.audioElement.src
-        this.markPlaybackStart()
-      })
-      this.audioElement.addEventListener('pause', () => {
-        this.flushPlaybackTime()
-      })
-      this.audioElement.addEventListener('timeupdate', () => {
+
+      // Remove existing listeners to avoid duplicates
+      this.audioElement.removeEventListener('timeupdate', this.audioTimeUpdate)
+      this.audioElement.removeEventListener('ended', this.audioEnded)
+      this.audioElement.removeEventListener('error', this.audioError)
+
+      // Bind methods
+      this.audioTimeUpdate = () => {
         this.currentTime = this.audioElement.currentTime
         this.duration = this.audioElement.duration
-      })
-      this.audioElement.addEventListener('loadedmetadata', () => {
-        if (this.restoredAudioState?.currentTime && Math.abs(this.audioElement.currentTime || 0) < 0.2) {
-          try { this.audioElement.currentTime = Number(this.restoredAudioState.currentTime || 0) } catch (e) { console.error(e) }
+      }
+
+      this.audioEnded = () => {
+        this.isPlaying = false
+        if (this.playMode === 'auto') {
+          setTimeout(() => this.next(), this.delay * 1000)
         }
-        if (this.currentPlaybackMode === 'verse' && this.currentVersePlaybackKey && this.audioElement.duration && isFinite(this.audioElement.duration)) {
-          this.storeVerseDuration(this.currentVersePlaybackKey, this.audioElement.duration)
-        }
-      })
-      this.audioElement.addEventListener('error', () => {
-        this.flushPlaybackTime()
-        const err = this.audioElement?.error
-        const payload = {
-          src: this.audioElement?.src,
-          currentSrc: this.audioElement?.currentSrc,
-          code: err?.code,
-          message: err?.message
-        }
-        console.error('Audio element error', payload)
-        this.lastAudioDebug = { at: Date.now(), phase: 'audio-error', ...payload }
-        if (this.playMode === 'auto' && this.studyMode !== 'quiz') {
-          setTimeout(() => this.next(), 300)
-        }
-      })
-      this.audioElement.addEventListener('ended', () => {
-        if (this.currentPlaybackMode === 'word-sequence' && this.wordSequence) {
-          this.advanceWordSequence()
-          return
-        }
-        const src = this.audioElement.currentSrc || this.audioElement.src
-        if (src && lastSrc === src && this.currentVersePlaybackKey && this.duration && isFinite(this.duration) && this.duration > 1 && this.duration < 120) {
-          this.storeVerseDuration(this.currentVersePlaybackKey, this.duration)
-        }
-        this.finishVersePlayback()
-      })
+      }
+
+      this.audioError = (e) => {
+        console.error('Audio error:', e)
+        this.isPlaying = false
+        this.showBanner('Audio failed to load. Check your connection.', 'error', 3000)
+      }
+
+      // Add listeners
+      this.audioElement.addEventListener('timeupdate', this.audioTimeUpdate)
+      this.audioElement.addEventListener('ended', this.audioEnded)
+      this.audioElement.addEventListener('error', this.audioError)
     },
+
     applySpeed() {
       if (this.audioElement) this.audioElement.playbackRate = this.speed
     },
@@ -3200,11 +3462,419 @@ body {
   z-index: 20;
 }
 
+/* Mode Indicator */
+.mode-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  margin: 8px 0 4px;
+  background: var(--accent-light);
+  border-radius: 20px;
+  font-size: 0.7rem;
+  color: var(--accent);
+  border: 1px solid var(--accent-soft);
+  width: fit-content;
+}
+
+.mode-indicator i {
+  font-size: 0.75rem;
+}
+
+[data-theme="dark"] .mode-indicator {
+  background: rgba(208, 160, 107, 0.12);
+  border-color: rgba(208, 160, 107, 0.25);
+}
+
+.verse-translation {
+  font-size: 0.85rem;
+  color: #5a6b63;
+  line-height: 1.6;
+  padding-top: 12px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  display: block;
+}
+
+[data-theme="dark"] .verse-translation {
+  color: #a0a0b0;
+}
+
+[data-theme="sepia"] .verse-translation {
+  color: #7a684a;
+}
+
 .header-left {
   display: flex;
   align-items: center;
   gap: 32px;
   flex-wrap: wrap;
+}
+
+/* Verses Grid */
+.verses-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.verse-card {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 24px;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border);
+  position: relative;
+}
+
+.verse-card.active {
+  border-left: 4px solid var(--accent);
+  background: var(--accent-light);
+}
+
+.verse-card.focus-mode {
+  opacity: 0.4;
+}
+
+.verse-card.focus-mode.active {
+  opacity: 1;
+}
+
+.verse-card.blurred {
+  filter: blur(4px);
+}
+
+.verse-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.verse-badges {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.verse-number {
+  font-size: 0.75rem;
+  padding: 4px 12px;
+  background: var(--accent-light);
+  border-radius: 20px;
+  color: var(--accent);
+}
+
+.verse-ref {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+.verse-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.start-btn {
+  width: 100%;
+  padding: 7px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+  transition: all 0.2s;
+}
+
+.start-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.start-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.start-btn:disabled:hover {
+  transform: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.verse-play-btn,
+.verse-focus-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.verse-play-btn:hover,
+.verse-focus-btn:hover {
+  background: var(--accent-light);
+  border-color: var(--accent);
+}
+
+.verse-arabic {
+  font-family: var(--font-ar);
+  font-size: 1.4rem;
+  line-height: 1.8;
+  text-align: right;
+  direction: rtl;
+  background: var(--bg-elevated);
+  padding: 20px;
+  border-radius: 16px;
+  margin: 12px 0;
+}
+
+
+
+.verse-transliteration {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 8px;
+}
+
+.verse-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.word-item {
+  background: var(--accent-light);
+  padding: 6px 12px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+}
+
+.word-arabic {
+  font-family: var(--font-ar);
+  font-size: 0.9rem;
+}
+
+.word-meaning {
+  color: var(--text-muted);
+}
+
+.word-audio-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--accent);
+  padding: 0 4px;
+}
+
+/* Navigation Bar */
+.navigation-bar {
+  position: sticky;
+  bottom: 20px;
+  margin-top: 24px;
+  background: var(--surface);
+  border-radius: 60px;
+  padding: 12px 24px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  z-index: 15;
+}
+
+.nav-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-btn {
+  padding: 10px 24px;
+  border-radius: 40px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.nav-btn:hover:not(:disabled) {
+  background: var(--accent-light);
+  border-color: var(--accent);
+}
+
+.nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.play-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 56px;
+  background: var(--accent-green, #2c5f4a);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  transition: transform 0.2s;
+}
+
+.play-btn:hover {
+  transform: scale(1.02);
+}
+
+/* Simple Planner Styles */
+.planner-simple {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.goal-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.goal-item span {
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.input-small {
+  width: 80px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  text-align: center;
+}
+
+.today-plan {
+  background: var(--accent-light);
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 8px;
+}
+
+.plan-header {
+  font-weight: 600;
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+}
+
+.plan-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.plan-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+}
+
+.plan-item span {
+  color: var(--text-muted);
+}
+
+.planner-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btn-secondary {
+  flex: 1;
+  padding: 10px;
+  border-radius: 40px;
+  border: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-primary {
+  flex: 1;
+  padding: 10px;
+  border-radius: 40px;
+  background: var(--accent-green, #2c5f4a);
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.weak-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.weak-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--surface);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.weak-ref {
+  font-family: monospace;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.weak-lapses {
+  font-size: 0.7rem;
+  color: var(--text-muted);
 }
 
 .brand {
@@ -3628,18 +4298,12 @@ body {
 }
 
 .verse {
-  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
-  border-radius: 22px;
-  padding: 22px 24px;
-  border: 0;
-  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
-  box-shadow: var(--shadow-md);
+  transition: all 0.2s ease;
 }
 
 .verse.active {
-  background: linear-gradient(180deg, var(--surface-strong), var(--accent-wash));
-  box-shadow: 0 30px 70px rgba(63, 39, 18, 0.24);
-  outline: 2px solid rgba(154, 103, 56, 0.18);
+  border-left: 3px solid var(--accent);
+  background: var(--accent-light);
 }
 
 .verse-head {
@@ -3704,13 +4368,7 @@ body {
   margin-top: 6px;
 }
 
-.verse-translation {
-  font-size: 1rem;
-  color: var(--text);
-  padding-top: 8px;
-  line-height: 1.9;
-  font-weight: 500;
-}
+
 
 .verse-words {
   display: grid;
@@ -3850,35 +4508,64 @@ body {
 }
 
 .verse-arabic tajweed.ham_wasl,
-.verse-arabic .ham_wasl { color: #9c27b0; }
+.verse-arabic .ham_wasl {
+  color: #9c27b0;
+}
+
 .verse-arabic tajweed.ghunnah,
-.verse-arabic .ghunnah { color: #1f7a8c; }
+.verse-arabic .ghunnah {
+  color: #1f7a8c;
+}
+
 .verse-arabic tajweed.idgham_ghunnah,
-.verse-arabic .idgham_ghunnah { color: #1f7a8c; }
+.verse-arabic .idgham_ghunnah {
+  color: #1f7a8c;
+}
+
 .verse-arabic tajweed.idgham_wo_ghunnah,
-.verse-arabic .idgham_wo_ghunnah { color: #0f766e; }
+.verse-arabic .idgham_wo_ghunnah {
+  color: #0f766e;
+}
+
 .verse-arabic tajweed.iqlab,
-.verse-arabic .iqlab { color: #2563eb; }
+.verse-arabic .iqlab {
+  color: #2563eb;
+}
+
 .verse-arabic tajweed.ikhafa,
-.verse-arabic .ikhafa { color: #f59e0b; }
+.verse-arabic .ikhafa {
+  color: #f59e0b;
+}
+
 .verse-arabic tajweed.qlqla,
 .verse-arabic .qlqla,
 .verse-arabic tajweed.qalqalah,
-.verse-arabic .qalqalah { color: #ef4444; }
+.verse-arabic .qalqalah {
+  color: #ef4444;
+}
+
 .verse-arabic tajweed.madda_normal,
 .verse-arabic .madda_normal,
 .verse-arabic tajweed.madda_permissible,
 .verse-arabic .madda_permissible,
 .verse-arabic tajweed.madda_necessary,
-.verse-arabic .madda_necessary { color: #8b5cf6; }
+.verse-arabic .madda_necessary {
+  color: #8b5cf6;
+}
+
 .verse-arabic tajweed.idgham_shafawi,
 .verse-arabic .idgham_shafawi,
 .verse-arabic tajweed.ikhafa_shafawi,
-.verse-arabic .ikhafa_shafawi { color: #db2777; }
+.verse-arabic .ikhafa_shafawi {
+  color: #db2777;
+}
+
 .verse-arabic tajweed.slnt,
 .verse-arabic .slnt,
 .verse-arabic tajweed.waqf,
-.verse-arabic .waqf { color: #6b7280; }
+.verse-arabic .waqf {
+  color: #6b7280;
+}
 
 /* Tools Panel */
 .tools {
@@ -4428,8 +5115,13 @@ body {
 }
 
 @keyframes shimmer {
-  0% { background-position: 0% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: 0% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .bars {
@@ -4829,6 +5521,7 @@ body {
 }
 
 @media (max-width: 520px) {
+
   .quiz-summary-grid,
   .quiz-summary-skill-grid {
     grid-template-columns: 1fr;
@@ -5439,13 +6132,10 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 242, 234, 0.96));
+  z-index: 100;
+  background: var(--surface);
   border-top: 1px solid var(--border);
-  backdrop-filter: blur(14px);
-  padding: 6px 12px 8px;
-  z-index: 25;
-  box-shadow: 0 -20px 44px rgba(91, 74, 57, 0.12);
-  transition: right 0.25s ease;
+  padding: 8px 16px;
 }
 
 .main.tools-open .player-bar {
@@ -5542,9 +6232,10 @@ body {
 }
 
 .player-controls {
-  display: grid;
-  grid-template-columns: 56px 1fr 56px;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .player-time {
@@ -5560,8 +6251,7 @@ body {
 .player-center {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .player-icon {
@@ -5784,6 +6474,15 @@ body {
 
   .player-select {
     display: none;
+  }
+
+  .player-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .verse-arabic {
+    font-size: 1.2rem;
   }
 }
 

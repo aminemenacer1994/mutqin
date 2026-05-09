@@ -5,7 +5,6 @@
     <div class="auth-card">
         <div class="auth-copy">
             <div class="auth-kicker">Start here</div>
-            <h1 class="auth-title">{{ __('Create your account') }}</h1>
             <p class="auth-subtitle">A clean setup for memorisation, revision, and tracking.</p>
         </div>
         <div class="auth-form-wrap">

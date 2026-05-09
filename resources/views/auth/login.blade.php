@@ -5,7 +5,6 @@
     <div class="auth-card">
         <div class="auth-copy">
             <div class="auth-kicker">Welcome back</div>
-            <h1 class="auth-title">{{ __('Continue your hifz') }}</h1>
             <p class="auth-subtitle">Simple sign in. Your memorisation setup stays ready.</p>
         </div>
         <div class="auth-form-wrap">

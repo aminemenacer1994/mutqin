@@ -23662,19 +23662,19 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _lib_quranApis__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../lib/quranApis */ "./resources/js/lib/quranApis.js");
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t["return"] || t["return"](); } finally { if (u) throw o; } } }; }
-function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
-function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
-function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
-function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
 function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
-function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
-function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
+function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
+function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
@@ -23698,27 +23698,93 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   },
   data: function data() {
     return {
+      beginner: {
+        chapterId: 0,
+        rangeStart: 1,
+        rangeEnd: 7,
+        reciterId: 7,
+        speed: 1,
+        delay: 1,
+        playMode: 'auto',
+        repeats: 1,
+        // This is beginnerRepeats
+        order: 'seq',
+        focusMode: false,
+        blurAdjacent: false,
+        verses: [],
+        activeKey: null,
+        queue: [],
+        queueIndex: 0,
+        sessionActive: false
+      },
+      // Advanced mode specific state
+      advanced: {
+        chapterId: 0,
+        rangeStart: 1,
+        rangeEnd: 7,
+        reciterId: 7,
+        speed: 1,
+        delay: 1,
+        playMode: 'auto',
+        repeats: 1,
+        order: 'seq',
+        focusMode: false,
+        blurAdjacent: false,
+        repeatAndLoopAudio: false,
+        advancedRepeats: 1,
+        // Add this for advanced mode's repeat count
+        verses: [],
+        activeKey: null,
+        queue: [],
+        queueIndex: 0,
+        sessionActive: false
+      },
+      // Current active mode
+      currentMode: 'beginner',
+      // Shared state
       theme: 'light',
-      showTools: false,
       tab: 'beginner',
+      // Simplified planner data
+      dailyPlan: {
+        newVerses: 5,
+        reviewVerses: 10,
+        minutes: 20
+      },
+      todayPlanSummary: null,
+      simpleStats: {
+        streak: 0,
+        sessions: 0,
+        memorised: 0,
+        weak: 0
+      },
+      // REMOVE these duplicates - they are now in beginner/advanced objects:
+      // repeatAndLoopAudio: false,
+      // beginnerRepeats: 1,
+      // advancedRepeats: 1,
+
+      weakVersesList: [],
+      showTools: false,
+      activeVerseKey: null,
+      quizScore: 0,
+      quizMistakes: [],
+      quizComplete: false,
       chapters: [],
-      chapterId: 0,
       currentChapter: null,
-      rangeStart: 1,
-      rangeEnd: 7,
       reciters: [{
         id: 7,
         name: 'Alafasy'
       }],
-      reciterId: 7,
       alquranAudioEditions: [],
       alquranEdition: '',
+      audioTimeUpdate: null,
+      audioEnded: null,
+      audioError: null,
+      currentVerseIndex: 0,
+      isAudioLoading: false,
       speedOptions: [0.5, 0.75, 1, 1.25, 1.5],
       delayOptions: [0, 0.5, 1, 2, 3, 5, 7, 10],
       repeatOptions: [1, 2, 3, 4, 5, 7, 10],
       rangeLoopDelay: 1,
-      blurAdjacent: false,
-      focusMode: false,
       sessionName: '',
       savedSessions: [],
       selectedSessionId: '',
@@ -23783,11 +23849,14 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       fontScale: 1,
       bookmarks: [],
       pins: [],
+      // These are now controlled by computed properties
       playMode: 'auto',
       speed: 1,
       delay: 1,
       repeats: 1,
       order: 'seq',
+      blurAdjacent: false,
+      focusMode: false,
       verses: [],
       activeKey: null,
       queue: [],
@@ -23802,19 +23871,192 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       playerCollapsed: true,
       sectionOpen: {
         beginner_setup: true,
-        beginner_playback: false,
+        beginner_audio: false,
         advanced_setup: true,
+        advanced_playback: false,
         advanced_practice: false,
         advanced_saved: false,
         analytics_overview: true,
-        analytics_retention: false,
-        analytics_trends: false,
         analytics_planner: true,
-        analytics_leeches: false
+        analytics_weak: false
       }
     };
   },
   computed: {
+    currentConfig: function currentConfig() {
+      return this.currentMode === 'beginner' ? this.beginner : this.advanced;
+    },
+    hasVerses: function hasVerses() {
+      var _this$beginner$verses, _this$advanced$verses;
+      return this.currentMode === 'beginner' ? ((_this$beginner$verses = this.beginner.verses) === null || _this$beginner$verses === void 0 ? void 0 : _this$beginner$verses.length) > 0 : ((_this$advanced$verses = this.advanced.verses) === null || _this$advanced$verses === void 0 ? void 0 : _this$advanced$verses.length) > 0;
+    },
+    hasSelectedSurah: function hasSelectedSurah() {
+      var chapterId = this.currentMode === 'beginner' ? this.beginner.chapterId : this.advanced.chapterId;
+      return chapterId && chapterId > 0;
+    },
+    // Computed properties that use current mode
+    chapterId: {
+      get: function get() {
+        var val = this.currentConfig.chapterId;
+        return val || 0;
+      },
+      set: function set(val) {
+        var numVal = Number(val) || 0;
+        if (this.currentMode === 'beginner') {
+          this.beginner.chapterId = numVal;
+        } else {
+          this.advanced.chapterId = numVal;
+        }
+      }
+    },
+    rangeStart: {
+      get: function get() {
+        return this.currentConfig.rangeStart;
+      },
+      set: function set(val) {
+        if (this.currentMode === 'beginner') this.beginner.rangeStart = val;else this.advanced.rangeStart = val;
+      }
+    },
+    rangeEnd: {
+      get: function get() {
+        return this.currentConfig.rangeEnd;
+      },
+      set: function set(val) {
+        if (this.currentMode === 'beginner') this.beginner.rangeEnd = val;else this.advanced.rangeEnd = val;
+      }
+    },
+    reciterId: {
+      get: function get() {
+        return this.currentConfig.reciterId;
+      },
+      set: function set(val) {
+        if (this.currentMode === 'beginner') this.beginner.reciterId = val;else this.advanced.reciterId = val;
+      }
+    },
+    speed: {
+      get: function get() {
+        return this.currentConfig.speed;
+      },
+      set: function set(val) {
+        if (this.currentMode === 'beginner') this.beginner.speed = val;else this.advanced.speed = val;
+      }
+    },
+    delay: {
+      get: function get() {
+        return this.currentConfig.delay;
+      },
+      set: function set(val) {
+        if (this.currentMode === 'beginner') this.beginner.delay = val;else this.advanced.delay = val;
+      }
+    },
+    playMode: {
+      get: function get() {
+        return this.currentConfig.playMode;
+      },
+      set: function set(val) {
+        if (this.currentMode === 'beginner') this.beginner.playMode = val;else this.advanced.playMode = val;
+      }
+    },
+    order: {
+      get: function get() {
+        return this.currentConfig.order;
+      },
+      set: function set(val) {
+        if (this.currentMode === 'beginner') this.beginner.order = val;else this.advanced.order = val;
+      }
+    },
+    focusMode: {
+      get: function get() {
+        return this.currentConfig.focusMode;
+      },
+      set: function set(val) {
+        if (this.currentMode === 'beginner') this.beginner.focusMode = val;else this.advanced.focusMode = val;
+      }
+    },
+    blurAdjacent: {
+      get: function get() {
+        return this.currentConfig.blurAdjacent;
+      },
+      set: function set(val) {
+        if (this.currentMode === 'beginner') this.beginner.blurAdjacent = val;else this.advanced.blurAdjacent = val;
+      }
+    },
+    verses: {
+      get: function get() {
+        return this.currentConfig.verses;
+      },
+      set: function set(val) {
+        if (this.currentMode === 'beginner') this.beginner.verses = val;else this.advanced.verses = val;
+      }
+    },
+    activeKey: {
+      get: function get() {
+        return this.currentConfig.activeKey;
+      },
+      set: function set(val) {
+        if (this.currentMode === 'beginner') this.beginner.activeKey = val;else this.advanced.activeKey = val;
+      }
+    },
+    queue: {
+      get: function get() {
+        return this.currentConfig.queue;
+      },
+      set: function set(val) {
+        if (this.currentMode === 'beginner') this.beginner.queue = val;else this.advanced.queue = val;
+      }
+    },
+    queueIndex: {
+      get: function get() {
+        return this.currentConfig.queueIndex;
+      },
+      set: function set(val) {
+        if (this.currentMode === 'beginner') this.beginner.queueIndex = val;else this.advanced.queueIndex = val;
+      }
+    },
+    // Advanced mode specific
+    repeatAndLoopAudio: {
+      get: function get() {
+        return this.advanced.repeatAndLoopAudio;
+      },
+      set: function set(val) {
+        this.advanced.repeatAndLoopAudio = val;
+      }
+    },
+    advancedRepeats: {
+      get: function get() {
+        return this.advanced.advancedRepeats;
+      },
+      set: function set(val) {
+        this.advanced.advancedRepeats = val;
+      }
+    },
+    beginnerRepeats: {
+      get: function get() {
+        return this.beginner.repeats;
+      },
+      set: function set(val) {
+        this.beginner.repeats = val;
+      }
+    },
+    activeVerseIndex: function activeVerseIndex() {
+      var _this = this;
+      if (!this.activeVerseKey || !this.verses.length) return -1;
+      return this.verses.findIndex(function (v) {
+        return v.key === _this.activeVerseKey;
+      });
+    },
+    canGoPrev: function canGoPrev() {
+      var idx = this.activeVerseIndex;
+      return idx > 0;
+    },
+    canGoNext: function canGoNext() {
+      var idx = this.activeVerseIndex;
+      return idx >= 0 && idx < this.verses.length - 1;
+    },
+    quizAccuracy: function quizAccuracy() {
+      if (!this.quizQueue.length) return 0;
+      return Math.round(this.quizScore / this.quizQueue.length * 100);
+    },
     isLoggedIn: function isLoggedIn() {
       var _this$auth;
       return !!((_this$auth = this.auth) !== null && _this$auth !== void 0 && _this$auth.check);
@@ -23926,19 +24168,19 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return map[(_this$quizCard = this.quizCard) === null || _this$quizCard === void 0 ? void 0 : _this$quizCard.type] || 'Question';
     },
     collapsedPlayerTitle: function collapsedPlayerTitle() {
-      var _this = this,
+      var _this2 = this,
         _this$currentChapter,
         _this$currentChapter2;
       var verse = this.verses.find(function (v) {
-        return v.key === _this.activeKey;
+        return v.key === _this2.activeKey;
       });
       if (!verse) return ((_this$currentChapter = this.currentChapter) === null || _this$currentChapter === void 0 ? void 0 : _this$currentChapter.name_simple) || 'Now playing';
       return "".concat(((_this$currentChapter2 = this.currentChapter) === null || _this$currentChapter2 === void 0 ? void 0 : _this$currentChapter2.name_simple) || 'Session', " \xB7 Ayah ").concat(verse.number);
     },
     collapsedPlayerSubtitle: function collapsedPlayerSubtitle() {
-      var _this2 = this;
+      var _this3 = this;
       var verse = this.verses.find(function (v) {
-        return v.key === _this2.activeKey;
+        return v.key === _this3.activeKey;
       });
       if (!verse) return "".concat(this.sessionTypeInfo.label, " \xB7 ").concat(this.progressPercent, "% complete");
       return "".concat(this.sessionTypeInfo.label, " \xB7 ").concat(this.queueIndex + 1, "/").concat(this.queue.length, " \xB7 ").concat(this.formatTime(this.currentTime), " / ").concat(this.formatTime(this.duration));
@@ -23995,7 +24237,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return '⚙';
     },
     showOnboarding: function showOnboarding() {
-      return !this.onboardingDismissed && !this.chapterId && !this.activeKey && !this.quizActive;
+      // Don't show onboarding if we have verses in current mode
+      var hasVersesInCurrentMode = this.currentMode === 'beginner' ? this.beginner.verses && this.beginner.verses.length > 0 : this.advanced.verses && this.advanced.verses.length > 0;
+      return !this.onboardingDismissed && !this.chapterId && !hasVersesInCurrentMode && !this.quizActive;
     },
     onboardingStep: function onboardingStep() {
       if (!this.chapterId) return 1;
@@ -24049,7 +24293,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return this.todayPlan ? 'Your next guided session is ready.' : 'Choose a surah, set the range, then begin a focused session.';
     },
     sessionTypeInfo: function sessionTypeInfo() {
-      var _this3 = this,
+      var _this4 = this,
         _plan$newKeys,
         _plan$newKeys2,
         _plan$reviewKeys,
@@ -24082,9 +24326,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         return labels[plan.sessionType] || labels.memorisation;
       }
       var weakCount = ((plan === null || plan === void 0 ? void 0 : plan.reviewKeys) || []).filter(function (key) {
-        var text = _this3.sm2Get(_this3.sm2CardKey(key, 'recite_text'));
-        var audio = _this3.sm2Get(_this3.sm2CardKey(key, 'audio_recall'));
-        var meaning = _this3.sm2Get(_this3.sm2CardKey(key, 'meaning'));
+        var text = _this4.sm2Get(_this4.sm2CardKey(key, 'recite_text'));
+        var audio = _this4.sm2Get(_this4.sm2CardKey(key, 'audio_recall'));
+        var meaning = _this4.sm2Get(_this4.sm2CardKey(key, 'meaning'));
         return (text.lapses || 0) >= 3 || (audio.lapses || 0) >= 3 || (meaning.lapses || 0) >= 3 || text.suspended || audio.suspended || meaning.suspended;
       }).length;
       if (weakCount && !(plan !== null && plan !== void 0 && (_plan$newKeys = plan.newKeys) !== null && _plan$newKeys !== void 0 && _plan$newKeys.length)) return {
@@ -24114,11 +24358,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       };
     },
     retentionStats: function retentionStats() {
-      var _this4 = this;
+      var _this5 = this;
       var verseCount = this.verses.length || 1;
       var scores = this.verses.map(function (v) {
         var cards = ['recite_text', 'audio_recall', 'meaning'].map(function (skill) {
-          return _this4.sm2Get(_this4.sm2CardKey(v.key, skill));
+          return _this5.sm2Get(_this5.sm2CardKey(v.key, skill));
         });
         var skillScore = cards.reduce(function (sum, card) {
           var qualityWeight = Math.min(5, Math.max(0, (card.ef || 2.5) * 1.2));
@@ -24191,7 +24435,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return "".concat(Math.max(1, Math.ceil(estimate / 60)), " min");
     },
     stats: function stats() {
-      var _this5 = this;
+      var _this6 = this;
       var now = Date.now();
       var dayKey = this.dayKey(now);
       var events = this.events || [];
@@ -24213,24 +24457,24 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         return a + b;
       }, 0) / qualities.length : 0;
       var dueNow = this.verses.filter(function (v) {
-        return (_this5.sm2Get(_this5.sm2CardKey(v.key, 'recite_text')).due || 0) <= now || (_this5.sm2Get(_this5.sm2CardKey(v.key, 'audio_recall')).due || 0) <= now || (_this5.sm2Get(_this5.sm2CardKey(v.key, 'meaning')).due || 0) <= now;
+        return (_this6.sm2Get(_this6.sm2CardKey(v.key, 'recite_text')).due || 0) <= now || (_this6.sm2Get(_this6.sm2CardKey(v.key, 'audio_recall')).due || 0) <= now || (_this6.sm2Get(_this6.sm2CardKey(v.key, 'meaning')).due || 0) <= now;
       }).length;
       var dueBySkill = {
         recite_text: this.verses.filter(function (v) {
-          return (_this5.sm2Get(_this5.sm2CardKey(v.key, 'recite_text')).due || 0) <= now;
+          return (_this6.sm2Get(_this6.sm2CardKey(v.key, 'recite_text')).due || 0) <= now;
         }).length,
         audio_recall: this.verses.filter(function (v) {
-          return (_this5.sm2Get(_this5.sm2CardKey(v.key, 'audio_recall')).due || 0) <= now;
+          return (_this6.sm2Get(_this6.sm2CardKey(v.key, 'audio_recall')).due || 0) <= now;
         }).length,
         meaning: this.verses.filter(function (v) {
-          return (_this5.sm2Get(_this5.sm2CardKey(v.key, 'meaning')).due || 0) <= now;
+          return (_this6.sm2Get(_this6.sm2CardKey(v.key, 'meaning')).due || 0) <= now;
         }).length
       };
       var grades14d = [];
       var avgQuality14d = [];
       var _loop = function _loop() {
         var t = now - i * 24 * 60 * 60 * 1000;
-        var dk = _this5.dayKey(t);
+        var dk = _this6.dayKey(t);
         var d = events.filter(function (e) {
           return e.day === dk && e.type === 'sm2_grade';
         });
@@ -24300,23 +24544,59 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }
   },
   mounted: function mounted() {
-    this.migrateLocalStorage();
-    this.loadUiState();
-    this.loadChapters();
-    this.loadReciters();
-    this.loadSavedSessions();
-    this.loadSm2();
-    this.loadEvents();
-    this.loadPlanner();
-    this.loadMetrics();
-    this.initAudio();
-    this.theme = document.documentElement.getAttribute('data-theme') || this.theme;
-    this.loadBookmarksPins();
-    window.addEventListener('online', this.handleOnline);
-    window.addEventListener('offline', this.handleOffline);
-    window.addEventListener('beforeunload', this.persistAllState);
-    document.addEventListener('pointerdown', this.handleGlobalPointerDown);
-    window.addEventListener('keydown', this.handleGlobalKeydown);
+    var _this7 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
+      return _regenerator().w(function (_context) {
+        while (1) switch (_context.n) {
+          case 0:
+            _this7.$nextTick(function () {
+              _this7.collectSimpleStats();
+            });
+            _this7.migrateLocalStorage();
+            _this7.loadUiState();
+            _this7.loadChapters();
+            _this7.loadReciters();
+            _this7.loadSavedSessions();
+            _this7.loadSm2();
+            _this7.loadEvents();
+            _this7.loadPlanner();
+            _this7.loadMetrics();
+            _this7.initAudio();
+            _this7.theme = document.documentElement.getAttribute('data-theme') || _this7.theme;
+            _this7.loadBookmarksPins();
+
+            // Initialize based on current mode
+            if (!(_this7.currentMode === 'advanced' && _this7.advanced.chapterId)) {
+              _context.n = 2;
+              break;
+            }
+            _this7.currentMode = 'advanced';
+            _this7.tab = 'advanced';
+            _context.n = 1;
+            return _this7.loadVerses();
+          case 1:
+            _context.n = 3;
+            break;
+          case 2:
+            if (!_this7.beginner.chapterId) {
+              _context.n = 3;
+              break;
+            }
+            _this7.currentMode = 'beginner';
+            _this7.tab = 'beginner';
+            _context.n = 3;
+            return _this7.loadVerses();
+          case 3:
+            window.addEventListener('online', _this7.handleOnline);
+            window.addEventListener('offline', _this7.handleOffline);
+            window.addEventListener('beforeunload', _this7.persistAllState);
+            document.addEventListener('pointerdown', _this7.handleGlobalPointerDown);
+            window.addEventListener('keydown', _this7.handleGlobalKeydown);
+          case 4:
+            return _context.a(2);
+        }
+      }, _callee);
+    }))();
   },
   beforeUnmount: function beforeUnmount() {
     window.removeEventListener('online', this.handleOnline);
@@ -24328,7 +24608,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     this.flushPlaybackTime();
     this.persistAllState();
   },
-  watch: {
+  watch: _defineProperty({
     theme: 'persistUiState',
     showTools: 'persistUiState',
     tab: 'persistUiState',
@@ -24361,9 +24641,201 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     sectionOpen: {
       handler: 'persistUiState',
       deep: true
+    },
+    beginnerRepeats: function beginnerRepeats() {
+      if (this.tab === 'beginner') this.rebuildQueue();
+    },
+    advancedRepeats: function advancedRepeats() {
+      if (this.tab === 'advanced' && this.repeatAndLoopAudio) this.rebuildQueue();
+    },
+    repeatAndLoopAudio: function repeatAndLoopAudio() {
+      if (this.tab === 'advanced') this.rebuildQueue();
+    },
+    verses: {
+      handler: function handler(newVal) {
+        console.log('Verses changed:', newVal === null || newVal === void 0 ? void 0 : newVal.length, 'currentMode:', this.currentMode);
+      },
+      immediate: true,
+      deep: true
     }
-  },
+  }, "tab", function tab(newVal) {
+    // Don't change currentMode if it's already set correctly
+    if (newVal === 'beginner' && this.currentMode !== 'beginner') {
+      this.currentMode = 'beginner';
+      // Load beginner's verses if any
+      if (this.beginner.chapterId && this.beginner.verses.length === 0) {
+        this.loadVerses();
+      }
+    } else if (newVal === 'advanced' && this.currentMode !== 'advanced') {
+      this.currentMode = 'advanced';
+      // Load advanced's verses if any
+      if (this.advanced.chapterId && this.advanced.verses.length === 0) {
+        this.loadVerses();
+      }
+    }
+    this.persistUiState();
+  }),
   methods: {
+    onChapterChange: function onChapterChange(event) {
+      var val = parseInt(event.target.value);
+      console.log('Chapter changed to:', val, 'currentMode:', this.currentMode);
+      if (this.currentMode === 'beginner') {
+        this.beginner.chapterId = val;
+      } else {
+        this.advanced.chapterId = val;
+      }
+      this.loadChapter();
+    },
+    setActiveVerse: function setActiveVerse(key) {
+      this.activeVerseKey = key;
+      this.activeKey = key;
+      // Scroll to verse
+      this.$nextTick(function () {
+        var el = document.querySelector(".verse-card[data-verse-key=\"".concat(key, "\"]"));
+        if (el) el.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      });
+    },
+    playCurrentVerse: function playCurrentVerse() {
+      var _this8 = this;
+      var verse = this.verses.find(function (v) {
+        return v.key === _this8.activeVerseKey;
+      });
+      if (verse) this.playVerse(verse);
+    },
+    prevVerse: function prevVerse() {
+      if (!this.canGoPrev) return;
+      var idx = this.activeVerseIndex;
+      var prevVerse = this.verses[idx - 1];
+      if (prevVerse) this.playVerse(prevVerse);
+    },
+    nextVerse: function nextVerse() {
+      if (!this.canGoNext) return;
+      var idx = this.activeVerseIndex;
+      var nextVerse = this.verses[idx + 1];
+      if (nextVerse) this.playVerse(nextVerse);
+    },
+    // Collect simple stats
+    collectSimpleStats: function collectSimpleStats() {
+      var _this9 = this;
+      // Count sessions from saved sessions
+      var sessionCount = this.savedSessions.length || 0;
+
+      // Count weak verses from SM2
+      var weak = Object.entries(this.sm2 || {}).filter(function (_ref9) {
+        var _ref0 = _slicedToArray(_ref9, 2),
+          card = _ref0[1];
+        return card && (card.lapses >= 3 || card.suspended);
+      }).map(function (_ref1) {
+        var _ref10 = _slicedToArray(_ref1, 1),
+          key = _ref10[0];
+        return key.split('::')[0];
+      });
+      var uniqueWeak = _toConsumableArray(new Set(weak));
+
+      // Build weak verses list for display
+      this.weakVersesList = uniqueWeak.map(function (key) {
+        var textCard = _this9.sm2Get(_this9.sm2CardKey(key, 'recite_text'));
+        return {
+          key: key,
+          lapses: textCard.lapses || 0
+        };
+      }).sort(function (a, b) {
+        return b.lapses - a.lapses;
+      });
+      this.simpleStats = {
+        streak: this.computeStreak(this.events, Date.now()),
+        sessions: sessionCount,
+        memorised: this.verses.length || 0,
+        weak: uniqueWeak.length
+      };
+    },
+    // Generate a simple daily plan
+    generateSimplePlan: function generateSimplePlan() {
+      var now = Date.now();
+      var day = this.dayKey(now);
+
+      // Calculate target verses based on daily goals
+      var targetNew = Math.min(this.dailyPlan.newVerses, 20);
+      var targetReview = Math.min(this.dailyPlan.reviewVerses, 50);
+      var totalTarget = targetNew + targetReview;
+
+      // Estimate time per verse (approx 45 seconds)
+      var estimatedSeconds = totalTarget * 45;
+      var estimatedMinutes = Math.ceil(estimatedSeconds / 60);
+
+      // Determine session type based on weak verses and new verses
+      var sessionType = 'Memorisation';
+      var planRange = null;
+      if (this.weakVersesList.length > 0 && this.weakVersesList.length > targetNew) {
+        sessionType = 'Revision (Recovery)';
+      } else if (this.weakVersesList.length > 0) {
+        sessionType = 'Mixed (Review + New)';
+      } else if (targetNew > 0) {
+        sessionType = 'New Memorisation';
+      } else {
+        sessionType = 'Review Session';
+      }
+
+      // Get current range from selected surah
+      if (this.currentChapter) {
+        planRange = "".concat(this.currentChapter.name_simple, " (").concat(this.rangeStart, "-").concat(this.rangeEnd, ")");
+      }
+      this.todayPlanSummary = {
+        type: sessionType,
+        target: totalTarget,
+        eta: Math.max(estimatedMinutes, this.dailyPlan.minutes),
+        range: planRange,
+        newCount: targetNew,
+        reviewCount: targetReview,
+        day: day
+      };
+      this.showBanner('Plan generated! Press Start to begin.', 'success', 3000);
+    },
+    // Start the plan session
+    startPlanSession: function startPlanSession() {
+      if (!this.todayPlanSummary) {
+        this.generateSimplePlan();
+      }
+
+      // If we have a valid session, start it
+      if (this.chapterId && this.verses.length) {
+        this.startSession();
+      } else {
+        this.tab = 'beginner';
+        this.showTools = true;
+        this.showBanner('Please select a surah and range first', 'info', 3000);
+      }
+    },
+    // Review a specific weak verse
+    reviewWeakVerse: function reviewWeakVerse(verseKey) {
+      var _this0 = this;
+      // Find the verse in current verses or load it
+      var verse = this.verses.find(function (v) {
+        return v.key === verseKey;
+      });
+      if (!verse) {
+        // Try to load from chapter
+        var _verseKey$split = verseKey.split(':'),
+          _verseKey$split2 = _slicedToArray(_verseKey$split, 1),
+          chapterId = _verseKey$split2[0];
+        if (chapterId) {
+          this.selectedChapterId = parseInt(chapterId);
+          this.loadChapter();
+          setTimeout(function () {
+            verse = _this0.verses.find(function (v) {
+              return v.key === verseKey;
+            });
+            if (verse) _this0.playVerse(verse);
+          }, 500);
+        }
+      } else {
+        this.playVerse(verse);
+      }
+      this.showTools = false;
+    },
     userStorageKey: function userStorageKey(suffix) {
       var _this$auth2;
       var uid = ((_this$auth2 = this.auth) === null || _this$auth2 === void 0 ? void 0 : _this$auth2.id) || 'guest';
@@ -24394,6 +24866,47 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         theme: this.theme,
         showTools: this.showTools,
         tab: this.tab,
+        currentMode: this.currentMode,
+        // Save beginner mode state
+        beginner: {
+          chapterId: this.beginner.chapterId,
+          rangeStart: this.beginner.rangeStart,
+          rangeEnd: this.beginner.rangeEnd,
+          reciterId: this.beginner.reciterId,
+          speed: this.beginner.speed,
+          delay: this.beginner.delay,
+          playMode: this.beginner.playMode,
+          repeats: this.beginner.repeats,
+          order: this.beginner.order,
+          blurAdjacent: this.beginner.blurAdjacent,
+          focusMode: this.beginner.focusMode,
+          verses: [],
+          // Don't persist verses to avoid storage issues
+          queue: [],
+          queueIndex: 0,
+          sessionActive: false
+        },
+        // Save advanced mode state
+        advanced: {
+          chapterId: this.advanced.chapterId,
+          rangeStart: this.advanced.rangeStart,
+          rangeEnd: this.advanced.rangeEnd,
+          reciterId: this.advanced.reciterId,
+          speed: this.advanced.speed,
+          delay: this.advanced.delay,
+          playMode: this.advanced.playMode,
+          repeats: this.advanced.repeats,
+          order: this.advanced.order,
+          blurAdjacent: this.advanced.blurAdjacent,
+          focusMode: this.advanced.focusMode,
+          repeatAndLoopAudio: this.advanced.repeatAndLoopAudio,
+          advancedRepeats: this.advanced.advancedRepeats,
+          verses: [],
+          queue: [],
+          queueIndex: 0,
+          sessionActive: false
+        },
+        // For backward compatibility
         chapterId: this.chapterId,
         rangeStart: this.rangeStart,
         rangeEnd: this.rangeEnd,
@@ -24446,20 +24959,14 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     toggleReadingOption: function toggleReadingOption(kind) {
       if (kind === 'translation') {
         this.showTranslation = !this.showTranslation;
-        if (this.showTranslation && this.verses.some(function (verse) {
-          return !verse.translation;
-        })) this.loadVerses();
+        // Force a re-render
+        this.$forceUpdate();
       }
       if (kind === 'transliteration') {
         this.showTransliteration = !this.showTransliteration;
-        if (this.showTransliteration) this.loadVerses();
       }
       if (kind === 'wbw') {
         this.showWordByWord = !this.showWordByWord;
-        if (this.showWordByWord && this.verses.some(function (verse) {
-          var _verse$words;
-          return !((_verse$words = verse.words) !== null && _verse$words !== void 0 && _verse$words.length);
-        })) this.loadVerses();
       }
     },
     toggleFontPicker: function toggleFontPicker() {
@@ -24532,48 +25039,64 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       this.fontScale = Math.max(0.85, Math.round((this.fontScale - 0.05) * 100) / 100);
     },
     buildWeakWordClusters: function buildWeakWordClusters(weakAyahs) {
-      var _this6 = this;
+      var _this1 = this;
       var set = new Set(weakAyahs);
       var counts = {};
       this.verses.filter(function (v) {
         return set.has(v.number);
       }).forEach(function (v) {
         return (v.words || []).forEach(function (word) {
-          var token = _this6.normalizeTextForQuiz(word.en || word.ar).toLowerCase();
+          var token = _this1.normalizeTextForQuiz(word.en || word.ar).toLowerCase();
           if (!token || token.length < 3) return;
           counts[token] = (counts[token] || 0) + 1;
         });
       });
       return Object.entries(counts).sort(function (a, b) {
         return b[1] - a[1];
-      }).slice(0, 3).map(function (_ref9) {
-        var _ref0 = _slicedToArray(_ref9, 1),
-          token = _ref0[0];
+      }).slice(0, 3).map(function (_ref11) {
+        var _ref12 = _slicedToArray(_ref11, 1),
+          token = _ref12[0];
         return token;
       });
     },
     loadUiState: function loadUiState() {
       try {
-        var _state$showTools, _state$speed, _state$delay, _state$repeats, _state$blurAdjacent, _state$focusMode, _state$showTranslatio, _state$showTransliter, _state$showWordByWord, _state$wordByWordAudi, _state$fontScale, _state$onboardingDism;
+        var _state$showTranslatio, _state$showTransliter, _state$showWordByWord, _state$wordByWordAudi, _state$fontScale, _state$onboardingDism;
         var raw = localStorage.getItem('telawa.uiState');
         if (!raw) return;
         var state = JSON.parse(raw);
         this.theme = state.theme || this.theme;
-        this.showTools = (_state$showTools = state.showTools) !== null && _state$showTools !== void 0 ? _state$showTools : this.showTools;
+        // Don't restore showTools from storage if you want it closed by default
+        // this.showTools = state.showTools ?? this.showTools
+        this.showTools = false; // Force closed on load
+
         this.tab = state.tab || this.tab;
-        this.chapterId = state.chapterId || this.chapterId;
-        this.rangeStart = state.rangeStart || this.rangeStart;
-        this.rangeEnd = state.rangeEnd || this.rangeEnd;
-        this.reciterId = state.reciterId || this.reciterId;
-        this.speed = (_state$speed = state.speed) !== null && _state$speed !== void 0 ? _state$speed : this.speed;
-        this.delay = (_state$delay = state.delay) !== null && _state$delay !== void 0 ? _state$delay : this.delay;
-        this.repeats = (_state$repeats = state.repeats) !== null && _state$repeats !== void 0 ? _state$repeats : this.repeats;
-        this.playMode = state.playMode || this.playMode;
-        this.order = state.order || this.order;
-        this.blurAdjacent = (_state$blurAdjacent = state.blurAdjacent) !== null && _state$blurAdjacent !== void 0 ? _state$blurAdjacent : this.blurAdjacent;
-        this.focusMode = (_state$focusMode = state.focusMode) !== null && _state$focusMode !== void 0 ? _state$focusMode : this.focusMode;
-        this.studyMode = state.studyMode || this.studyMode;
-        this.quizType = state.quizType || this.quizType;
+        this.currentMode = state.currentMode || 'beginner';
+
+        // Restore beginner mode settings
+        if (state.beginner) {
+          this.beginner = _objectSpread(_objectSpread({}, this.beginner), state.beginner);
+        }
+
+        // Restore advanced mode settings
+        if (state.advanced) {
+          this.advanced = _objectSpread(_objectSpread({}, this.advanced), state.advanced);
+        }
+
+        // For backward compatibility, also load from old flat state
+        if (state.chapterId !== undefined && this.currentMode === 'beginner') {
+          var _state$speed, _state$delay, _state$blurAdjacent, _state$focusMode;
+          this.beginner.chapterId = state.chapterId;
+          this.beginner.rangeStart = state.rangeStart || this.beginner.rangeStart;
+          this.beginner.rangeEnd = state.rangeEnd || this.beginner.rangeEnd;
+          this.beginner.reciterId = state.reciterId || this.beginner.reciterId;
+          this.beginner.speed = (_state$speed = state.speed) !== null && _state$speed !== void 0 ? _state$speed : this.beginner.speed;
+          this.beginner.delay = (_state$delay = state.delay) !== null && _state$delay !== void 0 ? _state$delay : this.beginner.delay;
+          this.beginner.playMode = state.playMode || this.beginner.playMode;
+          this.beginner.order = state.order || this.beginner.order;
+          this.beginner.blurAdjacent = (_state$blurAdjacent = state.blurAdjacent) !== null && _state$blurAdjacent !== void 0 ? _state$blurAdjacent : this.beginner.blurAdjacent;
+          this.beginner.focusMode = (_state$focusMode = state.focusMode) !== null && _state$focusMode !== void 0 ? _state$focusMode : this.beginner.focusMode;
+        }
         this.showTranslation = (_state$showTranslatio = state.showTranslation) !== null && _state$showTranslatio !== void 0 ? _state$showTranslatio : this.showTranslation;
         this.showTransliteration = (_state$showTransliter = state.showTransliteration) !== null && _state$showTransliter !== void 0 ? _state$showTransliter : this.showTransliteration;
         this.showWordByWord = (_state$showWordByWord = state.showWordByWord) !== null && _state$showWordByWord !== void 0 ? _state$showWordByWord : this.showWordByWord;
@@ -24699,7 +25222,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       }
     },
     showBanner: function showBanner(message) {
-      var _this7 = this;
+      var _this10 = this;
       var kind = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'info';
       var ttlMs = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 3500;
       var action = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
@@ -24712,7 +25235,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         actionLabel: (action === null || action === void 0 ? void 0 : action.label) || ''
       };
       this.bannerTimer = setTimeout(function () {
-        if (_this7.banner && Date.now() - _this7.banner.at >= ttlMs) _this7.banner = null;
+        if (_this10.banner && Date.now() - _this10.banner.at >= ttlMs) _this10.banner = null;
       }, ttlMs + 50);
     },
     runBannerAction: function runBannerAction() {
@@ -24862,12 +25385,12 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return this.estimateAyahSeconds();
     },
     estimateKeysSeconds: function estimateKeysSeconds() {
-      var _this8 = this;
+      var _this11 = this;
       var keys = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       var list = Array.isArray(keys) ? keys : [];
       if (!list.length) return Math.max(0, this.remainingAyahs * this.estimateAyahSeconds());
       return list.reduce(function (sum, verseKey) {
-        return sum + _this8.estimateVerseSeconds(verseKey);
+        return sum + _this11.estimateVerseSeconds(verseKey);
       }, 0);
     },
     estimateCapacityAyat: function estimateCapacityAyat(minutes) {
@@ -24877,7 +25400,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     },
     generateTodayPlan: function generateTodayPlan() {
       var _this$plannerState,
-        _this9 = this;
+        _this12 = this;
       var settings = ((_this$plannerState = this.plannerState) === null || _this$plannerState === void 0 ? void 0 : _this$plannerState.settings) || {
         dailyMinutes: 20,
         newAyat: 5,
@@ -24909,98 +25432,98 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       var startSurah = Number(settings.startSurah || 1);
       var endSurah = Number(settings.endSurah || 114);
       var fetchChapterVerses = /*#__PURE__*/function () {
-        var _ref1 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee(chapterId) {
+        var _ref13 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2(chapterId) {
           var _res$data;
           var params, res, all;
-          return _regenerator().w(function (_context) {
-            while (1) switch (_context.n) {
+          return _regenerator().w(function (_context2) {
+            while (1) switch (_context2.n) {
               case 0:
                 params = {
                   per_page: 300,
-                  translations: _this9.shouldRequestTranslations() ? '131' : undefined,
+                  translations: _this12.shouldRequestTranslations() ? '131' : undefined,
                   words: false,
-                  audio: _this9.reciterId,
+                  audio: _this12.reciterId,
                   fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs'
                 };
-                _context.n = 1;
+                _context2.n = 1;
                 return axios__WEBPACK_IMPORTED_MODULE_1__["default"].get("https://api.quran.com/api/v4/verses/by_chapter/".concat(chapterId), {
                   params: params
                 });
               case 1:
-                res = _context.v;
+                res = _context2.v;
                 all = ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.verses) || [];
-                return _context.a(2, all.map(function (v) {
+                return _context2.a(2, all.map(function (v) {
                   var _v$translations, _v$audio;
                   return {
                     key: v.verse_key,
                     number: v.verse_number,
                     arabic: v.text_qpc_hafs || v.text_uthmani_tajweed || v.text_uthmani || '',
                     translation: ((_v$translations = v.translations) === null || _v$translations === void 0 || (_v$translations = _v$translations[0]) === null || _v$translations === void 0 ? void 0 : _v$translations.text) || '',
-                    audio: _this9.normalizeAudioUrl(((_v$audio = v.audio) === null || _v$audio === void 0 ? void 0 : _v$audio.url) || '')
+                    audio: _this12.normalizeAudioUrl(((_v$audio = v.audio) === null || _v$audio === void 0 ? void 0 : _v$audio.url) || '')
                   };
                 }));
             }
-          }, _callee);
+          }, _callee2);
         }));
         return function fetchChapterVerses(_x) {
-          return _ref1.apply(this, arguments);
+          return _ref13.apply(this, arguments);
         };
       }();
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
         var capacityAyat, reviewCap, newCap, dueVerseKeys, _ch, verses, _iterator, _step, v, dueText, dueAudio, dueMeaning, newVerseKeys, ch, ayah, _verses, slice, _iterator2, _step2, _v, last, nextAyah, newProgress, quizKeys, bySurah, _iterator3, _step3, k, _k$split, _k$split2, s, sid, segments, firstSeg, weakReviewCount, sessionType, _t, _t2;
-        return _regenerator().w(function (_context2) {
-          while (1) switch (_context2.p = _context2.n) {
+        return _regenerator().w(function (_context3) {
+          while (1) switch (_context3.p = _context3.n) {
             case 0:
               // time-based capacity: cap total cards if dailyMinutes is small
-              capacityAyat = _this9.estimateCapacityAyat(settings.dailyMinutes);
+              capacityAyat = _this12.estimateCapacityAyat(settings.dailyMinutes);
               reviewCap = Math.min(settings.reviewCards, Math.max(0, capacityAyat - settings.newAyat));
               newCap = Math.min(settings.newAyat, capacityAyat); // Review: due cards across curriculum range
               dueVerseKeys = [];
               _ch = startSurah;
             case 1:
               if (!(_ch <= endSurah && dueVerseKeys.length < reviewCap)) {
-                _context2.n = 10;
+                _context3.n = 10;
                 break;
               }
-              _context2.n = 2;
+              _context3.n = 2;
               return fetchChapterVerses(_ch);
             case 2:
-              verses = _context2.v;
+              verses = _context3.v;
               _iterator = _createForOfIteratorHelper(verses);
-              _context2.p = 3;
+              _context3.p = 3;
               _iterator.s();
             case 4:
               if ((_step = _iterator.n()).done) {
-                _context2.n = 6;
+                _context3.n = 6;
                 break;
               }
               v = _step.value;
-              dueText = (_this9.sm2Get(_this9.sm2CardKey(v.key, 'recite_text')).due || 0) <= now;
-              dueAudio = (_this9.sm2Get(_this9.sm2CardKey(v.key, 'audio_recall')).due || 0) <= now;
-              dueMeaning = (_this9.sm2Get(_this9.sm2CardKey(v.key, 'meaning')).due || 0) <= now;
+              dueText = (_this12.sm2Get(_this12.sm2CardKey(v.key, 'recite_text')).due || 0) <= now;
+              dueAudio = (_this12.sm2Get(_this12.sm2CardKey(v.key, 'audio_recall')).due || 0) <= now;
+              dueMeaning = (_this12.sm2Get(_this12.sm2CardKey(v.key, 'meaning')).due || 0) <= now;
               if (dueText || dueAudio || dueMeaning) dueVerseKeys.push(v.key);
               if (!(dueVerseKeys.length >= reviewCap)) {
-                _context2.n = 5;
+                _context3.n = 5;
                 break;
               }
-              return _context2.a(3, 6);
+              return _context3.a(3, 6);
             case 5:
-              _context2.n = 4;
+              _context3.n = 4;
               break;
             case 6:
-              _context2.n = 8;
+              _context3.n = 8;
               break;
             case 7:
-              _context2.p = 7;
-              _t = _context2.v;
+              _context3.p = 7;
+              _t = _context3.v;
               _iterator.e(_t);
             case 8:
-              _context2.p = 8;
+              _context3.p = 8;
               _iterator.f();
-              return _context2.f(8);
+              return _context3.f(8);
             case 9:
               _ch++;
-              _context2.n = 1;
+              _context3.n = 1;
               break;
             case 10:
               // New: take next N ayat from progress pointer
@@ -25009,48 +25532,48 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
               ayah = Number(progress.ayah || 1);
             case 11:
               if (!(newVerseKeys.length < newCap && ch <= endSurah)) {
-                _context2.n = 21;
+                _context3.n = 21;
                 break;
               }
-              _context2.n = 12;
+              _context3.n = 12;
               return fetchChapterVerses(ch);
             case 12:
-              _verses = _context2.v;
+              _verses = _context3.v;
               slice = _verses.filter(function (v) {
                 return v.number >= ayah;
               });
               _iterator2 = _createForOfIteratorHelper(slice);
-              _context2.p = 13;
+              _context3.p = 13;
               _iterator2.s();
             case 14:
               if ((_step2 = _iterator2.n()).done) {
-                _context2.n = 16;
+                _context3.n = 16;
                 break;
               }
               _v = _step2.value;
               newVerseKeys.push(_v.key);
               if (!(newVerseKeys.length >= newCap)) {
-                _context2.n = 15;
+                _context3.n = 15;
                 break;
               }
-              return _context2.a(3, 16);
+              return _context3.a(3, 16);
             case 15:
-              _context2.n = 14;
+              _context3.n = 14;
               break;
             case 16:
-              _context2.n = 18;
+              _context3.n = 18;
               break;
             case 17:
-              _context2.p = 17;
-              _t2 = _context2.v;
+              _context3.p = 17;
+              _t2 = _context3.v;
               _iterator2.e(_t2);
             case 18:
-              _context2.p = 18;
+              _context3.p = 18;
               _iterator2.f();
-              return _context2.f(18);
+              return _context3.f(18);
             case 19:
               if (!(newVerseKeys.length >= newCap)) {
-                _context2.n = 20;
+                _context3.n = 20;
                 break;
               }
               last = _verses.find(function (v) {
@@ -25063,11 +25586,11 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
               } else {
                 ayah = nextAyah;
               }
-              return _context2.a(3, 21);
+              return _context3.a(3, 21);
             case 20:
               ch += 1;
               ayah = 1;
-              _context2.n = 11;
+              _context3.n = 11;
               break;
             case 21:
               newProgress = {
@@ -25093,10 +25616,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
               }
               segments = _toConsumableArray(bySurah.entries()).sort(function (a, b) {
                 return a[0] - b[0];
-              }).map(function (_ref11) {
-                var _ref12 = _slicedToArray(_ref11, 2),
-                  sid = _ref12[0],
-                  keys = _ref12[1];
+              }).map(function (_ref15) {
+                var _ref16 = _slicedToArray(_ref15, 2),
+                  sid = _ref16[0],
+                  keys = _ref16[1];
                 var nums = keys.map(function (x) {
                   return parseInt(x.split(':')[1]);
                 }).filter(Boolean).sort(function (a, b) {
@@ -25116,13 +25639,13 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
                 keys: []
               };
               weakReviewCount = dueVerseKeys.filter(function (key) {
-                var text = _this9.sm2Get(_this9.sm2CardKey(key, 'recite_text'));
-                var audio = _this9.sm2Get(_this9.sm2CardKey(key, 'audio_recall'));
-                var meaning = _this9.sm2Get(_this9.sm2CardKey(key, 'meaning'));
+                var text = _this12.sm2Get(_this12.sm2CardKey(key, 'recite_text'));
+                var audio = _this12.sm2Get(_this12.sm2CardKey(key, 'audio_recall'));
+                var meaning = _this12.sm2Get(_this12.sm2CardKey(key, 'meaning'));
                 return (text.lapses || 0) >= 3 || (audio.lapses || 0) >= 3 || (meaning.lapses || 0) >= 3 || text.suspended || audio.suspended || meaning.suspended;
               }).length;
               sessionType = weakReviewCount && !newVerseKeys.length ? 'recovery' : dueVerseKeys.length && newVerseKeys.length ? 'mixed' : dueVerseKeys.length ? 'revision' : 'memorisation';
-              _this9.todayPlan = {
+              _this12.todayPlan = {
                 day: day,
                 createdAt: now,
                 chapterId: firstSeg.chapterId,
@@ -25144,102 +25667,102 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
                   capacityAyat: capacityAyat,
                   reviewCap: reviewCap,
                   newCap: newCap,
-                  secondsPerAyah: _this9.estimateAyahSeconds(),
-                  totalSeconds: _this9.estimateKeysSeconds(quizKeys)
+                  secondsPerAyah: _this12.estimateAyahSeconds(),
+                  totalSeconds: _this12.estimateKeysSeconds(quizKeys)
                 }
               };
-              _this9.persistTodayPlan();
+              _this12.persistTodayPlan();
             case 22:
-              return _context2.a(2);
+              return _context3.a(2);
           }
-        }, _callee2, null, [[13, 17, 18, 19], [3, 7, 8, 9]]);
+        }, _callee3, null, [[13, 17, 18, 19], [3, 7, 8, 9]]);
       }))();
     },
     applyTodayPlan: function applyTodayPlan() {
-      var _this0 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
-        var _this0$todayPlan$segm;
-        var seg, plannerMode;
-        return _regenerator().w(function (_context3) {
-          while (1) switch (_context3.n) {
-            case 0:
-              if (!(!_this0.todayPlan || _this0.todayPlan.day !== _this0.dayKey())) {
-                _context3.n = 1;
-                break;
-              }
-              _context3.n = 1;
-              return _this0.generateTodayPlan();
-            case 1:
-              if (_this0.todayPlan) {
-                _context3.n = 2;
-                break;
-              }
-              return _context3.a(2);
-            case 2:
-              if (!_this0.todayPlan.off) {
-                _context3.n = 3;
-                break;
-              }
-              _this0.showBanner('Day off (planner)', 'info');
-              return _context3.a(2);
-            case 3:
-              _this0.planRun = {
-                segmentIndex: 0
-              };
-              _context3.n = 4;
-              return _this0.applyPlanSegment(0);
-            case 4:
-              if ((_this0$todayPlan$segm = _this0.todayPlan.segments) !== null && _this0$todayPlan$segm !== void 0 && _this0$todayPlan$segm[0]) {
-                seg = _this0.todayPlan.segments[0];
-                _this0.showBanner("Starting: Surah ".concat(seg.chapterId, " \u2022 Ayah ").concat(seg.rangeStart, "-").concat(seg.rangeEnd), 'info', 4500);
-              }
-              _this0.showBanner('Today plan applied', 'success');
-              plannerMode = _this0.todayPlan.sessionType === 'memorisation' ? 'recite' : _this0.todayPlan.sessionType === 'revision' ? 'quiz' : 'hybrid';
-              _this0.studyMode = plannerMode;
-              if (_this0.todayPlan.sessionType === 'recovery') _this0.order = 'chain';
-              _this0.quizType = 'mixed';
-              _this0.showTools = false;
-              _context3.n = 5;
-              return _this0.$nextTick();
-            case 5:
-              _this0.startSession();
-            case 6:
-              return _context3.a(2);
-          }
-        }, _callee3);
-      }))();
-    },
-    applyPlanSegment: function applyPlanSegment(index) {
-      var _this1 = this;
+      var _this13 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4() {
-        var _this1$todayPlan, _res$data2, _this1$queue$;
-        var segs, seg, params, res, all, mapped, byKey, ordered, nums;
+        var _this13$todayPlan$seg;
+        var seg, plannerMode;
         return _regenerator().w(function (_context4) {
           while (1) switch (_context4.n) {
             case 0:
-              segs = ((_this1$todayPlan = _this1.todayPlan) === null || _this1$todayPlan === void 0 ? void 0 : _this1$todayPlan.segments) || [];
-              seg = segs[index];
-              if (seg) {
+              if (!(!_this13.todayPlan || _this13.todayPlan.day !== _this13.dayKey())) {
                 _context4.n = 1;
                 break;
               }
-              return _context4.a(2);
+              _context4.n = 1;
+              return _this13.generateTodayPlan();
             case 1:
-              _this1.chapterId = seg.chapterId;
+              if (_this13.todayPlan) {
+                _context4.n = 2;
+                break;
+              }
+              return _context4.a(2);
+            case 2:
+              if (!_this13.todayPlan.off) {
+                _context4.n = 3;
+                break;
+              }
+              _this13.showBanner('Day off (planner)', 'info');
+              return _context4.a(2);
+            case 3:
+              _this13.planRun = {
+                segmentIndex: 0
+              };
+              _context4.n = 4;
+              return _this13.applyPlanSegment(0);
+            case 4:
+              if ((_this13$todayPlan$seg = _this13.todayPlan.segments) !== null && _this13$todayPlan$seg !== void 0 && _this13$todayPlan$seg[0]) {
+                seg = _this13.todayPlan.segments[0];
+                _this13.showBanner("Starting: Surah ".concat(seg.chapterId, " \u2022 Ayah ").concat(seg.rangeStart, "-").concat(seg.rangeEnd), 'info', 4500);
+              }
+              _this13.showBanner('Today plan applied', 'success');
+              plannerMode = _this13.todayPlan.sessionType === 'memorisation' ? 'recite' : _this13.todayPlan.sessionType === 'revision' ? 'quiz' : 'hybrid';
+              _this13.studyMode = plannerMode;
+              if (_this13.todayPlan.sessionType === 'recovery') _this13.order = 'chain';
+              _this13.quizType = 'mixed';
+              _this13.showTools = false;
+              _context4.n = 5;
+              return _this13.$nextTick();
+            case 5:
+              _this13.startSession();
+            case 6:
+              return _context4.a(2);
+          }
+        }, _callee4);
+      }))();
+    },
+    applyPlanSegment: function applyPlanSegment(index) {
+      var _this14 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5() {
+        var _this14$todayPlan, _res$data2, _this14$queue$;
+        var segs, seg, params, res, all, mapped, byKey, ordered, nums;
+        return _regenerator().w(function (_context5) {
+          while (1) switch (_context5.n) {
+            case 0:
+              segs = ((_this14$todayPlan = _this14.todayPlan) === null || _this14$todayPlan === void 0 ? void 0 : _this14$todayPlan.segments) || [];
+              seg = segs[index];
+              if (seg) {
+                _context5.n = 1;
+                break;
+              }
+              return _context5.a(2);
+            case 1:
+              _this14.chapterId = seg.chapterId;
               // Load full segment keys and show only them (avoid range reload races)
               params = {
                 per_page: 300,
-                translations: _this1.shouldRequestTranslations() ? '131' : undefined,
-                words: _this1.shouldRequestWords(),
-                audio: _this1.reciterId,
+                translations: _this14.shouldRequestTranslations() ? '131' : undefined,
+                words: _this14.shouldRequestWords(),
+                audio: _this14.reciterId,
                 fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs'
               };
-              _context4.n = 2;
+              _context5.n = 2;
               return axios__WEBPACK_IMPORTED_MODULE_1__["default"].get("https://api.quran.com/api/v4/verses/by_chapter/".concat(seg.chapterId), {
                 params: params
               });
             case 2:
-              res = _context4.v;
+              res = _context5.v;
               all = ((_res$data2 = res.data) === null || _res$data2 === void 0 ? void 0 : _res$data2.verses) || [];
               mapped = all.map(function (v) {
                 var _v$translations2, _v$audio2;
@@ -25248,13 +25771,13 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
                   number: v.verse_number,
                   arabic: v.text_qpc_hafs || v.text_uthmani_tajweed || v.text_uthmani || '',
                   translation: ((_v$translations2 = v.translations) === null || _v$translations2 === void 0 || (_v$translations2 = _v$translations2[0]) === null || _v$translations2 === void 0 ? void 0 : _v$translations2.text) || '',
-                  audio: _this1.normalizeAudioUrl(((_v$audio2 = v.audio) === null || _v$audio2 === void 0 ? void 0 : _v$audio2.url) || ''),
+                  audio: _this14.normalizeAudioUrl(((_v$audio2 = v.audio) === null || _v$audio2 === void 0 ? void 0 : _v$audio2.url) || ''),
                   words: (v.words || []).map(function (w) {
                     var _w$translation;
                     return {
                       ar: w.text_uthmani || w.text || '',
                       en: ((_w$translation = w.translation) === null || _w$translation === void 0 ? void 0 : _w$translation.text) || '',
-                      audio: _this1.normalizeAudioUrl(w.audio_url)
+                      audio: _this14.normalizeAudioUrl(w.audio_url)
                     };
                   })
                 };
@@ -25265,21 +25788,21 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
               ordered = (seg.keys || []).map(function (k) {
                 return byKey.get(k);
               }).filter(Boolean);
-              _this1.verses = ordered.length ? ordered : mapped;
-              nums = _this1.verses.map(function (v) {
+              _this14.verses = ordered.length ? ordered : mapped;
+              nums = _this14.verses.map(function (v) {
                 return v.number;
               }).filter(Boolean).sort(function (a, b) {
                 return a - b;
               });
-              _this1.rangeStart = nums[0] || 1;
-              _this1.rangeEnd = nums[nums.length - 1] || _this1.rangeStart;
-              _this1.queue = _toConsumableArray(_this1.verses);
-              _this1.queueIndex = 0;
-              _this1.activeKey = ((_this1$queue$ = _this1.queue[0]) === null || _this1$queue$ === void 0 ? void 0 : _this1$queue$.key) || _this1.activeKey;
+              _this14.rangeStart = nums[0] || 1;
+              _this14.rangeEnd = nums[nums.length - 1] || _this14.rangeStart;
+              _this14.queue = _toConsumableArray(_this14.verses);
+              _this14.queueIndex = 0;
+              _this14.activeKey = ((_this14$queue$ = _this14.queue[0]) === null || _this14$queue$ === void 0 ? void 0 : _this14$queue$.key) || _this14.activeKey;
             case 3:
-              return _context4.a(2);
+              return _context5.a(2);
           }
-        }, _callee4);
+        }, _callee5);
       }))();
     },
     openTodayReview: function openTodayReview() {
@@ -25363,7 +25886,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     },
     exportData: function exportData() {
       var _navigator$clipboard,
-        _this10 = this;
+        _this15 = this;
       var payload = {
         schemaVersion: Number(localStorage.getItem('telawa.schemaVersion') || 1),
         sm2: this.sm2 || {},
@@ -25381,7 +25904,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       };
       var text = JSON.stringify(payload);
       (_navigator$clipboard = navigator.clipboard) === null || _navigator$clipboard === void 0 || _navigator$clipboard.writeText(text).then(function () {
-        _this10.showBanner('Export copied to clipboard', 'success');
+        _this15.showBanner('Export copied to clipboard', 'success');
       })["catch"](function () {
         prompt('Copy this JSON', text);
       });
@@ -25558,15 +26081,17 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       if (this.todayPlan) this.tab = 'analytics';else this.tab = 'beginner';
     },
     beginPlannerSession: function beginPlannerSession() {
-      var _this11 = this;
+      var _this16 = this;
       this.onboardingDismissed = true;
       if (this.todayPlan) this.applyTodayPlan();else this.generateTodayPlan().then(function () {
-        return _this11.applyTodayPlan();
+        return _this16.applyTodayPlan();
       });
     },
-    footerPrimaryAction: function footerPrimaryAction() {
-      if (this.tab === 'analytics') this.beginPlannerSession();else if (this.tab === 'beginner') this.beginPlanAndStart();else this.startSession();
-    },
+    // footerPrimaryAction() {
+    //   if (this.tab === 'analytics') this.beginPlannerSession()
+    //   else if (this.tab === 'beginner') this.beginPlanAndStart()
+    //   else this.startSession()
+    // },
     beginPlanAndStart: function beginPlanAndStart() {
       this.onboardingDismissed = true;
       if (this.chapterId) this.startSession();else this.showTools = true;
@@ -25594,19 +26119,39 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         id: String(Date.now()),
         name: name,
         savedAt: Date.now(),
+        mode: this.currentMode,
+        // Save which mode this session is for
         settings: {
-          chapterId: this.chapterId,
-          rangeStart: this.rangeStart,
-          rangeEnd: this.rangeEnd,
-          reciterId: this.reciterId,
-          speed: this.speed,
-          delay: this.delay,
-          repeats: this.repeats,
-          playMode: this.playMode,
-          order: this.order,
-          blurAdjacent: this.blurAdjacent,
-          focusMode: this.focusMode,
-          rangeLoopDelay: this.rangeLoopDelay
+          // Beginner settings
+          beginner: {
+            chapterId: this.beginner.chapterId,
+            rangeStart: this.beginner.rangeStart,
+            rangeEnd: this.beginner.rangeEnd,
+            reciterId: this.beginner.reciterId,
+            speed: this.beginner.speed,
+            delay: this.beginner.delay,
+            repeats: this.beginner.repeats,
+            playMode: this.beginner.playMode,
+            order: this.beginner.order,
+            blurAdjacent: this.beginner.blurAdjacent,
+            focusMode: this.beginner.focusMode
+          },
+          // Advanced settings
+          advanced: {
+            chapterId: this.advanced.chapterId,
+            rangeStart: this.advanced.rangeStart,
+            rangeEnd: this.advanced.rangeEnd,
+            reciterId: this.advanced.reciterId,
+            speed: this.advanced.speed,
+            delay: this.advanced.delay,
+            repeats: this.advanced.repeats,
+            playMode: this.advanced.playMode,
+            order: this.advanced.order,
+            blurAdjacent: this.advanced.blurAdjacent,
+            focusMode: this.advanced.focusMode,
+            repeatAndLoopAudio: this.advanced.repeatAndLoopAudio,
+            advancedRepeats: this.advanced.advancedRepeats
+          }
         }
       };
       this.savedSessions = [payload].concat(_toConsumableArray(this.savedSessions)).slice(0, 20);
@@ -25616,45 +26161,46 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       this.selectedSessionId = payload.id;
     },
     loadSession: function loadSession(id) {
-      var _this12 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5() {
-        var _set$speed, _set$delay, _set$repeats, _set$blurAdjacent, _set$focusMode, _set$rangeLoopDelay;
-        var s, set;
-        return _regenerator().w(function (_context5) {
-          while (1) switch (_context5.n) {
+      var _this17 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6() {
+        var s;
+        return _regenerator().w(function (_context6) {
+          while (1) switch (_context6.n) {
             case 0:
-              s = _this12.savedSessions.find(function (x) {
+              s = _this17.savedSessions.find(function (x) {
                 return x.id === id;
               });
               if (s) {
-                _context5.n = 1;
+                _context6.n = 1;
                 break;
               }
-              return _context5.a(2);
+              return _context6.a(2);
             case 1:
-              set = s.settings || {};
-              _this12.chapterId = set.chapterId || 0;
-              _this12.rangeStart = set.rangeStart || 1;
-              _this12.rangeEnd = set.rangeEnd || 7;
-              _this12.reciterId = set.reciterId || _this12.reciterId;
-              _this12.speed = (_set$speed = set.speed) !== null && _set$speed !== void 0 ? _set$speed : _this12.speed;
-              _this12.delay = (_set$delay = set.delay) !== null && _set$delay !== void 0 ? _set$delay : _this12.delay;
-              _this12.repeats = (_set$repeats = set.repeats) !== null && _set$repeats !== void 0 ? _set$repeats : _this12.repeats;
-              _this12.playMode = set.playMode || _this12.playMode;
-              _this12.order = set.order || _this12.order;
-              _this12.blurAdjacent = (_set$blurAdjacent = set.blurAdjacent) !== null && _set$blurAdjacent !== void 0 ? _set$blurAdjacent : _this12.blurAdjacent;
-              _this12.focusMode = (_set$focusMode = set.focusMode) !== null && _set$focusMode !== void 0 ? _set$focusMode : _this12.focusMode;
-              _this12.rangeLoopDelay = (_set$rangeLoopDelay = set.rangeLoopDelay) !== null && _set$rangeLoopDelay !== void 0 ? _set$rangeLoopDelay : _this12.rangeLoopDelay;
-              _context5.n = 2;
-              return _this12.loadChapter();
+              // Restore beginner settings
+              if (s.settings.beginner) {
+                Object.assign(_this17.beginner, s.settings.beginner);
+              }
+
+              // Restore advanced settings
+              if (s.settings.advanced) {
+                Object.assign(_this17.advanced, s.settings.advanced);
+              }
+
+              // Switch to the saved mode
+              if (s.mode) {
+                _this17.currentMode = s.mode;
+                _this17.tab = s.mode === 'beginner' ? 'beginner' : 'advanced';
+              }
+              _context6.n = 2;
+              return _this17.loadChapter();
             case 2:
-              _this12.refreshVerses();
-              _this12.applySpeed();
-              _this12.persistAllState();
+              _this17.refreshVerses();
+              _this17.applySpeed();
+              _this17.persistAllState();
             case 3:
-              return _context5.a(2);
+              return _context6.a(2);
           }
-        }, _callee5);
+        }, _callee6);
       }))();
     },
     deleteSession: function deleteSession(id) {
@@ -25686,22 +26232,22 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       this.playerMenuOpen = false;
     },
     loadAlquranAudioEditions: function loadAlquranAudioEditions() {
-      var _this13 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6() {
+      var _this18 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7() {
         var _res$data3, res, list, _t3;
-        return _regenerator().w(function (_context6) {
-          while (1) switch (_context6.p = _context6.n) {
+        return _regenerator().w(function (_context7) {
+          while (1) switch (_context7.p = _context7.n) {
             case 0:
-              _context6.p = 0;
-              _context6.n = 1;
+              _context7.p = 0;
+              _context7.n = 1;
               return (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_0__.getEditions)({
                 format: 'audio',
                 type: 'versebyverse'
               });
             case 1:
-              res = _context6.v;
+              res = _context7.v;
               list = ((_res$data3 = res.data) === null || _res$data3 === void 0 ? void 0 : _res$data3.data) || [];
-              _this13.alquranAudioEditions = list.map(function (e) {
+              _this18.alquranAudioEditions = list.map(function (e) {
                 return {
                   identifier: e.identifier,
                   name: e.englishName || e.name || e.identifier,
@@ -25710,51 +26256,52 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
                   format: e.format
                 };
               });
-              if (!_this13.alquranEdition && _this13.alquranAudioEditions.length) _this13.alquranEdition = _this13.alquranAudioEditions[0].identifier;
-              _context6.n = 3;
+              if (!_this18.alquranEdition && _this18.alquranAudioEditions.length) _this18.alquranEdition = _this18.alquranAudioEditions[0].identifier;
+              _context7.n = 3;
               break;
             case 2:
-              _context6.p = 2;
-              _t3 = _context6.v;
+              _context7.p = 2;
+              _t3 = _context7.v;
               console.error(_t3);
             case 3:
-              return _context6.a(2);
+              return _context7.a(2);
           }
-        }, _callee6, null, [[0, 2]]);
+        }, _callee7, null, [[0, 2]]);
       }))();
     },
     ensureAlquranEdition: function ensureAlquranEdition() {
-      var _this14 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7() {
-        return _regenerator().w(function (_context7) {
-          while (1) switch (_context7.n) {
+      var _this19 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee8() {
+        return _regenerator().w(function (_context8) {
+          while (1) switch (_context8.n) {
             case 0:
-              if (!_this14.alquranEdition) {
-                _context7.n = 1;
+              if (!_this19.alquranEdition) {
+                _context8.n = 1;
                 break;
               }
-              return _context7.a(2);
+              return _context8.a(2);
             case 1:
-              if (_this14.alquranAudioEditions.length) {
-                _context7.n = 2;
+              if (_this19.alquranAudioEditions.length) {
+                _context8.n = 2;
                 break;
               }
-              _context7.n = 2;
-              return _this14.loadAlquranAudioEditions();
+              _context8.n = 2;
+              return _this19.loadAlquranAudioEditions();
             case 2:
-              if (!_this14.alquranEdition && _this14.alquranAudioEditions.length) _this14.alquranEdition = _this14.alquranAudioEditions[0].identifier;
+              if (!_this19.alquranEdition && _this19.alquranAudioEditions.length) _this19.alquranEdition = _this19.alquranAudioEditions[0].identifier;
             case 3:
-              return _context7.a(2);
+              return _context8.a(2);
           }
-        }, _callee7);
+        }, _callee8);
       }))();
     },
     normalizeAudioUrl: function normalizeAudioUrl(url) {
       if (!url) return '';
       if (url.startsWith('http://') || url.startsWith('https://')) return url;
       if (url.startsWith('//')) return "https:".concat(url);
+      // Fix for Quran.com audio paths
       if (url.startsWith('/')) return "https://verses.quran.com".concat(url);
-      if (/^[A-Za-z0-9_-]+\/mp3\//.test(url)) return "https://verses.quran.com/".concat(url);
+      if (url.includes('mp3')) return "https://verses.quran.com/".concat(url);
       return url;
     },
     shouldRequestTranslations: function shouldRequestTranslations() {
@@ -25768,13 +26315,13 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       return "".concat(String(Math.floor(t / 60)).padStart(2, '0'), ":").concat(String(t % 60).padStart(2, '0'));
     },
     verseClasses: function verseClasses(verse, idx) {
-      var _this15 = this;
+      var _this20 = this;
       var active = this.activeKey === verse.key;
       if (!this.blurAdjacent && !this.focusMode) return {
         active: active
       };
       var activeIdx = this.verses.findIndex(function (v) {
-        return v.key === _this15.activeKey;
+        return v.key === _this20.activeKey;
       });
       var isNeighbor = activeIdx >= 0 && Math.abs(idx - activeIdx) === 1;
       var dim = this.focusMode && !active;
@@ -25793,105 +26340,111 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       this.persistUiState();
     },
     loadChapters: function loadChapters() {
-      var _this16 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee8() {
+      var _this21 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee9() {
         var _res$data4, res, _t4;
-        return _regenerator().w(function (_context8) {
-          while (1) switch (_context8.p = _context8.n) {
+        return _regenerator().w(function (_context9) {
+          while (1) switch (_context9.p = _context9.n) {
             case 0:
-              _context8.p = 0;
-              _context8.n = 1;
+              _context9.p = 0;
+              _context9.n = 1;
               return axios__WEBPACK_IMPORTED_MODULE_1__["default"].get('https://api.quran.com/api/v4/chapters', {
                 params: {
                   language: 'en'
                 }
               });
             case 1:
-              res = _context8.v;
-              _this16.chapters = ((_res$data4 = res.data) === null || _res$data4 === void 0 ? void 0 : _res$data4.chapters) || [];
-              if (!_this16.chapterId) {
-                _context8.n = 2;
+              res = _context9.v;
+              _this21.chapters = ((_res$data4 = res.data) === null || _res$data4 === void 0 ? void 0 : _res$data4.chapters) || [];
+              if (!_this21.chapterId) {
+                _context9.n = 2;
                 break;
               }
-              _context8.n = 2;
-              return _this16.loadChapter();
+              _context9.n = 2;
+              return _this21.loadChapter();
             case 2:
-              _context8.n = 4;
+              _context9.n = 4;
               break;
             case 3:
-              _context8.p = 3;
-              _t4 = _context8.v;
+              _context9.p = 3;
+              _t4 = _context9.v;
               console.error(_t4);
             case 4:
-              return _context8.a(2);
+              return _context9.a(2);
           }
-        }, _callee8, null, [[0, 3]]);
+        }, _callee9, null, [[0, 3]]);
       }))();
     },
     loadReciters: function loadReciters() {
-      var _this17 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee9() {
+      var _this22 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee0() {
         var _res$data5, res, list, _t5;
-        return _regenerator().w(function (_context9) {
-          while (1) switch (_context9.p = _context9.n) {
+        return _regenerator().w(function (_context0) {
+          while (1) switch (_context0.p = _context0.n) {
             case 0:
-              _context9.p = 0;
-              _context9.n = 1;
+              _context0.p = 0;
+              _context0.n = 1;
               return axios__WEBPACK_IMPORTED_MODULE_1__["default"].get('https://api.quran.com/api/v4/resources/recitations', {
                 params: {
                   per_page: 30
                 }
               });
             case 1:
-              res = _context9.v;
+              res = _context0.v;
               list = ((_res$data5 = res.data) === null || _res$data5 === void 0 ? void 0 : _res$data5.recitations) || [];
-              if (list.length) _this17.reciters = list.map(function (r) {
+              if (list.length) _this22.reciters = list.map(function (r) {
                 return {
                   id: r.id,
                   name: r.reciter_name
                 };
               });
-              _context9.n = 3;
+              _context0.n = 3;
               break;
             case 2:
-              _context9.p = 2;
-              _t5 = _context9.v;
+              _context0.p = 2;
+              _t5 = _context0.v;
               console.error(_t5);
             case 3:
-              return _context9.a(2);
+              return _context0.a(2);
           }
-        }, _callee9, null, [[0, 2]]);
+        }, _callee0, null, [[0, 2]]);
       }))();
     },
     loadChapter: function loadChapter() {
-      var _this18 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee0() {
-        var _this18$currentChapte;
-        var max;
-        return _regenerator().w(function (_context0) {
-          while (1) switch (_context0.n) {
+      var _this23 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
+        var _this23$currentChapte;
+        var chapterId, max;
+        return _regenerator().w(function (_context1) {
+          while (1) switch (_context1.n) {
             case 0:
-              if (_this18.chapterId) {
-                _context0.n = 1;
+              chapterId = _this23.chapterId;
+              if (chapterId) {
+                _context1.n = 1;
                 break;
               }
-              _this18.currentChapter = null;
-              _this18.verses = [];
-              return _context0.a(2);
+              _this23.currentChapter = null;
+              _this23.verses = [];
+              return _context1.a(2);
             case 1:
-              _this18.onboardingDismissed = true;
-              _this18.currentChapter = _this18.chapters.find(function (c) {
-                return c.id === _this18.chapterId;
+              _this23.onboardingDismissed = true;
+              _this23.currentChapter = _this23.chapters.find(function (c) {
+                return c.id === chapterId;
               });
-              max = ((_this18$currentChapte = _this18.currentChapter) === null || _this18$currentChapte === void 0 ? void 0 : _this18$currentChapte.verses_count) || 286;
-              _this18.rangeEnd = Math.min(_this18.rangeEnd, max);
-              _this18.rangeStart = Math.max(1, _this18.rangeStart);
-              _context0.n = 2;
-              return _this18.loadVerses();
+              max = ((_this23$currentChapte = _this23.currentChapter) === null || _this23$currentChapte === void 0 ? void 0 : _this23$currentChapte.verses_count) || 286; // Update range based on current mode
+              if (_this23.currentMode === 'beginner') {
+                _this23.beginner.rangeEnd = Math.min(_this23.beginner.rangeEnd, max);
+                _this23.beginner.rangeStart = Math.max(1, _this23.beginner.rangeStart);
+              } else {
+                _this23.advanced.rangeEnd = Math.min(_this23.advanced.rangeEnd, max);
+                _this23.advanced.rangeStart = Math.max(1, _this23.advanced.rangeStart);
+              }
+              _context1.n = 2;
+              return _this23.loadVerses();
             case 2:
-              return _context0.a(2);
+              return _context1.a(2);
           }
-        }, _callee0);
+        }, _callee1);
       }))();
     },
     adjustRange: function adjustRange() {
@@ -25902,34 +26455,35 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       this.loadVerses();
     },
     loadVerses: function loadVerses() {
-      var _this19 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
-        var params, _res$data6, _this19$restoredAudio, _this19$restoredAudio2, _this19$verses$find, res, all, start, end, mappedVerses, _translitRes$data, translitRes, translitAyahs, byNumber, _tajweedRes$data, tajweedRes, ayahs, _byNumber, cached, detail, _t6, _t7, _t8;
-        return _regenerator().w(function (_context1) {
-          while (1) switch (_context1.p = _context1.n) {
+      var _this24 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee10() {
+        var params, _res$data6, res, all, start, end, mappedVerses, _translitRes$data, translitRes, translitAyahs, byNumber, _tajweedRes$data, tajweedRes, ayahs, _byNumber, cached, _t6, _t7, _t8;
+        return _regenerator().w(function (_context10) {
+          while (1) switch (_context10.p = _context10.n) {
             case 0:
-              if (_this19.chapterId) {
-                _context1.n = 1;
+              if (_this24.chapterId) {
+                _context10.n = 1;
                 break;
               }
-              return _context1.a(2);
+              return _context10.a(2);
             case 1:
+              console.log('loadVerses called - chapterId:', _this24.chapterId, 'currentMode:', _this24.currentMode);
               params = {
                 per_page: 300,
-                translations: _this19.shouldRequestTranslations() ? '131' : undefined,
-                words: _this19.shouldRequestWords(),
-                audio: _this19.reciterId,
+                translations: _this24.shouldRequestTranslations() ? '131' : undefined,
+                words: _this24.shouldRequestWords(),
+                audio: _this24.reciterId,
                 fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs'
               };
-              _context1.p = 2;
-              _context1.n = 3;
-              return axios__WEBPACK_IMPORTED_MODULE_1__["default"].get("https://api.quran.com/api/v4/verses/by_chapter/".concat(_this19.chapterId), {
+              _context10.p = 2;
+              _context10.n = 3;
+              return axios__WEBPACK_IMPORTED_MODULE_1__["default"].get("https://api.quran.com/api/v4/verses/by_chapter/".concat(_this24.chapterId), {
                 params: params
               });
             case 3:
-              res = _context1.v;
+              res = _context10.v;
               all = ((_res$data6 = res.data) === null || _res$data6 === void 0 ? void 0 : _res$data6.verses) || [];
-              start = _this19.rangeStart, end = _this19.rangeEnd;
+              start = _this24.rangeStart, end = _this24.rangeEnd;
               mappedVerses = all.filter(function (v) {
                 return v.verse_number >= start && v.verse_number <= end;
               }).map(function (v) {
@@ -25940,27 +26494,27 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
                   arabic: v.text_qpc_hafs || v.text_uthmani_tajweed || v.text_uthmani || '',
                   translation: ((_v$translations3 = v.translations) === null || _v$translations3 === void 0 || (_v$translations3 = _v$translations3[0]) === null || _v$translations3 === void 0 ? void 0 : _v$translations3.text) || '',
                   transliteration: '',
-                  audio: _this19.normalizeAudioUrl(((_v$audio3 = v.audio) === null || _v$audio3 === void 0 ? void 0 : _v$audio3.url) || ''),
+                  audio: _this24.normalizeAudioUrl(((_v$audio3 = v.audio) === null || _v$audio3 === void 0 ? void 0 : _v$audio3.url) || ''),
                   words: (v.words || []).map(function (w) {
                     var _w$translation2, _w$translation3;
                     return {
                       ar: w.text_uthmani || w.text || '',
                       en: ((_w$translation2 = w.translation) === null || _w$translation2 === void 0 ? void 0 : _w$translation2.text) || '',
                       tooltip: "".concat(w.text_uthmani || w.text || '', " \u2022 ").concat(((_w$translation3 = w.translation) === null || _w$translation3 === void 0 ? void 0 : _w$translation3.text) || '').trim(),
-                      audio: _this19.normalizeAudioUrl(w.audio_url)
+                      audio: _this24.normalizeAudioUrl(w.audio_url)
                     };
                   })
                 };
               });
-              if (!_this19.showTransliteration) {
-                _context1.n = 7;
+              if (!_this24.showTransliteration) {
+                _context10.n = 7;
                 break;
               }
-              _context1.p = 4;
-              _context1.n = 5;
-              return (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_0__.getSurahTransliteration)(_this19.chapterId, 'en.transliteration');
+              _context10.p = 4;
+              _context10.n = 5;
+              return (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_0__.getSurahTransliteration)(_this24.chapterId, 'en.transliteration');
             case 5:
-              translitRes = _context1.v;
+              translitRes = _context10.v;
               translitAyahs = ((_translitRes$data = translitRes.data) === null || _translitRes$data === void 0 || (_translitRes$data = _translitRes$data.data) === null || _translitRes$data === void 0 ? void 0 : _translitRes$data.ayahs) || [];
               byNumber = new Map(translitAyahs.map(function (a) {
                 return [a.numberInSurah, a.text];
@@ -25970,85 +26524,91 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
                   transliteration: byNumber.get(v.number) || ''
                 });
               });
-              _context1.n = 7;
+              _context10.n = 7;
               break;
             case 6:
-              _context1.p = 6;
-              _t6 = _context1.v;
+              _context10.p = 6;
+              _t6 = _context10.v;
               console.error(_t6);
-              _this19.showBanner('Transliteration failed to load.', 'info', 5000, {
+              _this24.showBanner('Transliteration failed to load.', 'info', 5000, {
                 key: 'retry-transliteration',
                 label: 'Retry'
               });
             case 7:
-              if (!(_this19.script === 'tajweed')) {
-                _context1.n = 11;
+              if (!(_this24.script === 'tajweed')) {
+                _context10.n = 11;
                 break;
               }
-              _context1.p = 8;
-              _context1.n = 9;
-              return (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_0__.getSurahEdition)(_this19.chapterId, 'quran-tajweed');
+              _context10.p = 8;
+              _context10.n = 9;
+              return (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_0__.getSurahEdition)(_this24.chapterId, 'quran-tajweed');
             case 9:
-              tajweedRes = _context1.v;
+              tajweedRes = _context10.v;
               ayahs = ((_tajweedRes$data = tajweedRes.data) === null || _tajweedRes$data === void 0 || (_tajweedRes$data = _tajweedRes$data.data) === null || _tajweedRes$data === void 0 ? void 0 : _tajweedRes$data.ayahs) || [];
               _byNumber = new Map(ayahs.map(function (a) {
-                return [a.numberInSurah, _this19.normalizeTajweedText(a.text)];
+                return [a.numberInSurah, _this24.normalizeTajweedText(a.text)];
               }));
               mappedVerses = mappedVerses.map(function (v) {
                 return _objectSpread(_objectSpread({}, v), {}, {
                   arabic: _byNumber.get(v.number) || v.arabic
                 });
               });
-              _context1.n = 11;
+              _context10.n = 11;
               break;
             case 10:
-              _context1.p = 10;
-              _t7 = _context1.v;
+              _context10.p = 10;
+              _t7 = _context10.v;
               console.error(_t7);
-              _this19.showBanner('Tajweed text failed to load. Showing standard text.', 'info', 5000, {
+              _this24.showBanner('Tajweed text failed to load. Showing standard text.', 'info', 5000, {
                 key: 'retry-tajweed',
                 label: 'Retry'
               });
             case 11:
-              _this19.verses = mappedVerses;
-              _this19.writeVerseCache(_this19.chapterId, mappedVerses);
-              if (_this19.verses.length && !_this19.activeKey) _this19.activeKey = _this19.verses[0].key;
-              _this19.buildQueue();
-              if ((_this19$restoredAudio = _this19.restoredAudioState) !== null && _this19$restoredAudio !== void 0 && _this19$restoredAudio.src && ((_this19$restoredAudio2 = _this19.restoredAudioState) === null || _this19$restoredAudio2 === void 0 ? void 0 : _this19$restoredAudio2.src) === (((_this19$verses$find = _this19.verses.find(function (v) {
-                return v.key === _this19.activeKey;
-              })) === null || _this19$verses$find === void 0 ? void 0 : _this19$verses$find.audio) || _this19.restoredAudioState.src)) {
-                _this19.playerVisible = !!_this19.restoredAudioState.playerVisible;
-                _this19.currentTime = Number(_this19.restoredAudioState.currentTime || 0);
+              // Assign to correct mode's verses
+              if (_this24.currentMode === 'beginner') {
+                _this24.beginner.verses = mappedVerses;
+                if (_this24.beginner.verses.length && !_this24.beginner.activeKey) {
+                  _this24.beginner.activeKey = _this24.beginner.verses[0].key;
+                }
+              } else {
+                _this24.advanced.verses = mappedVerses;
+                if (_this24.advanced.verses.length && !_this24.advanced.activeKey) {
+                  _this24.advanced.activeKey = _this24.advanced.verses[0].key;
+                }
               }
-              _context1.n = 14;
+              _this24.writeVerseCache(_this24.chapterId, mappedVerses);
+              _this24.buildQueue();
+              console.log('Verses loaded. Length:', mappedVerses.length);
+              _context10.n = 13;
               break;
             case 12:
-              _context1.p = 12;
-              _t8 = _context1.v;
-              console.error(_t8);
-              cached = _this19.readVerseCache(_this19.chapterId);
-              if (!cached.length) {
-                _context1.n = 13;
-                break;
+              _context10.p = 12;
+              _t8 = _context10.v;
+              console.error('API Error:', _t8);
+              // Try to load from cache
+              cached = _this24.readVerseCache(_this24.chapterId);
+              if (cached && cached.length) {
+                console.log('Loading from cache:', cached.length);
+                if (_this24.currentMode === 'beginner') {
+                  _this24.beginner.verses = cached;
+                  if (_this24.beginner.verses.length && !_this24.beginner.activeKey) {
+                    _this24.beginner.activeKey = _this24.beginner.verses[0].key;
+                  }
+                } else {
+                  _this24.advanced.verses = cached;
+                  if (_this24.advanced.verses.length && !_this24.advanced.activeKey) {
+                    _this24.advanced.activeKey = _this24.advanced.verses[0].key;
+                  }
+                }
+                _this24.buildQueue();
+                _this24.showBanner('Loaded from offline cache', 'info', 3000);
+              } else {
+                _this24.showBanner("Failed to load verses: ".concat(_t8.message || 'Network error'), 'error', 5000);
               }
-              _this19.verses = cached;
-              if (_this19.verses.length && !_this19.activeKey) _this19.activeKey = _this19.verses[0].key;
-              _this19.buildQueue();
-              _this19.showBanner('Offline copy loaded for this range.', 'info', 4500, {
-                key: 'retry-verses',
-                label: 'Retry'
-              });
-              return _context1.a(2);
             case 13:
-              detail = _this19.describeNetworkError(_t8);
-              _this19.showBanner("Failed to load verses".concat(detail ? ": ".concat(detail) : '', "."), 'error', 6000, {
-                key: 'retry-verses',
-                label: 'Retry'
-              });
-            case 14:
-              return _context1.a(2);
+              return _context10.a(2);
           }
-        }, _callee1, null, [[8, 10], [4, 6], [2, 12]]);
+        }, _callee10, null, [[8, 10], [4, 6], [2, 12]]);
       }))();
     },
     refreshVerses: function refreshVerses() {
@@ -26057,365 +26617,234 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     buildQueue: function buildQueue() {
       var q = [];
       var base = this.verses;
-      var rep = Math.max(1, this.repeats);
+      var rep = 1;
+      if (this.currentMode === 'beginner') {
+        rep = this.beginner.repeats;
+        console.log('Beginner repeats:', rep);
+      } else if (this.currentMode === 'advanced') {
+        rep = this.advanced.repeatAndLoopAudio ? this.advanced.advancedRepeats || 1 : 1;
+        console.log('Advanced repeats:', rep, 'repeatAndLoopAudio:', this.advanced.repeatAndLoopAudio);
+      }
       var ord = this.order;
-      for (var r = 0; r < rep; r++) {
-        if (ord === 'seq') q.push.apply(q, _toConsumableArray(base));else if (ord === 'cum') {
-          for (var i = 0; i < base.length; i++) for (var j = 0; j <= i; j++) q.push(base[j]);
-        } else if (ord === 'rand') {
-          var shuffled = _toConsumableArray(base);
-          for (var _i = shuffled.length - 1; _i > 0; _i--) {
-            var _j = Math.floor(Math.random() * (_i + 1));
-            var _ref13 = [shuffled[_j], shuffled[_i]];
-            shuffled[_i] = _ref13[0];
-            shuffled[_j] = _ref13[1];
-          }
-          q.push.apply(q, _toConsumableArray(shuffled));
-        } else if (ord === 'chain') {
-          // A → (A,B) → B → (B,C) → C ...
-          for (var _i2 = 0; _i2 < base.length; _i2++) {
-            var a = base[_i2];
-            var b = base[_i2 + 1];
-            if (!a) continue;
-            q.push(a);
-            if (b) q.push(a, b);
+      if (ord === 'seq') {
+        for (var r = 0; r < rep; r++) q.push.apply(q, _toConsumableArray(base));
+      } else if (ord === 'cum') {
+        for (var _r = 0; _r < rep; _r++) {
+          for (var i = 0; i < base.length; i++) {
+            for (var j = 0; j <= i; j++) q.push(base[j]);
           }
         }
+      } else if (ord === 'rand') {
+        var shuffled = _toConsumableArray(base);
+        for (var _i = shuffled.length - 1; _i > 0; _i--) {
+          var _j = Math.floor(Math.random() * (_i + 1));
+          var _ref17 = [shuffled[_j], shuffled[_i]];
+          shuffled[_i] = _ref17[0];
+          shuffled[_j] = _ref17[1];
+        }
+        for (var _r2 = 0; _r2 < rep; _r2++) q.push.apply(q, _toConsumableArray(shuffled));
       }
       this.queue = q;
       this.queueIndex = 0;
+      console.log('Queue built with repeats:', rep, 'queue length:', q.length);
     },
     rebuildQueue: function rebuildQueue() {
       this.buildQueue();
     },
     startSession: function startSession() {
-      var _this20 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee10() {
+      var _this25 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee11() {
         var first;
-        return _regenerator().w(function (_context10) {
-          while (1) switch (_context10.n) {
+        return _regenerator().w(function (_context11) {
+          while (1) switch (_context11.n) {
             case 0:
-              _this20.onboardingDismissed = true;
-              _this20.sessionCompleted = false;
-              if (_this20.chapterId) {
-                _context10.n = 1;
+              console.log('=== startSession called ===');
+              console.log('currentMode:', _this25.currentMode);
+              console.log('chapterId:', _this25.chapterId);
+              _this25.onboardingDismissed = true;
+              _this25.sessionCompleted = false;
+
+              // Fix: Check if a surah is selected (chapterId > 0, not just truthy)
+              if (!(!_this25.chapterId || _this25.chapterId === 0)) {
+                _context11.n = 1;
                 break;
               }
-              _this20.showTools = true;
-              return _context10.a(2);
+              console.log('No chapter selected');
+              _this25.showTools = true;
+              _this25.showBanner('Please select a surah first', 'info', 3000);
+              return _context11.a(2);
             case 1:
-              if (_this20.verses.length) {
-                _context10.n = 2;
+              if (_this25.verses.length) {
+                _context11.n = 3;
                 break;
               }
-              _context10.n = 2;
-              return _this20.loadVerses();
+              console.log('Loading verses...');
+              _context11.n = 2;
+              return _this25.loadVerses();
             case 2:
-              if (_this20.verses.length) {
-                _context10.n = 3;
-                break;
-              }
-              _this20.showBanner('No verses loaded yet', 'error');
-              _this20.showTools = true;
-              return _context10.a(2);
+              console.log('Verses loaded:', _this25.verses.length);
             case 3:
-              if (!(_this20.studyMode === 'quiz')) {
-                _context10.n = 4;
+              if (_this25.verses.length) {
+                _context11.n = 4;
                 break;
               }
-              _this20.startQuiz();
-              _this20.showTools = false;
-              return _context10.a(2);
+              console.log('Still no verses');
+              _this25.showBanner('No verses loaded. Check your network connection.', 'error');
+              return _context11.a(2);
             case 4:
-              if (!_this20.queue.length) _this20.buildQueue();
-              if (_this20.queue.length) {
-                _context10.n = 5;
+              if (!_this25.audioElement) {
+                console.log('Initializing audio...');
+                _this25.initAudio();
+              }
+              if (!_this25.queue.length) {
+                console.log('Building queue...');
+                _this25.buildQueue();
+                console.log('Queue built:', _this25.queue.length);
+              }
+              if (_this25.queue.length) {
+                _context11.n = 5;
                 break;
               }
-              _this20.showBanner('Nothing to play. Check range.', 'error');
-              _this20.showTools = true;
-              return _context10.a(2);
+              console.log('Queue is empty');
+              _this25.showBanner('Nothing to play. Check range settings.', 'error');
+              return _context11.a(2);
             case 5:
-              _this20.queueIndex = 0;
-              first = _this20.queue[0] || _this20.verses[0];
-              _this20.showTools = false;
-              _context10.n = 6;
-              return _this20.$nextTick();
+              _this25.queueIndex = 0;
+              first = _this25.queue[0];
+              console.log('First verse:', first === null || first === void 0 ? void 0 : first.key);
+              if (!first) {
+                _context11.n = 8;
+                break;
+              }
+              _this25.activeKey = first.key;
+              _this25.activeVerseKey = first.key;
+              _context11.n = 6;
+              return _this25.$nextTick();
             case 6:
-              if (first) _this20.playVerse(first);
-              _this20.persistAllState();
+              console.log('Calling playVerse...');
+              _context11.n = 7;
+              return _this25.playVerse(first);
             case 7:
-              return _context10.a(2);
+              console.log('playVerse completed');
+            case 8:
+              _this25.showTools = false;
+              console.log('=== startSession completed ===');
+            case 9:
+              return _context11.a(2);
           }
-        }, _callee10);
+        }, _callee11);
       }))();
     },
+    ensureAudioPlays: function ensureAudioPlays() {
+      var _this26 = this;
+      return new Promise(function (resolve, reject) {
+        if (!_this26.audioElement) reject('No audio element');
+        var timeout = setTimeout(function () {
+          return reject('Timeout');
+        }, 10000);
+        _this26.audioElement.addEventListener('canplaythrough', function () {
+          clearTimeout(timeout);
+          resolve();
+        }, {
+          once: true
+        });
+        _this26.audioElement.load();
+      });
+    },
+    // Quiz Methods - Add these to your existing methods
     startQuiz: function startQuiz() {
-      var _this21 = this;
-      this.sessionCompleted = false;
-      var now = Date.now();
-      var skill = this.quizSkill || 'recite_text';
-      var source = this.getQuizSourceVerses();
-      var due = source.filter(function (v) {
-        return (_this21.sm2Get(_this21.sm2CardKey(v.key, skill)).due || 0) <= now;
-      });
-      var rest = source.filter(function (v) {
-        return !due.includes(v);
-      });
-      var base = [].concat(_toConsumableArray(due), _toConsumableArray(rest));
-      // de-duplicate and limit
-      var seen = new Set();
-      var pool = [];
-      var _iterator4 = _createForOfIteratorHelper(base),
-        _step4;
-      try {
-        for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-          var v = _step4.value;
-          if (seen.has(v.key)) continue;
-          seen.add(v.key);
-          pool.push(v);
-          if (pool.length >= 6) break;
-        }
-      } catch (err) {
-        _iterator4.e(err);
-      } finally {
-        _iterator4.f();
-      }
-      this.quizQueue = pool;
-      this.quizIndex = 0;
-      this.quizActive = true;
-      this.quizRevealed = false;
-      this.quizLastResult = null;
-      this.quizSummaryActive = false;
-      this.quizSessionStats = {
-        total: pool.length,
-        correct: 0,
-        qualitySum: 0,
-        answers: [],
-        mistakes: [],
-        skillTotals: {},
-        startedAt: Date.now(),
-        durationMs: 0
-      };
-      this.nextQuizCard();
-    },
-    getQuizSourceVerses: function getQuizSourceVerses() {
-      var _this$todayPlan6, _this$todayPlan7;
-      var byKey = new Map((this.verses || []).map(function (verse) {
-        return [verse.key, verse];
-      }));
-      var orderedQueue = [];
-      var _iterator5 = _createForOfIteratorHelper(this.queue || []),
-        _step5;
-      try {
-        var _loop2 = function _loop2() {
-          var item = _step5.value;
-          if (!(item !== null && item !== void 0 && item.key) || !byKey.has(item.key) || orderedQueue.some(function (verse) {
-            return verse.key === item.key;
-          })) return 1; // continue
-          orderedQueue.push(byKey.get(item.key));
-        };
-        for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-          if (_loop2()) continue;
-        }
-      } catch (err) {
-        _iterator5.e(err);
-      } finally {
-        _iterator5.f();
-      }
-      if (this.planRun && (_this$todayPlan6 = this.todayPlan) !== null && _this$todayPlan6 !== void 0 && (_this$todayPlan6 = _this$todayPlan6.segments) !== null && _this$todayPlan6 !== void 0 && _this$todayPlan6.length) {
-        var seg = this.todayPlan.segments[this.planRun.segmentIndex || 0];
-        var segmentVerses = ((seg === null || seg === void 0 ? void 0 : seg.keys) || []).map(function (key) {
-          return byKey.get(key);
-        }).filter(Boolean);
-        if (segmentVerses.length) return segmentVerses;
-      }
-      if ((_this$todayPlan7 = this.todayPlan) !== null && _this$todayPlan7 !== void 0 && (_this$todayPlan7 = _this$todayPlan7.quizKeys) !== null && _this$todayPlan7 !== void 0 && _this$todayPlan7.length) {
-        var planned = this.todayPlan.quizKeys.map(function (key) {
-          return byKey.get(key);
-        }).filter(Boolean);
-        if (planned.length) return planned;
-      }
-      if (this.order === 'chain' && orderedQueue.length) return orderedQueue;
-      return orderedQueue.length ? orderedQueue : _toConsumableArray(this.verses);
-    },
-    restartQuiz: function restartQuiz() {
-      this.quizSummaryActive = false;
-      this.quizIndex = 0;
-      this.quizSessionStats = null;
-      this.startQuiz();
-    },
-    nextQuizCard: function nextQuizCard() {
-      var _this22 = this;
-      var verse = this.quizQueue[this.quizIndex];
-      if (!verse) {
-        if (this.quizSessionStats) {
-          this.quizSessionStats.durationMs = Math.max(0, Date.now() - Number(this.quizSessionStats.startedAt || Date.now()));
-        }
-        this.quizSummaryActive = true;
-        if (this.studyMode !== 'hybrid') this.triggerConfetti();
+      var _this27 = this;
+      if (!this.verses.length) {
+        this.showBanner('No verses to quiz on. Start a session first.', 'info', 3000);
         return;
       }
-      var type = this.quizType === 'mixed' ? ['flashcard', 'mcq', 'blank', 'audio_mcq'][this.quizIndex % 4] : this.quizType;
-      var skill = type === 'audio_mcq' ? 'audio_recall' : type === 'blank' ? 'meaning' : 'recite_text';
-      this.quizSkill = skill;
-      this.quizCard = _objectSpread(_objectSpread({}, verse), {}, {
-        type: type,
-        skill: skill
+
+      // Build quiz queue from current verses
+      var source = this.verses.slice(0, 10);
+      this.quizQueue = source.map(function (v) {
+        return _objectSpread(_objectSpread({}, v), {}, {
+          type: _this27.getRandomQuizType()
+        });
       });
+      this.quizIndex = 0;
+      this.quizScore = 0;
+      this.quizMistakes = [];
+      this.quizComplete = false;
+      this.quizRevealed = false;
       this.quizAnswer = '';
-      this.quizOptions = [];
-      this.quizRevealed = type === 'flashcard' ? false : true;
-      this.quizLastResult = null;
-      if (type === 'mcq') {
-        var options = new Set([verse.key]);
-        var idx = this.verses.findIndex(function (v) {
-          return v.key === verse.key;
-        });
-        var nearby = [];
-        for (var i = Math.max(0, idx - 6); i <= Math.min(this.verses.length - 1, idx + 6); i++) {
-          if (i !== idx) nearby.push(this.verses[i].key);
-        }
-        while (options.size < 4 && nearby.length) {
-          var pick = nearby.splice(Math.floor(Math.random() * nearby.length), 1)[0];
-          options.add(pick);
-        }
-        while (options.size < 4 && this.verses.length > 3) {
-          var _pick = this.verses[Math.floor(Math.random() * this.verses.length)];
-          options.add(_pick.key);
-        }
-        this.quizOptions = _toConsumableArray(options).sort(function () {
-          return Math.random() - 0.5;
-        }).map(function (k) {
-          var v = _this22.verses.find(function (x) {
-            return x.key === k;
-          });
-          var n = v ? v.number : parseInt(k.split(':')[1]);
-          var snippet = _this22.normalizeTextForQuiz(((v === null || v === void 0 ? void 0 : v.arabic) || '').replace(/<[^>]+>/g, '')).slice(0, 36);
-          return {
-            key: k,
-            label: "".concat(k, " \u2022 ").concat(n, " \u2022 ").concat(snippet).trim()
-          };
-        });
+      this.quizActive = true;
+      this.nextQuizCard();
+    },
+    getRandomQuizType: function getRandomQuizType() {
+      var types = ['flashcard', 'mcq', 'blank'];
+      return types[Math.floor(Math.random() * types.length)];
+    },
+    nextQuizCard: function nextQuizCard() {
+      if (this.quizIndex >= this.quizQueue.length) {
+        this.quizComplete = true;
+        return;
       }
-      if (type === 'audio_mcq') {
-        var _options = new Set([verse.key]);
-        var _idx = this.verses.findIndex(function (v) {
-          return v.key === verse.key;
-        });
-        var _nearby = [];
-        for (var _i3 = Math.max(0, _idx - 6); _i3 <= Math.min(this.verses.length - 1, _idx + 6); _i3++) {
-          if (_i3 !== _idx) _nearby.push(this.verses[_i3].key);
-        }
-        while (_options.size < 4 && _nearby.length) {
-          var _pick2 = _nearby.splice(Math.floor(Math.random() * _nearby.length), 1)[0];
-          _options.add(_pick2);
-        }
-        while (_options.size < 4 && this.verses.length > 3) {
-          var _pick3 = this.verses[Math.floor(Math.random() * this.verses.length)];
-          _options.add(_pick3.key);
-        }
-        this.quizOptions = _toConsumableArray(_options).sort(function () {
-          return Math.random() - 0.5;
-        }).map(function (k) {
-          var v = _this22.verses.find(function (x) {
-            return x.key === k;
-          });
-          var n = v ? v.number : parseInt(k.split(':')[1]);
-          return {
-            key: k,
-            label: "".concat(k, " \u2022 Ayah ").concat(n)
-          };
-        });
-      }
-      if (type === 'blank') {
-        var _this$quizMakePrompt = this.quizMakePrompt(verse),
-          _prompt = _this$quizMakePrompt.prompt,
-          missing = _this$quizMakePrompt.missing;
-        this.quizCard.prompt = _prompt;
-        this.quizCard.missing = missing;
-      }
-      if (type === 'audio_mcq') {
-        // play audio cue
-        setTimeout(function () {
-          return _this22.playVerse(verse);
-        }, 50);
+      this.quizCard = this.quizQueue[this.quizIndex];
+      this.quizRevealed = false;
+      this.quizAnswer = '';
+
+      // Generate MCQ options if needed
+      if (this.quizCard.type === 'mcq') {
+        this.quizOptions = this.generateMcqOptions(this.quizCard);
       }
     },
-    submitQuiz: function submitQuiz() {
-      var _this23 = this;
-      var qualityOverride = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-      var card = this.quizCard;
-      if (!card) return;
-      var quality = 4;
-      if (typeof qualityOverride === 'number') quality = qualityOverride;else if (card.type === 'mcq' || card.type === 'audio_mcq') quality = this.quizAnswer === card.key ? 4 : 2;else if (card.type === 'blank') {
-        var a = this.normalizeTextForQuiz(this.quizAnswer).toLowerCase();
-        var b = this.normalizeTextForQuiz(card.missing).toLowerCase();
-        if (a && b && a === b) quality = 4;else if (a && b && (b.startsWith(a) || a.startsWith(b))) quality = 3;else quality = 2;
-      }
-      var sm2Key = this.sm2CardKey(card.key, card.skill || this.quizSkill || 'recite_text');
-      this.sm2Grade(sm2Key, quality);
-      if (this.quizSessionStats) {
-        var skillKey = card.skill || this.quizSkill || 'recite_text';
-        var skillTotals = _objectSpread({}, this.quizSessionStats.skillTotals || {});
-        var currentSkill = skillTotals[skillKey] || {
-          total: 0,
-          correct: 0
-        };
-        this.quizSessionStats.qualitySum += quality;
-        var isCorrect = quality >= 4;
-        if (isCorrect) this.quizSessionStats.correct += 1;else this.quizSessionStats.mistakes.push(card.key);
-        this.quizSessionStats.answers.push({
-          key: card.key,
-          quality: quality,
-          type: card.type
+    generateMcqOptions: function generateMcqOptions(correctVerse) {
+      var options = [{
+        key: correctVerse.key,
+        label: "Ayah ".concat(correctVerse.number)
+      }];
+      var otherVerses = this.verses.filter(function (v) {
+        return v.key !== correctVerse.key;
+      }).slice(0, 3);
+      otherVerses.forEach(function (v) {
+        return options.push({
+          key: v.key,
+          label: "Ayah ".concat(v.number)
         });
-        currentSkill.total += 1;
-        if (isCorrect) currentSkill.correct += 1;
-        skillTotals[skillKey] = currentSkill;
-        this.quizSessionStats.skillTotals = skillTotals;
-        this.quizSessionStats.durationMs = Math.max(0, Date.now() - Number(this.quizSessionStats.startedAt || Date.now()));
+      });
+      return options.sort(function () {
+        return Math.random() - 0.5;
+      });
+    },
+    submitQuiz: function submitQuiz() {
+      var quality = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 4;
+      var isCorrect = quality >= 4;
+      if (isCorrect) {
+        this.quizScore++;
+      } else {
+        this.quizMistakes.push("Ayah ".concat(this.quizCard.number));
       }
-      this.quizLastResult = {
-        at: Date.now(),
-        key: card.key,
-        quality: quality,
-        skill: card.skill
-      };
-      this.quizIndex += 1;
+
+      // Log SM2 grade
+      var sm2Key = this.sm2CardKey(this.quizCard.key, 'recite_text');
+      this.sm2Grade(sm2Key, quality);
+      this.quizIndex++;
       this.nextQuizCard();
-      if (this.studyMode === 'hybrid' && this.hybridPendingKey) {
-        var pending = this.hybridPendingKey;
-        this.hybridPendingKey = null;
-        this.quizActive = false;
-        this.quizCard = null;
-        this.quizQueue = [];
-        this.quizIndex = 0;
-        setTimeout(function () {
-          if (_this23.playMode === 'auto') _this23.next();
-        }, (this.delay || 0) * 1000);
-      }
+    },
+    restartQuiz: function restartQuiz() {
+      this.quizScore = 0;
+      this.quizMistakes = [];
+      this.quizComplete = false;
+      this.quizIndex = 0;
+      this.nextQuizCard();
     },
     stopQuiz: function stopQuiz() {
       this.quizActive = false;
       this.quizCard = null;
       this.quizQueue = [];
-      this.quizIndex = 0;
-      this.quizAnswer = '';
-      this.quizOptions = [];
-      this.quizRevealed = false;
-      this.quizLastResult = null;
-      this.quizSummaryActive = false;
-      this.quizSessionStats = null;
-      this.sessionCompleted = false;
-      this.hybridPendingKey = null;
+      this.quizComplete = false;
     },
     triggerConfetti: function triggerConfetti() {
-      var _this24 = this;
+      var _this28 = this;
       this.confettiSeed = (this.confettiSeed + 1) % 1000000;
       this.confettiActive = true;
       setTimeout(function () {
-        _this24.confettiActive = false;
+        _this28.confettiActive = false;
       }, 4000);
     },
     setActive: function setActive(key) {
@@ -26435,8 +26864,8 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       });
     },
     shouldUseWordSequence: function shouldUseWordSequence(verse) {
-      var _verse$words2;
-      return !!(this.showWordByWord && this.wordByWordAudioEnabled && verse !== null && verse !== void 0 && (_verse$words2 = verse.words) !== null && _verse$words2 !== void 0 && _verse$words2.length && verse.words.every(function (word) {
+      var _verse$words;
+      return !!(this.showWordByWord && this.wordByWordAudioEnabled && verse !== null && verse !== void 0 && (_verse$words = verse.words) !== null && _verse$words !== void 0 && _verse$words.length && verse.words.every(function (word) {
         return !!word.audio;
       }));
     },
@@ -26466,45 +26895,45 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       this.persistMetrics();
     },
     playAudioSrc: function playAudioSrc(src) {
-      var _this25 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee11() {
-        return _regenerator().w(function (_context11) {
-          while (1) switch (_context11.n) {
+      var _this29 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee12() {
+        return _regenerator().w(function (_context12) {
+          while (1) switch (_context12.n) {
             case 0:
-              _this25.audioElement.src = src;
-              _this25.audioElement.load();
-              _this25.audioElement.playbackRate = _this25.speed;
-              _context11.n = 1;
-              return _this25.audioElement.play();
+              _this29.audioElement.src = src;
+              _this29.audioElement.load();
+              _this29.audioElement.playbackRate = _this29.speed;
+              _context12.n = 1;
+              return _this29.audioElement.play();
             case 1:
-              _this25.playerVisible = true;
-              _this25.isPlaying = true;
-              _this25.markPlaybackStart();
-              _this25.persistAudioState();
+              _this29.playerVisible = true;
+              _this29.isPlaying = true;
+              _this29.markPlaybackStart();
+              _this29.persistAudioState();
             case 2:
-              return _context11.a(2);
+              return _context12.a(2);
           }
-        }, _callee11);
+        }, _callee12);
       }))();
     },
     startWordSequence: function startWordSequence(verse) {
-      var _this26 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee12() {
+      var _this30 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee13() {
         var first, _t9;
-        return _regenerator().w(function (_context12) {
-          while (1) switch (_context12.p = _context12.n) {
+        return _regenerator().w(function (_context13) {
+          while (1) switch (_context13.p = _context13.n) {
             case 0:
-              if (!_this26.audioElement) _this26.audioElement = _this26.$refs.audio;
-              if (_this26.audioElement) {
-                _context12.n = 1;
+              if (!_this30.audioElement) _this30.audioElement = _this30.$refs.audio;
+              if (_this30.audioElement) {
+                _context13.n = 1;
                 break;
               }
-              return _context12.a(2);
+              return _context13.a(2);
             case 1:
-              _this26.currentPlaybackMode = 'word-sequence';
-              _this26.currentVersePlaybackKey = verse.key;
-              _this26.activeKey = verse.key;
-              _this26.wordSequence = {
+              _this30.currentPlaybackMode = 'word-sequence';
+              _this30.currentVersePlaybackKey = verse.key;
+              _this30.activeKey = verse.key;
+              _this30.wordSequence = {
                 verseKey: verse.key,
                 words: verse.words.filter(function (word) {
                   return !!word.audio;
@@ -26512,101 +26941,101 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
                 index: 0,
                 totalSeconds: 0
               };
-              _this26.activeWordAudio = "".concat(verse.key, ":0");
-              first = _this26.wordSequence.words[0];
+              _this30.activeWordAudio = "".concat(verse.key, ":0");
+              first = _this30.wordSequence.words[0];
               if (first !== null && first !== void 0 && first.audio) {
-                _context12.n = 2;
+                _context13.n = 2;
                 break;
               }
-              return _context12.a(2);
+              return _context13.a(2);
             case 2:
-              _this26.lastAudioDebug = {
+              _this30.lastAudioDebug = {
                 at: Date.now(),
                 key: verse.key,
                 src: first.audio,
                 phase: 'word-sequence-start'
               };
-              _context12.p = 3;
-              _context12.n = 4;
-              return _this26.playAudioSrc(first.audio);
-            case 4:
-              _context12.n = 6;
-              break;
-            case 5:
-              _context12.p = 5;
-              _t9 = _context12.v;
-              console.error(_t9);
-              _this26.activeWordAudio = '';
-              _this26.wordSequence = null;
-              _this26.currentPlaybackMode = 'verse';
-              _this26.showBanner('Word audio could not start. Falling back to ayah audio.', 'info', 4000);
-              _this26.playVerse(_objectSpread(_objectSpread({}, verse), {}, {
-                words: []
-              }));
-            case 6:
-              return _context12.a(2);
-          }
-        }, _callee12, null, [[3, 5]]);
-      }))();
-    },
-    advanceWordSequence: function advanceWordSequence() {
-      var _this27 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee13() {
-        var sequence, currentClip, nextWord, _t0;
-        return _regenerator().w(function (_context13) {
-          while (1) switch (_context13.p = _context13.n) {
-            case 0:
-              sequence = _this27.wordSequence;
-              if (sequence) {
-                _context13.n = 1;
-                break;
-              }
-              return _context13.a(2);
-            case 1:
-              currentClip = sequence.words[sequence.index];
-              if (_this27.duration && isFinite(_this27.duration)) sequence.totalSeconds += Number(_this27.duration);
-              sequence.index += 1;
-              if (!(sequence.index >= sequence.words.length)) {
-                _context13.n = 2;
-                break;
-              }
-              _this27.activeWordAudio = '';
-              _this27.storeVerseDuration(sequence.verseKey, sequence.totalSeconds || _this27.duration || 0);
-              _this27.wordSequence = null;
-              _this27.finishVersePlayback();
-              return _context13.a(2);
-            case 2:
-              nextWord = sequence.words[sequence.index];
-              _this27.activeWordAudio = "".concat(sequence.verseKey, ":").concat(sequence.index);
               _context13.p = 3;
               _context13.n = 4;
-              return _this27.playAudioSrc(nextWord.audio);
+              return _this30.playAudioSrc(first.audio);
             case 4:
               _context13.n = 6;
               break;
             case 5:
               _context13.p = 5;
-              _t0 = _context13.v;
-              console.error(_t0);
-              _this27.activeWordAudio = '';
-              _this27.wordSequence = null;
-              _this27.finishVersePlayback();
+              _t9 = _context13.v;
+              console.error(_t9);
+              _this30.activeWordAudio = '';
+              _this30.wordSequence = null;
+              _this30.currentPlaybackMode = 'verse';
+              _this30.showBanner('Word audio could not start. Falling back to ayah audio.', 'info', 4000);
+              _this30.playVerse(_objectSpread(_objectSpread({}, verse), {}, {
+                words: []
+              }));
             case 6:
               return _context13.a(2);
           }
         }, _callee13, null, [[3, 5]]);
       }))();
     },
+    advanceWordSequence: function advanceWordSequence() {
+      var _this31 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee14() {
+        var sequence, currentClip, nextWord, _t0;
+        return _regenerator().w(function (_context14) {
+          while (1) switch (_context14.p = _context14.n) {
+            case 0:
+              sequence = _this31.wordSequence;
+              if (sequence) {
+                _context14.n = 1;
+                break;
+              }
+              return _context14.a(2);
+            case 1:
+              currentClip = sequence.words[sequence.index];
+              if (_this31.duration && isFinite(_this31.duration)) sequence.totalSeconds += Number(_this31.duration);
+              sequence.index += 1;
+              if (!(sequence.index >= sequence.words.length)) {
+                _context14.n = 2;
+                break;
+              }
+              _this31.activeWordAudio = '';
+              _this31.storeVerseDuration(sequence.verseKey, sequence.totalSeconds || _this31.duration || 0);
+              _this31.wordSequence = null;
+              _this31.finishVersePlayback();
+              return _context14.a(2);
+            case 2:
+              nextWord = sequence.words[sequence.index];
+              _this31.activeWordAudio = "".concat(sequence.verseKey, ":").concat(sequence.index);
+              _context14.p = 3;
+              _context14.n = 4;
+              return _this31.playAudioSrc(nextWord.audio);
+            case 4:
+              _context14.n = 6;
+              break;
+            case 5:
+              _context14.p = 5;
+              _t0 = _context14.v;
+              console.error(_t0);
+              _this31.activeWordAudio = '';
+              _this31.wordSequence = null;
+              _this31.finishVersePlayback();
+            case 6:
+              return _context14.a(2);
+          }
+        }, _callee14, null, [[3, 5]]);
+      }))();
+    },
     finishVersePlayback: function finishVersePlayback() {
-      var _this28 = this;
+      var _this32 = this;
       this.flushPlaybackTime();
       this.isPlaying = false;
       if (this.playMode === 'loop') {
         setTimeout(function () {
-          var verse = _this28.verses.find(function (item) {
-            return item.key === _this28.activeKey;
+          var verse = _this32.verses.find(function (item) {
+            return item.key === _this32.activeKey;
           });
-          if (verse) _this28.playVerse(verse);
+          if (verse) _this32.playVerse(verse);
         }, (this.delay || 0) * 1000);
         return;
       }
@@ -26627,7 +27056,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       }
       if (this.playMode === 'auto') {
         setTimeout(function () {
-          if (_this28.canNext) _this28.next();else _this28.handleSessionComplete();
+          if (_this32.canNext) _this32.next();else _this32.handleSessionComplete();
         }, this.delay * 1000);
       } else {
         this.handleSessionComplete();
@@ -26647,127 +27076,181 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       }
     },
     playVerse: function playVerse(verse) {
-      var _this29 = this;
-      if (!verse.audio) {
-        console.warn('Missing verse audio url', verse);
-        return;
+      var _this33 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee15() {
+        var audioUrl, playPromise;
+        return _regenerator().w(function (_context15) {
+          while (1) switch (_context15.n) {
+            case 0:
+              console.log('playVerse called with verse:', verse === null || verse === void 0 ? void 0 : verse.key);
+              if (verse) {
+                _context15.n = 1;
+                break;
+              }
+              console.error('No verse provided');
+              return _context15.a(2);
+            case 1:
+              if (verse.audio) {
+                _context15.n = 2;
+                break;
+              }
+              console.error('No audio URL for verse:', verse.key);
+              _this33.showBanner("Audio not available for verse ".concat(verse.number), 'info', 2000);
+              return _context15.a(2);
+            case 2:
+              // Set active verse
+              _this33.activeKey = verse.key;
+              _this33.activeVerseKey = verse.key;
+
+              // Get or create audio element
+              if (_this33.audioElement) {
+                _context15.n = 3;
+                break;
+              }
+              _this33.audioElement = _this33.$refs.audio;
+              if (_this33.audioElement) {
+                _context15.n = 3;
+                break;
+              }
+              console.error('Audio element not found in DOM');
+              _this33.showBanner('Audio system not ready. Please refresh the page.', 'error', 3000);
+              return _context15.a(2);
+            case 3:
+              // Stop current playback
+              try {
+                _this33.audioElement.pause();
+              } catch (e) {
+                console.warn('Error pausing audio:', e);
+              }
+              audioUrl = _this33.normalizeAudioUrl(verse.audio);
+              console.log('Playing audio URL:', audioUrl);
+
+              // Set up audio element
+              _this33.audioElement.src = audioUrl;
+              _this33.audioElement.load();
+
+              // Show player
+              _this33.playerVisible = true;
+
+              // Create a promise that resolves when audio starts playing
+              playPromise = new Promise(function (resolve, reject) {
+                var timeout = setTimeout(function () {
+                  console.error('Audio timeout for verse:', verse.key);
+                  _this33.showBanner('Audio loading timeout. Please try again.', 'error', 3000);
+                  reject(new Error('Timeout'));
+                }, 10000);
+                var _canPlayHandler = function canPlayHandler() {
+                  console.log('Audio can play event fired');
+                  clearTimeout(timeout);
+
+                  // Set speed
+                  _this33.audioElement.playbackRate = _this33.speed;
+
+                  // Play the audio
+                  _this33.audioElement.play().then(function () {
+                    console.log('Audio playing successfully');
+                    _this33.isPlaying = true;
+                    _this33.markPlaybackStart();
+                    _this33.logEvent({
+                      type: 'audio_play',
+                      key: verse.key
+                    });
+                    resolve();
+                  })["catch"](function (err) {
+                    console.error('Audio play failed:', err);
+                    _this33.isPlaying = false;
+                    _this33.showBanner("Cannot play audio: ".concat(err.message), 'error', 3000);
+                    reject(err);
+                  });
+                  _this33.audioElement.removeEventListener('canplay', _canPlayHandler);
+                };
+                var errorHandler = function errorHandler(err) {
+                  console.error('Audio error event:', err);
+                  clearTimeout(timeout);
+                  _this33.isPlaying = false;
+                  _this33.showBanner('Audio playback error', 'error', 3000);
+                  reject(err);
+                };
+                _this33.audioElement.addEventListener('canplay', _canPlayHandler);
+                _this33.audioElement.addEventListener('error', errorHandler, {
+                  once: true
+                });
+              });
+              return _context15.a(2, playPromise["catch"](function (err) {
+                console.error('playVerse failed:', err);
+                _this33.isPlaying = false;
+              }));
+          }
+        }, _callee15);
+      }))();
+    },
+    testPlayback: function testPlayback() {
+      var _this34 = this;
+      console.log('=== TEST PLAYBACK ===');
+      console.log('Chapter:', this.chapterId);
+      console.log('Verses:', this.verses.length);
+      if (this.verses.length === 0) {
+        console.log('No verses, loading...');
+        this.loadVerses().then(function () {
+          if (_this34.verses.length > 0) {
+            console.log('Verses loaded, playing first verse');
+            _this34.playVerse(_this34.verses[0]);
+          }
+        });
+      } else {
+        console.log('Playing first verse');
+        this.playVerse(this.verses[0]);
       }
-      this.activeKey = verse.key;
-      if (!this.audioElement) this.audioElement = this.$refs.audio;
-      if (!this.audioElement) return;
-      this.currentVersePlaybackKey = verse.key;
-      this.currentPlaybackMode = 'verse';
-      this.wordSequence = null;
-      this.activeWordAudio = '';
-      if (this.shouldUseWordSequence(verse)) {
-        this.startWordSequence(verse);
-        return;
-      }
-      this.lastAudioDebug = {
-        at: Date.now(),
-        key: verse.key,
-        src: verse.audio,
-        phase: 'set-src'
-      };
-      this.playAudioSrc(verse.audio)["catch"](function (e) {
-        console.error(e);
-        _this29.lastAudioDebug = {
-          at: Date.now(),
-          key: verse.key,
-          src: verse.audio,
-          phase: 'play-catch',
-          error: String((e === null || e === void 0 ? void 0 : e.message) || e)
-        };
-        _this29.isPlaying = false;
-      });
-      this.logEvent({
-        type: 'audio_play',
-        key: verse.key
-      });
     },
     playWordAudio: function playWordAudio(url) {
-      var _this30 = this;
+      var _this35 = this;
       var key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
       if (!url) return;
       this.activeWordAudio = key;
       var a = new Audio(url);
       a.addEventListener('ended', function () {
-        if (_this30.activeWordAudio === key) _this30.activeWordAudio = '';
+        if (_this35.activeWordAudio === key) _this35.activeWordAudio = '';
       });
       a.addEventListener('error', function () {
-        if (_this30.activeWordAudio === key) _this30.activeWordAudio = '';
+        if (_this35.activeWordAudio === key) _this35.activeWordAudio = '';
       });
       a.play()["catch"](function () {
-        _this30.activeWordAudio = '';
+        _this35.activeWordAudio = '';
       });
     },
     initAudio: function initAudio() {
-      var _this$restoredAudioSt,
-        _this31 = this;
+      var _this36 = this;
       this.audioElement = this.$refs.audio;
       if (!this.audioElement) return;
-      if ((_this$restoredAudioSt = this.restoredAudioState) !== null && _this$restoredAudioSt !== void 0 && _this$restoredAudioSt.src) {
-        this.audioElement.src = this.restoredAudioState.src;
-        this.playerVisible = !!this.restoredAudioState.playerVisible;
-        this.currentTime = Number(this.restoredAudioState.currentTime || 0);
-      }
-      var lastSrc = null;
-      this.audioElement.addEventListener('play', function () {
-        lastSrc = _this31.audioElement.currentSrc || _this31.audioElement.src;
-        _this31.markPlaybackStart();
-      });
-      this.audioElement.addEventListener('pause', function () {
-        _this31.flushPlaybackTime();
-      });
-      this.audioElement.addEventListener('timeupdate', function () {
-        _this31.currentTime = _this31.audioElement.currentTime;
-        _this31.duration = _this31.audioElement.duration;
-      });
-      this.audioElement.addEventListener('loadedmetadata', function () {
-        var _this31$restoredAudio;
-        if ((_this31$restoredAudio = _this31.restoredAudioState) !== null && _this31$restoredAudio !== void 0 && _this31$restoredAudio.currentTime && Math.abs(_this31.audioElement.currentTime || 0) < 0.2) {
-          try {
-            _this31.audioElement.currentTime = Number(_this31.restoredAudioState.currentTime || 0);
-          } catch (e) {
-            console.error(e);
-          }
-        }
-        if (_this31.currentPlaybackMode === 'verse' && _this31.currentVersePlaybackKey && _this31.audioElement.duration && isFinite(_this31.audioElement.duration)) {
-          _this31.storeVerseDuration(_this31.currentVersePlaybackKey, _this31.audioElement.duration);
-        }
-      });
-      this.audioElement.addEventListener('error', function () {
-        var _this31$audioElement, _this31$audioElement2, _this31$audioElement3;
-        _this31.flushPlaybackTime();
-        var err = (_this31$audioElement = _this31.audioElement) === null || _this31$audioElement === void 0 ? void 0 : _this31$audioElement.error;
-        var payload = {
-          src: (_this31$audioElement2 = _this31.audioElement) === null || _this31$audioElement2 === void 0 ? void 0 : _this31$audioElement2.src,
-          currentSrc: (_this31$audioElement3 = _this31.audioElement) === null || _this31$audioElement3 === void 0 ? void 0 : _this31$audioElement3.currentSrc,
-          code: err === null || err === void 0 ? void 0 : err.code,
-          message: err === null || err === void 0 ? void 0 : err.message
-        };
-        console.error('Audio element error', payload);
-        _this31.lastAudioDebug = _objectSpread({
-          at: Date.now(),
-          phase: 'audio-error'
-        }, payload);
-        if (_this31.playMode === 'auto' && _this31.studyMode !== 'quiz') {
+
+      // Remove existing listeners to avoid duplicates
+      this.audioElement.removeEventListener('timeupdate', this.audioTimeUpdate);
+      this.audioElement.removeEventListener('ended', this.audioEnded);
+      this.audioElement.removeEventListener('error', this.audioError);
+
+      // Bind methods
+      this.audioTimeUpdate = function () {
+        _this36.currentTime = _this36.audioElement.currentTime;
+        _this36.duration = _this36.audioElement.duration;
+      };
+      this.audioEnded = function () {
+        _this36.isPlaying = false;
+        if (_this36.playMode === 'auto') {
           setTimeout(function () {
-            return _this31.next();
-          }, 300);
+            return _this36.next();
+          }, _this36.delay * 1000);
         }
-      });
-      this.audioElement.addEventListener('ended', function () {
-        if (_this31.currentPlaybackMode === 'word-sequence' && _this31.wordSequence) {
-          _this31.advanceWordSequence();
-          return;
-        }
-        var src = _this31.audioElement.currentSrc || _this31.audioElement.src;
-        if (src && lastSrc === src && _this31.currentVersePlaybackKey && _this31.duration && isFinite(_this31.duration) && _this31.duration > 1 && _this31.duration < 120) {
-          _this31.storeVerseDuration(_this31.currentVersePlaybackKey, _this31.duration);
-        }
-        _this31.finishVersePlayback();
-      });
+      };
+      this.audioError = function (e) {
+        console.error('Audio error:', e);
+        _this36.isPlaying = false;
+        _this36.showBanner('Audio failed to load. Check your connection.', 'error', 3000);
+      };
+
+      // Add listeners
+      this.audioElement.addEventListener('timeupdate', this.audioTimeUpdate);
+      this.audioElement.addEventListener('ended', this.audioEnded);
+      this.audioElement.addEventListener('error', this.audioError);
     },
     applySpeed: function applySpeed() {
       if (this.audioElement) this.audioElement.playbackRate = this.speed;
@@ -26796,8 +27279,8 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       if (v) this.playVerse(v);
     },
     next: function next() {
-      var _this$todayPlan8,
-        _this32 = this;
+      var _this$todayPlan6,
+        _this37 = this;
       if (this.canNext) {
         this.sessionCompleted = false;
         this.queueIndex++;
@@ -26805,16 +27288,16 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         if (v) this.playVerse(v);
         return;
       }
-      if (this.planRun && (_this$todayPlan8 = this.todayPlan) !== null && _this$todayPlan8 !== void 0 && (_this$todayPlan8 = _this$todayPlan8.segments) !== null && _this$todayPlan8 !== void 0 && _this$todayPlan8.length) {
+      if (this.planRun && (_this$todayPlan6 = this.todayPlan) !== null && _this$todayPlan6 !== void 0 && (_this$todayPlan6 = _this$todayPlan6.segments) !== null && _this$todayPlan6 !== void 0 && _this$todayPlan6.length) {
         // move to next segment automatically
         var nextIndex = (this.planRun.segmentIndex || 0) + 1;
         if (nextIndex < this.todayPlan.segments.length) {
           this.planRun.segmentIndex = nextIndex;
           this.applyPlanSegment(nextIndex).then(function () {
-            var first = _this32.queue[0];
-            var seg = _this32.todayPlan.segments[nextIndex];
-            if (seg) _this32.showBanner("Next: Surah ".concat(seg.chapterId, " \u2022 Ayah ").concat(seg.rangeStart, "-").concat(seg.rangeEnd), 'info', 4500);
-            if (first) _this32.playVerse(first);
+            var first = _this37.queue[0];
+            var seg = _this37.todayPlan.segments[nextIndex];
+            if (seg) _this37.showBanner("Next: Surah ".concat(seg.chapterId, " \u2022 Ayah ").concat(seg.rangeStart, "-").concat(seg.rangeEnd), 'info', 4500);
+            if (first) _this37.playVerse(first);
           });
         } else {
           this.handleSessionComplete();
@@ -27137,129 +27620,131 @@ var _hoisted_16 = {
   "class": "rail-stat"
 };
 var _hoisted_17 = {
-  "class": "progress-bar progress-bar-wide"
+  key: 0,
+  "class": "mode-indicator"
 };
 var _hoisted_18 = {
-  key: 2,
-  "class": "reading-toolbar"
+  "class": "progress-bar progress-bar-wide"
 };
 var _hoisted_19 = {
-  "class": "reading-toolbar-group"
+  key: 2,
+  "class": "reading-toolbar"
 };
 var _hoisted_20 = {
   "class": "reading-toolbar-group"
 };
 var _hoisted_21 = {
-  "class": "toolbar-font-wrap"
+  "class": "reading-toolbar-group"
 };
 var _hoisted_22 = {
+  "class": "toolbar-font-wrap"
+};
+var _hoisted_23 = {
   key: 0,
   "class": "toolbar-font-menu"
 };
-var _hoisted_23 = ["onClick"];
-var _hoisted_24 = {
+var _hoisted_24 = ["onClick"];
+var _hoisted_25 = {
   key: 3,
   "class": "empty"
 };
-var _hoisted_25 = {
+var _hoisted_26 = {
   "class": "empty-card"
 };
-var _hoisted_26 = {
+var _hoisted_27 = {
   "class": "empty-actions"
 };
-var _hoisted_27 = ["data-verse-key"];
 var _hoisted_28 = {
-  "class": "verse-head"
+  "class": "verses-grid"
 };
 var _hoisted_29 = {
-  "class": "verse-badge"
+  "class": "verse-header"
 };
 var _hoisted_30 = {
-  "class": "verse-num"
+  "class": "verse-badges"
 };
 var _hoisted_31 = {
-  "class": "verse-ref"
+  "class": "verse-number"
 };
 var _hoisted_32 = {
+  "class": "verse-ref"
+};
+var _hoisted_33 = {
   "class": "verse-actions"
 };
-var _hoisted_33 = ["onClick"];
-var _hoisted_34 = ["innerHTML"];
-var _hoisted_35 = {
-  key: 0,
-  "class": "verse-transliteration"
-};
+var _hoisted_34 = ["onClick"];
+var _hoisted_35 = ["innerHTML"];
 var _hoisted_36 = {
-  key: 1,
+  key: 0,
   "class": "verse-translation"
 };
 var _hoisted_37 = {
+  key: 1,
+  "class": "verse-transliteration"
+};
+var _hoisted_38 = {
   key: 2,
   "class": "verse-words"
 };
-var _hoisted_38 = ["onMouseenter", "onFocusin", "onClick"];
 var _hoisted_39 = {
-  "class": "word-en"
+  "class": "word-arabic",
+  dir: "rtl"
 };
-var _hoisted_40 = ["onClick"];
-var _hoisted_41 = {
-  key: 1,
-  "class": "word-tooltip",
-  role: "tooltip"
+var _hoisted_40 = {
+  "class": "word-meaning"
 };
+var _hoisted_41 = ["onClick"];
 var _hoisted_42 = {
-  "class": "word-tooltip-en"
-};
-var _hoisted_43 = {
   "class": "tools-top"
 };
-var _hoisted_44 = {
+var _hoisted_43 = {
   "class": "tools-topbar"
 };
-var _hoisted_45 = {
+var _hoisted_44 = {
   "class": "tools-title"
 };
-var _hoisted_46 = {
+var _hoisted_45 = {
   "class": "tools-context"
 };
-var _hoisted_47 = {
+var _hoisted_46 = {
   "class": "tools-tabs"
 };
-var _hoisted_48 = {
+var _hoisted_47 = {
   "class": "tools-body"
 };
-var _hoisted_49 = {
+var _hoisted_48 = {
   key: 0,
   "class": "sheet"
 };
-var _hoisted_50 = {
-  "class": "sheet-section sheet-section-guide"
-};
-var _hoisted_51 = {
-  "class": "flow-strip"
-};
-var _hoisted_52 = {
-  "class": "guide-copy"
-};
-var _hoisted_53 = {
-  "class": "guide-title"
-};
-var _hoisted_54 = {
-  "class": "guide-sub"
-};
-var _hoisted_55 = {
+var _hoisted_49 = {
   "class": "sheet-section"
 };
-var _hoisted_56 = {
+var _hoisted_50 = {
   "class": "sheet-content"
 };
-var _hoisted_57 = {
+var _hoisted_51 = {
   "class": "field-stack"
 };
-var _hoisted_58 = {
+var _hoisted_52 = {
   "class": "field"
 };
-var _hoisted_59 = ["value"];
+var _hoisted_53 = ["value"];
+var _hoisted_54 = ["value"];
+var _hoisted_55 = {
+  "class": "field"
+};
+var _hoisted_56 = {
+  "class": "range range-single"
+};
+var _hoisted_57 = {
+  "class": "sheet-section"
+};
+var _hoisted_58 = {
+  "class": "sheet-content"
+};
+var _hoisted_59 = {
+  "class": "field-stack"
+};
 var _hoisted_60 = {
   "class": "field"
 };
@@ -27268,412 +27753,289 @@ var _hoisted_62 = {
   "class": "field"
 };
 var _hoisted_63 = {
-  "class": "range range-compact range-single"
+  "class": "radio-group radio-group-tight"
 };
 var _hoisted_64 = {
-  "class": "cta-row cta-row-split"
+  "class": "radio"
 };
 var _hoisted_65 = {
-  "class": "sheet-section"
+  "class": "radio"
 };
 var _hoisted_66 = {
-  "class": "sheet-content"
+  "class": "radio"
 };
 var _hoisted_67 = {
-  "class": "field-stack"
+  "class": "radio"
 };
 var _hoisted_68 = {
   "class": "field"
 };
-var _hoisted_69 = ["value"];
-var _hoisted_70 = {
-  "class": "field"
+var _hoisted_69 = {
+  "class": "radio-group radio-group-tight"
 };
-var _hoisted_71 = ["value"];
+var _hoisted_70 = {
+  "class": "radio"
+};
+var _hoisted_71 = {
+  "class": "radio"
+};
 var _hoisted_72 = {
   "class": "field"
 };
 var _hoisted_73 = ["value"];
-var _hoisted_74 = {
-  "class": "field"
-};
+var _hoisted_74 = ["disabled"];
 var _hoisted_75 = {
-  "class": "radio-group radio-group-tight"
-};
-var _hoisted_76 = {
-  "class": "radio"
-};
-var _hoisted_77 = {
-  "class": "radio"
-};
-var _hoisted_78 = {
-  "class": "radio"
-};
-var _hoisted_79 = {
   key: 1,
   "class": "sheet"
 };
-var _hoisted_80 = {
+var _hoisted_76 = {
   "class": "sheet-section"
 };
-var _hoisted_81 = {
+var _hoisted_77 = {
   "class": "sheet-content"
 };
-var _hoisted_82 = {
+var _hoisted_78 = {
   "class": "field-stack"
+};
+var _hoisted_79 = {
+  "class": "field"
+};
+var _hoisted_80 = ["value"];
+var _hoisted_81 = {
+  "class": "field"
+};
+var _hoisted_82 = {
+  "class": "range range-single"
 };
 var _hoisted_83 = {
   "class": "field"
 };
 var _hoisted_84 = ["value"];
 var _hoisted_85 = {
-  "class": "field"
+  "class": "sheet-section"
 };
 var _hoisted_86 = {
-  key: 0,
-  "class": "field"
-};
-var _hoisted_87 = {
-  "class": "field"
-};
-var _hoisted_88 = ["value"];
-var _hoisted_89 = {
-  "class": "field"
-};
-var _hoisted_90 = {
-  "class": "range range-compact range-single"
-};
-var _hoisted_91 = {
-  key: 1,
-  "class": "field"
-};
-var _hoisted_92 = ["value"];
-var _hoisted_93 = {
-  key: 2,
-  "class": "field"
-};
-var _hoisted_94 = ["value"];
-var _hoisted_95 = {
-  key: 3,
-  "class": "field"
-};
-var _hoisted_96 = ["value"];
-var _hoisted_97 = {
-  key: 4,
-  "class": "field"
-};
-var _hoisted_98 = {
-  "class": "radio-group radio-group-tight"
-};
-var _hoisted_99 = {
-  "class": "radio"
-};
-var _hoisted_100 = {
-  "class": "radio"
-};
-var _hoisted_101 = {
-  "class": "radio"
-};
-var _hoisted_102 = {
-  "class": "cta-row cta-row-split"
-};
-var _hoisted_103 = {
-  key: 0,
-  "class": "sheet-section sheet-section-accent"
-};
-var _hoisted_104 = {
   "class": "sheet-content"
 };
-var _hoisted_105 = {
+var _hoisted_87 = {
   "class": "field-stack"
 };
-var _hoisted_106 = {
+var _hoisted_88 = {
   "class": "field"
+};
+var _hoisted_89 = {
+  "class": "radio-group radio-group-tight"
+};
+var _hoisted_90 = {
+  "class": "radio"
+};
+var _hoisted_91 = {
+  "class": "radio"
+};
+var _hoisted_92 = {
+  "class": "radio"
+};
+var _hoisted_93 = {
+  "class": "radio"
+};
+var _hoisted_94 = {
+  "class": "field"
+};
+var _hoisted_95 = {
+  "class": "radio-group radio-group-tight"
+};
+var _hoisted_96 = {
+  "class": "radio"
+};
+var _hoisted_97 = {
+  "class": "radio"
+};
+var _hoisted_98 = {
+  "class": "field"
+};
+var _hoisted_99 = ["value"];
+var _hoisted_100 = {
+  "class": "field"
+};
+var _hoisted_101 = ["value"];
+var _hoisted_102 = {
+  "class": "field checkbox"
+};
+var _hoisted_103 = {
+  "class": "switch"
+};
+var _hoisted_104 = {
+  "class": "sheet-section"
+};
+var _hoisted_105 = {
+  "class": "sheet-content"
+};
+var _hoisted_106 = {
+  "class": "field-stack"
 };
 var _hoisted_107 = {
   "class": "field"
 };
-var _hoisted_108 = ["value"];
+var _hoisted_108 = {
+  "class": "radio-group"
+};
 var _hoisted_109 = {
-  "class": "field"
+  "class": "radio"
 };
 var _hoisted_110 = {
-  "class": "switch"
+  "class": "radio"
 };
 var _hoisted_111 = {
-  "class": "field"
+  "class": "radio"
 };
 var _hoisted_112 = {
-  "class": "switch"
+  "class": "field checkbox"
 };
 var _hoisted_113 = {
-  "class": "sheet-section"
+  "class": "switch"
 };
 var _hoisted_114 = {
-  "class": "sheet-content"
+  "class": "field checkbox"
 };
 var _hoisted_115 = {
-  "class": "field"
+  "class": "switch"
 };
-var _hoisted_116 = ["value"];
-var _hoisted_117 = {
-  "class": "action-grid-3"
-};
-var _hoisted_118 = ["disabled"];
-var _hoisted_119 = ["disabled"];
-var _hoisted_120 = {
-  "class": "field"
-};
-var _hoisted_121 = {
-  "class": "row"
-};
-var _hoisted_122 = {
-  key: 2,
-  "class": "sheet"
-};
-var _hoisted_123 = {
+var _hoisted_116 = {
+  key: 0,
   "class": "sheet-section"
 };
-var _hoisted_124 = {
+var _hoisted_117 = {
   "class": "sheet-content"
 };
-var _hoisted_125 = {
+var _hoisted_118 = ["disabled"];
+var _hoisted_119 = {
+  "class": "tools-footer"
+};
+var _hoisted_120 = {
+  key: 1,
+  "class": "quiz-overlay"
+};
+var _hoisted_121 = {
+  "class": "quiz-card"
+};
+var _hoisted_122 = {
+  "class": "quiz-header"
+};
+var _hoisted_123 = {
+  "class": "quiz-subtitle"
+};
+var _hoisted_124 = {
   key: 0,
-  "class": "analytics-empty"
+  "class": "quiz-progress"
+};
+var _hoisted_125 = {
+  "class": "quiz-progress-bar"
 };
 var _hoisted_126 = {
-  "class": "stat-grid"
+  "class": "quiz-stats"
 };
 var _hoisted_127 = {
-  "class": "stat"
+  key: 1,
+  "class": "quiz-summary"
 };
 var _hoisted_128 = {
-  "class": "stat-v"
+  "class": "quiz-summary-stats"
 };
 var _hoisted_129 = {
   "class": "stat"
 };
 var _hoisted_130 = {
-  "class": "stat-v"
+  "class": "stat-value"
 };
 var _hoisted_131 = {
   "class": "stat"
 };
 var _hoisted_132 = {
-  "class": "stat-v"
+  "class": "stat-value"
 };
 var _hoisted_133 = {
-  "class": "stat"
+  key: 0,
+  "class": "quiz-summary-mistakes"
 };
 var _hoisted_134 = {
-  "class": "stat-v"
+  "class": "mistake-tags"
 };
 var _hoisted_135 = {
-  "class": "field",
-  style: {
-    "margin-top": "12px"
-  }
+  "class": "quiz-actions"
 };
 var _hoisted_136 = {
-  "class": "read-list"
+  "class": "quiz-body"
 };
 var _hoisted_137 = {
-  "class": "read-row"
+  key: 0
 };
-var _hoisted_138 = {
-  "class": "cta-row"
-};
+var _hoisted_138 = ["innerHTML"];
 var _hoisted_139 = {
-  key: 0,
-  "class": "sheet-section"
+  key: 1,
+  "class": "quiz-answer"
 };
 var _hoisted_140 = {
-  "class": "sheet-content"
+  "class": "quiz-translation"
 };
 var _hoisted_141 = {
-  "class": "read-list"
+  "class": "quiz-grade-buttons"
 };
 var _hoisted_142 = {
-  "class": "read-row"
+  "class": "quiz-prompt"
 };
 var _hoisted_143 = {
-  "class": "read-row"
+  "class": "quiz-options"
 };
-var _hoisted_144 = {
-  "class": "read-row"
-};
+var _hoisted_144 = ["onClick"];
 var _hoisted_145 = {
-  "class": "read-row"
+  "class": "quiz-options"
 };
-var _hoisted_146 = {
-  key: 1,
-  "class": "sheet-section"
-};
+var _hoisted_146 = ["onClick"];
 var _hoisted_147 = {
-  "class": "sheet-content"
+  "class": "quiz-blank-prompt"
 };
 var _hoisted_148 = {
-  key: 0,
-  "class": "empty-mini"
-};
-var _hoisted_149 = {
-  key: 1,
-  "class": "leech-list"
-};
-var _hoisted_150 = {
-  "class": "leech-main"
-};
-var _hoisted_151 = {
-  "class": "leech-k"
-};
-var _hoisted_152 = {
-  "class": "leech-s"
-};
-var _hoisted_153 = ["onClick"];
-var _hoisted_154 = {
-  key: 2,
-  "class": "sheet-section sheet-section-accent"
-};
-var _hoisted_155 = {
-  "class": "sheet-content"
-};
-var _hoisted_156 = {
-  "class": "chart"
-};
-var _hoisted_157 = {
-  "class": "bars"
-};
-var _hoisted_158 = {
-  "class": "chart"
-};
-var _hoisted_159 = {
-  "class": "bars bars-soft"
-};
-var _hoisted_160 = {
-  "class": "chart"
-};
-var _hoisted_161 = {
-  "class": "bars bars-danger"
-};
-var _hoisted_162 = {
-  "class": "sheet-section"
-};
-var _hoisted_163 = {
-  "class": "sheet-content"
-};
-var _hoisted_164 = {
-  "class": "field"
-};
-var _hoisted_165 = {
-  "class": "planner-row"
-};
-var _hoisted_166 = {
-  "class": "pill"
-};
-var _hoisted_167 = {
-  "class": "pill"
-};
-var _hoisted_168 = {
-  "class": "pill"
-};
-var _hoisted_169 = {
-  "class": "field"
-};
-var _hoisted_170 = {
-  "class": "planner-settings planner-settings-stack"
-};
-var _hoisted_171 = {
-  "class": "pill-input pill-input-row"
-};
-var _hoisted_172 = {
-  "class": "pill-input pill-input-row"
-};
-var _hoisted_173 = {
-  "class": "pill-input pill-input-row"
-};
-var _hoisted_174 = {
-  "class": "field"
-};
-var _hoisted_175 = {
-  "class": "read-list"
-};
-var _hoisted_176 = {
-  "class": "field"
-};
-var _hoisted_177 = {
-  "class": "planner-row"
-};
-var _hoisted_178 = {
-  "class": "pill"
-};
-var _hoisted_179 = {
-  "class": "pill"
-};
-var _hoisted_180 = {
-  key: 0,
-  "class": "field"
-};
-var _hoisted_181 = {
-  "class": "planner-row"
-};
-var _hoisted_182 = {
-  "class": "pill"
-};
-var _hoisted_183 = {
-  "class": "pill"
-};
-var _hoisted_184 = {
-  "class": "pill"
-};
-var _hoisted_185 = {
-  "class": "tools-inline-actions"
-};
-var _hoisted_186 = {
-  "class": "tools-footer"
-};
-var _hoisted_187 = {
-  key: 1,
+  key: 3,
   "class": "player-bar"
 };
-var _hoisted_188 = {
+var _hoisted_149 = {
   key: 0,
   "class": "player-collapsed-meta"
 };
-var _hoisted_189 = {
+var _hoisted_150 = {
   "class": "player-collapsed-copy"
 };
-var _hoisted_190 = {
+var _hoisted_151 = {
   "class": "player-collapsed-title"
 };
-var _hoisted_191 = {
+var _hoisted_152 = {
   "class": "player-collapsed-sub"
 };
-var _hoisted_192 = {
+var _hoisted_153 = {
   "class": "player-controls"
 };
-var _hoisted_193 = {
+var _hoisted_154 = {
   "class": "player-time left"
 };
-var _hoisted_194 = {
+var _hoisted_155 = {
   "class": "player-center"
 };
-var _hoisted_195 = ["disabled"];
-var _hoisted_196 = ["disabled"];
-var _hoisted_197 = {
+var _hoisted_156 = ["disabled"];
+var _hoisted_157 = ["disabled"];
+var _hoisted_158 = {
   "class": "player-time right"
 };
-var _hoisted_198 = ["aria-label"];
-var _hoisted_199 = {
+var _hoisted_159 = {
   "class": "player-menu-row"
 };
-var _hoisted_200 = {
+var _hoisted_160 = {
   "class": "pm-value"
 };
-var _hoisted_201 = {
+var _hoisted_161 = {
   "class": "player-menu-row"
 };
-var _hoisted_202 = ["value"];
-var _hoisted_203 = {
+var _hoisted_162 = ["value"];
+var _hoisted_163 = {
   ref: "audio",
   preload: "auto",
   style: {
@@ -27681,6 +28043,7 @@ var _hoisted_203 = {
   }
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
+  var _$data$quizCard, _$data$quizCard2;
   return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     "class": "app",
     "data-theme": $data.theme
@@ -27699,41 +28062,41 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $data.banner = null;
     }),
     "aria-label": "Dismiss"
-  }, _toConsumableArray(_cache[108] || (_cache[108] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[90] || (_cache[90] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */)])))])], 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Main Content "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["main", {
       'tools-open': $data.showTools
     }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [$options.showOnboarding ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [_cache[112] || (_cache[112] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"hero-copy\"><div class=\"hero-kicker\">Focused hifz system</div><h1 class=\"hero-title\">Memorise and retain Quran intelligently.</h1><p class=\"hero-sub\">Structured memorisation, automatic revision, and retention tracking in one focused system.</p></div><div class=\"hero-flow\"><div class=\"hero-step\"><span>1</span><strong>Read</strong></div><div class=\"hero-step\"><span>2</span><strong>Repeat</strong></div><div class=\"hero-step\"><span>3</span><strong>Review</strong></div><div class=\"hero-step\"><span>4</span><strong>Retain</strong></div></div><div class=\"hero-points\"><div class=\"hero-point\"><i class=\"bi bi-shield-check\"></i><span>Weak ayahs are tracked automatically.</span></div><div class=\"hero-point\"><i class=\"bi bi-clock-history\"></i><span>Reviews appear before forgetting.</span></div><div class=\"hero-point\"><i class=\"bi bi-magic\"></i><span>Sessions are generated automatically.</span></div></div>", 3)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [$options.showOnboarding ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [_cache[94] || (_cache[94] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"hero-copy\"><div class=\"hero-kicker\">Focused hifz system</div><h1 class=\"hero-title\">Memorise and retain Quran intelligently.</h1><p class=\"hero-sub\">Structured memorisation, automatic revision, and retention tracking in one focused system.</p></div><div class=\"hero-flow\"><div class=\"hero-step\"><span>1</span><strong>Read</strong></div><div class=\"hero-step\"><span>2</span><strong>Repeat</strong></div><div class=\"hero-step\"><span>3</span><strong>Review</strong></div><div class=\"hero-step\"><span>4</span><strong>Retain</strong></div></div><div class=\"hero-points\"><div class=\"hero-point\"><i class=\"bi bi-shield-check\"></i><span>Weak ayahs are tracked automatically.</span></div><div class=\"hero-point\"><i class=\"bi bi-clock-history\"></i><span>Reviews appear before forgetting.</span></div><div class=\"hero-point\"><i class=\"bi bi-magic\"></i><span>Sessions are generated automatically.</span></div></div>", 3)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-ghost",
     onClick: _cache[2] || (_cache[2] = function ($event) {
       return $data.tab = 'analytics';
     })
-  }, _toConsumableArray(_cache[109] || (_cache[109] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[91] || (_cache[91] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-bar-chart"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "See stats", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-primary",
     onClick: _cache[3] || (_cache[3] = function () {
       return $options.beginPlan && $options.beginPlan.apply($options, arguments);
     })
-  }, [_cache[110] || (_cache[110] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [_cache[92] || (_cache[92] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-circle"
   }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.onboardingPrimaryLabel), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-ghost",
     onClick: _cache[4] || (_cache[4] = function ($event) {
       return $data.showTools = true;
     })
-  }, _toConsumableArray(_cache[111] || (_cache[111] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[93] || (_cache[93] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Open setup", -1 /* CACHED */)])))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.currentChapter && $data.verses.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [_cache[113] || (_cache[113] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Open setup", -1 /* CACHED */)])))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.currentChapter && $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [_cache[95] || (_cache[95] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "session-rail-kicker"
   }, "Current session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_9, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.currentChapter.name_simple), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_10, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + "/" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses) + " · Remaining " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.remainingAyahs) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionTypeInfo.label) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_11, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "rail-btn rail-btn-ghost",
     onClick: _cache[5] || (_cache[5] = function ($event) {
       return $data.showTools = true;
     })
-  }, _toConsumableArray(_cache[114] || (_cache[114] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[96] || (_cache[96] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-layout-sidebar-inset"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Plan", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button class=\"rail-btn\" @click=\"prev\" :disabled=\"!canPrev\"><i\n                  class=\"bi bi-skip-backward\"></i><span>Prev</span></button> "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "rail-btn rail-btn-primary",
@@ -27742,19 +28105,21 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     })
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
-  }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.railPrimaryLabel), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button class=\"rail-btn\" @click=\"next\" :disabled=\"!canNext\"><i\n                  class=\"bi bi-skip-forward\"></i><span>Next</span></button> ")])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_12, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_13, [_cache[115] || (_cache[115] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionTypeInfo.label), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_14, [_cache[116] || (_cache[116] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Progress", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_15, [_cache[117] || (_cache[117] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Remaining", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.remainingAyahs), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_16, [_cache[118] || (_cache[118] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "ETA", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_17, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.railPrimaryLabel), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button class=\"rail-btn\" @click=\"next\" :disabled=\"!canNext\"><i\n                  class=\"bi bi-skip-forward\"></i><span>Next</span></button> ")])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_12, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_13, [_cache[97] || (_cache[97] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionTypeInfo.label), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_14, [_cache[98] || (_cache[98] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Progress", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_15, [_cache[99] || (_cache[99] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Remaining", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.remainingAyahs), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_16, [_cache[100] || (_cache[100] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "ETA", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel), 1 /* TEXT */)])]), $data.currentMode === 'advanced' && $options.repeatAndLoopAudio ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_17, [_cache[101] || (_cache[101] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-arrow-repeat"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Loop Mode: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.advancedRepeats) + "x per Ayah ", 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_18, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "progress-fill",
     style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
       width: $options.progressPercent + '%'
     })
-  }, null, 4 /* STYLE */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.verses.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_18, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_19, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, 4 /* STYLE */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_19, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_20, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
       active: $data.showTranslation
     }]),
     onClick: _cache[7] || (_cache[7] = function ($event) {
       return $options.toggleReadingOption('translation');
     })
-  }, _toConsumableArray(_cache[119] || (_cache[119] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[102] || (_cache[102] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-translate"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Translation", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
@@ -27763,18 +28128,9 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[8] || (_cache[8] = function ($event) {
       return $options.toggleReadingOption('transliteration');
     })
-  }, _toConsumableArray(_cache[120] || (_cache[120] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[103] || (_cache[103] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-type"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Transliteration", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button class=\"toolbar-chip\" :class=\"{ active: showWordByWord }\" @click=\"toggleReadingOption('wbw')\">\n              <i class=\"bi bi-grid-3x2-gap\"></i><span>Word by word</span>\n            </button>\n            <button class=\"toolbar-chip\" :class=\"{ active: wordByWordAudioEnabled }\" @click=\"wordByWordAudioEnabled = !wordByWordAudioEnabled\">\n              <i class=\"bi bi-volume-up\"></i><span>Word audio</span>\n            </button> ")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_20, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_21, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
-      active: $data.script === 'uthmani' || $data.fontPickerOpen
-    }]),
-    onClick: _cache[9] || (_cache[9] = function () {
-      return $options.toggleFontPicker && $options.toggleFontPicker.apply($options, arguments);
-    })
-  }, _toConsumableArray(_cache[121] || (_cache[121] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-file-earmark-richtext"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Quranic fonts", -1 /* CACHED */)])), 2 /* CLASS */), $data.fontPickerOpen ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_22, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quranFontOptions, function (font) {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Transliteration", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button class=\"toolbar-chip\" :class=\"{ active: showWordByWord }\" @click=\"toggleReadingOption('wbw')\">\n              <i class=\"bi bi-grid-3x2-gap\"></i><span>Word by word</span>\n            </button>\n            <button class=\"toolbar-chip\" :class=\"{ active: wordByWordAudioEnabled }\" @click=\"wordByWordAudioEnabled = !wordByWordAudioEnabled\">\n              <i class=\"bi bi-volume-up\"></i><span>Word audio</span>\n            </button> ")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_21, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_22, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button class=\"toolbar-chip\" :class=\"{ active: script === 'uthmani' || fontPickerOpen }\"\n                @click=\"toggleFontPicker\">\n                <i class=\"bi bi-file-earmark-richtext\"></i><span>Quranic fonts</span>\n              </button> "), $data.fontPickerOpen ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_23, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quranFontOptions, function (font) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
       key: font.value,
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-font-option", {
@@ -27783,179 +28139,154 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       onClick: function onClick($event) {
         return $options.setQuranFont(font.value);
       }
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(font.label), 1 /* TEXT */)], 10 /* CLASS, PROPS */, _hoisted_23);
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(font.label), 1 /* TEXT */)], 10 /* CLASS, PROPS */, _hoisted_24);
   }), 128 /* KEYED_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button class=\"toolbar-chip\" :class=\"{ active: script === 'uthmani' }\" @click=\"setScriptMode('uthmani')\">\n              <i class=\"bi bi-file-earmark-richtext\"></i><span>Quranic text</span>\n            </button> "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
       active: $data.script === 'tajweed'
     }]),
-    onClick: _cache[10] || (_cache[10] = function ($event) {
+    onClick: _cache[9] || (_cache[9] = function ($event) {
       return $options.setScriptMode('tajweed');
     })
-  }, _toConsumableArray(_cache[122] || (_cache[122] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[104] || (_cache[104] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-palette"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Tajweed", -1 /* CACHED */)])), 2 /* CLASS */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Empty State "), !$data.verses.length && !$options.showOnboarding ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_24, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, [_cache[125] || (_cache[125] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Tajweed", -1 /* CACHED */)])), 2 /* CLASS */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Empty State "), !$options.hasVerses && !$options.showOnboarding ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_25, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [_cache[107] || (_cache[107] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "empty-icon"
-  }, "﴿", -1 /* CACHED */)), _cache[126] || (_cache[126] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Begin your journey", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.nextActionDescription), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "﴿", -1 /* CACHED */)), _cache[108] || (_cache[108] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Begin your journey", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.nextActionDescription), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-primary",
-    onClick: _cache[11] || (_cache[11] = function () {
+    onClick: _cache[10] || (_cache[10] = function () {
       return $options.beginPlan && $options.beginPlan.apply($options, arguments);
     })
-  }, [_cache[123] || (_cache[123] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [_cache[105] || (_cache[105] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-circle"
   }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.emptyPrimaryLabel), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-ghost",
-    onClick: _cache[12] || (_cache[12] = function ($event) {
+    onClick: _cache[11] || (_cache[11] = function ($event) {
       return $data.showTools = true;
     })
-  }, _toConsumableArray(_cache[124] || (_cache[124] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[106] || (_cache[106] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Open setup", -1 /* CACHED */)])))])])])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Open setup", -1 /* CACHED */)])))])])])) : $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 4
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["verses", {
-      compact: $data.compactMode,
-      focus: $data.focusMode
-    }])
-  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.verses, function (verse, i) {
-    var _verse$words;
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Grid "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_28, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.verses, function (verse) {
+    var _$data$activeVerseKey, _verse$words;
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: verse.key,
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["verse", $options.verseClasses(verse, i)]),
-      "data-verse-key": verse.key
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_28, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_29, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_30, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.number), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_31, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.key), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_32, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-      "class": "action-btn",
+      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["verse-card", {
+        active: $data.activeVerseKey === verse.key,
+        'focus-mode': $options.focusMode && $data.activeVerseKey !== verse.key,
+        blurred: $options.blurAdjacent && $data.activeVerseKey !== verse.key && Math.abs(verse.number - (((_$data$activeVerseKey = $data.activeVerseKey) === null || _$data$activeVerseKey === void 0 ? void 0 : _$data$activeVerseKey.split(':')[1]) || 0)) > 1
+      }])
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_29, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_30, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_31, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.number), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_32, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.key), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_33, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      "class": "verse-play-btn",
       onClick: function onClick($event) {
         return $options.playVerse(verse);
-      }
-    }, _toConsumableArray(_cache[127] || (_cache[127] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      },
+      title: "Play verse"
+    }, _toConsumableArray(_cache[109] || (_cache[109] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-play-fill"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_33)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_34)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
       "class": "verse-arabic",
       dir: "rtl",
-      style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)($options.verseArabicStyle),
+      lang: "ar",
       innerHTML: verse.arabic
-    }, null, 12 /* STYLE, PROPS */, _hoisted_34), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_35, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_36, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.translation), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showWordByWord && (_verse$words = verse.words) !== null && _verse$words !== void 0 && _verse$words.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_37, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(verse.words, function (w, i) {
-      return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
-        key: i,
-        "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["word", {
-          active: $data.activeWordAudio === "".concat(verse.key, ":").concat(i)
-        }]),
-        onMouseenter: function onMouseenter($event) {
-          return $options.openWordTooltip(verse, w, i);
-        },
-        onMouseleave: _cache[13] || (_cache[13] = function () {
-          return $options.closeWordTooltip && $options.closeWordTooltip.apply($options, arguments);
-        }),
-        onFocusin: function onFocusin($event) {
-          return $options.openWordTooltip(verse, w, i);
-        },
-        onFocusout: _cache[14] || (_cache[14] = function () {
-          return $options.closeWordTooltip && $options.closeWordTooltip.apply($options, arguments);
-        }),
-        onClick: function onClick($event) {
-          return $options.toggleWordTooltip(verse, w, i);
-        }
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "word-ar",
-        dir: "rtl",
-        style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)($options.wordArabicStyle)
-      }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(w.ar), 5 /* TEXT, STYLE */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_39, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(w.en), 1 /* TEXT */), w.audio && $data.wordByWordAudioEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
+    }, null, 8 /* PROPS */, _hoisted_35), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" TRANSLATION - Fixed conditional "), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_36, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.translation), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_37, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showWordByWord && (_verse$words = verse.words) !== null && _verse$words !== void 0 && _verse$words.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_38, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(verse.words, function (word, wi) {
+      return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+        key: wi,
+        "class": "word-item"
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_39, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.ar), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_40, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.en), 1 /* TEXT */), word.audio && $data.wordByWordAudioEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
         key: 0,
-        "class": "word-play",
+        "class": "word-audio-btn",
         onClick: function onClick($event) {
-          return $options.playWordAudio(w.audio, "".concat(verse.key, ":").concat(i));
+          return $options.playWordAudio(word.audio);
         }
-      }, _toConsumableArray(_cache[128] || (_cache[128] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[110] || (_cache[110] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-volume-up"
-      }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_40)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.isTooltipOpen(verse.key, i) ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_41, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "word-tooltip-ar",
-        dir: "rtl",
-        style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)($options.wordArabicStyle)
-      }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(w.ar), 5 /* TEXT, STYLE */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_42, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(w.en || 'No translation'), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 42 /* CLASS, PROPS, NEED_HYDRATION */, _hoisted_38);
-    }), 128 /* KEYED_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), _cache[129] || (_cache[129] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-      "class": "verse-footer"
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <div class=\"verse-footer-side\">\n                <button class=\"verse-tool-btn\" @click=\"decFont\" aria-label=\"Decrease font\"><i class=\"bi bi-dash-lg\"></i></button>\n                <button class=\"verse-tool-btn\" @click=\"incFont\" aria-label=\"Increase font\"><i class=\"bi bi-plus-lg\"></i></button>\n              </div> "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-      "class": "verse-footer-side verse-footer-side-right"
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button class=\"verse-tool-btn\" @click=\"toggleBookmark(verse)\" :class=\"{ active: bookmarks.includes(verse.key) }\" aria-label=\"Bookmark ayah\"><i class=\"bi bi-bookmark\"></i></button> "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button class=\"verse-tool-btn\" @click=\"togglePin(verse)\" :class=\"{ active: pins.includes(verse.key) }\" aria-label=\"Pin ayah\"><i class=\"bi bi-pin-angle\"></i></button> "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button class=\"verse-tool-btn\" @click=\"shareWhatsApp(verse)\" aria-label=\"Share on WhatsApp\"><i class=\"bi bi-whatsapp\"></i></button> "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button class=\"verse-tool-btn\" @click=\"downloadAyah(verse)\" aria-label=\"Download ayah\"><i class=\"bi bi-download\"></i></button> "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button class=\"verse-tool-btn\" @click=\"playVerse(verse)\" aria-label=\"Play audio\"><i class=\"bi bi-play-circle\"></i></button> ")])], -1 /* CACHED */))], 10 /* CLASS, PROPS */, _hoisted_27);
-  }), 128 /* KEYED_FRAGMENT */))], 2 /* CLASS */)], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Tools Panel "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("aside", {
+      }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_41)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]);
+    }), 128 /* KEYED_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */);
+  }), 128 /* KEYED_FRAGMENT */))])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Tools Panel "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("aside", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["tools", {
       open: $data.showTools
     }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_43, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_44, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_45, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.toolsHeaderTitle), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_42, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_43, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_44, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.toolsHeaderTitle), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-x",
-    onClick: _cache[15] || (_cache[15] = function ($event) {
+    onClick: _cache[12] || (_cache[12] = function ($event) {
       return $data.showTools = false;
     }),
     "aria-label": "Close panel"
-  }, _toConsumableArray(_cache[130] || (_cache[130] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[111] || (_cache[111] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_46, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.contextLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_47, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_45, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.contextLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_46, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
       active: $data.tab === 'beginner'
     }),
-    onClick: _cache[16] || (_cache[16] = function ($event) {
+    onClick: _cache[13] || (_cache[13] = function ($event) {
       return $data.tab = 'beginner';
     })
   }, "Beginner", 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
       active: $data.tab === 'advanced'
     }),
-    onClick: _cache[17] || (_cache[17] = function ($event) {
+    onClick: _cache[14] || (_cache[14] = function ($event) {
       return $data.tab = 'advanced';
     })
-  }, "Advanced", 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
-      active: $data.tab === 'analytics'
-    }),
-    onClick: _cache[18] || (_cache[18] = function ($event) {
-      return $data.tab = 'analytics';
-    })
-  }, "Analytics", 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_48, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Beginner Tab "), $data.tab === 'beginner' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_49, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_50, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_51, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["flow-step", {
-      active: $options.onboardingStep === 1
-    }])
-  }, "1. Read", 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["flow-step", {
-      active: $options.onboardingStep === 2
-    }])
-  }, "2. Repeat", 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["flow-step", {
-      active: $options.onboardingStep === 3
-    }])
-  }, "3. Review", 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["flow-step", {
-      active: $options.onboardingStep === 4
-    }])
-  }, "4. Retain", 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_52, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_53, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.beginnerGuide.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_54, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.beginnerGuide.text), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_55, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Advanced", 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_47, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Beginner Tab - Simplified "), $data.tab === 'beginner' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_48, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quick Setup Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_49, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[19] || (_cache[19] = function ($event) {
+    onClick: _cache[15] || (_cache[15] = function ($event) {
       return $options.toggleSection('beginner_setup');
     }),
     type: "button"
-  }, [_cache[132] || (_cache[132] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Setup</span><span class=\"st-sub\">Surah, reciter, range</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[113] || (_cache[113] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book\"></i></span><span class=\"st-txt\"><span class=\"st-title\">1. What to Memorise</span><span class=\"st-sub\">Surah and verses</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.beginner_setup
     }])
-  }, _toConsumableArray(_cache[131] || (_cache[131] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[112] || (_cache[112] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_56, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_57, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_58, [_cache[134] || (_cache[134] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[20] || (_cache[20] = function ($event) {
-      return $data.chapterId = $event;
-    }),
-    onChange: _cache[21] || (_cache[21] = function () {
-      return $options.loadChapter && $options.loadChapter.apply($options, arguments);
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_50, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_51, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_52, [_cache[115] || (_cache[115] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    value: $options.chapterId,
+    onChange: _cache[16] || (_cache[16] = function () {
+      return $options.onChapterChange && $options.onChapterChange.apply($options, arguments);
     }),
     "class": "select"
-  }, [_cache[133] || (_cache[133] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+  }, [_cache[114] || (_cache[114] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: 0
   }, "Choose a surah...", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (c) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: c.id,
       value: c.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.id) + ". " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_59);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.chapterId]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_60, [_cache[135] || (_cache[135] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.id) + ". " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_54);
+  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_53)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_55, [_cache[117] || (_cache[117] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verses", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_56, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "number",
+    "class": "input",
+    "onUpdate:modelValue": _cache[17] || (_cache[17] = function ($event) {
+      return $options.rangeStart = $event;
+    }),
+    onChange: _cache[18] || (_cache[18] = function () {
+      return $options.adjustRange && $options.adjustRange.apply($options, arguments);
+    }),
+    min: "1"
+  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeStart, void 0, {
+    number: true
+  }]]), _cache[116] || (_cache[116] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "number",
+    "class": "input",
+    "onUpdate:modelValue": _cache[19] || (_cache[19] = function ($event) {
+      return $options.rangeEnd = $event;
+    }),
+    onChange: _cache[20] || (_cache[20] = function () {
+      return $options.adjustRange && $options.adjustRange.apply($options, arguments);
+    }),
+    min: "1"
+  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeEnd, void 0, {
+    number: true
+  }]])])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_57, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "sheet-toggle",
+    onClick: _cache[21] || (_cache[21] = function ($event) {
+      return $options.toggleSection('beginner_audio');
+    }),
+    type: "button"
+  }, _toConsumableArray(_cache[118] || (_cache[118] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">2. Audio Settings</span><span class=\"st-sub\">Reciter and playback</span></span></span>", 1)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_58, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_59, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_60, [_cache[119] || (_cache[119] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     "onUpdate:modelValue": _cache[22] || (_cache[22] = function ($event) {
-      return $data.reciterId = $event;
+      return $options.reciterId = $event;
     }),
     onChange: _cache[23] || (_cache[23] = function () {
       return $options.refreshVerses && $options.refreshVerses.apply($options, arguments);
@@ -27966,164 +28297,116 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       key: r.id,
       value: r.id
     }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_61);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.reciterId]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_62, [_cache[137] || (_cache[137] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Ayah range", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_63, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "number",
-    "class": "input",
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_62, [_cache[124] || (_cache[124] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_63, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_64, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "0.75",
     "onUpdate:modelValue": _cache[24] || (_cache[24] = function ($event) {
-      return $data.rangeStart = $event;
-    }),
-    onChange: _cache[25] || (_cache[25] = function () {
-      return $options.adjustRange && $options.adjustRange.apply($options, arguments);
-    }),
-    min: "1"
-  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.rangeStart, void 0, {
-    number: true
-  }]]), _cache[136] || (_cache[136] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "number",
-    "class": "input",
+      return $options.speed = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[120] || (_cache[120] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 0.75x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_65, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "1",
+    "onUpdate:modelValue": _cache[25] || (_cache[25] = function ($event) {
+      return $options.speed = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[121] || (_cache[121] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_66, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "1.25",
     "onUpdate:modelValue": _cache[26] || (_cache[26] = function ($event) {
-      return $data.rangeEnd = $event;
-    }),
-    onChange: _cache[27] || (_cache[27] = function () {
-      return $options.adjustRange && $options.adjustRange.apply($options, arguments);
-    }),
-    min: "1"
-  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.rangeEnd, void 0, {
-    number: true
-  }]])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_64, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "cta cta-primary",
-    onClick: _cache[28] || (_cache[28] = function () {
-      return $options.beginPlan && $options.beginPlan.apply($options, arguments);
+      return $options.speed = $event;
     })
-  }, [_cache[138] || (_cache[138] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-play-circle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.beginnerPrimaryLabel), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "cta cta-ghost",
-    onClick: _cache[29] || (_cache[29] = function ($event) {
-      return $data.tab = 'analytics';
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[122] || (_cache[122] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.25x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_67, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "1.5",
+    "onUpdate:modelValue": _cache[27] || (_cache[27] = function ($event) {
+      return $options.speed = $event;
     })
-  }, _toConsumableArray(_cache[139] || (_cache[139] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-bar-chart"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "See plan", -1 /* CACHED */)])))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_65, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "sheet-toggle",
-    onClick: _cache[30] || (_cache[30] = function ($event) {
-      return $options.toggleSection('beginner_playback');
-    }),
-    type: "button"
-  }, [_cache[141] || (_cache[141] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-repeat\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Playback</span><span class=\"st-sub\">Speed, delay, repeats, mode</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
-      open: $data.sectionOpen.beginner_playback
-    }])
-  }, _toConsumableArray(_cache[140] || (_cache[140] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_66, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_67, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_68, [_cache[142] || (_cache[142] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[31] || (_cache[31] = function ($event) {
-      return $data.speed = $event;
-    }),
-    onChange: _cache[32] || (_cache[32] = function () {
-      return $options.applySpeed && $options.applySpeed.apply($options, arguments);
-    }),
-    "class": "select select-prominent"
-  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.speedOptions, function (s) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
-      key: "sp-".concat(s),
-      value: s
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s) + "x", 9 /* TEXT, PROPS */, _hoisted_69);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.speed, void 0, {
-    number: true
-  }]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_70, [_cache[143] || (_cache[143] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Delay", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[33] || (_cache[33] = function ($event) {
-      return $data.delay = $event;
-    }),
-    "class": "select"
-  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.delayOptions, function (d) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
-      key: "dl-".concat(d),
-      value: d
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(d) + "s", 9 /* TEXT, PROPS */, _hoisted_71);
-  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.delay, void 0, {
-    number: true
-  }]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_72, [_cache[144] || (_cache[144] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repeat", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[34] || (_cache[34] = function ($event) {
-      return $data.repeats = $event;
-    }),
-    onChange: _cache[35] || (_cache[35] = function () {
-      return $options.rebuildQueue && $options.rebuildQueue.apply($options, arguments);
-    }),
-    "class": "select"
-  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.repeatOptions, function (r) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
-      key: "rp-".concat(r),
-      value: r
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r), 9 /* TEXT, PROPS */, _hoisted_73);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.repeats, void 0, {
-    number: true
-  }]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_74, [_cache[148] || (_cache[148] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Mode", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_75, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_76, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[123] || (_cache[123] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.5x", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_68, [_cache[127] || (_cache[127] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_69, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_70, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "auto",
-    "onUpdate:modelValue": _cache[36] || (_cache[36] = function ($event) {
-      return $data.playMode = $event;
+    "onUpdate:modelValue": _cache[28] || (_cache[28] = function ($event) {
+      return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.playMode]]), _cache[145] || (_cache[145] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Auto", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_77, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[125] || (_cache[125] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_71, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "manual",
-    "onUpdate:modelValue": _cache[37] || (_cache[37] = function ($event) {
-      return $data.playMode = $event;
+    "onUpdate:modelValue": _cache[29] || (_cache[29] = function ($event) {
+      return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.playMode]]), _cache[146] || (_cache[146] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Manual", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_78, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "radio",
-    value: "loop",
-    "onUpdate:modelValue": _cache[38] || (_cache[38] = function ($event) {
-      return $data.playMode = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.playMode]]), _cache[147] || (_cache[147] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Loop", -1 /* CACHED */))])])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_playback]])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Advanced Tab "), $data.tab === 'advanced' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_79, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_80, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[126] || (_cache[126] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No (manual)", -1 /* CACHED */))])])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_audio]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Inside beginner tab, after Speed setting in Audio Settings section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_72, [_cache[128] || (_cache[128] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repetition Count", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[30] || (_cache[30] = function ($event) {
+      return $options.beginnerRepeats = $event;
+    }),
+    "class": "select"
+  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.repeatOptions, function (n) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
+      key: n,
+      value: n
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n) + " " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n === 1 ? 'time' : 'times'), 9 /* TEXT, PROPS */, _hoisted_73);
+  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.beginnerRepeats]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "start-btn",
+    onClick: _cache[31] || (_cache[31] = function () {
+      return $options.startSession && $options.startSession.apply($options, arguments);
+    }),
+    disabled: !$options.hasSelectedSurah
+  }, _toConsumableArray(_cache[129] || (_cache[129] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-play-fill"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Start Memorising ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_74)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Advanced Tab - Simplified "), $data.tab === 'advanced' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_75, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Setup Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_76, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[39] || (_cache[39] = function ($event) {
+    onClick: _cache[32] || (_cache[32] = function ($event) {
       return $options.toggleSection('advanced_setup');
     }),
     type: "button"
-  }, [_cache[150] || (_cache[150] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-compass\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Setup</span><span class=\"st-sub\">Surah • Range • Reciter • Playback</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[131] || (_cache[131] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-compass\"></i></span><span class=\"st-txt\"><span class=\"st-title\">1. Session Setup</span><span class=\"st-sub\">Surah and verses</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_setup
     }])
-  }, _toConsumableArray(_cache[149] || (_cache[149] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[130] || (_cache[130] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_81, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_82, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_83, [_cache[152] || (_cache[152] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[40] || (_cache[40] = function ($event) {
-      return $data.chapterId = $event;
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_77, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_78, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_79, [_cache[133] || (_cache[133] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[33] || (_cache[33] = function ($event) {
+      return $options.chapterId = $event;
     }),
-    onChange: _cache[41] || (_cache[41] = function () {
+    onChange: _cache[34] || (_cache[34] = function () {
       return $options.loadChapter && $options.loadChapter.apply($options, arguments);
     }),
     "class": "select"
-  }, [_cache[151] || (_cache[151] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+  }, [_cache[132] || (_cache[132] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: 0
   }, "Choose a surah...", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (c) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: c.id,
       value: c.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.id) + ". " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_84);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.chapterId]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_85, [_cache[154] || (_cache[154] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Study", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[42] || (_cache[42] = function ($event) {
-      return $data.studyMode = $event;
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.id) + ". " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_80);
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.chapterId]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_81, [_cache[135] || (_cache[135] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verses", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_82, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "number",
+    "class": "input",
+    "onUpdate:modelValue": _cache[35] || (_cache[35] = function ($event) {
+      return $options.rangeStart = $event;
     }),
-    "class": "select"
-  }, _toConsumableArray(_cache[153] || (_cache[153] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
-    value: "recite"
-  }, "Recite", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
-    value: "quiz"
-  }, "Quiz", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
-    value: "hybrid"
-  }, "Hybrid", -1 /* CACHED */)])), 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.studyMode]])]), $data.studyMode === 'quiz' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_86, [_cache[156] || (_cache[156] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Quiz type", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[43] || (_cache[43] = function ($event) {
-      return $data.quizType = $event;
+    onChange: _cache[36] || (_cache[36] = function () {
+      return $options.adjustRange && $options.adjustRange.apply($options, arguments);
     }),
-    "class": "select"
-  }, _toConsumableArray(_cache[155] || (_cache[155] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<option value=\"mixed\">Mixed</option><option value=\"flashcard\">Flashcards</option><option value=\"mcq\">Multiple choice</option><option value=\"audio_mcq\">Audio choose</option><option value=\"blank\">Fill blank</option>", 5)])), 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.quizType]])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_87, [_cache[157] || (_cache[157] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[44] || (_cache[44] = function ($event) {
-      return $data.reciterId = $event;
+    min: "1"
+  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeStart, void 0, {
+    number: true
+  }]]), _cache[134] || (_cache[134] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "number",
+    "class": "input",
+    "onUpdate:modelValue": _cache[37] || (_cache[37] = function ($event) {
+      return $options.rangeEnd = $event;
     }),
-    onChange: _cache[45] || (_cache[45] = function () {
+    onChange: _cache[38] || (_cache[38] = function () {
+      return $options.adjustRange && $options.adjustRange.apply($options, arguments);
+    }),
+    min: "1"
+  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeEnd, void 0, {
+    number: true
+  }]])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_83, [_cache[136] || (_cache[136] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[39] || (_cache[39] = function ($event) {
+      return $options.reciterId = $event;
+    }),
+    onChange: _cache[40] || (_cache[40] = function () {
       return $options.refreshVerses && $options.refreshVerses.apply($options, arguments);
     }),
     "class": "select"
@@ -28131,359 +28414,315 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: r.id,
       value: r.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_88);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.reciterId]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_89, [_cache[159] || (_cache[159] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Ayah range", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_90, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "number",
-    "class": "input",
-    "onUpdate:modelValue": _cache[46] || (_cache[46] = function ($event) {
-      return $data.rangeStart = $event;
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_84);
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Playback Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_85, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "sheet-toggle",
+    onClick: _cache[41] || (_cache[41] = function ($event) {
+      return $options.toggleSection('advanced_playback');
     }),
-    onChange: _cache[47] || (_cache[47] = function () {
-      return $options.adjustRange && $options.adjustRange.apply($options, arguments);
-    }),
-    min: "1"
-  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.rangeStart, void 0, {
-    number: true
-  }]]), _cache[158] || (_cache[158] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "number",
-    "class": "input",
-    "onUpdate:modelValue": _cache[48] || (_cache[48] = function ($event) {
-      return $data.rangeEnd = $event;
-    }),
-    onChange: _cache[49] || (_cache[49] = function () {
-      return $options.adjustRange && $options.adjustRange.apply($options, arguments);
-    }),
-    min: "1"
-  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.rangeEnd, void 0, {
-    number: true
-  }]])])]), $options.showAdvancedPlaybackFields ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_91, [_cache[160] || (_cache[160] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[50] || (_cache[50] = function ($event) {
-      return $data.speed = $event;
-    }),
-    onChange: _cache[51] || (_cache[51] = function () {
-      return $options.applySpeed && $options.applySpeed.apply($options, arguments);
-    }),
-    "class": "select select-prominent"
-  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.speedOptions, function (s) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
-      key: "asp-".concat(s),
-      value: s
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s) + "x", 9 /* TEXT, PROPS */, _hoisted_92);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.speed, void 0, {
-    number: true
-  }]])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.showAdvancedPlaybackFields ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_93, [_cache[161] || (_cache[161] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Delay", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[52] || (_cache[52] = function ($event) {
-      return $data.delay = $event;
-    }),
-    "class": "select"
-  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.delayOptions, function (d) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
-      key: "adl-".concat(d),
-      value: d
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(d) + "s", 9 /* TEXT, PROPS */, _hoisted_94);
-  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.delay, void 0, {
-    number: true
-  }]])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.showAdvancedPlaybackFields ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_95, [_cache[162] || (_cache[162] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repeat", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[53] || (_cache[53] = function ($event) {
-      return $data.repeats = $event;
-    }),
-    onChange: _cache[54] || (_cache[54] = function () {
-      return $options.rebuildQueue && $options.rebuildQueue.apply($options, arguments);
-    }),
-    "class": "select"
-  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.repeatOptions, function (r) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
-      key: "arp-".concat(r),
-      value: r
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r), 9 /* TEXT, PROPS */, _hoisted_96);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.repeats, void 0, {
-    number: true
-  }]])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.showAdvancedPlaybackFields ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_97, [_cache[166] || (_cache[166] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Mode", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_98, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_99, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "button"
+  }, [_cache[138] || (_cache[138] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-repeat\"></i></span><span class=\"st-txt\"><span class=\"st-title\">2. Playback</span><span class=\"st-sub\">Speed, repeats, mode</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
+      open: $data.sectionOpen.advanced_playback
+    }])
+  }, _toConsumableArray(_cache[137] || (_cache[137] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-chevron-down"
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_86, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_87, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_88, [_cache[143] || (_cache[143] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_89, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_90, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "0.75",
+    "onUpdate:modelValue": _cache[42] || (_cache[42] = function ($event) {
+      return $options.speed = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[139] || (_cache[139] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 0.75x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_91, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "1",
+    "onUpdate:modelValue": _cache[43] || (_cache[43] = function ($event) {
+      return $options.speed = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[140] || (_cache[140] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_92, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "1.25",
+    "onUpdate:modelValue": _cache[44] || (_cache[44] = function ($event) {
+      return $options.speed = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[141] || (_cache[141] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.25x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_93, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "1.5",
+    "onUpdate:modelValue": _cache[45] || (_cache[45] = function ($event) {
+      return $options.speed = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[142] || (_cache[142] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.5x", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_94, [_cache[146] || (_cache[146] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_95, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_96, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "auto",
-    "onUpdate:modelValue": _cache[55] || (_cache[55] = function ($event) {
-      return $data.playMode = $event;
+    "onUpdate:modelValue": _cache[46] || (_cache[46] = function ($event) {
+      return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.playMode]]), _cache[163] || (_cache[163] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Auto", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_100, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[144] || (_cache[144] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_97, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "manual",
-    "onUpdate:modelValue": _cache[56] || (_cache[56] = function ($event) {
-      return $data.playMode = $event;
+    "onUpdate:modelValue": _cache[47] || (_cache[47] = function ($event) {
+      return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.playMode]]), _cache[164] || (_cache[164] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Manual", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_101, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "radio",
-    value: "loop",
-    "onUpdate:modelValue": _cache[57] || (_cache[57] = function ($event) {
-      return $data.playMode = $event;
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[145] || (_cache[145] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No (manual)", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_98, [_cache[147] || (_cache[147] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Delay between verses", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[48] || (_cache[48] = function ($event) {
+      return $options.delay = $event;
+    }),
+    "class": "select"
+  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)([0, 1, 2, 3, 5], function (d) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+      key: d,
+      value: d
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(d) + " second" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(d !== 1 ? 's' : ''), 9 /* TEXT, PROPS */, _hoisted_99);
+  }), 64 /* STABLE_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.delay, void 0, {
+    number: true
+  }]])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_playback]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_100, [_cache[148] || (_cache[148] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repetition Count", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[49] || (_cache[49] = function ($event) {
+      return $options.advancedRepeats = $event;
+    }),
+    "class": "select"
+  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.repeatOptions, function (n) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
+      key: n,
+      value: n
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n) + " " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n === 1 ? 'time' : 'times'), 9 /* TEXT, PROPS */, _hoisted_101);
+  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.advancedRepeats]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "checkbox",
+    "onUpdate:modelValue": _cache[50] || (_cache[50] = function ($event) {
+      return $options.repeatAndLoopAudio = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.playMode]]), _cache[165] || (_cache[165] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Loop", -1 /* CACHED */))])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_102, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "cta cta-ghost",
-    onClick: _cache[58] || (_cache[58] = function ($event) {
-      return $data.tab = 'analytics';
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.repeatAndLoopAudio]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_102, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_103, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "checkbox",
+    "onUpdate:modelValue": _cache[51] || (_cache[51] = function ($event) {
+      return $options.repeatAndLoopAudio = $event;
     })
-  }, _toConsumableArray(_cache[167] || (_cache[167] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-bar-chart"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "See progress", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "cta cta-primary",
-    onClick: _cache[59] || (_cache[59] = function () {
-      return $options.startSession && $options.startSession.apply($options, arguments);
-    })
-  }, [_cache[168] || (_cache[168] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-play-circle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.advancedPrimaryLabel), 1 /* TEXT */)])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_setup]])]), $options.showAdvancedPractice ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_103, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.repeatAndLoopAudio]]), _cache[149] || (_cache[149] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "switch-ui"
+  }, null, -1 /* CACHED */)), _cache[150] || (_cache[150] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "switch-text"
+  }, "Repeat & Loop Audio (Āyah by Āyah)", -1 /* CACHED */))]), _cache[151] || (_cache[151] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    "class": "field-hint"
+  }, "Loop each ayah multiple times before advancing", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Practice Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_104, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[60] || (_cache[60] = function ($event) {
+    onClick: _cache[52] || (_cache[52] = function ($event) {
       return $options.toggleSection('advanced_practice');
     }),
     type: "button"
-  }, [_cache[170] || (_cache[170] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-stars\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Practice</span><span class=\"st-sub\">Chaining • Focus • Looping</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[153] || (_cache[153] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-stars\"></i></span><span class=\"st-txt\"><span class=\"st-title\">3. Practice Mode</span><span class=\"st-sub\">Order and focus</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_practice
     }])
-  }, _toConsumableArray(_cache[169] || (_cache[169] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[152] || (_cache[152] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_104, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_105, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_106, [_cache[172] || (_cache[172] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Chaining", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[61] || (_cache[61] = function ($event) {
-      return $data.order = $event;
-    }),
-    onChange: _cache[62] || (_cache[62] = function () {
-      return $options.rebuildQueue && $options.rebuildQueue.apply($options, arguments);
-    }),
-    "class": "select"
-  }, _toConsumableArray(_cache[171] || (_cache[171] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
-    value: "seq"
-  }, "Sequential", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
-    value: "cum"
-  }, "Cumulative", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
-    value: "rand"
-  }, "Random", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
-    value: "chain"
-  }, "A-A/B-B", -1 /* CACHED */)])), 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.order]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_107, [_cache[173] || (_cache[173] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Loop delay", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[63] || (_cache[63] = function ($event) {
-      return $data.rangeLoopDelay = $event;
-    }),
-    "class": "select"
-  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.delayOptions, function (d) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
-      key: "rld-".concat(d),
-      value: d
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(d) + "s", 9 /* TEXT, PROPS */, _hoisted_108);
-  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.rangeLoopDelay, void 0, {
-    number: true
-  }]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_109, [_cache[176] || (_cache[176] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Blur context", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_110, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "checkbox",
-    "onUpdate:modelValue": _cache[64] || (_cache[64] = function ($event) {
-      return $data.blurAdjacent = $event;
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_105, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_106, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_107, [_cache[157] || (_cache[157] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verse order", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_108, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_109, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "seq",
+    "onUpdate:modelValue": _cache[53] || (_cache[53] = function ($event) {
+      return $options.order = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $data.blurAdjacent]]), _cache[174] || (_cache[174] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "switch-ui"
-  }, null, -1 /* CACHED */)), _cache[175] || (_cache[175] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "switch-text"
-  }, "Reduce distraction", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_111, [_cache[179] || (_cache[179] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Focus mode", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_112, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "checkbox",
-    "onUpdate:modelValue": _cache[65] || (_cache[65] = function ($event) {
-      return $data.focusMode = $event;
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.order]]), _cache[154] || (_cache[154] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Sequential (1,2,3...)", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_110, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "rand",
+    "onUpdate:modelValue": _cache[54] || (_cache[54] = function ($event) {
+      return $options.order = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $data.focusMode]]), _cache[177] || (_cache[177] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.order]]), _cache[155] || (_cache[155] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Random order", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_111, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "cum",
+    "onUpdate:modelValue": _cache[55] || (_cache[55] = function ($event) {
+      return $options.order = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.order]]), _cache[156] || (_cache[156] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Cumulative (1,1-2,1-3...)", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_112, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_113, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "checkbox",
+    "onUpdate:modelValue": _cache[56] || (_cache[56] = function ($event) {
+      return $options.focusMode = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.focusMode]]), _cache[158] || (_cache[158] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "switch-ui"
-  }, null, -1 /* CACHED */)), _cache[178] || (_cache[178] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, -1 /* CACHED */)), _cache[159] || (_cache[159] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "switch-text"
-  }, "Highlight active ayah", -1 /* CACHED */))])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_practice]])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_113, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Focus mode (dim other verses)", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_114, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_115, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "checkbox",
+    "onUpdate:modelValue": _cache[57] || (_cache[57] = function ($event) {
+      return $options.blurAdjacent = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.blurAdjacent]]), _cache[160] || (_cache[160] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "switch-ui"
+  }, null, -1 /* CACHED */)), _cache[161] || (_cache[161] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "switch-text"
+  }, "Blur non-active verses (active recall)", -1 /* CACHED */))])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_practice]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Saved Sessions "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" In advanced tab, wrap saved sessions section with v-if "), $options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_116, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[66] || (_cache[66] = function ($event) {
+    onClick: _cache[58] || (_cache[58] = function ($event) {
       return $options.toggleSection('advanced_saved');
     }),
     type: "button"
-  }, [_cache[181] || (_cache[181] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-save\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Saved sessions</span><span class=\"st-sub\">Save • Load • Delete</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[163] || (_cache[163] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-save\"></i></span><span class=\"st-txt\"><span class=\"st-title\">4. Saved Sessions</span><span class=\"st-sub\">Save, load, delete</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_saved
     }])
-  }, _toConsumableArray(_cache[180] || (_cache[180] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[162] || (_cache[162] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_114, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_115, [_cache[183] || (_cache[183] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Saved sessions", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[67] || (_cache[67] = function ($event) {
-      return $data.selectedSessionId = $event;
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_117, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" existing saved sessions content ")], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_saved]])])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+    key: 1
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Add a message for logged out users "), _cache[164] || (_cache[164] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section class=\"sheet-section\"><div class=\"sheet-content\"><div class=\"field-stack\"><div class=\"field\"><div class=\"pill\" style=\"text-align:center;padding:16px;\"><i class=\"bi bi-person\"></i><span>Login to save and load sessions</span></div></div></div></div></section>", 1))], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "start-btn",
+    onClick: _cache[59] || (_cache[59] = function () {
+      return $options.startSession && $options.startSession.apply($options, arguments);
     }),
-    "class": "select"
-  }, [_cache[182] || (_cache[182] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
-    value: ""
-  }, "Select saved session…", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.savedSessions, function (s) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
-      key: s.id,
-      value: s.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.name), 9 /* TEXT, PROPS */, _hoisted_116);
-  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.selectedSessionId]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_117, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "mini-btn",
-    disabled: !$data.selectedSessionId,
-    onClick: _cache[68] || (_cache[68] = function ($event) {
-      return $options.loadSession($data.selectedSessionId);
-    })
-  }, _toConsumableArray(_cache[184] || (_cache[184] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-folder2-open"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Load", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_118), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "mini-btn danger",
-    disabled: !$data.selectedSessionId,
-    onClick: _cache[69] || (_cache[69] = function ($event) {
-      return $options.deleteSession($data.selectedSessionId);
-    })
-  }, _toConsumableArray(_cache[185] || (_cache[185] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-trash3"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Delete", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_119), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "mini-btn",
-    onClick: _cache[70] || (_cache[70] = function ($event) {
-      return $data.tab = 'analytics';
-    })
-  }, _toConsumableArray(_cache[186] || (_cache[186] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-graph-up"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Stats", -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_120, [_cache[187] || (_cache[187] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Save current", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_121, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    "class": "input",
-    "onUpdate:modelValue": _cache[71] || (_cache[71] = function ($event) {
-      return $data.sessionName = $event;
-    }),
-    placeholder: "Session name"
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.sessionName, void 0, {
-    trim: true
-  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "mini-btn",
-    onClick: _cache[72] || (_cache[72] = function () {
-      return $options.saveSession && $options.saveSession.apply($options, arguments);
-    })
-  }, "Save")])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_saved]])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Analytics Tab "), $data.tab === 'analytics' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_122, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_123, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "sheet-toggle",
-    onClick: _cache[73] || (_cache[73] = function ($event) {
-      return $options.toggleSection('analytics_overview');
-    }),
-    type: "button"
-  }, [_cache[189] || (_cache[189] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-bar-chart\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Overview</span><span class=\"st-sub\">Due • Accuracy • Streak</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
-      open: $data.sectionOpen.analytics_overview
-    }])
-  }, _toConsumableArray(_cache[188] || (_cache[188] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_124, [!$data.events.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_125, _toConsumableArray(_cache[190] || (_cache[190] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"skeleton-row\"></div><div class=\"skeleton-grid\"><div class=\"skeleton-card\"></div><div class=\"skeleton-card\"></div><div class=\"skeleton-card\"></div><div class=\"skeleton-card\"></div></div><div class=\"analytics-empty-copy\"> No stats yet. Start a session and your progress appears here. </div>", 3)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_126, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_127, [_cache[191] || (_cache[191] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "stat-k"
-  }, "Streak", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_128, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.stats.streakDays), 1 /* TEXT */), _cache[192] || (_cache[192] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "stat-s"
-  }, "Current run", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_129, [_cache[193] || (_cache[193] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "stat-k"
-  }, "Sessions", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_130, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.savedSessions.length), 1 /* TEXT */), _cache[194] || (_cache[194] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "stat-s"
-  }, "Saved setups", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_131, [_cache[195] || (_cache[195] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "stat-k"
-  }, "Reviewed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_132, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.stats.gradedToday), 1 /* TEXT */), _cache[196] || (_cache[196] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "stat-s"
-  }, "Graded today", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_133, [_cache[197] || (_cache[197] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "stat-k"
-  }, "Mistakes", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_134, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.globalWeakCount), 1 /* TEXT */), _cache[198] || (_cache[198] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "stat-s"
-  }, "Weak ayahs", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_135, [_cache[200] || (_cache[200] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Current weak ayahs", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_136, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_137, [_cache[199] || (_cache[199] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Needs review", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.weakAyahSummary), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_138, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "cta cta-primary",
-    onClick: _cache[74] || (_cache[74] = function () {
-      return $options.beginPlannerSession && $options.beginPlannerSession.apply($options, arguments);
-    })
-  }, [_cache[201] || (_cache[201] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-play-circle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerPrimaryCta), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "cta cta-ghost",
-    onClick: _cache[75] || (_cache[75] = function ($event) {
-      return $data.tab = 'beginner';
-    })
-  }, _toConsumableArray(_cache[202] || (_cache[202] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-arrow-left-circle"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Back to setup", -1 /* CACHED */)])))])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.analytics_overview]])]),  false ? (0) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true),  false ? (0) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true),  false ? (0) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_162, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "sheet-toggle",
-    onClick: _cache[79] || (_cache[79] = function ($event) {
-      return $options.toggleSection('analytics_planner');
-    }),
-    type: "button"
-  }, [_cache[217] || (_cache[217] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-calendar3\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Planner</span><span class=\"st-sub\">Daily targets</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
-      open: $data.sectionOpen.analytics_planner
-    }])
-  }, _toConsumableArray(_cache[216] || (_cache[216] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_163, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_164, [_cache[221] || (_cache[221] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Daily goals", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_165, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_166, [_cache[218] || (_cache[218] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("New: ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.planner.settings.newAyat), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_167, [_cache[219] || (_cache[219] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Review: ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.planner.settings.reviewCards), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_168, [_cache[220] || (_cache[220] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Streak: ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.stats.streakDays), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_169, [_cache[225] || (_cache[225] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Planner settings", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_170, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_171, [_cache[222] || (_cache[222] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "New ayahs", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    "class": "input",
-    type: "number",
-    min: "0",
-    "onUpdate:modelValue": _cache[80] || (_cache[80] = function ($event) {
-      return $data.plannerState.settings.newAyat = $event;
-    }),
-    onChange: _cache[81] || (_cache[81] = function () {
-      return $options.persistPlanner && $options.persistPlanner.apply($options, arguments);
-    })
-  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.plannerState.settings.newAyat, void 0, {
-    number: true
-  }]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_172, [_cache[223] || (_cache[223] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Review target", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    "class": "input",
-    type: "number",
-    min: "0",
-    "onUpdate:modelValue": _cache[82] || (_cache[82] = function ($event) {
-      return $data.plannerState.settings.reviewCards = $event;
-    }),
-    onChange: _cache[83] || (_cache[83] = function () {
-      return $options.persistPlanner && $options.persistPlanner.apply($options, arguments);
-    })
-  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.plannerState.settings.reviewCards, void 0, {
-    number: true
-  }]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_173, [_cache[224] || (_cache[224] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Min minutes", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    "class": "input",
-    type: "number",
-    min: "5",
-    "onUpdate:modelValue": _cache[84] || (_cache[84] = function ($event) {
-      return $data.plannerState.settings.dailyMinutes = $event;
-    }),
-    onChange: _cache[85] || (_cache[85] = function () {
-      return $options.persistPlanner && $options.persistPlanner.apply($options, arguments);
-    })
-  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.plannerState.settings.dailyMinutes, void 0, {
-    number: true
-  }]])])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_174, [_cache[227] || (_cache[227] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Why reviews are due", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_175, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.reviewReasons, function (reason) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
-      key: reason,
-      "class": "read-row"
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(reason), 1 /* TEXT */), _cache[226] || (_cache[226] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Due", -1 /* CACHED */))]);
-  }), 128 /* KEYED_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_176, [_cache[230] || (_cache[230] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Today progress", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_177, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_178, [_cache[228] || (_cache[228] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Graded: ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.stats.gradedToday), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_179, [_cache[229] || (_cache[229] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Listened: ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.stats.listenedAyatToday), 1 /* TEXT */)])])]), $data.todayPlan ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_180, [_cache[234] || (_cache[234] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Today plan", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_181, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_182, [_cache[231] || (_cache[231] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Type: ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionTypeInfo.label), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_183, [_cache[232] || (_cache[232] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Range: ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.todayPlan.rangeStart) + "–" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.todayPlan.rangeEnd), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_184, [_cache[233] || (_cache[233] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("ETA: ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.todayPlanEtaLabel), 1 /* TEXT */)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_185, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    disabled: !$options.hasSelectedSurah
+  }, _toConsumableArray(_cache[165] || (_cache[165] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-play-fill"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Start Session ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_118)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_119, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-btn tools-btn-ghost",
-    onClick: _cache[86] || (_cache[86] = function () {
-      return $options.generateTodayPlan && $options.generateTodayPlan.apply($options, arguments);
-    })
-  }, _toConsumableArray(_cache[235] || (_cache[235] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-magic"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Generate plan", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "tools-btn tools-btn-primary",
-    onClick: _cache[87] || (_cache[87] = function () {
-      return $options.applyTodayPlan && $options.applyTodayPlan.apply($options, arguments);
-    })
-  }, _toConsumableArray(_cache[236] || (_cache[236] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-play-circle"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Begin plan", -1 /* CACHED */)])))])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.analytics_planner]])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_186, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "tools-btn tools-btn-ghost",
-    onClick: _cache[88] || (_cache[88] = function () {
+    onClick: _cache[60] || (_cache[60] = function () {
       return $options.resetControls && $options.resetControls.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[237] || (_cache[237] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[166] || (_cache[166] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-counterclockwise"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Reset", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-btn tools-btn-ghost",
-    onClick: _cache[89] || (_cache[89] = function ($event) {
+    onClick: _cache[61] || (_cache[61] = function ($event) {
       return $data.showTools = false;
     })
-  }, _toConsumableArray(_cache[238] || (_cache[238] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[167] || (_cache[167] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-circle"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Close", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "tools-btn tools-btn-primary",
-    onClick: _cache[90] || (_cache[90] = function () {
-      return $options.footerPrimaryAction && $options.footerPrimaryAction.apply($options, arguments);
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Close", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button class=\"tools-btn tools-btn-primary\" @click=\"footerPrimaryAction\"><i\n              class=\"bi bi-play-circle\"></i><span>{{ footerPrimaryLabel }}</span></button> ")])], 2 /* CLASS */)], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Replace the entire quiz-overlay div section with this "), $data.quizActive ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_120, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_121, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_122, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[168] || (_cache[168] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", {
+    "class": "quiz-title"
+  }, "Retention Check", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_123, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.quizContextLabel), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "quiz-close",
+    onClick: _cache[62] || (_cache[62] = function () {
+      return $options.stopQuiz && $options.stopQuiz.apply($options, arguments);
     })
-  }, [_cache[239] || (_cache[239] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-play-circle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.footerPrimaryLabel), 1 /* TEXT */)])])], 2 /* CLASS */)], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <div v-if=\"!quizActive\" class=\"quiz-overlay\">\n      <div class=\"quiz-card\">\n        <div class=\"quiz-top\">\n          <div class=\"quiz-title-wrap\">\n            <div class=\"quiz-title\">Retention check</div>\n            <div class=\"quiz-title-sub\">{{ quizContextLabel }}</div>\n          </div>\n          <button class=\"quiz-x\" @click=\"stopQuiz\"><i class=\"bi bi-x-lg\"></i></button>\n        </div>\n        <div class=\"quiz-meta\" v-if=\"!quizSummaryActive\">\n          <span class=\"quiz-chip\"><i class=\"bi bi-ui-checks-grid\"></i>{{ quizIndex + 1 }} / {{ quizQueue.length }}</span>\n          <span class=\"quiz-chip\"><i class=\"bi bi-diagram-3\"></i>{{ quizCardTypeLabel }}</span>\n          <span class=\"quiz-chip\"><i class=\"bi bi-bookmark\"></i>{{ quizCard?.key }}</span>\n        </div>\n\n        <div class=\"quiz-body\" v-if=\"quizSummaryActive\">\n          <div class=\"quiz-summary-title\">Session complete</div>\n          <div class=\"quiz-summary-grid\">\n            <div class=\"quiz-summary-item\">\n              <div class=\"quiz-summary-k\">Score</div>\n              <div class=\"quiz-summary-v\">{{ quizSummary.correct }} / {{ quizSummary.total }}</div>\n            </div>\n            <div class=\"quiz-summary-item\">\n              <div class=\"quiz-summary-k\">Accuracy</div>\n              <div class=\"quiz-summary-v\">{{ quizSummary.accuracy }}%</div>\n            </div>\n            <div class=\"quiz-summary-item\">\n              <div class=\"quiz-summary-k\">Avg grade</div>\n              <div class=\"quiz-summary-v\">{{ quizSummary.avgQuality }}</div>\n            </div>\n            <div class=\"quiz-summary-item\">\n              <div class=\"quiz-summary-k\">Time</div>\n              <div class=\"quiz-summary-v\">{{ quizSummary.timeSpent }}</div>\n            </div>\n            <div class=\"quiz-summary-item\">\n              <div class=\"quiz-summary-k\">Plan progress</div>\n              <div class=\"quiz-summary-v\">{{ quizSummary.planProgress }}</div>\n            </div>\n            <div class=\"quiz-summary-item\">\n              <div class=\"quiz-summary-k\">Best skill</div>\n              <div class=\"quiz-summary-v\">{{ quizSummary.bestSkill }}</div>\n            </div>\n          </div>\n          <div v-if=\"quizSummary.skills.length\" class=\"quiz-summary-skill-grid\">\n            <div v-for=\"skill in quizSummary.skills\" :key=\"skill.key\" class=\"quiz-summary-skill\">\n              <div class=\"quiz-summary-k\">{{ skill.label }}</div>\n              <div class=\"quiz-summary-v\">{{ skill.correct }}/{{ skill.total }}</div>\n              <div class=\"quiz-summary-s\">{{ skill.accuracy }}% accuracy</div>\n            </div>\n          </div>\n          <div class=\"quiz-summary-explain\">\n            <div class=\"quiz-summary-k\">What to do next</div>\n            <div class=\"quiz-summary-s\">{{ quizSummary.explanation }}</div>\n          </div>\n          <div class=\"quiz-summary-explain\">\n            <div class=\"quiz-summary-k\">Engine sync</div>\n            <div class=\"quiz-summary-s\">{{ quizSummary.engineLink }}</div>\n          </div>\n          <div v-if=\"quizSummary.mistakes?.length\" class=\"quiz-summary-mistakes\">\n            <div class=\"quiz-summary-k\">Mistakes</div>\n            <div class=\"quiz-summary-tags\">\n              <span v-for=\"m in quizSummary.mistakes.slice(0,6)\" :key=\"m\" class=\"quiz-tag\">{{ m }}</span>\n            </div>\n          </div>\n          <div class=\"quiz-actions\">\n            <button class=\"tools-btn tools-btn-ghost\" @click=\"stopQuiz\">Close</button>\n            <button class=\"tools-btn tools-btn-primary\" @click=\"restartQuiz\">Start again</button>\n          </div>\n        </div>\n\n        <div class=\"quiz-body\" v-else-if=\"quizCard\">\n          <div v-if=\"quizCard.type === 'flashcard'\">\n            <div class=\"quiz-section-label\"><i class=\"bi bi-layers\"></i><span>Recall the next ayah</span></div>\n            <div class=\"quiz-prompt\" dir=\"rtl\" v-html=\"quizCard.arabic\"></div>\n            <button class=\"quiz-reveal\" v-if=\"!quizRevealed\" @click=\"quizRevealed = true\"><i class=\"bi bi-eye\"></i><span>Show answer</span></button>\n            <div v-if=\"quizRevealed\" class=\"quiz-hint\">{{ quizCard.translation || 'Grade yourself' }}</div>\n          </div>\n\n          <div v-else-if=\"quizCard.type === 'mcq'\">\n            <div class=\"quiz-section-label\"><i class=\"bi bi-list-check\"></i><span>Pick the matching ayah</span></div>\n            <div class=\"quiz-prompt\" dir=\"rtl\" v-html=\"quizCard.arabic\"></div>\n            <div class=\"quiz-options\">\n              <label v-for=\"opt in quizOptions\" :key=\"opt.key\" class=\"quiz-opt\">\n                <input type=\"radio\" name=\"mcq\" :value=\"opt.key\" v-model=\"quizAnswer\">\n                <span>{{ opt.label }}</span>\n              </label>\n            </div>\n          </div>\n\n          <div v-else-if=\"quizCard.type === 'audio_mcq'\">\n            <div class=\"quiz-section-label\"><i class=\"bi bi-ear\"></i><span>Listen, then choose</span></div>\n            <button class=\"quiz-reveal\" @click=\"playVerse(quizCard)\"><i class=\"bi bi-arrow-repeat\"></i><span>Replay audio</span></button>\n            <div class=\"quiz-options\">\n              <label v-for=\"opt in quizOptions\" :key=\"opt.key\" class=\"quiz-opt\">\n                <input type=\"radio\" name=\"amcq\" :value=\"opt.key\" v-model=\"quizAnswer\">\n                <span>{{ opt.label }}</span>\n              </label>\n            </div>\n          </div>\n\n          <div v-else>\n            <div class=\"quiz-section-label\"><i class=\"bi bi-pencil-square\"></i><span>Fill the missing word</span></div>\n            <div class=\"quiz-prompt\">{{ quizCard.prompt }}</div>\n            <input class=\"input\" v-model=\"quizAnswer\" placeholder=\"Type missing word\">\n          </div>\n        </div>\n\n        <div class=\"quiz-actions\" v-if=\"!quizSummaryActive\">\n          <button class=\"quiz-action quiz-action-ghost\" @click=\"stopQuiz\"><i class=\"bi bi-stop-circle\"></i><span>Stop</span></button>\n          <button class=\"tools-btn tools-btn-ghost\" v-if=\"quizCard?.type === 'flashcard' && !quizRevealed\"\n            @click=\"quizRevealed = true\"><i class=\"bi bi-eye\"></i><span>Reveal</span></button>\n          <button class=\"quiz-action quiz-action-primary\" v-if=\"quizCard?.type !== 'flashcard'\"\n            @click=\"submitQuiz()\"><i class=\"bi bi-arrow-right-circle\"></i><span>Next</span></button>\n          <div class=\"quiz-grade\" v-else>\n            <button class=\"qg\" @click=\"submitQuiz(2)\"><i class=\"bi bi-arrow-counterclockwise\"></i><span>Again</span></button>\n            <button class=\"qg\" @click=\"submitQuiz(3)\"><i class=\"bi bi-slash-circle\"></i><span>Hard</span></button>\n            <button class=\"qg primary\" @click=\"submitQuiz(4)\"><i class=\"bi bi-check2-circle\"></i><span>Good</span></button>\n            <button class=\"qg\" @click=\"submitQuiz(5)\"><i class=\"bi bi-stars\"></i><span>Easy</span></button>\n          </div>\n        </div>\n      </div>\n    </div>\n\n    <div v-if=\"confettiActive\" class=\"confetti\" :key=\"confettiSeed\" aria-hidden=\"true\">\n      <span v-for=\"n in 26\" :key=\"n\" class=\"confetti-piece\" :style=\"{\n        left: (Math.random() * 100) + '%',\n        background: ['#8b5e3c', '#1f7a8c', '#f4d35e', '#ee964b', '#2a9d8f'][n % 5],\n        transform: `rotate(${Math.random() * 360}deg)`,\n        animationDelay: (Math.random() * 0.2) + 's'\n      }\"></span>\n    </div> "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio Player "), $data.playerVisible ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_187, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "×")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quiz Progress "), !$data.quizComplete ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_124, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_125, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "quiz-progress-fill",
+    style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
+      width: ($data.quizIndex + 1) / $data.quizQueue.length * 100 + '%'
+    })
+  }, null, 4 /* STYLE */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_126, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizIndex + 1) + " / " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizQueue.length), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$quizCard = $data.quizCard) === null || _$data$quizCard === void 0 ? void 0 : _$data$quizCard.type) === 'flashcard' ? 'Flashcard' : ((_$data$quizCard2 = $data.quizCard) === null || _$data$quizCard2 === void 0 ? void 0 : _$data$quizCard2.type) === 'mcq' ? 'Multiple Choice' : 'Question'), 1 /* TEXT */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quiz Summary (Complete) "), $data.quizComplete ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_127, [_cache[172] || (_cache[172] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "quiz-summary-icon"
+  }, "🎉", -1 /* CACHED */)), _cache[173] || (_cache[173] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Session Complete!", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_128, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_129, [_cache[169] || (_cache[169] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "stat-label"
+  }, "Score", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_130, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizScore) + "/" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizQueue.length), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_131, [_cache[170] || (_cache[170] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "stat-label"
+  }, "Accuracy", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_132, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.quizAccuracy) + "%", 1 /* TEXT */)])]), $data.quizMistakes.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_133, [_cache[171] || (_cache[171] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Verses to review:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_134, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quizMistakes, function (m) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
+      key: m,
+      "class": "mistake-tag"
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(m), 1 /* TEXT */);
+  }), 128 /* KEYED_FRAGMENT */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_135, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "btn-outline",
+    onClick: _cache[63] || (_cache[63] = function () {
+      return $options.stopQuiz && $options.stopQuiz.apply($options, arguments);
+    })
+  }, "Close"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "btn-primary",
+    onClick: _cache[64] || (_cache[64] = function () {
+      return $options.restartQuiz && $options.restartQuiz.apply($options, arguments);
+    })
+  }, "Try Again")])])) : $data.quizCard ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+    key: 2
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quiz Card "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_136, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Flashcard Type "), $data.quizCard.type === 'flashcard' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_137, [_cache[175] || (_cache[175] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "quiz-question"
+  }, "Recite this verse:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "quiz-arabic",
+    dir: "rtl",
+    innerHTML: $data.quizCard.arabic
+  }, null, 8 /* PROPS */, _hoisted_138), !$data.quizRevealed ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
+    key: 0,
+    "class": "quiz-reveal-btn",
+    onClick: _cache[65] || (_cache[65] = function ($event) {
+      return $data.quizRevealed = true;
+    })
+  }, _toConsumableArray(_cache[174] || (_cache[174] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-eye"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Reveal Answer ", -1 /* CACHED */)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.quizRevealed ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_139, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_140, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizCard.translation), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_141, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "grade-btn",
+    onClick: _cache[66] || (_cache[66] = function ($event) {
+      return $options.submitQuiz(2);
+    })
+  }, "Again"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "grade-btn",
+    onClick: _cache[67] || (_cache[67] = function ($event) {
+      return $options.submitQuiz(3);
+    })
+  }, "Hard"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "grade-btn primary",
+    onClick: _cache[68] || (_cache[68] = function ($event) {
+      return $options.submitQuiz(4);
+    })
+  }, "Good"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "grade-btn",
+    onClick: _cache[69] || (_cache[69] = function ($event) {
+      return $options.submitQuiz(5);
+    })
+  }, "Easy")])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])) : $data.quizCard.type === 'mcq' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+    key: 1
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Multiple Choice Type "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[176] || (_cache[176] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "quiz-question"
+  }, "Which verse matches this meaning?", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_142, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizCard.prompt), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_143, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quizOptions, function (opt) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
+      key: opt.key,
+      "class": "quiz-option",
+      onClick: function onClick($event) {
+        return $options.submitQuiz(opt.key === $data.quizCard.key ? 4 : 2);
+      }
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(opt.label), 9 /* TEXT, PROPS */, _hoisted_144);
+  }), 128 /* KEYED_FRAGMENT */))])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : $data.quizCard.type === 'audio_mcq' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+    key: 2
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio MCQ Type "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[177] || (_cache[177] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "quiz-question"
+  }, "Listen and choose the correct verse", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "quiz-play-audio",
+    onClick: _cache[70] || (_cache[70] = function ($event) {
+      return $options.playVerse($data.quizCard);
+    })
+  }, "▶ Play Audio"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_145, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quizOptions, function (opt) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
+      key: opt.key,
+      "class": "quiz-option",
+      onClick: function onClick($event) {
+        return $options.submitQuiz(opt.key === $data.quizCard.key ? 4 : 2);
+      }
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(opt.label), 9 /* TEXT, PROPS */, _hoisted_146);
+  }), 128 /* KEYED_FRAGMENT */))])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : $data.quizCard.type === 'blank' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+    key: 3
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Fill Blank Type "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[178] || (_cache[178] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "quiz-question"
+  }, "Fill in the missing word:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_147, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizCard.prompt), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "text",
+    "onUpdate:modelValue": _cache[71] || (_cache[71] = function ($event) {
+      return $data.quizAnswer = $event;
+    }),
+    "class": "quiz-input",
+    placeholder: "Type your answer",
+    onKeyup: _cache[72] || (_cache[72] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)(function ($event) {
+      return $options.submitQuiz();
+    }, ["enter"]))
+  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.quizAnswer]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "btn-primary",
+    onClick: _cache[73] || (_cache[73] = function ($event) {
+      return $options.submitQuiz();
+    })
+  }, "Submit")])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.confettiActive ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+    "class": "confetti",
+    key: $data.confettiSeed,
+    "aria-hidden": "true"
+  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(26, function (n) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+      key: n,
+      "class": "confetti-piece",
+      style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
+        left: Math.random() * 100 + '%',
+        background: ['#8b5e3c', '#1f7a8c', '#f4d35e', '#ee964b', '#2a9d8f'][n % 5],
+        transform: "rotate(".concat(Math.random() * 360, "deg)"),
+        animationDelay: Math.random() * 0.2 + 's'
+      })
+    }, null, 4 /* STYLE */);
+  }), 64 /* STABLE_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio Player "), $data.playerVisible ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_148, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "player-progress",
-    onClick: _cache[91] || (_cache[91] = function ($event) {
+    onClick: _cache[74] || (_cache[74] = function ($event) {
       return $options.seek($event);
     })
-  }, [_cache[240] || (_cache[240] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [_cache[179] || (_cache[179] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "player-track"
   }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "player-fill",
@@ -28495,40 +28734,40 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
       left: $options.seekPercent + '%'
     })
-  }, null, 4 /* STYLE */)]), $data.playerCollapsed ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_188, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_189, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_190, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.collapsedPlayerTitle), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_191, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.collapsedPlayerSubtitle), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, 4 /* STYLE */)]), $data.playerCollapsed ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_149, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_150, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_151, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.collapsedPlayerTitle), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_152, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.collapsedPlayerSubtitle), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "player-icon play",
-    onClick: _cache[92] || (_cache[92] = function () {
+    onClick: _cache[75] || (_cache[75] = function () {
       return $options.togglePlay && $options.togglePlay.apply($options, arguments);
     }),
     "aria-label": "Play"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
-  }, null, 2 /* CLASS */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_192, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_193, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_194, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, 2 /* CLASS */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_153, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_154, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_155, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "player-icon",
-    onClick: _cache[93] || (_cache[93] = function () {
+    onClick: _cache[76] || (_cache[76] = function () {
       return $options.togglePlayerMenu && $options.togglePlayerMenu.apply($options, arguments);
     }),
     "aria-label": "Menu"
-  }, _toConsumableArray(_cache[241] || (_cache[241] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[180] || (_cache[180] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-three-dots"
   }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "player-icon player-speed",
-    onClick: _cache[94] || (_cache[94] = function () {
+    onClick: _cache[77] || (_cache[77] = function () {
       return $options.applySpeed && $options.applySpeed.apply($options, arguments);
     }),
     "aria-label": "Speed"
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.speed) + "x", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.speed) + "x", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "player-icon",
-    onClick: _cache[95] || (_cache[95] = function () {
+    onClick: _cache[78] || (_cache[78] = function () {
       return $options.prev && $options.prev.apply($options, arguments);
     }),
     disabled: !$options.canPrev,
     "aria-label": "Previous"
-  }, _toConsumableArray(_cache[242] || (_cache[242] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[181] || (_cache[181] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-skip-backward-fill"
-  }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_195), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_156), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "player-icon play",
-    onClick: _cache[96] || (_cache[96] = function () {
+    onClick: _cache[79] || (_cache[79] = function () {
       return $options.togglePlay && $options.togglePlay.apply($options, arguments);
     }),
     "aria-label": "Play"
@@ -28536,61 +28775,53 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
   }, null, 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "player-icon",
-    onClick: _cache[97] || (_cache[97] = function () {
+    onClick: _cache[80] || (_cache[80] = function () {
       return $options.next && $options.next.apply($options, arguments);
     }),
     disabled: !$options.canNext,
     "aria-label": "Next"
-  }, _toConsumableArray(_cache[243] || (_cache[243] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[182] || (_cache[182] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-skip-forward-fill"
-  }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_196), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_157), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "player-icon",
-    onClick: _cache[98] || (_cache[98] = function () {
+    onClick: _cache[81] || (_cache[81] = function () {
       return $options.closePlayer && $options.closePlayer.apply($options, arguments);
     }),
     "aria-label": "Close"
-  }, _toConsumableArray(_cache[244] || (_cache[244] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[183] || (_cache[183] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_197, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.duration)), 1 /* TEXT */)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.playerCollapsed]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "player-collapse",
-    onClick: _cache[99] || (_cache[99] = function () {
-      return $options.togglePlayerCollapsed && $options.togglePlayerCollapsed.apply($options, arguments);
-    }),
-    "aria-label": $data.playerCollapsed ? 'Expand player' : 'Collapse player'
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.playerCollapsed ? 'bi-chevron-up' : 'bi-chevron-down'])
-  }, null, 2 /* CLASS */)], 8 /* PROPS */, _hoisted_198), $data.playerMenuOpen ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_158, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.duration)), 1 /* TEXT */)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.playerCollapsed]]), $data.playerMenuOpen ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 1,
     "class": "player-menu-overlay",
-    onClick: _cache[107] || (_cache[107] = function ($event) {
+    onClick: _cache[89] || (_cache[89] = function ($event) {
       return $data.playerMenuOpen = false;
     })
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "player-menu",
-    onClick: _cache[106] || (_cache[106] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
+    onClick: _cache[88] || (_cache[88] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "player-menu-item",
-    onClick: _cache[100] || (_cache[100] = function () {
+    onClick: _cache[82] || (_cache[82] = function () {
       return $options.downloadCurrentAudio && $options.downloadCurrentAudio.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[245] || (_cache[245] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, _toConsumableArray(_cache[184] || (_cache[184] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "pm-ico"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-download"
   })], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Download", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "player-menu-item",
-    onClick: _cache[101] || (_cache[101] = function ($event) {
+    onClick: _cache[83] || (_cache[83] = function ($event) {
       $data.tab = 'advanced';
       $data.showTools = true;
       $data.playerMenuOpen = false;
     })
-  }, _toConsumableArray(_cache[246] || (_cache[246] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, _toConsumableArray(_cache[185] || (_cache[185] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "pm-ico"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-repeat"
-  })], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Manage repeat settings", -1 /* CACHED */)]))), _cache[249] || (_cache[249] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  })], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Manage repeat settings", -1 /* CACHED */)]))), _cache[188] || (_cache[188] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "player-menu-sep"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_199, [_cache[247] || (_cache[247] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_159, [_cache[186] || (_cache[186] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "pm-label"
   }, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     "class": "pm-range",
@@ -28598,21 +28829,21 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     min: "0.5",
     max: "1.5",
     step: "0.1",
-    "onUpdate:modelValue": _cache[102] || (_cache[102] = function ($event) {
-      return $data.speed = $event;
+    "onUpdate:modelValue": _cache[84] || (_cache[84] = function ($event) {
+      return $options.speed = $event;
     }),
-    onInput: _cache[103] || (_cache[103] = function () {
+    onInput: _cache[85] || (_cache[85] = function () {
       return $options.applySpeed && $options.applySpeed.apply($options, arguments);
     })
-  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.speed, void 0, {
+  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.speed, void 0, {
     number: true
-  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_200, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.speed) + "x", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_201, [_cache[248] || (_cache[248] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_160, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.speed) + "x", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_161, [_cache[187] || (_cache[187] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "pm-label"
   }, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[104] || (_cache[104] = function ($event) {
-      return $data.reciterId = $event;
+    "onUpdate:modelValue": _cache[86] || (_cache[86] = function ($event) {
+      return $options.reciterId = $event;
     }),
-    onChange: _cache[105] || (_cache[105] = function () {
+    onChange: _cache[87] || (_cache[87] = function () {
       return $options.updateAudioReciter && $options.updateAudioReciter.apply($options, arguments);
     }),
     "class": "pm-select"
@@ -28620,8 +28851,8 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: r.id,
       value: r.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_202);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.reciterId]])])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_203, null, 512 /* NEED_PATCH */)], 8 /* PROPS */, _hoisted_1);
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_162);
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]])])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_163, null, 512 /* NEED_PATCH */)], 8 /* PROPS */, _hoisted_1);
 }
 
 /***/ }),
@@ -35247,7 +35478,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n:root {\n  --bg: #f3eee6;\n  --surface: rgba(255, 250, 243, 0.88);\n  --surface-strong: rgba(255, 255, 255, 0.92);\n  --border: rgba(78, 58, 38, 0.10);\n  --text: #1f1a17;\n  --text-muted: #6c6258;\n  --accent: #9a6738;\n  --accent-strong: #6e4726;\n  --accent-soft: #d8c1a8;\n  --accent-light: rgba(154, 103, 56, 0.10);\n  --accent-wash: rgba(228, 211, 194, 0.42);\n  --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);\n  --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);\n  --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);\n  --radius: 16px;\n  --navbar-offset: 56px;\n  --tools-width: 440px;\n  --tools-footer-h: 78px;\n  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;\n  --font-ui: \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n[data-theme=\"dark\"] {\n  --bg: #15110f;\n  --surface: rgba(33, 27, 24, 0.88);\n  --surface-strong: rgba(44, 36, 31, 0.94);\n  --border: rgba(255, 235, 214, 0.10);\n  --text: #f1e7dc;\n  --text-muted: #bcae9f;\n  --accent: #d0a06b;\n  --accent-strong: #efc18d;\n  --accent-soft: #5f4530;\n  --accent-light: rgba(208, 160, 107, 0.14);\n  --accent-wash: rgba(208, 160, 107, 0.08);\n  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);\n  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);\n  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);\n}\n[data-theme=\"sepia\"] {\n  --bg: #efe2cb;\n  --surface: rgba(250, 241, 227, 0.88);\n  --surface-strong: rgba(255, 248, 237, 0.94);\n  --text: #352516;\n  --text-muted: #75624f;\n  --accent: #b8824e;\n  --accent-strong: #8f6033;\n  --accent-soft: #dcc3a6;\n  --accent-light: rgba(184, 130, 78, 0.12);\n  --accent-wash: rgba(221, 194, 162, 0.35);\n}\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\nbody {\n  font-family: var(--font-ui);\n  background: var(--bg);\n  color: var(--text);\n  background-image:\n    radial-gradient(circle at top left, rgba(255, 255, 255, 0.55), transparent 34%),\n    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 30%);\n}\n.app {\n  min-height: 100vh;\n  animation: appFade 260ms ease-out;\n}\n\n/* Header */\n.app-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 12px 24px;\n  background: var(--surface);\n  border-bottom: 1px solid var(--border);\n  backdrop-filter: blur(10px);\n  position: sticky;\n  top: 0;\n  z-index: 20;\n}\n.header-left {\n  display: flex;\n  align-items: center;\n  gap: 32px;\n  flex-wrap: wrap;\n}\n.brand {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.brand-mark {\n  font-size: 1.4rem;\n  color: var(--accent);\n}\n.brand-name {\n  font-weight: 500;\n  font-size: 0.95rem;\n}\n.session-name {\n  font-size: 0.85rem;\n  font-weight: 450;\n}\n.session-meta {\n  display: flex;\n  gap: 8px;\n  margin-top: 4px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.header-right {\n  display: flex;\n  gap: 8px;\n}\n.icon-btn {\n  width: 34px;\n  height: 34px;\n  border-radius: 12px;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.58));\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: var(--text-muted);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n}\n\n/* Main */\n.main {\n  transition: padding-right 0.25s ease;\n  padding: 20px 24px 100px;\n}\n.main.tools-open {\n  padding-right: var(--tools-width);\n}\n.main.tools-open .content {\n  max-width: min(980px, calc(100vw - var(--tools-width) - 80px));\n}\n.content {\n  max-width: 1120px;\n  margin: 0 auto;\n}\n.reading-toolbar {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  margin-bottom: 16px;\n  padding: 12px 14px;\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.reading-toolbar-group {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  align-items: flex-start;\n}\n.toolbar-font-wrap {\n  position: relative;\n}\n.toolbar-font-menu {\n  position: absolute;\n  top: calc(100% + 8px);\n  left: 0;\n  min-width: 180px;\n  display: grid;\n  gap: 6px;\n  padding: 8px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: var(--surface-strong);\n  box-shadow: var(--shadow-md);\n  z-index: 12;\n}\n.toolbar-font-option {\n  width: 100%;\n  padding: 8px 10px;\n  border: 0;\n  border-radius: 10px;\n  background: transparent;\n  color: var(--text);\n  text-align: left;\n  font-size: 0.78rem;\n  cursor: pointer;\n}\n.toolbar-font-option.active,\n.toolbar-font-option:hover {\n  background: var(--accent-light);\n}\n.toolbar-chip {\n  border: 0;\n  border-radius: 999px;\n  padding: 8px 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  font-size: 0.75rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: var(--shadow-sm);\n}\n.toolbar-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.hero-card {\n  margin-bottom: 16px;\n  padding: 18px 18px 16px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 236, 226, 0.92));\n  box-shadow: var(--shadow-md);\n  display: grid;\n  gap: 14px;\n  animation: riseSoft 260ms ease-out;\n}\n.hero-kicker {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  color: var(--accent);\n}\n.hero-title {\n  margin-top: 6px;\n  font-size: 1.24rem;\n  font-weight: 500;\n  letter-spacing: -0.03em;\n}\n.hero-sub {\n  margin-top: 8px;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  max-width: 56ch;\n}\n.hero-flow {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n}\n.hero-step {\n  padding: 10px 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.62);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.74rem;\n}\n.hero-step span {\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  display: grid;\n  place-items: center;\n  background: var(--accent-light);\n  color: var(--accent);\n  font-size: 11px;\n}\n.hero-step strong {\n  font-weight: 500;\n}\n.hero-points {\n  display: grid;\n  gap: 8px;\n}\n.hero-point {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.hero-point i {\n  color: var(--accent);\n}\n.hero-actions,\n.empty-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n\n/* Session rail */\n.session-rail {\n  position: sticky;\n  top: 14px;\n  z-index: 18;\n  margin-bottom: 18px;\n  padding: 12px 14px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-md);\n  animation: railIn 280ms ease-out;\n}\n[data-theme=\"dark\"] .session-rail {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(18, 18, 18, 0.86);\n}\n.session-rail-top {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  gap: 12px;\n  align-items: center;\n}\n.session-rail-kicker {\n  font-size: 10px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  margin-top: 2px;\n  font-size: 14px;\n  font-weight: 450;\n}\n.session-rail-meta {\n  margin-top: 2px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.session-rail-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 8px;\n  margin-top: 10px;\n}\n.rail-stat {\n  padding: 8px 10px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-stat span {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n}\n.rail-stat strong {\n  font-size: 0.78rem;\n  font-weight: 500;\n}\n.rail-btn {\n  height: 34px;\n  padding: 0 12px;\n  border-radius: 13px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  color: var(--text);\n  font-size: 12px;\n  font-weight: 450;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n[data-theme=\"dark\"] .rail-btn {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.46);\n}\n.rail-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);\n}\n.rail-btn-ghost {\n  background: transparent;\n}\n.progress-bar {\n  flex: 1;\n  height: 4px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-wide {\n  margin-top: 10px;\n}\n.progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s;\n}\n.cta-btn {\n  padding: 6px 18px;\n  border-radius: 40px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  color: white;\n  font-size: 0.74rem;\n  font-weight: 450;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: 0 14px 30px rgba(154, 103, 56, 0.24);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n\n/* Empty */\n.empty {\n  padding: 40px 0;\n}\n.empty-card {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: var(--radius);\n  padding: 32px;\n  text-align: center;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-md);\n}\n.empty-icon {\n  font-family: var(--font-ar);\n  font-size: 2.2rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.empty-card h3 {\n  font-weight: 450;\n  margin-bottom: 6px;\n  font-size: 1rem;\n}\n.empty-card p {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  margin-bottom: 16px;\n}\n\n/* Verses */\n.verses {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.verses.compact .verse {\n  padding: 12px;\n}\n.verse {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: 22px;\n  padding: 22px 24px;\n  border: 0;\n  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;\n  box-shadow: var(--shadow-md);\n}\n.verse.active {\n  background: linear-gradient(180deg, var(--surface-strong), var(--accent-wash));\n  box-shadow: 0 30px 70px rgba(63, 39, 18, 0.24);\n  outline: 2px solid rgba(154, 103, 56, 0.18);\n}\n.verse-head {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 12px;\n}\n.verse-badge {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-num {\n  font-size: 0.7rem;\n  padding: 2px 8px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  color: var(--accent);\n}\n.verse-ref {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 6px;\n}\n.action-btn {\n  background: transparent;\n  border: none;\n  color: var(--text-muted);\n  cursor: pointer;\n  padding: 4px 8px;\n  border-radius: 6px;\n  font-size: 0.7rem;\n}\n.verse-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.7rem;\n  line-height: 2.25;\n  text-align: right;\n  direction: rtl;\n  margin: 12px 0 10px;\n  text-rendering: optimizeLegibility;\n  font-feature-settings: \"liga\" 1, \"calt\" 1;\n  font-variant-ligatures: contextual common-ligatures;\n  unicode-bidi: plaintext;\n}\n.verse-transliteration {\n  font-size: 0.94rem;\n  color: var(--text-muted);\n  line-height: 1.8;\n  margin-top: 6px;\n}\n.verse-translation {\n  font-size: 1rem;\n  color: var(--text);\n  padding-top: 8px;\n  line-height: 1.9;\n  font-weight: 500;\n}\n.verse-words {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(84px, max-content));\n  gap: 10px 8px;\n  margin-top: 10px;\n  align-items: start;\n}\n.word {\n  background: var(--accent-light);\n  padding: 8px 10px 10px;\n  border-radius: 16px;\n  display: inline-grid;\n  justify-items: center;\n  gap: 3px;\n  font-size: 0.72rem;\n  position: relative;\n  cursor: default;\n  min-width: 84px;\n}\n.word.active {\n  background: var(--accent);\n  color: #fff;\n  box-shadow: 0 10px 24px rgba(154, 103, 56, 0.22);\n}\n.word-ar {\n  font-family: var(--font-ar);\n  font-size: 1.12rem;\n  line-height: 1.7;\n  color: var(--text);\n}\n.word-en {\n  color: var(--text-muted);\n  font-size: 0.66rem;\n  line-height: 1.35;\n  text-align: center;\n  max-width: 100%;\n  word-break: break-word;\n}\n.word-play {\n  background: rgba(255, 255, 255, 0.6);\n  border-radius: 999px;\n  width: 22px;\n  height: 22px;\n  border: none;\n  cursor: pointer;\n  font-size: 0.62rem;\n  display: grid;\n  place-items: center;\n  color: var(--accent);\n  margin-top: 3px;\n}\n.word-tooltip {\n  position: absolute;\n  left: 50%;\n  bottom: calc(100% + 8px);\n  transform: translateX(-50%);\n  min-width: 132px;\n  max-width: 220px;\n  display: grid;\n  gap: 4px;\n  padding: 8px 10px;\n  border-radius: 12px;\n  background: rgba(24, 27, 33, 0.96);\n  color: rgba(255, 255, 255, 0.94);\n  box-shadow: 0 14px 34px rgba(10, 12, 18, 0.24);\n  white-space: normal;\n  z-index: 8;\n  animation: fadeLift 140ms ease-out;\n}\n.word-tooltip::after {\n  content: \"\";\n  position: absolute;\n  left: 50%;\n  bottom: -5px;\n  width: 10px;\n  height: 10px;\n  transform: translateX(-50%) rotate(45deg);\n  background: rgba(24, 27, 33, 0.96);\n}\n.word-tooltip-ar {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n  line-height: 1.7;\n  text-align: right;\n}\n.word-tooltip-en {\n  font-size: 0.72rem;\n  line-height: 1.45;\n  color: rgba(255, 255, 255, 0.82);\n}\n.verse-footer {\n  margin-top: 14px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n  display: flex;\n  justify-content: space-between;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.verse-footer-side {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.verse-tool-btn {\n  width: 36px;\n  height: 36px;\n  border: 0;\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  box-shadow: var(--shadow-sm);\n}\n.verse-tool-btn.active {\n  background: var(--accent);\n  color: #fff;\n}\n.verse-arabic tajweed,\n.verse-arabic .tajweed {\n  font-family: inherit;\n}\n.verse-arabic tajweed.ham_wasl,\n.verse-arabic .ham_wasl { color: #9c27b0;\n}\n.verse-arabic tajweed.ghunnah,\n.verse-arabic .ghunnah { color: #1f7a8c;\n}\n.verse-arabic tajweed.idgham_ghunnah,\n.verse-arabic .idgham_ghunnah { color: #1f7a8c;\n}\n.verse-arabic tajweed.idgham_wo_ghunnah,\n.verse-arabic .idgham_wo_ghunnah { color: #0f766e;\n}\n.verse-arabic tajweed.iqlab,\n.verse-arabic .iqlab { color: #2563eb;\n}\n.verse-arabic tajweed.ikhafa,\n.verse-arabic .ikhafa { color: #f59e0b;\n}\n.verse-arabic tajweed.qlqla,\n.verse-arabic .qlqla,\n.verse-arabic tajweed.qalqalah,\n.verse-arabic .qalqalah { color: #ef4444;\n}\n.verse-arabic tajweed.madda_normal,\n.verse-arabic .madda_normal,\n.verse-arabic tajweed.madda_permissible,\n.verse-arabic .madda_permissible,\n.verse-arabic tajweed.madda_necessary,\n.verse-arabic .madda_necessary { color: #8b5cf6;\n}\n.verse-arabic tajweed.idgham_shafawi,\n.verse-arabic .idgham_shafawi,\n.verse-arabic tajweed.ikhafa_shafawi,\n.verse-arabic .ikhafa_shafawi { color: #db2777;\n}\n.verse-arabic tajweed.slnt,\n.verse-arabic .slnt,\n.verse-arabic tajweed.waqf,\n.verse-arabic .waqf { color: #6b7280;\n}\n\n/* Tools Panel */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  width: min(var(--tools-width), 100vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n}\n[data-theme=\"dark\"] .tools {\n  background: rgba(18, 18, 18, 0.9);\n  border-left-color: rgba(255, 255, 255, 0.08);\n  box-shadow: -40px 0 120px rgba(0, 0, 0, 0.55);\n}\n.tools.open {\n  transform: translateX(0);\n}\n@media (max-width: 768px) {\n.tools {\n    left: 0;\n    right: 0;\n    width: 100%;\n}\n.main.tools-open {\n    padding-right: 24px;\n}\n}\n@media (max-width: 1180px) {\n.main.tools-open {\n    padding-right: 24px;\n}\n.main.tools-open .content {\n    max-width: 1120px;\n}\n}\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n  background:\n    radial-gradient(circle at top right, rgba(154, 103, 56, 0.12), transparent 36%),\n    linear-gradient(180deg, rgba(255, 255, 255, 0.25), transparent 100%);\n}\n[data-theme=\"dark\"] .tools-top {\n  border-bottom-color: rgba(255, 255, 255, 0.08);\n}\n.tools-topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.tools-title {\n  font-size: 1rem;\n  font-weight: 700;\n  letter-spacing: -0.2px;\n  color: var(--text);\n}\n.tools-context {\n  margin-top: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 600;\n}\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n  color: rgba(0, 0, 0, 0.7);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n[data-theme=\"dark\"] .tools-x {\n  border-color: rgba(255, 255, 255, 0.1);\n  background: rgba(30, 30, 40, 0.35);\n  color: rgba(255, 255, 255, 0.85);\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n}\n.tools-tabs button {\n  flex: 1;\n  padding: 7px 10px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.82rem;\n  cursor: pointer;\n  color: rgba(0, 0, 0, 0.55);\n  font-weight: 450;\n  transition: background 140ms ease, color 140ms ease, transform 140ms ease;\n}\n.tools-tabs button.active {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));\n  box-shadow: var(--shadow-sm);\n  color: rgba(0, 0, 0, 0.85);\n}\n[data-theme=\"dark\"] .tools-tabs {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 255, 255, 0.08);\n}\n[data-theme=\"dark\"] .tools-tabs button {\n  color: rgba(255, 255, 255, 0.7);\n}\n[data-theme=\"dark\"] .tools-tabs button.active {\n  background: rgba(30, 30, 40, 0.9);\n  color: rgba(255, 255, 255, 0.92);\n  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);\n}\n.tools-body {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n}\n.sheet {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.sheet-section {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border-radius: 18px;\n  padding: 0;\n  overflow: hidden;\n  box-shadow: var(--shadow-sm);\n  animation: riseSoft 260ms ease-out;\n}\n[data-theme=\"dark\"] .sheet-section {\n  border-color: rgba(255, 255, 255, 0.08);\n  background: rgba(30, 30, 40, 0.45);\n}\n.sheet-section-accent {\n  border-color: rgba(154, 103, 56, 0.22);\n  background: linear-gradient(180deg, rgba(154, 103, 56, 0.14), rgba(233, 214, 194, 0.26));\n}\n.sheet-toggle {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border: none;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease;\n}\n[data-theme=\"dark\"] .sheet-toggle {\n  background: linear-gradient(180deg, rgba(30, 30, 40, 0.85), rgba(30, 30, 40, 0.45));\n}\n.st-left {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.st-ico {\n  width: 24px;\n  height: 24px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));\n  border: 1px solid rgba(139, 94, 60, 0.18);\n  flex: 0 0 auto;\n  font-size: 11px;\n  font-weight: 600;\n  color: var(--accent);\n}\n[data-theme=\"dark\"] .st-ico {\n  background: rgba(196, 154, 108, 0.10);\n  border-color: rgba(196, 154, 108, 0.14);\n}\n.st-txt {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 2px;\n  min-width: 0;\n}\n.st-title {\n  font-weight: 450;\n  letter-spacing: -0.2px;\n  color: var(--text);\n  font-size: 0.82rem;\n}\n.st-sub {\n  font-size: 0.66rem;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.st-chev {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  display: grid;\n  place-items: center;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  color: rgba(0, 0, 0, 0.65);\n  transition: transform 0.15s ease;\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .st-chev {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.35);\n  color: rgba(255, 255, 255, 0.75);\n}\n.st-chev.open {\n  transform: rotate(180deg);\n}\n.sheet-content {\n  padding: 16px 16px 18px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.tools-footer {\n  position: absolute;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  height: var(--tools-footer-h);\n  padding: 12px 16px 14px;\n  border-top: 1px solid var(--border);\n  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));\n  display: flex;\n  gap: 10px;\n  justify-content: space-between;\n  align-items: center;\n}\n[data-theme=\"dark\"] .tools-footer {\n  border-top-color: rgba(255, 255, 255, 0.08);\n  background: linear-gradient(to top, rgba(18, 18, 18, 0.98), rgba(18, 18, 18, 0.78), rgba(18, 18, 18, 0));\n}\n.tools-btn {\n  flex: 1;\n  min-height: 44px;\n  padding: 10px 10px;\n  border-radius: 15px;\n  font-weight: 500;\n  border: 1px solid rgba(0, 0, 0, 0.1);\n  cursor: pointer;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  line-height: 1;\n}\n.tools-btn span {\n  white-space: nowrap;\n}\n[data-theme=\"dark\"] .tools-btn {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.9);\n}\n.tools-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: rgba(0, 0, 0, 0.05);\n  color: white;\n  box-shadow: 0 18px 40px rgba(139, 94, 60, 0.32);\n}\n.flow-strip {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n  padding: 12px 14px 0;\n}\n.guide-copy {\n  padding: 0 14px 14px;\n}\n.guide-title {\n  font-size: 1rem;\n  font-weight: 700;\n}\n.guide-sub {\n  margin-top: 4px;\n  font-size: 0.84rem;\n  color: var(--text-muted);\n}\n.flow-step {\n  min-height: 30px;\n  padding: 6px 8px;\n  border-radius: 14px;\n  background: rgba(0, 0, 0, 0.04);\n  font-size: 10px;\n  color: var(--text-muted);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.flow-step.active {\n  background: rgba(139, 94, 60, 0.12);\n  color: var(--accent);\n}\n.field-stack {\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n}\n.action-grid-3 {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 8px;\n}\n@media (max-width: 640px) {\n.action-grid-3,\n  .radio-group-tight {\n    grid-template-columns: 1fr;\n}\n.hero-flow,\n  .session-rail-stats,\n  .flow-strip {\n    grid-template-columns: 1fr 1fr;\n}\n.reading-toolbar {\n    padding: 10px 12px;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 8px);\n    justify-content: center;\n}\n.verse {\n    padding: 16px 14px;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n}\n.session-rail-actions {\n    flex-wrap: wrap;\n}\n}\n.stat-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 10px;\n}\n@media (max-width: 520px) {\n.stat-grid {\n    grid-template-columns: 1fr;\n}\n}\n.stat {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 243, 0.62));\n  border-radius: 14px;\n  padding: 10px;\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .stat {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n}\n.stat-k {\n  font-size: 0.62rem;\n  color: var(--text-muted);\n  font-weight: 450;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.stat-v {\n  margin-top: 6px;\n  font-size: 1.18rem;\n  font-weight: 700;\n  color: var(--text);\n}\n.stat-s {\n  margin-top: 2px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n}\n.stat-cta {\n  margin-top: 10px;\n  width: 100%;\n  padding: 8px 10px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  cursor: pointer;\n  font-weight: 450;\n  font-size: 11px;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n}\n[data-theme=\"dark\"] .stat-cta {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.9);\n}\n.chart {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 243, 0.62));\n  border-radius: 14px;\n  padding: 10px;\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .chart {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n}\n.chart-title {\n  font-weight: 450;\n  color: var(--text);\n  margin-bottom: 8px;\n  font-size: 0.74rem;\n}\n.analytics-empty {\n  display: grid;\n  gap: 12px;\n}\n.analytics-empty-copy {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  font-weight: 600;\n}\n.skeleton-row {\n  height: 12px;\n  border-radius: 999px;\n  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.06));\n  background-size: 200% 100%;\n  animation: shimmer 1.2s ease-in-out infinite;\n}\n.skeleton-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 10px;\n}\n.skeleton-card {\n  height: 58px;\n  border-radius: 16px;\n  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.06));\n  background-size: 200% 100%;\n  animation: shimmer 1.2s ease-in-out infinite;\n}\n[data-theme=\"dark\"] .skeleton-row,\n[data-theme=\"dark\"] .skeleton-card {\n  background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.08));\n}\n@keyframes shimmer {\n0% { background-position: 0% 0;\n}\n100% { background-position: 200% 0;\n}\n}\n.bars {\n  display: grid;\n  grid-template-columns: repeat(14, 1fr);\n  gap: 5px;\n  align-items: end;\n  min-height: 68px;\n  padding-top: 6px;\n}\n.bar-col {\n  display: flex;\n  align-items: end;\n  justify-content: center;\n  min-height: 68px;\n}\n.bar {\n  width: 100%;\n  min-height: 6px;\n  border-radius: 999px;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.95), rgba(139, 94, 60, 0.32));\n}\n.bars-soft .bar {\n  background: linear-gradient(180deg, rgba(31, 122, 140, 0.95), rgba(31, 122, 140, 0.30));\n}\n.bars-danger .bar {\n  background: linear-gradient(180deg, rgba(190, 73, 73, 0.95), rgba(190, 73, 73, 0.28));\n}\n.planner-row {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n}\n.planner-settings {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.pill-input {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 12px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 249, 241, 0.62));\n  box-shadow: var(--shadow-sm);\n}\n.pill-input-row {\n  justify-content: space-between;\n}\n[data-theme=\"dark\"] .pill-input {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n}\n.pill-input span {\n  font-weight: 450;\n  color: rgba(0, 0, 0, 0.6);\n  min-width: 64px;\n  font-size: 11px;\n}\n[data-theme=\"dark\"] .pill-input span {\n  color: rgba(255, 255, 255, 0.7);\n}\n.pill-input .input,\n.pill-input .select {\n  flex: 1;\n  box-shadow: none;\n  padding: 10px 10px;\n  border-radius: 12px;\n}\n.empty-mini {\n  color: var(--text-muted);\n  font-weight: 400;\n}\n.leech-list {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.leech {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 249, 241, 0.62));\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .leech {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n}\n.leech-k {\n  font-weight: 450;\n  font-size: 0.84rem;\n}\n.leech-s {\n  color: var(--text-muted);\n  font-weight: 400;\n  font-size: 0.76rem;\n}\n.pill {\n  padding: 8px 10px;\n  border-radius: 999px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 243, 0.62));\n  font-weight: 450;\n  color: rgba(0, 0, 0, 0.75);\n  font-size: 11px;\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .pill {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n  color: rgba(255, 255, 255, 0.85);\n}\n.tools-inline-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.read-list {\n  display: grid;\n  gap: 8px;\n}\n.read-row {\n  display: flex;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  font-size: 0.76rem;\n  align-items: center;\n}\n.read-row strong {\n  font-weight: 500;\n  text-align: right;\n  overflow-wrap: anywhere;\n}\n.cta-row {\n  display: flex;\n  gap: 10px;\n  margin-top: 2px;\n  flex-wrap: wrap;\n}\n.cta-row-split .cta {\n  min-height: 46px;\n}\n.cta {\n  flex: 1;\n  padding: 10px 10px;\n  border-radius: 14px;\n  font-weight: 450;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 11px;\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.cta-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);\n}\n.cta-ghost {\n  background: rgba(255, 255, 255, 0.58);\n  box-shadow: var(--shadow-sm);\n}\n.quiz-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 80;\n  background: rgba(0, 0, 0, 0.35);\n  backdrop-filter: blur(6px);\n  display: grid;\n  place-items: center;\n  padding: 18px;\n}\n.quiz-card {\n  width: min(680px, 100%);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(250, 245, 239, 0.95));\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 22px;\n  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);\n  overflow: hidden;\n}\n[data-theme=\"dark\"] .quiz-card {\n  background: rgba(18, 18, 18, 0.92);\n  border-color: rgba(255, 255, 255, 0.10);\n}\n.quiz-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 18px 22px 14px;\n  border-bottom: 1px solid rgba(0, 0, 0, 0.08);\n}\n[data-theme=\"dark\"] .quiz-top {\n  border-bottom-color: rgba(255, 255, 255, 0.08);\n}\n.quiz-title-wrap {\n  display: grid;\n  gap: 4px;\n}\n.quiz-title {\n  font-weight: 500;\n  font-size: 1.05rem;\n}\n.quiz-title-sub {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.quiz-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.7);\n  cursor: pointer;\n  font-size: 20px;\n}\n[data-theme=\"dark\"] .quiz-x {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.5);\n  color: rgba(255, 255, 255, 0.9);\n}\n.quiz-meta {\n  padding: 14px 22px 0;\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.quiz-chip {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  padding: 7px 10px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n  font-size: 0.73rem;\n  box-shadow: var(--shadow-sm);\n}\n.quiz-body {\n  padding: 18px 22px 22px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.quiz-summary-title {\n  font-size: 1.18rem;\n  font-weight: 500;\n  letter-spacing: -0.02em;\n}\n.quiz-summary-grid {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n  margin-top: 6px;\n}\n.quiz-summary-skill-grid {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n}\n.quiz-summary-skill,\n.quiz-summary-explain {\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 10px 12px;\n  background: rgba(255, 255, 255, 0.72);\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .quiz-summary-skill,\n[data-theme=\"dark\"] .quiz-summary-explain {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n}\n.quiz-summary-s {\n  margin-top: 4px;\n  font-size: 0.74rem;\n  color: var(--text-muted);\n  line-height: 1.45;\n}\n.quiz-summary-item {\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 10px 10px;\n  background: rgba(255, 255, 255, 0.72);\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .quiz-summary-item {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n}\n.quiz-summary-k {\n  font-size: 0.7rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n.quiz-summary-v {\n  margin-top: 6px;\n  font-size: 1.08rem;\n  font-weight: 500;\n  color: var(--text);\n}\n.quiz-summary-mistakes {\n  margin-top: 6px;\n  display: grid;\n  gap: 8px;\n}\n.quiz-summary-tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.quiz-tag {\n  padding: 8px 10px;\n  border-radius: 999px;\n  background: rgba(190, 73, 73, 0.10);\n  border: 1px solid rgba(190, 73, 73, 0.18);\n  color: rgba(140, 30, 30, 0.9);\n  font-weight: 500;\n  font-size: 0.72rem;\n}\n[data-theme=\"dark\"] .quiz-tag {\n  background: rgba(190, 73, 73, 0.18);\n  color: rgba(255, 255, 255, 0.86);\n}\n@media (max-width: 520px) {\n.quiz-summary-grid,\n  .quiz-summary-skill-grid {\n    grid-template-columns: 1fr;\n}\n.quiz-top,\n  .quiz-body,\n  .quiz-meta,\n  .quiz-actions {\n    padding-left: 16px;\n    padding-right: 16px;\n}\n.quiz-grade,\n  .quiz-actions {\n    flex-direction: column;\n}\n}\n.quiz-prompt {\n  font-size: 1.02rem;\n  color: var(--text);\n  line-height: 1.7;\n}\n.quiz-section-label {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n.quiz-hint {\n  color: var(--text-muted);\n  font-size: 0.88rem;\n  line-height: 1.7;\n}\n.quiz-options {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.quiz-opt {\n  display: flex;\n  gap: 10px;\n  align-items: flex-start;\n  padding: 12px 14px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.8);\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  font-size: 0.86rem;\n  line-height: 1.55;\n}\n[data-theme=\"dark\"] .quiz-opt {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n}\n.quiz-actions {\n  padding: 0 22px 22px;\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.quiz-reveal {\n  padding: 10px 12px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.8);\n  cursor: pointer;\n  font-weight: 450;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n}\n[data-theme=\"dark\"] .quiz-reveal {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.9);\n}\n.quiz-action {\n  min-height: 42px;\n  padding: 9px 12px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.8);\n  cursor: pointer;\n  font-weight: 450;\n  font-size: 0.82rem;\n  box-shadow: var(--shadow-sm);\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.quiz-action-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n}\n.quiz-action-ghost {\n  color: var(--text);\n}\n.quiz-grade {\n  flex: 1;\n  display: flex;\n  gap: 10px;\n  justify-content: flex-end;\n  flex-wrap: wrap;\n}\n.qg {\n  min-height: 42px;\n  padding: 9px 12px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.78);\n  cursor: pointer;\n  font-weight: 450;\n  font-size: 0.82rem;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n}\n.qg.primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: rgba(0, 0, 0, 0.06);\n  color: white;\n}\n.banner {\n  position: fixed;\n  top: 14px;\n  left: 50%;\n  transform: translateX(-50%);\n  z-index: 120;\n  min-width: min(560px, calc(100vw - 24px));\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px 14px;\n  border-radius: 16px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.92);\n  backdrop-filter: blur(10px);\n  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);\n  font-weight: 450;\n  animation: riseSoft 220ms ease-out;\n}\n.banner-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.banner-action {\n  border: 0;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  padding: 9px 12px;\n  font-size: 0.78rem;\n  font-weight: 500;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n}\n.banner.success {\n  border-color: rgba(0, 150, 90, 0.25);\n}\n.banner.error {\n  border-color: rgba(200, 0, 50, 0.25);\n}\n.banner.info {\n  border-color: rgba(0, 0, 0, 0.10);\n}\n[data-theme=\"dark\"] .banner {\n  background: rgba(18, 18, 18, 0.88);\n  border-color: rgba(255, 255, 255, 0.12);\n  color: rgba(255, 255, 255, 0.92);\n}\n[data-theme=\"dark\"] .banner-action {\n  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);\n}\n.banner-x {\n  width: 36px;\n  height: 36px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n}\n[data-theme=\"dark\"] .banner-x {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.9);\n}\n.confetti {\n  position: fixed;\n  inset: 0;\n  pointer-events: none;\n  z-index: 140;\n  overflow: hidden;\n}\n.confetti-piece {\n  position: absolute;\n  top: -10px;\n  width: 8px;\n  height: 12px;\n  border-radius: 3px;\n  opacity: 0.9;\n  animation: confetti-fall 1.35s ease-in forwards;\n  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);\n}\n@keyframes fadeLift {\nfrom {\n    opacity: 0;\n    transform: translateX(-50%) translateY(4px);\n}\nto {\n    opacity: 1;\n    transform: translateX(-50%) translateY(0);\n}\n}\n@keyframes confetti-fall {\n0% {\n    transform: translateY(-20px) rotate(0deg);\n    opacity: 0;\n}\n10% {\n    opacity: 0.95;\n}\n100% {\n    transform: translateY(110vh) rotate(480deg);\n    opacity: 0;\n}\n}\n.row {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.mini-btn {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.68));\n  cursor: pointer;\n  font-size: 0.72rem;\n  color: var(--text);\n  white-space: nowrap;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.mini-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.mini-btn.danger {\n  border-color: rgba(255, 0, 0, 0.2);\n  color: #b00020;\n}\n.radio-group {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.radio {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 0.85rem;\n  color: var(--text);\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n}\n[data-theme=\"dark\"] .radio {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.25);\n}\n.radio input {\n  margin: 0;\n}\n.checkline {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.verses.focus .verse.dim {\n  opacity: 0.22;\n}\n.verse.blur {\n  filter: blur(4px);\n  opacity: 0.38;\n}\n.group {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  min-width: 0;\n}\n.field label {\n  font-size: 0.62rem;\n  font-weight: 700;\n  text-transform: uppercase;\n  color: var(--text-muted);\n  letter-spacing: 0.5px;\n}\n.select,\n.input {\n  width: 100%;\n  min-width: 0;\n  padding: 11px 12px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--text);\n  font-size: 0.8rem;\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n[data-theme=\"dark\"] .select,\n[data-theme=\"dark\"] .input {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.55);\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);\n}\n.select:focus,\n.input:focus {\n  outline: none;\n  border-color: rgba(139, 94, 60, 0.35);\n  box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.12), 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n.select-prominent {\n  border-color: rgba(139, 94, 60, 0.22);\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.12), rgba(255, 255, 255, 0.92));\n}\n.range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.range-compact>* {\n  flex: 1;\n}\n.range-single {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n  align-items: center;\n}\n.range span {\n  color: rgba(0, 0, 0, 0.35);\n  font-weight: 450;\n  font-size: 11px;\n}\n[data-theme=\"dark\"] .range span {\n  color: rgba(255, 255, 255, 0.35);\n}\n.radio-group {\n  gap: 12px;\n}\n.radio {\n  border-radius: 14px;\n  padding: 8px 10px;\n  font-size: 11px;\n  font-weight: 400;\n}\n.radio-group-tight {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.radio-group-tight .radio {\n  flex: 1 1 110px;\n  justify-content: center;\n}\n.row .select {\n  flex: 1;\n}\n.row .input,\n.row .select,\n.row .mini-btn {\n  min-width: 0;\n}\n.switch {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 11px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  cursor: pointer;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n}\n[data-theme=\"dark\"] .switch {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.25);\n}\n.switch input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.switch-ui {\n  width: 44px;\n  height: 26px;\n  border-radius: 999px;\n  background: rgba(0, 0, 0, 0.12);\n  position: relative;\n  flex: 0 0 auto;\n}\n[data-theme=\"dark\"] .switch-ui {\n  background: rgba(255, 255, 255, 0.14);\n}\n.switch-ui::after {\n  content: \"\";\n  position: absolute;\n  top: 3px;\n  left: 3px;\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  background: white;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);\n  transition: transform 0.15s ease, background 0.15s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.45);\n}\n.switch input:checked+.switch-ui::after {\n  transform: translateX(18px);\n}\n.switch-text {\n  font-size: 0.74rem;\n  color: rgba(0, 0, 0, 0.72);\n  font-weight: 400;\n}\n[data-theme=\"dark\"] .switch-text {\n  color: rgba(255, 255, 255, 0.82);\n}\n.range input {\n  flex: 1;\n}\n.toggle {\n  display: flex;\n  gap: 8px;\n}\n.toggle button {\n  flex: 1;\n  padding: 8px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n}\n.toggle button.active {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: var(--accent);\n  color: white;\n}\n.slider {\n  width: 100%;\n  height: 3px;\n  -webkit-appearance: none;\n  background: var(--border);\n  border-radius: 3px;\n}\n.slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 12px;\n  height: 12px;\n  border-radius: 50%;\n  background: var(--accent);\n  cursor: pointer;\n}\n.value {\n  color: var(--accent);\n  margin-left: 4px;\n}\n.check label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  cursor: pointer;\n  font-weight: normal;\n  text-transform: none;\n}\n.primary-btn {\n  padding: 12px;\n  border-radius: 40px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  color: white;\n  cursor: pointer;\n  font-weight: 450;\n  box-shadow: 0 16px 34px rgba(139, 94, 60, 0.26);\n}\n.full {\n  width: 100%;\n}\n\n/* Audio Player */\n.player-bar {\n  position: fixed;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 242, 234, 0.96));\n  border-top: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  padding: 6px 12px 8px;\n  z-index: 25;\n  box-shadow: 0 -20px 44px rgba(91, 74, 57, 0.12);\n  transition: right 0.25s ease;\n}\n.main.tools-open .player-bar {\n  right: var(--tools-width);\n}\n.player-collapsed-meta {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 2px 42px 2px 0;\n}\n.player-collapsed-copy {\n  min-width: 0;\n}\n.player-collapsed-title {\n  font-size: 12px;\n  font-weight: 500;\n  color: var(--text);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-collapsed-sub {\n  margin-top: 2px;\n  font-size: 10px;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-collapse {\n  position: absolute;\n  right: 12px;\n  top: 6px;\n  width: 34px;\n  height: 28px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  box-shadow: var(--shadow-sm);\n  cursor: pointer;\n  display: grid;\n  place-items: center;\n  color: rgba(73, 58, 45, 0.76);\n}\n[data-theme=\"dark\"] .player-collapse {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.85);\n}\n.player-progress {\n  position: relative;\n  height: 14px;\n  cursor: pointer;\n  margin-bottom: 4px;\n}\n.player-track {\n  position: absolute;\n  top: 6px;\n  left: 0;\n  right: 0;\n  height: 2px;\n  background: rgba(117, 101, 85, 0.16);\n  border-radius: 2px;\n}\n.player-fill {\n  position: absolute;\n  top: 6px;\n  left: 0;\n  height: 2px;\n  background: linear-gradient(90deg, var(--accent), var(--accent-strong));\n  border-radius: 2px;\n}\n.player-handle {\n  position: absolute;\n  top: 3px;\n  width: 8px;\n  height: 8px;\n  background: var(--accent);\n  box-shadow: 0 4px 14px rgba(154, 103, 56, 0.32);\n  border-radius: 50%;\n  transform: translateX(-50%);\n}\n.player-controls {\n  display: grid;\n  grid-template-columns: 56px 1fr 56px;\n  align-items: center;\n}\n.player-time {\n  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace;\n  font-size: 11px;\n  color: rgba(73, 58, 45, 0.64);\n}\n.player-time.right {\n  text-align: right;\n}\n.player-center {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n}\n.player-icon {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.66));\n  border: 1px solid var(--border);\n  padding: 6px;\n  font-size: 16px;\n  line-height: 1;\n  cursor: pointer;\n  color: rgba(73, 58, 45, 0.76);\n  border-radius: 12px;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n}\n.player-icon:disabled {\n  opacity: 0.35;\n  cursor: not-allowed;\n}\n.player-icon.play {\n  font-size: 18px;\n  color: rgba(73, 58, 45, 0.92);\n}\n.player-menu-overlay {\n  position: fixed;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  top: 0;\n  z-index: 30;\n}\n.player-menu {\n  position: absolute;\n  left: 50%;\n  transform: translateX(-50%);\n  bottom: 58px;\n  width: min(420px, calc(100vw - 24px));\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 242, 234, 0.96));\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.14);\n  padding: 10px;\n}\n.player-menu-item {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 10px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 12px;\n  color: rgba(0, 0, 0, 0.85);\n  text-align: left;\n  border-radius: 12px;\n  transition: background 140ms ease, transform 140ms ease;\n}\n.player-menu-item:hover {\n  background: rgba(0, 0, 0, 0.04);\n}\n.pm-ico {\n  width: 18px;\n  text-align: center;\n  color: rgba(0, 0, 0, 0.65);\n}\n.player-menu-sep {\n  height: 1px;\n  background: rgba(0, 0, 0, 0.08);\n  margin: 6px 2px;\n}\n.player-menu-row {\n  display: grid;\n  grid-template-columns: 70px 1fr auto;\n  align-items: center;\n  gap: 10px;\n  padding: 8px 10px;\n}\n.pm-label {\n  font-size: 11px;\n  color: rgba(0, 0, 0, 0.65);\n}\n.pm-value {\n  font-size: 11px;\n  color: rgba(0, 0, 0, 0.75);\n  min-width: 40px;\n  text-align: right;\n}\n.pm-range {\n  width: 100%;\n}\n.pm-select {\n  grid-column: 2 / span 2;\n  padding: 8px 10px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: white;\n  font-size: 12px;\n}\n.icon-btn:hover,\n.rail-btn:hover,\n.cta-btn:hover,\n.tools-x:hover,\n.tools-tabs button:hover,\n.sheet-toggle:hover,\n.tools-btn:hover,\n.stat-cta:hover,\n.cta:hover,\n.quiz-opt:hover,\n.quiz-reveal:hover,\n.qg:hover,\n.mini-btn:hover,\n.radio:hover,\n.switch:hover,\n.player-icon:hover,\n.player-menu-item:hover {\n  transform: translateY(-1px);\n}\n.icon-btn:hover,\n.rail-btn:hover,\n.tools-x:hover,\n.tools-btn:hover,\n.stat-cta:hover,\n.cta:hover,\n.quiz-opt:hover,\n.quiz-reveal:hover,\n.qg:hover,\n.mini-btn:hover,\n.radio:hover,\n.switch:hover,\n.player-icon:hover {\n  box-shadow: var(--shadow-md);\n}\n.tools-tabs button:hover,\n.sheet-toggle:hover,\n.player-menu-item:hover {\n  background: rgba(255, 255, 255, 0.76);\n}\n@keyframes appFade {\n0% {\n    opacity: 0;\n    transform: translateY(4px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes railIn {\n0% {\n    opacity: 0;\n    transform: translateY(-8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes riseSoft {\n0% {\n    opacity: 0;\n    transform: translateY(8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n/* Responsive */\n@media (max-width: 768px) {\n.app-header {\n    padding: 10px 16px;\n}\n.main {\n    padding: 16px 16px 100px;\n}\n.main.tools-open {\n    padding-right: 16px;\n}\n.main.tools-open .player-bar {\n    right: 0;\n}\n.session-meta {\n    display: none;\n}\n.player-row {\n    gap: 8px;\n}\n.player-btn {\n    padding: 4px 8px;\n}\n.player-select {\n    display: none;\n}\n}\n@media (min-width: 1500px) {\n.content {\n    max-width: 1220px;\n}\n.main.tools-open .content {\n    max-width: min(1180px, calc(100vw - var(--tools-width) - 120px));\n}\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n:root {\n  --bg: #f3eee6;\n  --surface: rgba(255, 250, 243, 0.88);\n  --surface-strong: rgba(255, 255, 255, 0.92);\n  --border: rgba(78, 58, 38, 0.10);\n  --text: #1f1a17;\n  --text-muted: #6c6258;\n  --accent: #9a6738;\n  --accent-strong: #6e4726;\n  --accent-soft: #d8c1a8;\n  --accent-light: rgba(154, 103, 56, 0.10);\n  --accent-wash: rgba(228, 211, 194, 0.42);\n  --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);\n  --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);\n  --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);\n  --radius: 16px;\n  --navbar-offset: 56px;\n  --tools-width: 440px;\n  --tools-footer-h: 78px;\n  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;\n  --font-ui: \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n[data-theme=\"dark\"] {\n  --bg: #15110f;\n  --surface: rgba(33, 27, 24, 0.88);\n  --surface-strong: rgba(44, 36, 31, 0.94);\n  --border: rgba(255, 235, 214, 0.10);\n  --text: #f1e7dc;\n  --text-muted: #bcae9f;\n  --accent: #d0a06b;\n  --accent-strong: #efc18d;\n  --accent-soft: #5f4530;\n  --accent-light: rgba(208, 160, 107, 0.14);\n  --accent-wash: rgba(208, 160, 107, 0.08);\n  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);\n  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);\n  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);\n}\n[data-theme=\"sepia\"] {\n  --bg: #efe2cb;\n  --surface: rgba(250, 241, 227, 0.88);\n  --surface-strong: rgba(255, 248, 237, 0.94);\n  --text: #352516;\n  --text-muted: #75624f;\n  --accent: #b8824e;\n  --accent-strong: #8f6033;\n  --accent-soft: #dcc3a6;\n  --accent-light: rgba(184, 130, 78, 0.12);\n  --accent-wash: rgba(221, 194, 162, 0.35);\n}\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\nbody {\n  font-family: var(--font-ui);\n  background: var(--bg);\n  color: var(--text);\n  background-image:\n    radial-gradient(circle at top left, rgba(255, 255, 255, 0.55), transparent 34%),\n    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 30%);\n}\n.app {\n  min-height: 100vh;\n  animation: appFade 260ms ease-out;\n}\n\n/* Header */\n.app-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 12px 24px;\n  background: var(--surface);\n  border-bottom: 1px solid var(--border);\n  backdrop-filter: blur(10px);\n  position: sticky;\n  top: 0;\n  z-index: 20;\n}\n\n/* Mode Indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  margin: 8px 0 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n.mode-indicator i {\n  font-size: 0.75rem;\n}\n[data-theme=\"dark\"] .mode-indicator {\n  background: rgba(208, 160, 107, 0.12);\n  border-color: rgba(208, 160, 107, 0.25);\n}\n.verse-translation {\n  font-size: 0.85rem;\n  color: #5a6b63;\n  line-height: 1.6;\n  padding-top: 12px;\n  margin-top: 8px;\n  border-top: 1px solid var(--border);\n  display: block;\n}\n[data-theme=\"dark\"] .verse-translation {\n  color: #a0a0b0;\n}\n[data-theme=\"sepia\"] .verse-translation {\n  color: #7a684a;\n}\n.header-left {\n  display: flex;\n  align-items: center;\n  gap: 32px;\n  flex-wrap: wrap;\n}\n\n/* Verses Grid */\n.verses-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  margin-top: 20px;\n}\n.verse-card {\n  background: var(--surface);\n  border-radius: 20px;\n  padding: 24px;\n  transition: all 0.2s ease;\n  border: 1px solid var(--border);\n  position: relative;\n}\n.verse-card.active {\n  border-left: 4px solid var(--accent);\n  background: var(--accent-light);\n}\n.verse-card.focus-mode {\n  opacity: 0.4;\n}\n.verse-card.focus-mode.active {\n  opacity: 1;\n}\n.verse-card.blurred {\n  filter: blur(4px);\n}\n.verse-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 16px;\n}\n.verse-badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-number {\n  font-size: 0.75rem;\n  padding: 4px 12px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  color: var(--accent);\n}\n.verse-ref {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 8px;\n}\n.start-btn {\n  width: 100%;\n  padding: 7px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  border-radius: 10px;\n  color: white;\n  font-size: 1rem;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  margin-top: 20px;\n  transition: all 0.2s;\n}\n.start-btn:hover:not(:disabled) {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 20px rgba(0,0,0,0.15);\n}\n.start-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.start-btn:disabled:hover {\n  transform: none;\n  box-shadow: var(--shadow-sm);\n}\n.verse-play-btn,\n.verse-focus-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.verse-play-btn:hover,\n.verse-focus-btn:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.verse-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.4rem;\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n.verse-transliteration {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  font-style: italic;\n  margin-top: 8px;\n}\n.verse-words {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 12px;\n  margin-top: 16px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n}\n.word-item {\n  background: var(--accent-light);\n  padding: 6px 12px;\n  border-radius: 20px;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.75rem;\n}\n.word-arabic {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n}\n.word-meaning {\n  color: var(--text-muted);\n}\n.word-audio-btn {\n  background: none;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 0 4px;\n}\n\n/* Navigation Bar */\n.navigation-bar {\n  position: sticky;\n  bottom: 20px;\n  margin-top: 24px;\n  background: var(--surface);\n  border-radius: 60px;\n  padding: 12px 24px;\n  box-shadow: var(--shadow-lg);\n  border: 1px solid var(--border);\n  backdrop-filter: blur(10px);\n  z-index: 15;\n}\n.nav-buttons {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 16px;\n}\n.nav-btn {\n  padding: 10px 24px;\n  border-radius: 40px;\n  border: 1px solid var(--border);\n  background: var(--bg-surface);\n  color: var(--text);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.nav-btn:hover:not(:disabled) {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.nav-btn:disabled {\n  opacity: 0.4;\n  cursor: not-allowed;\n}\n.play-btn {\n  width: 56px;\n  height: 56px;\n  border-radius: 56px;\n  background: var(--accent-green, #2c5f4a);\n  border: none;\n  color: white;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.4rem;\n  transition: transform 0.2s;\n}\n.play-btn:hover {\n  transform: scale(1.02);\n}\n\n/* Simple Planner Styles */\n.planner-simple {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.goal-item {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 8px 0;\n  border-bottom: 1px solid var(--border);\n}\n.goal-item span {\n  font-size: 0.8rem;\n  color: var(--text);\n}\n.input-small {\n  width: 80px;\n  padding: 6px 10px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  color: var(--text);\n  text-align: center;\n}\n.today-plan {\n  background: var(--accent-light);\n  border-radius: 12px;\n  padding: 12px;\n  margin-top: 8px;\n}\n.plan-header {\n  font-weight: 600;\n  margin-bottom: 10px;\n  font-size: 0.85rem;\n}\n.plan-details {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n}\n.plan-item {\n  display: flex;\n  justify-content: space-between;\n  font-size: 0.75rem;\n}\n.plan-item span {\n  color: var(--text-muted);\n}\n.planner-actions {\n  display: flex;\n  gap: 10px;\n  margin-top: 16px;\n}\n.btn-secondary {\n  flex: 1;\n  padding: 10px;\n  border-radius: 40px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.75rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.btn-primary {\n  flex: 1;\n  padding: 10px;\n  border-radius: 40px;\n  background: var(--accent-green, #2c5f4a);\n  border: none;\n  color: white;\n  cursor: pointer;\n  font-size: 0.75rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.weak-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  max-height: 300px;\n  overflow-y: auto;\n}\n.weak-item {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 8px 10px;\n  background: var(--surface);\n  border-radius: 10px;\n  border: 1px solid var(--border);\n}\n.weak-ref {\n  font-family: monospace;\n  font-size: 0.8rem;\n  font-weight: 500;\n}\n.weak-lapses {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.brand {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.brand-mark {\n  font-size: 1.4rem;\n  color: var(--accent);\n}\n.brand-name {\n  font-weight: 500;\n  font-size: 0.95rem;\n}\n.session-name {\n  font-size: 0.85rem;\n  font-weight: 450;\n}\n.session-meta {\n  display: flex;\n  gap: 8px;\n  margin-top: 4px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.header-right {\n  display: flex;\n  gap: 8px;\n}\n.icon-btn {\n  width: 34px;\n  height: 34px;\n  border-radius: 12px;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.58));\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: var(--text-muted);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n}\n\n/* Main */\n.main {\n  transition: padding-right 0.25s ease;\n  padding: 20px 24px 100px;\n}\n.main.tools-open {\n  padding-right: var(--tools-width);\n}\n.main.tools-open .content {\n  max-width: min(980px, calc(100vw - var(--tools-width) - 80px));\n}\n.content {\n  max-width: 1120px;\n  margin: 0 auto;\n}\n.reading-toolbar {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  margin-bottom: 16px;\n  padding: 12px 14px;\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.reading-toolbar-group {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  align-items: flex-start;\n}\n.toolbar-font-wrap {\n  position: relative;\n}\n.toolbar-font-menu {\n  position: absolute;\n  top: calc(100% + 8px);\n  left: 0;\n  min-width: 180px;\n  display: grid;\n  gap: 6px;\n  padding: 8px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: var(--surface-strong);\n  box-shadow: var(--shadow-md);\n  z-index: 12;\n}\n.toolbar-font-option {\n  width: 100%;\n  padding: 8px 10px;\n  border: 0;\n  border-radius: 10px;\n  background: transparent;\n  color: var(--text);\n  text-align: left;\n  font-size: 0.78rem;\n  cursor: pointer;\n}\n.toolbar-font-option.active,\n.toolbar-font-option:hover {\n  background: var(--accent-light);\n}\n.toolbar-chip {\n  border: 0;\n  border-radius: 999px;\n  padding: 8px 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  font-size: 0.75rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: var(--shadow-sm);\n}\n.toolbar-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.hero-card {\n  margin-bottom: 16px;\n  padding: 18px 18px 16px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 236, 226, 0.92));\n  box-shadow: var(--shadow-md);\n  display: grid;\n  gap: 14px;\n  animation: riseSoft 260ms ease-out;\n}\n.hero-kicker {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  color: var(--accent);\n}\n.hero-title {\n  margin-top: 6px;\n  font-size: 1.24rem;\n  font-weight: 500;\n  letter-spacing: -0.03em;\n}\n.hero-sub {\n  margin-top: 8px;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  max-width: 56ch;\n}\n.hero-flow {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n}\n.hero-step {\n  padding: 10px 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.62);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.74rem;\n}\n.hero-step span {\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  display: grid;\n  place-items: center;\n  background: var(--accent-light);\n  color: var(--accent);\n  font-size: 11px;\n}\n.hero-step strong {\n  font-weight: 500;\n}\n.hero-points {\n  display: grid;\n  gap: 8px;\n}\n.hero-point {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.hero-point i {\n  color: var(--accent);\n}\n.hero-actions,\n.empty-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n\n/* Session rail */\n.session-rail {\n  position: sticky;\n  top: 14px;\n  z-index: 18;\n  margin-bottom: 18px;\n  padding: 12px 14px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-md);\n  animation: railIn 280ms ease-out;\n}\n[data-theme=\"dark\"] .session-rail {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(18, 18, 18, 0.86);\n}\n.session-rail-top {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  gap: 12px;\n  align-items: center;\n}\n.session-rail-kicker {\n  font-size: 10px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  margin-top: 2px;\n  font-size: 14px;\n  font-weight: 450;\n}\n.session-rail-meta {\n  margin-top: 2px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.session-rail-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 8px;\n  margin-top: 10px;\n}\n.rail-stat {\n  padding: 8px 10px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-stat span {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n}\n.rail-stat strong {\n  font-size: 0.78rem;\n  font-weight: 500;\n}\n.rail-btn {\n  height: 34px;\n  padding: 0 12px;\n  border-radius: 13px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  color: var(--text);\n  font-size: 12px;\n  font-weight: 450;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n[data-theme=\"dark\"] .rail-btn {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.46);\n}\n.rail-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);\n}\n.rail-btn-ghost {\n  background: transparent;\n}\n.progress-bar {\n  flex: 1;\n  height: 4px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-wide {\n  margin-top: 10px;\n}\n.progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s;\n}\n.cta-btn {\n  padding: 6px 18px;\n  border-radius: 40px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  color: white;\n  font-size: 0.74rem;\n  font-weight: 450;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: 0 14px 30px rgba(154, 103, 56, 0.24);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n\n/* Empty */\n.empty {\n  padding: 40px 0;\n}\n.empty-card {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: var(--radius);\n  padding: 32px;\n  text-align: center;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-md);\n}\n.empty-icon {\n  font-family: var(--font-ar);\n  font-size: 2.2rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.empty-card h3 {\n  font-weight: 450;\n  margin-bottom: 6px;\n  font-size: 1rem;\n}\n.empty-card p {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  margin-bottom: 16px;\n}\n\n/* Verses */\n.verses {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.verses.compact .verse {\n  padding: 12px;\n}\n.verse {\n  transition: all 0.2s ease;\n}\n.verse.active {\n  border-left: 3px solid var(--accent);\n  background: var(--accent-light);\n}\n.verse-head {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 12px;\n}\n.verse-badge {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-num {\n  font-size: 0.7rem;\n  padding: 2px 8px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  color: var(--accent);\n}\n.verse-ref {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 6px;\n}\n.action-btn {\n  background: transparent;\n  border: none;\n  color: var(--text-muted);\n  cursor: pointer;\n  padding: 4px 8px;\n  border-radius: 6px;\n  font-size: 0.7rem;\n}\n.verse-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.7rem;\n  line-height: 2.25;\n  text-align: right;\n  direction: rtl;\n  margin: 12px 0 10px;\n  text-rendering: optimizeLegibility;\n  font-feature-settings: \"liga\" 1, \"calt\" 1;\n  font-variant-ligatures: contextual common-ligatures;\n  unicode-bidi: plaintext;\n}\n.verse-transliteration {\n  font-size: 0.94rem;\n  color: var(--text-muted);\n  line-height: 1.8;\n  margin-top: 6px;\n}\n.verse-words {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(84px, max-content));\n  gap: 10px 8px;\n  margin-top: 10px;\n  align-items: start;\n}\n.word {\n  background: var(--accent-light);\n  padding: 8px 10px 10px;\n  border-radius: 16px;\n  display: inline-grid;\n  justify-items: center;\n  gap: 3px;\n  font-size: 0.72rem;\n  position: relative;\n  cursor: default;\n  min-width: 84px;\n}\n.word.active {\n  background: var(--accent);\n  color: #fff;\n  box-shadow: 0 10px 24px rgba(154, 103, 56, 0.22);\n}\n.word-ar {\n  font-family: var(--font-ar);\n  font-size: 1.12rem;\n  line-height: 1.7;\n  color: var(--text);\n}\n.word-en {\n  color: var(--text-muted);\n  font-size: 0.66rem;\n  line-height: 1.35;\n  text-align: center;\n  max-width: 100%;\n  word-break: break-word;\n}\n.word-play {\n  background: rgba(255, 255, 255, 0.6);\n  border-radius: 999px;\n  width: 22px;\n  height: 22px;\n  border: none;\n  cursor: pointer;\n  font-size: 0.62rem;\n  display: grid;\n  place-items: center;\n  color: var(--accent);\n  margin-top: 3px;\n}\n.word-tooltip {\n  position: absolute;\n  left: 50%;\n  bottom: calc(100% + 8px);\n  transform: translateX(-50%);\n  min-width: 132px;\n  max-width: 220px;\n  display: grid;\n  gap: 4px;\n  padding: 8px 10px;\n  border-radius: 12px;\n  background: rgba(24, 27, 33, 0.96);\n  color: rgba(255, 255, 255, 0.94);\n  box-shadow: 0 14px 34px rgba(10, 12, 18, 0.24);\n  white-space: normal;\n  z-index: 8;\n  animation: fadeLift 140ms ease-out;\n}\n.word-tooltip::after {\n  content: \"\";\n  position: absolute;\n  left: 50%;\n  bottom: -5px;\n  width: 10px;\n  height: 10px;\n  transform: translateX(-50%) rotate(45deg);\n  background: rgba(24, 27, 33, 0.96);\n}\n.word-tooltip-ar {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n  line-height: 1.7;\n  text-align: right;\n}\n.word-tooltip-en {\n  font-size: 0.72rem;\n  line-height: 1.45;\n  color: rgba(255, 255, 255, 0.82);\n}\n.verse-footer {\n  margin-top: 14px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n  display: flex;\n  justify-content: space-between;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.verse-footer-side {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.verse-tool-btn {\n  width: 36px;\n  height: 36px;\n  border: 0;\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  box-shadow: var(--shadow-sm);\n}\n.verse-tool-btn.active {\n  background: var(--accent);\n  color: #fff;\n}\n.verse-arabic tajweed,\n.verse-arabic .tajweed {\n  font-family: inherit;\n}\n.verse-arabic tajweed.ham_wasl,\n.verse-arabic .ham_wasl {\n  color: #9c27b0;\n}\n.verse-arabic tajweed.ghunnah,\n.verse-arabic .ghunnah {\n  color: #1f7a8c;\n}\n.verse-arabic tajweed.idgham_ghunnah,\n.verse-arabic .idgham_ghunnah {\n  color: #1f7a8c;\n}\n.verse-arabic tajweed.idgham_wo_ghunnah,\n.verse-arabic .idgham_wo_ghunnah {\n  color: #0f766e;\n}\n.verse-arabic tajweed.iqlab,\n.verse-arabic .iqlab {\n  color: #2563eb;\n}\n.verse-arabic tajweed.ikhafa,\n.verse-arabic .ikhafa {\n  color: #f59e0b;\n}\n.verse-arabic tajweed.qlqla,\n.verse-arabic .qlqla,\n.verse-arabic tajweed.qalqalah,\n.verse-arabic .qalqalah {\n  color: #ef4444;\n}\n.verse-arabic tajweed.madda_normal,\n.verse-arabic .madda_normal,\n.verse-arabic tajweed.madda_permissible,\n.verse-arabic .madda_permissible,\n.verse-arabic tajweed.madda_necessary,\n.verse-arabic .madda_necessary {\n  color: #8b5cf6;\n}\n.verse-arabic tajweed.idgham_shafawi,\n.verse-arabic .idgham_shafawi,\n.verse-arabic tajweed.ikhafa_shafawi,\n.verse-arabic .ikhafa_shafawi {\n  color: #db2777;\n}\n.verse-arabic tajweed.slnt,\n.verse-arabic .slnt,\n.verse-arabic tajweed.waqf,\n.verse-arabic .waqf {\n  color: #6b7280;\n}\n\n/* Tools Panel */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  width: min(var(--tools-width), 100vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n}\n[data-theme=\"dark\"] .tools {\n  background: rgba(18, 18, 18, 0.9);\n  border-left-color: rgba(255, 255, 255, 0.08);\n  box-shadow: -40px 0 120px rgba(0, 0, 0, 0.55);\n}\n.tools.open {\n  transform: translateX(0);\n}\n@media (max-width: 768px) {\n.tools {\n    left: 0;\n    right: 0;\n    width: 100%;\n}\n.main.tools-open {\n    padding-right: 24px;\n}\n}\n@media (max-width: 1180px) {\n.main.tools-open {\n    padding-right: 24px;\n}\n.main.tools-open .content {\n    max-width: 1120px;\n}\n}\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n  background:\n    radial-gradient(circle at top right, rgba(154, 103, 56, 0.12), transparent 36%),\n    linear-gradient(180deg, rgba(255, 255, 255, 0.25), transparent 100%);\n}\n[data-theme=\"dark\"] .tools-top {\n  border-bottom-color: rgba(255, 255, 255, 0.08);\n}\n.tools-topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.tools-title {\n  font-size: 1rem;\n  font-weight: 700;\n  letter-spacing: -0.2px;\n  color: var(--text);\n}\n.tools-context {\n  margin-top: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 600;\n}\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n  color: rgba(0, 0, 0, 0.7);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n[data-theme=\"dark\"] .tools-x {\n  border-color: rgba(255, 255, 255, 0.1);\n  background: rgba(30, 30, 40, 0.35);\n  color: rgba(255, 255, 255, 0.85);\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n}\n.tools-tabs button {\n  flex: 1;\n  padding: 7px 10px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.82rem;\n  cursor: pointer;\n  color: rgba(0, 0, 0, 0.55);\n  font-weight: 450;\n  transition: background 140ms ease, color 140ms ease, transform 140ms ease;\n}\n.tools-tabs button.active {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));\n  box-shadow: var(--shadow-sm);\n  color: rgba(0, 0, 0, 0.85);\n}\n[data-theme=\"dark\"] .tools-tabs {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 255, 255, 0.08);\n}\n[data-theme=\"dark\"] .tools-tabs button {\n  color: rgba(255, 255, 255, 0.7);\n}\n[data-theme=\"dark\"] .tools-tabs button.active {\n  background: rgba(30, 30, 40, 0.9);\n  color: rgba(255, 255, 255, 0.92);\n  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);\n}\n.tools-body {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n}\n.sheet {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.sheet-section {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border-radius: 18px;\n  padding: 0;\n  overflow: hidden;\n  box-shadow: var(--shadow-sm);\n  animation: riseSoft 260ms ease-out;\n}\n[data-theme=\"dark\"] .sheet-section {\n  border-color: rgba(255, 255, 255, 0.08);\n  background: rgba(30, 30, 40, 0.45);\n}\n.sheet-section-accent {\n  border-color: rgba(154, 103, 56, 0.22);\n  background: linear-gradient(180deg, rgba(154, 103, 56, 0.14), rgba(233, 214, 194, 0.26));\n}\n.sheet-toggle {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border: none;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease;\n}\n[data-theme=\"dark\"] .sheet-toggle {\n  background: linear-gradient(180deg, rgba(30, 30, 40, 0.85), rgba(30, 30, 40, 0.45));\n}\n.st-left {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.st-ico {\n  width: 24px;\n  height: 24px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));\n  border: 1px solid rgba(139, 94, 60, 0.18);\n  flex: 0 0 auto;\n  font-size: 11px;\n  font-weight: 600;\n  color: var(--accent);\n}\n[data-theme=\"dark\"] .st-ico {\n  background: rgba(196, 154, 108, 0.10);\n  border-color: rgba(196, 154, 108, 0.14);\n}\n.st-txt {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 2px;\n  min-width: 0;\n}\n.st-title {\n  font-weight: 450;\n  letter-spacing: -0.2px;\n  color: var(--text);\n  font-size: 0.82rem;\n}\n.st-sub {\n  font-size: 0.66rem;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.st-chev {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  display: grid;\n  place-items: center;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  color: rgba(0, 0, 0, 0.65);\n  transition: transform 0.15s ease;\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .st-chev {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.35);\n  color: rgba(255, 255, 255, 0.75);\n}\n.st-chev.open {\n  transform: rotate(180deg);\n}\n.sheet-content {\n  padding: 16px 16px 18px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.tools-footer {\n  position: absolute;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  height: var(--tools-footer-h);\n  padding: 12px 16px 14px;\n  border-top: 1px solid var(--border);\n  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));\n  display: flex;\n  gap: 10px;\n  justify-content: space-between;\n  align-items: center;\n}\n[data-theme=\"dark\"] .tools-footer {\n  border-top-color: rgba(255, 255, 255, 0.08);\n  background: linear-gradient(to top, rgba(18, 18, 18, 0.98), rgba(18, 18, 18, 0.78), rgba(18, 18, 18, 0));\n}\n.tools-btn {\n  flex: 1;\n  min-height: 44px;\n  padding: 10px 10px;\n  border-radius: 15px;\n  font-weight: 500;\n  border: 1px solid rgba(0, 0, 0, 0.1);\n  cursor: pointer;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  line-height: 1;\n}\n.tools-btn span {\n  white-space: nowrap;\n}\n[data-theme=\"dark\"] .tools-btn {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.9);\n}\n.tools-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: rgba(0, 0, 0, 0.05);\n  color: white;\n  box-shadow: 0 18px 40px rgba(139, 94, 60, 0.32);\n}\n.flow-strip {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n  padding: 12px 14px 0;\n}\n.guide-copy {\n  padding: 0 14px 14px;\n}\n.guide-title {\n  font-size: 1rem;\n  font-weight: 700;\n}\n.guide-sub {\n  margin-top: 4px;\n  font-size: 0.84rem;\n  color: var(--text-muted);\n}\n.flow-step {\n  min-height: 30px;\n  padding: 6px 8px;\n  border-radius: 14px;\n  background: rgba(0, 0, 0, 0.04);\n  font-size: 10px;\n  color: var(--text-muted);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.flow-step.active {\n  background: rgba(139, 94, 60, 0.12);\n  color: var(--accent);\n}\n.field-stack {\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n}\n.action-grid-3 {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 8px;\n}\n@media (max-width: 640px) {\n.action-grid-3,\n  .radio-group-tight {\n    grid-template-columns: 1fr;\n}\n.hero-flow,\n  .session-rail-stats,\n  .flow-strip {\n    grid-template-columns: 1fr 1fr;\n}\n.reading-toolbar {\n    padding: 10px 12px;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 8px);\n    justify-content: center;\n}\n.verse {\n    padding: 16px 14px;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n}\n.session-rail-actions {\n    flex-wrap: wrap;\n}\n}\n.stat-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 10px;\n}\n@media (max-width: 520px) {\n.stat-grid {\n    grid-template-columns: 1fr;\n}\n}\n.stat {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 243, 0.62));\n  border-radius: 14px;\n  padding: 10px;\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .stat {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n}\n.stat-k {\n  font-size: 0.62rem;\n  color: var(--text-muted);\n  font-weight: 450;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.stat-v {\n  margin-top: 6px;\n  font-size: 1.18rem;\n  font-weight: 700;\n  color: var(--text);\n}\n.stat-s {\n  margin-top: 2px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n}\n.stat-cta {\n  margin-top: 10px;\n  width: 100%;\n  padding: 8px 10px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  cursor: pointer;\n  font-weight: 450;\n  font-size: 11px;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n}\n[data-theme=\"dark\"] .stat-cta {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.9);\n}\n.chart {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 243, 0.62));\n  border-radius: 14px;\n  padding: 10px;\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .chart {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n}\n.chart-title {\n  font-weight: 450;\n  color: var(--text);\n  margin-bottom: 8px;\n  font-size: 0.74rem;\n}\n.analytics-empty {\n  display: grid;\n  gap: 12px;\n}\n.analytics-empty-copy {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  font-weight: 600;\n}\n.skeleton-row {\n  height: 12px;\n  border-radius: 999px;\n  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.06));\n  background-size: 200% 100%;\n  animation: shimmer 1.2s ease-in-out infinite;\n}\n.skeleton-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 10px;\n}\n.skeleton-card {\n  height: 58px;\n  border-radius: 16px;\n  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.06));\n  background-size: 200% 100%;\n  animation: shimmer 1.2s ease-in-out infinite;\n}\n[data-theme=\"dark\"] .skeleton-row,\n[data-theme=\"dark\"] .skeleton-card {\n  background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.08));\n}\n@keyframes shimmer {\n0% {\n    background-position: 0% 0;\n}\n100% {\n    background-position: 200% 0;\n}\n}\n.bars {\n  display: grid;\n  grid-template-columns: repeat(14, 1fr);\n  gap: 5px;\n  align-items: end;\n  min-height: 68px;\n  padding-top: 6px;\n}\n.bar-col {\n  display: flex;\n  align-items: end;\n  justify-content: center;\n  min-height: 68px;\n}\n.bar {\n  width: 100%;\n  min-height: 6px;\n  border-radius: 999px;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.95), rgba(139, 94, 60, 0.32));\n}\n.bars-soft .bar {\n  background: linear-gradient(180deg, rgba(31, 122, 140, 0.95), rgba(31, 122, 140, 0.30));\n}\n.bars-danger .bar {\n  background: linear-gradient(180deg, rgba(190, 73, 73, 0.95), rgba(190, 73, 73, 0.28));\n}\n.planner-row {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n}\n.planner-settings {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.pill-input {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 12px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 249, 241, 0.62));\n  box-shadow: var(--shadow-sm);\n}\n.pill-input-row {\n  justify-content: space-between;\n}\n[data-theme=\"dark\"] .pill-input {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n}\n.pill-input span {\n  font-weight: 450;\n  color: rgba(0, 0, 0, 0.6);\n  min-width: 64px;\n  font-size: 11px;\n}\n[data-theme=\"dark\"] .pill-input span {\n  color: rgba(255, 255, 255, 0.7);\n}\n.pill-input .input,\n.pill-input .select {\n  flex: 1;\n  box-shadow: none;\n  padding: 10px 10px;\n  border-radius: 12px;\n}\n.empty-mini {\n  color: var(--text-muted);\n  font-weight: 400;\n}\n.leech-list {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.leech {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 249, 241, 0.62));\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .leech {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n}\n.leech-k {\n  font-weight: 450;\n  font-size: 0.84rem;\n}\n.leech-s {\n  color: var(--text-muted);\n  font-weight: 400;\n  font-size: 0.76rem;\n}\n.pill {\n  padding: 8px 10px;\n  border-radius: 999px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 243, 0.62));\n  font-weight: 450;\n  color: rgba(0, 0, 0, 0.75);\n  font-size: 11px;\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .pill {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n  color: rgba(255, 255, 255, 0.85);\n}\n.tools-inline-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.read-list {\n  display: grid;\n  gap: 8px;\n}\n.read-row {\n  display: flex;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  font-size: 0.76rem;\n  align-items: center;\n}\n.read-row strong {\n  font-weight: 500;\n  text-align: right;\n  overflow-wrap: anywhere;\n}\n.cta-row {\n  display: flex;\n  gap: 10px;\n  margin-top: 2px;\n  flex-wrap: wrap;\n}\n.cta-row-split .cta {\n  min-height: 46px;\n}\n.cta {\n  flex: 1;\n  padding: 10px 10px;\n  border-radius: 14px;\n  font-weight: 450;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 11px;\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.cta-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);\n}\n.cta-ghost {\n  background: rgba(255, 255, 255, 0.58);\n  box-shadow: var(--shadow-sm);\n}\n.quiz-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 80;\n  background: rgba(0, 0, 0, 0.35);\n  backdrop-filter: blur(6px);\n  display: grid;\n  place-items: center;\n  padding: 18px;\n}\n.quiz-card {\n  width: min(680px, 100%);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(250, 245, 239, 0.95));\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 22px;\n  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);\n  overflow: hidden;\n}\n[data-theme=\"dark\"] .quiz-card {\n  background: rgba(18, 18, 18, 0.92);\n  border-color: rgba(255, 255, 255, 0.10);\n}\n.quiz-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 18px 22px 14px;\n  border-bottom: 1px solid rgba(0, 0, 0, 0.08);\n}\n[data-theme=\"dark\"] .quiz-top {\n  border-bottom-color: rgba(255, 255, 255, 0.08);\n}\n.quiz-title-wrap {\n  display: grid;\n  gap: 4px;\n}\n.quiz-title {\n  font-weight: 500;\n  font-size: 1.05rem;\n}\n.quiz-title-sub {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.quiz-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.7);\n  cursor: pointer;\n  font-size: 20px;\n}\n[data-theme=\"dark\"] .quiz-x {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.5);\n  color: rgba(255, 255, 255, 0.9);\n}\n.quiz-meta {\n  padding: 14px 22px 0;\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.quiz-chip {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  padding: 7px 10px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n  font-size: 0.73rem;\n  box-shadow: var(--shadow-sm);\n}\n.quiz-body {\n  padding: 18px 22px 22px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.quiz-summary-title {\n  font-size: 1.18rem;\n  font-weight: 500;\n  letter-spacing: -0.02em;\n}\n.quiz-summary-grid {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n  margin-top: 6px;\n}\n.quiz-summary-skill-grid {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n}\n.quiz-summary-skill,\n.quiz-summary-explain {\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 10px 12px;\n  background: rgba(255, 255, 255, 0.72);\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .quiz-summary-skill,\n[data-theme=\"dark\"] .quiz-summary-explain {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n}\n.quiz-summary-s {\n  margin-top: 4px;\n  font-size: 0.74rem;\n  color: var(--text-muted);\n  line-height: 1.45;\n}\n.quiz-summary-item {\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 10px 10px;\n  background: rgba(255, 255, 255, 0.72);\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .quiz-summary-item {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n}\n.quiz-summary-k {\n  font-size: 0.7rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n.quiz-summary-v {\n  margin-top: 6px;\n  font-size: 1.08rem;\n  font-weight: 500;\n  color: var(--text);\n}\n.quiz-summary-mistakes {\n  margin-top: 6px;\n  display: grid;\n  gap: 8px;\n}\n.quiz-summary-tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.quiz-tag {\n  padding: 8px 10px;\n  border-radius: 999px;\n  background: rgba(190, 73, 73, 0.10);\n  border: 1px solid rgba(190, 73, 73, 0.18);\n  color: rgba(140, 30, 30, 0.9);\n  font-weight: 500;\n  font-size: 0.72rem;\n}\n[data-theme=\"dark\"] .quiz-tag {\n  background: rgba(190, 73, 73, 0.18);\n  color: rgba(255, 255, 255, 0.86);\n}\n@media (max-width: 520px) {\n.quiz-summary-grid,\n  .quiz-summary-skill-grid {\n    grid-template-columns: 1fr;\n}\n.quiz-top,\n  .quiz-body,\n  .quiz-meta,\n  .quiz-actions {\n    padding-left: 16px;\n    padding-right: 16px;\n}\n.quiz-grade,\n  .quiz-actions {\n    flex-direction: column;\n}\n}\n.quiz-prompt {\n  font-size: 1.02rem;\n  color: var(--text);\n  line-height: 1.7;\n}\n.quiz-section-label {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n.quiz-hint {\n  color: var(--text-muted);\n  font-size: 0.88rem;\n  line-height: 1.7;\n}\n.quiz-options {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.quiz-opt {\n  display: flex;\n  gap: 10px;\n  align-items: flex-start;\n  padding: 12px 14px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.8);\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  font-size: 0.86rem;\n  line-height: 1.55;\n}\n[data-theme=\"dark\"] .quiz-opt {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n}\n.quiz-actions {\n  padding: 0 22px 22px;\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.quiz-reveal {\n  padding: 10px 12px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.8);\n  cursor: pointer;\n  font-weight: 450;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n}\n[data-theme=\"dark\"] .quiz-reveal {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.9);\n}\n.quiz-action {\n  min-height: 42px;\n  padding: 9px 12px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.8);\n  cursor: pointer;\n  font-weight: 450;\n  font-size: 0.82rem;\n  box-shadow: var(--shadow-sm);\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.quiz-action-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n}\n.quiz-action-ghost {\n  color: var(--text);\n}\n.quiz-grade {\n  flex: 1;\n  display: flex;\n  gap: 10px;\n  justify-content: flex-end;\n  flex-wrap: wrap;\n}\n.qg {\n  min-height: 42px;\n  padding: 9px 12px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.78);\n  cursor: pointer;\n  font-weight: 450;\n  font-size: 0.82rem;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n}\n.qg.primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: rgba(0, 0, 0, 0.06);\n  color: white;\n}\n.banner {\n  position: fixed;\n  top: 14px;\n  left: 50%;\n  transform: translateX(-50%);\n  z-index: 120;\n  min-width: min(560px, calc(100vw - 24px));\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px 14px;\n  border-radius: 16px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.92);\n  backdrop-filter: blur(10px);\n  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);\n  font-weight: 450;\n  animation: riseSoft 220ms ease-out;\n}\n.banner-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.banner-action {\n  border: 0;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  padding: 9px 12px;\n  font-size: 0.78rem;\n  font-weight: 500;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n}\n.banner.success {\n  border-color: rgba(0, 150, 90, 0.25);\n}\n.banner.error {\n  border-color: rgba(200, 0, 50, 0.25);\n}\n.banner.info {\n  border-color: rgba(0, 0, 0, 0.10);\n}\n[data-theme=\"dark\"] .banner {\n  background: rgba(18, 18, 18, 0.88);\n  border-color: rgba(255, 255, 255, 0.12);\n  color: rgba(255, 255, 255, 0.92);\n}\n[data-theme=\"dark\"] .banner-action {\n  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);\n}\n.banner-x {\n  width: 36px;\n  height: 36px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n}\n[data-theme=\"dark\"] .banner-x {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.9);\n}\n.confetti {\n  position: fixed;\n  inset: 0;\n  pointer-events: none;\n  z-index: 140;\n  overflow: hidden;\n}\n.confetti-piece {\n  position: absolute;\n  top: -10px;\n  width: 8px;\n  height: 12px;\n  border-radius: 3px;\n  opacity: 0.9;\n  animation: confetti-fall 1.35s ease-in forwards;\n  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);\n}\n@keyframes fadeLift {\nfrom {\n    opacity: 0;\n    transform: translateX(-50%) translateY(4px);\n}\nto {\n    opacity: 1;\n    transform: translateX(-50%) translateY(0);\n}\n}\n@keyframes confetti-fall {\n0% {\n    transform: translateY(-20px) rotate(0deg);\n    opacity: 0;\n}\n10% {\n    opacity: 0.95;\n}\n100% {\n    transform: translateY(110vh) rotate(480deg);\n    opacity: 0;\n}\n}\n.row {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.mini-btn {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.68));\n  cursor: pointer;\n  font-size: 0.72rem;\n  color: var(--text);\n  white-space: nowrap;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.mini-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.mini-btn.danger {\n  border-color: rgba(255, 0, 0, 0.2);\n  color: #b00020;\n}\n.radio-group {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.radio {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 0.85rem;\n  color: var(--text);\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n}\n[data-theme=\"dark\"] .radio {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.25);\n}\n.radio input {\n  margin: 0;\n}\n.checkline {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.verses.focus .verse.dim {\n  opacity: 0.22;\n}\n.verse.blur {\n  filter: blur(4px);\n  opacity: 0.38;\n}\n.group {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  min-width: 0;\n}\n.field label {\n  font-size: 0.62rem;\n  font-weight: 700;\n  text-transform: uppercase;\n  color: var(--text-muted);\n  letter-spacing: 0.5px;\n}\n.select,\n.input {\n  width: 100%;\n  min-width: 0;\n  padding: 11px 12px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--text);\n  font-size: 0.8rem;\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n[data-theme=\"dark\"] .select,\n[data-theme=\"dark\"] .input {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.55);\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);\n}\n.select:focus,\n.input:focus {\n  outline: none;\n  border-color: rgba(139, 94, 60, 0.35);\n  box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.12), 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n.select-prominent {\n  border-color: rgba(139, 94, 60, 0.22);\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.12), rgba(255, 255, 255, 0.92));\n}\n.range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.range-compact>* {\n  flex: 1;\n}\n.range-single {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n  align-items: center;\n}\n.range span {\n  color: rgba(0, 0, 0, 0.35);\n  font-weight: 450;\n  font-size: 11px;\n}\n[data-theme=\"dark\"] .range span {\n  color: rgba(255, 255, 255, 0.35);\n}\n.radio-group {\n  gap: 12px;\n}\n.radio {\n  border-radius: 14px;\n  padding: 8px 10px;\n  font-size: 11px;\n  font-weight: 400;\n}\n.radio-group-tight {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.radio-group-tight .radio {\n  flex: 1 1 110px;\n  justify-content: center;\n}\n.row .select {\n  flex: 1;\n}\n.row .input,\n.row .select,\n.row .mini-btn {\n  min-width: 0;\n}\n.switch {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 11px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  cursor: pointer;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n}\n[data-theme=\"dark\"] .switch {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.25);\n}\n.switch input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.switch-ui {\n  width: 44px;\n  height: 26px;\n  border-radius: 999px;\n  background: rgba(0, 0, 0, 0.12);\n  position: relative;\n  flex: 0 0 auto;\n}\n[data-theme=\"dark\"] .switch-ui {\n  background: rgba(255, 255, 255, 0.14);\n}\n.switch-ui::after {\n  content: \"\";\n  position: absolute;\n  top: 3px;\n  left: 3px;\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  background: white;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);\n  transition: transform 0.15s ease, background 0.15s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.45);\n}\n.switch input:checked+.switch-ui::after {\n  transform: translateX(18px);\n}\n.switch-text {\n  font-size: 0.74rem;\n  color: rgba(0, 0, 0, 0.72);\n  font-weight: 400;\n}\n[data-theme=\"dark\"] .switch-text {\n  color: rgba(255, 255, 255, 0.82);\n}\n.range input {\n  flex: 1;\n}\n.toggle {\n  display: flex;\n  gap: 8px;\n}\n.toggle button {\n  flex: 1;\n  padding: 8px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n}\n.toggle button.active {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: var(--accent);\n  color: white;\n}\n.slider {\n  width: 100%;\n  height: 3px;\n  -webkit-appearance: none;\n  background: var(--border);\n  border-radius: 3px;\n}\n.slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 12px;\n  height: 12px;\n  border-radius: 50%;\n  background: var(--accent);\n  cursor: pointer;\n}\n.value {\n  color: var(--accent);\n  margin-left: 4px;\n}\n.check label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  cursor: pointer;\n  font-weight: normal;\n  text-transform: none;\n}\n.primary-btn {\n  padding: 12px;\n  border-radius: 40px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  color: white;\n  cursor: pointer;\n  font-weight: 450;\n  box-shadow: 0 16px 34px rgba(139, 94, 60, 0.26);\n}\n.full {\n  width: 100%;\n}\n\n/* Audio Player */\n.player-bar {\n  position: fixed;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  z-index: 100;\n  background: var(--surface);\n  border-top: 1px solid var(--border);\n  padding: 8px 16px;\n}\n.main.tools-open .player-bar {\n  right: var(--tools-width);\n}\n.player-collapsed-meta {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 2px 42px 2px 0;\n}\n.player-collapsed-copy {\n  min-width: 0;\n}\n.player-collapsed-title {\n  font-size: 12px;\n  font-weight: 500;\n  color: var(--text);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-collapsed-sub {\n  margin-top: 2px;\n  font-size: 10px;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-collapse {\n  position: absolute;\n  right: 12px;\n  top: 6px;\n  width: 34px;\n  height: 28px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  box-shadow: var(--shadow-sm);\n  cursor: pointer;\n  display: grid;\n  place-items: center;\n  color: rgba(73, 58, 45, 0.76);\n}\n[data-theme=\"dark\"] .player-collapse {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.85);\n}\n.player-progress {\n  position: relative;\n  height: 14px;\n  cursor: pointer;\n  margin-bottom: 4px;\n}\n.player-track {\n  position: absolute;\n  top: 6px;\n  left: 0;\n  right: 0;\n  height: 2px;\n  background: rgba(117, 101, 85, 0.16);\n  border-radius: 2px;\n}\n.player-fill {\n  position: absolute;\n  top: 6px;\n  left: 0;\n  height: 2px;\n  background: linear-gradient(90deg, var(--accent), var(--accent-strong));\n  border-radius: 2px;\n}\n.player-handle {\n  position: absolute;\n  top: 3px;\n  width: 8px;\n  height: 8px;\n  background: var(--accent);\n  box-shadow: 0 4px 14px rgba(154, 103, 56, 0.32);\n  border-radius: 50%;\n  transform: translateX(-50%);\n}\n.player-controls {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.player-time {\n  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace;\n  font-size: 11px;\n  color: rgba(73, 58, 45, 0.64);\n}\n.player-time.right {\n  text-align: right;\n}\n.player-center {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.player-icon {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.66));\n  border: 1px solid var(--border);\n  padding: 6px;\n  font-size: 16px;\n  line-height: 1;\n  cursor: pointer;\n  color: rgba(73, 58, 45, 0.76);\n  border-radius: 12px;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n}\n.player-icon:disabled {\n  opacity: 0.35;\n  cursor: not-allowed;\n}\n.player-icon.play {\n  font-size: 18px;\n  color: rgba(73, 58, 45, 0.92);\n}\n.player-menu-overlay {\n  position: fixed;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  top: 0;\n  z-index: 30;\n}\n.player-menu {\n  position: absolute;\n  left: 50%;\n  transform: translateX(-50%);\n  bottom: 58px;\n  width: min(420px, calc(100vw - 24px));\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 242, 234, 0.96));\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.14);\n  padding: 10px;\n}\n.player-menu-item {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 10px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 12px;\n  color: rgba(0, 0, 0, 0.85);\n  text-align: left;\n  border-radius: 12px;\n  transition: background 140ms ease, transform 140ms ease;\n}\n.player-menu-item:hover {\n  background: rgba(0, 0, 0, 0.04);\n}\n.pm-ico {\n  width: 18px;\n  text-align: center;\n  color: rgba(0, 0, 0, 0.65);\n}\n.player-menu-sep {\n  height: 1px;\n  background: rgba(0, 0, 0, 0.08);\n  margin: 6px 2px;\n}\n.player-menu-row {\n  display: grid;\n  grid-template-columns: 70px 1fr auto;\n  align-items: center;\n  gap: 10px;\n  padding: 8px 10px;\n}\n.pm-label {\n  font-size: 11px;\n  color: rgba(0, 0, 0, 0.65);\n}\n.pm-value {\n  font-size: 11px;\n  color: rgba(0, 0, 0, 0.75);\n  min-width: 40px;\n  text-align: right;\n}\n.pm-range {\n  width: 100%;\n}\n.pm-select {\n  grid-column: 2 / span 2;\n  padding: 8px 10px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: white;\n  font-size: 12px;\n}\n.icon-btn:hover,\n.rail-btn:hover,\n.cta-btn:hover,\n.tools-x:hover,\n.tools-tabs button:hover,\n.sheet-toggle:hover,\n.tools-btn:hover,\n.stat-cta:hover,\n.cta:hover,\n.quiz-opt:hover,\n.quiz-reveal:hover,\n.qg:hover,\n.mini-btn:hover,\n.radio:hover,\n.switch:hover,\n.player-icon:hover,\n.player-menu-item:hover {\n  transform: translateY(-1px);\n}\n.icon-btn:hover,\n.rail-btn:hover,\n.tools-x:hover,\n.tools-btn:hover,\n.stat-cta:hover,\n.cta:hover,\n.quiz-opt:hover,\n.quiz-reveal:hover,\n.qg:hover,\n.mini-btn:hover,\n.radio:hover,\n.switch:hover,\n.player-icon:hover {\n  box-shadow: var(--shadow-md);\n}\n.tools-tabs button:hover,\n.sheet-toggle:hover,\n.player-menu-item:hover {\n  background: rgba(255, 255, 255, 0.76);\n}\n@keyframes appFade {\n0% {\n    opacity: 0;\n    transform: translateY(4px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes railIn {\n0% {\n    opacity: 0;\n    transform: translateY(-8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes riseSoft {\n0% {\n    opacity: 0;\n    transform: translateY(8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n/* Responsive */\n@media (max-width: 768px) {\n.app-header {\n    padding: 10px 16px;\n}\n.main {\n    padding: 16px 16px 100px;\n}\n.main.tools-open {\n    padding-right: 16px;\n}\n.main.tools-open .player-bar {\n    right: 0;\n}\n.session-meta {\n    display: none;\n}\n.player-row {\n    gap: 8px;\n}\n.player-btn {\n    padding: 4px 8px;\n}\n.player-select {\n    display: none;\n}\n.player-controls {\n    flex-wrap: wrap;\n    justify-content: center;\n}\n.verse-arabic {\n    font-size: 1.2rem;\n}\n}\n@media (min-width: 1500px) {\n.content {\n    max-width: 1220px;\n}\n.main.tools-open .content {\n    max-width: min(1180px, calc(100vw - var(--tools-width) - 120px));\n}\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
