@@ -87,12 +87,13 @@
               @click="toggleReadingOption('transliteration')">
               <i class="bi bi-type"></i><span>Transliteration</span>
             </button>
-            <!-- <button class="toolbar-chip" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')">
+            <button class="toolbar-chip" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')">
               <i class="bi bi-grid-3x2-gap"></i><span>Word by word</span>
             </button>
-            <button class="toolbar-chip" :class="{ active: wordByWordAudioEnabled }" @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
+            <button class="toolbar-chip" :class="{ active: wordByWordAudioEnabled }"
+              @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
               <i class="bi bi-volume-up"></i><span>Word audio</span>
-            </button> -->
+            </button>
           </div>
           <div class="reading-toolbar-group">
             <div class="toolbar-font-wrap">
@@ -134,7 +135,8 @@
         <!-- Verses Grid -->
         <!-- Replace the verses-grid section (around line 165) with this: -->
         <div v-else-if="hasVerses" class="verses-grid">
-          <div v-for="verse in verses" :key="verse.key" class="verse-card" :class="{
+          <!-- Update the verse-card div to include data-verse-key -->
+          <div v-for="verse in verses" :key="verse.key" class="verse-card" :data-verse-key="verse.key" :class="{
             active: activeVerseKey === verse.key,
             'focus-mode': focusMode && activeVerseKey !== verse.key,
             blurred: blurAdjacent && activeVerseKey !== verse.key && !isAdjacentVerse(verse)
@@ -151,7 +153,9 @@
               </div>
             </div>
 
-            <div class="verse-arabic" dir="rtl" lang="ar" v-html="verse.arabic"></div>
+            <div class="verse-arabic" dir="rtl" lang="ar" v-html="getHighlightedArabic(verse)"
+              :class="{ 'word-highlight-enabled': wordByWordAudioEnabled }">
+            </div>
 
             <!-- TRANSLATION -->
             <div v-if="showTranslation && verse.translation" class="verse-translation">
@@ -162,16 +166,20 @@
               {{ verse.transliteration }}
             </div>
 
+            <!-- In the verse-words section (around line 165) -->
             <div v-if="showWordByWord && verse.words?.length" class="verse-words">
-              <div v-for="(word, wi) in verse.words" :key="wi" class="word-item">
+              <div v-for="(word, wi) in verse.words" :key="wi" class="word-item"
+                :class="{ 'word-highlighted': isWordHighlighted(verse.key, wi) }" :data-word-index="wi"
+                :data-verse-key="verse.key">
                 <span class="word-arabic" dir="rtl">{{ word.ar }}</span>
                 <span class="word-meaning">{{ word.en }}</span>
                 <button v-if="word.audio && wordByWordAudioEnabled" class="word-audio-btn"
-                  @click="playWordAudio(word.audio)">
+                  @click="playWordAudio(word.audio, `${verse.key}:${wi}`)">
                   <i class="bi bi-volume-up"></i>
                 </button>
               </div>
             </div>
+
           </div>
         </div>
 
@@ -672,6 +680,7 @@ export default {
   },
   data() {
     return {
+      // Mode-specific state
       beginner: {
         chapterId: 0,
         rangeStart: 1,
@@ -680,7 +689,7 @@ export default {
         speed: 1,
         delay: 1,
         playMode: 'auto',
-        repeats: 1,  // This is beginnerRepeats
+        repeats: 1,
         order: 'seq',
         focusMode: false,
         blurAdjacent: false,
@@ -690,7 +699,6 @@ export default {
         queueIndex: 0,
         sessionActive: false
       },
-      // Advanced mode specific state
       advanced: {
         chapterId: 0,
         rangeStart: 1,
@@ -704,7 +712,7 @@ export default {
         focusMode: false,
         blurAdjacent: false,
         repeatAndLoopAudio: false,
-        advancedRepeats: 1,  // Add this for advanced mode's repeat count
+        advancedRepeats: 1,
         verses: [],
         activeKey: null,
         queue: [],
@@ -712,90 +720,34 @@ export default {
         sessionActive: false
       },
 
-      // Current active mode
-      currentMode: 'beginner',
+      // Arabic text word highlighting state
+      currentWordIndex: -1,
+      currentHighlightedVerseKey: null,
+      wordTimestampsMap: new Map(),
+      wordHighlightHandler: null,
+      currentVerseWords: [], // Store current verse's word spans
 
-      // Shared state
+      // UI State
+      currentMode: 'beginner',
       theme: 'light',
       tab: 'beginner',
-
-      // Simplified planner data
-      dailyPlan: {
-        newVerses: 5,
-        reviewVerses: 10,
-        minutes: 20
-      },
-      todayPlanSummary: null,
-      simpleStats: {
-        streak: 0,
-        sessions: 0,
-        memorised: 0,
-        weak: 0
-      },
-
-      // REMOVE these duplicates - they are now in beginner/advanced objects:
-      // repeatAndLoopAudio: false,
-      // beginnerRepeats: 1,
-      // advancedRepeats: 1,
-
-      weakVersesList: [],
       showTools: false,
+      playerVisible: false,
+      playerCollapsed: true,
+      playerMenuOpen: false,
+
+      // Session State
       activeVerseKey: null,
-      quizScore: 0,
-      quizMistakes: [],
-      quizComplete: false,
+      verses: [],
+      activeKey: null,
+      queue: [],
+      queueIndex: 0,
+      isPlaying: false,
+      currentTime: 0,
+      duration: 0,
+      audioElement: null,
 
-      chapters: [],
-      currentChapter: null,
-
-      reciters: [{ id: 7, name: 'Alafasy' }],
-      alquranAudioEditions: [],
-      alquranEdition: '',
-      audioTimeUpdate: null,
-      audioEnded: null,
-      audioError: null,
-      currentVerseIndex: 0,
-      isAudioLoading: false,
-      speedOptions: [0.5, 0.75, 1, 1.25, 1.5],
-      delayOptions: [0, 0.5, 1, 2, 3, 5, 7, 10],
-      repeatOptions: [1, 2, 3, 4, 5, 7, 10],
-      rangeLoopDelay: 1,
-      sessionName: '',
-      savedSessions: [],
-      selectedSessionId: '',
-      studyMode: 'recite',
-      quizActive: false,
-      quizType: 'mixed',
-      quizQueue: [],
-      quizIndex: 0,
-      quizCard: null,
-      quizOptions: [],
-      quizAnswer: '',
-      quizRevealed: false,
-      quizLastResult: null,
-      quizSummaryActive: false,
-      quizSessionStats: null,
-      sessionCompleted: false,
-      hybridPendingKey: null,
-      quizSkill: 'recite_text',
-      confettiActive: false,
-      confettiSeed: 0,
-      sm2: {},
-      events: [],
-      plannerState: null,
-      todayPlan: null,
-      planRun: null,
-      banner: null,
-      bannerTimer: null,
-      metrics: null,
-      networkOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
-      currentVersePlaybackKey: '',
-      currentPlaybackMode: 'verse',
-      wordSequence: null,
-      playbackStartedAt: 0,
-      onboardingDismissed: false,
-      restoredAudioState: null,
-
+      // Reading options
       script: 'uthmani',
       quranFont: 'uthmanic',
       fontPickerOpen: false,
@@ -810,14 +762,9 @@ export default {
       showTransliteration: false,
       showWordByWord: false,
       wordByWordAudioEnabled: true,
-      activeWordAudio: '',
-      activeWordTooltip: null,
-      compactMode: false,
       fontScale: 1,
-      bookmarks: [],
-      pins: [],
 
-      // These are now controlled by computed properties
+      // Audio playback settings
       playMode: 'auto',
       speed: 1,
       delay: 1,
@@ -826,20 +773,78 @@ export default {
       blurAdjacent: false,
       focusMode: false,
 
-      verses: [],
-      activeKey: null,
-      queue: [],
-      queueIndex: 0,
+      // Quiz state
+      quizActive: false,
+      quizScore: 0,
+      quizMistakes: [],
+      quizComplete: false,
+      quizQueue: [],
+      quizIndex: 0,
+      quizCard: null,
+      quizOptions: [],
+      quizAnswer: '',
+      quizRevealed: false,
+      studyMode: 'recite',
+      quizType: 'mixed',
 
-      playerVisible: false,
-      isPlaying: false,
-      currentTime: 0,
-      duration: 0,
+      // Data
+      chapters: [],
+      currentChapter: null,
+      reciters: [{ id: 7, name: 'Alafasy' }],
+      savedSessions: [],
+      selectedSessionId: '',
+      sessionName: '',
 
-      audioElement: null,
-      lastAudioDebug: null,
-      playerMenuOpen: false,
-      playerCollapsed: true,
+      // Analytics
+      sm2: {},
+      events: [],
+      plannerState: null,
+      todayPlan: null,
+      planRun: null,
+      metrics: null,
+      weakVersesList: [],
+
+      // Simple stats
+      simpleStats: {
+        streak: 0,
+        sessions: 0,
+        memorised: 0,
+        weak: 0
+      },
+      dailyPlan: {
+        newVerses: 5,
+        reviewVerses: 10,
+        minutes: 20
+      },
+      todayPlanSummary: null,
+
+      // UI Helpers
+      banner: null,
+      bannerTimer: null,
+      confettiActive: false,
+      confettiSeed: 0,
+      networkOnline: true,
+      onboardingDismissed: false,
+      restoredAudioState: null,
+
+      // Word sequence
+      wordSequence: null,
+      playbackStartedAt: 0,
+      currentVersePlaybackKey: '',
+      currentPlaybackMode: 'verse',
+      activeWordAudio: '',
+      activeWordTooltip: null,
+      compactMode: false,
+      bookmarks: [],
+      pins: [],
+
+      // Options
+      speedOptions: [0.5, 0.75, 1, 1.25, 1.5],
+      delayOptions: [0, 0.5, 1, 2, 3, 5, 7, 10],
+      repeatOptions: [1, 2, 3, 4, 5, 7, 10],
+      rangeLoopDelay: 1,
+
+      // Section open state
       sectionOpen: {
         beginner_setup: true,
         beginner_audio: false,
@@ -851,41 +856,45 @@ export default {
         analytics_planner: true,
         analytics_weak: false
       },
+
+      // Audio event handlers
+      audioTimeUpdate: null,
+      audioEnded: null,
+      audioError: null,
+      lastAudioDebug: null,
+
+      // AlQuran
+      alquranAudioEditions: [],
+      alquranEdition: '',
+
+      // Misc
+      currentVerseIndex: 0,
+      isAudioLoading: false,
+      sessionCompleted: false,
+      hybridPendingKey: null,
+      quizSkill: 'recite_text',
+      quizSessionStats: null,
+      quizLastResult: null,
+      quizSummaryActive: false
     }
   },
 
   computed: {
-    currentVerseNumber() {
-      if (!this.activeVerseKey) return 0
-      const parts = this.activeVerseKey.split(':')
-      return parseInt(parts[1]) || 0
-    },
-    getActiveVerseNumber() {
-      if (!this.activeVerseKey) return 0
-      const parts = this.activeVerseKey.split(':')
-      return parts.length > 1 ? parseInt(parts[1]) : 0
-    },
     currentConfig() {
       return this.currentMode === 'beginner' ? this.beginner : this.advanced
     },
+
     hasVerses() {
-      return this.currentMode === 'beginner'
-        ? (this.beginner.verses?.length > 0)
-        : (this.advanced.verses?.length > 0)
+      return this.currentConfig.verses?.length > 0
     },
 
     hasSelectedSurah() {
-      const chapterId = this.currentMode === 'beginner'
-        ? this.beginner.chapterId
-        : this.advanced.chapterId
+      const chapterId = this.currentConfig.chapterId
       return chapterId && chapterId > 0
     },
-    // Computed properties that use current mode
+
     chapterId: {
-      get() {
-        const val = this.currentConfig.chapterId
-        return val || 0
-      },
+      get() { return this.currentConfig.chapterId || 0 },
       set(val) {
         const numVal = Number(val) || 0
         if (this.currentMode === 'beginner') {
@@ -1000,7 +1009,6 @@ export default {
       }
     },
 
-    // Advanced mode specific
     repeatAndLoopAudio: {
       get() { return this.advanced.repeatAndLoopAudio },
       set(val) { this.advanced.repeatAndLoopAudio = val }
@@ -1015,353 +1023,121 @@ export default {
       get() { return this.beginner.repeats },
       set(val) { this.beginner.repeats = val }
     },
-    activeVerseIndex() {
-      if (!this.activeVerseKey || !this.verses.length) return -1
-      return this.verses.findIndex(v => v.key === this.activeVerseKey)
-    },
-    canGoPrev() {
-      const idx = this.activeVerseIndex
-      return idx > 0
-    },
-    canGoNext() {
-      const idx = this.activeVerseIndex
-      return idx >= 0 && idx < this.verses.length - 1
-    },
-    quizAccuracy() {
-      if (!this.quizQueue.length) return 0
-      return Math.round((this.quizScore / this.quizQueue.length) * 100)
-    },
-    isLoggedIn() {
-      return !!this.auth?.check
-    },
-    themeIcon() {
-      return this.theme === 'dark' ? '☾' : this.theme === 'sepia' ? '◐' : '☀'
-    },
+
     totalVerses() {
       return Math.max(0, this.rangeEnd - this.rangeStart + 1)
     },
+
     currentPosition() {
       if (!this.activeKey) return 1
       const num = parseInt(this.activeKey.split(':')[1])
       return Math.max(1, num - this.rangeStart + 1)
     },
+
     remainingAyahs() {
       return Math.max(0, this.totalVerses - this.currentPosition)
     },
+
     progressPercent() {
       if (!this.totalVerses) return 0
       return Math.round((this.currentPosition / this.totalVerses) * 100)
     },
+
+    canPrev() {
+      return this.queueIndex > 0
+    },
+
+    canNext() {
+      return this.queueIndex < this.queue.length - 1
+    },
+
+    seekPercent() {
+      if (!this.duration) return 0
+      return (this.currentTime / this.duration) * 100
+    },
+
+    isLoggedIn() {
+      return !!this.auth?.check
+    },
+
+    showOnboarding() {
+      const hasVersesInCurrentMode = this.hasVerses
+      return !this.onboardingDismissed && !this.chapterId && !hasVersesInCurrentMode && !this.quizActive
+    },
+
+    sessionTypeInfo() {
+      return { key: 'memorisation', label: 'Memorisation', tone: 'memorisation' }
+    },
+
+    quranFontFamily() {
+      const fonts = {
+        amiri: "'Amiri', 'Noto Naskh Arabic', serif",
+        naskh: "'Noto Naskh Arabic', 'Amiri', serif",
+        scheherazade: "'Scheherazade New', 'Noto Naskh Arabic', serif",
+        lateef: "'Lateef', 'Amiri', serif",
+        uthmanic: "'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif"
+      }
+      return fonts[this.quranFont] || fonts.uthmanic
+    },
+
+    collapsedPlayerTitle() {
+      const verse = this.verses.find(v => v.key === this.activeKey)
+      if (!verse) return this.currentChapter?.name_simple || 'Now playing'
+      return `${this.currentChapter?.name_simple || 'Session'} · Ayah ${verse.number}`
+    },
+
+    collapsedPlayerSubtitle() {
+      if (!this.activeKey) return `${this.sessionTypeInfo.label} · 0% complete`
+      return `${this.sessionTypeInfo.label} · ${this.queueIndex + 1}/${this.queue.length} · ${this.formatTime(this.currentTime)} / ${this.formatTime(this.duration)}`
+    },
+
+    railPrimaryLabel() {
+      return this.isPlaying ? 'Pause' : 'Start session'
+    },
+
     etaLabel() {
       const remainingQueue = (this.queue || []).slice(this.queueIndex).map(v => v?.key).filter(Boolean)
       const seconds = this.estimateKeysSeconds(remainingQueue)
       const minutes = Math.max(1, Math.ceil(seconds / 60))
       return `${minutes} min`
     },
-    seekPercent() {
-      if (!this.duration) return 0
-      return (this.currentTime / this.duration) * 100
-    },
-    canPrev() {
-      return this.queueIndex > 0
-    },
-    canNext() {
-      return this.queueIndex < this.queue.length - 1
-    },
-    quizSummary() {
-      const s = this.quizSessionStats || { total: 0, correct: 0, qualitySum: 0, mistakes: [] }
-      const total = Math.max(0, Number(s.total || 0))
-      const correct = Math.max(0, Number(s.correct || 0))
-      const accuracy = total ? Math.round((correct / total) * 100) : 0
-      const avgQuality = total ? Math.round((Number(s.qualitySum || 0) / total) * 10) / 10 : 0
-      const durationMs = Math.max(0, Number(s.durationMs || 0))
-      const timeSpent = this.formatTime(Math.round(durationMs / 1000))
-      const perSkill = Object.entries(s.skillTotals || {}).map(([key, value]) => {
-        const totalAnswers = Math.max(0, Number(value?.total || 0))
-        const skillCorrect = Math.max(0, Number(value?.correct || 0))
-        const skillAccuracy = totalAnswers ? Math.round((skillCorrect / totalAnswers) * 100) : 0
-        const labels = {
-          recite_text: 'Recite',
-          audio_recall: 'Audio',
-          meaning: 'Meaning'
-        }
-        return { key, label: labels[key] || key, total: totalAnswers, correct: skillCorrect, accuracy: skillAccuracy }
-      })
-      const bestSkill = perSkill.slice().sort((a, b) => b.accuracy - a.accuracy || b.correct - a.correct)[0]?.label || 'None'
-      const planTarget = this.todayPlan?.quizKeys?.length || this.todayPlan?.reviewKeys?.length || total
-      const planProgress = `${Math.min(total, planTarget)} / ${planTarget}`
-      const explanation = accuracy >= 85
-        ? 'Strong recall. Keep the same pace for the next session.'
-        : accuracy >= 60
-          ? 'A few ayahs need another pass. Review the weak ones first.'
-          : 'Recall is still fragile. Repeat the range, then review again.'
-      const engineLink = this.todayPlan
-        ? 'These grades already update SM-2, retention, and the next planner session.'
-        : this.order === 'chain'
-          ? 'These grades update SM-2 and keep the current chain review aligned with weak links.'
-          : 'These grades update SM-2 and feed the next review cycle automatically.'
-      return { total, correct, accuracy, avgQuality, mistakes: s.mistakes || [], skills: perSkill, bestSkill, timeSpent, planProgress, explanation, engineLink }
-    },
-    quizContextLabel() {
-      if (this.todayPlan) return `${this.sessionTypeInfo.label} plan`
-      if (this.order === 'chain') return 'Chain review'
-      return 'Focused review'
-    },
-    quizCardTypeLabel() {
-      const map = {
-        flashcard: 'Flashcard',
-        mcq: 'Multiple choice',
-        audio_mcq: 'Audio choose',
-        blank: 'Fill blank'
-      }
-      return map[this.quizCard?.type] || 'Question'
-    },
-    collapsedPlayerTitle() {
-      const verse = this.verses.find(v => v.key === this.activeKey)
-      if (!verse) return this.currentChapter?.name_simple || 'Now playing'
-      return `${this.currentChapter?.name_simple || 'Session'} · Ayah ${verse.number}`
-    },
-    collapsedPlayerSubtitle() {
-      const verse = this.verses.find(v => v.key === this.activeKey)
-      if (!verse) return `${this.sessionTypeInfo.label} · ${this.progressPercent}% complete`
-      return `${this.sessionTypeInfo.label} · ${this.queueIndex + 1}/${this.queue.length} · ${this.formatTime(this.currentTime)} / ${this.formatTime(this.duration)}`
-    },
-    showAdvancedPlaybackFields() {
-      return this.studyMode !== 'quiz'
-    },
-    showAdvancedPractice() {
-      return this.studyMode !== 'quiz'
-    },
-    quranFontFamily() {
-      if (this.quranFont === 'amiri') return "'Amiri', 'Noto Naskh Arabic', serif"
-      if (this.quranFont === 'naskh') return "'Noto Naskh Arabic', 'Amiri', serif"
-      if (this.quranFont === 'scheherazade') return "'Scheherazade New', 'Noto Naskh Arabic', serif"
-      if (this.quranFont === 'lateef') return "'Lateef', 'Amiri', serif"
-      return "'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif"
-    },
-    verseArabicStyle() {
-      return {
-        fontSize: `${this.fontScale}em`,
-        fontFamily: this.quranFontFamily
-      }
-    },
-    wordArabicStyle() {
-      return { fontFamily: this.quranFontFamily }
-    },
-    globalWeakCount() {
-      return this.globalWeakAyahKeys.length
-    },
-    globalWeakAyahKeys() {
-      const weakKeys = new Set()
-      Object.entries(this.sm2 || {}).forEach(([key, card]) => {
-        if (!card) return
-        if ((card.lapses || 0) < 3 && !card.suspended) return
-        weakKeys.add(String(key).split('::')[0])
-      })
-      return Array.from(weakKeys)
-    },
-    primaryLabel() {
-      if (!this.chapterId) return 'Start'
-      if (!this.verses.length) return 'Start'
-      if (!this.isPlaying) return 'Continue'
-      return 'Controls'
-    },
-    primaryIcon() {
-      if (!this.chapterId) return '→'
-      if (!this.verses.length) return '▶'
-      if (!this.isPlaying) return '▶'
-      return '⚙'
-    },
-    showOnboarding() {
-      // Don't show onboarding if we have verses in current mode
-      const hasVersesInCurrentMode = this.currentMode === 'beginner'
-        ? (this.beginner.verses && this.beginner.verses.length > 0)
-        : (this.advanced.verses && this.advanced.verses.length > 0)
 
-      return !this.onboardingDismissed && !this.chapterId && !hasVersesInCurrentMode && !this.quizActive
-    },
-    onboardingStep() {
-      if (!this.chapterId) return 1
-      if (!this.activeKey) return 2
-      if (this.sessionTypeInfo.key === 'revision') return 3
-      return 4
-    },
-    beginnerGuide() {
-      const map = {
-        1: { title: 'Choose what to read', text: 'Pick a surah and ayah range first.' },
-        2: { title: 'Build your repetition', text: 'Set speed, delay, and repeats.' },
-        3: { title: 'Review before forgetting', text: 'Weak ayahs return automatically.' },
-        4: { title: 'Track retention', text: 'Progress stays saved and guided.' }
-      }
-      return map[this.onboardingStep] || map[1]
-    },
-    onboardingPrimaryLabel() {
-      return this.todayPlan ? 'Begin plan' : 'Open setup'
-    },
-    beginnerPrimaryLabel() {
-      return this.todayPlan ? 'Begin plan' : 'Start memorising'
-    },
-    advancedPrimaryLabel() {
-      return this.sessionTypeInfo.label === 'Revision' ? 'Start session' : this.sessionTypeInfo.label === 'Recovery' ? 'Continue chain' : 'Start session'
-    },
-    emptyPrimaryLabel() {
-      return this.todayPlan ? 'Begin plan' : 'Start memorising'
-    },
-    railPrimaryLabel() {
-      return this.isPlaying ? 'Pause' : this.sessionTypeInfo.label === 'Recovery' ? 'Continue chain' : 'Start session'
-    },
-    footerPrimaryLabel() {
-      return this.tab === 'analytics' ? this.plannerPrimaryCta : this.tab === 'beginner' ? this.beginnerPrimaryLabel : this.advancedPrimaryLabel
-    },
-    plannerPrimaryCta() {
-      return this.todayPlan ? 'Begin plan' : 'Generate plan'
-    },
-    nextActionDescription() {
-      return this.todayPlan ? 'Your next guided session is ready.' : 'Choose a surah, set the range, then begin a focused session.'
-    },
-    sessionTypeInfo() {
-      const plan = this.todayPlan
-      if (plan?.sessionType) {
-        const labels = {
-          memorisation: { key: 'memorisation', label: 'Memorisation', tone: 'memorisation' },
-          revision: { key: 'revision', label: 'Revision', tone: 'revision' },
-          mixed: { key: 'mixed', label: 'Mixed', tone: 'mixed' },
-          recovery: { key: 'recovery', label: 'Recovery', tone: 'recovery' }
-        }
-        return labels[plan.sessionType] || labels.memorisation
-      }
-      const weakCount = (plan?.reviewKeys || []).filter(key => {
-        const text = this.sm2Get(this.sm2CardKey(key, 'recite_text'))
-        const audio = this.sm2Get(this.sm2CardKey(key, 'audio_recall'))
-        const meaning = this.sm2Get(this.sm2CardKey(key, 'meaning'))
-        return (text.lapses || 0) >= 3 || (audio.lapses || 0) >= 3 || (meaning.lapses || 0) >= 3 || text.suspended || audio.suspended || meaning.suspended
-      }).length
-      if (weakCount && !plan?.newKeys?.length) return { key: 'recovery', label: 'Recovery', tone: 'recovery' }
-      if (plan?.newKeys?.length && plan?.reviewKeys?.length) return { key: 'mixed', label: 'Mixed', tone: 'mixed' }
-      if (plan?.reviewKeys?.length) return { key: 'revision', label: 'Revision', tone: 'revision' }
-      if (plan?.newKeys?.length) return { key: 'memorisation', label: 'Memorisation', tone: 'memorisation' }
-      return { key: 'memorisation', label: 'Memorisation', tone: 'memorisation' }
-    },
-    retentionStats() {
-      const verseCount = this.verses.length || 1
-      const scores = this.verses.map(v => {
-        const cards = ['recite_text', 'audio_recall', 'meaning'].map(skill => this.sm2Get(this.sm2CardKey(v.key, skill)))
-        const skillScore = cards.reduce((sum, card) => {
-          const qualityWeight = Math.min(5, Math.max(0, (card.ef || 2.5) * 1.2))
-          const intervalWeight = Math.min(5, Math.log2((card.interval || 0) + 1))
-          const penalty = Math.min(3, (card.lapses || 0) * 0.5 + (card.suspended ? 1.5 : 0))
-          return sum + Math.max(0, qualityWeight + intervalWeight - penalty)
-        }, 0)
-        return Math.min(100, Math.round((skillScore / 18) * 100))
-      })
-      const overallRetention = Math.round((scores.reduce((a, b) => a + b, 0) / verseCount) || 0)
-      const surahMastery = overallRetention
-      const weakAyahs = this.verses.filter((v, idx) => scores[idx] < 55).map(v => v.number)
-      const weakClusters = this.buildWeakWordClusters(weakAyahs)
-      const weakTrend14d = Array.from({ length: 14 }, (_, idx) => {
-        const base = Math.max(0, weakAyahs.length - (13 - idx))
-        return base
-      })
-      const prevWeek = this.stats.avgQuality14d.slice(0, 7).reduce((a, b) => a + b, 0) / 7 || 0
-      const thisWeek = this.stats.avgQuality14d.slice(7).reduce((a, b) => a + b, 0) / 7 || 0
-      const weeklyRetentionImprovement = Math.round((thisWeek - prevWeek) * 10)
-      const forgettingTrend = weakAyahs.length > Math.max(2, Math.round(this.verses.length * 0.2)) ? 'Rising' : weakAyahs.length ? 'Stable' : 'Low'
-      return { overallRetention, surahMastery, weakAyahs, weakClusters, weakTrend14d, weeklyRetentionImprovement, forgettingTrend }
-    },
-    weakAyahSummary() {
-      if (!this.globalWeakAyahKeys.length) return 'None'
-      return this.globalWeakAyahKeys.slice(0, 4).map(key => {
-        const ayah = String(key).split(':')[1] || key
-        return `Ayah ${ayah}`
-      }).join(', ')
-    },
-    weakWordSummary() {
-      return this.retentionStats.weakClusters.length ? this.retentionStats.weakClusters.join(', ') : 'No clear cluster'
-    },
-    reviewReasons() {
-      const reasons = []
-      if (this.retentionStats.weakAyahs.length) reasons.push('weak recall detected')
-      if (this.stats.dueNow > 0) reasons.push('review interval reached')
-      if (this.order === 'chain' || this.sessionTypeInfo.key === 'recovery') reasons.push('chain instability detected')
-      if (this.retentionStats.forgettingTrend === 'Rising') reasons.push('forgetting risk increased')
-      return reasons.length ? reasons : ['review interval reached']
-    },
     toolsHeaderTitle() {
       if (this.tab === 'analytics') return 'Retention and plan'
       if (this.tab === 'advanced') return 'Advanced session'
       return 'Guided session setup'
     },
-    todayPlanEtaLabel() {
-      const estimate = Number(this.todayPlan?.estimate?.totalSeconds || 0) || this.estimateKeysSeconds(this.todayPlan?.quizKeys || [])
-      return `${Math.max(1, Math.ceil(estimate / 60))} min`
-    },
-    stats() {
-      const now = Date.now()
-      const dayKey = this.dayKey(now)
-      const events = this.events || []
-      const today = events.filter(e => e.day === dayKey)
 
-      const gradedToday = today.filter(e => e.type === 'sm2_grade').length
-      const listenedAyatToday = today.filter(e => e.type === 'audio_play').length
-      const qualities = today.filter(e => e.type === 'sm2_grade').map(e => e.quality)
-      const avgQualityToday = qualities.length ? qualities.reduce((a, b) => a + b, 0) / qualities.length : 0
-
-      const dueNow = this.verses.filter(v => (
-        (this.sm2Get(this.sm2CardKey(v.key, 'recite_text')).due || 0) <= now ||
-        (this.sm2Get(this.sm2CardKey(v.key, 'audio_recall')).due || 0) <= now ||
-        (this.sm2Get(this.sm2CardKey(v.key, 'meaning')).due || 0) <= now
-      )).length
-
-      const dueBySkill = {
-        recite_text: this.verses.filter(v => (this.sm2Get(this.sm2CardKey(v.key, 'recite_text')).due || 0) <= now).length,
-        audio_recall: this.verses.filter(v => (this.sm2Get(this.sm2CardKey(v.key, 'audio_recall')).due || 0) <= now).length,
-        meaning: this.verses.filter(v => (this.sm2Get(this.sm2CardKey(v.key, 'meaning')).due || 0) <= now).length
-      }
-
-      const grades14d = []
-      const avgQuality14d = []
-      for (let i = 13; i >= 0; i--) {
-        const t = now - i * 24 * 60 * 60 * 1000
-        const dk = this.dayKey(t)
-        const d = events.filter(e => e.day === dk && e.type === 'sm2_grade')
-        grades14d.push(d.length)
-        const qs = d.map(x => x.quality)
-        avgQuality14d.push(qs.length ? qs.reduce((a, b) => a + b, 0) / qs.length : 0)
-      }
-
-      const streakDays = this.computeStreak(events, now)
-
-      return { dueNow, dueBySkill, gradedToday, listenedAyatToday, avgQualityToday, grades14d, avgQuality14d, streakDays }
-    },
-    planner() {
-      return this.plannerState || { today: { newAyat: 5, reviewAyat: 10, quizCards: 15 } }
-    },
-    leeches() {
-      const items = Object.entries(this.sm2 || {}).filter(([, v]) => v?.suspended)
-      return items.map(([key, v]) => {
-        const [verseKey, skill] = String(key).split('::')
-        const skillLabel =
-          skill === 'recite_text' ? 'Text' :
-            skill === 'audio_recall' ? 'Audio' :
-              skill === 'meaning' ? 'Meaning' :
-                skill || 'Skill'
-        return { key, verseKey, skill, skillLabel, lapses: v?.lapses || 0 }
-      }).sort((a, b) => (b.lapses - a.lapses)).slice(0, 50)
-    },
     contextLabel() {
       const surah = this.currentChapter?.name_simple || (this.chapterId ? `Surah ${this.chapterId}` : 'No surah')
       const range = this.chapterId ? `${this.rangeStart}-${this.rangeEnd}` : ''
-      return `${surah}${range ? ` • ${range}` : ''} • ${this.sessionTypeInfo.label} • Next: ${this.footerPrimaryLabel}`
+      return `${surah}${range ? ` • ${range}` : ''} • ${this.sessionTypeInfo.label}`
+    },
+
+    activeVerseIndex() {
+      if (!this.activeVerseKey || !this.verses.length) return -1
+      return this.verses.findIndex(v => v.key === this.activeVerseKey)
+    },
+
+    canGoPrev() {
+      return this.activeVerseIndex > 0
+    },
+
+    canGoNext() {
+      return this.activeVerseIndex >= 0 && this.activeVerseIndex < this.verses.length - 1
+    },
+
+    quizAccuracy() {
+      if (!this.quizQueue.length) return 0
+      return Math.round((this.quizScore / this.quizQueue.length) * 100)
     }
   },
+
   async mounted() {
-    this.$nextTick(() => {
-      this.collectSimpleStats()
-    })
     this.migrateLocalStorage()
     this.loadUiState()
-    this.loadChapters()
-    this.loadReciters()
+    await this.loadChapters()
+    await this.loadReciters()
     this.loadSavedSessions()
     this.loadSm2()
     this.loadEvents()
@@ -1371,7 +1147,6 @@ export default {
     this.theme = document.documentElement.getAttribute('data-theme') || this.theme
     this.loadBookmarksPins()
 
-    // Initialize based on current mode
     if (this.currentMode === 'advanced' && this.advanced.chapterId) {
       this.currentMode = 'advanced'
       this.tab = 'advanced'
@@ -1385,19 +1160,18 @@ export default {
     window.addEventListener('online', this.handleOnline)
     window.addEventListener('offline', this.handleOffline)
     window.addEventListener('beforeunload', this.persistAllState)
-    document.addEventListener('pointerdown', this.handleGlobalPointerDown)
-    window.addEventListener('keydown', this.handleGlobalKeydown)
   },
+
   beforeUnmount() {
     window.removeEventListener('online', this.handleOnline)
     window.removeEventListener('offline', this.handleOffline)
     window.removeEventListener('beforeunload', this.persistAllState)
-    document.removeEventListener('pointerdown', this.handleGlobalPointerDown)
-    window.removeEventListener('keydown', this.handleGlobalKeydown)
     if (this.bannerTimer) clearTimeout(this.bannerTimer)
     this.flushPlaybackTime()
+    this.stopWordHighlighting()
     this.persistAllState()
   },
+
   watch: {
     theme: 'persistUiState',
     showTools: 'persistUiState',
@@ -1408,13 +1182,10 @@ export default {
     reciterId: 'persistUiState',
     speed: 'persistUiState',
     delay: 'persistUiState',
-    repeats: 'persistUiState',
     playMode: 'persistUiState',
     order: 'persistUiState',
     blurAdjacent: 'persistUiState',
     focusMode: 'persistUiState',
-    studyMode: 'persistUiState',
-    quizType: 'persistUiState',
     showTranslation: 'persistUiState',
     showTransliteration: 'persistUiState',
     showWordByWord: 'persistUiState',
@@ -1439,406 +1210,765 @@ export default {
     repeatAndLoopAudio() {
       if (this.tab === 'advanced') this.rebuildQueue()
     },
-    verses: {
-      handler(newVal) {
-        console.log('Verses changed:', newVal?.length, 'currentMode:', this.currentMode)
-      },
-      immediate: true,
-      deep: true
-    },
+
     tab(newVal) {
-      // Don't change currentMode if it's already set correctly
       if (newVal === 'beginner' && this.currentMode !== 'beginner') {
         this.currentMode = 'beginner'
-        // Load beginner's verses if any
         if (this.beginner.chapterId && this.beginner.verses.length === 0) {
           this.loadVerses()
         }
       } else if (newVal === 'advanced' && this.currentMode !== 'advanced') {
         this.currentMode = 'advanced'
-        // Load advanced's verses if any
         if (this.advanced.chapterId && this.advanced.verses.length === 0) {
           this.loadVerses()
         }
       }
       this.persistUiState()
-    },
+    }
   },
+
   methods: {
-    isAdjacentVerse(verse) {
-      if (!this.activeVerseKey) return false
-      const activeNumber = parseInt(this.activeVerseKey.split(':')[1])
-      const verseNumber = verse.number
-      return Math.abs(verseNumber - activeNumber) === 1
-    },
-    onChapterChange(event) {
-      const val = parseInt(event.target.value)
-      console.log('Chapter changed to:', val, 'currentMode:', this.currentMode)
-      if (this.currentMode === 'beginner') {
-        this.beginner.chapterId = val
-      } else {
-        this.advanced.chapterId = val
+
+    splitArabicIntoWords(arabicText, verseKey) {
+      if (!arabicText || !this.wordByWordAudioEnabled) {
+        return arabicText
       }
-      this.loadChapter()
+
+      // First, protect tajweed tags by replacing them with placeholders
+      const tajweedMatches = []
+      let protectedText = arabicText.replace(/<tajweed[^>]*>.*?<\/tajweed>/gi, (match) => {
+        const index = tajweedMatches.length
+        tajweedMatches.push(match)
+        return `__TAJWEED_${index}__`
+      })
+
+      // Split by spaces to get individual words
+      const words = protectedText.split(/(\s+)/)
+
+      let result = ''
+      let wordIndex = 0
+
+      for (let i = 0; i < words.length; i++) {
+        let word = words[i]
+
+        // Skip if it's only whitespace
+        if (word.trim() === '') {
+          result += word
+          continue
+        }
+
+        // Restore any tajweed tags in this word
+        let restoredWord = word
+        let hasTajweed = false
+
+        // Check if this word contains tajweed placeholders
+        const tajweedRegex = /__TAJWEED_(\d+)__/g
+        let match
+        while ((match = tajweedRegex.exec(word)) !== null) {
+          hasTajweed = true
+          const tajweedIndex = parseInt(match[1])
+          if (tajweedMatches[tajweedIndex]) {
+            restoredWord = restoredWord.replace(`__TAJWEED_${tajweedIndex}__`, tajweedMatches[tajweedIndex])
+          }
+        }
+
+        const isHighlighted = (this.currentWordIndex === wordIndex && this.currentHighlightedVerseKey === verseKey)
+        const highlightClass = isHighlighted ? 'highlighted' : ''
+
+        if (hasTajweed) {
+          // For words with tajweed, we need to wrap the entire thing
+          result += `<word data-verse="${verseKey}" data-word-index="${wordIndex}" class="${highlightClass}">${restoredWord}</word>`
+        } else {
+          result += `<word data-verse="${verseKey}" data-word-index="${wordIndex}" class="${highlightClass}">${restoredWord}</word>`
+        }
+
+        wordIndex++
+
+        // Add space after word if not last and next is not whitespace
+        if (i < words.length - 1 && words[i + 1] && words[i + 1].trim() !== '') {
+          result += ' '
+        }
+      }
+
+      return result
     },
-    setActiveVerse(key) {
-      this.activeVerseKey = key
-      this.activeKey = key
-      // Scroll to verse
-      this.$nextTick(() => {
-        const el = document.querySelector(`.verse-card[data-verse-key="${key}"]`)
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // ==================== ARABIC TEXT WORD SPLITTING ====================
+
+    // Split Arabic text into individual word spans
+    splitArabicIntoWords(arabicText, verseKey) {
+      if (!arabicText || !this.wordByWordAudioEnabled) {
+        return arabicText
+      }
+
+      // Split Arabic text by spaces, but preserve spans/tajweed tags
+      // This regex matches words separated by spaces, including those with tajweed tags
+      const words = arabicText.split(/(\s+)/)
+
+      let result = ''
+      let wordIndex = 0
+
+      for (let i = 0; i < words.length; i++) {
+        const word = words[i]
+        // Skip if it's only whitespace
+        if (word.trim() === '') {
+          result += word
+          continue
+        }
+
+        // Check if this word has tajweed tags
+        const hasTajweed = word.includes('<tajweed')
+
+        if (hasTajweed) {
+          // For tajweed text, we need to extract the inner text
+          const match = word.match(/<tajweed[^>]*>(.*?)<\/tajweed>/)
+          if (match) {
+            const innerText = match[1]
+            result += `<word data-verse="${verseKey}" data-word-index="${wordIndex}" class="${this.currentWordIndex === wordIndex && this.currentHighlightedVerseKey === verseKey ? 'highlighted' : ''}">${word}</word>`
+            wordIndex++
+          } else {
+            result += `<word data-verse="${verseKey}" data-word-index="${wordIndex}" class="${this.currentWordIndex === wordIndex && this.currentHighlightedVerseKey === verseKey ? 'highlighted' : ''}">${word}</word>`
+            wordIndex++
+          }
+        } else {
+          // Regular text
+          result += `<word data-verse="${verseKey}" data-word-index="${wordIndex}" class="${this.currentWordIndex === wordIndex && this.currentHighlightedVerseKey === verseKey ? 'highlighted' : ''}">${word}</word>`
+          wordIndex++
+        }
+
+        // Add space after word if not last
+        if (i < words.length - 1 && words[i + 1] && words[i + 1].trim() !== '') {
+          result += ' '
+        }
+      }
+
+      return result
+    },
+
+    getHighlightedArabic(verse) {
+      if (!verse || !verse.arabic) return ''
+      if (!this.wordByWordAudioEnabled) return verse.arabic
+
+      // Store the split words for this verse
+      const highlightedHtml = this.splitArabicIntoWords(verse.arabic, verse.key)
+      return highlightedHtml
+    },
+
+    // ==================== WORD HIGHLIGHTING METHODS ====================
+
+    async getWordTimings(verse) {
+      if (!verse.words || verse.words.length === 0) {
+        // Generate word timings from the Arabic text if word-by-word data isn't available
+        const arabicText = verse.arabic
+        const words = arabicText.split(/\s+/).filter(w => w.trim().length > 0)
+        const totalChars = arabicText.replace(/[^ء-ي]/g, '').length
+        const totalDuration = Math.max(5, Math.min(45, totalChars * 0.12))
+
+        const timestamps = []
+        let currentTime = 0
+
+        for (let i = 0; i < words.length; i++) {
+          const word = words[i]
+          const wordChars = word.replace(/<[^>]+>/g, '').replace(/[^ء-ي]/g, '').length
+          const wordDuration = Math.max(0.2, (wordChars / totalChars) * totalDuration)
+
+          timestamps.push({
+            index: i,
+            start: currentTime,
+            end: currentTime + wordDuration
+          })
+          currentTime += wordDuration
+        }
+
+        return timestamps
+      }
+
+      const cacheKey = `${verse.key}_${this.reciterId}`
+      if (this.wordTimestampsMap.has(cacheKey)) {
+        return this.wordTimestampsMap.get(cacheKey)
+      }
+
+      const timestamps = []
+      const totalDuration = Math.max(5, Math.min(45, verse.arabic.replace(/[^ء-ي]/g, '').length * 0.12))
+      const totalChars = verse.arabic.replace(/[^ء-ي]/g, '').length
+      let currentTime = 0
+
+      for (let i = 0; i < verse.words.length; i++) {
+        const word = verse.words[i]
+        const wordChars = word.ar.replace(/[^ء-ي]/g, '').length
+        const wordDuration = Math.max(0.2, (wordChars / totalChars) * totalDuration)
+
+        timestamps.push({
+          index: i,
+          start: currentTime,
+          end: currentTime + wordDuration
+        })
+        currentTime += wordDuration
+      }
+
+      this.wordTimestampsMap.set(cacheKey, timestamps)
+      return timestamps
+    },
+
+    async startWordHighlighting(verse) {
+      this.stopWordHighlighting()
+
+      if (!this.wordByWordAudioEnabled) {
+        return
+      }
+
+      this.currentHighlightedVerseKey = verse.key
+
+      // Get word timings
+      const timestamps = await this.getWordTimings(verse)
+
+      if (!timestamps.length) return
+
+      const updateHighlight = () => {
+        if (!this.audioElement?.currentTime) return
+
+        const currentTime = this.audioElement.currentTime
+        let activeIndex = -1
+
+        for (let i = 0; i < timestamps.length; i++) {
+          const ts = timestamps[i]
+          if (currentTime >= ts.start && currentTime <= ts.end) {
+            activeIndex = i
+            break
+          }
+        }
+
+        if (this.currentWordIndex !== activeIndex) {
+          this.currentWordIndex = activeIndex
+
+          // Update the DOM directly for better performance
+          this.updateWordHighlightInDOM(verse.key, activeIndex)
+        }
+      }
+
+      this.wordHighlightHandler = updateHighlight
+      this.audioElement.addEventListener('timeupdate', this.wordHighlightHandler)
+    },
+
+    updateWordHighlightInDOM(verseKey, activeWordIndex) {
+      // Find all word elements in the current verse
+      const verseCard = document.querySelector(`.verse-card[data-verse-key="${verseKey}"]`)
+      if (!verseCard) return
+
+      // Find all word elements within the verse-arabic div
+      const words = verseCard.querySelectorAll('.verse-arabic word')
+
+      words.forEach((wordElement, index) => {
+        if (index === activeWordIndex) {
+          wordElement.classList.add('highlighted')
+          // Optional: scroll the highlighted word into view
+          if (this.wordByWordAudioEnabled) {
+            wordElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' })
+          }
+        } else {
+          wordElement.classList.remove('highlighted')
+        }
       })
     },
 
-    playCurrentVerse() {
-      const verse = this.verses.find(v => v.key === this.activeVerseKey)
-      if (verse) this.playVerse(verse)
+    stopWordHighlighting() {
+      if (this.audioElement && this.wordHighlightHandler) {
+        this.audioElement.removeEventListener('timeupdate', this.wordHighlightHandler)
+        this.wordHighlightHandler = null
+      }
+      this.currentWordIndex = -1
+      this.currentHighlightedVerseKey = null
+
+      // Clear all highlights from DOM
+      document.querySelectorAll('.verse-arabic word.highlighted').forEach(word => {
+        word.classList.remove('highlighted')
+      })
     },
 
-    prevVerse() {
-      if (!this.canGoPrev) return
-      const idx = this.activeVerseIndex
-      const prevVerse = this.verses[idx - 1]
-      if (prevVerse) this.playVerse(prevVerse)
-    },
+    // ==================== AUDIO METHODS ====================
 
-    nextVerse() {
-      if (!this.canGoNext) return
-      const idx = this.activeVerseIndex
-      const nextVerse = this.verses[idx + 1]
-      if (nextVerse) this.playVerse(nextVerse)
-    },
-    // Collect simple stats
-    collectSimpleStats() {
-      // Count sessions from saved sessions
-      const sessionCount = this.savedSessions.length || 0
+    initAudio() {
+      this.audioElement = this.$refs.audio
+      if (!this.audioElement) return
 
-      // Count weak verses from SM2
-      const weak = Object.entries(this.sm2 || {})
-        .filter(([, card]) => card && (card.lapses >= 3 || card.suspended))
-        .map(([key]) => key.split('::')[0])
-      const uniqueWeak = [...new Set(weak)]
+      this.audioElement.removeEventListener('timeupdate', this.audioTimeUpdate)
+      this.audioElement.removeEventListener('ended', this.audioEnded)
+      this.audioElement.removeEventListener('error', this.audioError)
 
-      // Build weak verses list for display
-      this.weakVersesList = uniqueWeak.map(key => {
-        const textCard = this.sm2Get(this.sm2CardKey(key, 'recite_text'))
-        return { key, lapses: textCard.lapses || 0 }
-      }).sort((a, b) => b.lapses - a.lapses)
-
-      this.simpleStats = {
-        streak: this.computeStreak(this.events, Date.now()),
-        sessions: sessionCount,
-        memorised: this.verses.length || 0,
-        weak: uniqueWeak.length
-      }
-    },
-
-    // Generate a simple daily plan
-    generateSimplePlan() {
-      const now = Date.now()
-      const day = this.dayKey(now)
-
-      // Calculate target verses based on daily goals
-      const targetNew = Math.min(this.dailyPlan.newVerses, 20)
-      const targetReview = Math.min(this.dailyPlan.reviewVerses, 50)
-      const totalTarget = targetNew + targetReview
-
-      // Estimate time per verse (approx 45 seconds)
-      const estimatedSeconds = totalTarget * 45
-      const estimatedMinutes = Math.ceil(estimatedSeconds / 60)
-
-      // Determine session type based on weak verses and new verses
-      let sessionType = 'Memorisation'
-      let planRange = null
-
-      if (this.weakVersesList.length > 0 && this.weakVersesList.length > targetNew) {
-        sessionType = 'Revision (Recovery)'
-      } else if (this.weakVersesList.length > 0) {
-        sessionType = 'Mixed (Review + New)'
-      } else if (targetNew > 0) {
-        sessionType = 'New Memorisation'
-      } else {
-        sessionType = 'Review Session'
+      this.audioTimeUpdate = () => {
+        this.currentTime = this.audioElement.currentTime
+        this.duration = this.audioElement.duration
       }
 
-      // Get current range from selected surah
-      if (this.currentChapter) {
-        planRange = `${this.currentChapter.name_simple} (${this.rangeStart}-${this.rangeEnd})`
-      }
-
-      this.todayPlanSummary = {
-        type: sessionType,
-        target: totalTarget,
-        eta: Math.max(estimatedMinutes, this.dailyPlan.minutes),
-        range: planRange,
-        newCount: targetNew,
-        reviewCount: targetReview,
-        day: day
-      }
-
-      this.showBanner('Plan generated! Press Start to begin.', 'success', 3000)
-    },
-
-    // Start the plan session
-    startPlanSession() {
-      if (!this.todayPlanSummary) {
-        this.generateSimplePlan()
-      }
-
-      // If we have a valid session, start it
-      if (this.chapterId && this.verses.length) {
-        this.startSession()
-      } else {
-        this.tab = 'beginner'
-        this.showTools = true
-        this.showBanner('Please select a surah and range first', 'info', 3000)
-      }
-    },
-
-    // Review a specific weak verse
-    reviewWeakVerse(verseKey) {
-      // Find the verse in current verses or load it
-      let verse = this.verses.find(v => v.key === verseKey)
-      if (!verse) {
-        // Try to load from chapter
-        const [chapterId] = verseKey.split(':')
-        if (chapterId) {
-          this.selectedChapterId = parseInt(chapterId)
-          this.loadChapter()
-          setTimeout(() => {
-            verse = this.verses.find(v => v.key === verseKey)
-            if (verse) this.playVerse(verse)
-          }, 500)
+      this.audioEnded = () => {
+        this.isPlaying = false
+        this.stopWordHighlighting()
+        if (this.playMode === 'auto') {
+          setTimeout(() => this.next(), (this.delay || 1) * 1000)
         }
-      } else {
-        this.playVerse(verse)
       }
+
+      this.audioError = (e) => {
+        console.error('Audio error:', e)
+        this.isPlaying = false
+        this.stopWordHighlighting()
+        this.showBanner('Audio playback error', 'error', 3000)
+      }
+
+      this.audioElement.addEventListener('timeupdate', this.audioTimeUpdate)
+      this.audioElement.addEventListener('ended', this.audioEnded)
+      this.audioElement.addEventListener('error', this.audioError)
+    },
+
+    async playVerse(verse) {
+      if (!verse) {
+        console.error('No verse provided')
+        return
+      }
+
+      if (!verse.audio) {
+        this.showBanner(`Audio not available for verse ${verse.number}`, 'info', 2000)
+        return
+      }
+
+      this.stopWordHighlighting()
+      if (this.audioElement) {
+        try { this.audioElement.pause() } catch (e) { }
+      }
+
+      this.activeKey = verse.key
+      this.activeVerseKey = verse.key
+
+      if (!this.audioElement) {
+        this.audioElement = this.$refs.audio
+        if (!this.audioElement) {
+          this.showBanner('Audio system not ready', 'error', 3000)
+          return
+        }
+        this.initAudio()
+      }
+
+      const audioUrl = this.normalizeAudioUrl(verse.audio)
+      this.audioElement.src = audioUrl
+      this.audioElement.load()
+      this.playerVisible = true
+
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('Timeout')), 10000)
+
+        const canPlayHandler = async () => {
+          clearTimeout(timeout)
+          this.audioElement.playbackRate = this.speed
+
+          try {
+            await this.audioElement.play()
+            this.isPlaying = true
+            this.markPlaybackStart()
+
+            // Start word highlighting after playback begins
+            if (this.wordByWordAudioEnabled) {
+              await this.startWordHighlighting(verse)
+            }
+            resolve()
+          } catch (err) {
+            this.isPlaying = false
+            reject(err)
+          }
+          this.audioElement.removeEventListener('canplay', canPlayHandler)
+        }
+
+        const errorHandler = (err) => {
+          clearTimeout(timeout)
+          this.isPlaying = false
+          reject(err)
+          this.audioElement.removeEventListener('error', errorHandler)
+        }
+
+        this.audioElement.addEventListener('canplay', canPlayHandler)
+        this.audioElement.addEventListener('error', errorHandler, { once: true })
+      }).catch(err => {
+        console.error('playVerse failed:', err)
+        this.isPlaying = false
+        this.showBanner('Failed to play audio', 'error', 3000)
+      })
+    },
+
+    togglePlay() {
+      if (!this.audioElement?.src) return
+      if (this.audioElement.paused) {
+        this.audioElement.play()
+        this.isPlaying = true
+      } else {
+        this.audioElement.pause()
+        this.isPlaying = false
+      }
+    },
+
+    applySpeed() {
+      if (this.audioElement) this.audioElement.playbackRate = this.speed
+    },
+
+    prev() {
+      if (!this.canPrev) return
+      this.sessionCompleted = false
+      this.queueIndex--
+      const v = this.queue[this.queueIndex]
+      if (v) this.playVerse(v)
+    },
+
+    next() {
+      if (this.canNext) {
+        this.sessionCompleted = false
+        this.queueIndex++
+        const v = this.queue[this.queueIndex]
+        if (v) this.playVerse(v)
+        return
+      }
+      this.handleSessionComplete()
+    },
+
+    closePlayer() {
+      this.flushPlaybackTime()
+      this.stopWordHighlighting()
+      if (this.audioElement) {
+        this.audioElement.pause()
+        this.audioElement.src = ''
+      }
+      this.playerVisible = false
+      this.isPlaying = false
+      this.playerMenuOpen = false
+      this.persistAudioState()
+    },
+
+    // ==================== VERSE METHODS ====================
+
+    async loadVerses() {
+      if (!this.chapterId) return
+
+      const params = {
+        per_page: 300,
+        translations: this.shouldRequestTranslations() ? '131' : undefined,
+        words: this.shouldRequestWords(),
+        audio: this.reciterId,
+        fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs'
+      }
+
+      try {
+        const res = await axios.get(`https://api.quran.com/api/v4/verses/by_chapter/${this.chapterId}`, { params })
+        const all = res.data?.verses || []
+        const start = this.rangeStart, end = this.rangeEnd
+
+        let mappedVerses = all.filter(v => v.verse_number >= start && v.verse_number <= end).map(v => ({
+          key: v.verse_key,
+          number: v.verse_number,
+          arabic: v.text_qpc_hafs || v.text_uthmani_tajweed || v.text_uthmani || '',
+          translation: v.translations?.[0]?.text || '',
+          transliteration: '',
+          audio: this.normalizeAudioUrl(v.audio?.url || ''),
+          words: (v.words || []).map(w => ({
+            ar: w.text_uthmani || w.text || '',
+            en: w.translation?.text || '',
+            tooltip: `${w.text_uthmani || w.text || ''} • ${w.translation?.text || ''}`.trim(),
+            audio: this.normalizeAudioUrl(w.audio_url)
+          }))
+        }))
+
+        if (this.script === 'tajweed') {
+          try {
+            const tajweedRes = await getSurahEdition(this.chapterId, 'quran-tajweed')
+            const ayahs = tajweedRes.data?.data?.ayahs || []
+            const byNumber = new Map(ayahs.map(a => [a.numberInSurah, this.normalizeTajweedText(a.text)]))
+            mappedVerses = mappedVerses.map(v => ({ ...v, arabic: byNumber.get(v.number) || v.arabic }))
+          } catch (e) {
+            console.error(e)
+          }
+        }
+
+        if (this.currentMode === 'beginner') {
+          this.beginner.verses = mappedVerses
+          if (this.beginner.verses.length && !this.beginner.activeKey) {
+            this.beginner.activeKey = this.beginner.verses[0].key
+          }
+        } else {
+          this.advanced.verses = mappedVerses
+          if (this.advanced.verses.length && !this.advanced.activeKey) {
+            this.advanced.activeKey = this.advanced.verses[0].key
+          }
+        }
+
+        this.buildQueue()
+      } catch (e) {
+        console.error('API Error:', e)
+        this.showBanner(`Failed to load verses: ${e.message || 'Network error'}`, 'error', 5000)
+      }
+    },
+
+    buildQueue() {
+      const q = []
+      const base = this.verses
+
+      let rep = 1
+      if (this.currentMode === 'beginner') {
+        rep = this.beginner.repeats
+      } else if (this.currentMode === 'advanced') {
+        rep = this.advanced.repeatAndLoopAudio ? (this.advanced.advancedRepeats || 1) : 1
+      }
+
+      const ord = this.order
+
+      if (ord === 'seq') {
+        for (let r = 0; r < rep; r++) q.push(...base)
+      } else if (ord === 'cum') {
+        for (let r = 0; r < rep; r++) {
+          for (let i = 0; i < base.length; i++) {
+            for (let j = 0; j <= i; j++) q.push(base[j])
+          }
+        }
+      } else if (ord === 'rand') {
+        const shuffled = [...base]
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+        }
+        for (let r = 0; r < rep; r++) q.push(...shuffled)
+      }
+
+      this.queue = q
+      this.queueIndex = 0
+    },
+
+    rebuildQueue() {
+      this.buildQueue()
+    },
+
+    async startSession() {
+      if (!this.chapterId || this.chapterId === 0) {
+        this.showTools = true
+        this.showBanner('Please select a surah first', 'info', 3000)
+        return
+      }
+
+      if (!this.verses.length) {
+        await this.loadVerses()
+      }
+
+      if (!this.verses.length) {
+        this.showBanner('No verses loaded. Check your network connection.', 'error')
+        return
+      }
+
+      if (!this.audioElement) {
+        this.initAudio()
+      }
+
+      if (!this.queue.length) {
+        this.buildQueue()
+      }
+
+      if (!this.queue.length) {
+        this.showBanner('Nothing to play. Check range settings.', 'error')
+        return
+      }
+
+      this.queueIndex = 0
+      const first = this.queue[0]
+
+      if (first) {
+        this.activeKey = first.key
+        this.activeVerseKey = first.key
+        await this.$nextTick()
+        await this.playVerse(first)
+      }
+
       this.showTools = false
     },
-    userStorageKey(suffix) {
-      const uid = this.auth?.id || 'guest'
-      return `telawa.${suffix}.${uid}`
+
+    // ==================== UTILITY METHODS ====================
+
+    formatTime(sec) {
+      const t = Math.max(0, Math.floor(sec || 0))
+      return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`
     },
-    loadBookmarksPins() {
-      try { this.bookmarks = JSON.parse(localStorage.getItem(this.userStorageKey('bookmarks')) || '[]') } catch { this.bookmarks = [] }
-      try { this.pins = JSON.parse(localStorage.getItem(this.userStorageKey('pins')) || '[]') } catch { this.pins = [] }
+
+    normalizeAudioUrl(url) {
+      if (!url) return ''
+      if (url.startsWith('http://') || url.startsWith('https://')) return url
+      if (url.startsWith('//')) return `https:${url}`
+      if (url.startsWith('/')) return `https://verses.quran.com${url}`
+      if (url.includes('mp3')) return `https://verses.quran.com/${url}`
+      return url
     },
-    persistBookmarksPins() {
-      try { localStorage.setItem(this.userStorageKey('bookmarks'), JSON.stringify((this.bookmarks || []).slice(0, 500))) } catch (e) { }
-      try { localStorage.setItem(this.userStorageKey('pins'), JSON.stringify((this.pins || []).slice(0, 500))) } catch (e) { }
+
+    shouldRequestTranslations() {
+      return !!(this.showTranslation || this.studyMode === 'quiz' || this.studyMode === 'hybrid' || this.quizActive)
     },
-    buildUiStatePayload() {
-      return {
-        theme: this.theme,
-        showTools: this.showTools,
-        tab: this.tab,
-        currentMode: this.currentMode,
-        // Save beginner mode state
-        beginner: {
-          chapterId: this.beginner.chapterId,
-          rangeStart: this.beginner.rangeStart,
-          rangeEnd: this.beginner.rangeEnd,
-          reciterId: this.beginner.reciterId,
-          speed: this.beginner.speed,
-          delay: this.beginner.delay,
-          playMode: this.beginner.playMode,
-          repeats: this.beginner.repeats,
-          order: this.beginner.order,
-          blurAdjacent: this.beginner.blurAdjacent,
-          focusMode: this.beginner.focusMode,
-          verses: [], // Don't persist verses to avoid storage issues
-          queue: [],
-          queueIndex: 0,
-          sessionActive: false
-        },
-        // Save advanced mode state
-        advanced: {
-          chapterId: this.advanced.chapterId,
-          rangeStart: this.advanced.rangeStart,
-          rangeEnd: this.advanced.rangeEnd,
-          reciterId: this.advanced.reciterId,
-          speed: this.advanced.speed,
-          delay: this.advanced.delay,
-          playMode: this.advanced.playMode,
-          repeats: this.advanced.repeats,
-          order: this.advanced.order,
-          blurAdjacent: this.advanced.blurAdjacent,
-          focusMode: this.advanced.focusMode,
-          repeatAndLoopAudio: this.advanced.repeatAndLoopAudio,
-          advancedRepeats: this.advanced.advancedRepeats,
-          verses: [],
-          queue: [],
-          queueIndex: 0,
-          sessionActive: false
-        },
-        // For backward compatibility
-        chapterId: this.chapterId,
-        rangeStart: this.rangeStart,
-        rangeEnd: this.rangeEnd,
-        reciterId: this.reciterId,
-        speed: this.speed,
-        delay: this.delay,
-        repeats: this.repeats,
-        playMode: this.playMode,
-        order: this.order,
-        blurAdjacent: this.blurAdjacent,
-        focusMode: this.focusMode,
-        studyMode: this.studyMode,
-        quizType: this.quizType,
-        showTranslation: this.showTranslation,
-        showTransliteration: this.showTransliteration,
-        showWordByWord: this.showWordByWord,
-        wordByWordAudioEnabled: this.wordByWordAudioEnabled,
-        fontScale: this.fontScale,
-        quranFont: this.quranFont,
-        script: this.script,
-        sectionOpen: this.sectionOpen,
-        onboardingDismissed: this.onboardingDismissed
+
+    shouldRequestWords() {
+      return !!(this.showWordByWord || (this.quizActive && this.quizType === 'blank'))
+    },
+
+    normalizeTajweedText(text) {
+      const raw = String(text || '')
+      if (!raw) return ''
+      if (raw.includes('<tajweed')) return raw
+      const classMap = {
+        h: 'ham_wasl', s: 'slnt', l: 'laam_shamsiyah', n: 'madda_normal',
+        p: 'madda_permissible', m: 'madda_necessary', q: 'qlqla', o: 'madda_obligatory',
+        c: 'ikhafa', f: 'ghunnah', w: 'idgham_wo_ghunnah', i: 'iqlab',
+        a: 'idgham_ghunnah', u: 'idgham_shafawi', d: 'ikhafa_shafawi', b: 'waqf', g: 'ghunnah'
       }
+      return raw.replace(/\[([a-z_]+)(?::[^\]]+)?\[([^\]]+)\]/gi, (_, code, inner) => {
+        const klass = classMap[String(code).toLowerCase()] || String(code).toLowerCase()
+        return `<tajweed class="${klass}">${inner}</tajweed>`
+      }).replace(/\]/g, '')
     },
+
+    showBanner(message, kind = 'info', ttlMs = 3500, action = null) {
+      if (this.bannerTimer) clearTimeout(this.bannerTimer)
+      this.banner = { message, kind, at: Date.now(), actionKey: action?.key || '', actionLabel: action?.label || '' }
+      this.bannerTimer = setTimeout(() => {
+        if (this.banner && Date.now() - this.banner.at >= ttlMs) this.banner = null
+      }, ttlMs + 50)
+    },
+
     handleOnline() {
       this.networkOnline = true
       this.showBanner('Back online. Live APIs are available again.', 'success', 2400)
     },
+
     handleOffline() {
       this.networkOnline = false
       this.showBanner('Offline mode active. Reading falls back to cached ranges.', 'info', 3200)
     },
-    openWordTooltip(verse, word, index) {
-      if (!word?.ar && !word?.en) return
-      this.activeWordTooltip = { verseKey: verse.key, index }
+
+    markPlaybackStart() {
+      this.playbackStartedAt = Date.now()
     },
-    toggleWordTooltip(verse, word, index) {
-      if (this.isTooltipOpen(verse.key, index)) this.activeWordTooltip = null
-      else this.openWordTooltip(verse, word, index)
+
+    flushPlaybackTime() {
+      if (!this.playbackStartedAt) return
+      const seconds = Math.max(0, Math.round((Date.now() - this.playbackStartedAt) / 1000))
+      this.playbackStartedAt = 0
     },
-    closeWordTooltip() {
-      this.activeWordTooltip = null
+
+    handleSessionComplete() {
+      if (!this.verses.length) return
+      this.sessionCompleted = true
+      this.showBanner('Session complete', 'success', 4500)
     },
-    isTooltipOpen(verseKey, index) {
-      return this.activeWordTooltip?.verseKey === verseKey && this.activeWordTooltip?.index === index
+
+    handlePrimaryAction() {
+      // Separate logic paths based on whether verses are loaded
+      if (!this.chapterId || this.chapterId === 0) {
+        this.showTools = true
+        this.showBanner('Please select a surah first', 'info', 3000)
+        return
+      }
+      
+      if (!this.verses.length) {
+        return this.startSession()
+      }
+      
+      // For loaded verses - handle play/pause state
+      this.handlePlayPause()
     },
+
+    handlePlayPause() {
+      if (this.isPlaying) {
+        return this.togglePlay()
+      }
+      
+      // Start or resume
+      if (!this.audioElement?.src || this.audioElement.paused) {
+        return this.startSession()
+      }
+      
+      return this.togglePlay()
+    },
+
+
+
+    
+
+    // ==================== UI METHODS ====================
+
     toggleReadingOption(kind) {
-      if (kind === 'translation') {
-        this.showTranslation = !this.showTranslation
-        // Force a re-render
-        this.$forceUpdate()
-      }
-      if (kind === 'transliteration') {
-        this.showTransliteration = !this.showTransliteration
-      }
+      if (kind === 'translation') this.showTranslation = !this.showTranslation
+      if (kind === 'transliteration') this.showTransliteration = !this.showTransliteration
       if (kind === 'wbw') {
         this.showWordByWord = !this.showWordByWord
+        // Reload verses to update the display
+        this.loadVerses()
       }
+      this.$forceUpdate()
     },
-    toggleFontPicker() {
-      this.fontPickerOpen = !this.fontPickerOpen
-      if (this.fontPickerOpen) this.script = 'uthmani'
+
+    setScriptMode(mode) {
+      this.script = mode
+      this.loadVerses()
     },
+
     setQuranFont(font) {
       this.quranFont = font
       this.script = 'uthmani'
       this.fontPickerOpen = false
       this.persistUiState()
     },
-    setScriptMode(mode) {
-      this.script = mode
-      if (mode !== 'uthmani') this.fontPickerOpen = false
-      this.loadVerses()
+
+    toggleFontPicker() {
+      this.fontPickerOpen = !this.fontPickerOpen
     },
-    handleGlobalPointerDown(event) {
-      if (!this.fontPickerOpen) return
-      const insideMenu = event.target?.closest?.('.toolbar-font-wrap')
-      if (!insideMenu) this.fontPickerOpen = false
+
+    togglePlayerMenu() {
+      this.playerMenuOpen = !this.playerMenuOpen
     },
-    handleGlobalKeydown(event) {
-      if (event.key === 'Escape' && this.fontPickerOpen) this.fontPickerOpen = false
+
+    cycleTheme() {
+      const themes = ['light', 'sepia', 'dark']
+      const idx = themes.indexOf(this.theme)
+      this.theme = themes[(idx + 1) % themes.length]
+      document.documentElement.setAttribute('data-theme', this.theme)
+      this.persistUiState()
     },
-    toggleBookmark(verse) {
-      if (!this.isLoggedIn) { this.showBanner('Login required to bookmark', 'info', 2800); return }
-      const key = verse.key
-      const idx = (this.bookmarks || []).indexOf(key)
-      if (idx >= 0) this.bookmarks.splice(idx, 1)
-      else this.bookmarks.unshift(key)
-      this.persistBookmarksPins()
+
+    toggleSection(key) {
+      this.sectionOpen[key] = !this.sectionOpen[key]
     },
-    togglePin(verse) {
-      if (!this.isLoggedIn) { this.showBanner('Login required to pin', 'info', 2800); return }
-      const key = verse.key
-      const idx = (this.pins || []).indexOf(key)
-      if (idx >= 0) this.pins.splice(idx, 1)
-      else this.pins.unshift(key)
-      this.persistBookmarksPins()
+
+    isAdjacentVerse(verse) {
+      if (!this.activeVerseKey) return false
+      const activeNumber = parseInt(this.activeVerseKey.split(':')[1])
+      return Math.abs(verse.number - activeNumber) === 1
     },
-    shareWhatsApp(verse) {
-      const deepLink = `${window.location.origin}${window.location.pathname}#${verse.key}`
-      const text = `${this.currentChapter?.name_simple || ''} ${verse.key}\n\n${this.normalizeTextForQuiz(verse.arabic)}\n\n${this.normalizeTextForQuiz(verse.translation)}\n\n${deepLink}`
-      const url = `https://wa.me/?text=${encodeURIComponent(text)}`
-      window.open(url, '_blank', 'noopener,noreferrer')
+
+    // ==================== PERSISTENCE METHODS ====================
+
+    userStorageKey(suffix) {
+      const uid = this.auth?.id || 'guest'
+      return `telawa.${suffix}.${uid}`
     },
-    downloadAyah(verse) {
-      const src = verse.audio
-      if (!src) return
-      const a = document.createElement('a')
-      a.href = src
-      a.target = '_blank'
-      a.rel = 'noopener noreferrer'
-      a.download = ''
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
+
+    loadBookmarksPins() {
+      try { this.bookmarks = JSON.parse(localStorage.getItem(this.userStorageKey('bookmarks')) || '[]') } catch { this.bookmarks = [] }
+      try { this.pins = JSON.parse(localStorage.getItem(this.userStorageKey('pins')) || '[]') } catch { this.pins = [] }
     },
-    incFont() { this.fontScale = Math.min(1.4, Math.round((this.fontScale + 0.05) * 100) / 100) },
-    decFont() { this.fontScale = Math.max(0.85, Math.round((this.fontScale - 0.05) * 100) / 100) },
-    buildWeakWordClusters(weakAyahs) {
-      const set = new Set(weakAyahs)
-      const counts = {}
-      this.verses
-        .filter(v => set.has(v.number))
-        .forEach(v => (v.words || []).forEach(word => {
-          const token = this.normalizeTextForQuiz(word.en || word.ar).toLowerCase()
-          if (!token || token.length < 3) return
-          counts[token] = (counts[token] || 0) + 1
-        }))
-      return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([token]) => token)
+
+    persistBookmarksPins() {
+      try { localStorage.setItem(this.userStorageKey('bookmarks'), JSON.stringify((this.bookmarks || []).slice(0, 500))) } catch (e) { }
+      try { localStorage.setItem(this.userStorageKey('pins'), JSON.stringify((this.pins || []).slice(0, 500))) } catch (e) { }
     },
+
     loadUiState() {
       try {
         const raw = localStorage.getItem('telawa.uiState')
         if (!raw) return
         const state = JSON.parse(raw)
         this.theme = state.theme || this.theme
-        // Don't restore showTools from storage if you want it closed by default
-        // this.showTools = state.showTools ?? this.showTools
-        this.showTools = false // Force closed on load
-
+        this.showTools = false
         this.tab = state.tab || this.tab
         this.currentMode = state.currentMode || 'beginner'
 
-        // Restore beginner mode settings
-        if (state.beginner) {
-          this.beginner = { ...this.beginner, ...state.beginner }
-        }
-
-        // Restore advanced mode settings
-        if (state.advanced) {
-          this.advanced = { ...this.advanced, ...state.advanced }
-        }
-
-        // For backward compatibility, also load from old flat state
-        if (state.chapterId !== undefined && this.currentMode === 'beginner') {
-          this.beginner.chapterId = state.chapterId
-          this.beginner.rangeStart = state.rangeStart || this.beginner.rangeStart
-          this.beginner.rangeEnd = state.rangeEnd || this.beginner.rangeEnd
-          this.beginner.reciterId = state.reciterId || this.beginner.reciterId
-          this.beginner.speed = state.speed ?? this.beginner.speed
-          this.beginner.delay = state.delay ?? this.beginner.delay
-          this.beginner.playMode = state.playMode || this.beginner.playMode
-          this.beginner.order = state.order || this.beginner.order
-          this.beginner.blurAdjacent = state.blurAdjacent ?? this.beginner.blurAdjacent
-          this.beginner.focusMode = state.focusMode ?? this.beginner.focusMode
-        }
+        if (state.beginner) this.beginner = { ...this.beginner, ...state.beginner }
+        if (state.advanced) this.advanced = { ...this.advanced, ...state.advanced }
 
         this.showTranslation = state.showTranslation ?? this.showTranslation
         this.showTransliteration = state.showTransliteration ?? this.showTransliteration
@@ -1857,33 +1987,71 @@ export default {
           const state = JSON.parse(raw)
           this.activeKey = state.activeKey || this.activeKey
           this.queueIndex = Number(state.queueIndex || 0)
-          this.planRun = state.planRun || null
         }
       } catch (e) { console.error(e) }
-
-      try {
-        const raw = localStorage.getItem('telawa.audioState')
-        this.restoredAudioState = raw ? JSON.parse(raw) : null
-      } catch (e) { console.error(e) }
     },
+
     persistUiState() {
       try {
-        localStorage.setItem('telawa.uiState', JSON.stringify(this.buildUiStatePayload()))
+        localStorage.setItem('telawa.uiState', JSON.stringify({
+          theme: this.theme,
+          showTools: this.showTools,
+          tab: this.tab,
+          currentMode: this.currentMode,
+          beginner: {
+            chapterId: this.beginner.chapterId,
+            rangeStart: this.beginner.rangeStart,
+            rangeEnd: this.beginner.rangeEnd,
+            reciterId: this.beginner.reciterId,
+            speed: this.beginner.speed,
+            delay: this.beginner.delay,
+            playMode: this.beginner.playMode,
+            repeats: this.beginner.repeats,
+            order: this.beginner.order,
+            blurAdjacent: this.beginner.blurAdjacent,
+            focusMode: this.beginner.focusMode
+          },
+          advanced: {
+            chapterId: this.advanced.chapterId,
+            rangeStart: this.advanced.rangeStart,
+            rangeEnd: this.advanced.rangeEnd,
+            reciterId: this.advanced.reciterId,
+            speed: this.advanced.speed,
+            delay: this.advanced.delay,
+            playMode: this.advanced.playMode,
+            repeats: this.advanced.repeats,
+            order: this.advanced.order,
+            blurAdjacent: this.advanced.blurAdjacent,
+            focusMode: this.advanced.focusMode,
+            repeatAndLoopAudio: this.advanced.repeatAndLoopAudio,
+            advancedRepeats: this.advanced.advancedRepeats
+          },
+          showTranslation: this.showTranslation,
+          showTransliteration: this.showTransliteration,
+          showWordByWord: this.showWordByWord,
+          wordByWordAudioEnabled: this.wordByWordAudioEnabled,
+          fontScale: this.fontScale,
+          quranFont: this.quranFont,
+          script: this.script,
+          sectionOpen: this.sectionOpen,
+          onboardingDismissed: this.onboardingDismissed
+        }))
       } catch (e) { console.error(e) }
     },
+
     persistSessionState() {
       try {
         localStorage.setItem('telawa.sessionState', JSON.stringify({
           activeKey: this.activeKey,
-          queueIndex: this.queueIndex,
-          planRun: this.planRun
+          queueIndex: this.queueIndex
         }))
       } catch (e) { console.error(e) }
     },
+
     persistAudioState() {
       try {
         localStorage.setItem('telawa.audioState', JSON.stringify({
-          src: this.audioElement?.currentSrc || this.audioElement?.src || '',
+          src: this.audioElement?.currentSrc || '',
           currentTime: this.currentTime || 0,
           playerVisible: this.playerVisible,
           speed: this.speed,
@@ -1891,6 +2059,7 @@ export default {
         }))
       } catch (e) { console.error(e) }
     },
+
     persistAllState() {
       this.persistUiState()
       this.persistSessionState()
@@ -1899,501 +2068,117 @@ export default {
       this.persistTodayPlan()
       this.persistSm2()
     },
-    loadMetrics() {
+
+    // ==================== SIMPLIFIED PLACEHOLDER METHODS ====================
+
+    async loadChapters() {
       try {
-        const raw = localStorage.getItem('telawa.metrics')
-        this.metrics = raw ? JSON.parse(raw) : { avgAyahSeconds: 10, durationsByVerse: {} }
-      } catch (e) {
-        console.error(e)
-        this.metrics = { avgAyahSeconds: 10, durationsByVerse: {} }
+        const res = await axios.get('https://api.quran.com/api/v4/chapters', { params: { language: 'en' } })
+        this.chapters = res.data?.chapters || []
+        if (this.chapterId) await this.loadChapter()
+      } catch (e) { console.error(e) }
+    },
+
+    async loadChapter() {
+      const chapterId = this.chapterId
+      if (!chapterId) {
+        this.currentChapter = null
+        return
       }
+      this.currentChapter = this.chapters.find(c => c.id === chapterId)
+      const max = this.currentChapter?.verses_count || 286
+
+      if (this.currentMode === 'beginner') {
+        this.beginner.rangeEnd = Math.min(this.beginner.rangeEnd, max)
+        this.beginner.rangeStart = Math.max(1, this.beginner.rangeStart)
+      } else {
+        this.advanced.rangeEnd = Math.min(this.advanced.rangeEnd, max)
+        this.advanced.rangeStart = Math.max(1, this.advanced.rangeStart)
+      }
+      await this.loadVerses()
     },
-    persistMetrics() {
-      try { localStorage.setItem('telawa.metrics', JSON.stringify(this.metrics)) } catch (e) { console.error(e) }
+
+    async loadReciters() {
+      try {
+        const res = await axios.get('https://api.quran.com/api/v4/resources/recitations', { params: { per_page: 30 } })
+        const list = res.data?.recitations || []
+        if (list.length) this.reciters = list.map(r => ({ id: r.id, name: r.reciter_name }))
+      } catch (e) { console.error(e) }
     },
+
+    loadSavedSessions() {
+      try { this.savedSessions = JSON.parse(localStorage.getItem('telawa.savedSessions') || '[]') } catch { this.savedSessions = [] }
+    },
+
+    loadSm2() {
+      try { this.sm2 = JSON.parse(localStorage.getItem('telawa.sm2') || '{}') } catch { this.sm2 = {} }
+    },
+
+    persistSm2() {
+      try { localStorage.setItem('telawa.sm2', JSON.stringify(this.sm2)) } catch (e) { console.error(e) }
+    },
+
+    loadEvents() {
+      try { this.events = JSON.parse(localStorage.getItem('telawa.events') || '[]') } catch { this.events = [] }
+    },
+
+    loadPlanner() {
+      try { this.plannerState = JSON.parse(localStorage.getItem('telawa.planner') || 'null') } catch { this.plannerState = null }
+      if (!this.plannerState) {
+        this.plannerState = { settings: { dailyMinutes: 20, newAyat: 5, reviewCards: 15 } }
+      }
+      this.loadTodayPlan()
+    },
+
+    loadTodayPlan() {
+      try { this.todayPlan = JSON.parse(localStorage.getItem('telawa.todayPlan') || 'null') } catch { this.todayPlan = null }
+    },
+
+    persistPlanner() {
+      try { localStorage.setItem('telawa.planner', JSON.stringify(this.plannerState)) } catch (e) { console.error(e) }
+    },
+
+    persistTodayPlan() {
+      try { localStorage.setItem('telawa.todayPlan', JSON.stringify(this.todayPlan)) } catch (e) { console.error(e) }
+    },
+
+    loadMetrics() {
+      try { this.metrics = JSON.parse(localStorage.getItem('telawa.metrics') || 'null') } catch { this.metrics = null }
+      if (!this.metrics) this.metrics = { avgAyahSeconds: 10, durationsByVerse: {} }
+    },
+
+    estimateKeysSeconds(keys = []) {
+      return keys.length * 10
+    },
+
     migrateLocalStorage() {
       const key = 'telawa.schemaVersion'
-      const current = 1
-      const v = Number(localStorage.getItem(key) || 0)
-      if (v >= current) return
-      // v0 -> v1: ensure objects exist, and cap event log size
-      try {
-        const eventsRaw = localStorage.getItem('telawa.events')
-        if (eventsRaw) {
-          const events = JSON.parse(eventsRaw)
-          if (Array.isArray(events)) localStorage.setItem('telawa.events', JSON.stringify(events.slice(-2000)))
-        }
-      } catch { }
-      localStorage.setItem(key, String(current))
+      if (!localStorage.getItem(key)) localStorage.setItem(key, '1')
     },
+
     dayKey(ts = Date.now()) {
       const d = new Date(ts)
-      const yyyy = d.getFullYear()
-      const mm = String(d.getMonth() + 1).padStart(2, '0')
-      const dd = String(d.getDate()).padStart(2, '0')
-      return `${yyyy}-${mm}-${dd}`
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     },
-    loadEvents() {
-      try {
-        const raw = localStorage.getItem('telawa.events')
-        this.events = raw ? JSON.parse(raw) : []
-      } catch (e) {
-        console.error(e)
-        this.events = []
-      }
-    },
-    showBanner(message, kind = 'info', ttlMs = 3500, action = null) {
-      if (this.bannerTimer) clearTimeout(this.bannerTimer)
-      this.banner = { message, kind, at: Date.now(), actionKey: action?.key || '', actionLabel: action?.label || '' }
-      this.bannerTimer = setTimeout(() => {
-        if (this.banner && Date.now() - this.banner.at >= ttlMs) this.banner = null
-      }, ttlMs + 50)
-    },
-    runBannerAction() {
-      const key = this.banner?.actionKey
-      this.banner = null
-      if (!key) return
-      if (key === 'retry-verses') this.loadVerses()
-      if (key === 'retry-transliteration') this.loadVerses()
-      if (key === 'retry-tajweed') this.loadVerses()
-      if (key === 'reload-plan') this.generateTodayPlan()
-      if (key === 'start-quiz') {
-        this.sessionCompleted = false
-        this.studyMode = 'quiz'
-        this.startQuiz()
-      }
-    },
-    describeNetworkError(error) {
-      const status = error?.response?.status
-      const message = error?.response?.data?.message || error?.message || ''
-      if (status) return `${status}${message ? ` ${message}` : ''}`.trim()
-      if (!this.networkOnline) return 'offline'
-      return message || ''
-    },
-    verseCacheKey(chapterId = this.chapterId) {
-      return [
-        'telawa.verses',
-        chapterId,
-        this.rangeStart,
-        this.rangeEnd,
-        this.script,
-        this.showTranslation ? 'tr' : 'no-tr',
-        this.showTransliteration ? 'tl' : 'no-tl',
-        this.showWordByWord ? 'wbw' : 'no-wbw',
-        this.reciterId
-      ].join('.')
-    },
-    writeVerseCache(chapterId, verses) {
-      if (!chapterId || !Array.isArray(verses) || !verses.length) return
-      try {
-        localStorage.setItem(this.verseCacheKey(chapterId), JSON.stringify({
-          savedAt: Date.now(),
-          verses
-        }))
-      } catch (e) { }
-    },
-    readVerseCache(chapterId = this.chapterId) {
-      try {
-        const raw = localStorage.getItem(this.verseCacheKey(chapterId))
-        const parsed = raw ? JSON.parse(raw) : null
-        return Array.isArray(parsed?.verses) ? parsed.verses : []
-      } catch (e) {
-        return []
-      }
-    },
+
     logEvent(evt) {
       const safe = { ...evt, at: Date.now(), day: this.dayKey() }
       this.events = [...(this.events || []), safe].slice(-2000)
       try { localStorage.setItem('telawa.events', JSON.stringify(this.events)) } catch (e) { console.error(e) }
     },
-    computeStreak(events, now) {
-      const days = new Set(events.filter(e => e.type === 'sm2_grade').map(e => e.day))
-      let streak = 0
-      for (let i = 0; i < 365; i++) {
-        const t = now - i * 24 * 60 * 60 * 1000
-        const dk = this.dayKey(t)
-        if (!days.has(dk)) break
-        streak++
-      }
-      return streak
-    },
-    loadPlanner() {
-      try {
-        const raw = localStorage.getItem('telawa.planner')
-        this.plannerState = raw ? JSON.parse(raw) : null
-      } catch (e) {
-        console.error(e)
-        this.plannerState = null
-      }
-      if (!this.plannerState) {
-        this.plannerState = {
-          settings: {
-            dailyMinutes: 20,
-            newAyat: 5,
-            reviewCards: 15,
-            mode: 'hybrid',
-            startSurah: 1,
-            endSurah: 114,
-            daysOff: []
-          },
-          today: { newAyat: 5, reviewAyat: 10, quizCards: 15 }
-        }
-        try { localStorage.setItem('telawa.planner', JSON.stringify(this.plannerState)) } catch (e) { console.error(e) }
-      }
-      this.loadTodayPlan()
-    },
-    loadTodayPlan() {
-      try {
-        const raw = localStorage.getItem('telawa.todayPlan')
-        this.todayPlan = raw ? JSON.parse(raw) : null
-      } catch (e) {
-        console.error(e)
-        this.todayPlan = null
-      }
-      if (this.todayPlan?.day !== this.dayKey()) this.todayPlan = null
-      this.planRun = null
-    },
-    persistPlanner() {
-      try { localStorage.setItem('telawa.planner', JSON.stringify(this.plannerState)) } catch (e) { console.error(e) }
-    },
-    persistTodayPlan() {
-      try { localStorage.setItem('telawa.todayPlan', JSON.stringify(this.todayPlan)) } catch (e) { console.error(e) }
-    },
-    estimateAyahSeconds() {
-      // heuristic: average ayah audio time + UI delay
-      const base = Number(this.metrics?.avgAyahSeconds || 10)
-      const speedFactor = Math.max(0.5, Number(this.speed) || 1)
-      return (base / speedFactor) + (Number(this.delay) || 0)
-    },
-    estimateVerseSeconds(verseKey) {
-      const durations = this.metrics?.durationsByVerse || {}
-      const known = Number(durations?.[verseKey] || 0)
-      if (known > 0) return known + (Number(this.delay) || 0)
-      return this.estimateAyahSeconds()
-    },
-    estimateKeysSeconds(keys = []) {
-      const list = Array.isArray(keys) ? keys : []
-      if (!list.length) return Math.max(0, this.remainingAyahs * this.estimateAyahSeconds())
-      return list.reduce((sum, verseKey) => sum + this.estimateVerseSeconds(verseKey), 0)
-    },
-    estimateCapacityAyat(minutes) {
-      const sec = Math.max(5, Number(minutes) || 0) * 60
-      const per = Math.max(3, this.estimateAyahSeconds())
-      return Math.max(1, Math.floor(sec / per))
-    },
-    generateTodayPlan() {
-      const settings = this.plannerState?.settings || { dailyMinutes: 20, newAyat: 5, reviewCards: 15, mode: 'hybrid', startSurah: 1, endSurah: 114, daysOff: [] }
-      const now = Date.now()
 
-      const day = this.dayKey(now)
-      const dayName = new Date(now).toLocaleDateString(undefined, { weekday: 'short' }).toLowerCase()
-      if ((settings.daysOff || []).includes(dayName)) {
-        this.todayPlan = { day, createdAt: now, off: true }
-        this.persistTodayPlan()
-        return Promise.resolve()
-      }
-
-      const progressRaw = localStorage.getItem('telawa.curriculumProgress')
-      const progress = progressRaw ? JSON.parse(progressRaw) : { chapterId: settings.startSurah || 1, ayah: 1 }
-      const startSurah = Number(settings.startSurah || 1)
-      const endSurah = Number(settings.endSurah || 114)
-
-      const fetchChapterVerses = async (chapterId) => {
-        const params = {
-          per_page: 300,
-          translations: this.shouldRequestTranslations() ? '131' : undefined,
-          words: false,
-          audio: this.reciterId,
-          fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs'
-        }
-        const res = await axios.get(`https://api.quran.com/api/v4/verses/by_chapter/${chapterId}`, { params })
-        const all = res.data?.verses || []
-        return all.map(v => ({
-          key: v.verse_key,
-          number: v.verse_number,
-          arabic: v.text_qpc_hafs || v.text_uthmani_tajweed || v.text_uthmani || '',
-          translation: v.translations?.[0]?.text || '',
-          audio: this.normalizeAudioUrl(v.audio?.url || '')
-        }))
-      }
-
-      return (async () => {
-        // time-based capacity: cap total cards if dailyMinutes is small
-        const capacityAyat = this.estimateCapacityAyat(settings.dailyMinutes)
-        const reviewCap = Math.min(settings.reviewCards, Math.max(0, capacityAyat - settings.newAyat))
-        const newCap = Math.min(settings.newAyat, capacityAyat)
-
-        // Review: due cards across curriculum range
-        const dueVerseKeys = []
-        for (let ch = startSurah; ch <= endSurah && dueVerseKeys.length < reviewCap; ch++) {
-          const verses = await fetchChapterVerses(ch)
-          for (const v of verses) {
-            const dueText = (this.sm2Get(this.sm2CardKey(v.key, 'recite_text')).due || 0) <= now
-            const dueAudio = (this.sm2Get(this.sm2CardKey(v.key, 'audio_recall')).due || 0) <= now
-            const dueMeaning = (this.sm2Get(this.sm2CardKey(v.key, 'meaning')).due || 0) <= now
-            if (dueText || dueAudio || dueMeaning) dueVerseKeys.push(v.key)
-            if (dueVerseKeys.length >= reviewCap) break
-          }
-        }
-
-        // New: take next N ayat from progress pointer
-        const newVerseKeys = []
-        let ch = Math.max(startSurah, Math.min(endSurah, Number(progress.chapterId || startSurah)))
-        let ayah = Number(progress.ayah || 1)
-        while (newVerseKeys.length < newCap && ch <= endSurah) {
-          const verses = await fetchChapterVerses(ch)
-          const slice = verses.filter(v => v.number >= ayah)
-          for (const v of slice) {
-            newVerseKeys.push(v.key)
-            if (newVerseKeys.length >= newCap) break
-          }
-          if (newVerseKeys.length >= newCap) {
-            const last = verses.find(v => v.key === newVerseKeys[newVerseKeys.length - 1])
-            const nextAyah = (last?.number || ayah) + 1
-            if (nextAyah > verses.length) { ch += 1; ayah = 1 } else { ayah = nextAyah }
-            break
-          }
-          ch += 1
-          ayah = 1
-        }
-
-        const newProgress = { chapterId: ch > endSurah ? endSurah : ch, ayah }
-        localStorage.setItem('telawa.curriculumProgress', JSON.stringify(newProgress))
-
-        const quizKeys = [...dueVerseKeys, ...newVerseKeys]
-
-        // segment plan by surah for execution
-        const bySurah = new Map()
-        for (const k of quizKeys) {
-          const [s] = k.split(':')
-          const sid = Number(s)
-          if (!bySurah.has(sid)) bySurah.set(sid, [])
-          bySurah.get(sid).push(k)
-        }
-        const segments = [...bySurah.entries()].sort((a, b) => a[0] - b[0]).map(([sid, keys]) => {
-          const nums = keys.map(x => parseInt(x.split(':')[1])).filter(Boolean).sort((a, b) => a - b)
-          return { chapterId: sid, keys, rangeStart: nums[0] || 1, rangeEnd: nums[nums.length - 1] || 1 }
-        })
-
-        const firstSeg = segments[0] || { chapterId: startSurah, rangeStart: 1, rangeEnd: 1, keys: [] }
-
-        const weakReviewCount = dueVerseKeys.filter(key => {
-          const text = this.sm2Get(this.sm2CardKey(key, 'recite_text'))
-          const audio = this.sm2Get(this.sm2CardKey(key, 'audio_recall'))
-          const meaning = this.sm2Get(this.sm2CardKey(key, 'meaning'))
-          return (text.lapses || 0) >= 3 || (audio.lapses || 0) >= 3 || (meaning.lapses || 0) >= 3 || text.suspended || audio.suspended || meaning.suspended
-        }).length
-        const sessionType =
-          weakReviewCount && !newVerseKeys.length ? 'recovery' :
-            dueVerseKeys.length && newVerseKeys.length ? 'mixed' :
-              dueVerseKeys.length ? 'revision' :
-                'memorisation'
-
-        this.todayPlan = {
-          day,
-          createdAt: now,
-          chapterId: firstSeg.chapterId,
-          rangeStart: firstSeg.rangeStart,
-          rangeEnd: firstSeg.rangeEnd,
-          phases: [
-            { type: 'review', keys: dueVerseKeys },
-            { type: 'new', keys: newVerseKeys }
-          ],
-          quizKeys,
-          reviewKeys: dueVerseKeys,
-          newKeys: newVerseKeys,
-          sessionType,
-          segments,
-          estimate: {
-            capacityAyat,
-            reviewCap,
-            newCap,
-            secondsPerAyah: this.estimateAyahSeconds(),
-            totalSeconds: this.estimateKeysSeconds(quizKeys)
-          }
-        }
-        this.persistTodayPlan()
-      })()
-    },
-    async applyTodayPlan() {
-      if (!this.todayPlan || this.todayPlan.day !== this.dayKey()) await this.generateTodayPlan()
-      if (!this.todayPlan) return
-      if (this.todayPlan.off) { this.showBanner('Day off (planner)', 'info'); return }
-
-      this.planRun = { segmentIndex: 0 }
-      await this.applyPlanSegment(0)
-      if (this.todayPlan.segments?.[0]) {
-        const seg = this.todayPlan.segments[0]
-        this.showBanner(`Starting: Surah ${seg.chapterId} • Ayah ${seg.rangeStart}-${seg.rangeEnd}`, 'info', 4500)
-      }
-      this.showBanner('Today plan applied', 'success')
-
-      const plannerMode =
-        this.todayPlan.sessionType === 'memorisation' ? 'recite' :
-          this.todayPlan.sessionType === 'revision' ? 'quiz' :
-            'hybrid'
-      this.studyMode = plannerMode
-      if (this.todayPlan.sessionType === 'recovery') this.order = 'chain'
-      this.quizType = 'mixed'
-      this.showTools = false
-      await this.$nextTick()
-      this.startSession()
-    },
-    async applyPlanSegment(index) {
-      const segs = this.todayPlan?.segments || []
-      const seg = segs[index]
-      if (!seg) return
-      this.chapterId = seg.chapterId
-      // Load full segment keys and show only them (avoid range reload races)
-      const params = {
-        per_page: 300,
-        translations: this.shouldRequestTranslations() ? '131' : undefined,
-        words: this.shouldRequestWords(),
-        audio: this.reciterId,
-        fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs'
-      }
-      const res = await axios.get(`https://api.quran.com/api/v4/verses/by_chapter/${seg.chapterId}`, { params })
-      const all = res.data?.verses || []
-      const mapped = all.map(v => ({
-        key: v.verse_key,
-        number: v.verse_number,
-        arabic: v.text_qpc_hafs || v.text_uthmani_tajweed || v.text_uthmani || '',
-        translation: v.translations?.[0]?.text || '',
-        audio: this.normalizeAudioUrl(v.audio?.url || ''),
-        words: (v.words || []).map(w => ({
-          ar: w.text_uthmani || w.text || '',
-          en: w.translation?.text || '',
-          audio: this.normalizeAudioUrl(w.audio_url)
-        }))
-      }))
-      const byKey = new Map(mapped.map(v => [v.key, v]))
-      const ordered = (seg.keys || []).map(k => byKey.get(k)).filter(Boolean)
-      this.verses = ordered.length ? ordered : mapped
-      const nums = this.verses.map(v => v.number).filter(Boolean).sort((a, b) => a - b)
-      this.rangeStart = nums[0] || 1
-      this.rangeEnd = nums[nums.length - 1] || this.rangeStart
-      this.queue = [...this.verses]
-      this.queueIndex = 0
-      this.activeKey = this.queue[0]?.key || this.activeKey
-    },
-    openTodayReview() {
-      this.tab = 'advanced'
-      this.showTools = true
-      this.studyMode = 'quiz'
-      this.quizType = 'mixed'
-    },
-    openTodayHybrid() {
-      this.tab = 'advanced'
-      this.showTools = true
-      this.studyMode = 'hybrid'
-      this.quizType = 'mixed'
-    },
-    sparkPoints(values) {
-      const arr = (values || []).map(v => Number(v) || 0)
-      if (!arr.length) return ''
-      const max = Math.max(...arr, 1)
-      const min = Math.min(...arr, 0)
-      const span = Math.max(1e-9, max - min)
-      return arr.map((v, i) => {
-        const x = (i / Math.max(1, arr.length - 1)) * 100
-        const y = 28 - ((v - min) / span) * 26
-        return `${x.toFixed(2)},${y.toFixed(2)}`
-      }).join(' ')
-    },
-    chartBarHeight(values, value) {
-      const arr = (values || []).map(v => Number(v) || 0)
-      const max = Math.max(...arr, 1)
-      const ratio = Math.max(0.08, (Number(value) || 0) / max)
-      return `${Math.round(ratio * 64)}px`
-    },
-    loadSm2() {
-      try {
-        const raw = localStorage.getItem('telawa.sm2')
-        this.sm2 = raw ? JSON.parse(raw) : {}
-      } catch (e) {
-        console.error(e)
-        this.sm2 = {}
-      }
-    },
-    persistSm2() {
-      try { localStorage.setItem('telawa.sm2', JSON.stringify(this.sm2)) } catch (e) { console.error(e) }
-    },
-    resetSm2All() {
-      if (!confirm('Reset all SM-2 progress? This cannot be undone.')) return
-      this.sm2 = {}
-      try { localStorage.setItem('telawa.sm2', JSON.stringify({})) } catch (e) { console.error(e) }
-      this.showBanner('SM-2 reset', 'info')
-    },
-    unsuspendLeech(key) {
-      const c = this.sm2Get(key)
-      this.sm2[key] = { ...c, suspended: false, lapses: Math.max(0, (c.lapses || 0) - 2) }
-      this.persistSm2()
-      this.showBanner('Card unsuspended', 'success')
-    },
-    clearEvents() {
-      if (!confirm('Clear analytics stats? This cannot be undone.')) return
-      this.events = []
-      try { localStorage.setItem('telawa.events', JSON.stringify([])) } catch (e) { console.error(e) }
-      this.showBanner('Stats cleared', 'info')
-    },
-    exportData() {
-      const payload = {
-        schemaVersion: Number(localStorage.getItem('telawa.schemaVersion') || 1),
-        sm2: this.sm2 || {},
-        planner: this.plannerState || null,
-        todayPlan: this.todayPlan || null,
-        curriculumProgress: (() => {
-          try { return JSON.parse(localStorage.getItem('telawa.curriculumProgress') || 'null') } catch { return null }
-        })(),
-        events: this.events || [],
-        metrics: this.metrics || null
-      }
-      const text = JSON.stringify(payload)
-      navigator.clipboard?.writeText(text).then(() => {
-        this.showBanner('Export copied to clipboard', 'success')
-      }).catch(() => {
-        prompt('Copy this JSON', text)
-      })
-    },
-    importData() {
-      const text = prompt('Paste exported JSON')
-      if (!text) return
-      try {
-        const payload = JSON.parse(text)
-        if (payload.sm2) { this.sm2 = payload.sm2; localStorage.setItem('telawa.sm2', JSON.stringify(payload.sm2)) }
-        if (payload.planner) { this.plannerState = payload.planner; localStorage.setItem('telawa.planner', JSON.stringify(payload.planner)) }
-        if (payload.todayPlan) { this.todayPlan = payload.todayPlan; localStorage.setItem('telawa.todayPlan', JSON.stringify(payload.todayPlan)) }
-        if (payload.curriculumProgress) localStorage.setItem('telawa.curriculumProgress', JSON.stringify(payload.curriculumProgress))
-        if (payload.events) { this.events = payload.events.slice(-2000); localStorage.setItem('telawa.events', JSON.stringify(this.events)) }
-        if (payload.metrics) { this.metrics = payload.metrics; localStorage.setItem('telawa.metrics', JSON.stringify(payload.metrics)) }
-        this.showBanner('Import complete', 'success', 4500)
-      } catch (e) {
-        console.error(e)
-        this.showBanner('Import failed: invalid JSON', 'error', 4500)
-      }
-    },
     sm2Get(key) {
       return this.sm2[key] || { ef: 2.5, interval: 0, reps: 0, due: 0, last: 0, lapses: 0, suspended: false }
     },
+
     sm2CardKey(verseKey, skill) {
       return `${verseKey}::${skill}`
     },
+
     sm2Grade(key, quality) {
       const now = Date.now()
       const card = this.sm2Get(key)
-      if (card.suspended && quality >= 4) {
-        // allow "good" to unsuspend
-        card.suspended = false
-        card.lapses = Math.max(0, (card.lapses || 0) - 2)
-      }
-      if (card.suspended) {
-        this.showBanner('Card is suspended (leech). Unsuspend from Analytics.', 'info', 4200)
-        return
-      }
-      let ef = card.ef
-      let reps = card.reps
-      let interval = card.interval
-      let lapses = card.lapses || 0
+      let ef = card.ef, reps = card.reps, interval = card.interval, lapses = card.lapses || 0
 
       if (quality < 3) {
         reps = 0
@@ -2413,57 +2198,60 @@ export default {
       this.persistSm2()
       this.logEvent({ type: 'sm2_grade', key, quality, interval, ef })
     },
-    normalizeTextForQuiz(s) {
-      const text = String(s || '')
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/[\u064B-\u065F\u0610-\u061A\u06D6-\u06ED]/g, '') // Arabic diacritics
-        .replace(/[^\p{L}\p{N}\s]/gu, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-      return text
-    },
-    normalizeTajweedText(text) {
-      const raw = String(text || '')
-      if (!raw) return ''
-      if (raw.includes('<tajweed')) return raw
-      const classMap = {
-        h: 'ham_wasl',
-        s: 'slnt',
-        l: 'laam_shamsiyah',
-        n: 'madda_normal',
-        p: 'madda_permissible',
-        m: 'madda_necessary',
-        q: 'qlqla',
-        o: 'madda_obligatory',
-        c: 'ikhafa',
-        f: 'ghunnah',
-        w: 'idgham_wo_ghunnah',
-        i: 'iqlab',
-        a: 'idgham_ghunnah',
-        u: 'idgham_shafawi',
-        d: 'ikhafa_shafawi',
-        b: 'waqf',
-        g: 'ghunnah'
+
+    startQuiz() {
+      if (!this.verses.length) {
+        this.showBanner('No verses to quiz on', 'info', 3000)
+        return
       }
-      return raw
-        .replace(/\[([a-z_]+)(?::[^\]]+)?\[([^\]]+)\]/gi, (_, code, inner) => {
-          const klass = classMap[String(code).toLowerCase()] || String(code).toLowerCase()
-          return `<tajweed class="${klass}">${inner}</tajweed>`
-        })
-        .replace(/\]/g, '')
+      this.quizQueue = this.verses.slice(0, 5).map(v => ({ ...v, type: 'flashcard' }))
+      this.quizIndex = 0
+      this.quizScore = 0
+      this.quizMistakes = []
+      this.quizComplete = false
+      this.quizActive = true
+      this.nextQuizCard()
     },
-    quizMakePrompt(verse) {
-      const src = this.normalizeTextForQuiz(verse.translation || verse.arabic)
-      const words = src.split(' ').filter(Boolean)
-      if (words.length < 4) return { prompt: src, missing: '' }
-      const idx = Math.max(1, Math.min(words.length - 2, Math.floor(Math.random() * (words.length - 2)) + 1))
-      const missing = words[idx] || ''
-      const prompt = words.map((w, i) => (i === idx ? '____' : w)).join(' ')
-      return { prompt, missing }
+
+    nextQuizCard() {
+      if (this.quizIndex >= this.quizQueue.length) {
+        this.quizComplete = true
+        return
+      }
+      this.quizCard = this.quizQueue[this.quizIndex]
+      this.quizRevealed = false
     },
-    toggleSection(key) {
-      this.sectionOpen[key] = !this.sectionOpen[key]
+
+    submitQuiz(quality = 4) {
+      if (quality >= 4) this.quizScore++
+      else this.quizMistakes.push(`Ayah ${this.quizCard.number}`)
+      this.quizIndex++
+      this.nextQuizCard()
     },
+
+    stopQuiz() {
+      this.quizActive = false
+      this.quizCard = null
+      this.quizQueue = []
+      this.quizComplete = false
+    },
+
+    restartQuiz() {
+      this.quizScore = 0
+      this.quizMistakes = []
+      this.quizComplete = false
+      this.quizIndex = 0
+      this.nextQuizCard()
+    },
+
+    playWordAudio(url, key = '') {
+      if (!url) return
+      this.activeWordAudio = key
+      const a = new Audio(url)
+      a.addEventListener('ended', () => { if (this.activeWordAudio === key) this.activeWordAudio = '' })
+      a.play().catch(() => { this.activeWordAudio = '' })
+    },
+
     resetControls() {
       if (!confirm('Reset session settings?')) return
       this.rangeStart = 1
@@ -2475,925 +2263,61 @@ export default {
       this.order = 'seq'
       this.blurAdjacent = false
       this.focusMode = false
-      this.rangeLoopDelay = 1
-      this.selectedSessionId = ''
-      this.sessionName = ''
       this.applySpeed()
       this.rebuildQueue()
       this.persistAllState()
     },
+
     beginPlan() {
       this.onboardingDismissed = true
       this.showTools = true
-      this.sectionOpen = { ...this.sectionOpen, beginner_setup: true, beginner_playback: false }
-      if (this.todayPlan) this.tab = 'analytics'
-      else this.tab = 'beginner'
     },
-    beginPlannerSession() {
-      this.onboardingDismissed = true
-      if (this.todayPlan) this.applyTodayPlan()
-      else this.generateTodayPlan().then(() => this.applyTodayPlan())
-    },
-    // footerPrimaryAction() {
-    //   if (this.tab === 'analytics') this.beginPlannerSession()
-    //   else if (this.tab === 'beginner') this.beginPlanAndStart()
-    //   else this.startSession()
-    // },
-    beginPlanAndStart() {
-      this.onboardingDismissed = true
-      if (this.chapterId) this.startSession()
-      else this.showTools = true
-    },
-    loadSavedSessions() {
-      try {
-        const raw = localStorage.getItem('telawa.savedSessions')
-        this.savedSessions = raw ? JSON.parse(raw) : []
-      } catch (e) {
-        console.error(e)
-        this.savedSessions = []
-      }
-    },
-    persistSavedSessions() {
-      try { localStorage.setItem('telawa.savedSessions', JSON.stringify(this.savedSessions)) } catch (e) { console.error(e) }
-    },
-    saveSession() {
-      const name = (this.sessionName || '').trim()
-      if (!name) return
-      const payload = {
-        id: String(Date.now()),
-        name,
-        savedAt: Date.now(),
-        mode: this.currentMode, // Save which mode this session is for
-        settings: {
-          // Beginner settings
-          beginner: {
-            chapterId: this.beginner.chapterId,
-            rangeStart: this.beginner.rangeStart,
-            rangeEnd: this.beginner.rangeEnd,
-            reciterId: this.beginner.reciterId,
-            speed: this.beginner.speed,
-            delay: this.beginner.delay,
-            repeats: this.beginner.repeats,
-            playMode: this.beginner.playMode,
-            order: this.beginner.order,
-            blurAdjacent: this.beginner.blurAdjacent,
-            focusMode: this.beginner.focusMode
-          },
-          // Advanced settings
-          advanced: {
-            chapterId: this.advanced.chapterId,
-            rangeStart: this.advanced.rangeStart,
-            rangeEnd: this.advanced.rangeEnd,
-            reciterId: this.advanced.reciterId,
-            speed: this.advanced.speed,
-            delay: this.advanced.delay,
-            repeats: this.advanced.repeats,
-            playMode: this.advanced.playMode,
-            order: this.advanced.order,
-            blurAdjacent: this.advanced.blurAdjacent,
-            focusMode: this.advanced.focusMode,
-            repeatAndLoopAudio: this.advanced.repeatAndLoopAudio,
-            advancedRepeats: this.advanced.advancedRepeats
-          }
-        }
-      }
-      this.savedSessions = [payload, ...this.savedSessions].slice(0, 20)
-      this.persistSavedSessions()
-      this.persistAllState()
-      this.sessionName = ''
-      this.selectedSessionId = payload.id
-    },
-    async loadSession(id) {
-      const s = this.savedSessions.find(x => x.id === id)
-      if (!s) return
 
-      // Restore beginner settings
-      if (s.settings.beginner) {
-        Object.assign(this.beginner, s.settings.beginner)
-      }
+    updateAudioReciter() {
+      this.wordTimestampsMap.clear()
+      this.loadVerses()
+    },
 
-      // Restore advanced settings
-      if (s.settings.advanced) {
-        Object.assign(this.advanced, s.settings.advanced)
-      }
-
-      // Switch to the saved mode
-      if (s.mode) {
-        this.currentMode = s.mode
-        this.tab = s.mode === 'beginner' ? 'beginner' : 'advanced'
-      }
-
-      await this.loadChapter()
-      this.refreshVerses()
-      this.applySpeed()
-      this.persistAllState()
-    },
-    deleteSession(id) {
-      if (!confirm('Delete this saved session? This cannot be undone.')) return
-      this.savedSessions = this.savedSessions.filter(x => x.id !== id)
-      if (this.selectedSessionId === id) this.selectedSessionId = ''
-      this.persistSavedSessions()
-    },
-    togglePlayerMenu() {
-      this.playerMenuOpen = !this.playerMenuOpen
-    },
-    togglePlayerCollapsed() {
-      this.playerCollapsed = !this.playerCollapsed
-    },
     downloadCurrentAudio() {
-      const src = this.audioElement?.currentSrc || this.audioElement?.src
+      const src = this.audioElement?.src
       if (!src) return
       const a = document.createElement('a')
       a.href = src
-      a.target = '_blank'
-      a.rel = 'noopener noreferrer'
       a.download = ''
-      document.body.appendChild(a)
       a.click()
-      a.remove()
-      this.playerMenuOpen = false
     },
-    async loadAlquranAudioEditions() {
-      try {
-        const res = await getEditions({ format: 'audio', type: 'versebyverse' })
-        const list = res.data?.data || []
-        this.alquranAudioEditions = list.map(e => ({
-          identifier: e.identifier,
-          name: e.englishName || e.name || e.identifier,
-          language: e.language,
-          type: e.type,
-          format: e.format
-        }))
-        if (!this.alquranEdition && this.alquranAudioEditions.length) this.alquranEdition = this.alquranAudioEditions[0].identifier
-      } catch (e) { console.error(e) }
-    },
-    async ensureAlquranEdition() {
-      if (this.alquranEdition) return
-      if (!this.alquranAudioEditions.length) await this.loadAlquranAudioEditions()
-      if (!this.alquranEdition && this.alquranAudioEditions.length) this.alquranEdition = this.alquranAudioEditions[0].identifier
-    },
-    normalizeAudioUrl(url) {
-      if (!url) return ''
-      if (url.startsWith('http://') || url.startsWith('https://')) return url
-      if (url.startsWith('//')) return `https:${url}`
-      // Fix for Quran.com audio paths
-      if (url.startsWith('/')) return `https://verses.quran.com${url}`
-      if (url.includes('mp3')) return `https://verses.quran.com/${url}`
-      return url
-    },
-    shouldRequestTranslations() {
-      return !!(this.showTranslation || this.studyMode === 'quiz' || this.studyMode === 'hybrid' || this.quizActive || this.quizType === 'flashcard' || this.quizType === 'blank')
-    },
-    shouldRequestWords() {
-      return !!(this.showWordByWord || (this.quizActive && this.quizType === 'blank'))
-    },
-    formatTime(sec) {
-      const t = Math.max(0, Math.floor(sec || 0))
-      return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`
-    },
-    verseClasses(verse, idx) {
-      const active = this.activeKey === verse.key
-      if (!this.blurAdjacent && !this.focusMode) return { active }
-      const activeIdx = this.verses.findIndex(v => v.key === this.activeKey)
-      const isNeighbor = activeIdx >= 0 && Math.abs(idx - activeIdx) === 1
-      const dim = this.focusMode && !active
-      const blur = this.blurAdjacent && !active && !isNeighbor
-      return { active, dim, blur }
-    },
-    cycleTheme() {
-      const themes = ['light', 'sepia', 'dark']
-      const idx = themes.indexOf(this.theme)
-      this.theme = themes[(idx + 1) % themes.length]
-      document.documentElement.setAttribute('data-theme', this.theme)
-      this.persistUiState()
-    },
-    async loadChapters() {
-      try {
-        const res = await axios.get('https://api.quran.com/api/v4/chapters', { params: { language: 'en' } })
-        this.chapters = res.data?.chapters || []
-        if (this.chapterId) await this.loadChapter()
-      } catch (e) { console.error(e) }
-    },
-    async loadReciters() {
-      try {
-        const res = await axios.get('https://api.quran.com/api/v4/resources/recitations', { params: { per_page: 30 } })
-        const list = res.data?.recitations || []
-        if (list.length) this.reciters = list.map(r => ({ id: r.id, name: r.reciter_name }))
-      } catch (e) { console.error(e) }
-    },
-    async loadChapter() {
-      const chapterId = this.chapterId
-      if (!chapterId) {
-        this.currentChapter = null
-        this.verses = []
-        return
-      }
-      this.onboardingDismissed = true
-      this.currentChapter = this.chapters.find(c => c.id === chapterId)
-      const max = this.currentChapter?.verses_count || 286
 
-      // Update range based on current mode
-      if (this.currentMode === 'beginner') {
-        this.beginner.rangeEnd = Math.min(this.beginner.rangeEnd, max)
-        this.beginner.rangeStart = Math.max(1, this.beginner.rangeStart)
-      } else {
-        this.advanced.rangeEnd = Math.min(this.advanced.rangeEnd, max)
-        this.advanced.rangeStart = Math.max(1, this.advanced.rangeStart)
-      }
-
-      await this.loadVerses()
-    },
     adjustRange() {
       const max = this.currentChapter?.verses_count || 286
       this.rangeStart = Math.max(1, Math.min(this.rangeStart, max))
       this.rangeEnd = Math.max(this.rangeStart, Math.min(this.rangeEnd, max))
       this.loadVerses()
     },
-    async loadVerses() {
-      if (!this.chapterId) return
 
-      console.log('loadVerses called - chapterId:', this.chapterId, 'currentMode:', this.currentMode)
-
-      const params = {
-        per_page: 300,
-        translations: this.shouldRequestTranslations() ? '131' : undefined,
-        words: this.shouldRequestWords(),
-        audio: this.reciterId,
-        fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs'
-      }
-
-      try {
-        const res = await axios.get(`https://api.quran.com/api/v4/verses/by_chapter/${this.chapterId}`, { params })
-        const all = res.data?.verses || []
-        const start = this.rangeStart, end = this.rangeEnd
-        let mappedVerses = all.filter(v => v.verse_number >= start && v.verse_number <= end).map(v => ({
-          key: v.verse_key,
-          number: v.verse_number,
-          arabic: v.text_qpc_hafs || v.text_uthmani_tajweed || v.text_uthmani || '',
-          translation: v.translations?.[0]?.text || '',
-          transliteration: '',
-          audio: this.normalizeAudioUrl(v.audio?.url || ''),
-          words: (v.words || []).map(w => ({
-            ar: w.text_uthmani || w.text || '',
-            en: w.translation?.text || '',
-            tooltip: `${w.text_uthmani || w.text || ''} • ${w.translation?.text || ''}`.trim(),
-            audio: this.normalizeAudioUrl(w.audio_url)
-          }))
-        }))
-
-        if (this.showTransliteration) {
-          try {
-            const translitRes = await getSurahTransliteration(this.chapterId, 'en.transliteration')
-            const translitAyahs = translitRes.data?.data?.ayahs || []
-            const byNumber = new Map(translitAyahs.map(a => [a.numberInSurah, a.text]))
-            mappedVerses = mappedVerses.map(v => ({ ...v, transliteration: byNumber.get(v.number) || '' }))
-          } catch (e) {
-            console.error(e)
-            this.showBanner('Transliteration failed to load.', 'info', 5000, { key: 'retry-transliteration', label: 'Retry' })
-          }
-        }
-
-        if (this.script === 'tajweed') {
-          try {
-            const tajweedRes = await getSurahEdition(this.chapterId, 'quran-tajweed')
-            const ayahs = tajweedRes.data?.data?.ayahs || []
-            const byNumber = new Map(ayahs.map(a => [a.numberInSurah, this.normalizeTajweedText(a.text)]))
-            mappedVerses = mappedVerses.map(v => ({ ...v, arabic: byNumber.get(v.number) || v.arabic }))
-          } catch (e) {
-            console.error(e)
-            this.showBanner('Tajweed text failed to load. Showing standard text.', 'info', 5000, { key: 'retry-tajweed', label: 'Retry' })
-          }
-        }
-
-        // Assign to correct mode's verses
-        if (this.currentMode === 'beginner') {
-          this.beginner.verses = mappedVerses
-          if (this.beginner.verses.length && !this.beginner.activeKey) {
-            this.beginner.activeKey = this.beginner.verses[0].key
-          }
-        } else {
-          this.advanced.verses = mappedVerses
-          if (this.advanced.verses.length && !this.advanced.activeKey) {
-            this.advanced.activeKey = this.advanced.verses[0].key
-          }
-        }
-
-        this.writeVerseCache(this.chapterId, mappedVerses)
-        this.buildQueue()
-
-        console.log('Verses loaded. Length:', mappedVerses.length)
-
-      } catch (e) {
-        console.error('API Error:', e)
-        // Try to load from cache
-        const cached = this.readVerseCache(this.chapterId)
-        if (cached && cached.length) {
-          console.log('Loading from cache:', cached.length)
-          if (this.currentMode === 'beginner') {
-            this.beginner.verses = cached
-            if (this.beginner.verses.length && !this.beginner.activeKey) {
-              this.beginner.activeKey = this.beginner.verses[0].key
-            }
-          } else {
-            this.advanced.verses = cached
-            if (this.advanced.verses.length && !this.advanced.activeKey) {
-              this.advanced.activeKey = this.advanced.verses[0].key
-            }
-          }
-          this.buildQueue()
-          this.showBanner('Loaded from offline cache', 'info', 3000)
-        } else {
-          this.showBanner(`Failed to load verses: ${e.message || 'Network error'}`, 'error', 5000)
-        }
-      }
-    },
-    refreshVerses() { this.loadVerses() },
-    buildQueue() {
-      const q = []
-      const base = this.verses
-
-      let rep = 1
-      if (this.currentMode === 'beginner') {
-        rep = this.beginner.repeats
-        console.log('Beginner repeats:', rep)
-      } else if (this.currentMode === 'advanced') {
-        rep = this.advanced.repeatAndLoopAudio ? (this.advanced.advancedRepeats || 1) : 1
-        console.log('Advanced repeats:', rep, 'repeatAndLoopAudio:', this.advanced.repeatAndLoopAudio)
-      }
-
-      const ord = this.order
-
-      if (ord === 'seq') {
-        for (let r = 0; r < rep; r++) q.push(...base)
-      } else if (ord === 'cum') {
-        for (let r = 0; r < rep; r++) {
-          for (let i = 0; i < base.length; i++) {
-            for (let j = 0; j <= i; j++) q.push(base[j])
-          }
-        }
-      } else if (ord === 'rand') {
-        const shuffled = [...base]
-        for (let i = shuffled.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1))
-            ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-        }
-        for (let r = 0; r < rep; r++) q.push(...shuffled)
-      }
-
-      this.queue = q
-      this.queueIndex = 0
-      console.log('Queue built with repeats:', rep, 'queue length:', q.length)
-    },
-    rebuildQueue() {
-      this.buildQueue()
+    onChapterChange(event) {
+      this.chapterId = parseInt(event.target.value)
+      this.loadChapter()
     },
 
-    async startSession() {
-      console.log('=== startSession called ===');
-      console.log('chapterId:', this.chapterId);
-
-      this.onboardingDismissed = true;
-      this.sessionCompleted = false;
-
-      // Check if a surah is selected (chapterId > 0)
-      if (!this.chapterId || this.chapterId === 0) {
-        console.log('No chapter selected');
-        this.showTools = true;
-        this.showBanner('Please select a surah first', 'info', 3000);
-        return;
-      }
-
-      // Load verses if not loaded
-      if (!this.verses.length) {
-        console.log('Loading verses...');
-        await this.loadVerses();
-        console.log('Verses loaded:', this.verses.length);
-      }
-
-      if (!this.verses.length) {
-        console.log('Still no verses');
-        this.showBanner('No verses loaded. Check your network connection.', 'error');
-        return;
-      }
-
-      // Initialize audio if needed
-      if (!this.audioElement) {
-        this.initAudio();
-      }
-
-      // Build queue if empty
-      if (!this.queue.length) {
-        console.log('Building queue...');
-        this.buildQueue();
-        console.log('Queue built:', this.queue.length);
-      }
-
-      if (!this.queue.length) {
-        console.log('Queue is empty');
-        this.showBanner('Nothing to play. Check range settings.', 'error');
-        return;
-      }
-
-      // Reset to start of queue
-      this.queueIndex = 0;
-      const first = this.queue[0];
-      console.log('First verse:', first?.key);
-
-      if (first) {
-        this.activeKey = first.key;
-        this.activeVerseKey = first.key;
-
-        await this.$nextTick();
-        await this.playVerse(first);
-      }
-
-      // Close tools panel after starting
-      this.showTools = false;
-      console.log('=== startSession completed ===');
-    },
-    ensureAudioPlays() {
-      return new Promise((resolve, reject) => {
-        if (!this.audioElement) reject('No audio element')
-
-        const timeout = setTimeout(() => reject('Timeout'), 10000)
-
-        this.audioElement.addEventListener('canplaythrough', () => {
-          clearTimeout(timeout)
-          resolve()
-        }, { once: true })
-
-        this.audioElement.load()
-      })
-    },
-    // Quiz Methods - Add these to your existing methods
-    startQuiz() {
-      if (!this.verses.length) {
-        this.showBanner('No verses to quiz on. Start a session first.', 'info', 3000)
-        return
-      }
-
-      // Build quiz queue from current verses
-      const source = this.verses.slice(0, 10)
-      this.quizQueue = source.map(v => ({ ...v, type: this.getRandomQuizType() }))
-      this.quizIndex = 0
-      this.quizScore = 0
-      this.quizMistakes = []
-      this.quizComplete = false
-      this.quizRevealed = false
-      this.quizAnswer = ''
-      this.quizActive = true
-
-      this.nextQuizCard()
-    },
-
-    getRandomQuizType() {
-      const types = ['flashcard', 'mcq', 'blank']
-      return types[Math.floor(Math.random() * types.length)]
-    },
-
-    nextQuizCard() {
-      if (this.quizIndex >= this.quizQueue.length) {
-        this.quizComplete = true
-        return
-      }
-
-      this.quizCard = this.quizQueue[this.quizIndex]
-      this.quizRevealed = false
-      this.quizAnswer = ''
-
-      // Generate MCQ options if needed
-      if (this.quizCard.type === 'mcq') {
-        this.quizOptions = this.generateMcqOptions(this.quizCard)
-      }
-    },
-
-    generateMcqOptions(correctVerse) {
-      const options = [{ key: correctVerse.key, label: `Ayah ${correctVerse.number}` }]
-      const otherVerses = this.verses.filter(v => v.key !== correctVerse.key).slice(0, 3)
-      otherVerses.forEach(v => options.push({ key: v.key, label: `Ayah ${v.number}` }))
-      return options.sort(() => Math.random() - 0.5)
-    },
-
-    submitQuiz(quality = 4) {
-      const isCorrect = quality >= 4
-
-      if (isCorrect) {
-        this.quizScore++
-      } else {
-        this.quizMistakes.push(`Ayah ${this.quizCard.number}`)
-      }
-
-      // Log SM2 grade
-      const sm2Key = this.sm2CardKey(this.quizCard.key, 'recite_text')
-      this.sm2Grade(sm2Key, quality)
-
-      this.quizIndex++
-      this.nextQuizCard()
-    },
-
-    restartQuiz() {
-      this.quizScore = 0
-      this.quizMistakes = []
-      this.quizComplete = false
-      this.quizIndex = 0
-      this.nextQuizCard()
-    },
-
-    stopQuiz() {
-      this.quizActive = false
-      this.quizCard = null
-      this.quizQueue = []
-      this.quizComplete = false
-    },
-
-    triggerConfetti() {
-      this.confettiSeed = (this.confettiSeed + 1) % 1000000
-      this.confettiActive = true
-      setTimeout(() => { this.confettiActive = false }, 4000)
-    },
-    setActive(key) {
+    setActiveVerse(key) {
+      this.activeVerseKey = key
       this.activeKey = key
-      const idx = this.queue.findIndex(v => v?.key === key)
-      if (idx >= 0) this.queueIndex = idx
       this.$nextTick(() => {
-        try {
-          const el = document.querySelector(`.verse[data-verse-key="${key}"]`)
-          if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        } catch (e) { }
+        const el = document.querySelector(`.verse-card[data-verse-key="${key}"]`)
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
       })
     },
-    shouldUseWordSequence(verse) {
-      return !!(this.showWordByWord && this.wordByWordAudioEnabled && verse?.words?.length && verse.words.every(word => !!word.audio))
-    },
-    markPlaybackStart() {
-      this.playbackStartedAt = Date.now()
-    },
-    flushPlaybackTime() {
-      if (!this.playbackStartedAt) return
-      const seconds = Math.max(0, Math.round((Date.now() - this.playbackStartedAt) / 1000))
-      this.playbackStartedAt = 0
-      if (seconds > 0) this.logEvent({ type: 'listening_time', seconds })
-    },
-    storeVerseDuration(verseKey, seconds) {
-      if (!verseKey || !seconds || !isFinite(seconds) || seconds <= 0) return
-      const durationsByVerse = { ...(this.metrics?.durationsByVerse || {}) }
-      durationsByVerse[verseKey] = Number(seconds.toFixed(2))
-      const avg = Number(this.metrics?.avgAyahSeconds || 10)
-      const nextAvg = avg * 0.88 + Number(seconds) * 0.12
-      this.metrics = {
-        ...(this.metrics || {}),
-        avgAyahSeconds: Number(nextAvg.toFixed(2)),
-        durationsByVerse
-      }
-      this.persistMetrics()
-    },
-    async playAudioSrc(src) {
-      this.audioElement.src = src
-      this.audioElement.load()
-      this.audioElement.playbackRate = this.speed
-      await this.audioElement.play()
-      this.playerVisible = true
-      this.isPlaying = true
-      this.markPlaybackStart()
-      this.persistAudioState()
-    },
-    async startWordSequence(verse) {
-      if (!this.audioElement) this.audioElement = this.$refs.audio
-      if (!this.audioElement) return
-      this.currentPlaybackMode = 'word-sequence'
-      this.currentVersePlaybackKey = verse.key
-      this.activeKey = verse.key
-      this.wordSequence = {
-        verseKey: verse.key,
-        words: verse.words.filter(word => !!word.audio),
-        index: 0,
-        totalSeconds: 0
-      }
-      this.activeWordAudio = `${verse.key}:0`
-      const first = this.wordSequence.words[0]
-      if (!first?.audio) return
-      this.lastAudioDebug = { at: Date.now(), key: verse.key, src: first.audio, phase: 'word-sequence-start' }
-      try {
-        await this.playAudioSrc(first.audio)
-      } catch (e) {
-        console.error(e)
-        this.activeWordAudio = ''
-        this.wordSequence = null
-        this.currentPlaybackMode = 'verse'
-        this.showBanner('Word audio could not start. Falling back to ayah audio.', 'info', 4000)
-        this.playVerse({ ...verse, words: [] })
-      }
-    },
-    async advanceWordSequence() {
-      const sequence = this.wordSequence
-      if (!sequence) return
-      const currentClip = sequence.words[sequence.index]
-      if (this.duration && isFinite(this.duration)) sequence.totalSeconds += Number(this.duration)
-      sequence.index += 1
-      if (sequence.index >= sequence.words.length) {
-        this.activeWordAudio = ''
-        this.storeVerseDuration(sequence.verseKey, sequence.totalSeconds || this.duration || 0)
-        this.wordSequence = null
-        this.finishVersePlayback()
-        return
-      }
-      const nextWord = sequence.words[sequence.index]
-      this.activeWordAudio = `${sequence.verseKey}:${sequence.index}`
-      try {
-        await this.playAudioSrc(nextWord.audio)
-      } catch (e) {
-        console.error(e)
-        this.activeWordAudio = ''
-        this.wordSequence = null
-        this.finishVersePlayback()
-      }
-    },
-    finishVersePlayback() {
-      this.flushPlaybackTime()
-      this.isPlaying = false
-      if (this.playMode === 'loop') {
-        setTimeout(() => {
-          const verse = this.verses.find(item => item.key === this.activeKey)
-          if (verse) this.playVerse(verse)
-        }, (this.delay || 0) * 1000)
-        return
-      }
-      if (this.studyMode === 'hybrid') {
-        const key = this.activeKey
-        const verse = this.verses.find(v => v.key === key)
-        if (verse) {
-          this.hybridPendingKey = key
-          this.quizQueue = [verse]
-          this.quizIndex = 0
-          this.quizType = 'mixed'
-          this.quizActive = true
-          this.nextQuizCard()
-          return
-        }
-      }
-      if (this.playMode === 'auto') {
-        setTimeout(() => {
-          if (this.canNext) this.next()
-          else this.handleSessionComplete()
-        }, this.delay * 1000)
-      } else {
-        this.handleSessionComplete()
-      }
-    },
-    handleSessionComplete() {
-      if (!this.verses.length) return
-      this.sessionCompleted = true
-      // Keep it simple: one clear CTA to start the quiz when a recite session ends.
-      if (!this.quizActive && this.studyMode === 'recite') {
-        this.showBanner('Session complete. Ready to review?', 'success', 7000, { key: 'start-quiz', label: 'Start quiz' })
-      } else {
-        this.showBanner('Session complete', 'success', 4500)
-      }
-    },
-    async playVerse(verse) {
-      console.log('playVerse called with verse:', verse?.key);
 
-      if (!verse) {
-        console.error('No verse provided');
-        return;
-      }
+    refreshVerses() { this.loadVerses() },
 
-      if (!verse.audio) {
-        console.error('No audio URL for verse:', verse.key);
-        this.showBanner(`Audio not available for verse ${verse.number}`, 'info', 2000);
-        return;
-      }
-
-      // Set active verse
-      this.activeKey = verse.key;
-      this.activeVerseKey = verse.key;
-
-      // Get or create audio element
-      if (!this.audioElement) {
-        this.audioElement = this.$refs.audio;
-        if (!this.audioElement) {
-          console.error('Audio element not found in DOM');
-          this.showBanner('Audio system not ready. Please refresh the page.', 'error', 3000);
-          return;
-        }
-      }
-
-      // Stop current playback
-      try {
-        this.audioElement.pause();
-      } catch (e) {
-        console.warn('Error pausing audio:', e);
-      }
-
-      const audioUrl = this.normalizeAudioUrl(verse.audio);
-      console.log('Playing audio URL:', audioUrl);
-
-      // Set up audio element
-      this.audioElement.src = audioUrl;
-      this.audioElement.load();
-
-      // Show player
-      this.playerVisible = true;
-
-      // Create a promise that resolves when audio starts playing
-      const playPromise = new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          console.error('Audio timeout for verse:', verse.key);
-          this.showBanner('Audio loading timeout. Please try again.', 'error', 3000);
-          reject(new Error('Timeout'));
-        }, 10000);
-
-        const canPlayHandler = () => {
-          console.log('Audio can play event fired');
-          clearTimeout(timeout);
-
-          // Set speed
-          this.audioElement.playbackRate = this.speed;
-
-          // Play the audio
-          this.audioElement.play()
-            .then(() => {
-              console.log('Audio playing successfully');
-              this.isPlaying = true;
-              this.markPlaybackStart();
-              this.logEvent({ type: 'audio_play', key: verse.key });
-              resolve();
-            })
-            .catch(err => {
-              console.error('Audio play failed:', err);
-              this.isPlaying = false;
-              this.showBanner(`Cannot play audio: ${err.message}`, 'error', 3000);
-              reject(err);
-            });
-
-          this.audioElement.removeEventListener('canplay', canPlayHandler);
-        };
-
-        const errorHandler = (err) => {
-          console.error('Audio error event:', err);
-          clearTimeout(timeout);
-          this.isPlaying = false;
-          this.showBanner('Audio playback error', 'error', 3000);
-          reject(err);
-        };
-
-        this.audioElement.addEventListener('canplay', canPlayHandler);
-        this.audioElement.addEventListener('error', errorHandler, { once: true });
-      });
-
-      return playPromise.catch(err => {
-        console.error('playVerse failed:', err);
-        this.isPlaying = false;
-      });
-    },
-    testPlayback() {
-      console.log('=== TEST PLAYBACK ===');
-      console.log('Chapter:', this.chapterId);
-      console.log('Verses:', this.verses.length);
-
-      if (this.verses.length === 0) {
-        console.log('No verses, loading...');
-        this.loadVerses().then(() => {
-          if (this.verses.length > 0) {
-            console.log('Verses loaded, playing first verse');
-            this.playVerse(this.verses[0]);
-          }
-        });
-      } else {
-        console.log('Playing first verse');
-        this.playVerse(this.verses[0]);
-      }
-    },
-    playWordAudio(url, key = '') {
-      if (!url) return
-      this.activeWordAudio = key
-      const a = new Audio(url)
-      a.addEventListener('ended', () => { if (this.activeWordAudio === key) this.activeWordAudio = '' })
-      a.addEventListener('error', () => { if (this.activeWordAudio === key) this.activeWordAudio = '' })
-      a.play().catch(() => { this.activeWordAudio = '' })
-    },
-    initAudio() {
-      this.audioElement = this.$refs.audio
-      if (!this.audioElement) return
-
-      // Remove existing listeners to avoid duplicates
-      this.audioElement.removeEventListener('timeupdate', this.audioTimeUpdate)
-      this.audioElement.removeEventListener('ended', this.audioEnded)
-      this.audioElement.removeEventListener('error', this.audioError)
-
-      // Bind methods
-      this.audioTimeUpdate = () => {
-        this.currentTime = this.audioElement.currentTime
-        this.duration = this.audioElement.duration
-      }
-
-      this.audioEnded = () => {
-        this.isPlaying = false
-        if (this.playMode === 'auto') {
-          setTimeout(() => this.next(), this.delay * 1000)
-        }
-      }
-
-      this.audioError = (e) => {
-        console.error('Audio error:', e)
-        this.isPlaying = false
-        this.showBanner('Audio failed to load. Check your connection.', 'error', 3000)
-      }
-
-      // Add listeners
-      this.audioElement.addEventListener('timeupdate', this.audioTimeUpdate)
-      this.audioElement.addEventListener('ended', this.audioEnded)
-      this.audioElement.addEventListener('error', this.audioError)
-    },
-
-    applySpeed() {
-      if (this.audioElement) this.audioElement.playbackRate = this.speed
-    },
-    togglePlay() {
-      if (!this.audioElement.src) return
-      if (this.audioElement.paused) {
-        this.audioElement.play()
-        this.isPlaying = true
-      } else {
-        this.audioElement.pause()
-        this.isPlaying = false
-      }
-    },
-    skipBack() {
-      if (this.audioElement) this.audioElement.currentTime = Math.max(0, this.audioElement.currentTime - 10)
-    },
-    skipFwd() {
-      if (this.audioElement && this.duration) this.audioElement.currentTime = Math.min(this.duration, this.audioElement.currentTime + 10)
-    },
-    prev() {
-      if (!this.canPrev) return
-      this.sessionCompleted = false
-      this.queueIndex--
-      const v = this.queue[this.queueIndex]
-      if (v) this.playVerse(v)
-    },
-    next() {
-      if (this.canNext) {
-        this.sessionCompleted = false
-        this.queueIndex++
-        const v = this.queue[this.queueIndex]
-        if (v) this.playVerse(v)
-        return
-      }
-      if (this.planRun && this.todayPlan?.segments?.length) {
-        // move to next segment automatically
-        const nextIndex = (this.planRun.segmentIndex || 0) + 1
-        if (nextIndex < this.todayPlan.segments.length) {
-          this.planRun.segmentIndex = nextIndex
-          this.applyPlanSegment(nextIndex).then(() => {
-            const first = this.queue[0]
-            const seg = this.todayPlan.segments[nextIndex]
-            if (seg) this.showBanner(`Next: Surah ${seg.chapterId} • Ayah ${seg.rangeStart}-${seg.rangeEnd}`, 'info', 4500)
-            if (first) this.playVerse(first)
-          })
-        } else {
-          this.handleSessionComplete()
-          this.showBanner('Plan complete for today', 'success', 4500)
-        }
-        return
-      }
-      this.handleSessionComplete()
-    },
-    seek(e) {
-      if (!this.audioElement || !this.duration) return
-      const rect = e.currentTarget.getBoundingClientRect()
-      const percent = (e.clientX - rect.left) / rect.width
-      this.audioElement.currentTime = percent * this.duration
-    },
-    updateAudioReciter() { this.loadVerses() },
-    closePlayer() {
-      this.flushPlaybackTime()
-      if (this.audioElement) { this.audioElement.pause(); this.audioElement.src = '' }
-      this.wordSequence = null
-      this.activeWordAudio = ''
-      const completedAtEnd = !this.canNext && !!this.activeKey && !this.quizActive
-      this.playerVisible = false
-      this.isPlaying = false
-      this.playerMenuOpen = false
-      this.persistAudioState()
-      if (completedAtEnd) this.handleSessionComplete()
-    },
-    handlePrimaryAction() {
-      if (!this.chapterId || this.chapterId === 0) {
-        this.showTools = true;
-        this.showBanner('Please select a surah first', 'info', 3000);
-      } else if (!this.verses.length) {
-        this.startSession();
-      } else if (this.isPlaying) {
-        // If playing, pause audio - don't open tools
-        this.togglePlay();
-      } else {
-        // If paused or session not active, start/continue
-        if (!this.audioElement?.src || this.audioElement.paused) {
-          this.startSession();
-        } else {
-          this.togglePlay();
-        }
+    collectSimpleStats() {
+      const sessionCount = this.savedSessions.length || 0
+      const weak = Object.entries(this.sm2 || {}).filter(([, card]) => card && (card.lapses >= 3)).length
+      this.simpleStats = {
+        streak: 0,
+        sessions: sessionCount,
+        memorised: this.verses.length || 0,
+        weak: weak
       }
     }
   }
@@ -3486,6 +2410,132 @@ body {
   position: sticky;
   top: 0;
   z-index: 20;
+}
+
+/* Ensure tajweed styles work inside word tags */
+.verse-arabic word {
+  display: inline-block;
+  transition: all 0.15s ease;
+  border-radius: 4px;
+  padding: 0 2px;
+}
+
+.verse-arabic word.highlighted {
+  background: var(--accent);
+  color: white;
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
+}
+
+/* Preserve tajweed styling inside highlighted words */
+.verse-arabic word.highlighted tajweed,
+.verse-arabic word.highlighted .tajweed {
+  color: inherit;
+}
+
+.verse-arabic.word-highlight-enabled {
+  cursor: pointer;
+}
+
+/* Original tajweed styles - ensure they work */
+.verse-arabic tajweed.ham_wasl,
+.verse-arabic .ham_wasl {
+  color: #9c27b0;
+}
+
+.verse-arabic tajweed.ghunnah,
+.verse-arabic .ghunnah {
+  color: #1f7a8c;
+}
+
+.verse-arabic tajweed.idgham_ghunnah,
+.verse-arabic .idgham_ghunnah {
+  color: #1f7a8c;
+}
+
+.verse-arabic tajweed.idgham_wo_ghunnah,
+.verse-arabic .idgham_wo_ghunnah {
+  color: #0f766e;
+}
+
+.verse-arabic tajweed.iqlab,
+.verse-arabic .iqlab {
+  color: #2563eb;
+}
+
+.verse-arabic tajweed.ikhafa,
+.verse-arabic .ikhafa {
+  color: #f59e0b;
+}
+
+.verse-arabic tajweed.qlqla,
+.verse-arabic .qlqla,
+.verse-arabic tajweed.qalqalah,
+.verse-arabic .qalqalah {
+  color: #ef4444;
+}
+
+.verse-arabic tajweed.madda_normal,
+.verse-arabic .madda_normal,
+.verse-arabic tajweed.madda_permissible,
+.verse-arabic .madda_permissible,
+.verse-arabic tajweed.madda_necessary,
+.verse-arabic .madda_necessary {
+  color: #8b5cf6;
+}
+
+.verse-arabic tajweed.idgham_shafawi,
+.verse-arabic .idgham_shafawi,
+.verse-arabic tajweed.ikhafa_shafawi,
+.verse-arabic .ikhafa_shafawi {
+  color: #db2777;
+}
+
+.verse-arabic tajweed.slnt,
+.verse-arabic .slnt,
+.verse-arabic tajweed.waqf,
+.verse-arabic .waqf {
+  color: #6b7280;
+}
+
+/* Add to your style section */
+.verse-arabic word {
+  display: inline-block;
+  transition: all 0.15s ease;
+  border-radius: 4px;
+  padding: 0 2px;
+}
+
+.verse-arabic word.highlighted {
+  background: var(--accent);
+  color: white;
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
+}
+
+.verse-arabic.word-highlight-enabled {
+  cursor: pointer;
+}
+
+/* Add this to your style section - replace the existing .word-item.highlighted */
+.word-item.word-highlighted {
+  background: var(--accent) !important;
+  color: white !important;
+  transform: scale(1.05);
+  transition: all 0.15s ease;
+  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.4);
+  position: relative;
+  z-index: 2;
+}
+
+.word-item.word-highlighted .word-arabic,
+.word-item.word-highlighted .word-meaning {
+  color: white !important;
+}
+
+.word-item.word-highlighted .word-audio-btn {
+  color: white !important;
+  opacity: 1;
 }
 
 /* Mode Indicator */
