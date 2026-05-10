@@ -136,10 +136,11 @@
         <!-- Replace the verses-grid section (around line 165) with this: -->
         <div v-else-if="hasVerses" class="verses-grid">
           <!-- Update the verse-card div to include data-verse-key -->
-          <div v-for="verse in verses" :key="verse.key" class="verse-card" :data-verse-key="verse.key" :class="{
+          <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" :class="{
+            'verse-card': true,
             active: activeVerseKey === verse.key,
             'focus-mode': focusMode && activeVerseKey !== verse.key,
-            blurred: blurAdjacent && activeVerseKey !== verse.key && !isAdjacentVerse(verse)
+            blurred: blurAdjacent && activeVerseKey && activeVerseKey !== verse.key && !isAdjacentVerse(verse)
           }">
             <div class="verse-header">
               <div class="verse-badges">
@@ -148,6 +149,23 @@
               </div>
 
               <div class="verse-actions">
+                <!-- Font size controls -->
+                <div class="verse-font-controls">
+                  <button class="verse-font-btn" @click="decreaseVerseFont(verse.key, $event)"
+                    title="Decrease font size">
+                    <i class="bi bi-dash"></i>
+                  </button>
+                  <span class="verse-font-size-indicator">{{ getVerseFontSize(verse.key) }}%</span>
+                  <button class="verse-font-btn" @click="increaseVerseFont(verse.key, $event)"
+                    title="Increase font size">
+                    <i class="bi bi-plus"></i>
+                  </button>
+                  <button v-if="verseFontSizes[verse.key]" class="verse-font-btn"
+                    @click="resetVerseFont(verse.key, $event)" title="Reset font size">
+                    <i class="bi bi-arrow-repeat"></i>
+                  </button>
+                </div>
+
                 <button class="verse-play-btn" @click="downloadOfflineVerses" title="Download for offline reading">
                   <i class="bi bi-save"></i>
                 </button>
@@ -158,19 +176,22 @@
             </div>
 
             <div class="verse-arabic" dir="rtl" lang="ar" v-html="getHighlightedArabic(verse)"
-              :class="{ 'word-highlight-enabled': wordByWordAudioEnabled }">
+              :class="{ 'word-highlight-enabled': wordByWordAudioEnabled }"
+              :style="{ fontSize: getVerseFontSize(verse.key) + '%' }">
             </div>
 
             <!-- TRANSLATION -->
-            <div v-if="showTranslation && verse.translation" class="verse-translation">
+            <div v-if="showTranslation && verse.translation" class="verse-translation"
+              :style="{ fontSize: (getVerseFontSize(verse.key) * 0.85) + '%' }">
               {{ verse.translation }}
             </div>
 
-            <div v-if="showTransliteration && verse.transliteration" class="verse-transliteration">
+            <div v-if="showTransliteration && verse.transliteration" class="verse-transliteration"
+              :style="{ fontSize: (getVerseFontSize(verse.key) * 0.7) + '%' }">
               {{ verse.transliteration }}
             </div>
 
-            <!-- In the verse-words section (around line 165) -->
+            <!-- In the verse-words section -->
             <div v-if="showWordByWord && verse.words?.length" class="verse-words">
               <div v-for="(word, wi) in verse.words" :key="wi" class="word-item"
                 :class="{ 'word-highlighted': isWordHighlighted(verse.key, wi) }" :data-word-index="wi"
@@ -183,7 +204,6 @@
                 </button>
               </div>
             </div>
-
           </div>
         </div>
 
@@ -603,73 +623,7 @@
       }"></span>
     </div>
 
-    <!-- Audio Player -->
-    <div class="player-bar" v-if="playerVisible">
-      <div class="player-progress" @click="seek($event)">
-        <div class="player-track"></div>
-        <div class="player-fill" :style="{ width: seekPercent + '%' }"></div>
-        <div class="player-handle" :style="{ left: seekPercent + '%' }"></div>
-      </div>
 
-      <div class="player-collapsed-meta" v-if="playerCollapsed">
-        <div class="player-collapsed-copy">
-          <div class="player-collapsed-title">{{ collapsedPlayerTitle }}</div>
-          <div class="player-collapsed-sub">{{ collapsedPlayerSubtitle }}</div>
-        </div>
-        <button class="player-icon play" @click="togglePlay" aria-label="Play">
-          <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-        </button>
-      </div>
-
-      <div class="player-controls" v-show="!playerCollapsed">
-        <div class="player-time left">{{ formatTime(currentTime) }}</div>
-
-        <div class="player-center">
-          <button class="player-icon" @click="togglePlayerMenu" aria-label="Menu"><i
-              class="bi bi-three-dots"></i></button>
-          <button class="player-icon player-speed" @click="applySpeed" aria-label="Speed">{{ speed }}x</button>
-          <button class="player-icon" @click="prev" :disabled="!canPrev" aria-label="Previous"><i
-              class="bi bi-skip-backward-fill"></i></button>
-          <button class="player-icon play" @click="togglePlay" aria-label="Play">
-            <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-          </button>
-          <button class="player-icon" @click="next" :disabled="!canNext" aria-label="Next"><i
-              class="bi bi-skip-forward-fill"></i></button>
-          <button class="player-icon" @click="closePlayer" aria-label="Close"><i class="bi bi-x-lg"></i></button>
-        </div>
-
-        <div class="player-time right">{{ formatTime(duration) }}</div>
-      </div>
-
-
-
-      <div v-if="playerMenuOpen" class="player-menu-overlay" @click="playerMenuOpen = false">
-        <div class="player-menu" @click.stop>
-          <button class="player-menu-item" @click="downloadCurrentAudio">
-            <span class="pm-ico"><i class="bi bi-download"></i></span>
-            <span>Download</span>
-          </button>
-          <button class="player-menu-item" @click="tab = 'advanced'; showTools = true; playerMenuOpen = false">
-            <span class="pm-ico"><i class="bi bi-arrow-repeat"></i></span>
-            <span>Manage repeat settings</span>
-          </button>
-          <div class="player-menu-sep"></div>
-          <div class="player-menu-row">
-            <span class="pm-label">Speed</span>
-            <input class="pm-range" type="range" min="0.5" max="1.5" step="0.1" v-model.number="speed"
-              @input="applySpeed">
-            <span class="pm-value">{{ speed }}x</span>
-          </div>
-          <div class="player-menu-row">
-            <span class="pm-label">Reciter</span>
-            <select v-model="reciterId" @change="updateAudioReciter" class="pm-select">
-              <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
-    <audio ref="audio" preload="auto" style="display:none"></audio>
   </div>
 </template>
 
@@ -684,6 +638,11 @@ export default {
   },
   data() {
     return {
+      verseFontSizes: {},
+      defaultFontSize: 150,
+      fontSizeStep: 10,
+      minFontSize: 80,
+      maxFontSize: 250,
       // Mode-specific state
       beginner: {
         chapterId: 0,
@@ -723,6 +682,20 @@ export default {
         queueIndex: 0,
         sessionActive: false
       },
+      // New chaining UI state
+      showQueueViewer: false,
+      queueViewCollapsed: true,
+      currentChainStats: {
+        totalEntries: 0,
+        uniqueVerses: 0,
+        repeatsPerVerse: 0,
+        totalDuration: 0
+      },
+      chainViewMode: 'compact', // 'compact', 'detailed', 'graph'
+      manualChainControl: false,
+      chainBookmarks: [],
+      chainHistory: [],
+      repeatGroups: [],
 
       // Arabic text word highlighting state
       currentWordIndex: -1,
@@ -973,11 +946,21 @@ export default {
       }
     },
 
+    // Replace the blurAdjacent computed setter
     blurAdjacent: {
       get() { return this.currentConfig.blurAdjacent },
       set(val) {
         if (this.currentMode === 'beginner') this.beginner.blurAdjacent = val
         else this.advanced.blurAdjacent = val
+
+        // Clear all blurs when turning off
+        if (!val) {
+          document.querySelectorAll('.verse-card.blurred').forEach(el => {
+            el.classList.remove('blurred')
+          })
+        }
+
+        this.$forceUpdate()
       }
     },
 
@@ -1138,6 +1121,7 @@ export default {
   },
 
   async mounted() {
+    this.loadVerseFontSizes();
     this.migrateLocalStorage()
     this.loadUiState()
     await this.loadChapters()
@@ -1205,6 +1189,25 @@ export default {
     currentTime: 'persistAudioState',
     sectionOpen: { handler: 'persistUiState', deep: true },
 
+    activeVerseKey(newKey, oldKey) {
+      if (this.blurAdjacent) {
+        // Force update to recalculate blur states
+        this.$nextTick(() => {
+          // Remove blur from old adjacent verses
+          if (oldKey) {
+            const oldAdjacent = this.verses.filter(v => this.isAdjacentToKey(v, oldKey))
+            oldAdjacent.forEach(v => {
+              const el = document.querySelector(`[data-verse-key="${v.key}"]`)
+              if (el) el.classList.remove('blurred')
+            })
+          }
+
+          // Apply blur to new context
+          this.$forceUpdate()
+        })
+      }
+    },
+
     beginnerRepeats() {
       if (this.tab === 'beginner') this.rebuildQueue()
     },
@@ -1232,6 +1235,145 @@ export default {
   },
 
   methods: {
+    increaseGlobalFont() {
+      this.defaultFontSize = Math.min(this.maxFontSize, this.defaultFontSize + this.fontSizeStep);
+      this.persistVerseFontSizes();
+    },
+
+    decreaseGlobalFont() {
+      this.defaultFontSize = Math.max(this.minFontSize, this.defaultFontSize - this.fontSizeStep);
+      this.persistVerseFontSizes();
+    },
+
+    resetGlobalFont() {
+      this.defaultFontSize = 100;
+      this.verseFontSizes = {};
+      this.persistVerseFontSizes();
+    },
+
+    getVerseFontSize(verseKey) {
+      // Check if verse has custom size, otherwise return default
+      return this.verseFontSizes[verseKey] || this.defaultFontSize;
+    },
+
+    increaseVerseFont(verseKey, event) {
+      event.stopPropagation();
+      const currentSize = this.getVerseFontSize(verseKey);
+      const newSize = Math.min(this.maxFontSize, currentSize + this.fontSizeStep);
+      // Update the reactive object
+      this.verseFontSizes = {
+        ...this.verseFontSizes,
+        [verseKey]: newSize
+      };
+      // Save to localStorage immediately
+      this.persistVerseFontSizes();
+    },
+
+    decreaseVerseFont(verseKey, event) {
+      event.stopPropagation();
+      const currentSize = this.getVerseFontSize(verseKey);
+      const newSize = Math.max(this.minFontSize, currentSize - this.fontSizeStep);
+      // Update the reactive object
+      this.verseFontSizes = {
+        ...this.verseFontSizes,
+        [verseKey]: newSize
+      };
+      // Save to localStorage immediately
+      this.persistVerseFontSizes();
+    },
+
+    resetVerseFont(verseKey, event) {
+      event.stopPropagation();
+      // Remove the custom size for this verse
+      const { [verseKey]: _, ...rest } = this.verseFontSizes;
+      this.verseFontSizes = rest;
+      // Save to localStorage immediately
+      this.persistVerseFontSizes();
+    },
+
+    // Global font controls (optional)
+    increaseGlobalFont() {
+      this.defaultFontSize = Math.min(this.maxFontSize, this.defaultFontSize + this.fontSizeStep);
+      // Save the new default
+      this.persistDefaultFontSize();
+    },
+
+    decreaseGlobalFont() {
+      this.defaultFontSize = Math.max(this.minFontSize, this.defaultFontSize - this.fontSizeStep);
+      // Save the new default
+      this.persistDefaultFontSize();
+    },
+
+    resetGlobalFont() {
+      this.defaultFontSize = 150;
+      this.verseFontSizes = {};
+      // Save both
+      this.persistDefaultFontSize();
+      this.persistVerseFontSizes();
+    },
+
+    persistDefaultFontSize() {
+      try {
+        localStorage.setItem('telawa.defaultFontSize', JSON.stringify(this.defaultFontSize));
+        console.log('Default font size saved:', this.defaultFontSize);
+      } catch (e) {
+        console.error('Failed to save default font size:', e);
+      }
+    },
+
+
+
+    // Persistence methods
+    persistVerseFontSizes() {
+      try {
+        localStorage.setItem('telawa.verseFontSizes', JSON.stringify(this.verseFontSizes));
+        console.log('Font sizes saved:', this.verseFontSizes);
+      } catch (e) {
+        console.error('Failed to save font sizes:', e);
+      }
+    },
+
+    loadVerseFontSizes() {
+      try {
+        const savedSizes = localStorage.getItem('telawa.verseFontSizes');
+        if (savedSizes) {
+          this.verseFontSizes = JSON.parse(savedSizes);
+          console.log('Loaded font sizes:', this.verseFontSizes);
+        }
+
+        const savedDefault = localStorage.getItem('telawa.defaultFontSize');
+        if (savedDefault) {
+          this.defaultFontSize = JSON.parse(savedDefault);
+          console.log('Loaded default font size:', this.defaultFontSize);
+        }
+      } catch (e) {
+        console.error('Failed to load font sizes:', e);
+      }
+    },
+
+    // Call this to clear all font size settings
+    clearAllFontSizes() {
+      if (confirm('Reset all font sizes to default?')) {
+        this.verseFontSizes = {};
+        this.defaultFontSize = 150;
+        this.persistVerseFontSizes();
+        this.persistDefaultFontSize();
+        this.showBanner('All font sizes reset to default', 'success', 2000);
+      }
+    },
+
+    isAdjacentToKey(verse, targetKey) {
+      if (!verse || !targetKey) return false
+      const targetParts = targetKey.split(':')
+      const verseParts = verse.key.split(':')
+
+      if (targetParts[0] !== verseParts[0]) return false
+
+      const targetNumber = parseInt(targetParts[1])
+      const verseNumber = parseInt(verseParts[1])
+
+      return Math.abs(verseNumber - targetNumber) === 1
+    },
     async downloadOfflineVerses() {
       // Check if we have verses loaded
       if (!this.verses || !this.verses.length) {
@@ -1667,23 +1809,54 @@ export default {
       if (this.audioElement) this.audioElement.playbackRate = this.speed
     },
 
-    prev() {
-      if (!this.canPrev) return
-      this.sessionCompleted = false
-      this.queueIndex--
-      const v = this.queue[this.queueIndex]
-      if (v) this.playVerse(v)
-    },
-
+    // Update the next() method to properly set active keys
     next() {
       if (this.canNext) {
         this.sessionCompleted = false
         this.queueIndex++
+        // Get verse from queue entry
+        const entry = this.queue[this.queueIndex]
+        const verseKey = entry?.verse?.key || entry?.key
+        if (verseKey) {
+          this.activeVerseKey = verseKey
+          this.activeKey = verseKey
+          this.$nextTick(() => {
+            const el = document.querySelector(`.verse-card[data-verse-key="${verseKey}"]`)
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            }
+            // Force blur recalculation
+            this.$forceUpdate()
+          })
+        }
         const v = this.queue[this.queueIndex]
-        if (v) this.playVerse(v)
+        if (v) {
+          const verse = v.verse || v
+          this.playVerse(verse)
+        }
         return
       }
       this.handleSessionComplete()
+    },
+
+    prev() {
+      if (!this.canPrev) return
+      this.sessionCompleted = false
+      this.queueIndex--
+      const entry = this.queue[this.queueIndex]
+      const verseKey = entry?.verse?.key || entry?.key
+      if (verseKey) {
+        this.activeVerseKey = verseKey
+        this.activeKey = verseKey
+        this.$nextTick(() => {
+          this.$forceUpdate()
+        })
+      }
+      const v = this.queue[this.queueIndex]
+      if (v) {
+        const verse = v.verse || v
+        this.playVerse(verse)
+      }
     },
 
     closePlayer() {
@@ -1878,83 +2051,108 @@ export default {
         console.error('=== LOAD VERSES ERROR END ===')
       }
     },
+    // Replace your buildQueue method with this enhanced version
     buildQueue() {
       console.log('=== BUILD QUEUE START ===')
-      console.log('Current mode:', this.currentMode)
 
-      // GET VERSES DIRECTLY - don't use computed property
       const verses = this.currentMode === 'beginner'
         ? this.beginner.verses
         : this.advanced.verses
 
-      console.log('Verses count:', verses?.length)
-      console.log('beginner.verses length:', this.beginner.verses?.length)
-      console.log('advanced.verses length:', this.advanced.verses?.length)
-
       if (!verses || verses.length === 0) {
         console.error('No verses available to build queue')
-        // Clear queues
         this.beginner.queue = []
         this.advanced.queue = []
         this.queue = []
         this.queueIndex = 0
+        this.currentChainStats = { totalEntries: 0, uniqueVerses: 0, repeatsPerVerse: 0, totalDuration: 0 }
         return
       }
 
       // Determine repeat count
-      let rep = 1  // ALWAYS default to at least 1
-
+      let rep = 1
       if (this.currentMode === 'beginner') {
         rep = this.beginner.repeats || 1
-        console.log('Using beginner repeats:', rep)
       } else if (this.currentMode === 'advanced') {
         if (this.advanced.repeatAndLoopAudio) {
           rep = this.advanced.advancedRepeats || 1
-          console.log('Using advanced loop repeats:', rep)
-        } else {
-          rep = 1
-          console.log('Advanced loop not enabled, using 1 repeat')
         }
       }
 
-      // Determine order
       const ord = this.order || 'seq'
-      console.log('Order:', ord, '| Repeats:', rep, '| Verses source length:', verses.length)
 
+      // Build enhanced queue with metadata
       const q = []
+      const entryGroups = []
 
-      // Build queue based on order
       if (ord === 'seq') {
         for (let r = 0; r < rep; r++) {
-          q.push(...verses)
+          verses.forEach((verse, idx) => {
+            q.push({
+              verse: verse,
+              repeatCount: r + 1,
+              totalRepeats: rep,
+              position: q.length,
+              groupId: `repeat_${r}_verse_${verse.number}`
+            })
+          })
+          entryGroups.push({
+            groupIndex: r,
+            type: 'repeat_cycle',
+            verseCount: verses.length,
+            repeats: r + 1
+          })
         }
-      } else if (ord === 'cum') {
+      }
+      else if (ord === 'cum') {
         for (let r = 0; r < rep; r++) {
           for (let i = 0; i < verses.length; i++) {
             for (let j = 0; j <= i; j++) {
-              q.push(verses[j])
+              q.push({
+                verse: verses[j],
+                repeatCount: r + 1,
+                totalRepeats: rep,
+                position: q.length,
+                cumulativePhase: i + 1,
+                groupId: `cum_phase_${i}_repeat_${r}`
+              })
             }
           }
         }
-      } else if (ord === 'rand') {
+      }
+      else if (ord === 'rand') {
         for (let r = 0; r < rep; r++) {
           const shuffled = [...verses]
           for (let i = shuffled.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
           }
-          q.push(...shuffled)
-        }
-      } else {
-        console.warn('Unknown order, defaulting to sequential')
-        for (let r = 0; r < rep; r++) {
-          q.push(...verses)
+          shuffled.forEach((verse, idx) => {
+            q.push({
+              verse: verse,
+              repeatCount: r + 1,
+              totalRepeats: rep,
+              position: q.length,
+              randomSeed: r,
+              groupId: `random_${r}_pos_${idx}`
+            })
+          })
         }
       }
 
-      console.log('Queue built with', q.length, 'items')
+      // Calculate statistics
+      const uniqueVerses = new Set(q.map(item => item.verse.key)).size
+      const totalDuration = this.estimateQueueDuration(q)
 
-      // Store queue in BOTH the mode-specific and the current config
+      this.currentChainStats = {
+        totalEntries: q.length,
+        uniqueVerses: uniqueVerses,
+        repeatsPerVerse: rep,
+        totalDuration: totalDuration,
+        repeatGroups: entryGroups,
+        orderType: ord
+      }
+
       if (this.currentMode === 'beginner') {
         this.beginner.queue = q
         this.beginner.queueIndex = 0
@@ -1963,12 +2161,22 @@ export default {
         this.advanced.queueIndex = 0
       }
 
-      // Also update the computed/reactive properties
       this.queue = q
       this.queueIndex = 0
 
-      console.log('Queue assigned. this.queue.length:', this.queue?.length)
-      console.log('=== BUILD QUEUE END ===')
+      console.log('Queue built with', q.length, 'entries')
+      console.log('Chain stats:', this.currentChainStats)
+
+      // Auto-show queue viewer for complex chains
+      if (q.length > 10 && !this.queueViewCollapsed) {
+        this.showQueueViewer = true
+      }
+    },
+
+    estimateQueueDuration(queue) {
+      // Estimate based on average verse duration
+      const avgVerseDuration = 45 // seconds per verse on average
+      return Math.ceil(queue.length * avgVerseDuration / 60) // minutes
     },
 
     rebuildQueue() {
@@ -2135,38 +2343,24 @@ export default {
     },
 
     handlePrimaryAction() {
-      // Separate logic paths based on whether verses are loaded
-      if (!this.chapterId || this.chapterId === 0) {
-        this.showTools = true
-        this.showBanner('Please select a surah first', 'info', 3000)
-        return
-      }
-
-      if (!this.verses.length) {
-        return this.startSession()
-      }
-
-      // For loaded verses - handle play/pause state
-      this.handlePlayPause()
+      // Always start a fresh session when clicking the start button
+      this.startSession()
     },
 
     handlePlayPause() {
-      if (this.isPlaying) {
-        return this.togglePlay()
-      }
-
-      // Start or resume
-      if (!this.audioElement?.src || this.audioElement.paused) {
+      // This is now only for the play/pause toggle in the player
+      if (!this.audioElement?.src || !this.verses.length) {
         return this.startSession()
       }
 
-      return this.togglePlay()
+      if (this.isPlaying) {
+        this.audioElement.pause()
+        this.isPlaying = false
+      } else {
+        this.audioElement.play()
+        this.isPlaying = true
+      }
     },
-
-
-
-
-
     // ==================== UI METHODS ====================
 
     toggleReadingOption(kind) {
@@ -2213,9 +2407,20 @@ export default {
     },
 
     isAdjacentVerse(verse) {
-      if (!this.activeVerseKey) return false
-      const activeNumber = parseInt(this.activeVerseKey.split(':')[1])
-      return Math.abs(verse.number - activeNumber) === 1
+      if (!this.activeVerseKey || !verse || !verse.key) return false
+      const activeParts = this.activeVerseKey.split(':')
+      const verseParts = verse.key.split(':')
+
+      // Must be in same chapter
+      if (activeParts[0] !== verseParts[0]) return false
+
+      const activeNumber = parseInt(activeParts[1])
+      const verseNumber = parseInt(verseParts[1])
+
+      if (isNaN(activeNumber) || isNaN(verseNumber)) return false
+
+      // Adjacent means immediately before or after
+      return Math.abs(verseNumber - activeNumber) === 1
     },
 
     // ==================== PERSISTENCE METHODS ====================
@@ -2774,6 +2979,80 @@ body {
 .verse-arabic tajweed.waqf,
 .verse-arabic .waqf {
   color: #6b7280;
+}
+
+/* Add to your style section */
+
+.verse-font-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--accent-light);
+  border-radius: 20px;
+  padding: 2px 6px;
+  margin-right: 8px;
+}
+
+.verse-font-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  transition: all 0.2s ease;
+  color: var(--text);
+}
+
+.verse-font-btn:hover {
+  background: var(--accent);
+  color: white;
+  transform: scale(1.05);
+}
+
+.verse-font-size-indicator {
+  font-size: 10px;
+  min-width: 35px;
+  text-align: center;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Adjust word items when font size changes */
+.verse-words {
+  transition: all 0.2s ease;
+}
+
+.word-item {
+  transition: all 0.2s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .verse-font-controls {
+    gap: 2px;
+    padding: 2px 4px;
+  }
+
+  .verse-font-btn {
+    width: 20px;
+    height: 20px;
+  }
+
+  .verse-font-size-indicator {
+    min-width: 30px;
+    font-size: 9px;
+  }
+}
+
+/* Toolbar font controls */
+.toolbar-chip i.bi-dash-lg,
+.toolbar-chip i.bi-plus-lg {
+  font-size: 12px;
 }
 
 /* Add to your style section */

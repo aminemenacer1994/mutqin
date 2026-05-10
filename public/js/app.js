@@ -23671,9 +23671,11 @@ function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) 
 function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
 function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _objectWithoutProperties(e, t) { if (null == e) return {}; var o, r, i = _objectWithoutPropertiesLoose(e, t); if (Object.getOwnPropertySymbols) { var n = Object.getOwnPropertySymbols(e); for (r = 0; r < n.length; r++) o = n[r], -1 === t.indexOf(o) && {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]); } return i; }
+function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t = {}; for (var n in r) if ({}.hasOwnProperty.call(r, n)) { if (-1 !== e.indexOf(n)) continue; t[n] = r[n]; } return t; }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
-function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
@@ -23698,6 +23700,11 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
   },
   data: function data() {
     return {
+      verseFontSizes: {},
+      defaultFontSize: 150,
+      fontSizeStep: 10,
+      minFontSize: 80,
+      maxFontSize: 250,
       // Mode-specific state
       beginner: {
         chapterId: 0,
@@ -23737,6 +23744,21 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
         queueIndex: 0,
         sessionActive: false
       },
+      // New chaining UI state
+      showQueueViewer: false,
+      queueViewCollapsed: true,
+      currentChainStats: {
+        totalEntries: 0,
+        uniqueVerses: 0,
+        repeatsPerVerse: 0,
+        totalDuration: 0
+      },
+      chainViewMode: 'compact',
+      // 'compact', 'detailed', 'graph'
+      manualChainControl: false,
+      chainBookmarks: [],
+      chainHistory: [],
+      repeatGroups: [],
       // Arabic text word highlighting state
       currentWordIndex: -1,
       currentHighlightedVerseKey: null,
@@ -23983,12 +24005,21 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
         if (this.currentMode === 'beginner') this.beginner.focusMode = val;else this.advanced.focusMode = val;
       }
     },
+    // Replace the blurAdjacent computed setter
     blurAdjacent: {
       get: function get() {
         return this.currentConfig.blurAdjacent;
       },
       set: function set(val) {
         if (this.currentMode === 'beginner') this.beginner.blurAdjacent = val;else this.advanced.blurAdjacent = val;
+
+        // Clear all blurs when turning off
+        if (!val) {
+          document.querySelectorAll('.verse-card.blurred').forEach(function (el) {
+            el.classList.remove('blurred');
+          });
+        }
+        this.$forceUpdate();
       }
     },
     verses: {
@@ -24157,6 +24188,7 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
       return _regenerator().w(function (_context) {
         while (1) switch (_context.n) {
           case 0:
+            _this3.loadVerseFontSizes();
             _this3.migrateLocalStorage();
             _this3.loadUiState();
             _context.n = 1;
@@ -24243,6 +24275,27 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
       handler: 'persistUiState',
       deep: true
     },
+    activeVerseKey: function activeVerseKey(newKey, oldKey) {
+      var _this4 = this;
+      if (this.blurAdjacent) {
+        // Force update to recalculate blur states
+        this.$nextTick(function () {
+          // Remove blur from old adjacent verses
+          if (oldKey) {
+            var oldAdjacent = _this4.verses.filter(function (v) {
+              return _this4.isAdjacentToKey(v, oldKey);
+            });
+            oldAdjacent.forEach(function (v) {
+              var el = document.querySelector("[data-verse-key=\"".concat(v.key, "\"]"));
+              if (el) el.classList.remove('blurred');
+            });
+          }
+
+          // Apply blur to new context
+          _this4.$forceUpdate();
+        });
+      }
+    },
     beginnerRepeats: function beginnerRepeats() {
       if (this.tab === 'beginner') this.rebuildQueue();
     },
@@ -24267,139 +24320,241 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
     this.persistUiState();
   }),
   methods: (_methods = {
-    downloadOfflineVerses: function downloadOfflineVerses() {
-      var _this4 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
-        var _this4$currentChapter, _this4$verses$, surahId, surahName, found, offlineData, storageKey, _t;
-        return _regenerator().w(function (_context2) {
-          while (1) switch (_context2.p = _context2.n) {
-            case 0:
-              if (!(!_this4.verses || !_this4.verses.length)) {
-                _context2.n = 1;
-                break;
-              }
-              _this4.showBanner('Load a surah first before downloading', 'info', 3000);
-              _this4.showTools = true;
-              return _context2.a(2);
-            case 1:
-              _context2.p = 1;
-              // Get surah info from the first verse if chapterId is not set
-              surahId = _this4.chapterId;
-              surahName = (_this4$currentChapter = _this4.currentChapter) === null || _this4$currentChapter === void 0 ? void 0 : _this4$currentChapter.name_simple;
-              if (!surahId && (_this4$verses$ = _this4.verses[0]) !== null && _this4$verses$ !== void 0 && _this4$verses$.key) {
-                surahId = parseInt(_this4.verses[0].key.split(':')[0]);
-                // Try to find surah name from chapters list
-                found = _this4.chapters.find(function (c) {
-                  return c.id === surahId;
-                });
-                surahName = (found === null || found === void 0 ? void 0 : found.name_simple) || "Surah ".concat(surahId);
-              }
-              if (surahId) {
-                _context2.n = 2;
-                break;
-              }
-              _this4.showBanner('Could not identify surah', 'error', 3000);
-              return _context2.a(2);
-            case 2:
-              offlineData = {
-                metadata: {
-                  surah: surahName,
-                  surahId: surahId,
-                  rangeStart: _this4.rangeStart,
-                  rangeEnd: _this4.rangeEnd,
-                  reciterId: _this4.reciterId,
-                  downloadedAt: new Date().toISOString(),
-                  totalVerses: _this4.verses.length
-                },
-                verses: _this4.verses.map(function (v) {
-                  return {
-                    key: v.key,
-                    number: v.number,
-                    arabic: v.arabic,
-                    translation: v.translation || '',
-                    transliteration: v.transliteration || '',
-                    audio: v.audio || ''
-                  };
-                })
-              };
-              storageKey = "offline_surah_".concat(surahId, "_").concat(_this4.rangeStart, "_").concat(_this4.rangeEnd);
-              localStorage.setItem(storageKey, JSON.stringify(offlineData));
-              _this4.showBanner("\u2713 Saved ".concat(_this4.verses.length, " verses from ").concat(surahName, " for offline reading!"), 'success', 3000);
-              _this4.confettiActive = true;
-              setTimeout(function () {
-                _this4.confettiActive = false;
-              }, 1200);
-              _context2.n = 4;
-              break;
-            case 3:
-              _context2.p = 3;
-              _t = _context2.v;
-              console.error('Download failed:', _t);
-              _this4.showBanner('Failed to download verses', 'error', 3000);
-            case 4:
-              return _context2.a(2);
-          }
-        }, _callee2, null, [[1, 3]]);
-      }))();
+    increaseGlobalFont: function increaseGlobalFont() {
+      this.defaultFontSize = Math.min(this.maxFontSize, this.defaultFontSize + this.fontSizeStep);
+      this.persistVerseFontSizes();
     },
-    splitArabicIntoWords: function splitArabicIntoWords(arabicText, verseKey) {
-      if (!arabicText || !this.wordByWordAudioEnabled) {
-        return arabicText;
-      }
-
-      // First, protect tajweed tags by replacing them with placeholders
-      var tajweedMatches = [];
-      var protectedText = arabicText.replace(/<tajweed[^>]*>.*?<\/tajweed>/gi, function (match) {
-        var index = tajweedMatches.length;
-        tajweedMatches.push(match);
-        return "__TAJWEED_".concat(index, "__");
-      });
-
-      // Split by spaces to get individual words
-      var words = protectedText.split(/(\s+)/);
-      var result = '';
-      var wordIndex = 0;
-      for (var i = 0; i < words.length; i++) {
-        var word = words[i];
-
-        // Skip if it's only whitespace
-        if (word.trim() === '') {
-          result += word;
-          continue;
-        }
-
-        // Restore any tajweed tags in this word
-        var restoredWord = word;
-        var hasTajweed = false;
-
-        // Check if this word contains tajweed placeholders
-        var tajweedRegex = /__TAJWEED_(\d+)__/g;
-        var match = void 0;
-        while ((match = tajweedRegex.exec(word)) !== null) {
-          hasTajweed = true;
-          var tajweedIndex = parseInt(match[1]);
-          if (tajweedMatches[tajweedIndex]) {
-            restoredWord = restoredWord.replace("__TAJWEED_".concat(tajweedIndex, "__"), tajweedMatches[tajweedIndex]);
-          }
-        }
-        var isHighlighted = this.currentWordIndex === wordIndex && this.currentHighlightedVerseKey === verseKey;
-        var highlightClass = isHighlighted ? 'highlighted' : '';
-        if (hasTajweed) {
-          // For words with tajweed, we need to wrap the entire thing
-          result += "<word data-verse=\"".concat(verseKey, "\" data-word-index=\"").concat(wordIndex, "\" class=\"").concat(highlightClass, "\">").concat(restoredWord, "</word>");
-        } else {
-          result += "<word data-verse=\"".concat(verseKey, "\" data-word-index=\"").concat(wordIndex, "\" class=\"").concat(highlightClass, "\">").concat(restoredWord, "</word>");
-        }
-        wordIndex++;
-
-        // Add space after word if not last and next is not whitespace
-        if (i < words.length - 1 && words[i + 1] && words[i + 1].trim() !== '') {
-          result += ' ';
-        }
-      }
-      return result;
+    decreaseGlobalFont: function decreaseGlobalFont() {
+      this.defaultFontSize = Math.max(this.minFontSize, this.defaultFontSize - this.fontSizeStep);
+      this.persistVerseFontSizes();
+    },
+    resetGlobalFont: function resetGlobalFont() {
+      this.defaultFontSize = 100;
+      this.verseFontSizes = {};
+      this.persistVerseFontSizes();
+    },
+    getVerseFontSize: function getVerseFontSize(verseKey) {
+      // Check if verse has custom size, otherwise return default
+      return this.verseFontSizes[verseKey] || this.defaultFontSize;
+    },
+    increaseVerseFont: function increaseVerseFont(verseKey, event) {
+      event.stopPropagation();
+      var currentSize = this.getVerseFontSize(verseKey);
+      var newSize = Math.min(this.maxFontSize, currentSize + this.fontSizeStep);
+      // Update the reactive object
+      this.verseFontSizes = _objectSpread(_objectSpread({}, this.verseFontSizes), {}, _defineProperty({}, verseKey, newSize));
+      // Save to localStorage immediately
+      this.persistVerseFontSizes();
+    },
+    decreaseVerseFont: function decreaseVerseFont(verseKey, event) {
+      event.stopPropagation();
+      var currentSize = this.getVerseFontSize(verseKey);
+      var newSize = Math.max(this.minFontSize, currentSize - this.fontSizeStep);
+      // Update the reactive object
+      this.verseFontSizes = _objectSpread(_objectSpread({}, this.verseFontSizes), {}, _defineProperty({}, verseKey, newSize));
+      // Save to localStorage immediately
+      this.persistVerseFontSizes();
+    },
+    resetVerseFont: function resetVerseFont(verseKey, event) {
+      event.stopPropagation();
+      // Remove the custom size for this verse
+      var _this$verseFontSizes = this.verseFontSizes,
+        _ = _this$verseFontSizes[verseKey],
+        rest = _objectWithoutProperties(_this$verseFontSizes, [verseKey].map(_toPropertyKey));
+      this.verseFontSizes = rest;
+      // Save to localStorage immediately
+      this.persistVerseFontSizes();
     }
-  }, _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "splitArabicIntoWords", function splitArabicIntoWords(arabicText, verseKey) {
+  }, _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "increaseGlobalFont", function increaseGlobalFont() {
+    this.defaultFontSize = Math.min(this.maxFontSize, this.defaultFontSize + this.fontSizeStep);
+    // Save the new default
+    this.persistDefaultFontSize();
+  }), "decreaseGlobalFont", function decreaseGlobalFont() {
+    this.defaultFontSize = Math.max(this.minFontSize, this.defaultFontSize - this.fontSizeStep);
+    // Save the new default
+    this.persistDefaultFontSize();
+  }), "resetGlobalFont", function resetGlobalFont() {
+    this.defaultFontSize = 150;
+    this.verseFontSizes = {};
+    // Save both
+    this.persistDefaultFontSize();
+    this.persistVerseFontSizes();
+  }), "persistDefaultFontSize", function persistDefaultFontSize() {
+    try {
+      localStorage.setItem('telawa.defaultFontSize', JSON.stringify(this.defaultFontSize));
+      console.log('Default font size saved:', this.defaultFontSize);
+    } catch (e) {
+      console.error('Failed to save default font size:', e);
+    }
+  }), "persistVerseFontSizes", function persistVerseFontSizes() {
+    try {
+      localStorage.setItem('telawa.verseFontSizes', JSON.stringify(this.verseFontSizes));
+      console.log('Font sizes saved:', this.verseFontSizes);
+    } catch (e) {
+      console.error('Failed to save font sizes:', e);
+    }
+  }), "loadVerseFontSizes", function loadVerseFontSizes() {
+    try {
+      var savedSizes = localStorage.getItem('telawa.verseFontSizes');
+      if (savedSizes) {
+        this.verseFontSizes = JSON.parse(savedSizes);
+        console.log('Loaded font sizes:', this.verseFontSizes);
+      }
+      var savedDefault = localStorage.getItem('telawa.defaultFontSize');
+      if (savedDefault) {
+        this.defaultFontSize = JSON.parse(savedDefault);
+        console.log('Loaded default font size:', this.defaultFontSize);
+      }
+    } catch (e) {
+      console.error('Failed to load font sizes:', e);
+    }
+  }), "clearAllFontSizes", function clearAllFontSizes() {
+    if (confirm('Reset all font sizes to default?')) {
+      this.verseFontSizes = {};
+      this.defaultFontSize = 150;
+      this.persistVerseFontSizes();
+      this.persistDefaultFontSize();
+      this.showBanner('All font sizes reset to default', 'success', 2000);
+    }
+  }), "isAdjacentToKey", function isAdjacentToKey(verse, targetKey) {
+    if (!verse || !targetKey) return false;
+    var targetParts = targetKey.split(':');
+    var verseParts = verse.key.split(':');
+    if (targetParts[0] !== verseParts[0]) return false;
+    var targetNumber = parseInt(targetParts[1]);
+    var verseNumber = parseInt(verseParts[1]);
+    return Math.abs(verseNumber - targetNumber) === 1;
+  }), "downloadOfflineVerses", function downloadOfflineVerses() {
+    var _this5 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
+      var _this5$currentChapter, _this5$verses$, surahId, surahName, found, offlineData, storageKey, _t;
+      return _regenerator().w(function (_context2) {
+        while (1) switch (_context2.p = _context2.n) {
+          case 0:
+            if (!(!_this5.verses || !_this5.verses.length)) {
+              _context2.n = 1;
+              break;
+            }
+            _this5.showBanner('Load a surah first before downloading', 'info', 3000);
+            _this5.showTools = true;
+            return _context2.a(2);
+          case 1:
+            _context2.p = 1;
+            // Get surah info from the first verse if chapterId is not set
+            surahId = _this5.chapterId;
+            surahName = (_this5$currentChapter = _this5.currentChapter) === null || _this5$currentChapter === void 0 ? void 0 : _this5$currentChapter.name_simple;
+            if (!surahId && (_this5$verses$ = _this5.verses[0]) !== null && _this5$verses$ !== void 0 && _this5$verses$.key) {
+              surahId = parseInt(_this5.verses[0].key.split(':')[0]);
+              // Try to find surah name from chapters list
+              found = _this5.chapters.find(function (c) {
+                return c.id === surahId;
+              });
+              surahName = (found === null || found === void 0 ? void 0 : found.name_simple) || "Surah ".concat(surahId);
+            }
+            if (surahId) {
+              _context2.n = 2;
+              break;
+            }
+            _this5.showBanner('Could not identify surah', 'error', 3000);
+            return _context2.a(2);
+          case 2:
+            offlineData = {
+              metadata: {
+                surah: surahName,
+                surahId: surahId,
+                rangeStart: _this5.rangeStart,
+                rangeEnd: _this5.rangeEnd,
+                reciterId: _this5.reciterId,
+                downloadedAt: new Date().toISOString(),
+                totalVerses: _this5.verses.length
+              },
+              verses: _this5.verses.map(function (v) {
+                return {
+                  key: v.key,
+                  number: v.number,
+                  arabic: v.arabic,
+                  translation: v.translation || '',
+                  transliteration: v.transliteration || '',
+                  audio: v.audio || ''
+                };
+              })
+            };
+            storageKey = "offline_surah_".concat(surahId, "_").concat(_this5.rangeStart, "_").concat(_this5.rangeEnd);
+            localStorage.setItem(storageKey, JSON.stringify(offlineData));
+            _this5.showBanner("\u2713 Saved ".concat(_this5.verses.length, " verses from ").concat(surahName, " for offline reading!"), 'success', 3000);
+            _this5.confettiActive = true;
+            setTimeout(function () {
+              _this5.confettiActive = false;
+            }, 1200);
+            _context2.n = 4;
+            break;
+          case 3:
+            _context2.p = 3;
+            _t = _context2.v;
+            console.error('Download failed:', _t);
+            _this5.showBanner('Failed to download verses', 'error', 3000);
+          case 4:
+            return _context2.a(2);
+        }
+      }, _callee2, null, [[1, 3]]);
+    }))();
+  }), "splitArabicIntoWords", function splitArabicIntoWords(arabicText, verseKey) {
+    if (!arabicText || !this.wordByWordAudioEnabled) {
+      return arabicText;
+    }
+
+    // First, protect tajweed tags by replacing them with placeholders
+    var tajweedMatches = [];
+    var protectedText = arabicText.replace(/<tajweed[^>]*>.*?<\/tajweed>/gi, function (match) {
+      var index = tajweedMatches.length;
+      tajweedMatches.push(match);
+      return "__TAJWEED_".concat(index, "__");
+    });
+
+    // Split by spaces to get individual words
+    var words = protectedText.split(/(\s+)/);
+    var result = '';
+    var wordIndex = 0;
+    for (var i = 0; i < words.length; i++) {
+      var word = words[i];
+
+      // Skip if it's only whitespace
+      if (word.trim() === '') {
+        result += word;
+        continue;
+      }
+
+      // Restore any tajweed tags in this word
+      var restoredWord = word;
+      var hasTajweed = false;
+
+      // Check if this word contains tajweed placeholders
+      var tajweedRegex = /__TAJWEED_(\d+)__/g;
+      var match = void 0;
+      while ((match = tajweedRegex.exec(word)) !== null) {
+        hasTajweed = true;
+        var tajweedIndex = parseInt(match[1]);
+        if (tajweedMatches[tajweedIndex]) {
+          restoredWord = restoredWord.replace("__TAJWEED_".concat(tajweedIndex, "__"), tajweedMatches[tajweedIndex]);
+        }
+      }
+      var isHighlighted = this.currentWordIndex === wordIndex && this.currentHighlightedVerseKey === verseKey;
+      var highlightClass = isHighlighted ? 'highlighted' : '';
+      if (hasTajweed) {
+        // For words with tajweed, we need to wrap the entire thing
+        result += "<word data-verse=\"".concat(verseKey, "\" data-word-index=\"").concat(wordIndex, "\" class=\"").concat(highlightClass, "\">").concat(restoredWord, "</word>");
+      } else {
+        result += "<word data-verse=\"".concat(verseKey, "\" data-word-index=\"").concat(wordIndex, "\" class=\"").concat(highlightClass, "\">").concat(restoredWord, "</word>");
+      }
+      wordIndex++;
+
+      // Add space after word if not last and next is not whitespace
+      if (i < words.length - 1 && words[i + 1] && words[i + 1].trim() !== '') {
+        result += ' ';
+      }
+    }
+    return result;
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "splitArabicIntoWords", function splitArabicIntoWords(arabicText, verseKey) {
     if (!arabicText || !this.wordByWordAudioEnabled) {
       return arabicText;
     }
@@ -24450,7 +24605,7 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
     var highlightedHtml = this.splitArabicIntoWords(verse.arabic, verse.key);
     return highlightedHtml;
   }), "getWordTimings", function getWordTimings(verse) {
-    var _this5 = this;
+    var _this6 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
       var arabicText, words, _totalChars, _totalDuration, _timestamps, _currentTime, i, word, wordChars, wordDuration, cacheKey, timestamps, totalDuration, totalChars, currentTime, _i, _word, _wordChars, _wordDuration;
       return _regenerator().w(function (_context3) {
@@ -24482,12 +24637,12 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
             }
             return _context3.a(2, _timestamps);
           case 1:
-            cacheKey = "".concat(verse.key, "_").concat(_this5.reciterId);
-            if (!_this5.wordTimestampsMap.has(cacheKey)) {
+            cacheKey = "".concat(verse.key, "_").concat(_this6.reciterId);
+            if (!_this6.wordTimestampsMap.has(cacheKey)) {
               _context3.n = 2;
               break;
             }
-            return _context3.a(2, _this5.wordTimestampsMap.get(cacheKey));
+            return _context3.a(2, _this6.wordTimestampsMap.get(cacheKey));
           case 2:
             timestamps = [];
             totalDuration = Math.max(5, Math.min(45, verse.arabic.replace(/[^ء-ي]/g, '').length * 0.12));
@@ -24504,30 +24659,30 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
               });
               currentTime += _wordDuration;
             }
-            _this5.wordTimestampsMap.set(cacheKey, timestamps);
+            _this6.wordTimestampsMap.set(cacheKey, timestamps);
             return _context3.a(2, timestamps);
         }
       }, _callee3);
     }))();
   }), "startWordHighlighting", function startWordHighlighting(verse) {
-    var _this6 = this;
+    var _this7 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4() {
       var timestamps, updateHighlight;
       return _regenerator().w(function (_context4) {
         while (1) switch (_context4.n) {
           case 0:
-            _this6.stopWordHighlighting();
-            if (_this6.wordByWordAudioEnabled) {
+            _this7.stopWordHighlighting();
+            if (_this7.wordByWordAudioEnabled) {
               _context4.n = 1;
               break;
             }
             return _context4.a(2);
           case 1:
-            _this6.currentHighlightedVerseKey = verse.key;
+            _this7.currentHighlightedVerseKey = verse.key;
 
             // Get word timings
             _context4.n = 2;
-            return _this6.getWordTimings(verse);
+            return _this7.getWordTimings(verse);
           case 2:
             timestamps = _context4.v;
             if (timestamps.length) {
@@ -24537,9 +24692,9 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
             return _context4.a(2);
           case 3:
             updateHighlight = function updateHighlight() {
-              var _this6$audioElement;
-              if (!((_this6$audioElement = _this6.audioElement) !== null && _this6$audioElement !== void 0 && _this6$audioElement.currentTime)) return;
-              var currentTime = _this6.audioElement.currentTime;
+              var _this7$audioElement;
+              if (!((_this7$audioElement = _this7.audioElement) !== null && _this7$audioElement !== void 0 && _this7$audioElement.currentTime)) return;
+              var currentTime = _this7.audioElement.currentTime;
               var activeIndex = -1;
               for (var i = 0; i < timestamps.length; i++) {
                 var ts = timestamps[i];
@@ -24548,22 +24703,22 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
                   break;
                 }
               }
-              if (_this6.currentWordIndex !== activeIndex) {
-                _this6.currentWordIndex = activeIndex;
+              if (_this7.currentWordIndex !== activeIndex) {
+                _this7.currentWordIndex = activeIndex;
 
                 // Update the DOM directly for better performance
-                _this6.updateWordHighlightInDOM(verse.key, activeIndex);
+                _this7.updateWordHighlightInDOM(verse.key, activeIndex);
               }
             };
-            _this6.wordHighlightHandler = updateHighlight;
-            _this6.audioElement.addEventListener('timeupdate', _this6.wordHighlightHandler);
+            _this7.wordHighlightHandler = updateHighlight;
+            _this7.audioElement.addEventListener('timeupdate', _this7.wordHighlightHandler);
           case 4:
             return _context4.a(2);
         }
       }, _callee4);
     }))();
   }), "updateWordHighlightInDOM", function updateWordHighlightInDOM(verseKey, activeWordIndex) {
-    var _this7 = this;
+    var _this8 = this;
     // Find all word elements in the current verse
     var verseCard = document.querySelector(".verse-card[data-verse-key=\"".concat(verseKey, "\"]"));
     if (!verseCard) return;
@@ -24574,7 +24729,7 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
       if (index === activeWordIndex) {
         wordElement.classList.add('highlighted');
         // Optional: scroll the highlighted word into view
-        if (_this7.wordByWordAudioEnabled) {
+        if (_this8.wordByWordAudioEnabled) {
           wordElement.scrollIntoView({
             behavior: 'smooth',
             block: 'center',
@@ -24598,36 +24753,36 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
       word.classList.remove('highlighted');
     });
   }), "initAudio", function initAudio() {
-    var _this8 = this;
+    var _this9 = this;
     this.audioElement = this.$refs.audio;
     if (!this.audioElement) return;
     this.audioElement.removeEventListener('timeupdate', this.audioTimeUpdate);
     this.audioElement.removeEventListener('ended', this.audioEnded);
     this.audioElement.removeEventListener('error', this.audioError);
     this.audioTimeUpdate = function () {
-      _this8.currentTime = _this8.audioElement.currentTime;
-      _this8.duration = _this8.audioElement.duration;
+      _this9.currentTime = _this9.audioElement.currentTime;
+      _this9.duration = _this9.audioElement.duration;
     };
     this.audioEnded = function () {
-      _this8.isPlaying = false;
-      _this8.stopWordHighlighting();
-      if (_this8.playMode === 'auto') {
+      _this9.isPlaying = false;
+      _this9.stopWordHighlighting();
+      if (_this9.playMode === 'auto') {
         setTimeout(function () {
-          return _this8.next();
-        }, (_this8.delay || 1) * 1000);
+          return _this9.next();
+        }, (_this9.delay || 1) * 1000);
       }
     };
     this.audioError = function (e) {
       console.error('Audio error:', e);
-      _this8.isPlaying = false;
-      _this8.stopWordHighlighting();
-      _this8.showBanner('Audio playback error', 'error', 3000);
+      _this9.isPlaying = false;
+      _this9.stopWordHighlighting();
+      _this9.showBanner('Audio playback error', 'error', 3000);
     };
     this.audioElement.addEventListener('timeupdate', this.audioTimeUpdate);
     this.audioElement.addEventListener('ended', this.audioEnded);
     this.audioElement.addEventListener('error', this.audioError);
   }), "playVerse", function playVerse(verse) {
-    var _this9 = this;
+    var _this0 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6() {
       var audioUrl;
       return _regenerator().w(function (_context6) {
@@ -24644,35 +24799,35 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
               _context6.n = 2;
               break;
             }
-            _this9.showBanner("Audio not available for verse ".concat(verse.number), 'info', 2000);
+            _this0.showBanner("Audio not available for verse ".concat(verse.number), 'info', 2000);
             return _context6.a(2);
           case 2:
-            _this9.stopWordHighlighting();
-            if (_this9.audioElement) {
+            _this0.stopWordHighlighting();
+            if (_this0.audioElement) {
               try {
-                _this9.audioElement.pause();
+                _this0.audioElement.pause();
               } catch (e) {}
             }
-            _this9.activeKey = verse.key;
-            _this9.activeVerseKey = verse.key;
-            if (_this9.audioElement) {
+            _this0.activeKey = verse.key;
+            _this0.activeVerseKey = verse.key;
+            if (_this0.audioElement) {
               _context6.n = 4;
               break;
             }
-            _this9.audioElement = _this9.$refs.audio;
-            if (_this9.audioElement) {
+            _this0.audioElement = _this0.$refs.audio;
+            if (_this0.audioElement) {
               _context6.n = 3;
               break;
             }
-            _this9.showBanner('Audio system not ready', 'error', 3000);
+            _this0.showBanner('Audio system not ready', 'error', 3000);
             return _context6.a(2);
           case 3:
-            _this9.initAudio();
+            _this0.initAudio();
           case 4:
-            audioUrl = _this9.normalizeAudioUrl(verse.audio);
-            _this9.audioElement.src = audioUrl;
-            _this9.audioElement.load();
-            _this9.playerVisible = true;
+            audioUrl = _this0.normalizeAudioUrl(verse.audio);
+            _this0.audioElement.src = audioUrl;
+            _this0.audioElement.load();
+            _this0.playerVisible = true;
             return _context6.a(2, new Promise(function (resolve, reject) {
               var timeout = setTimeout(function () {
                 return reject(new Error('Timeout'));
@@ -24684,21 +24839,21 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
                     while (1) switch (_context5.p = _context5.n) {
                       case 0:
                         clearTimeout(timeout);
-                        _this9.audioElement.playbackRate = _this9.speed;
+                        _this0.audioElement.playbackRate = _this0.speed;
                         _context5.p = 1;
                         _context5.n = 2;
-                        return _this9.audioElement.play();
+                        return _this0.audioElement.play();
                       case 2:
-                        _this9.isPlaying = true;
-                        _this9.markPlaybackStart();
+                        _this0.isPlaying = true;
+                        _this0.markPlaybackStart();
 
                         // Start word highlighting after playback begins
-                        if (!_this9.wordByWordAudioEnabled) {
+                        if (!_this0.wordByWordAudioEnabled) {
                           _context5.n = 3;
                           break;
                         }
                         _context5.n = 3;
-                        return _this9.startWordHighlighting(verse);
+                        return _this0.startWordHighlighting(verse);
                       case 3:
                         resolve();
                         _context5.n = 5;
@@ -24706,10 +24861,10 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
                       case 4:
                         _context5.p = 4;
                         _t2 = _context5.v;
-                        _this9.isPlaying = false;
+                        _this0.isPlaying = false;
                         reject(_t2);
                       case 5:
-                        _this9.audioElement.removeEventListener('canplay', _canPlayHandler);
+                        _this0.audioElement.removeEventListener('canplay', _canPlayHandler);
                       case 6:
                         return _context5.a(2);
                     }
@@ -24721,18 +24876,18 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
               }();
               var _errorHandler = function errorHandler(err) {
                 clearTimeout(timeout);
-                _this9.isPlaying = false;
+                _this0.isPlaying = false;
                 reject(err);
-                _this9.audioElement.removeEventListener('error', _errorHandler);
+                _this0.audioElement.removeEventListener('error', _errorHandler);
               };
-              _this9.audioElement.addEventListener('canplay', _canPlayHandler);
-              _this9.audioElement.addEventListener('error', _errorHandler, {
+              _this0.audioElement.addEventListener('canplay', _canPlayHandler);
+              _this0.audioElement.addEventListener('error', _errorHandler, {
                 once: true
               });
             })["catch"](function (err) {
               console.error('playVerse failed:', err);
-              _this9.isPlaying = false;
-              _this9.showBanner('Failed to play audio', 'error', 3000);
+              _this0.isPlaying = false;
+              _this0.showBanner('Failed to play audio', 'error', 3000);
             }));
         }
       }, _callee6);
@@ -24749,21 +24904,58 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
     }
   }), "applySpeed", function applySpeed() {
     if (this.audioElement) this.audioElement.playbackRate = this.speed;
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "prev", function prev() {
-    if (!this.canPrev) return;
-    this.sessionCompleted = false;
-    this.queueIndex--;
-    var v = this.queue[this.queueIndex];
-    if (v) this.playVerse(v);
-  }), "next", function next() {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "next", function next() {
+    var _this1 = this;
     if (this.canNext) {
+      var _entry$verse;
       this.sessionCompleted = false;
       this.queueIndex++;
+      // Get verse from queue entry
+      var entry = this.queue[this.queueIndex];
+      var verseKey = (entry === null || entry === void 0 || (_entry$verse = entry.verse) === null || _entry$verse === void 0 ? void 0 : _entry$verse.key) || (entry === null || entry === void 0 ? void 0 : entry.key);
+      if (verseKey) {
+        this.activeVerseKey = verseKey;
+        this.activeKey = verseKey;
+        this.$nextTick(function () {
+          var el = document.querySelector(".verse-card[data-verse-key=\"".concat(verseKey, "\"]"));
+          if (el) {
+            el.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center'
+            });
+          }
+          // Force blur recalculation
+          _this1.$forceUpdate();
+        });
+      }
       var v = this.queue[this.queueIndex];
-      if (v) this.playVerse(v);
+      if (v) {
+        var verse = v.verse || v;
+        this.playVerse(verse);
+      }
       return;
     }
     this.handleSessionComplete();
+  }), "prev", function prev() {
+    var _entry$verse2,
+      _this10 = this;
+    if (!this.canPrev) return;
+    this.sessionCompleted = false;
+    this.queueIndex--;
+    var entry = this.queue[this.queueIndex];
+    var verseKey = (entry === null || entry === void 0 || (_entry$verse2 = entry.verse) === null || _entry$verse2 === void 0 ? void 0 : _entry$verse2.key) || (entry === null || entry === void 0 ? void 0 : entry.key);
+    if (verseKey) {
+      this.activeVerseKey = verseKey;
+      this.activeKey = verseKey;
+      this.$nextTick(function () {
+        _this10.$forceUpdate();
+      });
+    }
+    var v = this.queue[this.queueIndex];
+    if (v) {
+      var verse = v.verse || v;
+      this.playVerse(verse);
+    }
   }), "closePlayer", function closePlayer() {
     this.flushPlaybackTime();
     this.stopWordHighlighting();
@@ -24776,13 +24968,13 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
     this.playerMenuOpen = false;
     this.persistAudioState();
   }), "loadVerses", function loadVerses() {
-    var _this0 = this;
+    var _this11 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7() {
-      var testRes, params, _res$data, url, res, all, start, end, mappedVerses, _tajweedRes$data, tajweedRes, ayahs, byNumber, _this0$currentChapter, _t3, _t4, _t5;
+      var testRes, params, _res$data, url, res, all, start, end, mappedVerses, _tajweedRes$data, tajweedRes, ayahs, byNumber, _this11$currentChapte, _t3, _t4, _t5;
       return _regenerator().w(function (_context7) {
         while (1) switch (_context7.p = _context7.n) {
           case 0:
-            if (_this0.chapterId) {
+            if (_this11.chapterId) {
               _context7.n = 1;
               break;
             }
@@ -24790,10 +24982,10 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
             return _context7.a(2);
           case 1:
             console.log('=== LOAD VERSES START ===');
-            console.log('Chapter ID:', _this0.chapterId);
-            console.log('Range:', _this0.rangeStart, '-', _this0.rangeEnd);
-            console.log('Reciter ID:', _this0.reciterId);
-            console.log('Current Mode:', _this0.currentMode);
+            console.log('Chapter ID:', _this11.chapterId);
+            console.log('Range:', _this11.rangeStart, '-', _this11.rangeEnd);
+            console.log('Reciter ID:', _this11.reciterId);
+            console.log('Current Mode:', _this11.currentMode);
 
             // Test if we can reach the API at all
             _context7.p = 2;
@@ -24810,19 +25002,19 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
             _context7.p = 4;
             _t3 = _context7.v;
             console.error('API Connectivity Test FAILED:', _t3.message);
-            _this0.showBanner('Cannot reach Quran.com API. Check your internet or try a VPN.', 'error', 10000);
+            _this11.showBanner('Cannot reach Quran.com API. Check your internet or try a VPN.', 'error', 10000);
             return _context7.a(2);
           case 5:
             params = {
               per_page: 300,
-              translations: _this0.shouldRequestTranslations() ? '131' : undefined,
-              words: _this0.shouldRequestWords(),
-              audio: _this0.reciterId,
+              translations: _this11.shouldRequestTranslations() ? '131' : undefined,
+              words: _this11.shouldRequestWords(),
+              audio: _this11.reciterId,
               fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs'
             };
             console.log('Request params:', JSON.stringify(params, null, 2));
             _context7.p = 6;
-            url = "https://api.quran.com/api/v4/verses/by_chapter/".concat(_this0.chapterId);
+            url = "https://api.quran.com/api/v4/verses/by_chapter/".concat(_this11.chapterId);
             console.log('Fetching:', url);
             _context7.n = 7;
             return axios__WEBPACK_IMPORTED_MODULE_1__["default"].get(url, {
@@ -24844,7 +25036,7 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
               break;
             }
             console.error('Response has no data property');
-            _this0.showBanner('Invalid response from server', 'error', 5000);
+            _this11.showBanner('Invalid response from server', 'error', 5000);
             return _context7.a(2);
           case 8:
             console.log('Response data type:', _typeof(res.data));
@@ -24855,19 +25047,19 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
               _context7.n = 9;
               break;
             }
-            console.error('API returned 0 verses for chapter:', _this0.chapterId);
-            _this0.showBanner("No verses found for Surah ".concat(_this0.chapterId, ". Try another surah."), 'error', 5000);
+            console.error('API returned 0 verses for chapter:', _this11.chapterId);
+            _this11.showBanner("No verses found for Surah ".concat(_this11.chapterId, ". Try another surah."), 'error', 5000);
             return _context7.a(2);
           case 9:
             // Log first verse to check structure
             console.log('First verse sample:', JSON.stringify(all[0], null, 2));
-            start = _this0.rangeStart, end = _this0.rangeEnd;
+            start = _this11.rangeStart, end = _this11.rangeEnd;
             console.log("Filtering verses ".concat(start, "-").concat(end));
             mappedVerses = all.filter(function (v) {
               return v.verse_number >= start && v.verse_number <= end;
             }).map(function (v) {
               var _v$audio, _v$translations;
-              var audio = _this0.normalizeAudioUrl(((_v$audio = v.audio) === null || _v$audio === void 0 ? void 0 : _v$audio.url) || '');
+              var audio = _this11.normalizeAudioUrl(((_v$audio = v.audio) === null || _v$audio === void 0 ? void 0 : _v$audio.url) || '');
               console.log("Verse ".concat(v.verse_number, " audio URL:"), audio || 'NO AUDIO');
               return {
                 key: v.verse_key,
@@ -24882,7 +25074,7 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
                     ar: w.text_uthmani || w.text || '',
                     en: ((_w$translation = w.translation) === null || _w$translation === void 0 ? void 0 : _w$translation.text) || '',
                     tooltip: "".concat(w.text_uthmani || w.text || '', " \u2022 ").concat(((_w$translation2 = w.translation) === null || _w$translation2 === void 0 ? void 0 : _w$translation2.text) || '').trim(),
-                    audio: _this0.normalizeAudioUrl(w.audio_url)
+                    audio: _this11.normalizeAudioUrl(w.audio_url)
                   };
                 })
               };
@@ -24893,23 +25085,23 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
               break;
             }
             console.error('Filter returned 0 verses. Check range:', start, '-', end, 'vs available:', all.length);
-            _this0.showBanner("Range ".concat(start, "-").concat(end, " is outside this surah (has ").concat(all.length, " verses)"), 'error', 5000);
+            _this11.showBanner("Range ".concat(start, "-").concat(end, " is outside this surah (has ").concat(all.length, " verses)"), 'error', 5000);
             return _context7.a(2);
           case 10:
             // Log first mapped verse
             console.log('First mapped verse:', JSON.stringify(mappedVerses[0], null, 2));
-            if (!(_this0.script === 'tajweed')) {
+            if (!(_this11.script === 'tajweed')) {
               _context7.n = 14;
               break;
             }
             _context7.p = 11;
             _context7.n = 12;
-            return (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_0__.getSurahEdition)(_this0.chapterId, 'quran-tajweed');
+            return (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_0__.getSurahEdition)(_this11.chapterId, 'quran-tajweed');
           case 12:
             tajweedRes = _context7.v;
             ayahs = ((_tajweedRes$data = tajweedRes.data) === null || _tajweedRes$data === void 0 || (_tajweedRes$data = _tajweedRes$data.data) === null || _tajweedRes$data === void 0 ? void 0 : _tajweedRes$data.ayahs) || [];
             byNumber = new Map(ayahs.map(function (a) {
-              return [a.numberInSurah, _this0.normalizeTajweedText(a.text)];
+              return [a.numberInSurah, _this11.normalizeTajweedText(a.text)];
             }));
             mappedVerses = mappedVerses.map(function (v) {
               return _objectSpread(_objectSpread({}, v), {}, {
@@ -24924,29 +25116,29 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
             console.error('Tajweed load failed:', _t4);
           case 14:
             // Assign verses
-            if (_this0.currentMode === 'beginner') {
-              _this0.beginner.verses = mappedVerses;
-              if (!_this0.beginner.activeKey && mappedVerses.length) {
-                _this0.beginner.activeKey = mappedVerses[0].key;
+            if (_this11.currentMode === 'beginner') {
+              _this11.beginner.verses = mappedVerses;
+              if (!_this11.beginner.activeKey && mappedVerses.length) {
+                _this11.beginner.activeKey = mappedVerses[0].key;
               }
-              console.log('Beginner verses set:', _this0.beginner.verses.length);
+              console.log('Beginner verses set:', _this11.beginner.verses.length);
             } else {
-              _this0.advanced.verses = mappedVerses;
-              if (!_this0.advanced.activeKey && mappedVerses.length) {
-                _this0.advanced.activeKey = mappedVerses[0].key;
+              _this11.advanced.verses = mappedVerses;
+              if (!_this11.advanced.activeKey && mappedVerses.length) {
+                _this11.advanced.activeKey = mappedVerses[0].key;
               }
-              console.log('Advanced verses set:', _this0.advanced.verses.length);
+              console.log('Advanced verses set:', _this11.advanced.verses.length);
             }
 
             // Update chapter info
-            if (!_this0.currentChapter) {
-              _this0.currentChapter = _this0.chapters.find(function (c) {
-                return c.id === _this0.chapterId;
+            if (!_this11.currentChapter) {
+              _this11.currentChapter = _this11.chapters.find(function (c) {
+                return c.id === _this11.chapterId;
               });
-              console.log('Current chapter set to:', (_this0$currentChapter = _this0.currentChapter) === null || _this0$currentChapter === void 0 ? void 0 : _this0$currentChapter.name_simple);
+              console.log('Current chapter set to:', (_this11$currentChapte = _this11.currentChapter) === null || _this11$currentChapte === void 0 ? void 0 : _this11$currentChapte.name_simple);
             }
-            _this0.buildQueue();
-            console.log('Queue built with', _this0.queue.length, 'items');
+            _this11.buildQueue();
+            console.log('Queue built with', _this11.queue.length, 'items');
             console.log('=== LOAD VERSES COMPLETE ===');
             _context7.n = 16;
             break;
@@ -24962,26 +25154,26 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
               console.error('Response data:', _t5.response.data);
               console.error('Response headers:', _t5.response.headers);
               if (_t5.response.status === 404) {
-                _this0.showBanner("Surah ".concat(_this0.chapterId, " not found"), 'error', 5000);
+                _this11.showBanner("Surah ".concat(_this11.chapterId, " not found"), 'error', 5000);
               } else if (_t5.response.status === 429) {
-                _this0.showBanner('Rate limited. Wait 30 seconds and try again.', 'error', 5000);
+                _this11.showBanner('Rate limited. Wait 30 seconds and try again.', 'error', 5000);
               } else {
-                _this0.showBanner("Server error ".concat(_t5.response.status), 'error', 5000);
+                _this11.showBanner("Server error ".concat(_t5.response.status), 'error', 5000);
               }
             } else if (_t5.request) {
               console.error('No response received. Network issue?');
               console.error('Request:', _t5.request);
-              _this0.showBanner('Network error. Check your connection or try VPN.', 'error', 8000);
+              _this11.showBanner('Network error. Check your connection or try VPN.', 'error', 8000);
             } else {
               console.error('Error config:', _t5.config);
-              _this0.showBanner("Error: ".concat(_t5.message), 'error', 5000);
+              _this11.showBanner("Error: ".concat(_t5.message), 'error', 5000);
             }
 
             // Clear verses on error
-            if (_this0.currentMode === 'beginner') {
-              _this0.beginner.verses = [];
+            if (_this11.currentMode === 'beginner') {
+              _this11.beginner.verses = [];
             } else {
-              _this0.advanced.verses = [];
+              _this11.advanced.verses = [];
             }
             console.error('=== LOAD VERSES ERROR END ===');
           case 16:
@@ -24990,61 +25182,75 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
       }, _callee7, null, [[11, 13], [6, 15], [2, 4]]);
     }))();
   }), "buildQueue", function buildQueue() {
-    var _this$beginner$verses, _this$advanced$verses, _this$queue;
     console.log('=== BUILD QUEUE START ===');
-    console.log('Current mode:', this.currentMode);
-
-    // GET VERSES DIRECTLY - don't use computed property
     var verses = this.currentMode === 'beginner' ? this.beginner.verses : this.advanced.verses;
-    console.log('Verses count:', verses === null || verses === void 0 ? void 0 : verses.length);
-    console.log('beginner.verses length:', (_this$beginner$verses = this.beginner.verses) === null || _this$beginner$verses === void 0 ? void 0 : _this$beginner$verses.length);
-    console.log('advanced.verses length:', (_this$advanced$verses = this.advanced.verses) === null || _this$advanced$verses === void 0 ? void 0 : _this$advanced$verses.length);
     if (!verses || verses.length === 0) {
       console.error('No verses available to build queue');
-      // Clear queues
       this.beginner.queue = [];
       this.advanced.queue = [];
       this.queue = [];
       this.queueIndex = 0;
+      this.currentChainStats = {
+        totalEntries: 0,
+        uniqueVerses: 0,
+        repeatsPerVerse: 0,
+        totalDuration: 0
+      };
       return;
     }
 
     // Determine repeat count
-    var rep = 1; // ALWAYS default to at least 1
-
+    var rep = 1;
     if (this.currentMode === 'beginner') {
       rep = this.beginner.repeats || 1;
-      console.log('Using beginner repeats:', rep);
     } else if (this.currentMode === 'advanced') {
       if (this.advanced.repeatAndLoopAudio) {
         rep = this.advanced.advancedRepeats || 1;
-        console.log('Using advanced loop repeats:', rep);
-      } else {
-        rep = 1;
-        console.log('Advanced loop not enabled, using 1 repeat');
       }
     }
-
-    // Determine order
     var ord = this.order || 'seq';
-    console.log('Order:', ord, '| Repeats:', rep, '| Verses source length:', verses.length);
-    var q = [];
 
-    // Build queue based on order
+    // Build enhanced queue with metadata
+    var q = [];
+    var entryGroups = [];
     if (ord === 'seq') {
+      var _loop = function _loop(r) {
+        verses.forEach(function (verse, idx) {
+          q.push({
+            verse: verse,
+            repeatCount: r + 1,
+            totalRepeats: rep,
+            position: q.length,
+            groupId: "repeat_".concat(r, "_verse_").concat(verse.number)
+          });
+        });
+        entryGroups.push({
+          groupIndex: r,
+          type: 'repeat_cycle',
+          verseCount: verses.length,
+          repeats: r + 1
+        });
+      };
       for (var r = 0; r < rep; r++) {
-        q.push.apply(q, _toConsumableArray(verses));
+        _loop(r);
       }
     } else if (ord === 'cum') {
       for (var _r = 0; _r < rep; _r++) {
         for (var i = 0; i < verses.length; i++) {
           for (var j = 0; j <= i; j++) {
-            q.push(verses[j]);
+            q.push({
+              verse: verses[j],
+              repeatCount: _r + 1,
+              totalRepeats: rep,
+              position: q.length,
+              cumulativePhase: i + 1,
+              groupId: "cum_phase_".concat(i, "_repeat_").concat(_r)
+            });
           }
         }
       }
     } else if (ord === 'rand') {
-      for (var _r2 = 0; _r2 < rep; _r2++) {
+      var _loop2 = function _loop2(_r2) {
         var shuffled = _toConsumableArray(verses);
         for (var _i2 = shuffled.length - 1; _i2 > 0; _i2--) {
           var _j = Math.floor(Math.random() * (_i2 + 1));
@@ -25052,17 +25258,35 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
           shuffled[_i2] = _ref2[0];
           shuffled[_j] = _ref2[1];
         }
-        q.push.apply(q, _toConsumableArray(shuffled));
-      }
-    } else {
-      console.warn('Unknown order, defaulting to sequential');
-      for (var _r3 = 0; _r3 < rep; _r3++) {
-        q.push.apply(q, _toConsumableArray(verses));
+        shuffled.forEach(function (verse, idx) {
+          q.push({
+            verse: verse,
+            repeatCount: _r2 + 1,
+            totalRepeats: rep,
+            position: q.length,
+            randomSeed: _r2,
+            groupId: "random_".concat(_r2, "_pos_").concat(idx)
+          });
+        });
+      };
+      for (var _r2 = 0; _r2 < rep; _r2++) {
+        _loop2(_r2);
       }
     }
-    console.log('Queue built with', q.length, 'items');
 
-    // Store queue in BOTH the mode-specific and the current config
+    // Calculate statistics
+    var uniqueVerses = new Set(q.map(function (item) {
+      return item.verse.key;
+    })).size;
+    var totalDuration = this.estimateQueueDuration(q);
+    this.currentChainStats = {
+      totalEntries: q.length,
+      uniqueVerses: uniqueVerses,
+      repeatsPerVerse: rep,
+      totalDuration: totalDuration,
+      repeatGroups: entryGroups,
+      orderType: ord
+    };
     if (this.currentMode === 'beginner') {
       this.beginner.queue = q;
       this.beginner.queueIndex = 0;
@@ -25070,36 +25294,43 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
       this.advanced.queue = q;
       this.advanced.queueIndex = 0;
     }
-
-    // Also update the computed/reactive properties
     this.queue = q;
     this.queueIndex = 0;
-    console.log('Queue assigned. this.queue.length:', (_this$queue = this.queue) === null || _this$queue === void 0 ? void 0 : _this$queue.length);
-    console.log('=== BUILD QUEUE END ===');
+    console.log('Queue built with', q.length, 'entries');
+    console.log('Chain stats:', this.currentChainStats);
+
+    // Auto-show queue viewer for complex chains
+    if (q.length > 10 && !this.queueViewCollapsed) {
+      this.showQueueViewer = true;
+    }
+  }), "estimateQueueDuration", function estimateQueueDuration(queue) {
+    // Estimate based on average verse duration
+    var avgVerseDuration = 45; // seconds per verse on average
+    return Math.ceil(queue.length * avgVerseDuration / 60); // minutes
   }), "rebuildQueue", function rebuildQueue() {
     this.buildQueue();
   }), "startSession", function startSession() {
-    var _this1 = this;
+    var _this12 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee8() {
-      var _this1$verses;
+      var _this12$verses;
       var currentVerses, updatedVerses, currentQueue, builtQueue, first;
       return _regenerator().w(function (_context8) {
         while (1) switch (_context8.n) {
           case 0:
             console.log('=== START SESSION ===');
-            console.log('chapterId:', _this1.chapterId);
-            console.log('currentMode:', _this1.currentMode);
+            console.log('chapterId:', _this12.chapterId);
+            console.log('currentMode:', _this12.currentMode);
 
             // Check verses directly from the mode-specific storage
-            currentVerses = _this1.currentMode === 'beginner' ? _this1.beginner.verses : _this1.advanced.verses;
+            currentVerses = _this12.currentMode === 'beginner' ? _this12.beginner.verses : _this12.advanced.verses;
             console.log('Direct verses check - length:', currentVerses === null || currentVerses === void 0 ? void 0 : currentVerses.length);
-            console.log('Computed verses - length:', (_this1$verses = _this1.verses) === null || _this1$verses === void 0 ? void 0 : _this1$verses.length);
-            if (!(!_this1.chapterId || _this1.chapterId === 0)) {
+            console.log('Computed verses - length:', (_this12$verses = _this12.verses) === null || _this12$verses === void 0 ? void 0 : _this12$verses.length);
+            if (!(!_this12.chapterId || _this12.chapterId === 0)) {
               _context8.n = 1;
               break;
             }
-            _this1.showTools = true;
-            _this1.showBanner('Please select a surah first', 'info', 3000);
+            _this12.showTools = true;
+            _this12.showBanner('Please select a surah first', 'info', 3000);
             return _context8.a(2);
           case 1:
             if (!(!currentVerses || currentVerses.length === 0)) {
@@ -25108,45 +25339,45 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
             }
             console.log('No verses found, calling loadVerses...');
             _context8.n = 2;
-            return _this1.loadVerses();
+            return _this12.loadVerses();
           case 2:
             // Check again after loading
-            updatedVerses = _this1.currentMode === 'beginner' ? _this1.beginner.verses : _this1.advanced.verses;
+            updatedVerses = _this12.currentMode === 'beginner' ? _this12.beginner.verses : _this12.advanced.verses;
             console.log('After load - verses length:', updatedVerses === null || updatedVerses === void 0 ? void 0 : updatedVerses.length);
             if (!(!updatedVerses || updatedVerses.length === 0)) {
               _context8.n = 3;
               break;
             }
             console.error('Still no verses after loading');
-            _this1.showBanner('No verses loaded. Check your network connection.', 'error');
+            _this12.showBanner('No verses loaded. Check your network connection.', 'error');
             return _context8.a(2);
           case 3:
-            if (!_this1.audioElement) {
+            if (!_this12.audioElement) {
               console.log('Initializing audio...');
-              _this1.initAudio();
+              _this12.initAudio();
             }
 
             // Check queue directly
-            currentQueue = _this1.currentMode === 'beginner' ? _this1.beginner.queue : _this1.advanced.queue;
+            currentQueue = _this12.currentMode === 'beginner' ? _this12.beginner.queue : _this12.advanced.queue;
             console.log('Current queue length:', currentQueue === null || currentQueue === void 0 ? void 0 : currentQueue.length);
             if (!currentQueue || currentQueue.length === 0) {
               console.log('Building queue...');
-              _this1.buildQueue();
+              _this12.buildQueue();
             }
 
             // Get queue again after building
-            builtQueue = _this1.currentMode === 'beginner' ? _this1.beginner.queue : _this1.advanced.queue;
+            builtQueue = _this12.currentMode === 'beginner' ? _this12.beginner.queue : _this12.advanced.queue;
             console.log('Queue after build - length:', builtQueue === null || builtQueue === void 0 ? void 0 : builtQueue.length);
             if (!(!builtQueue || builtQueue.length === 0)) {
               _context8.n = 4;
               break;
             }
             console.error('Queue is still empty!');
-            _this1.showBanner('Nothing to play. Check repeat/loop settings.', 'error');
+            _this12.showBanner('Nothing to play. Check repeat/loop settings.', 'error');
             return _context8.a(2);
           case 4:
             console.log('Setting queue index to 0');
-            _this1.queueIndex = 0;
+            _this12.queueIndex = 0;
             first = builtQueue[0];
             console.log('First queue item:', first === null || first === void 0 ? void 0 : first.key);
             if (!first) {
@@ -25154,15 +25385,15 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
               break;
             }
             console.log('Playing first verse:', first.key);
-            _this1.activeKey = first.key;
-            _this1.activeVerseKey = first.key;
+            _this12.activeKey = first.key;
+            _this12.activeVerseKey = first.key;
             _context8.n = 5;
-            return _this1.$nextTick();
+            return _this12.$nextTick();
           case 5:
             _context8.n = 6;
-            return _this1.playVerse(first);
+            return _this12.playVerse(first);
           case 6:
-            _this1.showTools = false;
+            _this12.showTools = false;
             console.log('=== START SESSION COMPLETE ===');
           case 7:
             return _context8.a(2);
@@ -25179,9 +25410,9 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
     if (url.startsWith('/')) return "https://verses.quran.com".concat(url);
     if (url.includes('mp3')) return "https://verses.quran.com/".concat(url);
     return url;
-  }), "shouldRequestTranslations", function shouldRequestTranslations() {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "shouldRequestTranslations", function shouldRequestTranslations() {
     return !!(this.showTranslation || this.studyMode === 'quiz' || this.studyMode === 'hybrid' || this.quizActive);
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "shouldRequestWords", function shouldRequestWords() {
+  }), "shouldRequestWords", function shouldRequestWords() {
     return !!(this.showWordByWord || this.quizActive && this.quizType === 'blank');
   }), "normalizeTajweedText", function normalizeTajweedText(text) {
     var raw = String(text || '');
@@ -25211,7 +25442,7 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
       return "<tajweed class=\"".concat(klass, "\">").concat(inner, "</tajweed>");
     }).replace(/\]/g, '');
   }), "showBanner", function showBanner(message) {
-    var _this10 = this;
+    var _this13 = this;
     var kind = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'info';
     var ttlMs = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 3500;
     var action = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
@@ -25224,7 +25455,7 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
       actionLabel: (action === null || action === void 0 ? void 0 : action.label) || ''
     };
     this.bannerTimer = setTimeout(function () {
-      if (_this10.banner && Date.now() - _this10.banner.at >= ttlMs) _this10.banner = null;
+      if (_this13.banner && Date.now() - _this13.banner.at >= ttlMs) _this13.banner = null;
     }, ttlMs + 50);
   }), "handleOnline", function handleOnline() {
     this.networkOnline = true;
@@ -25243,30 +25474,22 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
     this.sessionCompleted = true;
     this.showBanner('Session complete', 'success', 4500);
   }), "handlePrimaryAction", function handlePrimaryAction() {
-    // Separate logic paths based on whether verses are loaded
-    if (!this.chapterId || this.chapterId === 0) {
-      this.showTools = true;
-      this.showBanner('Please select a surah first', 'info', 3000);
-      return;
-    }
-    if (!this.verses.length) {
-      return this.startSession();
-    }
-
-    // For loaded verses - handle play/pause state
-    this.handlePlayPause();
-  }), "handlePlayPause", function handlePlayPause() {
+    // Always start a fresh session when clicking the start button
+    this.startSession();
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "handlePlayPause", function handlePlayPause() {
     var _this$audioElement2;
-    if (this.isPlaying) {
-      return this.togglePlay();
-    }
-
-    // Start or resume
-    if (!((_this$audioElement2 = this.audioElement) !== null && _this$audioElement2 !== void 0 && _this$audioElement2.src) || this.audioElement.paused) {
+    // This is now only for the play/pause toggle in the player
+    if (!((_this$audioElement2 = this.audioElement) !== null && _this$audioElement2 !== void 0 && _this$audioElement2.src) || !this.verses.length) {
       return this.startSession();
     }
-    return this.togglePlay();
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "toggleReadingOption", function toggleReadingOption(kind) {
+    if (this.isPlaying) {
+      this.audioElement.pause();
+      this.isPlaying = false;
+    } else {
+      this.audioElement.play();
+      this.isPlaying = true;
+    }
+  }), "toggleReadingOption", function toggleReadingOption(kind) {
     if (kind === 'translation') this.showTranslation = !this.showTranslation;
     if (kind === 'transliteration') this.showTransliteration = !this.showTransliteration;
     if (kind === 'wbw') {
@@ -25296,14 +25519,23 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
   }), "toggleSection", function toggleSection(key) {
     this.sectionOpen[key] = !this.sectionOpen[key];
   }), "isAdjacentVerse", function isAdjacentVerse(verse) {
-    if (!this.activeVerseKey) return false;
-    var activeNumber = parseInt(this.activeVerseKey.split(':')[1]);
-    return Math.abs(verse.number - activeNumber) === 1;
+    if (!this.activeVerseKey || !verse || !verse.key) return false;
+    var activeParts = this.activeVerseKey.split(':');
+    var verseParts = verse.key.split(':');
+
+    // Must be in same chapter
+    if (activeParts[0] !== verseParts[0]) return false;
+    var activeNumber = parseInt(activeParts[1]);
+    var verseNumber = parseInt(verseParts[1]);
+    if (isNaN(activeNumber) || isNaN(verseNumber)) return false;
+
+    // Adjacent means immediately before or after
+    return Math.abs(verseNumber - activeNumber) === 1;
   }), "userStorageKey", function userStorageKey(suffix) {
     var _this$auth2;
     var uid = ((_this$auth2 = this.auth) === null || _this$auth2 === void 0 ? void 0 : _this$auth2.id) || 'guest';
     return "telawa.".concat(suffix, ".").concat(uid);
-  }), "loadBookmarksPins", function loadBookmarksPins() {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "loadBookmarksPins", function loadBookmarksPins() {
     try {
       this.bookmarks = JSON.parse(localStorage.getItem(this.userStorageKey('bookmarks')) || '[]');
     } catch (_unused) {
@@ -25314,7 +25546,7 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
     } catch (_unused2) {
       this.pins = [];
     }
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "persistBookmarksPins", function persistBookmarksPins() {
+  }), "persistBookmarksPins", function persistBookmarksPins() {
     try {
       localStorage.setItem(this.userStorageKey('bookmarks'), JSON.stringify((this.bookmarks || []).slice(0, 500)));
     } catch (e) {}
@@ -25433,7 +25665,7 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
     this.persistTodayPlan();
     this.persistSm2();
   }), "loadChapters", function loadChapters() {
-    var _this11 = this;
+    var _this14 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee9() {
       var _res$data2, res, _t6;
       return _regenerator().w(function (_context9) {
@@ -25448,13 +25680,13 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
             });
           case 1:
             res = _context9.v;
-            _this11.chapters = ((_res$data2 = res.data) === null || _res$data2 === void 0 ? void 0 : _res$data2.chapters) || [];
-            if (!_this11.chapterId) {
+            _this14.chapters = ((_res$data2 = res.data) === null || _res$data2 === void 0 ? void 0 : _res$data2.chapters) || [];
+            if (!_this14.chapterId) {
               _context9.n = 2;
               break;
             }
             _context9.n = 2;
-            return _this11.loadChapter();
+            return _this14.loadChapter();
           case 2:
             _context9.n = 4;
             break;
@@ -25468,41 +25700,41 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
       }, _callee9, null, [[0, 3]]);
     }))();
   }), "loadChapter", function loadChapter() {
-    var _this12 = this;
+    var _this15 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee0() {
-      var _this12$currentChapte;
+      var _this15$currentChapte;
       var chapterId, max;
       return _regenerator().w(function (_context0) {
         while (1) switch (_context0.n) {
           case 0:
-            chapterId = _this12.chapterId;
+            chapterId = _this15.chapterId;
             if (chapterId) {
               _context0.n = 1;
               break;
             }
-            _this12.currentChapter = null;
+            _this15.currentChapter = null;
             return _context0.a(2);
           case 1:
-            _this12.currentChapter = _this12.chapters.find(function (c) {
+            _this15.currentChapter = _this15.chapters.find(function (c) {
               return c.id === chapterId;
             });
-            max = ((_this12$currentChapte = _this12.currentChapter) === null || _this12$currentChapte === void 0 ? void 0 : _this12$currentChapte.verses_count) || 286;
-            if (_this12.currentMode === 'beginner') {
-              _this12.beginner.rangeEnd = Math.min(_this12.beginner.rangeEnd, max);
-              _this12.beginner.rangeStart = Math.max(1, _this12.beginner.rangeStart);
+            max = ((_this15$currentChapte = _this15.currentChapter) === null || _this15$currentChapte === void 0 ? void 0 : _this15$currentChapte.verses_count) || 286;
+            if (_this15.currentMode === 'beginner') {
+              _this15.beginner.rangeEnd = Math.min(_this15.beginner.rangeEnd, max);
+              _this15.beginner.rangeStart = Math.max(1, _this15.beginner.rangeStart);
             } else {
-              _this12.advanced.rangeEnd = Math.min(_this12.advanced.rangeEnd, max);
-              _this12.advanced.rangeStart = Math.max(1, _this12.advanced.rangeStart);
+              _this15.advanced.rangeEnd = Math.min(_this15.advanced.rangeEnd, max);
+              _this15.advanced.rangeStart = Math.max(1, _this15.advanced.rangeStart);
             }
             _context0.n = 2;
-            return _this12.loadVerses();
+            return _this15.loadVerses();
           case 2:
             return _context0.a(2);
         }
       }, _callee0);
     }))();
   }), "loadReciters", function loadReciters() {
-    var _this13 = this;
+    var _this16 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
       var _res$data3, res, list, _t7;
       return _regenerator().w(function (_context1) {
@@ -25518,7 +25750,7 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
           case 1:
             res = _context1.v;
             list = ((_res$data3 = res.data) === null || _res$data3 === void 0 ? void 0 : _res$data3.recitations) || [];
-            if (list.length) _this13.reciters = list.map(function (r) {
+            if (list.length) _this16.reciters = list.map(function (r) {
               return {
                 id: r.id,
                 name: r.reciter_name
@@ -25535,13 +25767,13 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
         }
       }, _callee1, null, [[0, 2]]);
     }))();
-  }), "loadSavedSessions", function loadSavedSessions() {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "loadSavedSessions", function loadSavedSessions() {
     try {
       this.savedSessions = JSON.parse(localStorage.getItem('telawa.savedSessions') || '[]');
     } catch (_unused3) {
       this.savedSessions = [];
     }
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "loadSm2", function loadSm2() {
+  }), "loadSm2", function loadSm2() {
     try {
       this.sm2 = JSON.parse(localStorage.getItem('telawa.sm2') || '{}');
     } catch (_unused4) {
@@ -25606,10 +25838,10 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
   }), "estimateKeysSeconds", function estimateKeysSeconds() {
     var keys = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
     return keys.length * 10;
-  }), "migrateLocalStorage", function migrateLocalStorage() {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "migrateLocalStorage", function migrateLocalStorage() {
     var key = 'telawa.schemaVersion';
     if (!localStorage.getItem(key)) localStorage.setItem(key, '1');
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "dayKey", function dayKey() {
+  }), "dayKey", function dayKey() {
     var ts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : Date.now();
     var d = new Date(ts);
     return "".concat(d.getFullYear(), "-").concat(String(d.getMonth() + 1).padStart(2, '0'), "-").concat(String(d.getDate()).padStart(2, '0'));
@@ -25704,23 +25936,23 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
     this.quizCard = null;
     this.quizQueue = [];
     this.quizComplete = false;
-  }), "restartQuiz", function restartQuiz() {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "restartQuiz", function restartQuiz() {
     this.quizScore = 0;
     this.quizMistakes = [];
     this.quizComplete = false;
     this.quizIndex = 0;
     this.nextQuizCard();
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "playWordAudio", function playWordAudio(url) {
-    var _this14 = this;
+  }), "playWordAudio", function playWordAudio(url) {
+    var _this17 = this;
     var key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
     if (!url) return;
     this.activeWordAudio = key;
     var a = new Audio(url);
     a.addEventListener('ended', function () {
-      if (_this14.activeWordAudio === key) _this14.activeWordAudio = '';
+      if (_this17.activeWordAudio === key) _this17.activeWordAudio = '';
     });
     a.play()["catch"](function () {
-      _this14.activeWordAudio = '';
+      _this17.activeWordAudio = '';
     });
   }), "resetControls", function resetControls() {
     if (!confirm('Reset session settings?')) return;
@@ -25771,7 +26003,7 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
     });
   }), "refreshVerses", function refreshVerses() {
     this.loadVerses();
-  }), "collectSimpleStats", function collectSimpleStats() {
+  }), _defineProperty(_methods, "collectSimpleStats", function collectSimpleStats() {
     var sessionCount = this.savedSessions.length || 0;
     var weak = Object.entries(this.sm2 || {}).filter(function (_ref3) {
       var _ref4 = _slicedToArray(_ref3, 2),
@@ -26122,376 +26354,329 @@ var _hoisted_33 = {
 var _hoisted_34 = {
   "class": "verse-actions"
 };
-var _hoisted_35 = ["onClick"];
-var _hoisted_36 = ["innerHTML"];
+var _hoisted_35 = {
+  "class": "verse-font-controls"
+};
+var _hoisted_36 = ["onClick"];
 var _hoisted_37 = {
-  key: 0,
-  "class": "verse-translation"
+  "class": "verse-font-size-indicator"
 };
-var _hoisted_38 = {
-  key: 1,
-  "class": "verse-transliteration"
-};
-var _hoisted_39 = {
+var _hoisted_38 = ["onClick"];
+var _hoisted_39 = ["onClick"];
+var _hoisted_40 = ["onClick"];
+var _hoisted_41 = ["innerHTML"];
+var _hoisted_42 = {
   key: 2,
   "class": "verse-words"
 };
-var _hoisted_40 = ["data-word-index", "data-verse-key"];
-var _hoisted_41 = {
+var _hoisted_43 = ["data-word-index", "data-verse-key"];
+var _hoisted_44 = {
   "class": "word-arabic",
   dir: "rtl"
 };
-var _hoisted_42 = {
+var _hoisted_45 = {
   "class": "word-meaning"
 };
-var _hoisted_43 = ["onClick"];
-var _hoisted_44 = {
+var _hoisted_46 = ["onClick"];
+var _hoisted_47 = {
   "class": "tools-top"
 };
-var _hoisted_45 = {
+var _hoisted_48 = {
   "class": "tools-topbar"
 };
-var _hoisted_46 = {
+var _hoisted_49 = {
   "class": "tools-title"
 };
-var _hoisted_47 = {
+var _hoisted_50 = {
   "class": "tools-context"
 };
-var _hoisted_48 = {
+var _hoisted_51 = {
   "class": "tools-tabs"
 };
-var _hoisted_49 = {
+var _hoisted_52 = {
   "class": "tools-body"
 };
-var _hoisted_50 = {
+var _hoisted_53 = {
   key: 0,
   "class": "sheet"
 };
-var _hoisted_51 = {
+var _hoisted_54 = {
   "class": "sheet-section"
 };
-var _hoisted_52 = {
+var _hoisted_55 = {
   "class": "sheet-content"
 };
-var _hoisted_53 = {
+var _hoisted_56 = {
   "class": "field-stack"
 };
-var _hoisted_54 = {
-  "class": "field"
-};
-var _hoisted_55 = ["value"];
-var _hoisted_56 = ["value"];
 var _hoisted_57 = {
   "class": "field"
 };
-var _hoisted_58 = {
-  "class": "range range-single"
-};
-var _hoisted_59 = {
-  "class": "sheet-section"
-};
+var _hoisted_58 = ["value"];
+var _hoisted_59 = ["value"];
 var _hoisted_60 = {
-  "class": "sheet-content"
+  "class": "field"
 };
 var _hoisted_61 = {
-  "class": "field-stack"
+  "class": "range range-single"
 };
 var _hoisted_62 = {
-  "class": "field"
+  "class": "sheet-section"
 };
-var _hoisted_63 = ["value"];
+var _hoisted_63 = {
+  "class": "sheet-content"
+};
 var _hoisted_64 = {
-  "class": "field"
+  "class": "field-stack"
 };
 var _hoisted_65 = {
-  "class": "radio-group radio-group-tight"
+  "class": "field"
 };
-var _hoisted_66 = {
-  "class": "radio"
-};
+var _hoisted_66 = ["value"];
 var _hoisted_67 = {
-  "class": "radio"
+  "class": "field"
 };
 var _hoisted_68 = {
-  "class": "radio"
+  "class": "radio-group radio-group-tight"
 };
 var _hoisted_69 = {
   "class": "radio"
 };
 var _hoisted_70 = {
-  "class": "field"
+  "class": "radio"
 };
 var _hoisted_71 = {
-  "class": "radio-group radio-group-tight"
+  "class": "radio"
 };
 var _hoisted_72 = {
   "class": "radio"
 };
 var _hoisted_73 = {
-  "class": "radio"
-};
-var _hoisted_74 = {
   "class": "field"
 };
-var _hoisted_75 = ["value"];
-var _hoisted_76 = ["disabled"];
+var _hoisted_74 = {
+  "class": "radio-group radio-group-tight"
+};
+var _hoisted_75 = {
+  "class": "radio"
+};
+var _hoisted_76 = {
+  "class": "radio"
+};
 var _hoisted_77 = {
+  "class": "field"
+};
+var _hoisted_78 = ["value"];
+var _hoisted_79 = ["disabled"];
+var _hoisted_80 = {
   key: 1,
   "class": "sheet"
 };
-var _hoisted_78 = {
+var _hoisted_81 = {
   "class": "sheet-section"
 };
-var _hoisted_79 = {
+var _hoisted_82 = {
   "class": "sheet-content"
 };
-var _hoisted_80 = {
-  "class": "field-stack"
-};
-var _hoisted_81 = {
-  "class": "field"
-};
-var _hoisted_82 = ["value"];
 var _hoisted_83 = {
-  "class": "field"
+  "class": "field-stack"
 };
 var _hoisted_84 = {
+  "class": "field"
+};
+var _hoisted_85 = ["value"];
+var _hoisted_86 = {
+  "class": "field"
+};
+var _hoisted_87 = {
   "class": "range range-single"
 };
-var _hoisted_85 = {
+var _hoisted_88 = {
   "class": "field"
 };
-var _hoisted_86 = ["value"];
-var _hoisted_87 = {
+var _hoisted_89 = ["value"];
+var _hoisted_90 = {
   "class": "sheet-section"
 };
-var _hoisted_88 = {
+var _hoisted_91 = {
   "class": "sheet-content"
 };
-var _hoisted_89 = {
+var _hoisted_92 = {
   "class": "field-stack"
 };
-var _hoisted_90 = {
+var _hoisted_93 = {
   "class": "field"
 };
-var _hoisted_91 = {
-  "class": "radio-group radio-group-tight"
-};
-var _hoisted_92 = {
-  "class": "radio"
-};
-var _hoisted_93 = {
-  "class": "radio"
-};
 var _hoisted_94 = {
-  "class": "radio"
+  "class": "radio-group radio-group-tight"
 };
 var _hoisted_95 = {
   "class": "radio"
 };
 var _hoisted_96 = {
-  "class": "field"
+  "class": "radio"
 };
 var _hoisted_97 = {
-  "class": "radio-group radio-group-tight"
+  "class": "radio"
 };
 var _hoisted_98 = {
   "class": "radio"
 };
 var _hoisted_99 = {
-  "class": "radio"
+  "class": "field"
 };
 var _hoisted_100 = {
-  "class": "field"
+  "class": "radio-group radio-group-tight"
 };
-var _hoisted_101 = ["value"];
+var _hoisted_101 = {
+  "class": "radio"
+};
 var _hoisted_102 = {
+  "class": "radio"
+};
+var _hoisted_103 = {
   "class": "field"
 };
-var _hoisted_103 = ["value"];
-var _hoisted_104 = {
-  "class": "field checkbox"
-};
+var _hoisted_104 = ["value"];
 var _hoisted_105 = {
-  "class": "switch"
+  "class": "field"
 };
-var _hoisted_106 = {
-  "class": "sheet-section"
-};
+var _hoisted_106 = ["value"];
 var _hoisted_107 = {
-  "class": "sheet-content"
+  "class": "field checkbox"
 };
 var _hoisted_108 = {
-  "class": "field-stack"
+  "class": "switch"
 };
 var _hoisted_109 = {
-  "class": "field"
+  "class": "sheet-section"
 };
 var _hoisted_110 = {
-  "class": "radio-group"
+  "class": "sheet-content"
 };
 var _hoisted_111 = {
-  "class": "radio"
+  "class": "field-stack"
 };
 var _hoisted_112 = {
-  "class": "radio"
+  "class": "field"
 };
 var _hoisted_113 = {
-  "class": "radio"
+  "class": "radio-group"
 };
 var _hoisted_114 = {
-  "class": "field checkbox"
+  "class": "radio"
 };
 var _hoisted_115 = {
-  "class": "switch"
+  "class": "radio"
 };
 var _hoisted_116 = {
-  "class": "field checkbox"
+  "class": "radio"
 };
 var _hoisted_117 = {
-  "class": "switch"
+  "class": "field checkbox"
 };
 var _hoisted_118 = {
+  "class": "switch"
+};
+var _hoisted_119 = {
+  "class": "field checkbox"
+};
+var _hoisted_120 = {
+  "class": "switch"
+};
+var _hoisted_121 = {
   key: 0,
   "class": "sheet-section"
 };
-var _hoisted_119 = {
+var _hoisted_122 = {
   "class": "sheet-content"
 };
-var _hoisted_120 = ["disabled"];
-var _hoisted_121 = {
+var _hoisted_123 = ["disabled"];
+var _hoisted_124 = {
   "class": "tools-footer"
 };
-var _hoisted_122 = {
+var _hoisted_125 = {
   key: 1,
   "class": "quiz-overlay"
 };
-var _hoisted_123 = {
+var _hoisted_126 = {
   "class": "quiz-card"
 };
-var _hoisted_124 = {
+var _hoisted_127 = {
   "class": "quiz-header"
 };
-var _hoisted_125 = {
+var _hoisted_128 = {
   "class": "quiz-subtitle"
 };
-var _hoisted_126 = {
+var _hoisted_129 = {
   key: 0,
   "class": "quiz-progress"
 };
-var _hoisted_127 = {
+var _hoisted_130 = {
   "class": "quiz-progress-bar"
 };
-var _hoisted_128 = {
+var _hoisted_131 = {
   "class": "quiz-stats"
 };
-var _hoisted_129 = {
+var _hoisted_132 = {
   key: 1,
   "class": "quiz-summary"
 };
-var _hoisted_130 = {
+var _hoisted_133 = {
   "class": "quiz-summary-stats"
 };
-var _hoisted_131 = {
-  "class": "stat"
-};
-var _hoisted_132 = {
-  "class": "stat-value"
-};
-var _hoisted_133 = {
-  "class": "stat"
-};
 var _hoisted_134 = {
-  "class": "stat-value"
+  "class": "stat"
 };
 var _hoisted_135 = {
+  "class": "stat-value"
+};
+var _hoisted_136 = {
+  "class": "stat"
+};
+var _hoisted_137 = {
+  "class": "stat-value"
+};
+var _hoisted_138 = {
   key: 0,
   "class": "quiz-summary-mistakes"
 };
-var _hoisted_136 = {
+var _hoisted_139 = {
   "class": "mistake-tags"
 };
-var _hoisted_137 = {
+var _hoisted_140 = {
   "class": "quiz-actions"
 };
-var _hoisted_138 = {
+var _hoisted_141 = {
   "class": "quiz-body"
 };
-var _hoisted_139 = {
+var _hoisted_142 = {
   key: 0
 };
-var _hoisted_140 = ["innerHTML"];
-var _hoisted_141 = {
+var _hoisted_143 = ["innerHTML"];
+var _hoisted_144 = {
   key: 1,
   "class": "quiz-answer"
 };
-var _hoisted_142 = {
+var _hoisted_145 = {
   "class": "quiz-translation"
 };
-var _hoisted_143 = {
+var _hoisted_146 = {
   "class": "quiz-grade-buttons"
 };
-var _hoisted_144 = {
+var _hoisted_147 = {
   "class": "quiz-prompt"
 };
-var _hoisted_145 = {
+var _hoisted_148 = {
   "class": "quiz-options"
 };
-var _hoisted_146 = ["onClick"];
-var _hoisted_147 = {
-  "class": "quiz-options"
-};
-var _hoisted_148 = ["onClick"];
-var _hoisted_149 = {
-  "class": "quiz-blank-prompt"
-};
+var _hoisted_149 = ["onClick"];
 var _hoisted_150 = {
-  key: 3,
-  "class": "player-bar"
+  "class": "quiz-options"
 };
-var _hoisted_151 = {
-  key: 0,
-  "class": "player-collapsed-meta"
-};
+var _hoisted_151 = ["onClick"];
 var _hoisted_152 = {
-  "class": "player-collapsed-copy"
-};
-var _hoisted_153 = {
-  "class": "player-collapsed-title"
-};
-var _hoisted_154 = {
-  "class": "player-collapsed-sub"
-};
-var _hoisted_155 = {
-  "class": "player-controls"
-};
-var _hoisted_156 = {
-  "class": "player-time left"
-};
-var _hoisted_157 = {
-  "class": "player-center"
-};
-var _hoisted_158 = ["disabled"];
-var _hoisted_159 = ["disabled"];
-var _hoisted_160 = {
-  "class": "player-time right"
-};
-var _hoisted_161 = {
-  "class": "player-menu-row"
-};
-var _hoisted_162 = {
-  "class": "pm-value"
-};
-var _hoisted_163 = {
-  "class": "player-menu-row"
-};
-var _hoisted_164 = ["value"];
-var _hoisted_165 = {
-  ref: "audio",
-  preload: "auto",
-  style: {
-    "display": "none"
-  }
+  "class": "quiz-blank-prompt"
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
   var _$data$quizCard, _$data$quizCard2;
@@ -26513,41 +26698,41 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $data.banner = null;
     }),
     "aria-label": "Dismiss"
-  }, _toConsumableArray(_cache[93] || (_cache[93] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[77] || (_cache[77] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */)])))])], 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Main Content "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["main", {
       'tools-open': $data.showTools
     }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [$options.showOnboarding ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [_cache[97] || (_cache[97] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"hero-copy\"><div class=\"hero-kicker\">Focused hifz system</div><h1 class=\"hero-title\">Memorise and retain Quran intelligently.</h1><p class=\"hero-sub\">Structured memorisation, automatic revision, and retention tracking in one focused system.</p></div><div class=\"hero-flow\"><div class=\"hero-step\"><span>1</span><strong>Read</strong></div><div class=\"hero-step\"><span>2</span><strong>Repeat</strong></div><div class=\"hero-step\"><span>3</span><strong>Review</strong></div><div class=\"hero-step\"><span>4</span><strong>Retain</strong></div></div><div class=\"hero-points\"><div class=\"hero-point\"><i class=\"bi bi-shield-check\"></i><span>Weak ayahs are tracked automatically.</span></div><div class=\"hero-point\"><i class=\"bi bi-clock-history\"></i><span>Reviews appear before forgetting.</span></div><div class=\"hero-point\"><i class=\"bi bi-magic\"></i><span>Sessions are generated automatically.</span></div></div>", 3)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [$options.showOnboarding ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [_cache[81] || (_cache[81] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"hero-copy\"><div class=\"hero-kicker\">Focused hifz system</div><h1 class=\"hero-title\">Memorise and retain Quran intelligently.</h1><p class=\"hero-sub\">Structured memorisation, automatic revision, and retention tracking in one focused system.</p></div><div class=\"hero-flow\"><div class=\"hero-step\"><span>1</span><strong>Read</strong></div><div class=\"hero-step\"><span>2</span><strong>Repeat</strong></div><div class=\"hero-step\"><span>3</span><strong>Review</strong></div><div class=\"hero-step\"><span>4</span><strong>Retain</strong></div></div><div class=\"hero-points\"><div class=\"hero-point\"><i class=\"bi bi-shield-check\"></i><span>Weak ayahs are tracked automatically.</span></div><div class=\"hero-point\"><i class=\"bi bi-clock-history\"></i><span>Reviews appear before forgetting.</span></div><div class=\"hero-point\"><i class=\"bi bi-magic\"></i><span>Sessions are generated automatically.</span></div></div>", 3)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-ghost",
     onClick: _cache[2] || (_cache[2] = function ($event) {
       return $data.tab = 'analytics';
     })
-  }, _toConsumableArray(_cache[94] || (_cache[94] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[78] || (_cache[78] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-bar-chart"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "See stats", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-primary",
     onClick: _cache[3] || (_cache[3] = function () {
       return $options.beginPlan && $options.beginPlan.apply($options, arguments);
     })
-  }, [_cache[95] || (_cache[95] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [_cache[79] || (_cache[79] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-circle"
   }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.onboardingPrimaryLabel), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-ghost",
     onClick: _cache[4] || (_cache[4] = function ($event) {
       return $data.showTools = true;
     })
-  }, _toConsumableArray(_cache[96] || (_cache[96] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[80] || (_cache[80] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Open setup", -1 /* CACHED */)])))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.currentChapter && $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [_cache[98] || (_cache[98] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Open setup", -1 /* CACHED */)])))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.currentChapter && $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [_cache[82] || (_cache[82] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "session-rail-kicker"
   }, "Current session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_9, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.currentChapter.name_simple), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_10, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + "/" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses) + " · Remaining " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.remainingAyahs) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionTypeInfo.label) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_11, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "rail-btn rail-btn-ghost",
     onClick: _cache[5] || (_cache[5] = function ($event) {
       return $data.showTools = true;
     })
-  }, _toConsumableArray(_cache[99] || (_cache[99] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[83] || (_cache[83] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-layout-sidebar-inset"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Plan", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "rail-btn rail-btn-primary",
@@ -26556,7 +26741,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     })
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
-  }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.railPrimaryLabel), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_12, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_13, [_cache[100] || (_cache[100] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionTypeInfo.label), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_14, [_cache[101] || (_cache[101] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Progress", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_15, [_cache[102] || (_cache[102] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Remaining", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.remainingAyahs), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_16, [_cache[103] || (_cache[103] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "ETA", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel), 1 /* TEXT */)])]), $data.currentMode === 'advanced' && $options.repeatAndLoopAudio ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_17, [_cache[104] || (_cache[104] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.railPrimaryLabel), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_12, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_13, [_cache[84] || (_cache[84] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionTypeInfo.label), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_14, [_cache[85] || (_cache[85] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Progress", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_15, [_cache[86] || (_cache[86] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Remaining", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.remainingAyahs), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_16, [_cache[87] || (_cache[87] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "ETA", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel), 1 /* TEXT */)])]), $data.currentMode === 'advanced' && $options.repeatAndLoopAudio ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_17, [_cache[88] || (_cache[88] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-repeat"
   }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Loop Mode: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.advancedRepeats) + "x per Ayah ", 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_18, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "progress-fill",
@@ -26570,7 +26755,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[7] || (_cache[7] = function ($event) {
       return $options.toggleReadingOption('translation');
     })
-  }, _toConsumableArray(_cache[105] || (_cache[105] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[89] || (_cache[89] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-translate"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Translation", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
@@ -26579,7 +26764,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[8] || (_cache[8] = function ($event) {
       return $options.toggleReadingOption('transliteration');
     })
-  }, _toConsumableArray(_cache[106] || (_cache[106] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[90] || (_cache[90] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-type"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Transliteration", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
@@ -26588,7 +26773,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[9] || (_cache[9] = function ($event) {
       return $options.toggleReadingOption('wbw');
     })
-  }, _toConsumableArray(_cache[107] || (_cache[107] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[91] || (_cache[91] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-grid-3x2-gap"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Word by word", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
@@ -26597,7 +26782,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[10] || (_cache[10] = function ($event) {
       return $data.wordByWordAudioEnabled = !$data.wordByWordAudioEnabled;
     })
-  }, _toConsumableArray(_cache[108] || (_cache[108] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[92] || (_cache[92] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-volume-up"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Word audio", -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_21, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_22, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button class=\"toolbar-chip\" :class=\"{ active: script === 'uthmani' || fontPickerOpen }\"\n                @click=\"toggleFontPicker\">\n                <i class=\"bi bi-file-earmark-richtext\"></i><span>Quranic fonts</span>\n              </button> "), $data.fontPickerOpen ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_23, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quranFontOptions, function (font) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
@@ -26616,23 +26801,23 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[11] || (_cache[11] = function ($event) {
       return $options.setScriptMode('tajweed');
     })
-  }, _toConsumableArray(_cache[109] || (_cache[109] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[93] || (_cache[93] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-palette"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Tajweed", -1 /* CACHED */)])), 2 /* CLASS */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Empty State "), !$options.hasVerses && !$options.showOnboarding ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_25, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [_cache[112] || (_cache[112] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Tajweed", -1 /* CACHED */)])), 2 /* CLASS */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Empty State "), !$options.hasVerses && !$options.showOnboarding ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_25, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [_cache[96] || (_cache[96] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "empty-icon"
-  }, "﴿", -1 /* CACHED */)), _cache[113] || (_cache[113] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Begin your journey", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.nextActionDescription), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "﴿", -1 /* CACHED */)), _cache[97] || (_cache[97] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Begin your journey", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.nextActionDescription), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-primary",
     onClick: _cache[12] || (_cache[12] = function () {
       return $options.beginPlan && $options.beginPlan.apply($options, arguments);
     })
-  }, [_cache[110] || (_cache[110] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [_cache[94] || (_cache[94] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-circle"
   }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.emptyPrimaryLabel), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-ghost",
     onClick: _cache[13] || (_cache[13] = function ($event) {
       return $data.showTools = true;
     })
-  }, _toConsumableArray(_cache[111] || (_cache[111] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[95] || (_cache[95] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Open setup", -1 /* CACHED */)])))])])])) : $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 4
@@ -26640,19 +26825,45 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     var _verse$words;
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: verse.key,
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["verse-card", {
+      "data-verse-key": verse.key,
+      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
+        'verse-card': true,
         active: $data.activeVerseKey === verse.key,
         'focus-mode': $options.focusMode && $data.activeVerseKey !== verse.key,
-        blurred: $options.blurAdjacent && $data.activeVerseKey !== verse.key && !$options.isAdjacentVerse(verse)
-      }]),
-      "data-verse-key": verse.key
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_30, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_31, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_32, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.number), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_33, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.key), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_34, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+        blurred: $options.blurAdjacent && $data.activeVerseKey && $data.activeVerseKey !== verse.key && !$options.isAdjacentVerse(verse)
+      })
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_30, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_31, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_32, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.number), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_33, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.key), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_34, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Font size controls "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_35, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      "class": "verse-font-btn",
+      onClick: function onClick($event) {
+        return $options.decreaseVerseFont(verse.key, $event);
+      },
+      title: "Decrease font size"
+    }, _toConsumableArray(_cache[98] || (_cache[98] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      "class": "bi bi-dash"
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_36), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_37, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getVerseFontSize(verse.key)) + "%", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      "class": "verse-font-btn",
+      onClick: function onClick($event) {
+        return $options.increaseVerseFont(verse.key, $event);
+      },
+      title: "Increase font size"
+    }, _toConsumableArray(_cache[99] || (_cache[99] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      "class": "bi bi-plus"
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_38), $data.verseFontSizes[verse.key] ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
+      key: 0,
+      "class": "verse-font-btn",
+      onClick: function onClick($event) {
+        return $options.resetVerseFont(verse.key, $event);
+      },
+      title: "Reset font size"
+    }, _toConsumableArray(_cache[100] || (_cache[100] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      "class": "bi bi-arrow-repeat"
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_39)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "verse-play-btn",
       onClick: _cache[14] || (_cache[14] = function () {
         return $options.downloadOfflineVerses && $options.downloadOfflineVerses.apply($options, arguments);
       }),
       title: "Download for offline reading"
-    }, _toConsumableArray(_cache[114] || (_cache[114] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[101] || (_cache[101] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-save"
     }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "verse-play-btn",
@@ -26660,16 +26871,31 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         return $options.playVerse(verse);
       },
       title: "Play verse"
-    }, _toConsumableArray(_cache[115] || (_cache[115] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[102] || (_cache[102] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-play"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_35)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_40)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["verse-arabic", {
         'word-highlight-enabled': $data.wordByWordAudioEnabled
       }]),
       dir: "rtl",
       lang: "ar",
-      innerHTML: $options.getHighlightedArabic(verse)
-    }, null, 10 /* CLASS, PROPS */, _hoisted_36), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" TRANSLATION "), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_37, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.translation), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_38, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" In the verse-words section (around line 165) "), $data.showWordByWord && (_verse$words = verse.words) !== null && _verse$words !== void 0 && _verse$words.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_39, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(verse.words, function (word, wi) {
+      innerHTML: $options.getHighlightedArabic(verse),
+      style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
+        fontSize: $options.getVerseFontSize(verse.key) + '%'
+      })
+    }, null, 14 /* CLASS, STYLE, PROPS */, _hoisted_41), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" TRANSLATION "), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+      key: 0,
+      "class": "verse-translation",
+      style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
+        fontSize: $options.getVerseFontSize(verse.key) * 0.85 + '%'
+      })
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.translation), 5 /* TEXT, STYLE */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+      key: 1,
+      "class": "verse-transliteration",
+      style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
+        fontSize: $options.getVerseFontSize(verse.key) * 0.7 + '%'
+      })
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 5 /* TEXT, STYLE */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" In the verse-words section "), $data.showWordByWord && (_verse$words = verse.words) !== null && _verse$words !== void 0 && _verse$words.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_42, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(verse.words, function (word, wi) {
       return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
         key: wi,
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["word-item", {
@@ -26677,29 +26903,29 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         }]),
         "data-word-index": wi,
         "data-verse-key": verse.key
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_41, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.ar), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_42, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.en), 1 /* TEXT */), word.audio && $data.wordByWordAudioEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_44, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.ar), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_45, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.en), 1 /* TEXT */), word.audio && $data.wordByWordAudioEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
         key: 0,
         "class": "word-audio-btn",
         onClick: function onClick($event) {
           return $options.playWordAudio(word.audio, "".concat(verse.key, ":").concat(wi));
         }
-      }, _toConsumableArray(_cache[116] || (_cache[116] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[103] || (_cache[103] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-volume-up"
-      }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_43)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 10 /* CLASS, PROPS */, _hoisted_40);
+      }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_46)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 10 /* CLASS, PROPS */, _hoisted_43);
     }), 128 /* KEYED_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 10 /* CLASS, PROPS */, _hoisted_29);
   }), 128 /* KEYED_FRAGMENT */))])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Tools Panel "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("aside", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["tools", {
       open: $data.showTools
     }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_44, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_45, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_46, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.toolsHeaderTitle), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_47, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_48, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_49, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.toolsHeaderTitle), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-x",
     onClick: _cache[15] || (_cache[15] = function ($event) {
       return $data.showTools = false;
     }),
     "aria-label": "Close panel"
-  }, _toConsumableArray(_cache[117] || (_cache[117] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[104] || (_cache[104] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_47, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.contextLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_48, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_50, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.contextLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_51, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
       active: $data.tab === 'beginner'
     }),
@@ -26713,32 +26939,32 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[17] || (_cache[17] = function ($event) {
       return $data.tab = 'advanced';
     })
-  }, "Advanced", 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_49, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Beginner Tab - Simplified "), $data.tab === 'beginner' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_50, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quick Setup Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_51, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Advanced", 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_52, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Beginner Tab - Simplified "), $data.tab === 'beginner' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_53, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quick Setup Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_54, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
     onClick: _cache[18] || (_cache[18] = function ($event) {
       return $options.toggleSection('beginner_setup');
     }),
     type: "button"
-  }, [_cache[119] || (_cache[119] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book\"></i></span><span class=\"st-txt\"><span class=\"st-title\">1. What to Memorise</span><span class=\"st-sub\">Surah and verses</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[106] || (_cache[106] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book\"></i></span><span class=\"st-txt\"><span class=\"st-title\">1. What to Memorise</span><span class=\"st-sub\">Surah and verses</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.beginner_setup
     }])
-  }, _toConsumableArray(_cache[118] || (_cache[118] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[105] || (_cache[105] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_52, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_53, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_54, [_cache[121] || (_cache[121] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_55, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_56, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_57, [_cache[108] || (_cache[108] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     value: $options.chapterId,
     onChange: _cache[19] || (_cache[19] = function () {
       return $options.onChapterChange && $options.onChapterChange.apply($options, arguments);
     }),
     "class": "select"
-  }, [_cache[120] || (_cache[120] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+  }, [_cache[107] || (_cache[107] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: 0
   }, "Choose a surah...", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (c) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: c.id,
       value: c.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.id) + ". " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_56);
-  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_55)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_57, [_cache[123] || (_cache[123] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verses", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_58, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.id) + ". " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_59);
+  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_58)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_60, [_cache[110] || (_cache[110] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verses", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_61, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
     "onUpdate:modelValue": _cache[20] || (_cache[20] = function ($event) {
@@ -26750,7 +26976,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     min: "1"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeStart, void 0, {
     number: true
-  }]]), _cache[122] || (_cache[122] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }]]), _cache[109] || (_cache[109] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
     "onUpdate:modelValue": _cache[22] || (_cache[22] = function ($event) {
@@ -26762,13 +26988,13 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     min: "1"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeEnd, void 0, {
     number: true
-  }]])])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_59, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }]])])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_62, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
     onClick: _cache[24] || (_cache[24] = function ($event) {
       return $options.toggleSection('beginner_audio');
     }),
     type: "button"
-  }, _toConsumableArray(_cache[124] || (_cache[124] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">2. Audio Settings</span><span class=\"st-sub\">Reciter and playback</span></span></span>", 1)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_60, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_61, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_62, [_cache[125] || (_cache[125] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }, _toConsumableArray(_cache[111] || (_cache[111] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">2. Audio Settings</span><span class=\"st-sub\">Reciter and playback</span></span></span>", 1)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_63, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_64, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_65, [_cache[112] || (_cache[112] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     "onUpdate:modelValue": _cache[25] || (_cache[25] = function ($event) {
       return $options.reciterId = $event;
     }),
@@ -26780,44 +27006,44 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: r.id,
       value: r.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_63);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_64, [_cache[130] || (_cache[130] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_65, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_66, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_66);
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_67, [_cache[117] || (_cache[117] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_68, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_69, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "0.75",
     "onUpdate:modelValue": _cache[27] || (_cache[27] = function ($event) {
       return $options.speed = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[126] || (_cache[126] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 0.75x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_67, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[113] || (_cache[113] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 0.75x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_70, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "1",
     "onUpdate:modelValue": _cache[28] || (_cache[28] = function ($event) {
       return $options.speed = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[127] || (_cache[127] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_68, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[114] || (_cache[114] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_71, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "1.25",
     "onUpdate:modelValue": _cache[29] || (_cache[29] = function ($event) {
       return $options.speed = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[128] || (_cache[128] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.25x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_69, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[115] || (_cache[115] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.25x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_72, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "1.5",
     "onUpdate:modelValue": _cache[30] || (_cache[30] = function ($event) {
       return $options.speed = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[129] || (_cache[129] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.5x", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_70, [_cache[133] || (_cache[133] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_71, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_72, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[116] || (_cache[116] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.5x", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_73, [_cache[120] || (_cache[120] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_74, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_75, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "auto",
     "onUpdate:modelValue": _cache[31] || (_cache[31] = function ($event) {
       return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[131] || (_cache[131] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_73, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[118] || (_cache[118] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_76, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "manual",
     "onUpdate:modelValue": _cache[32] || (_cache[32] = function ($event) {
       return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[132] || (_cache[132] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No (manual)", -1 /* CACHED */))])])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_audio]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Inside beginner tab, after Speed setting in Audio Settings section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_74, [_cache[134] || (_cache[134] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repetition Count", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[119] || (_cache[119] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No (manual)", -1 /* CACHED */))])])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_audio]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Inside beginner tab, after Speed setting in Audio Settings section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_77, [_cache[121] || (_cache[121] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repetition Count", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     "onUpdate:modelValue": _cache[33] || (_cache[33] = function ($event) {
       return $options.beginnerRepeats = $event;
     }),
@@ -26826,28 +27052,28 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: n,
       value: n
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n) + " " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n === 1 ? 'time' : 'times'), 9 /* TEXT, PROPS */, _hoisted_75);
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n) + " " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n === 1 ? 'time' : 'times'), 9 /* TEXT, PROPS */, _hoisted_78);
   }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.beginnerRepeats]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "start-btn",
     onClick: _cache[34] || (_cache[34] = function () {
       return $options.startSession && $options.startSession.apply($options, arguments);
     }),
     disabled: !$options.hasSelectedSurah
-  }, _toConsumableArray(_cache[135] || (_cache[135] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[122] || (_cache[122] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-fill"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Start Memorising ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_76)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Advanced Tab - Simplified "), $data.tab === 'advanced' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_77, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Setup Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_78, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Start Memorising ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_79)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Advanced Tab - Simplified "), $data.tab === 'advanced' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_80, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Setup Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_81, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
     onClick: _cache[35] || (_cache[35] = function ($event) {
       return $options.toggleSection('advanced_setup');
     }),
     type: "button"
-  }, [_cache[137] || (_cache[137] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-compass\"></i></span><span class=\"st-txt\"><span class=\"st-title\">1. Session Setup</span><span class=\"st-sub\">Surah and verses</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[124] || (_cache[124] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-compass\"></i></span><span class=\"st-txt\"><span class=\"st-title\">1. Session Setup</span><span class=\"st-sub\">Surah and verses</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_setup
     }])
-  }, _toConsumableArray(_cache[136] || (_cache[136] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[123] || (_cache[123] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_79, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_80, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_81, [_cache[139] || (_cache[139] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_82, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_83, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_84, [_cache[126] || (_cache[126] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     "onUpdate:modelValue": _cache[36] || (_cache[36] = function ($event) {
       return $options.chapterId = $event;
     }),
@@ -26855,14 +27081,14 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.loadChapter && $options.loadChapter.apply($options, arguments);
     }),
     "class": "select"
-  }, [_cache[138] || (_cache[138] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+  }, [_cache[125] || (_cache[125] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: 0
   }, "Choose a surah...", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (c) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: c.id,
       value: c.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.id) + ". " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_82);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.chapterId]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_83, [_cache[141] || (_cache[141] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verses", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_84, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.id) + ". " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_85);
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.chapterId]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_86, [_cache[128] || (_cache[128] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verses", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_87, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
     "onUpdate:modelValue": _cache[38] || (_cache[38] = function ($event) {
@@ -26874,7 +27100,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     min: "1"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeStart, void 0, {
     number: true
-  }]]), _cache[140] || (_cache[140] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }]]), _cache[127] || (_cache[127] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
     "onUpdate:modelValue": _cache[40] || (_cache[40] = function ($event) {
@@ -26886,7 +27112,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     min: "1"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeEnd, void 0, {
     number: true
-  }]])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_85, [_cache[142] || (_cache[142] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }]])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_88, [_cache[129] || (_cache[129] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     "onUpdate:modelValue": _cache[42] || (_cache[42] = function ($event) {
       return $options.reciterId = $event;
     }),
@@ -26898,56 +27124,56 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: r.id,
       value: r.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_86);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Playback Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_87, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_89);
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Playback Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_90, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
     onClick: _cache[44] || (_cache[44] = function ($event) {
       return $options.toggleSection('advanced_playback');
     }),
     type: "button"
-  }, [_cache[144] || (_cache[144] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-repeat\"></i></span><span class=\"st-txt\"><span class=\"st-title\">2. Playback</span><span class=\"st-sub\">Speed, repeats, mode</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[131] || (_cache[131] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-repeat\"></i></span><span class=\"st-txt\"><span class=\"st-title\">2. Playback</span><span class=\"st-sub\">Speed, repeats, mode</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_playback
     }])
-  }, _toConsumableArray(_cache[143] || (_cache[143] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[130] || (_cache[130] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_88, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_89, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_90, [_cache[149] || (_cache[149] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_91, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_92, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_91, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_92, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_93, [_cache[136] || (_cache[136] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_94, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_95, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "0.75",
     "onUpdate:modelValue": _cache[45] || (_cache[45] = function ($event) {
       return $options.speed = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[145] || (_cache[145] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 0.75x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_93, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[132] || (_cache[132] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 0.75x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_96, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "1",
     "onUpdate:modelValue": _cache[46] || (_cache[46] = function ($event) {
       return $options.speed = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[146] || (_cache[146] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_94, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[133] || (_cache[133] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_97, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "1.25",
     "onUpdate:modelValue": _cache[47] || (_cache[47] = function ($event) {
       return $options.speed = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[147] || (_cache[147] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.25x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_95, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[134] || (_cache[134] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.25x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_98, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "1.5",
     "onUpdate:modelValue": _cache[48] || (_cache[48] = function ($event) {
       return $options.speed = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[148] || (_cache[148] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.5x", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_96, [_cache[152] || (_cache[152] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_97, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_98, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[135] || (_cache[135] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.5x", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_99, [_cache[139] || (_cache[139] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_100, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_101, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "auto",
     "onUpdate:modelValue": _cache[49] || (_cache[49] = function ($event) {
       return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[150] || (_cache[150] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_99, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[137] || (_cache[137] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_102, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "manual",
     "onUpdate:modelValue": _cache[50] || (_cache[50] = function ($event) {
       return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[151] || (_cache[151] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No (manual)", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_100, [_cache[153] || (_cache[153] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Delay between verses", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[138] || (_cache[138] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No (manual)", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_103, [_cache[140] || (_cache[140] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Delay between verses", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     "onUpdate:modelValue": _cache[51] || (_cache[51] = function ($event) {
       return $options.delay = $event;
     }),
@@ -26956,10 +27182,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
       key: d,
       value: d
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(d) + " second" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(d !== 1 ? 's' : ''), 9 /* TEXT, PROPS */, _hoisted_101);
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(d) + " second" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(d !== 1 ? 's' : ''), 9 /* TEXT, PROPS */, _hoisted_104);
   }), 64 /* STABLE_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.delay, void 0, {
     number: true
-  }]])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_playback]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_102, [_cache[154] || (_cache[154] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repetition Count", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }]])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_playback]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_105, [_cache[141] || (_cache[141] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repetition Count", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     "onUpdate:modelValue": _cache[52] || (_cache[52] = function ($event) {
       return $options.advancedRepeats = $event;
     }),
@@ -26968,131 +27194,131 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: n,
       value: n
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n) + " " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n === 1 ? 'time' : 'times'), 9 /* TEXT, PROPS */, _hoisted_103);
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n) + " " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n === 1 ? 'time' : 'times'), 9 /* TEXT, PROPS */, _hoisted_106);
   }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.advancedRepeats]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "checkbox",
     "onUpdate:modelValue": _cache[53] || (_cache[53] = function ($event) {
       return $options.repeatAndLoopAudio = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.repeatAndLoopAudio]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_104, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_105, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.repeatAndLoopAudio]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_107, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_108, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "checkbox",
     "onUpdate:modelValue": _cache[54] || (_cache[54] = function ($event) {
       return $options.repeatAndLoopAudio = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.repeatAndLoopAudio]]), _cache[155] || (_cache[155] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.repeatAndLoopAudio]]), _cache[142] || (_cache[142] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "switch-ui"
-  }, null, -1 /* CACHED */)), _cache[156] || (_cache[156] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, -1 /* CACHED */)), _cache[143] || (_cache[143] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "switch-text"
-  }, "Repeat & Loop Audio (Āyah by Āyah)", -1 /* CACHED */))]), _cache[157] || (_cache[157] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, "Repeat & Loop Audio (Āyah by Āyah)", -1 /* CACHED */))]), _cache[144] || (_cache[144] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Loop each ayah multiple times before advancing", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Practice Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_106, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Loop each ayah multiple times before advancing", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Practice Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_109, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
     onClick: _cache[55] || (_cache[55] = function ($event) {
       return $options.toggleSection('advanced_practice');
     }),
     type: "button"
-  }, [_cache[159] || (_cache[159] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-stars\"></i></span><span class=\"st-txt\"><span class=\"st-title\">3. Practice Mode</span><span class=\"st-sub\">Order and focus</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[146] || (_cache[146] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-stars\"></i></span><span class=\"st-txt\"><span class=\"st-title\">3. Practice Mode</span><span class=\"st-sub\">Order and focus</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_practice
     }])
-  }, _toConsumableArray(_cache[158] || (_cache[158] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[145] || (_cache[145] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_107, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_108, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_109, [_cache[163] || (_cache[163] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verse order", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_110, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_111, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_110, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_111, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_112, [_cache[150] || (_cache[150] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verse order", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_113, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_114, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "seq",
     "onUpdate:modelValue": _cache[56] || (_cache[56] = function ($event) {
       return $options.order = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.order]]), _cache[160] || (_cache[160] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Sequential (1,2,3...)", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_112, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.order]]), _cache[147] || (_cache[147] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Sequential (1,2,3...)", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_115, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "rand",
     "onUpdate:modelValue": _cache[57] || (_cache[57] = function ($event) {
       return $options.order = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.order]]), _cache[161] || (_cache[161] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Random order", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_113, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.order]]), _cache[148] || (_cache[148] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Random order", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_116, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "cum",
     "onUpdate:modelValue": _cache[58] || (_cache[58] = function ($event) {
       return $options.order = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.order]]), _cache[162] || (_cache[162] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Cumulative (1,1-2,1-3...)", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_114, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_115, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.order]]), _cache[149] || (_cache[149] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Cumulative (1,1-2,1-3...)", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_117, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_118, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "checkbox",
     "onUpdate:modelValue": _cache[59] || (_cache[59] = function ($event) {
       return $options.focusMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.focusMode]]), _cache[164] || (_cache[164] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.focusMode]]), _cache[151] || (_cache[151] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "switch-ui"
-  }, null, -1 /* CACHED */)), _cache[165] || (_cache[165] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, -1 /* CACHED */)), _cache[152] || (_cache[152] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "switch-text"
-  }, "Focus mode (dim other verses)", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_116, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_117, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Focus mode (dim other verses)", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_119, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_120, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "checkbox",
     "onUpdate:modelValue": _cache[60] || (_cache[60] = function ($event) {
       return $options.blurAdjacent = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.blurAdjacent]]), _cache[166] || (_cache[166] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.blurAdjacent]]), _cache[153] || (_cache[153] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "switch-ui"
-  }, null, -1 /* CACHED */)), _cache[167] || (_cache[167] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, -1 /* CACHED */)), _cache[154] || (_cache[154] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "switch-text"
-  }, "Blur non-active verses (active recall)", -1 /* CACHED */))])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_practice]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Saved Sessions "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" In advanced tab, wrap saved sessions section with v-if "), $options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_118, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Blur non-active verses (active recall)", -1 /* CACHED */))])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_practice]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Saved Sessions "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" In advanced tab, wrap saved sessions section with v-if "), $options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_121, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
     onClick: _cache[61] || (_cache[61] = function ($event) {
       return $options.toggleSection('advanced_saved');
     }),
     type: "button"
-  }, [_cache[169] || (_cache[169] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-save\"></i></span><span class=\"st-txt\"><span class=\"st-title\">4. Saved Sessions</span><span class=\"st-sub\">Save, load, delete</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[156] || (_cache[156] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-save\"></i></span><span class=\"st-txt\"><span class=\"st-title\">4. Saved Sessions</span><span class=\"st-sub\">Save, load, delete</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_saved
     }])
-  }, _toConsumableArray(_cache[168] || (_cache[168] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[155] || (_cache[155] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_119, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" existing saved sessions content ")], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_saved]])])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_122, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" existing saved sessions content ")], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_saved]])])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 1
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Add a message for logged out users "), _cache[170] || (_cache[170] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section class=\"sheet-section\"><div class=\"sheet-content\"><div class=\"field-stack\"><div class=\"field\"><div class=\"pill\" style=\"text-align:center;padding:16px;\"><i class=\"bi bi-person\"></i><span>Login to save and load sessions</span></div></div></div></div></section>", 1))], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Add a message for logged out users "), _cache[157] || (_cache[157] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section class=\"sheet-section\"><div class=\"sheet-content\"><div class=\"field-stack\"><div class=\"field\"><div class=\"pill\" style=\"text-align:center;padding:16px;\"><i class=\"bi bi-person\"></i><span>Login to save and load sessions</span></div></div></div></div></section>", 1))], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "start-btn",
     onClick: _cache[62] || (_cache[62] = function () {
       return $options.startSession && $options.startSession.apply($options, arguments);
     }),
     disabled: !$options.hasSelectedSurah
-  }, _toConsumableArray(_cache[171] || (_cache[171] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[158] || (_cache[158] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-fill"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Start Session ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_120)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_121, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Start Session ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_123)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_124, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-btn tools-btn-ghost",
     onClick: _cache[63] || (_cache[63] = function () {
       return $options.resetControls && $options.resetControls.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[172] || (_cache[172] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[159] || (_cache[159] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-counterclockwise"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Reset", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-btn tools-btn-ghost",
     onClick: _cache[64] || (_cache[64] = function ($event) {
       return $data.showTools = false;
     })
-  }, _toConsumableArray(_cache[173] || (_cache[173] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[160] || (_cache[160] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-circle"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Close", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button class=\"tools-btn tools-btn-primary\" @click=\"footerPrimaryAction\"><i\n              class=\"bi bi-play-circle\"></i><span>{{ footerPrimaryLabel }}</span></button> ")])], 2 /* CLASS */)], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Replace the entire quiz-overlay div section with this "), $data.quizActive ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_122, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_123, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_124, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[174] || (_cache[174] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Close", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button class=\"tools-btn tools-btn-primary\" @click=\"footerPrimaryAction\"><i\n              class=\"bi bi-play-circle\"></i><span>{{ footerPrimaryLabel }}</span></button> ")])], 2 /* CLASS */)], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Replace the entire quiz-overlay div section with this "), $data.quizActive ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_125, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_126, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_127, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[161] || (_cache[161] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", {
     "class": "quiz-title"
-  }, "Retention Check", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_125, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.quizContextLabel), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Retention Check", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_128, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.quizContextLabel), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "quiz-close",
     onClick: _cache[65] || (_cache[65] = function () {
       return $options.stopQuiz && $options.stopQuiz.apply($options, arguments);
     })
-  }, "×")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quiz Progress "), !$data.quizComplete ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_126, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_127, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "×")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quiz Progress "), !$data.quizComplete ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_129, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_130, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "quiz-progress-fill",
     style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
       width: ($data.quizIndex + 1) / $data.quizQueue.length * 100 + '%'
     })
-  }, null, 4 /* STYLE */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_128, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizIndex + 1) + " / " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizQueue.length), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$quizCard = $data.quizCard) === null || _$data$quizCard === void 0 ? void 0 : _$data$quizCard.type) === 'flashcard' ? 'Flashcard' : ((_$data$quizCard2 = $data.quizCard) === null || _$data$quizCard2 === void 0 ? void 0 : _$data$quizCard2.type) === 'mcq' ? 'Multiple Choice' : 'Question'), 1 /* TEXT */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quiz Summary (Complete) "), $data.quizComplete ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_129, [_cache[178] || (_cache[178] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, 4 /* STYLE */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_131, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizIndex + 1) + " / " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizQueue.length), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$quizCard = $data.quizCard) === null || _$data$quizCard === void 0 ? void 0 : _$data$quizCard.type) === 'flashcard' ? 'Flashcard' : ((_$data$quizCard2 = $data.quizCard) === null || _$data$quizCard2 === void 0 ? void 0 : _$data$quizCard2.type) === 'mcq' ? 'Multiple Choice' : 'Question'), 1 /* TEXT */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quiz Summary (Complete) "), $data.quizComplete ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_132, [_cache[165] || (_cache[165] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "quiz-summary-icon"
-  }, "🎉", -1 /* CACHED */)), _cache[179] || (_cache[179] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Session Complete!", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_130, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_131, [_cache[175] || (_cache[175] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, "🎉", -1 /* CACHED */)), _cache[166] || (_cache[166] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Session Complete!", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_133, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_134, [_cache[162] || (_cache[162] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "stat-label"
-  }, "Score", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_132, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizScore) + "/" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizQueue.length), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_133, [_cache[176] || (_cache[176] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, "Score", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_135, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizScore) + "/" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizQueue.length), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_136, [_cache[163] || (_cache[163] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "stat-label"
-  }, "Accuracy", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_134, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.quizAccuracy) + "%", 1 /* TEXT */)])]), $data.quizMistakes.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_135, [_cache[177] || (_cache[177] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Verses to review:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_136, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quizMistakes, function (m) {
+  }, "Accuracy", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_137, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.quizAccuracy) + "%", 1 /* TEXT */)])]), $data.quizMistakes.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_138, [_cache[164] || (_cache[164] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Verses to review:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_139, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quizMistakes, function (m) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
       key: m,
       "class": "mistake-tag"
     }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(m), 1 /* TEXT */);
-  }), 128 /* KEYED_FRAGMENT */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_137, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }), 128 /* KEYED_FRAGMENT */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_140, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-outline",
     onClick: _cache[66] || (_cache[66] = function () {
       return $options.stopQuiz && $options.stopQuiz.apply($options, arguments);
@@ -27104,21 +27330,21 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     })
   }, "Try Again")])])) : $data.quizCard ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 2
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quiz Card "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_138, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Flashcard Type "), $data.quizCard.type === 'flashcard' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_139, [_cache[181] || (_cache[181] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quiz Card "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_141, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Flashcard Type "), $data.quizCard.type === 'flashcard' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_142, [_cache[168] || (_cache[168] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "quiz-question"
   }, "Recite this verse:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "quiz-arabic",
     dir: "rtl",
     innerHTML: $data.quizCard.arabic
-  }, null, 8 /* PROPS */, _hoisted_140), !$data.quizRevealed ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
+  }, null, 8 /* PROPS */, _hoisted_143), !$data.quizRevealed ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
     key: 0,
     "class": "quiz-reveal-btn",
     onClick: _cache[68] || (_cache[68] = function ($event) {
       return $data.quizRevealed = true;
     })
-  }, _toConsumableArray(_cache[180] || (_cache[180] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[167] || (_cache[167] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-eye"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Reveal Answer ", -1 /* CACHED */)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.quizRevealed ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_141, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_142, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizCard.translation), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_143, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Reveal Answer ", -1 /* CACHED */)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.quizRevealed ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_144, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_145, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizCard.translation), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_146, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "grade-btn",
     onClick: _cache[69] || (_cache[69] = function ($event) {
       return $options.submitQuiz(2);
@@ -27140,38 +27366,38 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     })
   }, "Easy")])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])) : $data.quizCard.type === 'mcq' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 1
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Multiple Choice Type "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[182] || (_cache[182] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Multiple Choice Type "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[169] || (_cache[169] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "quiz-question"
-  }, "Which verse matches this meaning?", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_144, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizCard.prompt), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_145, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quizOptions, function (opt) {
+  }, "Which verse matches this meaning?", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_147, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizCard.prompt), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_148, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quizOptions, function (opt) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
       key: opt.key,
       "class": "quiz-option",
       onClick: function onClick($event) {
         return $options.submitQuiz(opt.key === $data.quizCard.key ? 4 : 2);
       }
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(opt.label), 9 /* TEXT, PROPS */, _hoisted_146);
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(opt.label), 9 /* TEXT, PROPS */, _hoisted_149);
   }), 128 /* KEYED_FRAGMENT */))])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : $data.quizCard.type === 'audio_mcq' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 2
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio MCQ Type "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[183] || (_cache[183] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio MCQ Type "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[170] || (_cache[170] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "quiz-question"
   }, "Listen and choose the correct verse", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "quiz-play-audio",
     onClick: _cache[73] || (_cache[73] = function ($event) {
       return $options.playVerse($data.quizCard);
     })
-  }, "▶ Play Audio"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_147, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quizOptions, function (opt) {
+  }, "▶ Play Audio"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_150, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quizOptions, function (opt) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
       key: opt.key,
       "class": "quiz-option",
       onClick: function onClick($event) {
         return $options.submitQuiz(opt.key === $data.quizCard.key ? 4 : 2);
       }
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(opt.label), 9 /* TEXT, PROPS */, _hoisted_148);
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(opt.label), 9 /* TEXT, PROPS */, _hoisted_151);
   }), 128 /* KEYED_FRAGMENT */))])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : $data.quizCard.type === 'blank' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 3
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Fill Blank Type "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[184] || (_cache[184] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Fill Blank Type "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[171] || (_cache[171] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "quiz-question"
-  }, "Fill in the missing word:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_149, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizCard.prompt), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Fill in the missing word:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_152, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizCard.prompt), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "text",
     "onUpdate:modelValue": _cache[74] || (_cache[74] = function ($event) {
       return $data.quizAnswer = $event;
@@ -27201,142 +27427,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         animationDelay: Math.random() * 0.2 + 's'
       })
     }, null, 4 /* STYLE */);
-  }), 64 /* STABLE_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio Player "), $data.playerVisible ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_150, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "player-progress",
-    onClick: _cache[77] || (_cache[77] = function ($event) {
-      return _ctx.seek($event);
-    })
-  }, [_cache[185] || (_cache[185] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "player-track"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "player-fill",
-    style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
-      width: $options.seekPercent + '%'
-    })
-  }, null, 4 /* STYLE */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "player-handle",
-    style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
-      left: $options.seekPercent + '%'
-    })
-  }, null, 4 /* STYLE */)]), $data.playerCollapsed ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_151, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_152, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_153, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.collapsedPlayerTitle), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_154, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.collapsedPlayerSubtitle), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "player-icon play",
-    onClick: _cache[78] || (_cache[78] = function () {
-      return $options.togglePlay && $options.togglePlay.apply($options, arguments);
-    }),
-    "aria-label": "Play"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
-  }, null, 2 /* CLASS */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_155, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_156, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_157, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "player-icon",
-    onClick: _cache[79] || (_cache[79] = function () {
-      return $options.togglePlayerMenu && $options.togglePlayerMenu.apply($options, arguments);
-    }),
-    "aria-label": "Menu"
-  }, _toConsumableArray(_cache[186] || (_cache[186] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-three-dots"
-  }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "player-icon player-speed",
-    onClick: _cache[80] || (_cache[80] = function () {
-      return $options.applySpeed && $options.applySpeed.apply($options, arguments);
-    }),
-    "aria-label": "Speed"
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.speed) + "x", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "player-icon",
-    onClick: _cache[81] || (_cache[81] = function () {
-      return $options.prev && $options.prev.apply($options, arguments);
-    }),
-    disabled: !$options.canPrev,
-    "aria-label": "Previous"
-  }, _toConsumableArray(_cache[187] || (_cache[187] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-skip-backward-fill"
-  }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_158), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "player-icon play",
-    onClick: _cache[82] || (_cache[82] = function () {
-      return $options.togglePlay && $options.togglePlay.apply($options, arguments);
-    }),
-    "aria-label": "Play"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
-  }, null, 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "player-icon",
-    onClick: _cache[83] || (_cache[83] = function () {
-      return $options.next && $options.next.apply($options, arguments);
-    }),
-    disabled: !$options.canNext,
-    "aria-label": "Next"
-  }, _toConsumableArray(_cache[188] || (_cache[188] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-skip-forward-fill"
-  }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_159), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "player-icon",
-    onClick: _cache[84] || (_cache[84] = function () {
-      return $options.closePlayer && $options.closePlayer.apply($options, arguments);
-    }),
-    "aria-label": "Close"
-  }, _toConsumableArray(_cache[189] || (_cache[189] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_160, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.duration)), 1 /* TEXT */)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.playerCollapsed]]), $data.playerMenuOpen ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
-    key: 1,
-    "class": "player-menu-overlay",
-    onClick: _cache[92] || (_cache[92] = function ($event) {
-      return $data.playerMenuOpen = false;
-    })
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "player-menu",
-    onClick: _cache[91] || (_cache[91] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "player-menu-item",
-    onClick: _cache[85] || (_cache[85] = function () {
-      return $options.downloadCurrentAudio && $options.downloadCurrentAudio.apply($options, arguments);
-    })
-  }, _toConsumableArray(_cache[190] || (_cache[190] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "pm-ico"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-download"
-  })], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Download", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "player-menu-item",
-    onClick: _cache[86] || (_cache[86] = function ($event) {
-      $data.tab = 'advanced';
-      $data.showTools = true;
-      $data.playerMenuOpen = false;
-    })
-  }, _toConsumableArray(_cache[191] || (_cache[191] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "pm-ico"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-arrow-repeat"
-  })], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Manage repeat settings", -1 /* CACHED */)]))), _cache[194] || (_cache[194] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "player-menu-sep"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_161, [_cache[192] || (_cache[192] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "pm-label"
-  }, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    "class": "pm-range",
-    type: "range",
-    min: "0.5",
-    max: "1.5",
-    step: "0.1",
-    "onUpdate:modelValue": _cache[87] || (_cache[87] = function ($event) {
-      return $options.speed = $event;
-    }),
-    onInput: _cache[88] || (_cache[88] = function () {
-      return $options.applySpeed && $options.applySpeed.apply($options, arguments);
-    })
-  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.speed, void 0, {
-    number: true
-  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_162, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.speed) + "x", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_163, [_cache[193] || (_cache[193] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "pm-label"
-  }, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[89] || (_cache[89] = function ($event) {
-      return $options.reciterId = $event;
-    }),
-    onChange: _cache[90] || (_cache[90] = function () {
-      return $options.updateAudioReciter && $options.updateAudioReciter.apply($options, arguments);
-    }),
-    "class": "pm-select"
-  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.reciters, function (r) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
-      key: r.id,
-      value: r.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_164);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]])])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_165, null, 512 /* NEED_PATCH */)], 8 /* PROPS */, _hoisted_1);
+  }), 64 /* STABLE_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 8 /* PROPS */, _hoisted_1);
 }
 
 /***/ }),
@@ -33962,7 +34053,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n:root {\n  --bg: #f3eee6;\n  --surface: rgba(255, 250, 243, 0.88);\n  --surface-strong: rgba(255, 255, 255, 0.92);\n  --border: rgba(78, 58, 38, 0.10);\n  --text: #1f1a17;\n  --text-muted: #6c6258;\n  --accent: #9a6738;\n  --accent-strong: #6e4726;\n  --accent-soft: #d8c1a8;\n  --accent-light: rgba(154, 103, 56, 0.10);\n  --accent-wash: rgba(228, 211, 194, 0.42);\n  --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);\n  --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);\n  --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);\n  --radius: 16px;\n  --navbar-offset: 56px;\n  --tools-width: 440px;\n  --tools-footer-h: 78px;\n  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;\n  --font-ui: \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n[data-theme=\"dark\"] {\n  --bg: #15110f;\n  --surface: rgba(33, 27, 24, 0.88);\n  --surface-strong: rgba(44, 36, 31, 0.94);\n  --border: rgba(255, 235, 214, 0.10);\n  --text: #f1e7dc;\n  --text-muted: #bcae9f;\n  --accent: #d0a06b;\n  --accent-strong: #efc18d;\n  --accent-soft: #5f4530;\n  --accent-light: rgba(208, 160, 107, 0.14);\n  --accent-wash: rgba(208, 160, 107, 0.08);\n  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);\n  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);\n  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);\n}\n[data-theme=\"sepia\"] {\n  --bg: #efe2cb;\n  --surface: rgba(250, 241, 227, 0.88);\n  --surface-strong: rgba(255, 248, 237, 0.94);\n  --text: #352516;\n  --text-muted: #75624f;\n  --accent: #b8824e;\n  --accent-strong: #8f6033;\n  --accent-soft: #dcc3a6;\n  --accent-light: rgba(184, 130, 78, 0.12);\n  --accent-wash: rgba(221, 194, 162, 0.35);\n}\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\nbody {\n  font-family: var(--font-ui);\n  background: var(--bg);\n  color: var(--text);\n  background-image:\n    radial-gradient(circle at top left, rgba(255, 255, 255, 0.55), transparent 34%),\n    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 30%);\n}\n.app {\n  min-height: 100vh;\n  animation: appFade 260ms ease-out;\n}\n\n/* Header */\n.app-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 12px 24px;\n  background: var(--surface);\n  border-bottom: 1px solid var(--border);\n  backdrop-filter: blur(10px);\n  position: sticky;\n  top: 0;\n  z-index: 20;\n}\n\n/* Ensure tajweed styles work inside word tags */\n.verse-arabic word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n\n/* Preserve tajweed styling inside highlighted words */\n.verse-arabic word.highlighted tajweed,\n.verse-arabic word.highlighted .tajweed {\n  color: inherit;\n}\n.verse-arabic.word-highlight-enabled {\n  cursor: pointer;\n}\n\n/* Original tajweed styles - ensure they work */\n.verse-arabic tajweed.ham_wasl,\n.verse-arabic .ham_wasl {\n  color: #9c27b0;\n}\n.verse-arabic tajweed.ghunnah,\n.verse-arabic .ghunnah {\n  color: #1f7a8c;\n}\n.verse-arabic tajweed.idgham_ghunnah,\n.verse-arabic .idgham_ghunnah {\n  color: #1f7a8c;\n}\n.verse-arabic tajweed.idgham_wo_ghunnah,\n.verse-arabic .idgham_wo_ghunnah {\n  color: #0f766e;\n}\n.verse-arabic tajweed.iqlab,\n.verse-arabic .iqlab {\n  color: #2563eb;\n}\n.verse-arabic tajweed.ikhafa,\n.verse-arabic .ikhafa {\n  color: #f59e0b;\n}\n.verse-arabic tajweed.qlqla,\n.verse-arabic .qlqla,\n.verse-arabic tajweed.qalqalah,\n.verse-arabic .qalqalah {\n  color: #ef4444;\n}\n.verse-arabic tajweed.madda_normal,\n.verse-arabic .madda_normal,\n.verse-arabic tajweed.madda_permissible,\n.verse-arabic .madda_permissible,\n.verse-arabic tajweed.madda_necessary,\n.verse-arabic .madda_necessary {\n  color: #8b5cf6;\n}\n.verse-arabic tajweed.idgham_shafawi,\n.verse-arabic .idgham_shafawi,\n.verse-arabic tajweed.ikhafa_shafawi,\n.verse-arabic .ikhafa_shafawi {\n  color: #db2777;\n}\n.verse-arabic tajweed.slnt,\n.verse-arabic .slnt,\n.verse-arabic tajweed.waqf,\n.verse-arabic .waqf {\n  color: #6b7280;\n}\n\n/* Add to your style section */\n.verse-arabic word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic.word-highlight-enabled {\n  cursor: pointer;\n}\n\n/* Add this to your style section - replace the existing .word-item.highlighted */\n.word-item.word-highlighted {\n  background: var(--accent) !important;\n  color: white !important;\n  transform: scale(1.05);\n  transition: all 0.15s ease;\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.4);\n  position: relative;\n  z-index: 2;\n}\n.word-item.word-highlighted .word-arabic,\n.word-item.word-highlighted .word-meaning {\n  color: white !important;\n}\n.word-item.word-highlighted .word-audio-btn {\n  color: white !important;\n  opacity: 1;\n}\n\n/* Mode Indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  margin: 8px 0 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n.mode-indicator i {\n  font-size: 0.75rem;\n}\n[data-theme=\"dark\"] .mode-indicator {\n  background: rgba(208, 160, 107, 0.12);\n  border-color: rgba(208, 160, 107, 0.25);\n}\n.verse-translation {\n  font-size: 0.85rem;\n  color: #5a6b63;\n  line-height: 1.6;\n  padding-top: 12px;\n  margin-top: 8px;\n  border-top: 1px solid var(--border);\n  display: block;\n}\n[data-theme=\"dark\"] .verse-translation {\n  color: #a0a0b0;\n}\n[data-theme=\"sepia\"] .verse-translation {\n  color: #7a684a;\n}\n.header-left {\n  display: flex;\n  align-items: center;\n  gap: 32px;\n  flex-wrap: wrap;\n}\n\n/* Verses Grid */\n.verses-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  margin-top: 20px;\n}\n.verse-card {\n  background: var(--surface);\n  border-radius: 20px;\n  padding: 24px;\n  transition: all 0.2s ease;\n  border: 1px solid var(--border);\n  position: relative;\n}\n.verse-card.active {\n  border-left: 4px solid var(--accent);\n  background: var(--accent-light);\n}\n.verse-card.focus-mode {\n  opacity: 0.4;\n}\n.verse-card.focus-mode.active {\n  opacity: 1;\n}\n.verse-card.blurred {\n  filter: blur(4px);\n}\n.verse-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 16px;\n}\n.verse-badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-number {\n  font-size: 0.75rem;\n  padding: 4px 12px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  color: var(--accent);\n}\n.verse-ref {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 8px;\n}\n.start-btn {\n  width: 100%;\n  padding: 7px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  border-radius: 10px;\n  color: white;\n  font-size: 1rem;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  margin-top: 20px;\n  transition: all 0.2s;\n}\n.start-btn:hover:not(:disabled) {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);\n}\n.start-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.start-btn:disabled:hover {\n  transform: none;\n  box-shadow: var(--shadow-sm);\n}\n.verse-play-btn,\n.verse-focus-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.verse-play-btn:hover,\n.verse-focus-btn:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.verse-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.4rem;\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n.verse-transliteration {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  font-style: italic;\n  margin-top: 8px;\n}\n.verse-words {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 12px;\n  margin-top: 16px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n}\n.word-item {\n  background: var(--accent-light);\n  padding: 6px 12px;\n  border-radius: 20px;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.75rem;\n}\n.word-arabic {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n}\n.word-meaning {\n  color: var(--text-muted);\n}\n.word-audio-btn {\n  background: none;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 0 4px;\n}\n\n/* Navigation Bar */\n.navigation-bar {\n  position: sticky;\n  bottom: 20px;\n  margin-top: 24px;\n  background: var(--surface);\n  border-radius: 60px;\n  padding: 12px 24px;\n  box-shadow: var(--shadow-lg);\n  border: 1px solid var(--border);\n  backdrop-filter: blur(10px);\n  z-index: 15;\n}\n.nav-buttons {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 16px;\n}\n.nav-btn {\n  padding: 10px 24px;\n  border-radius: 40px;\n  border: 1px solid var(--border);\n  background: var(--bg-surface);\n  color: var(--text);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.nav-btn:hover:not(:disabled) {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.nav-btn:disabled {\n  opacity: 0.4;\n  cursor: not-allowed;\n}\n.play-btn {\n  width: 56px;\n  height: 56px;\n  border-radius: 56px;\n  background: var(--accent-green, #2c5f4a);\n  border: none;\n  color: white;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.4rem;\n  transition: transform 0.2s;\n}\n.play-btn:hover {\n  transform: scale(1.02);\n}\n\n/* Simple Planner Styles */\n.planner-simple {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.goal-item {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 8px 0;\n  border-bottom: 1px solid var(--border);\n}\n.goal-item span {\n  font-size: 0.8rem;\n  color: var(--text);\n}\n.input-small {\n  width: 80px;\n  padding: 6px 10px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  color: var(--text);\n  text-align: center;\n}\n.today-plan {\n  background: var(--accent-light);\n  border-radius: 12px;\n  padding: 12px;\n  margin-top: 8px;\n}\n.plan-header {\n  font-weight: 600;\n  margin-bottom: 10px;\n  font-size: 0.85rem;\n}\n.plan-details {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n}\n.plan-item {\n  display: flex;\n  justify-content: space-between;\n  font-size: 0.75rem;\n}\n.plan-item span {\n  color: var(--text-muted);\n}\n.planner-actions {\n  display: flex;\n  gap: 10px;\n  margin-top: 16px;\n}\n.btn-secondary {\n  flex: 1;\n  padding: 10px;\n  border-radius: 40px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.75rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.btn-primary {\n  flex: 1;\n  padding: 10px;\n  border-radius: 40px;\n  background: var(--accent-green, #2c5f4a);\n  border: none;\n  color: white;\n  cursor: pointer;\n  font-size: 0.75rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.weak-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  max-height: 300px;\n  overflow-y: auto;\n}\n.weak-item {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 8px 10px;\n  background: var(--surface);\n  border-radius: 10px;\n  border: 1px solid var(--border);\n}\n.weak-ref {\n  font-family: monospace;\n  font-size: 0.8rem;\n  font-weight: 500;\n}\n.weak-lapses {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.brand {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.brand-mark {\n  font-size: 1.4rem;\n  color: var(--accent);\n}\n.brand-name {\n  font-weight: 500;\n  font-size: 0.95rem;\n}\n.session-name {\n  font-size: 0.85rem;\n  font-weight: 450;\n}\n.session-meta {\n  display: flex;\n  gap: 8px;\n  margin-top: 4px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.header-right {\n  display: flex;\n  gap: 8px;\n}\n.icon-btn {\n  width: 34px;\n  height: 34px;\n  border-radius: 12px;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.58));\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: var(--text-muted);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n}\n\n/* Main */\n.main {\n  transition: padding-right 0.25s ease;\n  padding: 20px 24px 100px;\n}\n.main.tools-open {\n  padding-right: var(--tools-width);\n}\n.main.tools-open .content {\n  max-width: min(980px, calc(100vw - var(--tools-width) - 80px));\n}\n.content {\n  max-width: 1120px;\n  margin: 0 auto;\n}\n.reading-toolbar {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  margin-bottom: 16px;\n  padding: 12px 14px;\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.reading-toolbar-group {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  align-items: flex-start;\n}\n.toolbar-font-wrap {\n  position: relative;\n}\n.toolbar-font-menu {\n  position: absolute;\n  top: calc(100% + 8px);\n  left: 0;\n  min-width: 180px;\n  display: grid;\n  gap: 6px;\n  padding: 8px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: var(--surface-strong);\n  box-shadow: var(--shadow-md);\n  z-index: 12;\n}\n.toolbar-font-option {\n  width: 100%;\n  padding: 8px 10px;\n  border: 0;\n  border-radius: 10px;\n  background: transparent;\n  color: var(--text);\n  text-align: left;\n  font-size: 0.78rem;\n  cursor: pointer;\n}\n.toolbar-font-option.active,\n.toolbar-font-option:hover {\n  background: var(--accent-light);\n}\n.toolbar-chip {\n  border: 0;\n  border-radius: 999px;\n  padding: 8px 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  font-size: 0.75rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: var(--shadow-sm);\n}\n.toolbar-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.hero-card {\n  margin-bottom: 16px;\n  padding: 18px 18px 16px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 236, 226, 0.92));\n  box-shadow: var(--shadow-md);\n  display: grid;\n  gap: 14px;\n  animation: riseSoft 260ms ease-out;\n}\n.hero-kicker {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  color: var(--accent);\n}\n.hero-title {\n  margin-top: 6px;\n  font-size: 1.24rem;\n  font-weight: 500;\n  letter-spacing: -0.03em;\n}\n.hero-sub {\n  margin-top: 8px;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  max-width: 56ch;\n}\n.hero-flow {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n}\n.hero-step {\n  padding: 10px 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.62);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.74rem;\n}\n.hero-step span {\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  display: grid;\n  place-items: center;\n  background: var(--accent-light);\n  color: var(--accent);\n  font-size: 11px;\n}\n.hero-step strong {\n  font-weight: 500;\n}\n.hero-points {\n  display: grid;\n  gap: 8px;\n}\n.hero-point {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.hero-point i {\n  color: var(--accent);\n}\n.hero-actions,\n.empty-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n\n/* Session rail */\n.session-rail {\n  position: sticky;\n  top: 14px;\n  z-index: 18;\n  margin-bottom: 18px;\n  padding: 12px 14px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-md);\n  animation: railIn 280ms ease-out;\n}\n[data-theme=\"dark\"] .session-rail {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(18, 18, 18, 0.86);\n}\n.session-rail-top {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  gap: 12px;\n  align-items: center;\n}\n.session-rail-kicker {\n  font-size: 10px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  margin-top: 2px;\n  font-size: 14px;\n  font-weight: 450;\n}\n.session-rail-meta {\n  margin-top: 2px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.session-rail-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 8px;\n  margin-top: 10px;\n}\n.rail-stat {\n  padding: 8px 10px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-stat span {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n}\n.rail-stat strong {\n  font-size: 0.78rem;\n  font-weight: 500;\n}\n.rail-btn {\n  height: 34px;\n  padding: 0 12px;\n  border-radius: 13px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  color: var(--text);\n  font-size: 12px;\n  font-weight: 450;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n[data-theme=\"dark\"] .rail-btn {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.46);\n}\n.rail-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);\n}\n.rail-btn-ghost {\n  background: transparent;\n}\n.progress-bar {\n  flex: 1;\n  height: 4px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-wide {\n  margin-top: 10px;\n}\n.progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s;\n}\n.cta-btn {\n  padding: 6px 18px;\n  border-radius: 40px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  color: white;\n  font-size: 0.74rem;\n  font-weight: 450;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: 0 14px 30px rgba(154, 103, 56, 0.24);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n\n/* Empty */\n.empty {\n  padding: 40px 0;\n}\n.empty-card {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: var(--radius);\n  padding: 32px;\n  text-align: center;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-md);\n}\n.empty-icon {\n  font-family: var(--font-ar);\n  font-size: 2.2rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.empty-card h3 {\n  font-weight: 450;\n  margin-bottom: 6px;\n  font-size: 1rem;\n}\n.empty-card p {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  margin-bottom: 16px;\n}\n\n/* Verses */\n.verses {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.verses.compact .verse {\n  padding: 12px;\n}\n.verse {\n  transition: all 0.2s ease;\n}\n.verse.active {\n  border-left: 3px solid var(--accent);\n  background: var(--accent-light);\n}\n.verse-head {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 12px;\n}\n.verse-badge {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-num {\n  font-size: 0.7rem;\n  padding: 2px 8px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  color: var(--accent);\n}\n.verse-ref {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 6px;\n}\n.action-btn {\n  background: transparent;\n  border: none;\n  color: var(--text-muted);\n  cursor: pointer;\n  padding: 4px 8px;\n  border-radius: 6px;\n  font-size: 0.7rem;\n}\n.verse-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.7rem;\n  line-height: 2.25;\n  text-align: right;\n  direction: rtl;\n  margin: 12px 0 10px;\n  text-rendering: optimizeLegibility;\n  font-feature-settings: \"liga\" 1, \"calt\" 1;\n  font-variant-ligatures: contextual common-ligatures;\n  unicode-bidi: plaintext;\n}\n.verse-transliteration {\n  font-size: 0.94rem;\n  color: var(--text-muted);\n  line-height: 1.8;\n  margin-top: 6px;\n}\n.verse-words {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(84px, max-content));\n  gap: 10px 8px;\n  margin-top: 10px;\n  align-items: start;\n}\n.word {\n  background: var(--accent-light);\n  padding: 8px 10px 10px;\n  border-radius: 16px;\n  display: inline-grid;\n  justify-items: center;\n  gap: 3px;\n  font-size: 0.72rem;\n  position: relative;\n  cursor: default;\n  min-width: 84px;\n}\n.word.active {\n  background: var(--accent);\n  color: #fff;\n  box-shadow: 0 10px 24px rgba(154, 103, 56, 0.22);\n}\n.word-ar {\n  font-family: var(--font-ar);\n  font-size: 1.12rem;\n  line-height: 1.7;\n  color: var(--text);\n}\n.word-en {\n  color: var(--text-muted);\n  font-size: 0.66rem;\n  line-height: 1.35;\n  text-align: center;\n  max-width: 100%;\n  word-break: break-word;\n}\n.word-play {\n  background: rgba(255, 255, 255, 0.6);\n  border-radius: 999px;\n  width: 22px;\n  height: 22px;\n  border: none;\n  cursor: pointer;\n  font-size: 0.62rem;\n  display: grid;\n  place-items: center;\n  color: var(--accent);\n  margin-top: 3px;\n}\n.word-tooltip {\n  position: absolute;\n  left: 50%;\n  bottom: calc(100% + 8px);\n  transform: translateX(-50%);\n  min-width: 132px;\n  max-width: 220px;\n  display: grid;\n  gap: 4px;\n  padding: 8px 10px;\n  border-radius: 12px;\n  background: rgba(24, 27, 33, 0.96);\n  color: rgba(255, 255, 255, 0.94);\n  box-shadow: 0 14px 34px rgba(10, 12, 18, 0.24);\n  white-space: normal;\n  z-index: 8;\n  animation: fadeLift 140ms ease-out;\n}\n.word-tooltip::after {\n  content: \"\";\n  position: absolute;\n  left: 50%;\n  bottom: -5px;\n  width: 10px;\n  height: 10px;\n  transform: translateX(-50%) rotate(45deg);\n  background: rgba(24, 27, 33, 0.96);\n}\n.word-tooltip-ar {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n  line-height: 1.7;\n  text-align: right;\n}\n.word-tooltip-en {\n  font-size: 0.72rem;\n  line-height: 1.45;\n  color: rgba(255, 255, 255, 0.82);\n}\n.verse-footer {\n  margin-top: 14px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n  display: flex;\n  justify-content: space-between;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.verse-footer-side {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.verse-tool-btn {\n  width: 36px;\n  height: 36px;\n  border: 0;\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  box-shadow: var(--shadow-sm);\n}\n.verse-tool-btn.active {\n  background: var(--accent);\n  color: #fff;\n}\n.verse-arabic tajweed,\n.verse-arabic .tajweed {\n  font-family: inherit;\n}\n.verse-arabic tajweed.ham_wasl,\n.verse-arabic .ham_wasl {\n  color: #9c27b0;\n}\n.verse-arabic tajweed.ghunnah,\n.verse-arabic .ghunnah {\n  color: #1f7a8c;\n}\n.verse-arabic tajweed.idgham_ghunnah,\n.verse-arabic .idgham_ghunnah {\n  color: #1f7a8c;\n}\n.verse-arabic tajweed.idgham_wo_ghunnah,\n.verse-arabic .idgham_wo_ghunnah {\n  color: #0f766e;\n}\n.verse-arabic tajweed.iqlab,\n.verse-arabic .iqlab {\n  color: #2563eb;\n}\n.verse-arabic tajweed.ikhafa,\n.verse-arabic .ikhafa {\n  color: #f59e0b;\n}\n.verse-arabic tajweed.qlqla,\n.verse-arabic .qlqla,\n.verse-arabic tajweed.qalqalah,\n.verse-arabic .qalqalah {\n  color: #ef4444;\n}\n.verse-arabic tajweed.madda_normal,\n.verse-arabic .madda_normal,\n.verse-arabic tajweed.madda_permissible,\n.verse-arabic .madda_permissible,\n.verse-arabic tajweed.madda_necessary,\n.verse-arabic .madda_necessary {\n  color: #8b5cf6;\n}\n.verse-arabic tajweed.idgham_shafawi,\n.verse-arabic .idgham_shafawi,\n.verse-arabic tajweed.ikhafa_shafawi,\n.verse-arabic .ikhafa_shafawi {\n  color: #db2777;\n}\n.verse-arabic tajweed.slnt,\n.verse-arabic .slnt,\n.verse-arabic tajweed.waqf,\n.verse-arabic .waqf {\n  color: #6b7280;\n}\n\n/* Tools Panel */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  width: min(var(--tools-width), 100vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n}\n[data-theme=\"dark\"] .tools {\n  background: rgba(18, 18, 18, 0.9);\n  border-left-color: rgba(255, 255, 255, 0.08);\n  box-shadow: -40px 0 120px rgba(0, 0, 0, 0.55);\n}\n.tools.open {\n  transform: translateX(0);\n}\n@media (max-width: 768px) {\n.tools {\n    left: 0;\n    right: 0;\n    width: 100%;\n}\n.main.tools-open {\n    padding-right: 24px;\n}\n}\n@media (max-width: 1180px) {\n.main.tools-open {\n    padding-right: 24px;\n}\n.main.tools-open .content {\n    max-width: 1120px;\n}\n}\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n  background:\n    radial-gradient(circle at top right, rgba(154, 103, 56, 0.12), transparent 36%),\n    linear-gradient(180deg, rgba(255, 255, 255, 0.25), transparent 100%);\n}\n[data-theme=\"dark\"] .tools-top {\n  border-bottom-color: rgba(255, 255, 255, 0.08);\n}\n.tools-topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.tools-title {\n  font-size: 1rem;\n  font-weight: 700;\n  letter-spacing: -0.2px;\n  color: var(--text);\n}\n.tools-context {\n  margin-top: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 600;\n}\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n  color: rgba(0, 0, 0, 0.7);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n[data-theme=\"dark\"] .tools-x {\n  border-color: rgba(255, 255, 255, 0.1);\n  background: rgba(30, 30, 40, 0.35);\n  color: rgba(255, 255, 255, 0.85);\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n}\n.tools-tabs button {\n  flex: 1;\n  padding: 7px 10px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.82rem;\n  cursor: pointer;\n  color: rgba(0, 0, 0, 0.55);\n  font-weight: 450;\n  transition: background 140ms ease, color 140ms ease, transform 140ms ease;\n}\n.tools-tabs button.active {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));\n  box-shadow: var(--shadow-sm);\n  color: rgba(0, 0, 0, 0.85);\n}\n[data-theme=\"dark\"] .tools-tabs {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 255, 255, 0.08);\n}\n[data-theme=\"dark\"] .tools-tabs button {\n  color: rgba(255, 255, 255, 0.7);\n}\n[data-theme=\"dark\"] .tools-tabs button.active {\n  background: rgba(30, 30, 40, 0.9);\n  color: rgba(255, 255, 255, 0.92);\n  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);\n}\n.tools-body {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n}\n.sheet {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.sheet-section {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border-radius: 18px;\n  padding: 0;\n  overflow: hidden;\n  box-shadow: var(--shadow-sm);\n  animation: riseSoft 260ms ease-out;\n}\n[data-theme=\"dark\"] .sheet-section {\n  border-color: rgba(255, 255, 255, 0.08);\n  background: rgba(30, 30, 40, 0.45);\n}\n.sheet-section-accent {\n  border-color: rgba(154, 103, 56, 0.22);\n  background: linear-gradient(180deg, rgba(154, 103, 56, 0.14), rgba(233, 214, 194, 0.26));\n}\n.sheet-toggle {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border: none;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease;\n}\n[data-theme=\"dark\"] .sheet-toggle {\n  background: linear-gradient(180deg, rgba(30, 30, 40, 0.85), rgba(30, 30, 40, 0.45));\n}\n.st-left {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.st-ico {\n  width: 24px;\n  height: 24px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));\n  border: 1px solid rgba(139, 94, 60, 0.18);\n  flex: 0 0 auto;\n  font-size: 11px;\n  font-weight: 600;\n  color: var(--accent);\n}\n[data-theme=\"dark\"] .st-ico {\n  background: rgba(196, 154, 108, 0.10);\n  border-color: rgba(196, 154, 108, 0.14);\n}\n.st-txt {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 2px;\n  min-width: 0;\n}\n.st-title {\n  font-weight: 450;\n  letter-spacing: -0.2px;\n  color: var(--text);\n  font-size: 0.82rem;\n}\n.st-sub {\n  font-size: 0.66rem;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.st-chev {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  display: grid;\n  place-items: center;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  color: rgba(0, 0, 0, 0.65);\n  transition: transform 0.15s ease;\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .st-chev {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.35);\n  color: rgba(255, 255, 255, 0.75);\n}\n.st-chev.open {\n  transform: rotate(180deg);\n}\n.sheet-content {\n  padding: 16px 16px 18px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.tools-footer {\n  position: absolute;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  height: var(--tools-footer-h);\n  padding: 12px 16px 14px;\n  border-top: 1px solid var(--border);\n  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));\n  display: flex;\n  gap: 10px;\n  justify-content: space-between;\n  align-items: center;\n}\n[data-theme=\"dark\"] .tools-footer {\n  border-top-color: rgba(255, 255, 255, 0.08);\n  background: linear-gradient(to top, rgba(18, 18, 18, 0.98), rgba(18, 18, 18, 0.78), rgba(18, 18, 18, 0));\n}\n.tools-btn {\n  flex: 1;\n  min-height: 44px;\n  padding: 10px 10px;\n  border-radius: 15px;\n  font-weight: 500;\n  border: 1px solid rgba(0, 0, 0, 0.1);\n  cursor: pointer;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  line-height: 1;\n}\n.tools-btn span {\n  white-space: nowrap;\n}\n[data-theme=\"dark\"] .tools-btn {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.9);\n}\n.tools-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: rgba(0, 0, 0, 0.05);\n  color: white;\n  box-shadow: 0 18px 40px rgba(139, 94, 60, 0.32);\n}\n.flow-strip {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n  padding: 12px 14px 0;\n}\n.guide-copy {\n  padding: 0 14px 14px;\n}\n.guide-title {\n  font-size: 1rem;\n  font-weight: 700;\n}\n.guide-sub {\n  margin-top: 4px;\n  font-size: 0.84rem;\n  color: var(--text-muted);\n}\n.flow-step {\n  min-height: 30px;\n  padding: 6px 8px;\n  border-radius: 14px;\n  background: rgba(0, 0, 0, 0.04);\n  font-size: 10px;\n  color: var(--text-muted);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.flow-step.active {\n  background: rgba(139, 94, 60, 0.12);\n  color: var(--accent);\n}\n.field-stack {\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n}\n.action-grid-3 {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 8px;\n}\n@media (max-width: 640px) {\n.action-grid-3,\n  .radio-group-tight {\n    grid-template-columns: 1fr;\n}\n.hero-flow,\n  .session-rail-stats,\n  .flow-strip {\n    grid-template-columns: 1fr 1fr;\n}\n.reading-toolbar {\n    padding: 10px 12px;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 8px);\n    justify-content: center;\n}\n.verse {\n    padding: 16px 14px;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n}\n.session-rail-actions {\n    flex-wrap: wrap;\n}\n}\n.stat-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 10px;\n}\n@media (max-width: 520px) {\n.stat-grid {\n    grid-template-columns: 1fr;\n}\n}\n.stat {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 243, 0.62));\n  border-radius: 14px;\n  padding: 10px;\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .stat {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n}\n.stat-k {\n  font-size: 0.62rem;\n  color: var(--text-muted);\n  font-weight: 450;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.stat-v {\n  margin-top: 6px;\n  font-size: 1.18rem;\n  font-weight: 700;\n  color: var(--text);\n}\n.stat-s {\n  margin-top: 2px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n}\n.stat-cta {\n  margin-top: 10px;\n  width: 100%;\n  padding: 8px 10px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  cursor: pointer;\n  font-weight: 450;\n  font-size: 11px;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n}\n[data-theme=\"dark\"] .stat-cta {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.9);\n}\n.chart {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 243, 0.62));\n  border-radius: 14px;\n  padding: 10px;\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .chart {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n}\n.chart-title {\n  font-weight: 450;\n  color: var(--text);\n  margin-bottom: 8px;\n  font-size: 0.74rem;\n}\n.analytics-empty {\n  display: grid;\n  gap: 12px;\n}\n.analytics-empty-copy {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  font-weight: 600;\n}\n.skeleton-row {\n  height: 12px;\n  border-radius: 999px;\n  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.06));\n  background-size: 200% 100%;\n  animation: shimmer 1.2s ease-in-out infinite;\n}\n.skeleton-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 10px;\n}\n.skeleton-card {\n  height: 58px;\n  border-radius: 16px;\n  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.06));\n  background-size: 200% 100%;\n  animation: shimmer 1.2s ease-in-out infinite;\n}\n[data-theme=\"dark\"] .skeleton-row,\n[data-theme=\"dark\"] .skeleton-card {\n  background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.08));\n}\n@keyframes shimmer {\n0% {\n    background-position: 0% 0;\n}\n100% {\n    background-position: 200% 0;\n}\n}\n.bars {\n  display: grid;\n  grid-template-columns: repeat(14, 1fr);\n  gap: 5px;\n  align-items: end;\n  min-height: 68px;\n  padding-top: 6px;\n}\n.bar-col {\n  display: flex;\n  align-items: end;\n  justify-content: center;\n  min-height: 68px;\n}\n.bar {\n  width: 100%;\n  min-height: 6px;\n  border-radius: 999px;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.95), rgba(139, 94, 60, 0.32));\n}\n.bars-soft .bar {\n  background: linear-gradient(180deg, rgba(31, 122, 140, 0.95), rgba(31, 122, 140, 0.30));\n}\n.bars-danger .bar {\n  background: linear-gradient(180deg, rgba(190, 73, 73, 0.95), rgba(190, 73, 73, 0.28));\n}\n.planner-row {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n}\n.planner-settings {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.pill-input {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 12px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 249, 241, 0.62));\n  box-shadow: var(--shadow-sm);\n}\n.pill-input-row {\n  justify-content: space-between;\n}\n[data-theme=\"dark\"] .pill-input {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n}\n.pill-input span {\n  font-weight: 450;\n  color: rgba(0, 0, 0, 0.6);\n  min-width: 64px;\n  font-size: 11px;\n}\n[data-theme=\"dark\"] .pill-input span {\n  color: rgba(255, 255, 255, 0.7);\n}\n.pill-input .input,\n.pill-input .select {\n  flex: 1;\n  box-shadow: none;\n  padding: 10px 10px;\n  border-radius: 12px;\n}\n.empty-mini {\n  color: var(--text-muted);\n  font-weight: 400;\n}\n.leech-list {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.leech {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 249, 241, 0.62));\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .leech {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n}\n.leech-k {\n  font-weight: 450;\n  font-size: 0.84rem;\n}\n.leech-s {\n  color: var(--text-muted);\n  font-weight: 400;\n  font-size: 0.76rem;\n}\n.pill {\n  padding: 8px 10px;\n  border-radius: 999px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 243, 0.62));\n  font-weight: 450;\n  color: rgba(0, 0, 0, 0.75);\n  font-size: 11px;\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .pill {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n  color: rgba(255, 255, 255, 0.85);\n}\n.tools-inline-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.read-list {\n  display: grid;\n  gap: 8px;\n}\n.read-row {\n  display: flex;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  font-size: 0.76rem;\n  align-items: center;\n}\n.read-row strong {\n  font-weight: 500;\n  text-align: right;\n  overflow-wrap: anywhere;\n}\n.cta-row {\n  display: flex;\n  gap: 10px;\n  margin-top: 2px;\n  flex-wrap: wrap;\n}\n.cta-row-split .cta {\n  min-height: 46px;\n}\n.cta {\n  flex: 1;\n  padding: 10px 10px;\n  border-radius: 14px;\n  font-weight: 450;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 11px;\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.cta-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);\n}\n.cta-ghost {\n  background: rgba(255, 255, 255, 0.58);\n  box-shadow: var(--shadow-sm);\n}\n.quiz-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 80;\n  background: rgba(0, 0, 0, 0.35);\n  backdrop-filter: blur(6px);\n  display: grid;\n  place-items: center;\n  padding: 18px;\n}\n.quiz-card {\n  width: min(680px, 100%);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(250, 245, 239, 0.95));\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 22px;\n  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);\n  overflow: hidden;\n}\n[data-theme=\"dark\"] .quiz-card {\n  background: rgba(18, 18, 18, 0.92);\n  border-color: rgba(255, 255, 255, 0.10);\n}\n.quiz-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 18px 22px 14px;\n  border-bottom: 1px solid rgba(0, 0, 0, 0.08);\n}\n[data-theme=\"dark\"] .quiz-top {\n  border-bottom-color: rgba(255, 255, 255, 0.08);\n}\n.quiz-title-wrap {\n  display: grid;\n  gap: 4px;\n}\n.quiz-title {\n  font-weight: 500;\n  font-size: 1.05rem;\n}\n.quiz-title-sub {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.quiz-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.7);\n  cursor: pointer;\n  font-size: 20px;\n}\n[data-theme=\"dark\"] .quiz-x {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.5);\n  color: rgba(255, 255, 255, 0.9);\n}\n.quiz-meta {\n  padding: 14px 22px 0;\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.quiz-chip {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  padding: 7px 10px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n  font-size: 0.73rem;\n  box-shadow: var(--shadow-sm);\n}\n.quiz-body {\n  padding: 18px 22px 22px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.quiz-summary-title {\n  font-size: 1.18rem;\n  font-weight: 500;\n  letter-spacing: -0.02em;\n}\n.quiz-summary-grid {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n  margin-top: 6px;\n}\n.quiz-summary-skill-grid {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n}\n.quiz-summary-skill,\n.quiz-summary-explain {\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 10px 12px;\n  background: rgba(255, 255, 255, 0.72);\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .quiz-summary-skill,\n[data-theme=\"dark\"] .quiz-summary-explain {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n}\n.quiz-summary-s {\n  margin-top: 4px;\n  font-size: 0.74rem;\n  color: var(--text-muted);\n  line-height: 1.45;\n}\n.quiz-summary-item {\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 10px 10px;\n  background: rgba(255, 255, 255, 0.72);\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .quiz-summary-item {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n}\n.quiz-summary-k {\n  font-size: 0.7rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n.quiz-summary-v {\n  margin-top: 6px;\n  font-size: 1.08rem;\n  font-weight: 500;\n  color: var(--text);\n}\n.quiz-summary-mistakes {\n  margin-top: 6px;\n  display: grid;\n  gap: 8px;\n}\n.quiz-summary-tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.quiz-tag {\n  padding: 8px 10px;\n  border-radius: 999px;\n  background: rgba(190, 73, 73, 0.10);\n  border: 1px solid rgba(190, 73, 73, 0.18);\n  color: rgba(140, 30, 30, 0.9);\n  font-weight: 500;\n  font-size: 0.72rem;\n}\n[data-theme=\"dark\"] .quiz-tag {\n  background: rgba(190, 73, 73, 0.18);\n  color: rgba(255, 255, 255, 0.86);\n}\n@media (max-width: 520px) {\n.quiz-summary-grid,\n  .quiz-summary-skill-grid {\n    grid-template-columns: 1fr;\n}\n.quiz-top,\n  .quiz-body,\n  .quiz-meta,\n  .quiz-actions {\n    padding-left: 16px;\n    padding-right: 16px;\n}\n.quiz-grade,\n  .quiz-actions {\n    flex-direction: column;\n}\n}\n.quiz-prompt {\n  font-size: 1.02rem;\n  color: var(--text);\n  line-height: 1.7;\n}\n.quiz-section-label {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n.quiz-hint {\n  color: var(--text-muted);\n  font-size: 0.88rem;\n  line-height: 1.7;\n}\n.quiz-options {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.quiz-opt {\n  display: flex;\n  gap: 10px;\n  align-items: flex-start;\n  padding: 12px 14px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.8);\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  font-size: 0.86rem;\n  line-height: 1.55;\n}\n[data-theme=\"dark\"] .quiz-opt {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n}\n.quiz-actions {\n  padding: 0 22px 22px;\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.quiz-reveal {\n  padding: 10px 12px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.8);\n  cursor: pointer;\n  font-weight: 450;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n}\n[data-theme=\"dark\"] .quiz-reveal {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.9);\n}\n.quiz-action {\n  min-height: 42px;\n  padding: 9px 12px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.8);\n  cursor: pointer;\n  font-weight: 450;\n  font-size: 0.82rem;\n  box-shadow: var(--shadow-sm);\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.quiz-action-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n}\n.quiz-action-ghost {\n  color: var(--text);\n}\n.quiz-grade {\n  flex: 1;\n  display: flex;\n  gap: 10px;\n  justify-content: flex-end;\n  flex-wrap: wrap;\n}\n.qg {\n  min-height: 42px;\n  padding: 9px 12px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.78);\n  cursor: pointer;\n  font-weight: 450;\n  font-size: 0.82rem;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n}\n.qg.primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: rgba(0, 0, 0, 0.06);\n  color: white;\n}\n.banner {\n  position: fixed;\n  top: 14px;\n  left: 50%;\n  transform: translateX(-50%);\n  z-index: 120;\n  min-width: min(560px, calc(100vw - 24px));\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px 14px;\n  border-radius: 16px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.92);\n  backdrop-filter: blur(10px);\n  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);\n  font-weight: 450;\n  animation: riseSoft 220ms ease-out;\n}\n.banner-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.banner-action {\n  border: 0;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  padding: 9px 12px;\n  font-size: 0.78rem;\n  font-weight: 500;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n}\n.banner.success {\n  border-color: rgba(0, 150, 90, 0.25);\n}\n.banner.error {\n  border-color: rgba(200, 0, 50, 0.25);\n}\n.banner.info {\n  border-color: rgba(0, 0, 0, 0.10);\n}\n[data-theme=\"dark\"] .banner {\n  background: rgba(18, 18, 18, 0.88);\n  border-color: rgba(255, 255, 255, 0.12);\n  color: rgba(255, 255, 255, 0.92);\n}\n[data-theme=\"dark\"] .banner-action {\n  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);\n}\n.banner-x {\n  width: 36px;\n  height: 36px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n}\n[data-theme=\"dark\"] .banner-x {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.9);\n}\n.confetti {\n  position: fixed;\n  inset: 0;\n  pointer-events: none;\n  z-index: 140;\n  overflow: hidden;\n}\n.confetti-piece {\n  position: absolute;\n  top: -10px;\n  width: 8px;\n  height: 12px;\n  border-radius: 3px;\n  opacity: 0.9;\n  animation: confetti-fall 1.35s ease-in forwards;\n  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);\n}\n@keyframes fadeLift {\nfrom {\n    opacity: 0;\n    transform: translateX(-50%) translateY(4px);\n}\nto {\n    opacity: 1;\n    transform: translateX(-50%) translateY(0);\n}\n}\n@keyframes confetti-fall {\n0% {\n    transform: translateY(-20px) rotate(0deg);\n    opacity: 0;\n}\n10% {\n    opacity: 0.95;\n}\n100% {\n    transform: translateY(110vh) rotate(480deg);\n    opacity: 0;\n}\n}\n.row {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.mini-btn {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.68));\n  cursor: pointer;\n  font-size: 0.72rem;\n  color: var(--text);\n  white-space: nowrap;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.mini-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.mini-btn.danger {\n  border-color: rgba(255, 0, 0, 0.2);\n  color: #b00020;\n}\n.radio-group {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.radio {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 0.85rem;\n  color: var(--text);\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n}\n[data-theme=\"dark\"] .radio {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.25);\n}\n.radio input {\n  margin: 0;\n}\n.checkline {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.verses.focus .verse.dim {\n  opacity: 0.22;\n}\n.verse.blur {\n  filter: blur(4px);\n  opacity: 0.38;\n}\n.group {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  min-width: 0;\n}\n.field label {\n  font-size: 0.62rem;\n  font-weight: 700;\n  text-transform: uppercase;\n  color: var(--text-muted);\n  letter-spacing: 0.5px;\n}\n.select,\n.input {\n  width: 100%;\n  min-width: 0;\n  padding: 11px 12px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--text);\n  font-size: 0.8rem;\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n[data-theme=\"dark\"] .select,\n[data-theme=\"dark\"] .input {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.55);\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);\n}\n.select:focus,\n.input:focus {\n  outline: none;\n  border-color: rgba(139, 94, 60, 0.35);\n  box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.12), 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n.select-prominent {\n  border-color: rgba(139, 94, 60, 0.22);\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.12), rgba(255, 255, 255, 0.92));\n}\n.range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.range-compact>* {\n  flex: 1;\n}\n.range-single {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n  align-items: center;\n}\n.range span {\n  color: rgba(0, 0, 0, 0.35);\n  font-weight: 450;\n  font-size: 11px;\n}\n[data-theme=\"dark\"] .range span {\n  color: rgba(255, 255, 255, 0.35);\n}\n.radio-group {\n  gap: 12px;\n}\n.radio {\n  border-radius: 14px;\n  padding: 8px 10px;\n  font-size: 11px;\n  font-weight: 400;\n}\n.radio-group-tight {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.radio-group-tight .radio {\n  flex: 1 1 110px;\n  justify-content: center;\n}\n.row .select {\n  flex: 1;\n}\n.row .input,\n.row .select,\n.row .mini-btn {\n  min-width: 0;\n}\n.switch {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 11px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  cursor: pointer;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n}\n[data-theme=\"dark\"] .switch {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.25);\n}\n.switch input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.switch-ui {\n  width: 44px;\n  height: 26px;\n  border-radius: 999px;\n  background: rgba(0, 0, 0, 0.12);\n  position: relative;\n  flex: 0 0 auto;\n}\n[data-theme=\"dark\"] .switch-ui {\n  background: rgba(255, 255, 255, 0.14);\n}\n.switch-ui::after {\n  content: \"\";\n  position: absolute;\n  top: 3px;\n  left: 3px;\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  background: white;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);\n  transition: transform 0.15s ease, background 0.15s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.45);\n}\n.switch input:checked+.switch-ui::after {\n  transform: translateX(18px);\n}\n.switch-text {\n  font-size: 0.74rem;\n  color: rgba(0, 0, 0, 0.72);\n  font-weight: 400;\n}\n[data-theme=\"dark\"] .switch-text {\n  color: rgba(255, 255, 255, 0.82);\n}\n.range input {\n  flex: 1;\n}\n.toggle {\n  display: flex;\n  gap: 8px;\n}\n.toggle button {\n  flex: 1;\n  padding: 8px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n}\n.toggle button.active {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: var(--accent);\n  color: white;\n}\n.slider {\n  width: 100%;\n  height: 3px;\n  -webkit-appearance: none;\n  background: var(--border);\n  border-radius: 3px;\n}\n.slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 12px;\n  height: 12px;\n  border-radius: 50%;\n  background: var(--accent);\n  cursor: pointer;\n}\n.value {\n  color: var(--accent);\n  margin-left: 4px;\n}\n.check label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  cursor: pointer;\n  font-weight: normal;\n  text-transform: none;\n}\n.primary-btn {\n  padding: 12px;\n  border-radius: 40px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  color: white;\n  cursor: pointer;\n  font-weight: 450;\n  box-shadow: 0 16px 34px rgba(139, 94, 60, 0.26);\n}\n.full {\n  width: 100%;\n}\n\n/* Audio Player */\n.player-bar {\n  position: fixed;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  z-index: 100;\n  background: var(--surface);\n  border-top: 1px solid var(--border);\n  padding: 8px 16px;\n}\n.main.tools-open .player-bar {\n  right: var(--tools-width);\n}\n.player-collapsed-meta {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 2px 42px 2px 0;\n}\n.player-collapsed-copy {\n  min-width: 0;\n}\n.player-collapsed-title {\n  font-size: 12px;\n  font-weight: 500;\n  color: var(--text);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-collapsed-sub {\n  margin-top: 2px;\n  font-size: 10px;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-collapse {\n  position: absolute;\n  right: 12px;\n  top: 6px;\n  width: 34px;\n  height: 28px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  box-shadow: var(--shadow-sm);\n  cursor: pointer;\n  display: grid;\n  place-items: center;\n  color: rgba(73, 58, 45, 0.76);\n}\n[data-theme=\"dark\"] .player-collapse {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.85);\n}\n.player-progress {\n  position: relative;\n  height: 14px;\n  cursor: pointer;\n  margin-bottom: 4px;\n}\n.player-track {\n  position: absolute;\n  top: 6px;\n  left: 0;\n  right: 0;\n  height: 2px;\n  background: rgba(117, 101, 85, 0.16);\n  border-radius: 2px;\n}\n.player-fill {\n  position: absolute;\n  top: 6px;\n  left: 0;\n  height: 2px;\n  background: linear-gradient(90deg, var(--accent), var(--accent-strong));\n  border-radius: 2px;\n}\n.player-handle {\n  position: absolute;\n  top: 3px;\n  width: 8px;\n  height: 8px;\n  background: var(--accent);\n  box-shadow: 0 4px 14px rgba(154, 103, 56, 0.32);\n  border-radius: 50%;\n  transform: translateX(-50%);\n}\n.player-controls {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.player-time {\n  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace;\n  font-size: 11px;\n  color: rgba(73, 58, 45, 0.64);\n}\n.player-time.right {\n  text-align: right;\n}\n.player-center {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.player-icon {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.66));\n  border: 1px solid var(--border);\n  padding: 6px;\n  font-size: 16px;\n  line-height: 1;\n  cursor: pointer;\n  color: rgba(73, 58, 45, 0.76);\n  border-radius: 12px;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n}\n.player-icon:disabled {\n  opacity: 0.35;\n  cursor: not-allowed;\n}\n.player-icon.play {\n  font-size: 18px;\n  color: rgba(73, 58, 45, 0.92);\n}\n.player-menu-overlay {\n  position: fixed;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  top: 0;\n  z-index: 30;\n}\n.player-menu {\n  position: absolute;\n  left: 50%;\n  transform: translateX(-50%);\n  bottom: 58px;\n  width: min(420px, calc(100vw - 24px));\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 242, 234, 0.96));\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.14);\n  padding: 10px;\n}\n.player-menu-item {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 10px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 12px;\n  color: rgba(0, 0, 0, 0.85);\n  text-align: left;\n  border-radius: 12px;\n  transition: background 140ms ease, transform 140ms ease;\n}\n.player-menu-item:hover {\n  background: rgba(0, 0, 0, 0.04);\n}\n.pm-ico {\n  width: 18px;\n  text-align: center;\n  color: rgba(0, 0, 0, 0.65);\n}\n.player-menu-sep {\n  height: 1px;\n  background: rgba(0, 0, 0, 0.08);\n  margin: 6px 2px;\n}\n.player-menu-row {\n  display: grid;\n  grid-template-columns: 70px 1fr auto;\n  align-items: center;\n  gap: 10px;\n  padding: 8px 10px;\n}\n.pm-label {\n  font-size: 11px;\n  color: rgba(0, 0, 0, 0.65);\n}\n.pm-value {\n  font-size: 11px;\n  color: rgba(0, 0, 0, 0.75);\n  min-width: 40px;\n  text-align: right;\n}\n.pm-range {\n  width: 100%;\n}\n.pm-select {\n  grid-column: 2 / span 2;\n  padding: 8px 10px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: white;\n  font-size: 12px;\n}\n.icon-btn:hover,\n.rail-btn:hover,\n.cta-btn:hover,\n.tools-x:hover,\n.tools-tabs button:hover,\n.sheet-toggle:hover,\n.tools-btn:hover,\n.stat-cta:hover,\n.cta:hover,\n.quiz-opt:hover,\n.quiz-reveal:hover,\n.qg:hover,\n.mini-btn:hover,\n.radio:hover,\n.switch:hover,\n.player-icon:hover,\n.player-menu-item:hover {\n  transform: translateY(-1px);\n}\n.icon-btn:hover,\n.rail-btn:hover,\n.tools-x:hover,\n.tools-btn:hover,\n.stat-cta:hover,\n.cta:hover,\n.quiz-opt:hover,\n.quiz-reveal:hover,\n.qg:hover,\n.mini-btn:hover,\n.radio:hover,\n.switch:hover,\n.player-icon:hover {\n  box-shadow: var(--shadow-md);\n}\n.tools-tabs button:hover,\n.sheet-toggle:hover,\n.player-menu-item:hover {\n  background: rgba(255, 255, 255, 0.76);\n}\n@keyframes appFade {\n0% {\n    opacity: 0;\n    transform: translateY(4px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes railIn {\n0% {\n    opacity: 0;\n    transform: translateY(-8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes riseSoft {\n0% {\n    opacity: 0;\n    transform: translateY(8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n/* Responsive */\n@media (max-width: 768px) {\n.app-header {\n    padding: 10px 16px;\n}\n.main {\n    padding: 16px 16px 100px;\n}\n.main.tools-open {\n    padding-right: 16px;\n}\n.main.tools-open .player-bar {\n    right: 0;\n}\n.session-meta {\n    display: none;\n}\n.player-row {\n    gap: 8px;\n}\n.player-btn {\n    padding: 4px 8px;\n}\n.player-select {\n    display: none;\n}\n.player-controls {\n    flex-wrap: wrap;\n    justify-content: center;\n}\n.verse-arabic {\n    font-size: 1.2rem;\n}\n}\n@media (min-width: 1500px) {\n.content {\n    max-width: 1220px;\n}\n.main.tools-open .content {\n    max-width: min(1180px, calc(100vw - var(--tools-width) - 120px));\n}\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n:root {\n  --bg: #f3eee6;\n  --surface: rgba(255, 250, 243, 0.88);\n  --surface-strong: rgba(255, 255, 255, 0.92);\n  --border: rgba(78, 58, 38, 0.10);\n  --text: #1f1a17;\n  --text-muted: #6c6258;\n  --accent: #9a6738;\n  --accent-strong: #6e4726;\n  --accent-soft: #d8c1a8;\n  --accent-light: rgba(154, 103, 56, 0.10);\n  --accent-wash: rgba(228, 211, 194, 0.42);\n  --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);\n  --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);\n  --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);\n  --radius: 16px;\n  --navbar-offset: 56px;\n  --tools-width: 440px;\n  --tools-footer-h: 78px;\n  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;\n  --font-ui: \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n[data-theme=\"dark\"] {\n  --bg: #15110f;\n  --surface: rgba(33, 27, 24, 0.88);\n  --surface-strong: rgba(44, 36, 31, 0.94);\n  --border: rgba(255, 235, 214, 0.10);\n  --text: #f1e7dc;\n  --text-muted: #bcae9f;\n  --accent: #d0a06b;\n  --accent-strong: #efc18d;\n  --accent-soft: #5f4530;\n  --accent-light: rgba(208, 160, 107, 0.14);\n  --accent-wash: rgba(208, 160, 107, 0.08);\n  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);\n  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);\n  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);\n}\n[data-theme=\"sepia\"] {\n  --bg: #efe2cb;\n  --surface: rgba(250, 241, 227, 0.88);\n  --surface-strong: rgba(255, 248, 237, 0.94);\n  --text: #352516;\n  --text-muted: #75624f;\n  --accent: #b8824e;\n  --accent-strong: #8f6033;\n  --accent-soft: #dcc3a6;\n  --accent-light: rgba(184, 130, 78, 0.12);\n  --accent-wash: rgba(221, 194, 162, 0.35);\n}\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\nbody {\n  font-family: var(--font-ui);\n  background: var(--bg);\n  color: var(--text);\n  background-image:\n    radial-gradient(circle at top left, rgba(255, 255, 255, 0.55), transparent 34%),\n    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 30%);\n}\n.app {\n  min-height: 100vh;\n  animation: appFade 260ms ease-out;\n}\n\n/* Header */\n.app-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 12px 24px;\n  background: var(--surface);\n  border-bottom: 1px solid var(--border);\n  backdrop-filter: blur(10px);\n  position: sticky;\n  top: 0;\n  z-index: 20;\n}\n\n/* Ensure tajweed styles work inside word tags */\n.verse-arabic word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n\n/* Preserve tajweed styling inside highlighted words */\n.verse-arabic word.highlighted tajweed,\n.verse-arabic word.highlighted .tajweed {\n  color: inherit;\n}\n.verse-arabic.word-highlight-enabled {\n  cursor: pointer;\n}\n\n/* Original tajweed styles - ensure they work */\n.verse-arabic tajweed.ham_wasl,\n.verse-arabic .ham_wasl {\n  color: #9c27b0;\n}\n.verse-arabic tajweed.ghunnah,\n.verse-arabic .ghunnah {\n  color: #1f7a8c;\n}\n.verse-arabic tajweed.idgham_ghunnah,\n.verse-arabic .idgham_ghunnah {\n  color: #1f7a8c;\n}\n.verse-arabic tajweed.idgham_wo_ghunnah,\n.verse-arabic .idgham_wo_ghunnah {\n  color: #0f766e;\n}\n.verse-arabic tajweed.iqlab,\n.verse-arabic .iqlab {\n  color: #2563eb;\n}\n.verse-arabic tajweed.ikhafa,\n.verse-arabic .ikhafa {\n  color: #f59e0b;\n}\n.verse-arabic tajweed.qlqla,\n.verse-arabic .qlqla,\n.verse-arabic tajweed.qalqalah,\n.verse-arabic .qalqalah {\n  color: #ef4444;\n}\n.verse-arabic tajweed.madda_normal,\n.verse-arabic .madda_normal,\n.verse-arabic tajweed.madda_permissible,\n.verse-arabic .madda_permissible,\n.verse-arabic tajweed.madda_necessary,\n.verse-arabic .madda_necessary {\n  color: #8b5cf6;\n}\n.verse-arabic tajweed.idgham_shafawi,\n.verse-arabic .idgham_shafawi,\n.verse-arabic tajweed.ikhafa_shafawi,\n.verse-arabic .ikhafa_shafawi {\n  color: #db2777;\n}\n.verse-arabic tajweed.slnt,\n.verse-arabic .slnt,\n.verse-arabic tajweed.waqf,\n.verse-arabic .waqf {\n  color: #6b7280;\n}\n\n/* Add to your style section */\n.verse-font-controls {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  padding: 2px 6px;\n  margin-right: 8px;\n}\n.verse-font-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 12px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 10px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.verse-font-btn:hover {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n}\n.verse-font-size-indicator {\n  font-size: 10px;\n  min-width: 35px;\n  text-align: center;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n\n/* Adjust word items when font size changes */\n.verse-words {\n  transition: all 0.2s ease;\n}\n.word-item {\n  transition: all 0.2s ease;\n}\n\n/* Responsive adjustments */\n@media (max-width: 768px) {\n.verse-font-controls {\n    gap: 2px;\n    padding: 2px 4px;\n}\n.verse-font-btn {\n    width: 20px;\n    height: 20px;\n}\n.verse-font-size-indicator {\n    min-width: 30px;\n    font-size: 9px;\n}\n}\n\n/* Toolbar font controls */\n.toolbar-chip i.bi-dash-lg,\n.toolbar-chip i.bi-plus-lg {\n  font-size: 12px;\n}\n\n/* Add to your style section */\n.verse-arabic word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic.word-highlight-enabled {\n  cursor: pointer;\n}\n\n/* Add this to your style section - replace the existing .word-item.highlighted */\n.word-item.word-highlighted {\n  background: var(--accent) !important;\n  color: white !important;\n  transform: scale(1.05);\n  transition: all 0.15s ease;\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.4);\n  position: relative;\n  z-index: 2;\n}\n.word-item.word-highlighted .word-arabic,\n.word-item.word-highlighted .word-meaning {\n  color: white !important;\n}\n.word-item.word-highlighted .word-audio-btn {\n  color: white !important;\n  opacity: 1;\n}\n\n/* Mode Indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  margin: 8px 0 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n.mode-indicator i {\n  font-size: 0.75rem;\n}\n[data-theme=\"dark\"] .mode-indicator {\n  background: rgba(208, 160, 107, 0.12);\n  border-color: rgba(208, 160, 107, 0.25);\n}\n.verse-translation {\n  font-size: 0.85rem;\n  color: #5a6b63;\n  line-height: 1.6;\n  padding-top: 12px;\n  margin-top: 8px;\n  border-top: 1px solid var(--border);\n  display: block;\n}\n[data-theme=\"dark\"] .verse-translation {\n  color: #a0a0b0;\n}\n[data-theme=\"sepia\"] .verse-translation {\n  color: #7a684a;\n}\n.header-left {\n  display: flex;\n  align-items: center;\n  gap: 32px;\n  flex-wrap: wrap;\n}\n\n/* Verses Grid */\n.verses-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  margin-top: 20px;\n}\n.verse-card {\n  background: var(--surface);\n  border-radius: 20px;\n  padding: 24px;\n  transition: all 0.2s ease;\n  border: 1px solid var(--border);\n  position: relative;\n}\n.verse-card.active {\n  border-left: 4px solid var(--accent);\n  background: var(--accent-light);\n}\n.verse-card.focus-mode {\n  opacity: 0.4;\n}\n.verse-card.focus-mode.active {\n  opacity: 1;\n}\n.verse-card.blurred {\n  filter: blur(4px);\n}\n.verse-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 16px;\n}\n.verse-badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-number {\n  font-size: 0.75rem;\n  padding: 4px 12px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  color: var(--accent);\n}\n.verse-ref {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 8px;\n}\n.start-btn {\n  width: 100%;\n  padding: 7px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  border-radius: 10px;\n  color: white;\n  font-size: 1rem;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  margin-top: 20px;\n  transition: all 0.2s;\n}\n.start-btn:hover:not(:disabled) {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);\n}\n.start-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.start-btn:disabled:hover {\n  transform: none;\n  box-shadow: var(--shadow-sm);\n}\n.verse-play-btn,\n.verse-focus-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.verse-play-btn:hover,\n.verse-focus-btn:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.verse-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.4rem;\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n.verse-transliteration {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  font-style: italic;\n  margin-top: 8px;\n}\n.verse-words {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 12px;\n  margin-top: 16px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n}\n.word-item {\n  background: var(--accent-light);\n  padding: 6px 12px;\n  border-radius: 20px;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.75rem;\n}\n.word-arabic {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n}\n.word-meaning {\n  color: var(--text-muted);\n}\n.word-audio-btn {\n  background: none;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 0 4px;\n}\n\n/* Navigation Bar */\n.navigation-bar {\n  position: sticky;\n  bottom: 20px;\n  margin-top: 24px;\n  background: var(--surface);\n  border-radius: 60px;\n  padding: 12px 24px;\n  box-shadow: var(--shadow-lg);\n  border: 1px solid var(--border);\n  backdrop-filter: blur(10px);\n  z-index: 15;\n}\n.nav-buttons {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 16px;\n}\n.nav-btn {\n  padding: 10px 24px;\n  border-radius: 40px;\n  border: 1px solid var(--border);\n  background: var(--bg-surface);\n  color: var(--text);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.nav-btn:hover:not(:disabled) {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.nav-btn:disabled {\n  opacity: 0.4;\n  cursor: not-allowed;\n}\n.play-btn {\n  width: 56px;\n  height: 56px;\n  border-radius: 56px;\n  background: var(--accent-green, #2c5f4a);\n  border: none;\n  color: white;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.4rem;\n  transition: transform 0.2s;\n}\n.play-btn:hover {\n  transform: scale(1.02);\n}\n\n/* Simple Planner Styles */\n.planner-simple {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.goal-item {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 8px 0;\n  border-bottom: 1px solid var(--border);\n}\n.goal-item span {\n  font-size: 0.8rem;\n  color: var(--text);\n}\n.input-small {\n  width: 80px;\n  padding: 6px 10px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  color: var(--text);\n  text-align: center;\n}\n.today-plan {\n  background: var(--accent-light);\n  border-radius: 12px;\n  padding: 12px;\n  margin-top: 8px;\n}\n.plan-header {\n  font-weight: 600;\n  margin-bottom: 10px;\n  font-size: 0.85rem;\n}\n.plan-details {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n}\n.plan-item {\n  display: flex;\n  justify-content: space-between;\n  font-size: 0.75rem;\n}\n.plan-item span {\n  color: var(--text-muted);\n}\n.planner-actions {\n  display: flex;\n  gap: 10px;\n  margin-top: 16px;\n}\n.btn-secondary {\n  flex: 1;\n  padding: 10px;\n  border-radius: 40px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.75rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.btn-primary {\n  flex: 1;\n  padding: 10px;\n  border-radius: 40px;\n  background: var(--accent-green, #2c5f4a);\n  border: none;\n  color: white;\n  cursor: pointer;\n  font-size: 0.75rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.weak-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  max-height: 300px;\n  overflow-y: auto;\n}\n.weak-item {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 8px 10px;\n  background: var(--surface);\n  border-radius: 10px;\n  border: 1px solid var(--border);\n}\n.weak-ref {\n  font-family: monospace;\n  font-size: 0.8rem;\n  font-weight: 500;\n}\n.weak-lapses {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.brand {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.brand-mark {\n  font-size: 1.4rem;\n  color: var(--accent);\n}\n.brand-name {\n  font-weight: 500;\n  font-size: 0.95rem;\n}\n.session-name {\n  font-size: 0.85rem;\n  font-weight: 450;\n}\n.session-meta {\n  display: flex;\n  gap: 8px;\n  margin-top: 4px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.header-right {\n  display: flex;\n  gap: 8px;\n}\n.icon-btn {\n  width: 34px;\n  height: 34px;\n  border-radius: 12px;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.58));\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: var(--text-muted);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n}\n\n/* Main */\n.main {\n  transition: padding-right 0.25s ease;\n  padding: 20px 24px 100px;\n}\n.main.tools-open {\n  padding-right: var(--tools-width);\n}\n.main.tools-open .content {\n  max-width: min(980px, calc(100vw - var(--tools-width) - 80px));\n}\n.content {\n  max-width: 1120px;\n  margin: 0 auto;\n}\n.reading-toolbar {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  margin-bottom: 16px;\n  padding: 12px 14px;\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.reading-toolbar-group {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  align-items: flex-start;\n}\n.toolbar-font-wrap {\n  position: relative;\n}\n.toolbar-font-menu {\n  position: absolute;\n  top: calc(100% + 8px);\n  left: 0;\n  min-width: 180px;\n  display: grid;\n  gap: 6px;\n  padding: 8px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: var(--surface-strong);\n  box-shadow: var(--shadow-md);\n  z-index: 12;\n}\n.toolbar-font-option {\n  width: 100%;\n  padding: 8px 10px;\n  border: 0;\n  border-radius: 10px;\n  background: transparent;\n  color: var(--text);\n  text-align: left;\n  font-size: 0.78rem;\n  cursor: pointer;\n}\n.toolbar-font-option.active,\n.toolbar-font-option:hover {\n  background: var(--accent-light);\n}\n.toolbar-chip {\n  border: 0;\n  border-radius: 999px;\n  padding: 8px 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  font-size: 0.75rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: var(--shadow-sm);\n}\n.toolbar-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.hero-card {\n  margin-bottom: 16px;\n  padding: 18px 18px 16px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 236, 226, 0.92));\n  box-shadow: var(--shadow-md);\n  display: grid;\n  gap: 14px;\n  animation: riseSoft 260ms ease-out;\n}\n.hero-kicker {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  color: var(--accent);\n}\n.hero-title {\n  margin-top: 6px;\n  font-size: 1.24rem;\n  font-weight: 500;\n  letter-spacing: -0.03em;\n}\n.hero-sub {\n  margin-top: 8px;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  max-width: 56ch;\n}\n.hero-flow {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n}\n.hero-step {\n  padding: 10px 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.62);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.74rem;\n}\n.hero-step span {\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  display: grid;\n  place-items: center;\n  background: var(--accent-light);\n  color: var(--accent);\n  font-size: 11px;\n}\n.hero-step strong {\n  font-weight: 500;\n}\n.hero-points {\n  display: grid;\n  gap: 8px;\n}\n.hero-point {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.hero-point i {\n  color: var(--accent);\n}\n.hero-actions,\n.empty-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n\n/* Session rail */\n.session-rail {\n  position: sticky;\n  top: 14px;\n  z-index: 18;\n  margin-bottom: 18px;\n  padding: 12px 14px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-md);\n  animation: railIn 280ms ease-out;\n}\n[data-theme=\"dark\"] .session-rail {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(18, 18, 18, 0.86);\n}\n.session-rail-top {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  gap: 12px;\n  align-items: center;\n}\n.session-rail-kicker {\n  font-size: 10px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  margin-top: 2px;\n  font-size: 14px;\n  font-weight: 450;\n}\n.session-rail-meta {\n  margin-top: 2px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.session-rail-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 8px;\n  margin-top: 10px;\n}\n.rail-stat {\n  padding: 8px 10px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-stat span {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n}\n.rail-stat strong {\n  font-size: 0.78rem;\n  font-weight: 500;\n}\n.rail-btn {\n  height: 34px;\n  padding: 0 12px;\n  border-radius: 13px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  color: var(--text);\n  font-size: 12px;\n  font-weight: 450;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n[data-theme=\"dark\"] .rail-btn {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.46);\n}\n.rail-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);\n}\n.rail-btn-ghost {\n  background: transparent;\n}\n.progress-bar {\n  flex: 1;\n  height: 4px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-wide {\n  margin-top: 10px;\n}\n.progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s;\n}\n.cta-btn {\n  padding: 6px 18px;\n  border-radius: 40px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  color: white;\n  font-size: 0.74rem;\n  font-weight: 450;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: 0 14px 30px rgba(154, 103, 56, 0.24);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n\n/* Empty */\n.empty {\n  padding: 40px 0;\n}\n.empty-card {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: var(--radius);\n  padding: 32px;\n  text-align: center;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-md);\n}\n.empty-icon {\n  font-family: var(--font-ar);\n  font-size: 2.2rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.empty-card h3 {\n  font-weight: 450;\n  margin-bottom: 6px;\n  font-size: 1rem;\n}\n.empty-card p {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  margin-bottom: 16px;\n}\n\n/* Verses */\n.verses {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.verses.compact .verse {\n  padding: 12px;\n}\n.verse {\n  transition: all 0.2s ease;\n}\n.verse.active {\n  border-left: 3px solid var(--accent);\n  background: var(--accent-light);\n}\n.verse-head {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 12px;\n}\n.verse-badge {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-num {\n  font-size: 0.7rem;\n  padding: 2px 8px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  color: var(--accent);\n}\n.verse-ref {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 6px;\n}\n.action-btn {\n  background: transparent;\n  border: none;\n  color: var(--text-muted);\n  cursor: pointer;\n  padding: 4px 8px;\n  border-radius: 6px;\n  font-size: 0.7rem;\n}\n.verse-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.7rem;\n  line-height: 2.25;\n  text-align: right;\n  direction: rtl;\n  margin: 12px 0 10px;\n  text-rendering: optimizeLegibility;\n  font-feature-settings: \"liga\" 1, \"calt\" 1;\n  font-variant-ligatures: contextual common-ligatures;\n  unicode-bidi: plaintext;\n}\n.verse-transliteration {\n  font-size: 0.94rem;\n  color: var(--text-muted);\n  line-height: 1.8;\n  margin-top: 6px;\n}\n.verse-words {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(84px, max-content));\n  gap: 10px 8px;\n  margin-top: 10px;\n  align-items: start;\n}\n.word {\n  background: var(--accent-light);\n  padding: 8px 10px 10px;\n  border-radius: 16px;\n  display: inline-grid;\n  justify-items: center;\n  gap: 3px;\n  font-size: 0.72rem;\n  position: relative;\n  cursor: default;\n  min-width: 84px;\n}\n.word.active {\n  background: var(--accent);\n  color: #fff;\n  box-shadow: 0 10px 24px rgba(154, 103, 56, 0.22);\n}\n.word-ar {\n  font-family: var(--font-ar);\n  font-size: 1.12rem;\n  line-height: 1.7;\n  color: var(--text);\n}\n.word-en {\n  color: var(--text-muted);\n  font-size: 0.66rem;\n  line-height: 1.35;\n  text-align: center;\n  max-width: 100%;\n  word-break: break-word;\n}\n.word-play {\n  background: rgba(255, 255, 255, 0.6);\n  border-radius: 999px;\n  width: 22px;\n  height: 22px;\n  border: none;\n  cursor: pointer;\n  font-size: 0.62rem;\n  display: grid;\n  place-items: center;\n  color: var(--accent);\n  margin-top: 3px;\n}\n.word-tooltip {\n  position: absolute;\n  left: 50%;\n  bottom: calc(100% + 8px);\n  transform: translateX(-50%);\n  min-width: 132px;\n  max-width: 220px;\n  display: grid;\n  gap: 4px;\n  padding: 8px 10px;\n  border-radius: 12px;\n  background: rgba(24, 27, 33, 0.96);\n  color: rgba(255, 255, 255, 0.94);\n  box-shadow: 0 14px 34px rgba(10, 12, 18, 0.24);\n  white-space: normal;\n  z-index: 8;\n  animation: fadeLift 140ms ease-out;\n}\n.word-tooltip::after {\n  content: \"\";\n  position: absolute;\n  left: 50%;\n  bottom: -5px;\n  width: 10px;\n  height: 10px;\n  transform: translateX(-50%) rotate(45deg);\n  background: rgba(24, 27, 33, 0.96);\n}\n.word-tooltip-ar {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n  line-height: 1.7;\n  text-align: right;\n}\n.word-tooltip-en {\n  font-size: 0.72rem;\n  line-height: 1.45;\n  color: rgba(255, 255, 255, 0.82);\n}\n.verse-footer {\n  margin-top: 14px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n  display: flex;\n  justify-content: space-between;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.verse-footer-side {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.verse-tool-btn {\n  width: 36px;\n  height: 36px;\n  border: 0;\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  box-shadow: var(--shadow-sm);\n}\n.verse-tool-btn.active {\n  background: var(--accent);\n  color: #fff;\n}\n.verse-arabic tajweed,\n.verse-arabic .tajweed {\n  font-family: inherit;\n}\n.verse-arabic tajweed.ham_wasl,\n.verse-arabic .ham_wasl {\n  color: #9c27b0;\n}\n.verse-arabic tajweed.ghunnah,\n.verse-arabic .ghunnah {\n  color: #1f7a8c;\n}\n.verse-arabic tajweed.idgham_ghunnah,\n.verse-arabic .idgham_ghunnah {\n  color: #1f7a8c;\n}\n.verse-arabic tajweed.idgham_wo_ghunnah,\n.verse-arabic .idgham_wo_ghunnah {\n  color: #0f766e;\n}\n.verse-arabic tajweed.iqlab,\n.verse-arabic .iqlab {\n  color: #2563eb;\n}\n.verse-arabic tajweed.ikhafa,\n.verse-arabic .ikhafa {\n  color: #f59e0b;\n}\n.verse-arabic tajweed.qlqla,\n.verse-arabic .qlqla,\n.verse-arabic tajweed.qalqalah,\n.verse-arabic .qalqalah {\n  color: #ef4444;\n}\n.verse-arabic tajweed.madda_normal,\n.verse-arabic .madda_normal,\n.verse-arabic tajweed.madda_permissible,\n.verse-arabic .madda_permissible,\n.verse-arabic tajweed.madda_necessary,\n.verse-arabic .madda_necessary {\n  color: #8b5cf6;\n}\n.verse-arabic tajweed.idgham_shafawi,\n.verse-arabic .idgham_shafawi,\n.verse-arabic tajweed.ikhafa_shafawi,\n.verse-arabic .ikhafa_shafawi {\n  color: #db2777;\n}\n.verse-arabic tajweed.slnt,\n.verse-arabic .slnt,\n.verse-arabic tajweed.waqf,\n.verse-arabic .waqf {\n  color: #6b7280;\n}\n\n/* Tools Panel */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  width: min(var(--tools-width), 100vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n}\n[data-theme=\"dark\"] .tools {\n  background: rgba(18, 18, 18, 0.9);\n  border-left-color: rgba(255, 255, 255, 0.08);\n  box-shadow: -40px 0 120px rgba(0, 0, 0, 0.55);\n}\n.tools.open {\n  transform: translateX(0);\n}\n@media (max-width: 768px) {\n.tools {\n    left: 0;\n    right: 0;\n    width: 100%;\n}\n.main.tools-open {\n    padding-right: 24px;\n}\n}\n@media (max-width: 1180px) {\n.main.tools-open {\n    padding-right: 24px;\n}\n.main.tools-open .content {\n    max-width: 1120px;\n}\n}\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n  background:\n    radial-gradient(circle at top right, rgba(154, 103, 56, 0.12), transparent 36%),\n    linear-gradient(180deg, rgba(255, 255, 255, 0.25), transparent 100%);\n}\n[data-theme=\"dark\"] .tools-top {\n  border-bottom-color: rgba(255, 255, 255, 0.08);\n}\n.tools-topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.tools-title {\n  font-size: 1rem;\n  font-weight: 700;\n  letter-spacing: -0.2px;\n  color: var(--text);\n}\n.tools-context {\n  margin-top: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 600;\n}\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n  color: rgba(0, 0, 0, 0.7);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n[data-theme=\"dark\"] .tools-x {\n  border-color: rgba(255, 255, 255, 0.1);\n  background: rgba(30, 30, 40, 0.35);\n  color: rgba(255, 255, 255, 0.85);\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n}\n.tools-tabs button {\n  flex: 1;\n  padding: 7px 10px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.82rem;\n  cursor: pointer;\n  color: rgba(0, 0, 0, 0.55);\n  font-weight: 450;\n  transition: background 140ms ease, color 140ms ease, transform 140ms ease;\n}\n.tools-tabs button.active {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));\n  box-shadow: var(--shadow-sm);\n  color: rgba(0, 0, 0, 0.85);\n}\n[data-theme=\"dark\"] .tools-tabs {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 255, 255, 0.08);\n}\n[data-theme=\"dark\"] .tools-tabs button {\n  color: rgba(255, 255, 255, 0.7);\n}\n[data-theme=\"dark\"] .tools-tabs button.active {\n  background: rgba(30, 30, 40, 0.9);\n  color: rgba(255, 255, 255, 0.92);\n  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);\n}\n.tools-body {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n}\n.sheet {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.sheet-section {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border-radius: 18px;\n  padding: 0;\n  overflow: hidden;\n  box-shadow: var(--shadow-sm);\n  animation: riseSoft 260ms ease-out;\n}\n[data-theme=\"dark\"] .sheet-section {\n  border-color: rgba(255, 255, 255, 0.08);\n  background: rgba(30, 30, 40, 0.45);\n}\n.sheet-section-accent {\n  border-color: rgba(154, 103, 56, 0.22);\n  background: linear-gradient(180deg, rgba(154, 103, 56, 0.14), rgba(233, 214, 194, 0.26));\n}\n.sheet-toggle {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border: none;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease;\n}\n[data-theme=\"dark\"] .sheet-toggle {\n  background: linear-gradient(180deg, rgba(30, 30, 40, 0.85), rgba(30, 30, 40, 0.45));\n}\n.st-left {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.st-ico {\n  width: 24px;\n  height: 24px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));\n  border: 1px solid rgba(139, 94, 60, 0.18);\n  flex: 0 0 auto;\n  font-size: 11px;\n  font-weight: 600;\n  color: var(--accent);\n}\n[data-theme=\"dark\"] .st-ico {\n  background: rgba(196, 154, 108, 0.10);\n  border-color: rgba(196, 154, 108, 0.14);\n}\n.st-txt {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 2px;\n  min-width: 0;\n}\n.st-title {\n  font-weight: 450;\n  letter-spacing: -0.2px;\n  color: var(--text);\n  font-size: 0.82rem;\n}\n.st-sub {\n  font-size: 0.66rem;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.st-chev {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  display: grid;\n  place-items: center;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  color: rgba(0, 0, 0, 0.65);\n  transition: transform 0.15s ease;\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .st-chev {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.35);\n  color: rgba(255, 255, 255, 0.75);\n}\n.st-chev.open {\n  transform: rotate(180deg);\n}\n.sheet-content {\n  padding: 16px 16px 18px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.tools-footer {\n  position: absolute;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  height: var(--tools-footer-h);\n  padding: 12px 16px 14px;\n  border-top: 1px solid var(--border);\n  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));\n  display: flex;\n  gap: 10px;\n  justify-content: space-between;\n  align-items: center;\n}\n[data-theme=\"dark\"] .tools-footer {\n  border-top-color: rgba(255, 255, 255, 0.08);\n  background: linear-gradient(to top, rgba(18, 18, 18, 0.98), rgba(18, 18, 18, 0.78), rgba(18, 18, 18, 0));\n}\n.tools-btn {\n  flex: 1;\n  min-height: 44px;\n  padding: 10px 10px;\n  border-radius: 15px;\n  font-weight: 500;\n  border: 1px solid rgba(0, 0, 0, 0.1);\n  cursor: pointer;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  line-height: 1;\n}\n.tools-btn span {\n  white-space: nowrap;\n}\n[data-theme=\"dark\"] .tools-btn {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.9);\n}\n.tools-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: rgba(0, 0, 0, 0.05);\n  color: white;\n  box-shadow: 0 18px 40px rgba(139, 94, 60, 0.32);\n}\n.flow-strip {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n  padding: 12px 14px 0;\n}\n.guide-copy {\n  padding: 0 14px 14px;\n}\n.guide-title {\n  font-size: 1rem;\n  font-weight: 700;\n}\n.guide-sub {\n  margin-top: 4px;\n  font-size: 0.84rem;\n  color: var(--text-muted);\n}\n.flow-step {\n  min-height: 30px;\n  padding: 6px 8px;\n  border-radius: 14px;\n  background: rgba(0, 0, 0, 0.04);\n  font-size: 10px;\n  color: var(--text-muted);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.flow-step.active {\n  background: rgba(139, 94, 60, 0.12);\n  color: var(--accent);\n}\n.field-stack {\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n}\n.action-grid-3 {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 8px;\n}\n@media (max-width: 640px) {\n.action-grid-3,\n  .radio-group-tight {\n    grid-template-columns: 1fr;\n}\n.hero-flow,\n  .session-rail-stats,\n  .flow-strip {\n    grid-template-columns: 1fr 1fr;\n}\n.reading-toolbar {\n    padding: 10px 12px;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 8px);\n    justify-content: center;\n}\n.verse {\n    padding: 16px 14px;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n}\n.session-rail-actions {\n    flex-wrap: wrap;\n}\n}\n.stat-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 10px;\n}\n@media (max-width: 520px) {\n.stat-grid {\n    grid-template-columns: 1fr;\n}\n}\n.stat {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 243, 0.62));\n  border-radius: 14px;\n  padding: 10px;\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .stat {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n}\n.stat-k {\n  font-size: 0.62rem;\n  color: var(--text-muted);\n  font-weight: 450;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.stat-v {\n  margin-top: 6px;\n  font-size: 1.18rem;\n  font-weight: 700;\n  color: var(--text);\n}\n.stat-s {\n  margin-top: 2px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n}\n.stat-cta {\n  margin-top: 10px;\n  width: 100%;\n  padding: 8px 10px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  cursor: pointer;\n  font-weight: 450;\n  font-size: 11px;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n}\n[data-theme=\"dark\"] .stat-cta {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.9);\n}\n.chart {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 243, 0.62));\n  border-radius: 14px;\n  padding: 10px;\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .chart {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n}\n.chart-title {\n  font-weight: 450;\n  color: var(--text);\n  margin-bottom: 8px;\n  font-size: 0.74rem;\n}\n.analytics-empty {\n  display: grid;\n  gap: 12px;\n}\n.analytics-empty-copy {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  font-weight: 600;\n}\n.skeleton-row {\n  height: 12px;\n  border-radius: 999px;\n  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.06));\n  background-size: 200% 100%;\n  animation: shimmer 1.2s ease-in-out infinite;\n}\n.skeleton-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 10px;\n}\n.skeleton-card {\n  height: 58px;\n  border-radius: 16px;\n  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.06));\n  background-size: 200% 100%;\n  animation: shimmer 1.2s ease-in-out infinite;\n}\n[data-theme=\"dark\"] .skeleton-row,\n[data-theme=\"dark\"] .skeleton-card {\n  background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.08));\n}\n@keyframes shimmer {\n0% {\n    background-position: 0% 0;\n}\n100% {\n    background-position: 200% 0;\n}\n}\n.bars {\n  display: grid;\n  grid-template-columns: repeat(14, 1fr);\n  gap: 5px;\n  align-items: end;\n  min-height: 68px;\n  padding-top: 6px;\n}\n.bar-col {\n  display: flex;\n  align-items: end;\n  justify-content: center;\n  min-height: 68px;\n}\n.bar {\n  width: 100%;\n  min-height: 6px;\n  border-radius: 999px;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.95), rgba(139, 94, 60, 0.32));\n}\n.bars-soft .bar {\n  background: linear-gradient(180deg, rgba(31, 122, 140, 0.95), rgba(31, 122, 140, 0.30));\n}\n.bars-danger .bar {\n  background: linear-gradient(180deg, rgba(190, 73, 73, 0.95), rgba(190, 73, 73, 0.28));\n}\n.planner-row {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n}\n.planner-settings {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.pill-input {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 12px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 249, 241, 0.62));\n  box-shadow: var(--shadow-sm);\n}\n.pill-input-row {\n  justify-content: space-between;\n}\n[data-theme=\"dark\"] .pill-input {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n}\n.pill-input span {\n  font-weight: 450;\n  color: rgba(0, 0, 0, 0.6);\n  min-width: 64px;\n  font-size: 11px;\n}\n[data-theme=\"dark\"] .pill-input span {\n  color: rgba(255, 255, 255, 0.7);\n}\n.pill-input .input,\n.pill-input .select {\n  flex: 1;\n  box-shadow: none;\n  padding: 10px 10px;\n  border-radius: 12px;\n}\n.empty-mini {\n  color: var(--text-muted);\n  font-weight: 400;\n}\n.leech-list {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.leech {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 249, 241, 0.62));\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .leech {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n}\n.leech-k {\n  font-weight: 450;\n  font-size: 0.84rem;\n}\n.leech-s {\n  color: var(--text-muted);\n  font-weight: 400;\n  font-size: 0.76rem;\n}\n.pill {\n  padding: 8px 10px;\n  border-radius: 999px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 243, 0.62));\n  font-weight: 450;\n  color: rgba(0, 0, 0, 0.75);\n  font-size: 11px;\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .pill {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.40);\n  color: rgba(255, 255, 255, 0.85);\n}\n.tools-inline-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.read-list {\n  display: grid;\n  gap: 8px;\n}\n.read-row {\n  display: flex;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  font-size: 0.76rem;\n  align-items: center;\n}\n.read-row strong {\n  font-weight: 500;\n  text-align: right;\n  overflow-wrap: anywhere;\n}\n.cta-row {\n  display: flex;\n  gap: 10px;\n  margin-top: 2px;\n  flex-wrap: wrap;\n}\n.cta-row-split .cta {\n  min-height: 46px;\n}\n.cta {\n  flex: 1;\n  padding: 10px 10px;\n  border-radius: 14px;\n  font-weight: 450;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 11px;\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.cta-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);\n}\n.cta-ghost {\n  background: rgba(255, 255, 255, 0.58);\n  box-shadow: var(--shadow-sm);\n}\n.quiz-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 80;\n  background: rgba(0, 0, 0, 0.35);\n  backdrop-filter: blur(6px);\n  display: grid;\n  place-items: center;\n  padding: 18px;\n}\n.quiz-card {\n  width: min(680px, 100%);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(250, 245, 239, 0.95));\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 22px;\n  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);\n  overflow: hidden;\n}\n[data-theme=\"dark\"] .quiz-card {\n  background: rgba(18, 18, 18, 0.92);\n  border-color: rgba(255, 255, 255, 0.10);\n}\n.quiz-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 18px 22px 14px;\n  border-bottom: 1px solid rgba(0, 0, 0, 0.08);\n}\n[data-theme=\"dark\"] .quiz-top {\n  border-bottom-color: rgba(255, 255, 255, 0.08);\n}\n.quiz-title-wrap {\n  display: grid;\n  gap: 4px;\n}\n.quiz-title {\n  font-weight: 500;\n  font-size: 1.05rem;\n}\n.quiz-title-sub {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.quiz-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.7);\n  cursor: pointer;\n  font-size: 20px;\n}\n[data-theme=\"dark\"] .quiz-x {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.5);\n  color: rgba(255, 255, 255, 0.9);\n}\n.quiz-meta {\n  padding: 14px 22px 0;\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.quiz-chip {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  padding: 7px 10px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n  font-size: 0.73rem;\n  box-shadow: var(--shadow-sm);\n}\n.quiz-body {\n  padding: 18px 22px 22px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.quiz-summary-title {\n  font-size: 1.18rem;\n  font-weight: 500;\n  letter-spacing: -0.02em;\n}\n.quiz-summary-grid {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n  margin-top: 6px;\n}\n.quiz-summary-skill-grid {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n}\n.quiz-summary-skill,\n.quiz-summary-explain {\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 10px 12px;\n  background: rgba(255, 255, 255, 0.72);\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .quiz-summary-skill,\n[data-theme=\"dark\"] .quiz-summary-explain {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n}\n.quiz-summary-s {\n  margin-top: 4px;\n  font-size: 0.74rem;\n  color: var(--text-muted);\n  line-height: 1.45;\n}\n.quiz-summary-item {\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 10px 10px;\n  background: rgba(255, 255, 255, 0.72);\n  box-shadow: var(--shadow-sm);\n}\n[data-theme=\"dark\"] .quiz-summary-item {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n}\n.quiz-summary-k {\n  font-size: 0.7rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n.quiz-summary-v {\n  margin-top: 6px;\n  font-size: 1.08rem;\n  font-weight: 500;\n  color: var(--text);\n}\n.quiz-summary-mistakes {\n  margin-top: 6px;\n  display: grid;\n  gap: 8px;\n}\n.quiz-summary-tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.quiz-tag {\n  padding: 8px 10px;\n  border-radius: 999px;\n  background: rgba(190, 73, 73, 0.10);\n  border: 1px solid rgba(190, 73, 73, 0.18);\n  color: rgba(140, 30, 30, 0.9);\n  font-weight: 500;\n  font-size: 0.72rem;\n}\n[data-theme=\"dark\"] .quiz-tag {\n  background: rgba(190, 73, 73, 0.18);\n  color: rgba(255, 255, 255, 0.86);\n}\n@media (max-width: 520px) {\n.quiz-summary-grid,\n  .quiz-summary-skill-grid {\n    grid-template-columns: 1fr;\n}\n.quiz-top,\n  .quiz-body,\n  .quiz-meta,\n  .quiz-actions {\n    padding-left: 16px;\n    padding-right: 16px;\n}\n.quiz-grade,\n  .quiz-actions {\n    flex-direction: column;\n}\n}\n.quiz-prompt {\n  font-size: 1.02rem;\n  color: var(--text);\n  line-height: 1.7;\n}\n.quiz-section-label {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n.quiz-hint {\n  color: var(--text-muted);\n  font-size: 0.88rem;\n  line-height: 1.7;\n}\n.quiz-options {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.quiz-opt {\n  display: flex;\n  gap: 10px;\n  align-items: flex-start;\n  padding: 12px 14px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.8);\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  font-size: 0.86rem;\n  line-height: 1.55;\n}\n[data-theme=\"dark\"] .quiz-opt {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n}\n.quiz-actions {\n  padding: 0 22px 22px;\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.quiz-reveal {\n  padding: 10px 12px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.8);\n  cursor: pointer;\n  font-weight: 450;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n}\n[data-theme=\"dark\"] .quiz-reveal {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.9);\n}\n.quiz-action {\n  min-height: 42px;\n  padding: 9px 12px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.8);\n  cursor: pointer;\n  font-weight: 450;\n  font-size: 0.82rem;\n  box-shadow: var(--shadow-sm);\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.quiz-action-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n}\n.quiz-action-ghost {\n  color: var(--text);\n}\n.quiz-grade {\n  flex: 1;\n  display: flex;\n  gap: 10px;\n  justify-content: flex-end;\n  flex-wrap: wrap;\n}\n.qg {\n  min-height: 42px;\n  padding: 9px 12px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.78);\n  cursor: pointer;\n  font-weight: 450;\n  font-size: 0.82rem;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n}\n.qg.primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: rgba(0, 0, 0, 0.06);\n  color: white;\n}\n.banner {\n  position: fixed;\n  top: 14px;\n  left: 50%;\n  transform: translateX(-50%);\n  z-index: 120;\n  min-width: min(560px, calc(100vw - 24px));\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px 14px;\n  border-radius: 16px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.92);\n  backdrop-filter: blur(10px);\n  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);\n  font-weight: 450;\n  animation: riseSoft 220ms ease-out;\n}\n.banner-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.banner-action {\n  border: 0;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  padding: 9px 12px;\n  font-size: 0.78rem;\n  font-weight: 500;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n}\n.banner.success {\n  border-color: rgba(0, 150, 90, 0.25);\n}\n.banner.error {\n  border-color: rgba(200, 0, 50, 0.25);\n}\n.banner.info {\n  border-color: rgba(0, 0, 0, 0.10);\n}\n[data-theme=\"dark\"] .banner {\n  background: rgba(18, 18, 18, 0.88);\n  border-color: rgba(255, 255, 255, 0.12);\n  color: rgba(255, 255, 255, 0.92);\n}\n[data-theme=\"dark\"] .banner-action {\n  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);\n}\n.banner-x {\n  width: 36px;\n  height: 36px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n}\n[data-theme=\"dark\"] .banner-x {\n  border-color: rgba(255, 255, 255, 0.12);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.9);\n}\n.confetti {\n  position: fixed;\n  inset: 0;\n  pointer-events: none;\n  z-index: 140;\n  overflow: hidden;\n}\n.confetti-piece {\n  position: absolute;\n  top: -10px;\n  width: 8px;\n  height: 12px;\n  border-radius: 3px;\n  opacity: 0.9;\n  animation: confetti-fall 1.35s ease-in forwards;\n  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);\n}\n@keyframes fadeLift {\nfrom {\n    opacity: 0;\n    transform: translateX(-50%) translateY(4px);\n}\nto {\n    opacity: 1;\n    transform: translateX(-50%) translateY(0);\n}\n}\n@keyframes confetti-fall {\n0% {\n    transform: translateY(-20px) rotate(0deg);\n    opacity: 0;\n}\n10% {\n    opacity: 0.95;\n}\n100% {\n    transform: translateY(110vh) rotate(480deg);\n    opacity: 0;\n}\n}\n.row {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.mini-btn {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.68));\n  cursor: pointer;\n  font-size: 0.72rem;\n  color: var(--text);\n  white-space: nowrap;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.mini-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.mini-btn.danger {\n  border-color: rgba(255, 0, 0, 0.2);\n  color: #b00020;\n}\n.radio-group {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.radio {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 0.85rem;\n  color: var(--text);\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n}\n[data-theme=\"dark\"] .radio {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.25);\n}\n.radio input {\n  margin: 0;\n}\n.checkline {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.verses.focus .verse.dim {\n  opacity: 0.22;\n}\n.verse.blur {\n  filter: blur(4px);\n  opacity: 0.38;\n}\n.group {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  min-width: 0;\n}\n.field label {\n  font-size: 0.62rem;\n  font-weight: 700;\n  text-transform: uppercase;\n  color: var(--text-muted);\n  letter-spacing: 0.5px;\n}\n.select,\n.input {\n  width: 100%;\n  min-width: 0;\n  padding: 11px 12px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--text);\n  font-size: 0.8rem;\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n[data-theme=\"dark\"] .select,\n[data-theme=\"dark\"] .input {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.55);\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);\n}\n.select:focus,\n.input:focus {\n  outline: none;\n  border-color: rgba(139, 94, 60, 0.35);\n  box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.12), 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n.select-prominent {\n  border-color: rgba(139, 94, 60, 0.22);\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.12), rgba(255, 255, 255, 0.92));\n}\n.range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.range-compact>* {\n  flex: 1;\n}\n.range-single {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n  align-items: center;\n}\n.range span {\n  color: rgba(0, 0, 0, 0.35);\n  font-weight: 450;\n  font-size: 11px;\n}\n[data-theme=\"dark\"] .range span {\n  color: rgba(255, 255, 255, 0.35);\n}\n.radio-group {\n  gap: 12px;\n}\n.radio {\n  border-radius: 14px;\n  padding: 8px 10px;\n  font-size: 11px;\n  font-weight: 400;\n}\n.radio-group-tight {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.radio-group-tight .radio {\n  flex: 1 1 110px;\n  justify-content: center;\n}\n.row .select {\n  flex: 1;\n}\n.row .input,\n.row .select,\n.row .mini-btn {\n  min-width: 0;\n}\n.switch {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 11px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  cursor: pointer;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n}\n[data-theme=\"dark\"] .switch {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.25);\n}\n.switch input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.switch-ui {\n  width: 44px;\n  height: 26px;\n  border-radius: 999px;\n  background: rgba(0, 0, 0, 0.12);\n  position: relative;\n  flex: 0 0 auto;\n}\n[data-theme=\"dark\"] .switch-ui {\n  background: rgba(255, 255, 255, 0.14);\n}\n.switch-ui::after {\n  content: \"\";\n  position: absolute;\n  top: 3px;\n  left: 3px;\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  background: white;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);\n  transition: transform 0.15s ease, background 0.15s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.45);\n}\n.switch input:checked+.switch-ui::after {\n  transform: translateX(18px);\n}\n.switch-text {\n  font-size: 0.74rem;\n  color: rgba(0, 0, 0, 0.72);\n  font-weight: 400;\n}\n[data-theme=\"dark\"] .switch-text {\n  color: rgba(255, 255, 255, 0.82);\n}\n.range input {\n  flex: 1;\n}\n.toggle {\n  display: flex;\n  gap: 8px;\n}\n.toggle button {\n  flex: 1;\n  padding: 8px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n}\n.toggle button.active {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: var(--accent);\n  color: white;\n}\n.slider {\n  width: 100%;\n  height: 3px;\n  -webkit-appearance: none;\n  background: var(--border);\n  border-radius: 3px;\n}\n.slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 12px;\n  height: 12px;\n  border-radius: 50%;\n  background: var(--accent);\n  cursor: pointer;\n}\n.value {\n  color: var(--accent);\n  margin-left: 4px;\n}\n.check label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  cursor: pointer;\n  font-weight: normal;\n  text-transform: none;\n}\n.primary-btn {\n  padding: 12px;\n  border-radius: 40px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  color: white;\n  cursor: pointer;\n  font-weight: 450;\n  box-shadow: 0 16px 34px rgba(139, 94, 60, 0.26);\n}\n.full {\n  width: 100%;\n}\n\n/* Audio Player */\n.player-bar {\n  position: fixed;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  z-index: 100;\n  background: var(--surface);\n  border-top: 1px solid var(--border);\n  padding: 8px 16px;\n}\n.main.tools-open .player-bar {\n  right: var(--tools-width);\n}\n.player-collapsed-meta {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 2px 42px 2px 0;\n}\n.player-collapsed-copy {\n  min-width: 0;\n}\n.player-collapsed-title {\n  font-size: 12px;\n  font-weight: 500;\n  color: var(--text);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-collapsed-sub {\n  margin-top: 2px;\n  font-size: 10px;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-collapse {\n  position: absolute;\n  right: 12px;\n  top: 6px;\n  width: 34px;\n  height: 28px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  box-shadow: var(--shadow-sm);\n  cursor: pointer;\n  display: grid;\n  place-items: center;\n  color: rgba(73, 58, 45, 0.76);\n}\n[data-theme=\"dark\"] .player-collapse {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n  color: rgba(255, 255, 255, 0.85);\n}\n.player-progress {\n  position: relative;\n  height: 14px;\n  cursor: pointer;\n  margin-bottom: 4px;\n}\n.player-track {\n  position: absolute;\n  top: 6px;\n  left: 0;\n  right: 0;\n  height: 2px;\n  background: rgba(117, 101, 85, 0.16);\n  border-radius: 2px;\n}\n.player-fill {\n  position: absolute;\n  top: 6px;\n  left: 0;\n  height: 2px;\n  background: linear-gradient(90deg, var(--accent), var(--accent-strong));\n  border-radius: 2px;\n}\n.player-handle {\n  position: absolute;\n  top: 3px;\n  width: 8px;\n  height: 8px;\n  background: var(--accent);\n  box-shadow: 0 4px 14px rgba(154, 103, 56, 0.32);\n  border-radius: 50%;\n  transform: translateX(-50%);\n}\n.player-controls {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.player-time {\n  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace;\n  font-size: 11px;\n  color: rgba(73, 58, 45, 0.64);\n}\n.player-time.right {\n  text-align: right;\n}\n.player-center {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.player-icon {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.66));\n  border: 1px solid var(--border);\n  padding: 6px;\n  font-size: 16px;\n  line-height: 1;\n  cursor: pointer;\n  color: rgba(73, 58, 45, 0.76);\n  border-radius: 12px;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n}\n.player-icon:disabled {\n  opacity: 0.35;\n  cursor: not-allowed;\n}\n.player-icon.play {\n  font-size: 18px;\n  color: rgba(73, 58, 45, 0.92);\n}\n.player-menu-overlay {\n  position: fixed;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  top: 0;\n  z-index: 30;\n}\n.player-menu {\n  position: absolute;\n  left: 50%;\n  transform: translateX(-50%);\n  bottom: 58px;\n  width: min(420px, calc(100vw - 24px));\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 242, 234, 0.96));\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.14);\n  padding: 10px;\n}\n.player-menu-item {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 10px;\n  border: none;\n  background: transparent;\n  cursor: pointer;\n  font-size: 12px;\n  color: rgba(0, 0, 0, 0.85);\n  text-align: left;\n  border-radius: 12px;\n  transition: background 140ms ease, transform 140ms ease;\n}\n.player-menu-item:hover {\n  background: rgba(0, 0, 0, 0.04);\n}\n.pm-ico {\n  width: 18px;\n  text-align: center;\n  color: rgba(0, 0, 0, 0.65);\n}\n.player-menu-sep {\n  height: 1px;\n  background: rgba(0, 0, 0, 0.08);\n  margin: 6px 2px;\n}\n.player-menu-row {\n  display: grid;\n  grid-template-columns: 70px 1fr auto;\n  align-items: center;\n  gap: 10px;\n  padding: 8px 10px;\n}\n.pm-label {\n  font-size: 11px;\n  color: rgba(0, 0, 0, 0.65);\n}\n.pm-value {\n  font-size: 11px;\n  color: rgba(0, 0, 0, 0.75);\n  min-width: 40px;\n  text-align: right;\n}\n.pm-range {\n  width: 100%;\n}\n.pm-select {\n  grid-column: 2 / span 2;\n  padding: 8px 10px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: white;\n  font-size: 12px;\n}\n.icon-btn:hover,\n.rail-btn:hover,\n.cta-btn:hover,\n.tools-x:hover,\n.tools-tabs button:hover,\n.sheet-toggle:hover,\n.tools-btn:hover,\n.stat-cta:hover,\n.cta:hover,\n.quiz-opt:hover,\n.quiz-reveal:hover,\n.qg:hover,\n.mini-btn:hover,\n.radio:hover,\n.switch:hover,\n.player-icon:hover,\n.player-menu-item:hover {\n  transform: translateY(-1px);\n}\n.icon-btn:hover,\n.rail-btn:hover,\n.tools-x:hover,\n.tools-btn:hover,\n.stat-cta:hover,\n.cta:hover,\n.quiz-opt:hover,\n.quiz-reveal:hover,\n.qg:hover,\n.mini-btn:hover,\n.radio:hover,\n.switch:hover,\n.player-icon:hover {\n  box-shadow: var(--shadow-md);\n}\n.tools-tabs button:hover,\n.sheet-toggle:hover,\n.player-menu-item:hover {\n  background: rgba(255, 255, 255, 0.76);\n}\n@keyframes appFade {\n0% {\n    opacity: 0;\n    transform: translateY(4px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes railIn {\n0% {\n    opacity: 0;\n    transform: translateY(-8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes riseSoft {\n0% {\n    opacity: 0;\n    transform: translateY(8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n/* Responsive */\n@media (max-width: 768px) {\n.app-header {\n    padding: 10px 16px;\n}\n.main {\n    padding: 16px 16px 100px;\n}\n.main.tools-open {\n    padding-right: 16px;\n}\n.main.tools-open .player-bar {\n    right: 0;\n}\n.session-meta {\n    display: none;\n}\n.player-row {\n    gap: 8px;\n}\n.player-btn {\n    padding: 4px 8px;\n}\n.player-select {\n    display: none;\n}\n.player-controls {\n    flex-wrap: wrap;\n    justify-content: center;\n}\n.verse-arabic {\n    font-size: 1.2rem;\n}\n}\n@media (min-width: 1500px) {\n.content {\n    max-width: 1220px;\n}\n.main.tools-open .content {\n    max-width: min(1180px, calc(100vw - var(--tools-width) - 120px));\n}\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
