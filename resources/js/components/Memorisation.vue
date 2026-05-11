@@ -4,7 +4,7 @@
       <span>{{ banner.message }}</span>
       <div class="banner-actions">
         <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
-          }}</button>
+        }}</button>
         <button class="banner-x" @click="banner = null" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
@@ -50,7 +50,7 @@
               <div class="session-rail-kicker">Current session</div>
               <div class="session-rail-title">{{ currentChapter.name_simple }}</div>
               <div class="session-rail-meta">Ayah {{ currentPosition }}/{{ totalVerses }} · Remaining {{ remainingAyahs
-              }} · {{ sessionTypeInfo.label }} · {{ progressPercent }}%</div>
+                }} · {{ sessionTypeInfo.label }} · {{ progressPercent }}%</div>
             </div>
             <div class="session-rail-actions">
               <button class="rail-btn rail-btn-ghost" @click="showTools = true">
@@ -180,26 +180,23 @@
               :style="{ fontSize: getVerseFontSize(verse.key) + '%' }">
             </div>
 
-            <!-- TRANSLATION -->
-            <div v-if="showTranslation && verse.translation" class="verse-translation"
-              :style="{ fontSize: (getVerseFontSize(verse.key) * 0.85) + '%' }">
+            <!-- Translation - shows only if showTranslation is true AND translation exists -->
+            <div v-if="showTranslation && verse.translation" class="verse-translation">
               {{ verse.translation }}
             </div>
 
-            <div v-if="showTransliteration && verse.transliteration" class="verse-transliteration"
-              :style="{ fontSize: (getVerseFontSize(verse.key) * 0.7) + '%' }">
+            <!-- Transliteration -->
+            <div v-if="showTransliteration && verse.transliteration" class="verse-transliteration">
               {{ verse.transliteration }}
             </div>
 
-            <!-- In the verse-words section -->
-            <div v-if="showWordByWord && verse.words?.length" class="verse-words">
-              <div v-for="(word, wi) in verse.words" :key="wi" class="word-item"
-                :class="{ 'word-highlighted': isWordHighlighted(verse.key, wi) }" :data-word-index="wi"
-                :data-verse-key="verse.key">
+            <!-- Words - shows only if showWordByWord is true AND words array has items -->
+            <div v-if="showWordByWord && verse.words && verse.words.length" class="verse-words">
+              <div v-for="(word, wi) in verse.words" :key="wi" class="word-item">
                 <span class="word-arabic" dir="rtl">{{ word.ar }}</span>
                 <span class="word-meaning">{{ word.en }}</span>
                 <button v-if="word.audio && wordByWordAudioEnabled" class="word-audio-btn"
-                  @click="playWordAudio(word.audio, `${verse.key}:${wi}`)">
+                  @click="playWordAudio(word.audio)">
                   <i class="bi bi-volume-up"></i>
                 </button>
               </div>
@@ -1235,6 +1232,52 @@ export default {
   },
 
   methods: {
+    async fetchTransliterationFromAPI(surahId) {
+      try {
+        // Use alquran.cloud API with proper headers to avoid CORS
+        const response = await axios.get(`https://api.alquran.cloud/v1/surah/${surahId}/en.transliteration`, {
+          headers: {
+            'Accept': 'application/json',
+          }
+        })
+
+        if (response.data && response.data.data) {
+          const verses = response.data.data.ayahs || []
+          const transliterationMap = {}
+          verses.forEach(verse => {
+            transliterationMap[verse.numberInSurah] = verse.text
+          })
+          console.log(`Loaded ${Object.keys(transliterationMap).length} transliterations`)
+          return transliterationMap
+        }
+        return {}
+      } catch (e) {
+        console.error('Transliteration fetch failed:', e)
+        return {}
+      }
+    },
+
+    async fetchTransliteration(surahId) {
+      try {
+        // Try a different API for transliteration
+        const response = await axios.get(`https://api.alquran.cloud/v1/surah/${surahId}/en.transliteration`)
+
+        if (response.data && response.data.data) {
+          const verses = response.data.data.ayahs || []
+          const transliterationMap = {}
+          verses.forEach(verse => {
+            transliterationMap[verse.numberInSurah] = verse.text
+          })
+          console.log(`Loaded ${Object.keys(transliterationMap).length} transliterations for surah ${surahId}`)
+          return transliterationMap
+        }
+        return {}
+      } catch (e) {
+        console.error('Transliteration fetch failed:', e)
+        return {}
+      }
+    },
+
     increaseGlobalFont() {
       this.defaultFontSize = Math.min(this.maxFontSize, this.defaultFontSize + this.fontSizeStep);
       this.persistVerseFontSizes();
@@ -1882,174 +1925,129 @@ export default {
 
       console.log('=== LOAD VERSES START ===')
       console.log('Chapter ID:', this.chapterId)
-      console.log('Range:', this.rangeStart, '-', this.rangeEnd)
-      console.log('Reciter ID:', this.reciterId)
-      console.log('Current Mode:', this.currentMode)
 
-      // Test if we can reach the API at all
-      try {
-        const testRes = await axios.get('https://api.quran.com/api/v4/chapters/1', { timeout: 5000 })
-        console.log('API Connectivity Test: OK', testRes.status)
-      } catch (testErr) {
-        console.error('API Connectivity Test FAILED:', testErr.message)
-        this.showBanner('Cannot reach Quran.com API. Check your internet or try a VPN.', 'error', 10000)
-        return
-      }
-
+      // Translation ID 20 = Sahih International (cleanest English translation)
       const params = {
         per_page: 300,
-        translations: this.shouldRequestTranslations() ? '131' : undefined,
-        words: this.shouldRequestWords(),
         audio: this.reciterId,
-        fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs'
+        fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs',
+        words: this.showWordByWord || false,
+        word_fields: 'text_uthmani,translation',
+        translations: '20'  // Sahih International - clean English
       }
-
-      console.log('Request params:', JSON.stringify(params, null, 2))
 
       try {
         const url = `https://api.quran.com/api/v4/verses/by_chapter/${this.chapterId}`
         console.log('Fetching:', url)
 
-        const res = await axios.get(url, {
-          params,
-          timeout: 15000,
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
-        })
-
-        console.log('Response status:', res.status)
-        console.log('Response headers:', res.headers)
-
-        // Check if response has data
-        if (!res.data) {
-          console.error('Response has no data property')
-          this.showBanner('Invalid response from server', 'error', 5000)
-          return
-        }
-
-        console.log('Response data type:', typeof res.data)
-        console.log('Response data keys:', Object.keys(res.data))
-
+        const res = await axios.get(url, { params })
         const all = res.data?.verses || []
-        console.log('All verses count:', all.length)
 
-        if (all.length === 0) {
-          console.error('API returned 0 verses for chapter:', this.chapterId)
-          this.showBanner(`No verses found for Surah ${this.chapterId}. Try another surah.`, 'error', 5000)
-          return
-        }
+        const start = this.rangeStart
+        const end = this.rangeEnd
 
-        // Log first verse to check structure
-        console.log('First verse sample:', JSON.stringify(all[0], null, 2))
+        const mappedVerses = all
+          .filter(v => v.verse_number >= start && v.verse_number <= end)
+          .map(v => {
+            const audio = this.normalizeAudioUrl(v.audio?.url || '')
 
-        const start = this.rangeStart, end = this.rangeEnd
-        console.log(`Filtering verses ${start}-${end}`)
+            // Clean translation - remove HTML tags like <sup>, <footnote>, etc.
+            let rawTranslation = ''
+            if (v.translations && v.translations[0]) {
+              rawTranslation = v.translations[0].text
+            }
 
-        let mappedVerses = all.filter(v => v.verse_number >= start && v.verse_number <= end).map(v => {
-          const audio = this.normalizeAudioUrl(v.audio?.url || '')
-          console.log(`Verse ${v.verse_number} audio URL:`, audio || 'NO AUDIO')
+            // Remove HTML tags and footnote markers
+            let translation = this.cleanTranslationText(rawTranslation)
 
-          return {
-            key: v.verse_key,
-            number: v.verse_number,
-            arabic: v.text_qpc_hafs || v.text_uthmani_tajweed || v.text_uthmani || '',
-            translation: v.translations?.[0]?.text || '',
-            transliteration: '',
-            audio: audio,
-            words: (v.words || []).map(w => ({
-              ar: w.text_uthmani || w.text || '',
-              en: w.translation?.text || '',
-              tooltip: `${w.text_uthmani || w.text || ''} • ${w.translation?.text || ''}`.trim(),
-              audio: this.normalizeAudioUrl(w.audio_url)
-            }))
-          }
-        })
+            // Transliteration - use a proper source or leave empty
+            // The API doesn't provide transliteration, so we'll skip it
+            let transliteration = ''  // Leave empty until we find a reliable source
+
+            console.log(`Verse ${v.verse_number}:`, {
+              hasTranslation: !!translation,
+              translationLength: translation?.length || 0,
+              translationPreview: translation?.substring(0, 80)
+            })
+
+            return {
+              key: v.verse_key,
+              number: v.verse_number,
+              arabic: v.text_qpc_hafs || v.text_uthmani_tajweed || v.text_uthmani || '',
+              translation: translation,
+              transliteration: transliteration,  // Leave empty for now
+              audio: audio,
+              words: (v.words || []).map(w => ({
+                ar: w.text_uthmani || w.text || '',
+                en: w.translation?.text || w.translation || '',
+                tooltip: `${w.text_uthmani || ''} • ${w.translation?.text || ''}`.trim(),
+                audio: this.normalizeAudioUrl(w.audio_url)
+              }))
+            }
+          })
 
         console.log('Mapped verses count:', mappedVerses.length)
 
-        if (mappedVerses.length === 0) {
-          console.error('Filter returned 0 verses. Check range:', start, '-', end, 'vs available:', all.length)
-          this.showBanner(`Range ${start}-${end} is outside this surah (has ${all.length} verses)`, 'error', 5000)
-          return
+        if (mappedVerses.length > 0) {
+          console.log('Sample clean translation:', mappedVerses[0].translation)
         }
 
-        // Log first mapped verse
-        console.log('First mapped verse:', JSON.stringify(mappedVerses[0], null, 2))
-
-        if (this.script === 'tajweed') {
-          try {
-            const tajweedRes = await getSurahEdition(this.chapterId, 'quran-tajweed')
-            const ayahs = tajweedRes.data?.data?.ayahs || []
-            const byNumber = new Map(ayahs.map(a => [a.numberInSurah, this.normalizeTajweedText(a.text)]))
-            mappedVerses = mappedVerses.map(v => ({ ...v, arabic: byNumber.get(v.number) || v.arabic }))
-          } catch (e) {
-            console.error('Tajweed load failed:', e)
-          }
-        }
-
-        // Assign verses
+        // Update verses based on current mode
         if (this.currentMode === 'beginner') {
           this.beginner.verses = mappedVerses
-          if (!this.beginner.activeKey && mappedVerses.length) {
-            this.beginner.activeKey = mappedVerses[0].key
-          }
-          console.log('Beginner verses set:', this.beginner.verses.length)
         } else {
           this.advanced.verses = mappedVerses
-          if (!this.advanced.activeKey && mappedVerses.length) {
-            this.advanced.activeKey = mappedVerses[0].key
-          }
-          console.log('Advanced verses set:', this.advanced.verses.length)
-        }
-
-        // Update chapter info
-        if (!this.currentChapter) {
-          this.currentChapter = this.chapters.find(c => c.id === this.chapterId)
-          console.log('Current chapter set to:', this.currentChapter?.name_simple)
         }
 
         this.buildQueue()
-        console.log('Queue built with', this.queue.length, 'items')
         console.log('=== LOAD VERSES COMPLETE ===')
 
       } catch (e) {
-        console.error('=== LOAD VERSES ERROR ===')
-        console.error('Error type:', e.constructor.name)
-        console.error('Error message:', e.message)
-        console.error('Error code:', e.code)
+        console.error('Error loading verses:', e)
+        this.showBanner('Failed to load verses', 'error', 3000)
 
-        if (e.response) {
-          console.error('Response status:', e.response.status)
-          console.error('Response data:', e.response.data)
-          console.error('Response headers:', e.response.headers)
-
-          if (e.response.status === 404) {
-            this.showBanner(`Surah ${this.chapterId} not found`, 'error', 5000)
-          } else if (e.response.status === 429) {
-            this.showBanner('Rate limited. Wait 30 seconds and try again.', 'error', 5000)
-          } else {
-            this.showBanner(`Server error ${e.response.status}`, 'error', 5000)
-          }
-        } else if (e.request) {
-          console.error('No response received. Network issue?')
-          console.error('Request:', e.request)
-          this.showBanner('Network error. Check your connection or try VPN.', 'error', 8000)
-        } else {
-          console.error('Error config:', e.config)
-          this.showBanner(`Error: ${e.message}`, 'error', 5000)
-        }
-
-        // Clear verses on error
         if (this.currentMode === 'beginner') {
           this.beginner.verses = []
         } else {
           this.advanced.verses = []
         }
-
-        console.error('=== LOAD VERSES ERROR END ===')
       }
+    },
+
+    // Add this helper method to clean translation text
+    cleanTranslationText(text) {
+      if (!text) return ''
+
+      let cleaned = text
+
+      // Remove footnote tags like <sup>foot_note=197294></sup>
+      cleaned = cleaned.replace(/<sup>foot_note=\d+><\/sup>/gi, '')
+      cleaned = cleaned.replace(/<sup>.*?<\/sup>/gi, '')
+
+      // Remove any other HTML tags
+      cleaned = cleaned.replace(/<[^>]*>/g, '')
+
+      // Remove footnote numbers like [197294]
+      cleaned = cleaned.replace(/\[\d+\]/g, '')
+
+      // Remove extra spaces
+      cleaned = cleaned.replace(/\s+/g, ' ').trim()
+
+      return cleaned
+    },
+
+    // Helper method to generate simple transliteration
+    generateSimpleTransliteration(arabicText) {
+      // This is a very basic mapping - you might want to use a proper library
+      const map = {
+        'ا': 'a', 'ب': 'b', 'ت': 't', 'ث': 'th', 'ج': 'j', 'ح': 'h', 'خ': 'kh',
+        'د': 'd', 'ذ': 'dh', 'ر': 'r', 'ز': 'z', 'س': 's', 'ش': 'sh', 'ص': 's',
+        'ض': 'd', 'ط': 't', 'ظ': 'z', 'ع': 'a', 'غ': 'gh', 'ف': 'f', 'ق': 'q',
+        'ك': 'k', 'ل': 'l', 'م': 'm', 'ن': 'n', 'ه': 'h', 'و': 'w', 'ي': 'y',
+        'ء': "'", 'آ': 'aa', 'إ': 'i', 'أ': 'a', 'ؤ': 'u', 'ئ': 'i', 'ة': 'h'
+      }
+
+      return arabicText.split('').map(char => map[char] || char).join('')
     },
     // Replace your buildQueue method with this enhanced version
     buildQueue() {
