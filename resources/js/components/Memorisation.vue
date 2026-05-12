@@ -4,15 +4,13 @@
       <span>{{ banner.message }}</span>
       <div class="banner-actions">
         <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
-        }}</button>
+          }}</button>
         <button class="banner-x" @click="banner = null" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
 
-
     <!-- Main Content -->
-    <div class="main" :class="{ 'tools-open': showTools }">
-
+    <div class="main container" :class="{ 'tools-open': showTools }">
       <div class="content">
         <section v-if="showOnboarding" class="hero-card">
           <div class="hero-copy">
@@ -50,7 +48,7 @@
               <div class="session-rail-kicker">Current session</div>
               <div class="session-rail-title">{{ currentChapter.name_simple }}</div>
               <div class="session-rail-meta">Ayah {{ currentPosition }}/{{ totalVerses }} · Remaining {{ remainingAyahs
-                }} · {{ sessionTypeInfo.label }} · {{ progressPercent }}%</div>
+              }} · {{ sessionTypeInfo.label }} · {{ progressPercent }}%</div>
             </div>
             <div class="session-rail-actions">
               <button class="rail-btn rail-btn-ghost" @click="showTools = true">
@@ -94,13 +92,12 @@
               @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
               <i class="bi bi-volume-up"></i><span>Word audio</span>
             </button>
+            <button class="toolbar-chip" @click="downloadOfflineVerses" title="Download for offline reading">
+              <i class="bi bi-cloud-arrow-down"></i><span>Download</span>
+            </button>
           </div>
           <div class="reading-toolbar-group">
             <div class="toolbar-font-wrap">
-              <!-- <button class="toolbar-chip" :class="{ active: script === 'uthmani' || fontPickerOpen }"
-                @click="toggleFontPicker">
-                <i class="bi bi-file-earmark-richtext"></i><span>Quranic fonts</span>
-              </button> -->
               <div v-if="fontPickerOpen" class="toolbar-font-menu">
                 <button v-for="font in quranFontOptions" :key="font.value" class="toolbar-font-option"
                   :class="{ active: quranFont === font.value }" @click="setQuranFont(font.value)">
@@ -108,9 +105,6 @@
                 </button>
               </div>
             </div>
-            <!-- <button class="toolbar-chip" :class="{ active: script === 'uthmani' }" @click="setScriptMode('uthmani')">
-              <i class="bi bi-file-earmark-richtext"></i><span>Quranic text</span>
-            </button> -->
             <button class="toolbar-chip" :class="{ active: script === 'tajweed' }" @click="setScriptMode('tajweed')">
               <i class="bi bi-palette"></i><span>Tajweed</span>
             </button>
@@ -133,9 +127,7 @@
         </div>
 
         <!-- Verses Grid -->
-        <!-- Replace the verses-grid section (around line 165) with this: -->
         <div v-else-if="hasVerses" class="verses-grid">
-          <!-- Update the verse-card div to include data-verse-key -->
           <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" :class="{
             'verse-card': true,
             active: activeVerseKey === verse.key,
@@ -166,9 +158,6 @@
                   </button>
                 </div>
 
-                <button class="verse-play-btn" @click="downloadOfflineVerses" title="Download for offline reading">
-                  <i class="bi bi-save"></i>
-                </button>
                 <button class="verse-play-btn" @click="playVerse(verse)" title="Play verse">
                   <i class="bi bi-play"></i>
                 </button>
@@ -177,7 +166,7 @@
 
             <div class="verse-arabic" dir="rtl" lang="ar" v-html="getHighlightedArabic(verse)"
               :class="{ 'word-highlight-enabled': wordByWordAudioEnabled }"
-              :style="{ fontSize: getVerseFontSize(verse.key) + '%' }">
+              :style="{ fontSize: getVerseFontSize(verse.key) + '%', fontFamily: quranFontFamily }">
             </div>
 
             <!-- Translation - shows only if showTranslation is true AND translation exists -->
@@ -203,8 +192,6 @@
             </div>
           </div>
         </div>
-
-
       </div>
 
       <!-- Tools Panel -->
@@ -217,22 +204,26 @@
           </div>
           <div class="tools-context">{{ contextLabel }}</div>
           <div class="tools-tabs">
-            <button :class="{ active: tab === 'beginner' }" @click="tab = 'beginner'">Beginner</button>
-            <button :class="{ active: tab === 'advanced' }" @click="tab = 'advanced'">Advanced</button>
+            <button :class="{ active: tab === 'beginner', 'active-tab': tab === 'beginner' }"
+              @click="tab = 'beginner'">Beginner</button>
+            <button :class="{ active: tab === 'advanced', 'active-tab': tab === 'advanced' }"
+              @click="tab = 'advanced'">Advanced</button>
+            <button :class="{ active: tab === 'offline', 'active-tab': tab === 'offline' }"
+              @click="tab = 'offline'"><i class="bi bi-cloud-check"></i> Offline</button>
           </div>
         </div>
 
         <div class="tools-body">
-          <!-- Beginner Tab - Simplified -->
+          <!-- Beginner Tab - 4 Consistent Sections -->
           <div v-if="tab === 'beginner'" class="sheet">
-            <!-- Quick Setup Section -->
+            <!-- Section 1: What to Memorise -->
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('beginner_setup')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-book"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">1. What to Memorise</span>
-                    <span class="st-sub">Surah and verses</span>
+                    <span class="st-title">What to memorise</span>
+                    <span class="st-sub">Choose surah and verses</span>
                   </span>
                 </span>
                 <span class="st-chev" :class="{ open: sectionOpen.beginner_setup }"><i
@@ -246,6 +237,7 @@
                       <option :value="0">Choose a surah...</option>
                       <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.id }}. {{ c.name_simple }}</option>
                     </select>
+                    <small class="field-hint">Select the surah you want to memorise</small>
                   </div>
                   <div class="field">
                     <label>Verses</label>
@@ -254,22 +246,24 @@
                       <span>to</span>
                       <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
                     </div>
+                    <small class="field-hint">Choose a range of verses to focus on</small>
                   </div>
                 </div>
               </div>
             </section>
 
-            <!-- Audio Section -->
+            <!-- Section 2: Audio Settings -->
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('beginner_audio')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-mic"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">2. Audio Settings</span>
+                    <span class="st-title">Audio settings</span>
                     <span class="st-sub">Reciter and playback</span>
                   </span>
                 </span>
-
+                <span class="st-chev" :class="{ open: sectionOpen.beginner_audio }"><i
+                    class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.beginner_audio">
                 <div class="field-stack">
@@ -278,6 +272,7 @@
                     <select v-model="reciterId" @change="refreshVerses" class="select">
                       <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
                     </select>
+                    <small class="field-hint">Choose your preferred Quran reciter</small>
                   </div>
                   <div class="field">
                     <label>Speed</label>
@@ -287,6 +282,7 @@
                       <label class="radio"><input type="radio" value="1.25" v-model="speed"> 1.25x</label>
                       <label class="radio"><input type="radio" value="1.5" v-model="speed"> 1.5x</label>
                     </div>
+                    <small class="field-hint">Adjust recitation speed</small>
                   </div>
                   <div class="field">
                     <label>Auto-advance</label>
@@ -294,34 +290,112 @@
                       <label class="radio"><input type="radio" value="auto" v-model="playMode"> Yes</label>
                       <label class="radio"><input type="radio" value="manual" v-model="playMode"> No (manual)</label>
                     </div>
+                    <small class="field-hint">Automatically move to next verse</small>
                   </div>
                 </div>
               </div>
             </section>
 
-            <!-- Inside beginner tab, after Speed setting in Audio Settings section -->
-            <div class="field">
-              <label>Repetition Count</label>
-              <select v-model="beginnerRepeats" class="select">
-                <option v-for="n in repeatOptions" :key="n" :value="n">{{ n }} {{ n === 1 ? 'time' : 'times' }}</option>
-              </select>
-            </div>
+            <!-- Section 3: Practice Mode -->
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('beginner_practice')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-stars"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">Practice mode</span>
+                    <span class="st-sub">Repetition and focus</span>
+                  </span>
+                </span>
+                <span class="st-chev" :class="{ open: sectionOpen.beginner_practice }"><i
+                    class="bi bi-chevron-down"></i></span>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.beginner_practice">
+                <div class="field-stack">
+                  <div class="field">
+                    <label>Repetition count</label>
+                    <select v-model="beginnerRepeats" class="select">
+                      <option v-for="n in repeatOptions" :key="n" :value="n">{{ n }} {{ n === 1 ? 'time' : 'times' }}
+                      </option>
+                    </select>
+                    <small class="field-hint">How many times to repeat each verse</small>
+                  </div>
+                  <div class="field checkbox">
+                    <label class="switch">
+                      <input type="checkbox" v-model="focusMode">
+                      <span class="switch-ui"></span>
+                      <span class="switch-text">Focus mode (dim other verses)</span>
+                    </label>
+                    <small class="field-hint">Reduce distraction by dimming non-active verses</small>
+                  </div>
+                  <div class="field checkbox">
+                    <label class="switch">
+                      <input type="checkbox" v-model="blurAdjacent">
+                      <span class="switch-ui"></span>
+                      <span class="switch-text">Blur non-active verses (active recall)</span>
+                    </label>
+                    <small class="field-hint">Test your memory by hiding non-active verses</small>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Section 4: Saved Sessions -->
+            <section class="sheet-section" v-if="isLoggedIn">
+              <button class="sheet-toggle" @click="toggleSection('beginner_saved')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-save"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">Saved sessions</span>
+                    <span class="st-sub">Save, load, delete</span>
+                  </span>
+                </span>
+                <span class="st-chev" :class="{ open: sectionOpen.beginner_saved }"><i
+                    class="bi bi-chevron-down"></i></span>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.beginner_saved">
+                <div class="field-stack">
+                  <div class="field">
+                    <label>Your saved sessions</label>
+                    <select v-model="selectedSessionId" class="select">
+                      <option value="">-- Select a session --</option>
+                      <option v-for="s in savedSessions" :key="s.id" :value="s.id">{{ s.name }}</option>
+                    </select>
+                    <small class="field-hint">Load previously saved sessions</small>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Login message for non-logged users -->
+            <section class="sheet-section" v-else>
+              <div class="sheet-content">
+                <div class="field-stack">
+                  <div class="field">
+                    <div class="pill" style="text-align: center; padding: 16px;">
+                      <i class="bi bi-person"></i>
+                      <span>Login to save and load sessions</span>
+                    </div>
+                    <small class="field-hint">Create an account to save your progress</small>
+                  </div>
+                </div>
+              </div>
+            </section>
 
             <button class="start-btn" @click="startSession" :disabled="!hasSelectedSurah">
-              <i class="bi bi-play-fill"></i> Start Memorising
+              <i class="bi bi-play-fill"></i> Start memorising
             </button>
           </div>
 
-          <!-- Advanced Tab - Simplified -->
+          <!-- Advanced Tab - 4 Consistent Sections -->
           <div v-if="tab === 'advanced'" class="sheet">
-            <!-- Setup Section -->
+            <!-- Section 1: Session Setup -->
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-compass"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">1. Session Setup</span>
-                    <span class="st-sub">Surah and verses</span>
+                    <span class="st-title">Session setup</span>
+                    <span class="st-sub">Surah, verses, and reciter</span>
                   </span>
                 </span>
                 <span class="st-chev" :class="{ open: sectionOpen.advanced_setup }"><i
@@ -335,6 +409,7 @@
                       <option :value="0">Choose a surah...</option>
                       <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.id }}. {{ c.name_simple }}</option>
                     </select>
+                    <small class="field-hint">Select the surah you want to memorise</small>
                   </div>
                   <div class="field">
                     <label>Verses</label>
@@ -343,25 +418,27 @@
                       <span>to</span>
                       <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
                     </div>
+                    <small class="field-hint">Choose a range of verses to focus on</small>
                   </div>
                   <div class="field">
                     <label>Reciter</label>
                     <select v-model="reciterId" @change="refreshVerses" class="select">
                       <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
                     </select>
+                    <small class="field-hint">Choose your preferred Quran reciter</small>
                   </div>
                 </div>
               </div>
             </section>
 
-            <!-- Playback Section -->
+            <!-- Section 2: Playback -->
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('advanced_playback')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-repeat"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">2. Playback</span>
-                    <span class="st-sub">Speed, repeats, mode</span>
+                    <span class="st-title">Playback</span>
+                    <span class="st-sub">Speed, delay, and mode</span>
                   </span>
                 </span>
                 <span class="st-chev" :class="{ open: sectionOpen.advanced_playback }"><i
@@ -377,6 +454,7 @@
                       <label class="radio"><input type="radio" value="1.25" v-model="speed"> 1.25x</label>
                       <label class="radio"><input type="radio" value="1.5" v-model="speed"> 1.5x</label>
                     </div>
+                    <small class="field-hint">Adjust recitation speed</small>
                   </div>
                   <div class="field">
                     <label>Auto-advance</label>
@@ -384,6 +462,7 @@
                       <label class="radio"><input type="radio" value="auto" v-model="playMode"> Yes</label>
                       <label class="radio"><input type="radio" value="manual" v-model="playMode"> No (manual)</label>
                     </div>
+                    <small class="field-hint">Automatically move to next verse</small>
                   </div>
                   <div class="field">
                     <label>Delay between verses</label>
@@ -391,36 +470,20 @@
                       <option v-for="d in [0, 1, 2, 3, 5]" :key="d" :value="d">{{ d }} second{{ d !== 1 ? 's' : '' }}
                       </option>
                     </select>
+                    <small class="field-hint">Pause between verse transitions</small>
                   </div>
                 </div>
               </div>
             </section>
 
-            <div class="field">
-              <label>Repetition Count</label>
-              <select v-model="advancedRepeats" class="select">
-                <option v-for="n in repeatOptions" :key="n" :value="n">{{ n }} {{ n === 1 ? 'time' : 'times' }}</option>
-              </select>
-
-              <input type="checkbox" v-model="repeatAndLoopAudio">
-            </div>
-            <div class="field checkbox">
-              <label class="switch">
-                <input type="checkbox" v-model="repeatAndLoopAudio">
-                <span class="switch-ui"></span>
-                <span class="switch-text">Repeat & Loop Audio (Āyah by Āyah)</span>
-              </label>
-              <small class="field-hint">Loop each ayah multiple times before advancing</small>
-            </div>
-
-            <!-- Practice Section -->
+            <!-- Section 3: Practice Mode -->
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('advanced_practice')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-stars"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">3. Practice Mode</span>
-                    <span class="st-sub">Order and focus</span>
+                    <span class="st-title">Practice mode</span>
+                    <span class="st-sub">Order, repetition, and focus</span>
                   </span>
                 </span>
                 <span class="st-chev" :class="{ open: sectionOpen.advanced_practice }"><i
@@ -437,6 +500,23 @@
                       <label class="radio"><input type="radio" value="cum" v-model="order"> Cumulative
                         (1,1-2,1-3...)</label>
                     </div>
+                    <small class="field-hint">Choose how verses are presented</small>
+                  </div>
+                  <div class="field">
+                    <label>Repetition count</label>
+                    <select v-model="advancedRepeats" class="select">
+                      <option v-for="n in repeatOptions" :key="n" :value="n">{{ n }} {{ n === 1 ? 'time' : 'times' }}
+                      </option>
+                    </select>
+                    <small class="field-hint">How many times to repeat each verse</small>
+                  </div>
+                  <div class="field checkbox">
+                    <label class="switch">
+                      <input type="checkbox" v-model="repeatAndLoopAudio">
+                      <span class="switch-ui"></span>
+                      <span class="switch-text">Repeat and loop audio (ayah by ayah)</span>
+                    </label>
+                    <small class="field-hint">Loop each ayah multiple times before advancing</small>
                   </div>
                   <div class="field checkbox">
                     <label class="switch">
@@ -444,6 +524,7 @@
                       <span class="switch-ui"></span>
                       <span class="switch-text">Focus mode (dim other verses)</span>
                     </label>
+                    <small class="field-hint">Reduce distraction by dimming non-active verses</small>
                   </div>
                   <div class="field checkbox">
                     <label class="switch">
@@ -451,19 +532,19 @@
                       <span class="switch-ui"></span>
                       <span class="switch-text">Blur non-active verses (active recall)</span>
                     </label>
+                    <small class="field-hint">Test your memory by hiding non-active verses</small>
                   </div>
                 </div>
               </div>
             </section>
 
-            <!-- Saved Sessions -->
-            <!-- In advanced tab, wrap saved sessions section with v-if -->
+            <!-- Section 4: Saved Sessions -->
             <section class="sheet-section" v-if="isLoggedIn">
               <button class="sheet-toggle" @click="toggleSection('advanced_saved')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-save"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">4. Saved Sessions</span>
+                    <span class="st-title">Saved sessions</span>
                     <span class="st-sub">Save, load, delete</span>
                   </span>
                 </span>
@@ -471,11 +552,20 @@
                     class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.advanced_saved">
-                <!-- existing saved sessions content -->
+                <div class="field-stack">
+                  <div class="field">
+                    <label>Your saved sessions</label>
+                    <select v-model="selectedSessionId" class="select">
+                      <option value="">-- Select a session --</option>
+                      <option v-for="s in savedSessions" :key="s.id" :value="s.id">{{ s.name }}</option>
+                    </select>
+                    <small class="field-hint">Load previously saved sessions</small>
+                  </div>
+                </div>
               </div>
             </section>
 
-            <!-- Add a message for logged out users -->
+            <!-- Login message for non-logged users -->
             <section class="sheet-section" v-else>
               <div class="sheet-content">
                 <div class="field-stack">
@@ -484,14 +574,56 @@
                       <i class="bi bi-person"></i>
                       <span>Login to save and load sessions</span>
                     </div>
+                    <small class="field-hint">Create an account to save your progress</small>
                   </div>
                 </div>
               </div>
             </section>
 
             <button class="start-btn" @click="startSession" :disabled="!hasSelectedSurah">
-              <i class="bi bi-play-fill"></i> Start Session
+              <i class="bi bi-play-fill"></i> Start session
             </button>
+          </div>
+
+          <!-- Offline Tab -->
+          <div v-if="tab === 'offline'" class="sheet">
+            <section class="sheet-section">
+              <div class="sheet-header" style="padding: 16px 16px 0;">
+                <h4 style="margin:0; color: var(--accent);">Downloaded Surahs</h4>
+                <p class="st-sub">Access your saved verses without internet</p>
+              </div>
+              <div class="sheet-content" style="display: block; padding: 16px;">
+                <div v-if="!offlineSurahs.length" class="empty-mini">
+                  <i class="bi bi-cloud-slash" style="font-size: 2rem; opacity: 0.3;"></i>
+                  <p style="margin-top: 8px; opacity: 0.6;">No offline surahs yet.</p>
+                  <button class="cta cta-primary" style="margin-top: 12px; width: 100%;" @click="tab = 'beginner'">
+                    Browse surahs
+                  </button>
+                </div>
+                <div v-else class="offline-list">
+                  <div v-for="s in offlineSurahs" :key="s.id" class="offline-item">
+                    <div class="oi-info">
+                      <div class="oi-name">{{ s.surah }}</div>
+                      <div class="oi-meta">Ayahs {{ s.range }} · {{ s.count }} verses</div>
+                      <div class="oi-date">Saved: {{ s.date }}</div>
+                    </div>
+                    <div class="oi-actions">
+                      <button class="oi-btn oi-load" @click="loadOfflineSurah(s)" title="Load">
+                        <i class="bi bi-folder2-open"></i>
+                      </button>
+                      <button class="oi-btn oi-delete" @click="deleteOfflineSurah(s.id)" title="Delete">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="offline-note" v-if="offlineSurahs.length">
+                    <i class="bi bi-info-circle"></i>
+                    <span>Audio requires an internet connection even for saved surahs.</span>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
 
@@ -500,13 +632,11 @@
               class="bi bi-arrow-counterclockwise"></i><span>Reset</span></button>
           <button class="tools-btn tools-btn-ghost" @click="showTools = false"><i
               class="bi bi-x-circle"></i><span>Close</span></button>
-          <!-- <button class="tools-btn tools-btn-primary" @click="footerPrimaryAction"><i
-              class="bi bi-play-circle"></i><span>{{ footerPrimaryLabel }}</span></button> -->
         </div>
       </aside>
     </div>
 
-    <!-- Replace the entire quiz-overlay div section with this -->
+    <!-- Quiz Overlay -->
     <div v-if="quizActive" class="quiz-overlay">
       <div class="quiz-card">
         <div class="quiz-header">
@@ -619,14 +749,42 @@
         animationDelay: (Math.random() * 0.2) + 's'
       }"></span>
     </div>
+    <!-- Global Audio Player -->
+    <transition name="slide-up">
+      <div v-if="playerVisible" class="player-bar">
+        <div class="player-main">
+          <div class="player-info">
+            <div class="player-chapter">{{ currentChapter?.name_simple || 'Quran' }}</div>
+            <div class="player-verse">Ayah {{ activeVerseKey }}</div>
+          </div>
+          <div class="player-controls">
+            <button class="player-btn" @click="prev" title="Previous"><i class="bi bi-skip-start-fill"></i></button>
+            <button class="player-btn player-play" @click="togglePlay" title="Play/Pause">
+              <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+            </button>
+            <button class="player-btn" @click="next" title="Next"><i class="bi bi-skip-end-fill"></i></button>
+          </div>
+          <div class="player-progress-wrap">
+            <span class="player-time">{{ formatTime(currentTime) }}</span>
+            <div class="player-progress-bg" @click="seek" ref="progress">
+              <div class="player-progress-fill" :style="{ width: (currentTime / (duration || 1)) * 100 + '%' }"></div>
+            </div>
+            <span class="player-time">{{ formatTime(duration) }}</span>
+          </div>
+          <button class="player-btn" @click="playerVisible = false" title="Close player">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+    </transition>
 
-
+    <!-- Audio System -->
+    <audio ref="audio" style="display:none"></audio>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
-import { getEditions, getSurahEdition, getSurahTransliteration } from '../lib/quranApis'
 
 export default {
   name: 'TelawaApp',
@@ -688,7 +846,7 @@ export default {
         repeatsPerVerse: 0,
         totalDuration: 0
       },
-      chainViewMode: 'compact', // 'compact', 'detailed', 'graph'
+      chainViewMode: 'compact',
       manualChainControl: false,
       chainBookmarks: [],
       chainHistory: [],
@@ -699,7 +857,7 @@ export default {
       currentHighlightedVerseKey: null,
       wordTimestampsMap: new Map(),
       wordHighlightHandler: null,
-      currentVerseWords: [], // Store current verse's word spans
+      currentVerseWords: [],
 
       // UI State
       currentMode: 'beginner',
@@ -764,6 +922,7 @@ export default {
       // Data
       chapters: [],
       currentChapter: null,
+      offlineSurahs: [],
       reciters: [{ id: 7, name: 'Alafasy' }],
       savedSessions: [],
       selectedSessionId: '',
@@ -818,10 +977,12 @@ export default {
       repeatOptions: [1, 2, 3, 4, 5, 7, 10],
       rangeLoopDelay: 1,
 
-      // Section open state
+      // Section open state - Expanded for consistency
       sectionOpen: {
         beginner_setup: true,
         beginner_audio: false,
+        beginner_practice: false,
+        beginner_saved: false,
         advanced_setup: true,
         advanced_playback: false,
         advanced_practice: false,
@@ -943,14 +1104,12 @@ export default {
       }
     },
 
-    // Replace the blurAdjacent computed setter
     blurAdjacent: {
       get() { return this.currentConfig.blurAdjacent },
       set(val) {
         if (this.currentMode === 'beginner') this.beginner.blurAdjacent = val
         else this.advanced.blurAdjacent = val
 
-        // Clear all blurs when turning off
         if (!val) {
           document.querySelectorAll('.verse-card.blurred').forEach(el => {
             el.classList.remove('blurred')
@@ -1114,16 +1273,29 @@ export default {
     quizAccuracy() {
       if (!this.quizQueue.length) return 0
       return Math.round((this.quizScore / this.quizQueue.length) * 100)
+    },
+
+    onboardingPrimaryLabel() {
+      return 'Begin plan'
+    },
+
+    emptyPrimaryLabel() {
+      return 'Begin plan'
+    },
+
+    nextActionDescription() {
+      return 'Select a surah and verses to start memorising'
     }
   },
 
   async mounted() {
-    this.loadVerseFontSizes();
+    this.loadVerseFontSizes()
     this.migrateLocalStorage()
     this.loadUiState()
     await this.loadChapters()
     await this.loadReciters()
     this.loadSavedSessions()
+    this.loadOfflineCatalog()
     this.loadSm2()
     this.loadEvents()
     this.loadPlanner()
@@ -1188,9 +1360,7 @@ export default {
 
     activeVerseKey(newKey, oldKey) {
       if (this.blurAdjacent) {
-        // Force update to recalculate blur states
         this.$nextTick(() => {
-          // Remove blur from old adjacent verses
           if (oldKey) {
             const oldAdjacent = this.verses.filter(v => this.isAdjacentToKey(v, oldKey))
             oldAdjacent.forEach(v => {
@@ -1198,8 +1368,6 @@ export default {
               if (el) el.classList.remove('blurred')
             })
           }
-
-          // Apply blur to new context
           this.$forceUpdate()
         })
       }
@@ -1232,182 +1400,67 @@ export default {
   },
 
   methods: {
-    async fetchTransliterationFromAPI(surahId) {
-      try {
-        // Use alquran.cloud API with proper headers to avoid CORS
-        const response = await axios.get(`https://api.alquran.cloud/v1/surah/${surahId}/en.transliteration`, {
-          headers: {
-            'Accept': 'application/json',
-          }
-        })
-
-        if (response.data && response.data.data) {
-          const verses = response.data.data.ayahs || []
-          const transliterationMap = {}
-          verses.forEach(verse => {
-            transliterationMap[verse.numberInSurah] = verse.text
-          })
-          console.log(`Loaded ${Object.keys(transliterationMap).length} transliterations`)
-          return transliterationMap
-        }
-        return {}
-      } catch (e) {
-        console.error('Transliteration fetch failed:', e)
-        return {}
-      }
-    },
-
-    async fetchTransliteration(surahId) {
-      try {
-        // Try a different API for transliteration
-        const response = await axios.get(`https://api.alquran.cloud/v1/surah/${surahId}/en.transliteration`)
-
-        if (response.data && response.data.data) {
-          const verses = response.data.data.ayahs || []
-          const transliterationMap = {}
-          verses.forEach(verse => {
-            transliterationMap[verse.numberInSurah] = verse.text
-          })
-          console.log(`Loaded ${Object.keys(transliterationMap).length} transliterations for surah ${surahId}`)
-          return transliterationMap
-        }
-        return {}
-      } catch (e) {
-        console.error('Transliteration fetch failed:', e)
-        return {}
-      }
-    },
-
-    increaseGlobalFont() {
-      this.defaultFontSize = Math.min(this.maxFontSize, this.defaultFontSize + this.fontSizeStep);
-      this.persistVerseFontSizes();
-    },
-
-    decreaseGlobalFont() {
-      this.defaultFontSize = Math.max(this.minFontSize, this.defaultFontSize - this.fontSizeStep);
-      this.persistVerseFontSizes();
-    },
-
-    resetGlobalFont() {
-      this.defaultFontSize = 100;
-      this.verseFontSizes = {};
-      this.persistVerseFontSizes();
-    },
-
+    // Font size management
     getVerseFontSize(verseKey) {
-      // Check if verse has custom size, otherwise return default
-      return this.verseFontSizes[verseKey] || this.defaultFontSize;
+      return this.verseFontSizes[verseKey] || this.defaultFontSize
     },
 
     increaseVerseFont(verseKey, event) {
-      event.stopPropagation();
-      const currentSize = this.getVerseFontSize(verseKey);
-      const newSize = Math.min(this.maxFontSize, currentSize + this.fontSizeStep);
-      // Update the reactive object
+      event.stopPropagation()
+      const currentSize = this.getVerseFontSize(verseKey)
+      const newSize = Math.min(this.maxFontSize, currentSize + this.fontSizeStep)
       this.verseFontSizes = {
         ...this.verseFontSizes,
         [verseKey]: newSize
-      };
-      // Save to localStorage immediately
-      this.persistVerseFontSizes();
+      }
+      this.persistVerseFontSizes()
     },
 
     decreaseVerseFont(verseKey, event) {
-      event.stopPropagation();
-      const currentSize = this.getVerseFontSize(verseKey);
-      const newSize = Math.max(this.minFontSize, currentSize - this.fontSizeStep);
-      // Update the reactive object
+      event.stopPropagation()
+      const currentSize = this.getVerseFontSize(verseKey)
+      const newSize = Math.max(this.minFontSize, currentSize - this.fontSizeStep)
       this.verseFontSizes = {
         ...this.verseFontSizes,
         [verseKey]: newSize
-      };
-      // Save to localStorage immediately
-      this.persistVerseFontSizes();
+      }
+      this.persistVerseFontSizes()
     },
 
     resetVerseFont(verseKey, event) {
-      event.stopPropagation();
-      // Remove the custom size for this verse
-      const { [verseKey]: _, ...rest } = this.verseFontSizes;
-      this.verseFontSizes = rest;
-      // Save to localStorage immediately
-      this.persistVerseFontSizes();
+      event.stopPropagation()
+      const { [verseKey]: _, ...rest } = this.verseFontSizes
+      this.verseFontSizes = rest
+      this.persistVerseFontSizes()
     },
 
-    // Global font controls (optional)
-    increaseGlobalFont() {
-      this.defaultFontSize = Math.min(this.maxFontSize, this.defaultFontSize + this.fontSizeStep);
-      // Save the new default
-      this.persistDefaultFontSize();
-    },
-
-    decreaseGlobalFont() {
-      this.defaultFontSize = Math.max(this.minFontSize, this.defaultFontSize - this.fontSizeStep);
-      // Save the new default
-      this.persistDefaultFontSize();
-    },
-
-    resetGlobalFont() {
-      this.defaultFontSize = 150;
-      this.verseFontSizes = {};
-      // Save both
-      this.persistDefaultFontSize();
-      this.persistVerseFontSizes();
-    },
-
-    persistDefaultFontSize() {
-      try {
-        localStorage.setItem('telawa.defaultFontSize', JSON.stringify(this.defaultFontSize));
-        console.log('Default font size saved:', this.defaultFontSize);
-      } catch (e) {
-        console.error('Failed to save default font size:', e);
-      }
-    },
-
-
-
-    // Persistence methods
     persistVerseFontSizes() {
       try {
-        localStorage.setItem('telawa.verseFontSizes', JSON.stringify(this.verseFontSizes));
-        console.log('Font sizes saved:', this.verseFontSizes);
+        localStorage.setItem('telawa.verseFontSizes', JSON.stringify(this.verseFontSizes))
       } catch (e) {
-        console.error('Failed to save font sizes:', e);
+        console.error('Failed to save font sizes:', e)
       }
     },
 
     loadVerseFontSizes() {
       try {
-        const savedSizes = localStorage.getItem('telawa.verseFontSizes');
+        const savedSizes = localStorage.getItem('telawa.verseFontSizes')
         if (savedSizes) {
-          this.verseFontSizes = JSON.parse(savedSizes);
-          console.log('Loaded font sizes:', this.verseFontSizes);
+          this.verseFontSizes = JSON.parse(savedSizes)
         }
-
-        const savedDefault = localStorage.getItem('telawa.defaultFontSize');
+        const savedDefault = localStorage.getItem('telawa.defaultFontSize')
         if (savedDefault) {
-          this.defaultFontSize = JSON.parse(savedDefault);
-          console.log('Loaded default font size:', this.defaultFontSize);
+          this.defaultFontSize = JSON.parse(savedDefault)
         }
       } catch (e) {
-        console.error('Failed to load font sizes:', e);
+        console.error('Failed to load font sizes:', e)
       }
     },
 
-    // Call this to clear all font size settings
-    clearAllFontSizes() {
-      if (confirm('Reset all font sizes to default?')) {
-        this.verseFontSizes = {};
-        this.defaultFontSize = 150;
-        this.persistVerseFontSizes();
-        this.persistDefaultFontSize();
-        this.showBanner('All font sizes reset to default', 'success', 2000);
-      }
-    },
-
-    isAdjacentToKey(verse, targetKey) {
-      if (!verse || !targetKey) return false
-      const targetParts = targetKey.split(':')
+    // Helper methods
+    isAdjacentVerse(verse) {
+      if (!verse?.key || !this.activeVerseKey) return false
+      const targetParts = this.activeVerseKey.split(':')
       const verseParts = verse.key.split(':')
 
       if (targetParts[0] !== verseParts[0]) return false
@@ -1417,31 +1470,30 @@ export default {
 
       return Math.abs(verseNumber - targetNumber) === 1
     },
+
     async downloadOfflineVerses() {
-      // Check if we have verses loaded
       if (!this.verses || !this.verses.length) {
-        this.showBanner('Load a surah first before downloading', 'info', 3000);
-        this.showTools = true;
-        return;
+        this.showBanner('Load a surah first before downloading', 'info', 3000)
+        this.showTools = true
+        return
       }
 
       try {
-        // Get surah info from the first verse if chapterId is not set
-        let surahId = this.chapterId;
-        let surahName = this.currentChapter?.name_simple;
+        let surahId = this.chapterId
+        let surahName = this.currentChapter?.name_simple
 
         if (!surahId && this.verses[0]?.key) {
-          surahId = parseInt(this.verses[0].key.split(':')[0]);
-          // Try to find surah name from chapters list
-          const found = this.chapters.find(c => c.id === surahId);
-          surahName = found?.name_simple || `Surah ${surahId}`;
+          surahId = parseInt(this.verses[0].key.split(':')[0])
+          const found = this.chapters.find(c => c.id === surahId)
+          surahName = found?.name_simple || `Surah ${surahId}`
         }
 
         if (!surahId) {
-          this.showBanner('Could not identify surah', 'error', 3000);
-          return;
+          this.showBanner('Could not identify surah', 'error', 3000)
+          return
         }
 
+        const storageKey = `offline_surah_${surahId}_${this.rangeStart}_${this.rangeEnd}`
         const offlineData = {
           metadata: {
             surah: surahName,
@@ -1452,161 +1504,129 @@ export default {
             downloadedAt: new Date().toISOString(),
             totalVerses: this.verses.length
           },
-          verses: this.verses.map(v => ({
-            key: v.key,
-            number: v.number,
-            arabic: v.arabic,
-            translation: v.translation || '',
-            transliteration: v.transliteration || '',
-            audio: v.audio || ''
-          }))
-        };
+          verses: this.verses
+        }
 
-        const storageKey = `offline_surah_${surahId}_${this.rangeStart}_${this.rangeEnd}`;
-        localStorage.setItem(storageKey, JSON.stringify(offlineData));
+        localStorage.setItem(storageKey, JSON.stringify(offlineData))
 
-        this.showBanner(`✓ Saved ${this.verses.length} verses from ${surahName} for offline reading!`, 'success', 3000);
-        this.confettiActive = true;
-        setTimeout(() => { this.confettiActive = false; }, 1200);
+        // Update catalog
+        const catalogKey = 'offline_surah_catalog'
+        let catalog = []
+        try {
+          catalog = JSON.parse(localStorage.getItem(catalogKey) || '[]')
+        } catch (e) { catalog = [] }
 
+        const entry = {
+          id: storageKey,
+          surah: surahName,
+          surahId: surahId,
+          range: `${this.rangeStart}-${this.rangeEnd}`,
+          count: this.verses.length,
+          date: new Date().toLocaleDateString()
+        }
+
+        const filtered = catalog.filter(c => c.id !== storageKey)
+        filtered.push(entry)
+        localStorage.setItem(catalogKey, JSON.stringify(filtered))
+        this.offlineSurahs = filtered
+
+        this.showBanner(`✓ Saved ${this.verses.length} verses from ${surahName} for offline reading!`, 'success', 3000)
+        this.confettiActive = true
+        setTimeout(() => { this.confettiActive = false }, 1200)
       } catch (err) {
-        console.error('Download failed:', err);
-        this.showBanner('Failed to download verses', 'error', 3000);
+        console.error('Download failed:', err)
+        this.showBanner('Failed to download verses', 'error', 3000)
       }
     },
+
+    loadOfflineCatalog() {
+      try {
+        const catalog = JSON.parse(localStorage.getItem('offline_surah_catalog') || '[]')
+        this.offlineSurahs = catalog
+      } catch (e) {
+        this.offlineSurahs = []
+      }
+    },
+
+    loadOfflineSurah(entry) {
+      try {
+        const data = JSON.parse(localStorage.getItem(entry.id))
+        if (!data) throw new Error('No data')
+
+        // Load into current view
+        if (this.currentMode === 'beginner') {
+          this.beginner.chapterId = data.metadata.surahId
+          this.beginner.rangeStart = data.metadata.rangeStart
+          this.beginner.rangeEnd = data.metadata.rangeEnd
+          this.beginner.verses = data.verses
+        } else {
+          this.advanced.chapterId = data.metadata.surahId
+          this.advanced.rangeStart = data.metadata.rangeStart
+          this.advanced.rangeEnd = data.metadata.rangeEnd
+          this.advanced.verses = data.verses
+        }
+
+        this.currentChapter = this.chapters.find(c => c.id === data.metadata.surahId)
+        this.showTools = false
+        this.showBanner(`Loaded ${data.metadata.surah} from offline storage`, 'success', 2000)
+        this.buildQueue()
+      } catch (e) {
+        console.error('Offline load error:', e)
+        this.showBanner('Failed to load offline surah', 'error', 3000)
+      }
+    },
+
+    deleteOfflineSurah(id) {
+      localStorage.removeItem(id)
+      const catalog = this.offlineSurahs.filter(s => s.id !== id)
+      localStorage.setItem('offline_surah_catalog', JSON.stringify(catalog))
+      this.offlineSurahs = catalog
+      this.showBanner('Offline surah removed', 'info', 2000)
+    },
+
+    // Arabic text word splitting and highlighting
+    getHighlightedArabic(verse) {
+      if (!verse || !verse.arabic) return ''
+      if (!this.wordByWordAudioEnabled) return verse.arabic
+
+      const highlightedHtml = this.splitArabicIntoWords(verse.arabic, verse.key)
+      return highlightedHtml
+    },
+
     splitArabicIntoWords(arabicText, verseKey) {
       if (!arabicText || !this.wordByWordAudioEnabled) {
         return arabicText
       }
 
-      // First, protect tajweed tags by replacing them with placeholders
-      const tajweedMatches = []
-      let protectedText = arabicText.replace(/<tajweed[^>]*>.*?<\/tajweed>/gi, (match) => {
-        const index = tajweedMatches.length
-        tajweedMatches.push(match)
-        return `__TAJWEED_${index}__`
-      })
-
-      // Split by spaces to get individual words
-      const words = protectedText.split(/(\s+)/)
-
+      const isActiveVerse = this.currentHighlightedVerseKey === verseKey
+      const words = arabicText.split(/(\s+)/)
       let result = ''
       let wordIndex = 0
 
       for (let i = 0; i < words.length; i++) {
         let word = words[i]
 
-        // Skip if it's only whitespace
         if (word.trim() === '') {
           result += word
           continue
         }
 
-        // Restore any tajweed tags in this word
-        let restoredWord = word
-        let hasTajweed = false
-
-        // Check if this word contains tajweed placeholders
-        const tajweedRegex = /__TAJWEED_(\d+)__/g
-        let match
-        while ((match = tajweedRegex.exec(word)) !== null) {
-          hasTajweed = true
-          const tajweedIndex = parseInt(match[1])
-          if (tajweedMatches[tajweedIndex]) {
-            restoredWord = restoredWord.replace(`__TAJWEED_${tajweedIndex}__`, tajweedMatches[tajweedIndex])
-          }
-        }
-
-        const isHighlighted = (this.currentWordIndex === wordIndex && this.currentHighlightedVerseKey === verseKey)
+        const isHighlighted = isActiveVerse && (this.currentWordIndex === wordIndex)
         const highlightClass = isHighlighted ? 'highlighted' : ''
 
-        if (hasTajweed) {
-          // For words with tajweed, we need to wrap the entire thing
-          result += `<word data-verse="${verseKey}" data-word-index="${wordIndex}" class="${highlightClass}">${restoredWord}</word>`
-        } else {
-          result += `<word data-verse="${verseKey}" data-word-index="${wordIndex}" class="${highlightClass}">${restoredWord}</word>`
-        }
-
+        result += `<word data-verse="${verseKey}" data-word-index="${wordIndex}" class="${highlightClass}">${word}</word>`
         wordIndex++
-
-        // Add space after word if not last and next is not whitespace
-        if (i < words.length - 1 && words[i + 1] && words[i + 1].trim() !== '') {
-          result += ' '
-        }
-      }
-
-      return result
-    },
-    // ==================== ARABIC TEXT WORD SPLITTING ====================
-
-    // Split Arabic text into individual word spans
-    splitArabicIntoWords(arabicText, verseKey) {
-      if (!arabicText || !this.wordByWordAudioEnabled) {
-        return arabicText
-      }
-
-      // Split Arabic text by spaces, but preserve spans/tajweed tags
-      // This regex matches words separated by spaces, including those with tajweed tags
-      const words = arabicText.split(/(\s+)/)
-
-      let result = ''
-      let wordIndex = 0
-
-      for (let i = 0; i < words.length; i++) {
-        const word = words[i]
-        // Skip if it's only whitespace
-        if (word.trim() === '') {
-          result += word
-          continue
-        }
-
-        // Check if this word has tajweed tags
-        const hasTajweed = word.includes('<tajweed')
-
-        if (hasTajweed) {
-          // For tajweed text, we need to extract the inner text
-          const match = word.match(/<tajweed[^>]*>(.*?)<\/tajweed>/)
-          if (match) {
-            const innerText = match[1]
-            result += `<word data-verse="${verseKey}" data-word-index="${wordIndex}" class="${this.currentWordIndex === wordIndex && this.currentHighlightedVerseKey === verseKey ? 'highlighted' : ''}">${word}</word>`
-            wordIndex++
-          } else {
-            result += `<word data-verse="${verseKey}" data-word-index="${wordIndex}" class="${this.currentWordIndex === wordIndex && this.currentHighlightedVerseKey === verseKey ? 'highlighted' : ''}">${word}</word>`
-            wordIndex++
-          }
-        } else {
-          // Regular text
-          result += `<word data-verse="${verseKey}" data-word-index="${wordIndex}" class="${this.currentWordIndex === wordIndex && this.currentHighlightedVerseKey === verseKey ? 'highlighted' : ''}">${word}</word>`
-          wordIndex++
-        }
-
-        // Add space after word if not last
-        if (i < words.length - 1 && words[i + 1] && words[i + 1].trim() !== '') {
-          result += ' '
-        }
       }
 
       return result
     },
 
-    getHighlightedArabic(verse) {
-      if (!verse || !verse.arabic) return ''
-      if (!this.wordByWordAudioEnabled) return verse.arabic
-
-      // Store the split words for this verse
-      const highlightedHtml = this.splitArabicIntoWords(verse.arabic, verse.key)
-      return highlightedHtml
-    },
-
-    // ==================== WORD HIGHLIGHTING METHODS ====================
-
-    async getWordTimings(verse) {
+    async getWordTimings(verse, actualDuration = null) {
       if (!verse.words || verse.words.length === 0) {
-        // Generate word timings from the Arabic text if word-by-word data isn't available
         const arabicText = verse.arabic
         const words = arabicText.split(/\s+/).filter(w => w.trim().length > 0)
         const totalChars = arabicText.replace(/[^ء-ي]/g, '').length
-        const totalDuration = Math.max(5, Math.min(45, totalChars * 0.12))
+        const totalDuration = actualDuration || Math.max(5, Math.min(45, totalChars * 0.12))
 
         const timestamps = []
         let currentTime = 0
@@ -1614,7 +1634,7 @@ export default {
         for (let i = 0; i < words.length; i++) {
           const word = words[i]
           const wordChars = word.replace(/<[^>]+>/g, '').replace(/[^ء-ي]/g, '').length
-          const wordDuration = Math.max(0.2, (wordChars / totalChars) * totalDuration)
+          const wordDuration = (wordChars / totalChars) * totalDuration
 
           timestamps.push({
             index: i,
@@ -1633,14 +1653,14 @@ export default {
       }
 
       const timestamps = []
-      const totalDuration = Math.max(5, Math.min(45, verse.arabic.replace(/[^ء-ي]/g, '').length * 0.12))
+      const totalDuration = actualDuration || Math.max(5, Math.min(45, verse.arabic.replace(/[^ء-ي]/g, '').length * 0.12))
       const totalChars = verse.arabic.replace(/[^ء-ي]/g, '').length
       let currentTime = 0
 
       for (let i = 0; i < verse.words.length; i++) {
         const word = verse.words[i]
         const wordChars = word.ar.replace(/[^ء-ي]/g, '').length
-        const wordDuration = Math.max(0.2, (wordChars / totalChars) * totalDuration)
+        const wordDuration = (wordChars / totalChars) * totalDuration
 
         timestamps.push({
           index: i,
@@ -1663,8 +1683,9 @@ export default {
 
       this.currentHighlightedVerseKey = verse.key
 
-      // Get word timings
-      const timestamps = await this.getWordTimings(verse)
+      // Use actual audio duration if available for better sync
+      const actualDuration = this.audioElement?.duration || null
+      const timestamps = await this.getWordTimings(verse, actualDuration)
 
       if (!timestamps.length) return
 
@@ -1684,8 +1705,6 @@ export default {
 
         if (this.currentWordIndex !== activeIndex) {
           this.currentWordIndex = activeIndex
-
-          // Update the DOM directly for better performance
           this.updateWordHighlightInDOM(verse.key, activeIndex)
         }
       }
@@ -1695,22 +1714,16 @@ export default {
     },
 
     updateWordHighlightInDOM(verseKey, activeWordIndex) {
-      // Find all word elements in the current verse
-      const verseCard = document.querySelector(`.verse-card[data-verse-key="${verseKey}"]`)
-      if (!verseCard) return
+      if (activeWordIndex === -1) return
 
-      // Find all word elements within the verse-arabic div
-      const words = verseCard.querySelectorAll('.verse-arabic word')
+      this.$nextTick(() => {
+        const verseCard = document.querySelector(`.verse-card[data-verse-key="${verseKey}"]`)
+        if (!verseCard) return
 
-      words.forEach((wordElement, index) => {
-        if (index === activeWordIndex) {
-          wordElement.classList.add('highlighted')
-          // Optional: scroll the highlighted word into view
-          if (this.wordByWordAudioEnabled) {
-            wordElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' })
-          }
-        } else {
-          wordElement.classList.remove('highlighted')
+        const activeWord = verseCard.querySelector(`.verse-arabic word[data-word-index="${activeWordIndex}"]`)
+        
+        if (activeWord && this.wordByWordAudioEnabled && this.isPlaying) {
+          activeWord.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' })
         }
       })
     },
@@ -1723,14 +1736,12 @@ export default {
       this.currentWordIndex = -1
       this.currentHighlightedVerseKey = null
 
-      // Clear all highlights from DOM
       document.querySelectorAll('.verse-arabic word.highlighted').forEach(word => {
         word.classList.remove('highlighted')
       })
     },
 
-    // ==================== AUDIO METHODS ====================
-
+    // Audio methods
     initAudio() {
       this.audioElement = this.$refs.audio
       if (!this.audioElement) return
@@ -1809,7 +1820,6 @@ export default {
             this.isPlaying = true
             this.markPlaybackStart()
 
-            // Start word highlighting after playback begins
             if (this.wordByWordAudioEnabled) {
               await this.startWordHighlighting(verse)
             }
@@ -1852,12 +1862,10 @@ export default {
       if (this.audioElement) this.audioElement.playbackRate = this.speed
     },
 
-    // Update the next() method to properly set active keys
     next() {
       if (this.canNext) {
         this.sessionCompleted = false
         this.queueIndex++
-        // Get verse from queue entry
         const entry = this.queue[this.queueIndex]
         const verseKey = entry?.verse?.key || entry?.key
         if (verseKey) {
@@ -1868,7 +1876,6 @@ export default {
             if (el) {
               el.scrollIntoView({ behavior: 'smooth', block: 'center' })
             }
-            // Force blur recalculation
             this.$forceUpdate()
           })
         }
@@ -1915,34 +1922,22 @@ export default {
       this.persistAudioState()
     },
 
-    // ==================== VERSE METHODS ====================
-
+    // Verse loading methods
     async loadVerses() {
-      if (!this.chapterId) {
-        console.warn('No chapterId set, skipping loadVerses')
-        return
-      }
+      if (!this.chapterId) return
 
-      console.log('=== LOAD VERSES START ===')
-      console.log('Chapter ID:', this.chapterId)
-
-      // Translation ID 20 = Sahih International (cleanest English translation)
       const params = {
         per_page: 300,
         audio: this.reciterId,
         fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs',
-        words: this.showWordByWord || false,
+        words: true,
         word_fields: 'text_uthmani,translation',
-        translations: '20'  // Sahih International - clean English
+        translations: '20'
       }
 
       try {
-        const url = `https://api.quran.com/api/v4/verses/by_chapter/${this.chapterId}`
-        console.log('Fetching:', url)
-
-        const res = await axios.get(url, { params })
+        const res = await axios.get(`https://api.quran.com/api/v4/verses/by_chapter/${this.chapterId}`, { params })
         const all = res.data?.verses || []
-
         const start = this.rangeStart
         const end = this.rangeEnd
 
@@ -1951,48 +1946,36 @@ export default {
           .map(v => {
             const audio = this.normalizeAudioUrl(v.audio?.url || '')
 
-            // Clean translation - remove HTML tags like <sup>, <footnote>, etc.
-            let rawTranslation = ''
+            let translation = ''
             if (v.translations && v.translations[0]) {
-              rawTranslation = v.translations[0].text
+              translation = this.cleanTranslationText(v.translations[0].text)
             }
 
-            // Remove HTML tags and footnote markers
-            let translation = this.cleanTranslationText(rawTranslation)
-
-            // Transliteration - use a proper source or leave empty
-            // The API doesn't provide transliteration, so we'll skip it
-            let transliteration = ''  // Leave empty until we find a reliable source
-
-            console.log(`Verse ${v.verse_number}:`, {
-              hasTranslation: !!translation,
-              translationLength: translation?.length || 0,
-              translationPreview: translation?.substring(0, 80)
-            })
+            let transliteration = ''
+            if (v.words && v.words.length > 0) {
+              transliteration = v.words
+                .map(w => w.transliteration?.text || '')
+                .filter(t => t.length > 0)
+                .join(' ')
+            }
 
             return {
               key: v.verse_key,
               number: v.verse_number,
               arabic: v.text_qpc_hafs || v.text_uthmani_tajweed || v.text_uthmani || '',
               translation: translation,
-              transliteration: transliteration,  // Leave empty for now
+              transliteration: transliteration,
               audio: audio,
               words: (v.words || []).map(w => ({
-                ar: w.text_uthmani || w.text || '',
-                en: w.translation?.text || w.translation || '',
+                ar: w.text_uthmani || '',
+                en: w.translation?.text || '',
+                transliteration: w.transliteration?.text || '',
                 tooltip: `${w.text_uthmani || ''} • ${w.translation?.text || ''}`.trim(),
                 audio: this.normalizeAudioUrl(w.audio_url)
               }))
             }
           })
 
-        console.log('Mapped verses count:', mappedVerses.length)
-
-        if (mappedVerses.length > 0) {
-          console.log('Sample clean translation:', mappedVerses[0].translation)
-        }
-
-        // Update verses based on current mode
         if (this.currentMode === 'beginner') {
           this.beginner.verses = mappedVerses
         } else {
@@ -2000,65 +1983,30 @@ export default {
         }
 
         this.buildQueue()
-        console.log('=== LOAD VERSES COMPLETE ===')
 
       } catch (e) {
         console.error('Error loading verses:', e)
         this.showBanner('Failed to load verses', 'error', 3000)
-
-        if (this.currentMode === 'beginner') {
-          this.beginner.verses = []
-        } else {
-          this.advanced.verses = []
-        }
       }
     },
 
-    // Add this helper method to clean translation text
     cleanTranslationText(text) {
       if (!text) return ''
-
       let cleaned = text
-
-      // Remove footnote tags like <sup>foot_note=197294></sup>
       cleaned = cleaned.replace(/<sup>foot_note=\d+><\/sup>/gi, '')
       cleaned = cleaned.replace(/<sup>.*?<\/sup>/gi, '')
-
-      // Remove any other HTML tags
       cleaned = cleaned.replace(/<[^>]*>/g, '')
-
-      // Remove footnote numbers like [197294]
       cleaned = cleaned.replace(/\[\d+\]/g, '')
-
-      // Remove extra spaces
       cleaned = cleaned.replace(/\s+/g, ' ').trim()
-
       return cleaned
     },
 
-    // Helper method to generate simple transliteration
-    generateSimpleTransliteration(arabicText) {
-      // This is a very basic mapping - you might want to use a proper library
-      const map = {
-        'ا': 'a', 'ب': 'b', 'ت': 't', 'ث': 'th', 'ج': 'j', 'ح': 'h', 'خ': 'kh',
-        'د': 'd', 'ذ': 'dh', 'ر': 'r', 'ز': 'z', 'س': 's', 'ش': 'sh', 'ص': 's',
-        'ض': 'd', 'ط': 't', 'ظ': 'z', 'ع': 'a', 'غ': 'gh', 'ف': 'f', 'ق': 'q',
-        'ك': 'k', 'ل': 'l', 'م': 'm', 'ن': 'n', 'ه': 'h', 'و': 'w', 'ي': 'y',
-        'ء': "'", 'آ': 'aa', 'إ': 'i', 'أ': 'a', 'ؤ': 'u', 'ئ': 'i', 'ة': 'h'
-      }
-
-      return arabicText.split('').map(char => map[char] || char).join('')
-    },
-    // Replace your buildQueue method with this enhanced version
     buildQueue() {
-      console.log('=== BUILD QUEUE START ===')
-
       const verses = this.currentMode === 'beginner'
         ? this.beginner.verses
         : this.advanced.verses
 
       if (!verses || verses.length === 0) {
-        console.error('No verses available to build queue')
         this.beginner.queue = []
         this.advanced.queue = []
         this.queue = []
@@ -2067,7 +2015,6 @@ export default {
         return
       }
 
-      // Determine repeat count
       let rep = 1
       if (this.currentMode === 'beginner') {
         rep = this.beginner.repeats || 1
@@ -2079,7 +2026,6 @@ export default {
 
       const ord = this.order || 'seq'
 
-      // Build enhanced queue with metadata
       const q = []
       const entryGroups = []
 
@@ -2138,7 +2084,6 @@ export default {
         }
       }
 
-      // Calculate statistics
       const uniqueVerses = new Set(q.map(item => item.verse.key)).size
       const totalDuration = this.estimateQueueDuration(q)
 
@@ -2162,19 +2107,14 @@ export default {
       this.queue = q
       this.queueIndex = 0
 
-      console.log('Queue built with', q.length, 'entries')
-      console.log('Chain stats:', this.currentChainStats)
-
-      // Auto-show queue viewer for complex chains
       if (q.length > 10 && !this.queueViewCollapsed) {
         this.showQueueViewer = true
       }
     },
 
     estimateQueueDuration(queue) {
-      // Estimate based on average verse duration
-      const avgVerseDuration = 45 // seconds per verse on average
-      return Math.ceil(queue.length * avgVerseDuration / 60) // minutes
+      const avgVerseDuration = 45
+      return Math.ceil(queue.length * avgVerseDuration / 60)
     },
 
     rebuildQueue() {
@@ -2182,92 +2122,64 @@ export default {
     },
 
     async startSession() {
-      console.log('=== START SESSION ===')
-      console.log('chapterId:', this.chapterId)
-      console.log('currentMode:', this.currentMode)
-
-      // Check verses directly from the mode-specific storage
-      const currentVerses = this.currentMode === 'beginner'
-        ? this.beginner.verses
-        : this.advanced.verses
-
-      console.log('Direct verses check - length:', currentVerses?.length)
-      console.log('Computed verses - length:', this.verses?.length)
-
       if (!this.chapterId || this.chapterId === 0) {
         this.showTools = true
         this.showBanner('Please select a surah first', 'info', 3000)
         return
       }
 
+      const currentVerses = this.currentMode === 'beginner'
+        ? this.beginner.verses
+        : this.advanced.verses
+
       if (!currentVerses || currentVerses.length === 0) {
-        console.log('No verses found, calling loadVerses...')
         await this.loadVerses()
       }
 
-      // Check again after loading
       const updatedVerses = this.currentMode === 'beginner'
         ? this.beginner.verses
         : this.advanced.verses
 
-      console.log('After load - verses length:', updatedVerses?.length)
-
       if (!updatedVerses || updatedVerses.length === 0) {
-        console.error('Still no verses after loading')
         this.showBanner('No verses loaded. Check your network connection.', 'error')
         return
       }
 
       if (!this.audioElement) {
-        console.log('Initializing audio...')
         this.initAudio()
       }
 
-      // Check queue directly
       const currentQueue = this.currentMode === 'beginner'
         ? this.beginner.queue
         : this.advanced.queue
 
-      console.log('Current queue length:', currentQueue?.length)
-
       if (!currentQueue || currentQueue.length === 0) {
-        console.log('Building queue...')
         this.buildQueue()
       }
 
-      // Get queue again after building
       const builtQueue = this.currentMode === 'beginner'
         ? this.beginner.queue
         : this.advanced.queue
 
-      console.log('Queue after build - length:', builtQueue?.length)
-
       if (!builtQueue || builtQueue.length === 0) {
-        console.error('Queue is still empty!')
         this.showBanner('Nothing to play. Check repeat/loop settings.', 'error')
         return
       }
 
-      console.log('Setting queue index to 0')
       this.queueIndex = 0
 
       const first = builtQueue[0]
-      console.log('First queue item:', first?.key)
-
-      if (first) {
-        console.log('Playing first verse:', first.key)
-        this.activeKey = first.key
-        this.activeVerseKey = first.key
+      if (first && first.verse) {
+        this.activeKey = first.verse.key
+        this.activeVerseKey = first.verse.key
         await this.$nextTick()
-        await this.playVerse(first)
+        await this.playVerse(first.verse)
       }
 
       this.showTools = false
-      console.log('=== START SESSION COMPLETE ===')
     },
 
-    // ==================== UTILITY METHODS ====================
-
+    // Utility methods
     formatTime(sec) {
       const t = Math.max(0, Math.floor(sec || 0))
       return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`
@@ -2280,30 +2192,6 @@ export default {
       if (url.startsWith('/')) return `https://verses.quran.com${url}`
       if (url.includes('mp3')) return `https://verses.quran.com/${url}`
       return url
-    },
-
-    shouldRequestTranslations() {
-      return !!(this.showTranslation || this.studyMode === 'quiz' || this.studyMode === 'hybrid' || this.quizActive)
-    },
-
-    shouldRequestWords() {
-      return !!(this.showWordByWord || (this.quizActive && this.quizType === 'blank'))
-    },
-
-    normalizeTajweedText(text) {
-      const raw = String(text || '')
-      if (!raw) return ''
-      if (raw.includes('<tajweed')) return raw
-      const classMap = {
-        h: 'ham_wasl', s: 'slnt', l: 'laam_shamsiyah', n: 'madda_normal',
-        p: 'madda_permissible', m: 'madda_necessary', q: 'qlqla', o: 'madda_obligatory',
-        c: 'ikhafa', f: 'ghunnah', w: 'idgham_wo_ghunnah', i: 'iqlab',
-        a: 'idgham_ghunnah', u: 'idgham_shafawi', d: 'ikhafa_shafawi', b: 'waqf', g: 'ghunnah'
-      }
-      return raw.replace(/\[([a-z_]+)(?::[^\]]+)?\[([^\]]+)\]/gi, (_, code, inner) => {
-        const klass = classMap[String(code).toLowerCase()] || String(code).toLowerCase()
-        return `<tajweed class="${klass}">${inner}</tajweed>`
-      }).replace(/\]/g, '')
     },
 
     showBanner(message, kind = 'info', ttlMs = 3500, action = null) {
@@ -2341,32 +2229,15 @@ export default {
     },
 
     handlePrimaryAction() {
-      // Always start a fresh session when clicking the start button
       this.startSession()
     },
 
-    handlePlayPause() {
-      // This is now only for the play/pause toggle in the player
-      if (!this.audioElement?.src || !this.verses.length) {
-        return this.startSession()
-      }
-
-      if (this.isPlaying) {
-        this.audioElement.pause()
-        this.isPlaying = false
-      } else {
-        this.audioElement.play()
-        this.isPlaying = true
-      }
-    },
-    // ==================== UI METHODS ====================
-
+    // UI methods
     toggleReadingOption(kind) {
       if (kind === 'translation') this.showTranslation = !this.showTranslation
       if (kind === 'transliteration') this.showTransliteration = !this.showTransliteration
       if (kind === 'wbw') {
         this.showWordByWord = !this.showWordByWord
-        // Reload verses to update the display
         this.loadVerses()
       }
       this.$forceUpdate()
@@ -2388,10 +2259,6 @@ export default {
       this.fontPickerOpen = !this.fontPickerOpen
     },
 
-    togglePlayerMenu() {
-      this.playerMenuOpen = !this.playerMenuOpen
-    },
-
     cycleTheme() {
       const themes = ['light', 'sepia', 'dark']
       const idx = themes.indexOf(this.theme)
@@ -2404,40 +2271,7 @@ export default {
       this.sectionOpen[key] = !this.sectionOpen[key]
     },
 
-    isAdjacentVerse(verse) {
-      if (!this.activeVerseKey || !verse || !verse.key) return false
-      const activeParts = this.activeVerseKey.split(':')
-      const verseParts = verse.key.split(':')
-
-      // Must be in same chapter
-      if (activeParts[0] !== verseParts[0]) return false
-
-      const activeNumber = parseInt(activeParts[1])
-      const verseNumber = parseInt(verseParts[1])
-
-      if (isNaN(activeNumber) || isNaN(verseNumber)) return false
-
-      // Adjacent means immediately before or after
-      return Math.abs(verseNumber - activeNumber) === 1
-    },
-
-    // ==================== PERSISTENCE METHODS ====================
-
-    userStorageKey(suffix) {
-      const uid = this.auth?.id || 'guest'
-      return `telawa.${suffix}.${uid}`
-    },
-
-    loadBookmarksPins() {
-      try { this.bookmarks = JSON.parse(localStorage.getItem(this.userStorageKey('bookmarks')) || '[]') } catch { this.bookmarks = [] }
-      try { this.pins = JSON.parse(localStorage.getItem(this.userStorageKey('pins')) || '[]') } catch { this.pins = [] }
-    },
-
-    persistBookmarksPins() {
-      try { localStorage.setItem(this.userStorageKey('bookmarks'), JSON.stringify((this.bookmarks || []).slice(0, 500))) } catch (e) { }
-      try { localStorage.setItem(this.userStorageKey('pins'), JSON.stringify((this.pins || []).slice(0, 500))) } catch (e) { }
-    },
-
+    // Persistence methods
     loadUiState() {
       try {
         const raw = localStorage.getItem('telawa.uiState')
@@ -2550,8 +2384,7 @@ export default {
       this.persistSm2()
     },
 
-    // ==================== SIMPLIFIED PLACEHOLDER METHODS ====================
-
+    // Data loading methods
     async loadChapters() {
       try {
         const res = await axios.get('https://api.quran.com/api/v4/chapters', { params: { language: 'en' } })
@@ -2637,49 +2470,52 @@ export default {
       if (!localStorage.getItem(key)) localStorage.setItem(key, '1')
     },
 
-    dayKey(ts = Date.now()) {
-      const d = new Date(ts)
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    loadBookmarksPins() {
+      try { this.bookmarks = JSON.parse(localStorage.getItem(this.userStorageKey('bookmarks')) || '[]') } catch { this.bookmarks = [] }
+      try { this.pins = JSON.parse(localStorage.getItem(this.userStorageKey('pins')) || '[]') } catch { this.pins = [] }
     },
 
-    logEvent(evt) {
-      const safe = { ...evt, at: Date.now(), day: this.dayKey() }
-      this.events = [...(this.events || []), safe].slice(-2000)
-      try { localStorage.setItem('telawa.events', JSON.stringify(this.events)) } catch (e) { console.error(e) }
+    userStorageKey(suffix) {
+      const uid = this.auth?.id || 'guest'
+      return `telawa.${suffix}.${uid}`
     },
 
-    sm2Get(key) {
-      return this.sm2[key] || { ef: 2.5, interval: 0, reps: 0, due: 0, last: 0, lapses: 0, suspended: false }
+    beginPlan() {
+      this.onboardingDismissed = true
+      this.showTools = true
     },
 
-    sm2CardKey(verseKey, skill) {
-      return `${verseKey}::${skill}`
+    resetControls() {
+      if (!confirm('Reset session settings?')) return
+      this.rangeStart = 1
+      this.rangeEnd = 7
+      this.speed = 1
+      this.delay = 1
+      this.repeats = 1
+      this.playMode = 'auto'
+      this.order = 'seq'
+      this.blurAdjacent = false
+      this.focusMode = false
+      this.applySpeed()
+      this.rebuildQueue()
+      this.persistAllState()
     },
 
-    sm2Grade(key, quality) {
-      const now = Date.now()
-      const card = this.sm2Get(key)
-      let ef = card.ef, reps = card.reps, interval = card.interval, lapses = card.lapses || 0
-
-      if (quality < 3) {
-        reps = 0
-        interval = 1
-        lapses += 1
-      } else {
-        reps += 1
-        if (reps === 1) interval = 1
-        else if (reps === 2) interval = 6
-        else interval = Math.round(interval * ef)
-      }
-
-      ef = Math.max(1.3, ef + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)))
-      const due = now + interval * 24 * 60 * 60 * 1000
-      const suspended = lapses >= 8
-      this.sm2[key] = { ef, reps, interval, due, last: now, lapses, suspended }
-      this.persistSm2()
-      this.logEvent({ type: 'sm2_grade', key, quality, interval, ef })
+    adjustRange() {
+      const max = this.currentChapter?.verses_count || 286
+      this.rangeStart = Math.max(1, Math.min(this.rangeStart, max))
+      this.rangeEnd = Math.max(this.rangeStart, Math.min(this.rangeEnd, max))
+      this.loadVerses()
     },
 
+    onChapterChange(event) {
+      this.chapterId = parseInt(event.target.value)
+      this.loadChapter()
+    },
+
+    refreshVerses() { this.loadVerses() },
+
+    // Quiz methods
     startQuiz() {
       if (!this.verses.length) {
         this.showBanner('No verses to quiz on', 'info', 3000)
@@ -2731,75 +2567,6 @@ export default {
       const a = new Audio(url)
       a.addEventListener('ended', () => { if (this.activeWordAudio === key) this.activeWordAudio = '' })
       a.play().catch(() => { this.activeWordAudio = '' })
-    },
-
-    resetControls() {
-      if (!confirm('Reset session settings?')) return
-      this.rangeStart = 1
-      this.rangeEnd = 7
-      this.speed = 1
-      this.delay = 1
-      this.repeats = 1
-      this.playMode = 'auto'
-      this.order = 'seq'
-      this.blurAdjacent = false
-      this.focusMode = false
-      this.applySpeed()
-      this.rebuildQueue()
-      this.persistAllState()
-    },
-
-    beginPlan() {
-      this.onboardingDismissed = true
-      this.showTools = true
-    },
-
-    updateAudioReciter() {
-      this.wordTimestampsMap.clear()
-      this.loadVerses()
-    },
-
-    downloadCurrentAudio() {
-      const src = this.audioElement?.src
-      if (!src) return
-      const a = document.createElement('a')
-      a.href = src
-      a.download = ''
-      a.click()
-    },
-
-    adjustRange() {
-      const max = this.currentChapter?.verses_count || 286
-      this.rangeStart = Math.max(1, Math.min(this.rangeStart, max))
-      this.rangeEnd = Math.max(this.rangeStart, Math.min(this.rangeEnd, max))
-      this.loadVerses()
-    },
-
-    onChapterChange(event) {
-      this.chapterId = parseInt(event.target.value)
-      this.loadChapter()
-    },
-
-    setActiveVerse(key) {
-      this.activeVerseKey = key
-      this.activeKey = key
-      this.$nextTick(() => {
-        const el = document.querySelector(`.verse-card[data-verse-key="${key}"]`)
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      })
-    },
-
-    refreshVerses() { this.loadVerses() },
-
-    collectSimpleStats() {
-      const sessionCount = this.savedSessions.length || 0
-      const weak = Object.entries(this.sm2 || {}).filter(([, card]) => card && (card.lapses >= 3)).length
-      this.simpleStats = {
-        streak: 0,
-        sessions: sessionCount,
-        memorised: this.verses.length || 0,
-        weak: weak
-      }
     }
   }
 }
@@ -2869,9 +2636,6 @@ body {
   font-family: var(--font-ui);
   background: var(--bg);
   color: var(--text);
-  background-image:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.55), transparent 34%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 30%);
 }
 
 .app {
@@ -2879,275 +2643,100 @@ body {
   animation: appFade 260ms ease-out;
 }
 
-/* Header */
-.app-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 24px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(10px);
-  position: sticky;
-  top: 0;
-  z-index: 20;
-}
-
-/* Ensure tajweed styles work inside word tags */
-.verse-arabic word {
-  display: inline-block;
-  transition: all 0.15s ease;
-  border-radius: 4px;
-  padding: 0 2px;
-}
-
-.verse-arabic word.highlighted {
-  background: var(--accent);
-  color: white;
-  transform: scale(1.02);
-  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
-}
-
-/* Preserve tajweed styling inside highlighted words */
-.verse-arabic word.highlighted tajweed,
-.verse-arabic word.highlighted .tajweed {
-  color: inherit;
-}
-
-.verse-arabic.word-highlight-enabled {
-  cursor: pointer;
-}
-
-/* Original tajweed styles - ensure they work */
-.verse-arabic tajweed.ham_wasl,
-.verse-arabic .ham_wasl {
-  color: #9c27b0;
-}
-
-.verse-arabic tajweed.ghunnah,
-.verse-arabic .ghunnah {
-  color: #1f7a8c;
-}
-
-.verse-arabic tajweed.idgham_ghunnah,
-.verse-arabic .idgham_ghunnah {
-  color: #1f7a8c;
-}
-
-.verse-arabic tajweed.idgham_wo_ghunnah,
-.verse-arabic .idgham_wo_ghunnah {
-  color: #0f766e;
-}
-
-.verse-arabic tajweed.iqlab,
-.verse-arabic .iqlab {
-  color: #2563eb;
-}
-
-.verse-arabic tajweed.ikhafa,
-.verse-arabic .ikhafa {
-  color: #f59e0b;
-}
-
-.verse-arabic tajweed.qlqla,
-.verse-arabic .qlqla,
-.verse-arabic tajweed.qalqalah,
-.verse-arabic .qalqalah {
-  color: #ef4444;
-}
-
-.verse-arabic tajweed.madda_normal,
-.verse-arabic .madda_normal,
-.verse-arabic tajweed.madda_permissible,
-.verse-arabic .madda_permissible,
-.verse-arabic tajweed.madda_necessary,
-.verse-arabic .madda_necessary {
-  color: #8b5cf6;
-}
-
-.verse-arabic tajweed.idgham_shafawi,
-.verse-arabic .idgham_shafawi,
-.verse-arabic tajweed.ikhafa_shafawi,
-.verse-arabic .ikhafa_shafawi {
-  color: #db2777;
-}
-
-.verse-arabic tajweed.slnt,
-.verse-arabic .slnt,
-.verse-arabic tajweed.waqf,
-.verse-arabic .waqf {
-  color: #6b7280;
-}
-
-/* Add to your style section */
-
-.verse-font-controls {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--accent-light);
-  border-radius: 20px;
-  padding: 2px 6px;
-  margin-right: 8px;
-}
-
-.verse-font-btn {
-  width: 24px;
-  height: 24px;
-  border-radius: 12px;
-  background: var(--surface-strong);
-  border: 1px solid var(--border);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  transition: all 0.2s ease;
-  color: var(--text);
-}
-
-.verse-font-btn:hover {
-  background: var(--accent);
-  color: white;
-  transform: scale(1.05);
-}
-
-.verse-font-size-indicator {
-  font-size: 10px;
-  min-width: 35px;
-  text-align: center;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-/* Adjust word items when font size changes */
-.verse-words {
-  transition: all 0.2s ease;
-}
-
-.word-item {
-  transition: all 0.2s ease;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .verse-font-controls {
-    gap: 2px;
-    padding: 2px 4px;
-  }
-
-  .verse-font-btn {
-    width: 20px;
-    height: 20px;
-  }
-
-  .verse-font-size-indicator {
-    min-width: 30px;
-    font-size: 9px;
-  }
-}
-
-/* Toolbar font controls */
-.toolbar-chip i.bi-dash-lg,
-.toolbar-chip i.bi-plus-lg {
-  font-size: 12px;
-}
-
-/* Add to your style section */
-.verse-arabic word {
-  display: inline-block;
-  transition: all 0.15s ease;
-  border-radius: 4px;
-  padding: 0 2px;
-}
-
-.verse-arabic word.highlighted {
-  background: var(--accent);
-  color: white;
-  transform: scale(1.02);
-  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
-}
-
-.verse-arabic.word-highlight-enabled {
-  cursor: pointer;
-}
-
-/* Add this to your style section - replace the existing .word-item.highlighted */
-.word-item.word-highlighted {
-  background: var(--accent) !important;
-  color: white !important;
-  transform: scale(1.05);
-  transition: all 0.15s ease;
-  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.4);
+/* Active tab indicator with pulse effect */
+.tools-tabs button.active-tab {
   position: relative;
-  z-index: 2;
+  animation: tabPulse 0.3s ease-out;
 }
 
-.word-item.word-highlighted .word-arabic,
-.word-item.word-highlighted .word-meaning {
-  color: white !important;
+@keyframes tabPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 var(--accent);
+  }
+
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 3px var(--accent-light);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 transparent;
+  }
 }
 
-.word-item.word-highlighted .word-audio-btn {
-  color: white !important;
-  opacity: 1;
+/* Toggle switch animation and visual feedback */
+.switch {
+  transition: all 0.2s ease;
 }
 
-/* Mode Indicator */
-.mode-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  margin: 8px 0 4px;
-  background: var(--accent-light);
-  border-radius: 20px;
+.switch:active {
+  transform: scale(0.98);
+}
+
+.switch-ui {
+  transition: background 0.2s ease;
+}
+
+.switch-ui::after {
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.switch input:checked+.switch-ui {
+  background: rgba(139, 94, 60, 0.65);
+  animation: switchPulse 0.3s ease-out;
+}
+
+@keyframes switchPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(139, 94, 60, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.2);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* Field hint styling */
+.field-hint {
   font-size: 0.7rem;
-  color: var(--accent);
-  border: 1px solid var(--accent-soft);
-  width: fit-content;
-}
-
-.mode-indicator i {
-  font-size: 0.75rem;
-}
-
-[data-theme="dark"] .mode-indicator {
-  background: rgba(208, 160, 107, 0.12);
-  border-color: rgba(208, 160, 107, 0.25);
-}
-
-.verse-translation {
-  font-size: 0.85rem;
-  color: #5a6b63;
-  line-height: 1.6;
-  padding-top: 12px;
-  margin-top: 8px;
-  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.4;
   display: block;
 }
 
-[data-theme="dark"] .verse-translation {
-  color: #a0a0b0;
+/* Verse Arabic styling */
+.verse-arabic {
+  font-family: var(--font-ar);
+  font-size: 1.4rem;
+  line-height: 1.8;
+  text-align: right;
+  direction: rtl;
+  unicode-bidi: isolate;
+  background: var(--bg-elevated);
+  padding: 20px;
+  border-radius: 16px;
+  margin: 12px 0;
 }
 
-[data-theme="sepia"] .verse-translation {
-  color: #7a684a;
+.verse-arabic word {
+  display: inline-block;
+  transition: all 0.15s ease;
+  border-radius: 4px;
+  padding: 0 2px;
 }
 
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-  flex-wrap: wrap;
-}
-
-/* Verses Grid */
-.verses-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  margin-top: 20px;
+.verse-arabic word.highlighted {
+  background: var(--accent);
+  color: white;
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
 }
 
 .verse-card {
@@ -3157,6 +2746,7 @@ body {
   transition: all 0.2s ease;
   border: 1px solid var(--border);
   position: relative;
+  direction: ltr;
 }
 
 .verse-card.active {
@@ -3208,371 +2798,181 @@ body {
   gap: 8px;
 }
 
-.start-btn {
-  width: 100%;
-  padding: 7px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  border: none;
-  border-radius: 10px;
-  color: white;
-  font-size: 1rem;
-  cursor: pointer;
+/* Font controls */
+.verse-font-controls {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 20px;
-  transition: all 0.2s;
-}
-
-.start-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-}
-
-.start-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.start-btn:disabled:hover {
-  transform: none;
-  box-shadow: var(--shadow-sm);
-}
-
-.verse-play-btn,
-.verse-focus-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: transparent;
-  border: 1px solid var(--border);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.verse-play-btn:hover,
-.verse-focus-btn:hover {
+  gap: 4px;
   background: var(--accent-light);
-  border-color: var(--accent);
-}
-
-.verse-arabic {
-  font-family: var(--font-ar);
-  font-size: 1.4rem;
-  line-height: 1.8;
-  text-align: right;
-  direction: rtl;
-  background: var(--bg-elevated);
-  padding: 20px;
-  border-radius: 16px;
-  margin: 12px 0;
-}
-
-
-
-.verse-transliteration {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  font-style: italic;
-  margin-top: 8px;
-}
-
-.verse-words {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-}
-
-.word-item {
-  background: var(--accent-light);
-  padding: 6px 12px;
   border-radius: 20px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.75rem;
+  padding: 2px 6px;
+  margin-right: 8px;
 }
 
-.word-arabic {
-  font-family: var(--font-ar);
-  font-size: 0.9rem;
-}
-
-.word-meaning {
-  color: var(--text-muted);
-}
-
-.word-audio-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--accent);
-  padding: 0 4px;
-}
-
-/* Navigation Bar */
-.navigation-bar {
-  position: sticky;
-  bottom: 20px;
-  margin-top: 24px;
-  background: var(--surface);
-  border-radius: 60px;
-  padding: 12px 24px;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(10px);
-  z-index: 15;
-}
-
-.nav-buttons {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-}
-
-.nav-btn {
-  padding: 10px 24px;
-  border-radius: 40px;
-  border: 1px solid var(--border);
-  background: var(--bg-surface);
-  color: var(--text);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
-}
-
-.nav-btn:hover:not(:disabled) {
-  background: var(--accent-light);
-  border-color: var(--accent);
-}
-
-.nav-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.play-btn {
-  width: 56px;
-  height: 56px;
-  border-radius: 56px;
-  background: var(--accent-green, #2c5f4a);
-  border: none;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-  transition: transform 0.2s;
-}
-
-.play-btn:hover {
-  transform: scale(1.02);
-}
-
-/* Simple Planner Styles */
-.planner-simple {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.goal-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.goal-item span {
-  font-size: 0.8rem;
-  color: var(--text);
-}
-
-.input-small {
-  width: 80px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  text-align: center;
-}
-
-.today-plan {
-  background: var(--accent-light);
+.verse-font-btn {
+  width: 24px;
+  height: 24px;
   border-radius: 12px;
-  padding: 12px;
-  margin-top: 8px;
-}
-
-.plan-header {
-  font-weight: 600;
-  margin-bottom: 10px;
-  font-size: 0.85rem;
-}
-
-.plan-details {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.plan-item {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.75rem;
-}
-
-.plan-item span {
-  color: var(--text-muted);
-}
-
-.planner-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 16px;
-}
-
-.btn-secondary {
-  flex: 1;
-  padding: 10px;
-  border-radius: 40px;
+  background: var(--surface-strong);
   border: 1px solid var(--border);
-  background: transparent;
   cursor: pointer;
-  font-size: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  font-size: 10px;
+  transition: all 0.2s ease;
+  color: var(--text);
 }
 
-.btn-primary {
-  flex: 1;
-  padding: 10px;
-  border-radius: 40px;
-  background: var(--accent-green, #2c5f4a);
-  border: none;
+.verse-font-btn:hover {
+  background: var(--accent);
   color: white;
-  cursor: pointer;
-  font-size: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
+  transform: scale(1.05);
 }
 
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.weak-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.weak-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 10px;
-  background: var(--surface);
-  border-radius: 10px;
-  border: 1px solid var(--border);
-}
-
-.weak-ref {
-  font-family: monospace;
-  font-size: 0.8rem;
+.verse-font-size-indicator {
+  font-size: 10px;
+  min-width: 35px;
+  text-align: center;
+  color: var(--text-muted);
   font-weight: 500;
 }
 
-.weak-lapses {
-  font-size: 0.7rem;
+/* Session rail */
+.session-rail {
+  position: sticky;
+  top: 14px;
+  z-index: 18;
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-md);
+  animation: railIn 280ms ease-out;
+}
+
+.session-rail-top {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.session-rail-kicker {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--text-muted);
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.brand-mark {
-  font-size: 1.4rem;
-  color: var(--accent);
-}
-
-.brand-name {
-  font-weight: 500;
-  font-size: 0.95rem;
-}
-
-.session-name {
-  font-size: 0.85rem;
+.session-rail-title {
+  margin-top: 2px;
+  font-size: 14px;
   font-weight: 450;
 }
 
-.session-meta {
-  display: flex;
-  gap: 8px;
-  margin-top: 4px;
-  font-size: 0.7rem;
+.session-rail-meta {
+  margin-top: 2px;
+  font-size: 11px;
   color: var(--text-muted);
 }
 
-.header-right {
+.session-rail-actions {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 
-.icon-btn {
-  width: 34px;
+.session-rail-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.rail-stat {
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(78, 58, 38, 0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rail-stat span {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.rail-stat strong {
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.rail-btn {
   height: 34px;
-  border-radius: 12px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.58));
+  padding: 0 12px;
+  border-radius: 13px;
   border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 450;
   cursor: pointer;
-  color: var(--text-muted);
   box-shadow: var(--shadow-sm);
   transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
-/* Main */
-.main {
-  transition: padding-right 0.25s ease;
-  padding: 20px 24px 100px;
+.rail-btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);
 }
 
-.main.tools-open {
-  padding-right: var(--tools-width);
+.progress-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
 }
 
-.main.tools-open .content {
-  max-width: min(980px, calc(100vw - var(--tools-width) - 80px));
+.progress-bar-wide {
+  margin-top: 10px;
 }
 
-.content {
-  max-width: 1120px;
-  margin: 0 auto;
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s;
 }
 
+/* Mode indicator */
+.mode-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  margin: 8px 0 4px;
+  background: var(--accent-light);
+  border-radius: 20px;
+  font-size: 0.7rem;
+  color: var(--accent);
+  border: 1px solid var(--accent-soft);
+  width: fit-content;
+}
+
+/* Reading toolbar */
 .reading-toolbar {
   display: flex;
   justify-content: space-between;
@@ -3592,42 +2992,6 @@ body {
   align-items: flex-start;
 }
 
-.toolbar-font-wrap {
-  position: relative;
-}
-
-.toolbar-font-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  min-width: 180px;
-  display: grid;
-  gap: 6px;
-  padding: 8px;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  background: var(--surface-strong);
-  box-shadow: var(--shadow-md);
-  z-index: 12;
-}
-
-.toolbar-font-option {
-  width: 100%;
-  padding: 8px 10px;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--text);
-  text-align: left;
-  font-size: 0.78rem;
-  cursor: pointer;
-}
-
-.toolbar-font-option.active,
-.toolbar-font-option:hover {
-  background: var(--accent-light);
-}
-
 .toolbar-chip {
   border: 0;
   border-radius: 999px;
@@ -3639,6 +3003,8 @@ body {
   align-items: center;
   gap: 6px;
   box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .toolbar-chip.active {
@@ -3646,6 +3012,418 @@ body {
   color: #fff;
 }
 
+.toolbar-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Tools panel */
+.tools {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(var(--tools-width), 100vw);
+  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));
+  border-left: 1px solid var(--border);
+  backdrop-filter: blur(14px);
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  box-shadow: var(--shadow-lg);
+  isolation: isolate;
+}
+
+.tools.open {
+  transform: translateX(0);
+}
+
+.tools-top {
+  padding: 18px 18px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tools-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tools-title {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--text);
+}
+
+.tools-context {
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.tools-x {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.7);
+  box-shadow: var(--shadow-sm);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.tools-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 6px;
+}
+
+.tools-tabs button {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 12px;
+  background: transparent;
+  border: none;
+  font-size: 0.82rem;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.55);
+  font-weight: 450;
+  transition: background 140ms ease, color 140ms ease, transform 140ms ease;
+}
+
+.tools-tabs button.active {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));
+  box-shadow: var(--shadow-sm);
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.tools-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 20px calc(var(--tools-footer-h) + 26px);
+}
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sheet-section {
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));
+  border-radius: 18px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  animation: riseSoft 260ms ease-out;
+}
+
+.sheet-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));
+  cursor: pointer;
+  transition: background 140ms ease, transform 140ms ease;
+}
+
+.st-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.st-ico {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));
+  border: 1px solid rgba(139, 94, 60, 0.18);
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.st-txt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.st-title {
+  font-weight: 450;
+  letter-spacing: -0.2px;
+  color: var(--text);
+  font-size: 0.82rem;
+}
+
+.st-sub {
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.st-chev {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.78);
+  color: rgba(0, 0, 0, 0.65);
+  transition: transform 0.15s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.st-chev.open {
+  transform: rotate(180deg);
+}
+
+.sheet-content {
+  padding: 16px 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.field label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+}
+
+.field-hint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.4;
+  display: block;
+}
+
+.select,
+.input {
+  width: 100%;
+  min-width: 0;
+  padding: 11px 12px;
+  border-radius: 13px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--text);
+  font-size: 0.8rem;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
+}
+
+.range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.range-single {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.range span {
+  color: rgba(0, 0, 0, 0.35);
+  font-weight: 450;
+  font-size: 11px;
+}
+
+.radio-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.radio {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text);
+  user-select: none;
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+}
+
+.radio:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.radio input {
+  margin: 0;
+}
+
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.switch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.switch-ui {
+  width: 44px;
+  height: 26px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.12);
+  position: relative;
+  flex: 0 0 auto;
+  transition: background 0.2s ease;
+}
+
+.switch-ui::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: white;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.switch input:checked+.switch-ui {
+  background: rgba(139, 94, 60, 0.65);
+}
+
+.switch input:checked+.switch-ui::after {
+  transform: translateX(18px);
+}
+
+.switch-text {
+  font-size: 0.74rem;
+  color: rgba(0, 0, 0, 0.72);
+  font-weight: 400;
+}
+
+/* Start button */
+.start-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+  transition: all 0.2s ease;
+}
+
+.start-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.start-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Tools footer */
+.tools-footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--tools-footer-h);
+  padding: 12px 16px 14px;
+  border-top: 1px solid var(--border);
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tools-btn {
+  flex: 1;
+  min-height: 44px;
+  padding: 10px 10px;
+  border-radius: 15px;
+  font-weight: 500;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));
+  box-shadow: var(--shadow-sm);
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
+}
+
+/* Hero section */
 .hero-card {
   margin-bottom: 16px;
   padding: 18px 18px 16px;
@@ -3735,98 +3513,14 @@ body {
   flex-wrap: wrap;
 }
 
-/* Session rail */
-.session-rail {
-  position: sticky;
-  top: 14px;
-  z-index: 18;
-  margin-bottom: 18px;
-  padding: 12px 14px;
-  border-radius: 22px;
-  border: 1px solid var(--border);
-  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
-  backdrop-filter: blur(12px);
-  box-shadow: var(--shadow-md);
-  animation: railIn 280ms ease-out;
-}
-
-[data-theme="dark"] .session-rail {
-  border-color: rgba(255, 255, 255, 0.10);
-  background: rgba(18, 18, 18, 0.86);
-}
-
-.session-rail-top {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 12px;
-  align-items: center;
-}
-
-.session-rail-kicker {
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.session-rail-title {
-  margin-top: 2px;
-  font-size: 14px;
-  font-weight: 450;
-}
-
-.session-rail-meta {
-  margin-top: 2px;
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-.session-rail-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.session-rail-stats {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.rail-stat {
-  padding: 8px 10px;
+.cta {
+  flex: 1;
+  padding: 10px 10px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.58);
-  border: 1px solid rgba(78, 58, 38, 0.07);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.rail-stat span {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-}
-
-.rail-stat strong {
-  font-size: 0.78rem;
-  font-weight: 500;
-}
-
-.rail-btn {
-  height: 34px;
-  padding: 0 12px;
-  border-radius: 13px;
-  border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));
-  color: var(--text);
-  font-size: 12px;
   font-weight: 450;
+  border: 1px solid rgba(0, 0, 0, 0.10);
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  font-size: 11px;
   transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
   display: inline-flex;
   align-items: center;
@@ -3834,57 +3528,19 @@ body {
   gap: 6px;
 }
 
-[data-theme="dark"] .rail-btn {
-  border-color: rgba(255, 255, 255, 0.10);
-  background: rgba(30, 30, 40, 0.46);
-}
-
-.rail-btn-primary {
+.cta-primary {
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  border-color: transparent;
   color: white;
-  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);
 }
 
-.rail-btn-ghost {
-  background: transparent;
+.cta-ghost {
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: var(--shadow-sm);
 }
 
-.progress-bar {
-  flex: 1;
-  height: 4px;
-  background: var(--border);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.progress-bar-wide {
-  margin-top: 10px;
-}
-
-.progress-fill {
-  height: 100%;
-  background: var(--accent);
-  transition: width 0.3s;
-}
-
-.cta-btn {
-  padding: 6px 18px;
-  border-radius: 40px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  border: none;
-  color: white;
-  font-size: 0.74rem;
-  font-weight: 450;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 14px 30px rgba(154, 103, 56, 0.24);
-  transition: transform 140ms ease, box-shadow 140ms ease;
-}
-
-/* Empty */
+/* Empty state */
 .empty {
   padding: 40px 0;
 }
@@ -3917,1049 +3573,289 @@ body {
   margin-bottom: 16px;
 }
 
-/* Verses */
-.verses {
+/* Verses grid */
+.verses-grid {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 24px;
+  margin-top: 32px;
 }
 
-.verses.compact .verse {
-  padding: 12px;
+.offline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.verse {
+.offline-item {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   transition: all 0.2s ease;
 }
 
-.verse.active {
-  border-left: 3px solid var(--accent);
-  background: var(--accent-light);
+.offline-item:hover {
+  border-color: var(--accent);
+  background: var(--surface);
 }
 
-.verse-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.verse-badge {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.verse-num {
-  font-size: 0.7rem;
-  padding: 2px 8px;
-  background: var(--accent-light);
-  border-radius: 20px;
-  color: var(--accent);
-}
-
-.verse-ref {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  font-family: monospace;
-}
-
-.verse-actions {
-  display: flex;
-  gap: 6px;
-}
-
-.action-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 0.7rem;
-}
-
-.verse-arabic {
-  font-family: var(--font-ar);
-  font-size: 1.7rem;
-  line-height: 2.25;
-  text-align: right;
-  direction: rtl;
-  margin: 12px 0 10px;
-  text-rendering: optimizeLegibility;
-  font-feature-settings: "liga" 1, "calt" 1;
-  font-variant-ligatures: contextual common-ligatures;
-  unicode-bidi: plaintext;
-}
-
-.verse-transliteration {
-  font-size: 0.94rem;
-  color: var(--text-muted);
-  line-height: 1.8;
-  margin-top: 6px;
-}
-
-
-
-.verse-words {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(84px, max-content));
-  gap: 10px 8px;
-  margin-top: 10px;
-  align-items: start;
-}
-
-.word {
-  background: var(--accent-light);
-  padding: 8px 10px 10px;
-  border-radius: 16px;
-  display: inline-grid;
-  justify-items: center;
-  gap: 3px;
-  font-size: 0.72rem;
-  position: relative;
-  cursor: default;
-  min-width: 84px;
-}
-
-.word.active {
-  background: var(--accent);
-  color: #fff;
-  box-shadow: 0 10px 24px rgba(154, 103, 56, 0.22);
-}
-
-.word-ar {
-  font-family: var(--font-ar);
-  font-size: 1.12rem;
-  line-height: 1.7;
-  color: var(--text);
-}
-
-.word-en {
-  color: var(--text-muted);
-  font-size: 0.66rem;
-  line-height: 1.35;
-  text-align: center;
-  max-width: 100%;
-  word-break: break-word;
-}
-
-.word-play {
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 999px;
-  width: 22px;
-  height: 22px;
-  border: none;
-  cursor: pointer;
-  font-size: 0.62rem;
-  display: grid;
-  place-items: center;
-  color: var(--accent);
-  margin-top: 3px;
-}
-
-.word-tooltip {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 8px);
-  transform: translateX(-50%);
-  min-width: 132px;
-  max-width: 220px;
-  display: grid;
-  gap: 4px;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: rgba(24, 27, 33, 0.96);
-  color: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 14px 34px rgba(10, 12, 18, 0.24);
-  white-space: normal;
-  z-index: 8;
-  animation: fadeLift 140ms ease-out;
-}
-
-.word-tooltip::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: -5px;
-  width: 10px;
-  height: 10px;
-  transform: translateX(-50%) rotate(45deg);
-  background: rgba(24, 27, 33, 0.96);
-}
-
-.word-tooltip-ar {
-  font-family: var(--font-ar);
-  font-size: 0.9rem;
-  line-height: 1.7;
-  text-align: right;
-}
-
-.word-tooltip-en {
-  font-size: 0.72rem;
-  line-height: 1.45;
-  color: rgba(255, 255, 255, 0.82);
-}
-
-.verse-footer {
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.verse-footer-side {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.verse-tool-btn {
-  width: 36px;
-  height: 36px;
-  border: 0;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.78);
-  color: var(--text-muted);
-  box-shadow: var(--shadow-sm);
-}
-
-.verse-tool-btn.active {
-  background: var(--accent);
-  color: #fff;
-}
-
-.verse-arabic tajweed,
-.verse-arabic .tajweed {
-  font-family: inherit;
-}
-
-.verse-arabic tajweed.ham_wasl,
-.verse-arabic .ham_wasl {
-  color: #9c27b0;
-}
-
-.verse-arabic tajweed.ghunnah,
-.verse-arabic .ghunnah {
-  color: #1f7a8c;
-}
-
-.verse-arabic tajweed.idgham_ghunnah,
-.verse-arabic .idgham_ghunnah {
-  color: #1f7a8c;
-}
-
-.verse-arabic tajweed.idgham_wo_ghunnah,
-.verse-arabic .idgham_wo_ghunnah {
-  color: #0f766e;
-}
-
-.verse-arabic tajweed.iqlab,
-.verse-arabic .iqlab {
-  color: #2563eb;
-}
-
-.verse-arabic tajweed.ikhafa,
-.verse-arabic .ikhafa {
-  color: #f59e0b;
-}
-
-.verse-arabic tajweed.qlqla,
-.verse-arabic .qlqla,
-.verse-arabic tajweed.qalqalah,
-.verse-arabic .qalqalah {
-  color: #ef4444;
-}
-
-.verse-arabic tajweed.madda_normal,
-.verse-arabic .madda_normal,
-.verse-arabic tajweed.madda_permissible,
-.verse-arabic .madda_permissible,
-.verse-arabic tajweed.madda_necessary,
-.verse-arabic .madda_necessary {
-  color: #8b5cf6;
-}
-
-.verse-arabic tajweed.idgham_shafawi,
-.verse-arabic .idgham_shafawi,
-.verse-arabic tajweed.ikhafa_shafawi,
-.verse-arabic .ikhafa_shafawi {
-  color: #db2777;
-}
-
-.verse-arabic tajweed.slnt,
-.verse-arabic .slnt,
-.verse-arabic tajweed.waqf,
-.verse-arabic .waqf {
-  color: #6b7280;
-}
-
-/* Tools Panel */
-.tools {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: min(var(--tools-width), 100vw);
-  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));
-  border-left: 1px solid var(--border);
-  backdrop-filter: blur(14px);
-  transform: translateX(100%);
-  transition: transform 0.25s ease;
-  z-index: 60;
+.oi-info {
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
-  box-shadow: var(--shadow-lg);
-  isolation: isolate;
+  gap: 4px;
 }
 
-[data-theme="dark"] .tools {
-  background: rgba(18, 18, 18, 0.9);
-  border-left-color: rgba(255, 255, 255, 0.08);
-  box-shadow: -40px 0 120px rgba(0, 0, 0, 0.55);
-}
-
-.tools.open {
-  transform: translateX(0);
-}
-
-@media (max-width: 768px) {
-  .tools {
-    left: 0;
-    right: 0;
-    width: 100%;
-  }
-
-  .main.tools-open {
-    padding-right: 24px;
-  }
-}
-
-@media (max-width: 1180px) {
-  .main.tools-open {
-    padding-right: 24px;
-  }
-
-  .main.tools-open .content {
-    max-width: 1120px;
-  }
-}
-
-.tools-top {
-  padding: 18px 18px 12px;
-  border-bottom: 1px solid var(--border);
-  background:
-    radial-gradient(circle at top right, rgba(154, 103, 56, 0.12), transparent 36%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.25), transparent 100%);
-}
-
-[data-theme="dark"] .tools-top {
-  border-bottom-color: rgba(255, 255, 255, 0.08);
-}
-
-.tools-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.tools-title {
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: -0.2px;
-  color: var(--text);
-}
-
-.tools-context {
-  margin-top: 8px;
-  font-size: 0.78rem;
-  color: var(--text-muted);
+.oi-name {
   font-weight: 600;
+  font-size: 1rem;
 }
 
-.tools-x {
+.oi-meta {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.oi-date {
+  font-size: 0.7rem;
+  opacity: 0.5;
+}
+
+.oi-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.oi-btn {
   width: 40px;
   height: 40px;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.72);
-  cursor: pointer;
-  font-size: 18px;
-  line-height: 1;
-  color: rgba(0, 0, 0, 0.7);
-  box-shadow: var(--shadow-sm);
-  transition: transform 140ms ease, box-shadow 140ms ease;
-}
-
-[data-theme="dark"] .tools-x {
-  border-color: rgba(255, 255, 255, 0.1);
-  background: rgba(30, 30, 40, 0.35);
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.tools-tabs {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-  background: rgba(0, 0, 0, 0.04);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 6px;
-}
-
-.tools-tabs button {
-  flex: 1;
-  padding: 7px 10px;
   border-radius: 12px;
-  background: transparent;
-  border: none;
-  font-size: 0.82rem;
-  cursor: pointer;
-  color: rgba(0, 0, 0, 0.55);
-  font-weight: 450;
-  transition: background 140ms ease, color 140ms ease, transform 140ms ease;
-}
-
-.tools-tabs button.active {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));
-  box-shadow: var(--shadow-sm);
-  color: rgba(0, 0, 0, 0.85);
-}
-
-[data-theme="dark"] .tools-tabs {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-[data-theme="dark"] .tools-tabs button {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-[data-theme="dark"] .tools-tabs button.active {
-  background: rgba(30, 30, 40, 0.9);
-  color: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
-}
-
-.tools-body {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 20px 20px calc(var(--tools-footer-h) + 26px);
-}
-
-.sheet {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.sheet-section {
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));
-  border-radius: 18px;
-  padding: 0;
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  animation: riseSoft 260ms ease-out;
-}
-
-[data-theme="dark"] .sheet-section {
-  border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(30, 30, 40, 0.45);
-}
-
-.sheet-section-accent {
-  border-color: rgba(154, 103, 56, 0.22);
-  background: linear-gradient(180deg, rgba(154, 103, 56, 0.14), rgba(233, 214, 194, 0.26));
-}
-
-.sheet-toggle {
-  width: 100%;
+  background: var(--surface);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 12px;
-  border: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));
+  justify-content: center;
   cursor: pointer;
-  transition: background 140ms ease, transform 140ms ease;
+  transition: all 0.2s ease;
 }
 
-[data-theme="dark"] .sheet-toggle {
-  background: linear-gradient(180deg, rgba(30, 30, 40, 0.85), rgba(30, 30, 40, 0.45));
+.oi-load:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
 }
 
-.st-left {
+.oi-delete:hover {
+  background: #ff4d4d;
+  color: white;
+  border-color: #ff4d4d;
+}
+
+.empty-mini {
+  text-align: center;
+  padding: 32px 16px;
+  background: var(--bg-elevated);
+  border-radius: 20px;
+  border: 1px dashed var(--border);
+}
+
+.offline-note {
+  margin-top: 24px;
+  padding: 12px;
+  background: var(--accent-light);
+  border-radius: 12px;
   display: flex;
-  align-items: center;
   gap: 10px;
-  min-width: 0;
-}
-
-.st-ico {
-  width: 24px;
-  height: 24px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));
-  border: 1px solid rgba(139, 94, 60, 0.18);
-  flex: 0 0 auto;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 0.75rem;
+  line-height: 1.4;
   color: var(--accent);
 }
 
-[data-theme="dark"] .st-ico {
-  background: rgba(196, 154, 108, 0.10);
-  border-color: rgba(196, 154, 108, 0.14);
-}
-
-.st-txt {
+/* Floating Player */
+.player-bar {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 800px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  padding: 12px 24px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  min-width: 0;
+  gap: 8px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
-.st-title {
-  font-weight: 450;
-  letter-spacing: -0.2px;
-  color: var(--text);
-  font-size: 0.82rem;
+.player-main {
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
-.st-sub {
-  font-size: 0.66rem;
-  color: var(--text-muted);
+.player-info {
+  min-width: 140px;
+}
+
+.player-chapter {
+  font-weight: 700;
+  font-size: 0.9rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.st-chev {
-  width: 28px;
-  height: 28px;
-  border-radius: 10px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.78);
-  color: rgba(0, 0, 0, 0.65);
-  transition: transform 0.15s ease;
-  box-shadow: var(--shadow-sm);
+.player-verse {
+  font-size: 0.75rem;
+  opacity: 0.7;
 }
 
-[data-theme="dark"] .st-chev {
-  border-color: rgba(255, 255, 255, 0.10);
-  background: rgba(30, 30, 40, 0.35);
-  color: rgba(255, 255, 255, 0.75);
-}
-
-.st-chev.open {
-  transform: rotate(180deg);
-}
-
-.sheet-content {
-  padding: 16px 16px 18px;
+.player-controls {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.tools-footer {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: var(--tools-footer-h);
-  padding: 12px 16px 14px;
-  border-top: 1px solid var(--border);
-  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));
-  display: flex;
-  gap: 10px;
-  justify-content: space-between;
   align-items: center;
+  gap: 8px;
 }
 
-[data-theme="dark"] .tools-footer {
-  border-top-color: rgba(255, 255, 255, 0.08);
-  background: linear-gradient(to top, rgba(18, 18, 18, 0.98), rgba(18, 18, 18, 0.78), rgba(18, 18, 18, 0));
-}
-
-.tools-btn {
-  flex: 1;
-  min-height: 44px;
-  padding: 10px 10px;
-  border-radius: 15px;
-  font-weight: 500;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+.player-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: none;
+  background: none;
+  color: var(--text);
   cursor: pointer;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));
-  box-shadow: var(--shadow-sm);
-  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  line-height: 1;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
 }
 
-.tools-btn span {
-  white-space: nowrap;
+.player-btn:hover {
+  background: var(--bg-elevated);
 }
 
-[data-theme="dark"] .tools-btn {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(30, 30, 40, 0.45);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.tools-btn-primary {
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  border-color: rgba(0, 0, 0, 0.05);
+.player-play {
+  background: var(--accent);
   color: white;
-  box-shadow: 0 18px 40px rgba(139, 94, 60, 0.32);
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.3);
 }
 
-.flow-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  padding: 12px 14px 0;
+.player-play:hover {
+  background: var(--accent-dark);
+  transform: scale(1.05);
 }
 
-.guide-copy {
-  padding: 0 14px 14px;
-}
-
-.guide-title {
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.guide-sub {
-  margin-top: 4px;
-  font-size: 0.84rem;
-  color: var(--text-muted);
-}
-
-.flow-step {
-  min-height: 30px;
-  padding: 6px 8px;
-  border-radius: 14px;
-  background: rgba(0, 0, 0, 0.04);
-  font-size: 10px;
-  color: var(--text-muted);
+.player-progress-wrap {
+  flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
-}
-
-.flow-step.active {
-  background: rgba(139, 94, 60, 0.12);
-  color: var(--accent);
-}
-
-.field-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.action-grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-
-@media (max-width: 640px) {
-
-  .action-grid-3,
-  .radio-group-tight {
-    grid-template-columns: 1fr;
-  }
-
-  .hero-flow,
-  .session-rail-stats,
-  .flow-strip {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .reading-toolbar {
-    padding: 10px 12px;
-  }
-
-  .reading-toolbar-group {
-    width: 100%;
-  }
-
-  .toolbar-chip {
-    flex: 1 1 calc(50% - 8px);
-    justify-content: center;
-  }
-
-  .verse {
-    padding: 16px 14px;
-  }
-
-  .session-rail-top {
-    grid-template-columns: 1fr;
-  }
-
-  .session-rail-actions {
-    flex-wrap: wrap;
-  }
-}
-
-.stat-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-@media (max-width: 520px) {
-  .stat-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.stat {
-  border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 243, 0.62));
-  border-radius: 14px;
-  padding: 10px;
-  box-shadow: var(--shadow-sm);
-}
-
-[data-theme="dark"] .stat {
-  border-color: rgba(255, 255, 255, 0.10);
-  background: rgba(30, 30, 40, 0.40);
-}
-
-.stat-k {
-  font-size: 0.62rem;
-  color: var(--text-muted);
-  font-weight: 450;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.stat-v {
-  margin-top: 6px;
-  font-size: 1.18rem;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.stat-s {
-  margin-top: 2px;
-  font-size: 0.72rem;
-  color: var(--text-muted);
-}
-
-.stat-cta {
-  margin-top: 10px;
-  width: 100%;
-  padding: 8px 10px;
-  border-radius: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));
-  cursor: pointer;
-  font-weight: 450;
-  font-size: 11px;
-  box-shadow: var(--shadow-sm);
-  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
-}
-
-[data-theme="dark"] .stat-cta {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(30, 30, 40, 0.45);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.chart {
-  border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 243, 0.62));
-  border-radius: 14px;
-  padding: 10px;
-  box-shadow: var(--shadow-sm);
-}
-
-[data-theme="dark"] .chart {
-  border-color: rgba(255, 255, 255, 0.10);
-  background: rgba(30, 30, 40, 0.40);
-}
-
-.chart-title {
-  font-weight: 450;
-  color: var(--text);
-  margin-bottom: 8px;
-  font-size: 0.74rem;
-}
-
-.analytics-empty {
-  display: grid;
   gap: 12px;
 }
 
-.analytics-empty-copy {
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  font-weight: 600;
+.player-time {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+  min-width: 40px;
 }
 
-.skeleton-row {
-  height: 12px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.06));
-  background-size: 200% 100%;
-  animation: shimmer 1.2s ease-in-out infinite;
-}
-
-.skeleton-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.skeleton-card {
-  height: 58px;
-  border-radius: 16px;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.06));
-  background-size: 200% 100%;
-  animation: shimmer 1.2s ease-in-out infinite;
-}
-
-[data-theme="dark"] .skeleton-row,
-[data-theme="dark"] .skeleton-card {
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.08));
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 0% 0;
-  }
-
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.bars {
-  display: grid;
-  grid-template-columns: repeat(14, 1fr);
-  gap: 5px;
-  align-items: end;
-  min-height: 68px;
-  padding-top: 6px;
-}
-
-.bar-col {
-  display: flex;
-  align-items: end;
-  justify-content: center;
-  min-height: 68px;
-}
-
-.bar {
-  width: 100%;
-  min-height: 6px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, rgba(139, 94, 60, 0.95), rgba(139, 94, 60, 0.32));
-}
-
-.bars-soft .bar {
-  background: linear-gradient(180deg, rgba(31, 122, 140, 0.95), rgba(31, 122, 140, 0.30));
-}
-
-.bars-danger .bar {
-  background: linear-gradient(180deg, rgba(190, 73, 73, 0.95), rgba(190, 73, 73, 0.28));
-}
-
-.planner-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.planner-settings {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.pill-input {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 249, 241, 0.62));
-  box-shadow: var(--shadow-sm);
-}
-
-.pill-input-row {
-  justify-content: space-between;
-}
-
-[data-theme="dark"] .pill-input {
-  border-color: rgba(255, 255, 255, 0.10);
-  background: rgba(30, 30, 40, 0.40);
-}
-
-.pill-input span {
-  font-weight: 450;
-  color: rgba(0, 0, 0, 0.6);
-  min-width: 64px;
-  font-size: 11px;
-}
-
-[data-theme="dark"] .pill-input span {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.pill-input .input,
-.pill-input .select {
+.player-progress-bg {
   flex: 1;
-  box-shadow: none;
-  padding: 10px 10px;
-  border-radius: 12px;
-}
-
-.empty-mini {
-  color: var(--text-muted);
-  font-weight: 400;
-}
-
-.leech-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.leech {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 12px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 249, 241, 0.62));
-  box-shadow: var(--shadow-sm);
-}
-
-[data-theme="dark"] .leech {
-  border-color: rgba(255, 255, 255, 0.10);
-  background: rgba(30, 30, 40, 0.40);
-}
-
-.leech-k {
-  font-weight: 450;
-  font-size: 0.84rem;
-}
-
-.leech-s {
-  color: var(--text-muted);
-  font-weight: 400;
-  font-size: 0.76rem;
-}
-
-.pill {
-  padding: 8px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 243, 0.62));
-  font-weight: 450;
-  color: rgba(0, 0, 0, 0.75);
-  font-size: 11px;
-  box-shadow: var(--shadow-sm);
-}
-
-[data-theme="dark"] .pill {
-  border-color: rgba(255, 255, 255, 0.10);
-  background: rgba(30, 30, 40, 0.40);
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.tools-inline-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.read-list {
-  display: grid;
-  gap: 8px;
-}
-
-.read-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.58);
-  border: 1px solid rgba(78, 58, 38, 0.07);
-  font-size: 0.76rem;
-  align-items: center;
-}
-
-.read-row strong {
-  font-weight: 500;
-  text-align: right;
-  overflow-wrap: anywhere;
-}
-
-.cta-row {
-  display: flex;
-  gap: 10px;
-  margin-top: 2px;
-  flex-wrap: wrap;
-}
-
-.cta-row-split .cta {
-  min-height: 46px;
-}
-
-.cta {
-  flex: 1;
-  padding: 10px 10px;
-  border-radius: 14px;
-  font-weight: 450;
-  border: 1px solid rgba(0, 0, 0, 0.10);
+  height: 6px;
+  background: var(--bg-elevated);
+  border-radius: 3px;
+  position: relative;
   cursor: pointer;
-  font-size: 11px;
-  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+
+.player-progress-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.1s linear;
+}
+
+/* Animations */
+.slide-up-enter-active, .slide-up-leave-active {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.slide-up-enter-from, .slide-up-leave-to {
+  transform: translate(-50%, 100px);
+  opacity: 0;
+}
+
+.verse-translation {
+  font-size: 0.85rem;
+  color: #5a6b63;
+  line-height: 1.6;
+  padding-top: 12px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  display: block;
+}
+
+.verse-transliteration {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 8px;
+}
+
+.verse-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  direction: rtl;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.word-item {
+  background: var(--accent-light);
+  padding: 6px 12px;
+  border-radius: 20px;
   display: inline-flex;
+  flex-direction: row-reverse;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
+  gap: 8px;
+  font-size: 0.75rem;
 }
 
-.cta-primary {
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: white;
-  border-color: rgba(0, 0, 0, 0.06);
-  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);
+.word-arabic {
+  font-family: var(--font-ar);
+  font-size: 0.9rem;
 }
 
-.cta-ghost {
-  background: rgba(255, 255, 255, 0.58);
-  box-shadow: var(--shadow-sm);
+.word-meaning {
+  color: var(--text-muted);
 }
 
+.word-audio-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--accent);
+  padding: 0 4px;
+}
+
+/* Quiz overlay */
 .quiz-overlay {
   position: fixed;
   inset: 0;
@@ -4973,19 +3869,14 @@ body {
 
 .quiz-card {
   width: min(680px, 100%);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(250, 245, 239, 0.95));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba, rgba(250, 245, 239, 0.95));
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 22px;
   box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);
   overflow: hidden;
 }
 
-[data-theme="dark"] .quiz-card {
-  background: rgba(18, 18, 18, 0.92);
-  border-color: rgba(255, 255, 255, 0.10);
-}
-
-.quiz-top {
+.quiz-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -4993,59 +3884,52 @@ body {
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-[data-theme="dark"] .quiz-top {
-  border-bottom-color: rgba(255, 255, 255, 0.08);
-}
-
-.quiz-title-wrap {
-  display: grid;
-  gap: 4px;
-}
-
 .quiz-title {
   font-weight: 500;
   font-size: 1.05rem;
 }
 
-.quiz-title-sub {
+.quiz-subtitle {
   font-size: 0.8rem;
   color: var(--text-muted);
 }
 
-.quiz-x {
+.quiz-close {
   width: 40px;
   height: 40px;
   border-radius: 14px;
   border: 1px solid rgba(0, 0, 0, 0.10);
   background: rgba(255, 255, 255, 0.7);
   cursor: pointer;
-  font-size: 20px;
-}
-
-[data-theme="dark"] .quiz-x {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(30, 30, 40, 0.5);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.quiz-meta {
-  padding: 14px 22px 0;
+  font-size: 24px;
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
 }
 
-.quiz-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid var(--border);
+.quiz-progress {
+  padding: 14px 22px 0;
+}
+
+.quiz-progress-bar {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.quiz-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.quiz-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 0.75rem;
   color: var(--text-muted);
-  font-size: 0.73rem;
-  box-shadow: var(--shadow-sm);
 }
 
 .quiz-body {
@@ -5055,142 +3939,69 @@ body {
   gap: 16px;
 }
 
-.quiz-summary-title {
-  font-size: 1.18rem;
-  font-weight: 500;
-  letter-spacing: -0.02em;
+.quiz-question {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--accent);
 }
 
-.quiz-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 6px;
-}
-
-.quiz-summary-skill-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.quiz-summary-skill,
-.quiz-summary-explain {
-  border: 1px solid var(--border);
+.quiz-arabic {
+  font-family: var(--font-ar);
+  font-size: 1.4rem;
+  line-height: 1.8;
+  text-align: right;
+  direction: rtl;
+  padding: 16px;
+  background: var(--accent-light);
   border-radius: 16px;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: var(--shadow-sm);
 }
 
-[data-theme="dark"] .quiz-summary-skill,
-[data-theme="dark"] .quiz-summary-explain {
-  border-color: rgba(255, 255, 255, 0.10);
-  background: rgba(30, 30, 40, 0.45);
-}
-
-.quiz-summary-s {
-  margin-top: 4px;
-  font-size: 0.74rem;
-  color: var(--text-muted);
-  line-height: 1.45;
-}
-
-.quiz-summary-item {
+.quiz-reveal-btn {
+  padding: 10px 16px;
+  border-radius: 12px;
   border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 10px 10px;
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: var(--shadow-sm);
-}
-
-[data-theme="dark"] .quiz-summary-item {
-  border-color: rgba(255, 255, 255, 0.10);
-  background: rgba(30, 30, 40, 0.45);
-}
-
-.quiz-summary-k {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-.quiz-summary-v {
-  margin-top: 6px;
-  font-size: 1.08rem;
-  font-weight: 500;
-  color: var(--text);
-}
-
-.quiz-summary-mistakes {
-  margin-top: 6px;
-  display: grid;
-  gap: 8px;
-}
-
-.quiz-summary-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.quiz-tag {
-  padding: 8px 10px;
-  border-radius: 999px;
-  background: rgba(190, 73, 73, 0.10);
-  border: 1px solid rgba(190, 73, 73, 0.18);
-  color: rgba(140, 30, 30, 0.9);
-  font-weight: 500;
-  font-size: 0.72rem;
-}
-
-[data-theme="dark"] .quiz-tag {
-  background: rgba(190, 73, 73, 0.18);
-  color: rgba(255, 255, 255, 0.86);
-}
-
-@media (max-width: 520px) {
-
-  .quiz-summary-grid,
-  .quiz-summary-skill-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .quiz-top,
-  .quiz-body,
-  .quiz-meta,
-  .quiz-actions {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-
-  .quiz-grade,
-  .quiz-actions {
-    flex-direction: column;
-  }
-}
-
-.quiz-prompt {
-  font-size: 1.02rem;
-  color: var(--text);
-  line-height: 1.7;
-}
-
-.quiz-section-label {
+  background: var(--surface);
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  font-weight: 500;
+  font-size: 0.85rem;
 }
 
-.quiz-hint {
-  color: var(--text-muted);
-  font-size: 0.88rem;
-  line-height: 1.7;
+.quiz-answer {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.quiz-translation {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.quiz-grade-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.grade-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.grade-btn.primary {
+  background: var(--accent);
+  color: white;
+  border-color: transparent;
 }
 
 .quiz-options {
@@ -5199,109 +4010,124 @@ body {
   gap: 10px;
 }
 
-.quiz-opt {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  background: rgba(255, 255, 255, 0.8);
+.quiz-option {
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
-  font-size: 0.86rem;
-  line-height: 1.55;
+  text-align: left;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
 }
 
-[data-theme="dark"] .quiz-opt {
-  border-color: rgba(255, 255, 255, 0.10);
-  background: rgba(30, 30, 40, 0.45);
+.quiz-option:hover {
+  background: var(--accent-light);
+  transform: translateX(4px);
+}
+
+.quiz-summary {
+  padding: 22px;
+  text-align: center;
+}
+
+.quiz-summary-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.quiz-summary-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.quiz-summary-stats .stat {
+  padding: 16px;
+  background: var(--surface);
+  border-radius: 16px;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.quiz-summary-mistakes {
+  margin: 20px 0;
+}
+
+.mistake-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  justify-content: center;
+}
+
+.mistake-tag {
+  padding: 6px 12px;
+  background: rgba(190, 73, 73, 0.1);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: #c0392b;
 }
 
 .quiz-actions {
-  padding: 0 22px 22px;
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.quiz-reveal {
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  background: rgba(255, 255, 255, 0.8);
-  cursor: pointer;
-  font-weight: 450;
-  box-shadow: var(--shadow-sm);
-  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-[data-theme="dark"] .quiz-reveal {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(30, 30, 40, 0.45);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.quiz-action {
-  min-height: 42px;
-  padding: 9px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  background: rgba(255, 255, 255, 0.8);
-  cursor: pointer;
-  font-weight: 450;
-  font-size: 0.82rem;
-  box-shadow: var(--shadow-sm);
-  display: inline-flex;
-  align-items: center;
+  gap: 12px;
   justify-content: center;
-  gap: 6px;
 }
 
-.quiz-action-primary {
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: white;
-  border-color: rgba(0, 0, 0, 0.06);
-}
-
-.quiz-action-ghost {
-  color: var(--text);
-}
-
-.quiz-grade {
-  flex: 1;
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-}
-
-.qg {
-  min-height: 42px;
-  padding: 9px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  background: rgba(255, 255, 255, 0.78);
+.btn-outline {
+  padding: 10px 24px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: transparent;
   cursor: pointer;
-  font-weight: 450;
-  font-size: 0.82rem;
-  box-shadow: var(--shadow-sm);
-  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  font-size: 0.85rem;
 }
 
-.qg.primary {
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  border-color: rgba(0, 0, 0, 0.06);
+.btn-primary {
+  padding: 10px 24px;
+  border-radius: 12px;
+  background: var(--accent);
   color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
 }
 
+/* Confetti */
+.confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 140;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -10px;
+  width: 8px;
+  height: 12px;
+  border-radius: 3px;
+  opacity: 0.9;
+  animation: confetti-fall 1.35s ease-in forwards;
+}
+
+/* Banner */
 .banner {
   position: fixed;
   top: 14px;
@@ -5341,28 +4167,6 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-.banner.success {
-  border-color: rgba(0, 150, 90, 0.25);
-}
-
-.banner.error {
-  border-color: rgba(200, 0, 50, 0.25);
-}
-
-.banner.info {
-  border-color: rgba(0, 0, 0, 0.10);
-}
-
-[data-theme="dark"] .banner {
-  background: rgba(18, 18, 18, 0.88);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.92);
-}
-
-[data-theme="dark"] .banner-action {
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
-}
-
 .banner-x {
   width: 36px;
   height: 36px;
@@ -5374,669 +4178,7 @@ body {
   line-height: 1;
 }
 
-[data-theme="dark"] .banner-x {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(30, 30, 40, 0.45);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.confetti {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 140;
-  overflow: hidden;
-}
-
-.confetti-piece {
-  position: absolute;
-  top: -10px;
-  width: 8px;
-  height: 12px;
-  border-radius: 3px;
-  opacity: 0.9;
-  animation: confetti-fall 1.35s ease-in forwards;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
-}
-
-@keyframes fadeLift {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(4px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
-@keyframes confetti-fall {
-  0% {
-    transform: translateY(-20px) rotate(0deg);
-    opacity: 0;
-  }
-
-  10% {
-    opacity: 0.95;
-  }
-
-  100% {
-    transform: translateY(110vh) rotate(480deg);
-    opacity: 0;
-  }
-}
-
-.row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.mini-btn {
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.68));
-  cursor: pointer;
-  font-size: 0.72rem;
-  color: var(--text);
-  white-space: nowrap;
-  box-shadow: var(--shadow-sm);
-  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-
-.mini-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.mini-btn.danger {
-  border-color: rgba(255, 0, 0, 0.2);
-  color: #b00020;
-}
-
-.radio-group {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.radio {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  cursor: pointer;
-  font-size: 0.85rem;
-  color: var(--text);
-  user-select: none;
-  background: rgba(255, 255, 255, 0.75);
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);
-}
-
-[data-theme="dark"] .radio {
-  border-color: rgba(255, 255, 255, 0.10);
-  background: rgba(30, 30, 40, 0.45);
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.25);
-}
-
-.radio input {
-  margin: 0;
-}
-
-.checkline {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.verses.focus .verse.dim {
-  opacity: 0.22;
-}
-
-.verse.blur {
-  filter: blur(4px);
-  opacity: 0.38;
-}
-
-.group {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-}
-
-.field label {
-  font-size: 0.62rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  letter-spacing: 0.5px;
-}
-
-.select,
-.input {
-  width: 100%;
-  min-width: 0;
-  padding: 11px 12px;
-  border-radius: 13px;
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  background: rgba(255, 255, 255, 0.85);
-  color: var(--text);
-  font-size: 0.8rem;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
-}
-
-[data-theme="dark"] .select,
-[data-theme="dark"] .input {
-  border-color: rgba(255, 255, 255, 0.10);
-  background: rgba(30, 30, 40, 0.55);
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);
-}
-
-.select:focus,
-.input:focus {
-  outline: none;
-  border-color: rgba(139, 94, 60, 0.35);
-  box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.12), 0 10px 22px rgba(0, 0, 0, 0.06);
-}
-
-.select-prominent {
-  border-color: rgba(139, 94, 60, 0.22);
-  background: linear-gradient(180deg, rgba(139, 94, 60, 0.12), rgba(255, 255, 255, 0.92));
-}
-
-.range {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.range-compact>* {
-  flex: 1;
-}
-
-.range-single {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-}
-
-.range span {
-  color: rgba(0, 0, 0, 0.35);
-  font-weight: 450;
-  font-size: 11px;
-}
-
-[data-theme="dark"] .range span {
-  color: rgba(255, 255, 255, 0.35);
-}
-
-.radio-group {
-  gap: 12px;
-}
-
-.radio {
-  border-radius: 14px;
-  padding: 8px 10px;
-  font-size: 11px;
-  font-weight: 400;
-}
-
-.radio-group-tight {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.radio-group-tight .radio {
-  flex: 1 1 110px;
-  justify-content: center;
-}
-
-.row .select {
-  flex: 1;
-}
-
-.row .input,
-.row .select,
-.row .mini-btn {
-  min-width: 0;
-}
-
-.switch {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  background: rgba(255, 255, 255, 0.75);
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);
-  cursor: pointer;
-  user-select: none;
-}
-
-[data-theme="dark"] .switch {
-  border-color: rgba(255, 255, 255, 0.10);
-  background: rgba(30, 30, 40, 0.45);
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.25);
-}
-
-.switch input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.switch-ui {
-  width: 44px;
-  height: 26px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.12);
-  position: relative;
-  flex: 0 0 auto;
-}
-
-[data-theme="dark"] .switch-ui {
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.switch-ui::after {
-  content: "";
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 20px;
-  height: 20px;
-  border-radius: 999px;
-  background: white;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
-  transition: transform 0.15s ease, background 0.15s ease;
-}
-
-.switch input:checked+.switch-ui {
-  background: rgba(139, 94, 60, 0.45);
-}
-
-.switch input:checked+.switch-ui::after {
-  transform: translateX(18px);
-}
-
-.switch-text {
-  font-size: 0.74rem;
-  color: rgba(0, 0, 0, 0.72);
-  font-weight: 400;
-}
-
-[data-theme="dark"] .switch-text {
-  color: rgba(255, 255, 255, 0.82);
-}
-
-.range input {
-  flex: 1;
-}
-
-.toggle {
-  display: flex;
-  gap: 8px;
-}
-
-.toggle button {
-  flex: 1;
-  padding: 8px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: transparent;
-  cursor: pointer;
-}
-
-.toggle button.active {
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  border-color: var(--accent);
-  color: white;
-}
-
-.slider {
-  width: 100%;
-  height: 3px;
-  -webkit-appearance: none;
-  background: var(--border);
-  border-radius: 3px;
-}
-
-.slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--accent);
-  cursor: pointer;
-}
-
-.value {
-  color: var(--accent);
-  margin-left: 4px;
-}
-
-.check label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-weight: normal;
-  text-transform: none;
-}
-
-.primary-btn {
-  padding: 12px;
-  border-radius: 40px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  border: none;
-  color: white;
-  cursor: pointer;
-  font-weight: 450;
-  box-shadow: 0 16px 34px rgba(139, 94, 60, 0.26);
-}
-
-.full {
-  width: 100%;
-}
-
-/* Audio Player */
-.player-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  padding: 8px 16px;
-}
-
-.main.tools-open .player-bar {
-  right: var(--tools-width);
-}
-
-.player-collapsed-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 2px 42px 2px 0;
-}
-
-.player-collapsed-copy {
-  min-width: 0;
-}
-
-.player-collapsed-title {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.player-collapsed-sub {
-  margin-top: 2px;
-  font-size: 10px;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.player-collapse {
-  position: absolute;
-  right: 12px;
-  top: 6px;
-  width: 34px;
-  height: 28px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: var(--shadow-sm);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  color: rgba(73, 58, 45, 0.76);
-}
-
-[data-theme="dark"] .player-collapse {
-  border-color: rgba(255, 255, 255, 0.10);
-  background: rgba(30, 30, 40, 0.45);
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.player-progress {
-  position: relative;
-  height: 14px;
-  cursor: pointer;
-  margin-bottom: 4px;
-}
-
-.player-track {
-  position: absolute;
-  top: 6px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: rgba(117, 101, 85, 0.16);
-  border-radius: 2px;
-}
-
-.player-fill {
-  position: absolute;
-  top: 6px;
-  left: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
-  border-radius: 2px;
-}
-
-.player-handle {
-  position: absolute;
-  top: 3px;
-  width: 8px;
-  height: 8px;
-  background: var(--accent);
-  box-shadow: 0 4px 14px rgba(154, 103, 56, 0.32);
-  border-radius: 50%;
-  transform: translateX(-50%);
-}
-
-.player-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.player-time {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 11px;
-  color: rgba(73, 58, 45, 0.64);
-}
-
-.player-time.right {
-  text-align: right;
-}
-
-.player-center {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.player-icon {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.66));
-  border: 1px solid var(--border);
-  padding: 6px;
-  font-size: 16px;
-  line-height: 1;
-  cursor: pointer;
-  color: rgba(73, 58, 45, 0.76);
-  border-radius: 12px;
-  box-shadow: var(--shadow-sm);
-  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
-}
-
-.player-icon:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.player-icon.play {
-  font-size: 18px;
-  color: rgba(73, 58, 45, 0.92);
-}
-
-.player-menu-overlay {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  top: 0;
-  z-index: 30;
-}
-
-.player-menu {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 58px;
-  width: min(420px, calc(100vw - 24px));
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 242, 234, 0.96));
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.14);
-  padding: 10px;
-}
-
-.player-menu-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.85);
-  text-align: left;
-  border-radius: 12px;
-  transition: background 140ms ease, transform 140ms ease;
-}
-
-.player-menu-item:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-
-.pm-ico {
-  width: 18px;
-  text-align: center;
-  color: rgba(0, 0, 0, 0.65);
-}
-
-.player-menu-sep {
-  height: 1px;
-  background: rgba(0, 0, 0, 0.08);
-  margin: 6px 2px;
-}
-
-.player-menu-row {
-  display: grid;
-  grid-template-columns: 70px 1fr auto;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-}
-
-.pm-label {
-  font-size: 11px;
-  color: rgba(0, 0, 0, 0.65);
-}
-
-.pm-value {
-  font-size: 11px;
-  color: rgba(0, 0, 0, 0.75);
-  min-width: 40px;
-  text-align: right;
-}
-
-.pm-range {
-  width: 100%;
-}
-
-.pm-select {
-  grid-column: 2 / span 2;
-  padding: 8px 10px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: white;
-  font-size: 12px;
-}
-
-.icon-btn:hover,
-.rail-btn:hover,
-.cta-btn:hover,
-.tools-x:hover,
-.tools-tabs button:hover,
-.sheet-toggle:hover,
-.tools-btn:hover,
-.stat-cta:hover,
-.cta:hover,
-.quiz-opt:hover,
-.quiz-reveal:hover,
-.qg:hover,
-.mini-btn:hover,
-.radio:hover,
-.switch:hover,
-.player-icon:hover,
-.player-menu-item:hover {
-  transform: translateY(-1px);
-}
-
-.icon-btn:hover,
-.rail-btn:hover,
-.tools-x:hover,
-.tools-btn:hover,
-.stat-cta:hover,
-.cta:hover,
-.quiz-opt:hover,
-.quiz-reveal:hover,
-.qg:hover,
-.mini-btn:hover,
-.radio:hover,
-.switch:hover,
-.player-icon:hover {
-  box-shadow: var(--shadow-md);
-}
-
-.tools-tabs button:hover,
-.sheet-toggle:hover,
-.player-menu-item:hover {
-  background: rgba(255, 255, 255, 0.76);
-}
-
+/* Animations */
 @keyframes appFade {
   0% {
     opacity: 0;
@@ -6073,12 +4215,24 @@ body {
   }
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .app-header {
-    padding: 10px 16px;
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-20px) rotate(0deg);
+    opacity: 0;
   }
 
+  10% {
+    opacity: 0.95;
+  }
+
+  100% {
+    transform: translateY(110vh) rotate(480deg);
+    opacity: 0;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
   .main {
     padding: 16px 16px 100px;
   }
@@ -6087,43 +4241,97 @@ body {
     padding-right: 16px;
   }
 
-  .main.tools-open .player-bar {
+  .tools {
+    left: 0;
     right: 0;
+    width: 100%;
   }
 
-  .session-meta {
-    display: none;
+  .session-rail-stats {
+    grid-template-columns: 1fr 1fr;
   }
 
-  .player-row {
-    gap: 8px;
+  .hero-flow {
+    grid-template-columns: 1fr 1fr;
   }
 
-  .player-btn {
-    padding: 4px 8px;
+  .reading-toolbar-group {
+    width: 100%;
   }
 
-  .player-select {
-    display: none;
-  }
-
-  .player-controls {
-    flex-wrap: wrap;
+  .toolbar-chip {
+    flex: 1 1 calc(50% - 8px);
     justify-content: center;
   }
 
-  .verse-arabic {
-    font-size: 1.2rem;
+  .verse-font-controls {
+    gap: 2px;
+    padding: 2px 4px;
+  }
+
+  .verse-font-btn {
+    width: 20px;
+    height: 20px;
+  }
+
+  .verse-font-size-indicator {
+    min-width: 30px;
+    font-size: 9px;
   }
 }
 
-@media (min-width: 1500px) {
-  .content {
-    max-width: 1220px;
+@media (max-width: 640px) {
+  .quiz-grade-buttons {
+    flex-direction: column;
   }
 
-  .main.tools-open .content {
-    max-width: min(1180px, calc(100vw - var(--tools-width) - 120px));
+  .quiz-actions {
+    flex-direction: column;
   }
+
+  .hero-actions,
+  .empty-actions {
+    flex-direction: column;
+  }
+
+  .cta {
+    width: 100%;
+  }
+}
+
+/* Dark theme overrides */
+[data-theme="dark"] .tools {
+  background: rgba(18, 18, 18, 0.9);
+  border-left-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .sheet-section {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(30, 30, 40, 0.45);
+}
+
+[data-theme="dark"] .select,
+[data-theme="dark"] .input {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(30, 30, 40, 0.55);
+}
+
+[data-theme="dark"] .switch {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(30, 30, 40, 0.45);
+}
+
+[data-theme="dark"] .verse-translation {
+  color: #a0a0b0;
+}
+
+[data-theme="dark"] .quiz-card {
+  background: rgba(18, 18, 18, 0.92);
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+/* Sepia theme overrides */
+[data-theme="sepia"] .verse-translation {
+  color: #7a684a;
 }
 </style>
