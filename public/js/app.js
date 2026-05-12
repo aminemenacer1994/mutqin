@@ -23660,12 +23660,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! axios */ "./node_modules/axios/lib/axios.js");
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
-function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
-function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _objectWithoutProperties(e, t) { if (null == e) return {}; var o, r, i = _objectWithoutPropertiesLoose(e, t); if (Object.getOwnPropertySymbols) { var n = Object.getOwnPropertySymbols(e); for (r = 0; r < n.length; r++) o = n[r], -1 === t.indexOf(o) && {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]); } return i; }
 function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t = {}; for (var n in r) if ({}.hasOwnProperty.call(r, n)) { if (-1 !== e.indexOf(n)) continue; t[n] = r[n]; } return t; }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
@@ -23673,6 +23667,12 @@ function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t =
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
+function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
 function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
 function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
@@ -23762,6 +23762,21 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
       theme: 'light',
       tab: 'beginner',
       showTools: false,
+      showPlannerModal: false,
+      plannerConfig: {
+        surah: 1,
+        totalVersesInSurah: 7,
+        versesPerDay: 5,
+        minutesPerVerse: 2
+      },
+      analytics: {
+        totalVersesRead: 124,
+        totalTimeSpent: 86,
+        currentStreak: 5,
+        versesMastered: 12,
+        totalRepetitions: 450,
+        sessionsCompleted: 15
+      },
       playerVisible: false,
       playerCollapsed: true,
       playerMenuOpen: false,
@@ -23860,6 +23875,7 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
       confettiSeed: 0,
       networkOnline: true,
       onboardingDismissed: false,
+      onboardingStep: 1,
       restoredAudioState: null,
       // Word sequence
       wordSequence: null,
@@ -24093,6 +24109,27 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
       if (!this.duration) return 0;
       return this.currentTime / this.duration * 100;
     },
+    plannerEstimatedDays: function plannerEstimatedDays() {
+      var perDay = Math.max(1, this.plannerConfig.versesPerDay || 1);
+      return Math.ceil(this.plannerConfig.totalVersesInSurah / perDay);
+    },
+    plannerEstimatedTimePerDay: function plannerEstimatedTimePerDay() {
+      var perDay = Math.max(1, this.plannerConfig.versesPerDay || 1);
+      return perDay * this.plannerConfig.minutesPerVerse;
+    },
+    plannerTotalVerses: function plannerTotalVerses() {
+      return this.plannerConfig.totalVersesInSurah;
+    },
+    plannerCompletionDate: function plannerCompletionDate() {
+      var days = this.plannerEstimatedDays;
+      var d = new Date();
+      d.setDate(d.getDate() + days);
+      return d.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    },
     isLoggedIn: function isLoggedIn() {
       var _this$auth;
       return !!((_this$auth = this.auth) !== null && _this$auth !== void 0 && _this$auth.check);
@@ -24142,6 +24179,11 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
       var seconds = this.estimateKeysSeconds(remainingQueue);
       var minutes = Math.max(1, Math.ceil(seconds / 60));
       return "".concat(minutes, " min");
+    },
+    currentChainPhase: function currentChainPhase() {
+      if (!this.queue || this.queue.length === 0) return 0;
+      var currentItem = this.queue[this.queueIndex];
+      return currentItem ? currentItem.cumulativePhase : 0;
     },
     toolsHeaderTitle: function toolsHeaderTitle() {
       if (this.tab === 'analytics') return 'Retention and plan';
@@ -24275,22 +24317,8 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
       handler: 'persistUiState',
       deep: true
     },
-    activeVerseKey: function activeVerseKey(newKey, oldKey) {
-      var _this4 = this;
-      if (this.blurAdjacent) {
-        this.$nextTick(function () {
-          if (oldKey) {
-            var oldAdjacent = _this4.verses.filter(function (v) {
-              return _this4.isAdjacentToKey(v, oldKey);
-            });
-            oldAdjacent.forEach(function (v) {
-              var el = document.querySelector("[data-verse-key=\"".concat(v.key, "\"]"));
-              if (el) el.classList.remove('blurred');
-            });
-          }
-          _this4.$forceUpdate();
-        });
-      }
+    activeVerseKey: function activeVerseKey() {
+      // Logic removed since blurring is now global
     },
     beginnerRepeats: function beginnerRepeats() {
       if (this.tab === 'beginner') this.rebuildQueue();
@@ -24304,18 +24332,53 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
   }, "tab", function tab(newVal) {
     if (newVal === 'beginner' && this.currentMode !== 'beginner') {
       this.currentMode = 'beginner';
-      if (this.beginner.chapterId && this.beginner.verses.length === 0) {
+      // Sync content state from advanced
+      if (this.advanced.chapterId) {
+        this.beginner.chapterId = this.advanced.chapterId;
+        this.beginner.rangeStart = this.advanced.rangeStart;
+        this.beginner.rangeEnd = this.advanced.rangeEnd;
+        this.beginner.reciterId = this.advanced.reciterId;
+        this.beginner.verses = _toConsumableArray(this.advanced.verses);
+        this.rebuildQueue();
+      } else if (this.beginner.chapterId && this.beginner.verses.length === 0) {
         this.loadVerses();
       }
     } else if (newVal === 'advanced' && this.currentMode !== 'advanced') {
       this.currentMode = 'advanced';
-      if (this.advanced.chapterId && this.advanced.verses.length === 0) {
+      // Sync content state from beginner
+      if (this.beginner.chapterId) {
+        this.advanced.chapterId = this.beginner.chapterId;
+        this.advanced.rangeStart = this.beginner.rangeStart;
+        this.advanced.rangeEnd = this.beginner.rangeEnd;
+        this.advanced.reciterId = this.beginner.reciterId;
+        this.advanced.verses = _toConsumableArray(this.beginner.verses);
+        this.rebuildQueue();
+      } else if (this.advanced.chapterId && this.advanced.verses.length === 0) {
         this.loadVerses();
       }
     }
     this.persistUiState();
   }),
   methods: {
+    // Planner functionality
+    updatePlannerSurah: function updatePlannerSurah() {
+      var _this4 = this;
+      var ch = this.chapters.find(function (c) {
+        return c.id === _this4.plannerConfig.surah;
+      });
+      if (ch) {
+        this.plannerConfig.totalVersesInSurah = ch.verses_count;
+      }
+    },
+    submitPlanner: function submitPlanner() {
+      this.showPlannerModal = false;
+      this.chapterId = this.plannerConfig.surah;
+      this.rangeStart = 1;
+      this.rangeEnd = Math.min(this.plannerConfig.versesPerDay, this.plannerConfig.totalVersesInSurah);
+      this.tab = 'beginner';
+      this.loadChapter();
+      this.showBanner('Plan created successfully!', 'success');
+    },
     // Font size management
     getVerseFontSize: function getVerseFontSize(verseKey) {
       return this.verseFontSizes[verseKey] || this.defaultFontSize;
@@ -25595,6 +25658,21 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
       this.onboardingDismissed = true;
       this.showTools = true;
     },
+    setGoal: function setGoal(mode) {
+      this.tab = mode;
+      this.onboardingStep = 2;
+    },
+    startWithFatiha: function startWithFatiha() {
+      this.chapterId = 1;
+      this.rangeStart = 1;
+      this.rangeEnd = 7;
+      this.onboardingDismissed = true;
+      this.loadChapter();
+    },
+    openSetup: function openSetup() {
+      this.onboardingDismissed = true;
+      this.showTools = true;
+    },
     resetControls: function resetControls() {
       if (!confirm('Reset session settings?')) return;
       this.rangeStart = 1;
@@ -25927,544 +26005,701 @@ var _hoisted_3 = {
 };
 var _hoisted_4 = {
   key: 0,
-  "class": "hero-card"
+  "class": "home-dashboard"
 };
 var _hoisted_5 = {
-  "class": "hero-actions"
+  "class": "dashboard-header"
 };
 var _hoisted_6 = {
+  "class": "header-stats"
+};
+var _hoisted_7 = {
+  "class": "mini-stat"
+};
+var _hoisted_8 = {
+  "class": "mini-stat"
+};
+var _hoisted_9 = {
+  "class": "dashboard-actions"
+};
+var _hoisted_10 = {
+  "class": "dashboard-recent"
+};
+var _hoisted_11 = {
+  "class": "recent-header"
+};
+var _hoisted_12 = {
+  "class": "recent-stats"
+};
+var _hoisted_13 = {
+  "class": "r-stat"
+};
+var _hoisted_14 = {
+  "class": "r-stat"
+};
+var _hoisted_15 = {
+  "class": "r-stat"
+};
+var _hoisted_16 = {
   key: 1,
   "class": "session-rail"
 };
-var _hoisted_7 = {
+var _hoisted_17 = {
   "class": "session-rail-top"
 };
-var _hoisted_8 = {
+var _hoisted_18 = {
   "class": "session-rail-copy"
 };
-var _hoisted_9 = {
+var _hoisted_19 = {
   "class": "session-rail-title"
 };
-var _hoisted_10 = {
+var _hoisted_20 = {
   "class": "session-rail-meta"
 };
-var _hoisted_11 = {
+var _hoisted_21 = {
   "class": "session-rail-actions"
 };
-var _hoisted_12 = {
+var _hoisted_22 = {
   "class": "session-rail-stats"
 };
-var _hoisted_13 = {
+var _hoisted_23 = {
   "class": "rail-stat"
 };
-var _hoisted_14 = {
+var _hoisted_24 = {
   "class": "rail-stat"
 };
-var _hoisted_15 = {
+var _hoisted_25 = {
   "class": "rail-stat"
 };
-var _hoisted_16 = {
+var _hoisted_26 = {
   "class": "rail-stat"
 };
-var _hoisted_17 = {
+var _hoisted_27 = {
   key: 0,
   "class": "mode-indicator"
 };
-var _hoisted_18 = {
+var _hoisted_28 = {
   "class": "progress-bar progress-bar-wide"
 };
-var _hoisted_19 = {
+var _hoisted_29 = {
   key: 2,
   "class": "reading-toolbar"
 };
-var _hoisted_20 = {
+var _hoisted_30 = {
   "class": "reading-toolbar-group"
 };
-var _hoisted_21 = {
+var _hoisted_31 = {
   "class": "reading-toolbar-group"
 };
-var _hoisted_22 = {
+var _hoisted_32 = {
   "class": "toolbar-font-wrap"
 };
-var _hoisted_23 = {
+var _hoisted_33 = {
   key: 0,
   "class": "toolbar-font-menu"
 };
-var _hoisted_24 = ["onClick"];
-var _hoisted_25 = {
+var _hoisted_34 = ["onClick"];
+var _hoisted_35 = {
   key: 3,
-  "class": "empty"
+  "class": "chaining-viewer"
 };
-var _hoisted_26 = {
-  "class": "empty-card"
+var _hoisted_36 = {
+  "class": "chaining-stats"
 };
-var _hoisted_27 = {
-  "class": "empty-actions"
+var _hoisted_37 = {
+  "class": "chaining-badge"
 };
-var _hoisted_28 = {
+var _hoisted_38 = {
+  "class": "chaining-badge alt"
+};
+var _hoisted_39 = {
+  key: 0,
+  "class": "chaining-body"
+};
+var _hoisted_40 = {
+  "class": "chain-timeline"
+};
+var _hoisted_41 = ["onClick"];
+var _hoisted_42 = {
+  "class": "step-indicator"
+};
+var _hoisted_43 = {
+  "class": "step-content"
+};
+var _hoisted_44 = {
+  "class": "step-phase"
+};
+var _hoisted_45 = {
+  "class": "step-verse"
+};
+var _hoisted_46 = {
   "class": "verses-grid"
 };
-var _hoisted_29 = ["data-verse-key"];
-var _hoisted_30 = {
+var _hoisted_47 = ["data-verse-key"];
+var _hoisted_48 = {
   "class": "verse-header"
 };
-var _hoisted_31 = {
+var _hoisted_49 = {
   "class": "verse-badges"
 };
-var _hoisted_32 = {
+var _hoisted_50 = {
   "class": "verse-number"
 };
-var _hoisted_33 = {
+var _hoisted_51 = {
   "class": "verse-ref"
 };
-var _hoisted_34 = {
+var _hoisted_52 = {
   "class": "verse-actions"
 };
-var _hoisted_35 = {
+var _hoisted_53 = {
   "class": "verse-font-controls"
 };
-var _hoisted_36 = ["onClick"];
-var _hoisted_37 = {
+var _hoisted_54 = ["onClick"];
+var _hoisted_55 = {
   "class": "verse-font-size-indicator"
 };
-var _hoisted_38 = ["onClick"];
-var _hoisted_39 = ["onClick"];
-var _hoisted_40 = ["onClick"];
-var _hoisted_41 = ["innerHTML"];
-var _hoisted_42 = {
+var _hoisted_56 = ["onClick"];
+var _hoisted_57 = ["onClick"];
+var _hoisted_58 = ["onClick"];
+var _hoisted_59 = ["innerHTML"];
+var _hoisted_60 = {
   key: 0,
   "class": "verse-translation"
 };
-var _hoisted_43 = {
+var _hoisted_61 = {
   key: 1,
   "class": "verse-transliteration"
 };
-var _hoisted_44 = {
+var _hoisted_62 = {
   key: 2,
   "class": "verse-words"
 };
-var _hoisted_45 = {
+var _hoisted_63 = {
   "class": "word-arabic",
   dir: "rtl"
 };
-var _hoisted_46 = {
+var _hoisted_64 = {
   "class": "word-meaning"
 };
-var _hoisted_47 = ["onClick"];
-var _hoisted_48 = {
+var _hoisted_65 = ["onClick"];
+var _hoisted_66 = {
   "class": "tools-top"
 };
-var _hoisted_49 = {
+var _hoisted_67 = {
   "class": "tools-topbar"
 };
-var _hoisted_50 = {
+var _hoisted_68 = {
   "class": "tools-title"
 };
-var _hoisted_51 = {
+var _hoisted_69 = {
   "class": "tools-context"
 };
-var _hoisted_52 = {
+var _hoisted_70 = {
   "class": "tools-tabs"
 };
-var _hoisted_53 = {
+var _hoisted_71 = {
   "class": "tools-body"
 };
-var _hoisted_54 = {
+var _hoisted_72 = {
   key: 0,
   "class": "sheet"
-};
-var _hoisted_55 = {
-  "class": "sheet-section"
-};
-var _hoisted_56 = {
-  "class": "sheet-content"
-};
-var _hoisted_57 = {
-  "class": "field-stack"
-};
-var _hoisted_58 = {
-  "class": "field"
-};
-var _hoisted_59 = ["value"];
-var _hoisted_60 = ["value"];
-var _hoisted_61 = {
-  "class": "field"
-};
-var _hoisted_62 = {
-  "class": "range range-single"
-};
-var _hoisted_63 = {
-  "class": "sheet-section"
-};
-var _hoisted_64 = {
-  "class": "sheet-content"
-};
-var _hoisted_65 = {
-  "class": "field-stack"
-};
-var _hoisted_66 = {
-  "class": "field"
-};
-var _hoisted_67 = ["value"];
-var _hoisted_68 = {
-  "class": "field"
-};
-var _hoisted_69 = {
-  "class": "radio-group radio-group-tight"
-};
-var _hoisted_70 = {
-  "class": "radio"
-};
-var _hoisted_71 = {
-  "class": "radio"
-};
-var _hoisted_72 = {
-  "class": "radio"
 };
 var _hoisted_73 = {
-  "class": "radio"
+  "class": "sheet-section"
 };
 var _hoisted_74 = {
-  "class": "field"
+  "class": "sheet-content"
 };
 var _hoisted_75 = {
-  "class": "radio-group radio-group-tight"
+  "class": "field-stack"
 };
 var _hoisted_76 = {
-  "class": "radio"
+  "class": "field"
 };
-var _hoisted_77 = {
-  "class": "radio"
-};
-var _hoisted_78 = {
-  "class": "sheet-section"
-};
+var _hoisted_77 = ["value"];
+var _hoisted_78 = ["value"];
 var _hoisted_79 = {
-  "class": "sheet-content"
+  "class": "field"
 };
 var _hoisted_80 = {
-  "class": "field-stack"
+  "class": "range range-single"
 };
 var _hoisted_81 = {
-  "class": "field"
+  "class": "sheet-section"
 };
-var _hoisted_82 = ["value"];
+var _hoisted_82 = {
+  "class": "sheet-content"
+};
 var _hoisted_83 = {
-  "class": "field checkbox"
+  "class": "field-stack"
 };
 var _hoisted_84 = {
-  "class": "switch"
+  "class": "field"
 };
-var _hoisted_85 = {
-  "class": "field checkbox"
-};
+var _hoisted_85 = ["value"];
 var _hoisted_86 = {
-  "class": "switch"
+  "class": "field"
 };
 var _hoisted_87 = {
-  key: 0,
-  "class": "sheet-section"
+  "class": "radio-group radio-group-tight"
 };
 var _hoisted_88 = {
-  "class": "sheet-content"
+  "class": "radio"
 };
 var _hoisted_89 = {
-  "class": "field-stack"
+  "class": "radio"
 };
 var _hoisted_90 = {
+  "class": "radio"
+};
+var _hoisted_91 = {
+  "class": "radio"
+};
+var _hoisted_92 = {
   "class": "field"
 };
-var _hoisted_91 = ["value"];
-var _hoisted_92 = ["disabled"];
 var _hoisted_93 = {
-  key: 1,
-  "class": "sheet"
+  "class": "radio-group radio-group-tight"
 };
 var _hoisted_94 = {
-  "class": "sheet-section"
+  "class": "radio"
 };
 var _hoisted_95 = {
-  "class": "sheet-content"
+  "class": "radio"
 };
 var _hoisted_96 = {
-  "class": "field-stack"
+  "class": "sheet-section"
 };
 var _hoisted_97 = {
-  "class": "field"
+  "class": "sheet-content"
 };
-var _hoisted_98 = ["value"];
+var _hoisted_98 = {
+  "class": "field-stack"
+};
 var _hoisted_99 = {
   "class": "field"
 };
-var _hoisted_100 = {
-  "class": "range range-single"
-};
+var _hoisted_100 = ["value"];
 var _hoisted_101 = {
-  "class": "field"
+  "class": "field checkbox"
 };
-var _hoisted_102 = ["value"];
+var _hoisted_102 = {
+  "class": "switch"
+};
 var _hoisted_103 = {
-  "class": "sheet-section"
+  "class": "field checkbox"
 };
 var _hoisted_104 = {
-  "class": "sheet-content"
+  "class": "switch"
 };
 var _hoisted_105 = {
-  "class": "field-stack"
-};
-var _hoisted_106 = {
-  "class": "field"
-};
-var _hoisted_107 = {
-  "class": "radio-group radio-group-tight"
-};
-var _hoisted_108 = {
-  "class": "radio"
-};
-var _hoisted_109 = {
-  "class": "radio"
-};
-var _hoisted_110 = {
-  "class": "radio"
-};
-var _hoisted_111 = {
-  "class": "radio"
-};
-var _hoisted_112 = {
-  "class": "field"
-};
-var _hoisted_113 = {
-  "class": "radio-group radio-group-tight"
-};
-var _hoisted_114 = {
-  "class": "radio"
-};
-var _hoisted_115 = {
-  "class": "radio"
-};
-var _hoisted_116 = {
-  "class": "field"
-};
-var _hoisted_117 = ["value"];
-var _hoisted_118 = {
-  "class": "sheet-section"
-};
-var _hoisted_119 = {
-  "class": "sheet-content"
-};
-var _hoisted_120 = {
-  "class": "field-stack"
-};
-var _hoisted_121 = {
-  "class": "field"
-};
-var _hoisted_122 = {
-  "class": "radio-group"
-};
-var _hoisted_123 = {
-  "class": "radio"
-};
-var _hoisted_124 = {
-  "class": "radio"
-};
-var _hoisted_125 = {
-  "class": "radio"
-};
-var _hoisted_126 = {
-  "class": "field"
-};
-var _hoisted_127 = ["value"];
-var _hoisted_128 = {
-  "class": "field checkbox"
-};
-var _hoisted_129 = {
-  "class": "switch"
-};
-var _hoisted_130 = {
-  "class": "field checkbox"
-};
-var _hoisted_131 = {
-  "class": "switch"
-};
-var _hoisted_132 = {
-  "class": "field checkbox"
-};
-var _hoisted_133 = {
-  "class": "switch"
-};
-var _hoisted_134 = {
   key: 0,
   "class": "sheet-section"
 };
-var _hoisted_135 = {
+var _hoisted_106 = {
   "class": "sheet-content"
 };
-var _hoisted_136 = {
+var _hoisted_107 = {
   "class": "field-stack"
 };
-var _hoisted_137 = {
+var _hoisted_108 = {
   "class": "field"
 };
-var _hoisted_138 = ["value"];
-var _hoisted_139 = ["disabled"];
+var _hoisted_109 = ["value"];
+var _hoisted_110 = ["disabled"];
+var _hoisted_111 = {
+  key: 1,
+  "class": "sheet"
+};
+var _hoisted_112 = {
+  "class": "sheet-section"
+};
+var _hoisted_113 = {
+  "class": "sheet-content"
+};
+var _hoisted_114 = {
+  "class": "field-stack"
+};
+var _hoisted_115 = {
+  "class": "field"
+};
+var _hoisted_116 = ["value"];
+var _hoisted_117 = {
+  "class": "field"
+};
+var _hoisted_118 = {
+  "class": "range range-single"
+};
+var _hoisted_119 = {
+  "class": "field"
+};
+var _hoisted_120 = ["value"];
+var _hoisted_121 = {
+  "class": "sheet-section"
+};
+var _hoisted_122 = {
+  "class": "sheet-content"
+};
+var _hoisted_123 = {
+  "class": "field-stack"
+};
+var _hoisted_124 = {
+  "class": "field"
+};
+var _hoisted_125 = {
+  "class": "radio-group radio-group-tight"
+};
+var _hoisted_126 = {
+  "class": "radio"
+};
+var _hoisted_127 = {
+  "class": "radio"
+};
+var _hoisted_128 = {
+  "class": "radio"
+};
+var _hoisted_129 = {
+  "class": "radio"
+};
+var _hoisted_130 = {
+  "class": "field"
+};
+var _hoisted_131 = {
+  "class": "radio-group radio-group-tight"
+};
+var _hoisted_132 = {
+  "class": "radio"
+};
+var _hoisted_133 = {
+  "class": "radio"
+};
+var _hoisted_134 = {
+  "class": "field"
+};
+var _hoisted_135 = ["value"];
+var _hoisted_136 = {
+  "class": "sheet-section"
+};
+var _hoisted_137 = {
+  "class": "sheet-content"
+};
+var _hoisted_138 = {
+  "class": "field-stack"
+};
+var _hoisted_139 = {
+  "class": "field"
+};
 var _hoisted_140 = {
+  "class": "radio-group"
+};
+var _hoisted_141 = {
+  "class": "radio"
+};
+var _hoisted_142 = {
+  "class": "radio"
+};
+var _hoisted_143 = {
+  "class": "radio"
+};
+var _hoisted_144 = {
+  "class": "field"
+};
+var _hoisted_145 = ["value"];
+var _hoisted_146 = {
+  "class": "field checkbox"
+};
+var _hoisted_147 = {
+  "class": "switch"
+};
+var _hoisted_148 = {
+  "class": "field checkbox"
+};
+var _hoisted_149 = {
+  "class": "switch"
+};
+var _hoisted_150 = {
+  "class": "field checkbox"
+};
+var _hoisted_151 = {
+  "class": "switch"
+};
+var _hoisted_152 = {
+  key: 0,
+  "class": "sheet-section"
+};
+var _hoisted_153 = {
+  "class": "sheet-content"
+};
+var _hoisted_154 = {
+  "class": "field-stack"
+};
+var _hoisted_155 = {
+  "class": "field"
+};
+var _hoisted_156 = ["value"];
+var _hoisted_157 = ["disabled"];
+var _hoisted_158 = {
   key: 2,
   "class": "sheet"
 };
-var _hoisted_141 = {
+var _hoisted_159 = {
+  "class": "sheet-section",
+  style: {
+    "padding": "20px"
+  }
+};
+var _hoisted_160 = {
+  "class": "analytics-grid"
+};
+var _hoisted_161 = {
+  "class": "stat-card"
+};
+var _hoisted_162 = {
+  "class": "stat-value"
+};
+var _hoisted_163 = {
+  "class": "stat-card"
+};
+var _hoisted_164 = {
+  "class": "stat-value"
+};
+var _hoisted_165 = {
+  "class": "stat-card"
+};
+var _hoisted_166 = {
+  "class": "stat-value"
+};
+var _hoisted_167 = {
+  "class": "stat-card"
+};
+var _hoisted_168 = {
+  "class": "stat-value"
+};
+var _hoisted_169 = {
+  "class": "stat-card"
+};
+var _hoisted_170 = {
+  "class": "stat-value"
+};
+var _hoisted_171 = {
+  "class": "stat-card"
+};
+var _hoisted_172 = {
+  "class": "stat-value"
+};
+var _hoisted_173 = {
+  key: 3,
+  "class": "sheet"
+};
+var _hoisted_174 = {
   "class": "sheet-section"
 };
-var _hoisted_142 = {
+var _hoisted_175 = {
   "class": "sheet-content",
   style: {
     "display": "block",
     "padding": "16px"
   }
 };
-var _hoisted_143 = {
+var _hoisted_176 = {
   key: 0,
   "class": "empty-mini"
 };
-var _hoisted_144 = {
+var _hoisted_177 = {
   key: 1,
   "class": "offline-list"
 };
-var _hoisted_145 = {
+var _hoisted_178 = {
   "class": "oi-info"
 };
-var _hoisted_146 = {
+var _hoisted_179 = {
   "class": "oi-name"
 };
-var _hoisted_147 = {
+var _hoisted_180 = {
   "class": "oi-meta"
 };
-var _hoisted_148 = {
+var _hoisted_181 = {
   "class": "oi-date"
 };
-var _hoisted_149 = {
+var _hoisted_182 = {
   "class": "oi-actions"
 };
-var _hoisted_150 = ["onClick"];
-var _hoisted_151 = ["onClick"];
-var _hoisted_152 = {
+var _hoisted_183 = ["onClick"];
+var _hoisted_184 = ["onClick"];
+var _hoisted_185 = {
   key: 2,
   "class": "offline-note"
 };
-var _hoisted_153 = {
+var _hoisted_186 = {
   "class": "tools-footer"
 };
-var _hoisted_154 = {
+var _hoisted_187 = {
   key: 1,
   "class": "quiz-overlay"
 };
-var _hoisted_155 = {
+var _hoisted_188 = {
   "class": "quiz-card"
 };
-var _hoisted_156 = {
+var _hoisted_189 = {
   "class": "quiz-header"
 };
-var _hoisted_157 = {
+var _hoisted_190 = {
   "class": "quiz-subtitle"
 };
-var _hoisted_158 = {
+var _hoisted_191 = {
   key: 0,
   "class": "quiz-progress"
 };
-var _hoisted_159 = {
+var _hoisted_192 = {
   "class": "quiz-progress-bar"
 };
-var _hoisted_160 = {
+var _hoisted_193 = {
   "class": "quiz-stats"
 };
-var _hoisted_161 = {
+var _hoisted_194 = {
   key: 1,
   "class": "quiz-summary"
 };
-var _hoisted_162 = {
+var _hoisted_195 = {
   "class": "quiz-summary-stats"
 };
-var _hoisted_163 = {
+var _hoisted_196 = {
   "class": "stat"
 };
-var _hoisted_164 = {
+var _hoisted_197 = {
   "class": "stat-value"
 };
-var _hoisted_165 = {
+var _hoisted_198 = {
   "class": "stat"
 };
-var _hoisted_166 = {
+var _hoisted_199 = {
   "class": "stat-value"
 };
-var _hoisted_167 = {
+var _hoisted_200 = {
   key: 0,
   "class": "quiz-summary-mistakes"
 };
-var _hoisted_168 = {
+var _hoisted_201 = {
   "class": "mistake-tags"
 };
-var _hoisted_169 = {
+var _hoisted_202 = {
   "class": "quiz-actions"
 };
-var _hoisted_170 = {
+var _hoisted_203 = {
   "class": "quiz-body"
 };
-var _hoisted_171 = {
+var _hoisted_204 = {
   key: 0
 };
-var _hoisted_172 = ["innerHTML"];
-var _hoisted_173 = {
+var _hoisted_205 = ["innerHTML"];
+var _hoisted_206 = {
   key: 1,
   "class": "quiz-answer"
 };
-var _hoisted_174 = {
+var _hoisted_207 = {
   "class": "quiz-translation"
 };
-var _hoisted_175 = {
+var _hoisted_208 = {
   "class": "quiz-grade-buttons"
 };
-var _hoisted_176 = {
+var _hoisted_209 = {
   "class": "quiz-prompt"
 };
-var _hoisted_177 = {
+var _hoisted_210 = {
   "class": "quiz-options"
 };
-var _hoisted_178 = ["onClick"];
-var _hoisted_179 = {
+var _hoisted_211 = ["onClick"];
+var _hoisted_212 = {
   "class": "quiz-options"
 };
-var _hoisted_180 = ["onClick"];
-var _hoisted_181 = {
+var _hoisted_213 = ["onClick"];
+var _hoisted_214 = {
   "class": "quiz-blank-prompt"
 };
-var _hoisted_182 = {
+var _hoisted_215 = {
+  "class": "modal-content planner-modal"
+};
+var _hoisted_216 = {
+  "class": "modal-header"
+};
+var _hoisted_217 = {
+  "class": "modal-body"
+};
+var _hoisted_218 = {
+  "class": "field"
+};
+var _hoisted_219 = ["value"];
+var _hoisted_220 = {
+  "class": "field"
+};
+var _hoisted_221 = {
+  "class": "planner-analytics-grid"
+};
+var _hoisted_222 = {
+  "class": "pa-card"
+};
+var _hoisted_223 = {
+  "class": "pa-val"
+};
+var _hoisted_224 = {
+  "class": "pa-card"
+};
+var _hoisted_225 = {
+  "class": "pa-val"
+};
+var _hoisted_226 = {
+  "class": "pa-card"
+};
+var _hoisted_227 = {
+  "class": "pa-val"
+};
+var _hoisted_228 = {
+  "class": "pa-card"
+};
+var _hoisted_229 = {
+  "class": "pa-val"
+};
+var _hoisted_230 = {
+  "class": "modal-footer",
+  style: {
+    "display": "flex",
+    "justify-content": "center",
+    "padding-top": "20px"
+  }
+};
+var _hoisted_231 = {
   key: 0,
   "class": "player-bar"
 };
-var _hoisted_183 = {
+var _hoisted_232 = {
   "class": "player-main"
 };
-var _hoisted_184 = {
+var _hoisted_233 = {
   "class": "player-info"
 };
-var _hoisted_185 = {
+var _hoisted_234 = {
   "class": "player-chapter"
 };
-var _hoisted_186 = {
+var _hoisted_235 = {
   "class": "player-verse"
 };
-var _hoisted_187 = {
+var _hoisted_236 = {
+  key: 0,
+  "class": "player-eta"
+};
+var _hoisted_237 = {
   "class": "player-controls"
 };
-var _hoisted_188 = {
+var _hoisted_238 = {
   "class": "player-progress-wrap"
 };
-var _hoisted_189 = {
+var _hoisted_239 = {
   "class": "player-time"
 };
-var _hoisted_190 = {
+var _hoisted_240 = {
   "class": "player-time"
 };
-var _hoisted_191 = {
+var _hoisted_241 = {
   ref: "audio",
   style: {
     "display": "none"
@@ -26490,101 +26725,151 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $data.banner = null;
     }),
     "aria-label": "Dismiss"
-  }, _toConsumableArray(_cache[89] || (_cache[89] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[97] || (_cache[97] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */)])))])], 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Main Content "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["main container", {
       'tools-open': $data.showTools
     }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [$options.showOnboarding ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [_cache[93] || (_cache[93] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"hero-copy\"><div class=\"hero-kicker\">Focused hifz system</div><h1 class=\"hero-title\">Memorise and retain Quran intelligently.</h1><p class=\"hero-sub\">Structured memorisation, automatic revision, and retention tracking in one focused system.</p></div><div class=\"hero-flow\"><div class=\"hero-step\"><span>1</span><strong>Read</strong></div><div class=\"hero-step\"><span>2</span><strong>Repeat</strong></div><div class=\"hero-step\"><span>3</span><strong>Review</strong></div><div class=\"hero-step\"><span>4</span><strong>Retain</strong></div></div><div class=\"hero-points\"><div class=\"hero-point\"><i class=\"bi bi-shield-check\"></i><span>Weak ayahs are tracked automatically.</span></div><div class=\"hero-point\"><i class=\"bi bi-clock-history\"></i><span>Reviews appear before forgetting.</span></div><div class=\"hero-point\"><i class=\"bi bi-magic\"></i><span>Sessions are generated automatically.</span></div></div>", 3)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "cta cta-ghost",
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [!$options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [_cache[102] || (_cache[102] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "welcome-text"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "hero-kicker"
+  }, "Welcome to Mutqin"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h1", {
+    "class": "hero-title"
+  }, "Ready to memorize?"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+    "class": "hero-sub"
+  }, "Generate a fast plan or configure a custom session to start reading.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [_cache[99] || (_cache[99] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-fire",
+    style: {
+      "color": "#ee964b"
+    }
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.currentStreak), 1 /* TEXT */), _cache[98] || (_cache[98] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Day Streak", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [_cache[101] || (_cache[101] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-check-circle-fill",
+    style: {
+      "color": "#2a9d8f"
+    }
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.versesMastered), 1 /* TEXT */), _cache[100] || (_cache[100] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Mastered", -1 /* CACHED */))])])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_9, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "action-card primary-action",
     onClick: _cache[2] || (_cache[2] = function ($event) {
-      return $data.tab = 'analytics';
+      return $data.showPlannerModal = true;
     })
-  }, _toConsumableArray(_cache[90] || (_cache[90] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-bar-chart"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "See stats", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "cta cta-primary",
+  }, _toConsumableArray(_cache[103] || (_cache[103] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "action-icon"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-magic"
+  })], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "action-content"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Quick Plan"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Generate a memorization plan in seconds")], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-arrow-right action-arrow"
+  }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "action-card",
     onClick: _cache[3] || (_cache[3] = function () {
-      return $options.beginPlan && $options.beginPlan.apply($options, arguments);
+      return $options.startWithFatiha && $options.startWithFatiha.apply($options, arguments);
     })
-  }, [_cache[91] || (_cache[91] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-play-circle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.onboardingPrimaryLabel), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "cta cta-ghost",
-    onClick: _cache[4] || (_cache[4] = function ($event) {
-      return $data.showTools = true;
+  }, _toConsumableArray(_cache[104] || (_cache[104] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "action-icon"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-play-circle-fill"
+  })], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "action-content"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Quickstart Demo"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Try the system with Surah Al-Fatiha")], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-arrow-right action-arrow"
+  }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "action-card",
+    onClick: _cache[4] || (_cache[4] = function () {
+      return $options.openSetup && $options.openSetup.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[92] || (_cache[92] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[105] || (_cache[105] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "action-icon"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Open setup", -1 /* CACHED */)])))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.currentChapter && $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [_cache[94] || (_cache[94] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "session-rail-kicker"
-  }, "Current session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_9, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.currentChapter.name_simple), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_10, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + "/" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses) + " · Remaining " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.remainingAyahs) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionTypeInfo.label) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_11, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "rail-btn rail-btn-ghost",
+  })], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "action-content"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Custom Setup"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Configure everything exactly how you want")], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-arrow-right action-arrow"
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_10, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_11, [_cache[106] || (_cache[106] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Activity Summary", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "btn-ghost",
     onClick: _cache[5] || (_cache[5] = function ($event) {
-      return $data.showTools = true;
+      $data.tab = 'analytics';
+      $data.showTools = true;
     })
-  }, _toConsumableArray(_cache[95] || (_cache[95] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-layout-sidebar-inset"
+  }, "View all stats")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_12, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_13, [_cache[107] || (_cache[107] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Verses Read", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.totalVersesRead), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_14, [_cache[108] || (_cache[108] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Time Spent", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.totalTimeSpent) + "m", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_15, [_cache[109] || (_cache[109] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Repetitions", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.totalRepetitions), 1 /* TEXT */)])])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.currentChapter && $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_16, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_17, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_18, [_cache[110] || (_cache[110] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "session-rail-kicker"
+  }, "Current session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_19, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.currentChapter.name_simple), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_20, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + "/" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses) + " · Remaining " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.remainingAyahs) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionTypeInfo.label) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_21, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "rail-btn rail-btn-ghost",
+    onClick: _cache[6] || (_cache[6] = function ($event) {
+      return $data.showPlannerModal = true;
+    })
+  }, _toConsumableArray(_cache[111] || (_cache[111] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-calendar-check"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Plan", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "rail-btn rail-btn-ghost",
+    onClick: _cache[7] || (_cache[7] = function ($event) {
+      $data.tab = 'analytics';
+      $data.showTools = true;
+    })
+  }, _toConsumableArray(_cache[112] || (_cache[112] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-bar-chart"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Stats", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "rail-btn rail-btn-primary",
-    onClick: _cache[6] || (_cache[6] = function () {
+    onClick: _cache[8] || (_cache[8] = function () {
       return $options.handlePrimaryAction && $options.handlePrimaryAction.apply($options, arguments);
     })
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
-  }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.railPrimaryLabel), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_12, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_13, [_cache[96] || (_cache[96] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionTypeInfo.label), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_14, [_cache[97] || (_cache[97] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Progress", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_15, [_cache[98] || (_cache[98] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Remaining", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.remainingAyahs), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_16, [_cache[99] || (_cache[99] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "ETA", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel), 1 /* TEXT */)])]), $data.currentMode === 'advanced' && $options.repeatAndLoopAudio ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_17, [_cache[100] || (_cache[100] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.railPrimaryLabel), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_22, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_23, [_cache[113] || (_cache[113] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionTypeInfo.label), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_24, [_cache[114] || (_cache[114] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Progress", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, [_cache[115] || (_cache[115] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Remaining", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.remainingAyahs), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [_cache[116] || (_cache[116] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "ETA", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel), 1 /* TEXT */)])]), $data.currentMode === 'advanced' && $options.repeatAndLoopAudio ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_27, [_cache[117] || (_cache[117] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-repeat"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Loop Mode: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.advancedRepeats) + "x per Ayah ", 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_18, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Loop Mode: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.advancedRepeats) + "x per Ayah ", 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_28, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "progress-fill",
     style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
       width: $options.progressPercent + '%'
     })
-  }, null, 4 /* STYLE */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_19, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_20, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, 4 /* STYLE */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_29, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_30, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
       active: $data.showTranslation
     }]),
-    onClick: _cache[7] || (_cache[7] = function ($event) {
+    onClick: _cache[9] || (_cache[9] = function ($event) {
       return $options.toggleReadingOption('translation');
     })
-  }, _toConsumableArray(_cache[101] || (_cache[101] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[118] || (_cache[118] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-translate"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Translation", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
       active: $data.showTransliteration
     }]),
-    onClick: _cache[8] || (_cache[8] = function ($event) {
+    onClick: _cache[10] || (_cache[10] = function ($event) {
       return $options.toggleReadingOption('transliteration');
     })
-  }, _toConsumableArray(_cache[102] || (_cache[102] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[119] || (_cache[119] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-type"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Transliteration", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
       active: $data.showWordByWord
     }]),
-    onClick: _cache[9] || (_cache[9] = function ($event) {
+    onClick: _cache[11] || (_cache[11] = function ($event) {
       return $options.toggleReadingOption('wbw');
     })
-  }, _toConsumableArray(_cache[103] || (_cache[103] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[120] || (_cache[120] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-grid-3x2-gap"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Word by word", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
       active: $data.wordByWordAudioEnabled
     }]),
-    onClick: _cache[10] || (_cache[10] = function ($event) {
+    onClick: _cache[12] || (_cache[12] = function ($event) {
       return $data.wordByWordAudioEnabled = !$data.wordByWordAudioEnabled;
     })
-  }, _toConsumableArray(_cache[104] || (_cache[104] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[121] || (_cache[121] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-volume-up"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Word audio", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "toolbar-chip",
-    onClick: _cache[11] || (_cache[11] = function () {
+    onClick: _cache[13] || (_cache[13] = function () {
       return $options.downloadOfflineVerses && $options.downloadOfflineVerses.apply($options, arguments);
     }),
     title: "Download for offline reading"
-  }, _toConsumableArray(_cache[105] || (_cache[105] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[122] || (_cache[122] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-cloud-arrow-down"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Download", -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_21, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_22, [$data.fontPickerOpen ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_23, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quranFontOptions, function (font) {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Download", -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_31, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_32, [$data.fontPickerOpen ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_33, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quranFontOptions, function (font) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
       key: font.value,
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-font-option", {
@@ -26593,35 +26878,52 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       onClick: function onClick($event) {
         return $options.setQuranFont(font.value);
       }
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(font.label), 1 /* TEXT */)], 10 /* CLASS, PROPS */, _hoisted_24);
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(font.label), 1 /* TEXT */)], 10 /* CLASS, PROPS */, _hoisted_34);
   }), 128 /* KEYED_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
       active: $data.script === 'tajweed'
     }]),
-    onClick: _cache[12] || (_cache[12] = function ($event) {
+    onClick: _cache[14] || (_cache[14] = function ($event) {
       return $options.setScriptMode('tajweed');
     })
-  }, _toConsumableArray(_cache[106] || (_cache[106] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[123] || (_cache[123] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-palette"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Tajweed", -1 /* CACHED */)])), 2 /* CLASS */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Empty State "), !$options.hasVerses && !$options.showOnboarding ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_25, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [_cache[109] || (_cache[109] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "empty-icon"
-  }, "﴿", -1 /* CACHED */)), _cache[110] || (_cache[110] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Begin your journey", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.nextActionDescription), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "cta cta-primary",
-    onClick: _cache[13] || (_cache[13] = function () {
-      return $options.beginPlan && $options.beginPlan.apply($options, arguments);
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Tajweed", -1 /* CACHED */)])), 2 /* CLASS */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Chaining / Queue Viewer "), $options.hasVerses && $options.order === 'cum' && $options.queue.length > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_35, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "chaining-header",
+    onClick: _cache[15] || (_cache[15] = function ($event) {
+      return $data.showQueueViewer = !$data.showQueueViewer;
     })
-  }, [_cache[107] || (_cache[107] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-play-circle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.emptyPrimaryLabel), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "cta cta-ghost",
-    onClick: _cache[14] || (_cache[14] = function ($event) {
-      return $data.showTools = true;
-    })
-  }, _toConsumableArray(_cache[108] || (_cache[108] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-sliders"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Open setup", -1 /* CACHED */)])))])])])) : $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+  }, [_cache[124] || (_cache[124] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "chaining-title"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-link-45deg"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Cumulative Chaining Mode")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_36, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_37, "Phase " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentChainPhase) + " / " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.verses.length), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_38, "Step " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.queueIndex + 1) + " / " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.queue.length), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.showQueueViewer ? 'bi-chevron-up' : 'bi-chevron-down'])
+  }, null, 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(vue__WEBPACK_IMPORTED_MODULE_0__.Transition, {
+    name: "slide-up"
+  }, {
+    "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
+      return [$data.showQueueViewer ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_39, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_40, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.queue, function (item, idx) {
+        return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+          "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["chain-step", {
+            active: idx === $options.queueIndex,
+            completed: idx < $options.queueIndex
+          }]),
+          key: 'chain_' + idx,
+          onClick: function onClick($event) {
+            $options.queueIndex = idx;
+            $data.activeVerseKey = item.verse.key;
+            $options.playVerse(item.verse);
+          }
+        }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_42, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+          "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", idx < $options.queueIndex ? 'bi-check' : idx === $options.queueIndex ? 'bi-play-fill' : 'bi-circle'])
+        }, null, 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_43, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_44, "Phase " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.cumulativePhase), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_45, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.verse.number), 1 /* TEXT */)])], 10 /* CLASS, PROPS */, _hoisted_41);
+      }), 128 /* KEYED_FRAGMENT */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)];
+    }),
+    _: 1 /* STABLE */
+  })])) : $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 4
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Grid "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_28, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.verses, function (verse) {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Grid "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_46, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.verses, function (verse) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: verse.key,
       "data-verse-key": verse.key,
@@ -26629,42 +26931,42 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         'verse-card': true,
         active: $data.activeVerseKey === verse.key,
         'focus-mode': $options.focusMode && $data.activeVerseKey !== verse.key,
-        blurred: $options.blurAdjacent && $data.activeVerseKey && $data.activeVerseKey !== verse.key && !$options.isAdjacentVerse(verse)
+        blurred: $options.blurAdjacent && $data.activeVerseKey && $data.activeVerseKey !== verse.key
       })
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_30, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_31, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_32, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.number), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_33, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.key), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_34, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Font size controls "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_35, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_48, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_49, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_50, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.number), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_51, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.key), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_52, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Font size controls "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_53, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "verse-font-btn",
       onClick: function onClick($event) {
         return $options.decreaseVerseFont(verse.key, $event);
       },
       title: "Decrease font size"
-    }, _toConsumableArray(_cache[111] || (_cache[111] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[125] || (_cache[125] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-dash"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_36), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_37, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getVerseFontSize(verse.key)) + "%", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_54), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_55, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getVerseFontSize(verse.key)) + "%", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "verse-font-btn",
       onClick: function onClick($event) {
         return $options.increaseVerseFont(verse.key, $event);
       },
       title: "Increase font size"
-    }, _toConsumableArray(_cache[112] || (_cache[112] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[126] || (_cache[126] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-plus"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_38), $data.verseFontSizes[verse.key] ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_56), $data.verseFontSizes[verse.key] ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
       key: 0,
       "class": "verse-font-btn",
       onClick: function onClick($event) {
         return $options.resetVerseFont(verse.key, $event);
       },
       title: "Reset font size"
-    }, _toConsumableArray(_cache[113] || (_cache[113] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[127] || (_cache[127] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-arrow-repeat"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_39)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_57)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "verse-play-btn",
       onClick: function onClick($event) {
         return $options.playVerse(verse);
       },
       title: "Play verse"
-    }, _toConsumableArray(_cache[114] || (_cache[114] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[128] || (_cache[128] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-play"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_40)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_58)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["verse-arabic", {
         'word-highlight-enabled': $data.wordByWordAudioEnabled
       }]),
@@ -26675,38 +26977,38 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         fontSize: $options.getVerseFontSize(verse.key) + '%',
         fontFamily: $options.quranFontFamily
       })
-    }, null, 14 /* CLASS, STYLE, PROPS */, _hoisted_41), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Translation - shows only if showTranslation is true AND translation exists "), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_42, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.translation), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Transliteration "), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_43, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Words - shows only if showWordByWord is true AND words array has items "), $data.showWordByWord && verse.words && verse.words.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_44, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(verse.words, function (word, wi) {
+    }, null, 14 /* CLASS, STYLE, PROPS */, _hoisted_59), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Translation - shows only if showTranslation is true AND translation exists "), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_60, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.translation), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Transliteration "), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_61, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Words - shows only if showWordByWord is true AND words array has items "), $data.showWordByWord && verse.words && verse.words.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_62, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(verse.words, function (word, wi) {
       return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
         key: wi,
         "class": "word-item"
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_45, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.ar), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_46, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.en), 1 /* TEXT */), word.audio && $data.wordByWordAudioEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_63, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.ar), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_64, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.en), 1 /* TEXT */), word.audio && $data.wordByWordAudioEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
         key: 0,
         "class": "word-audio-btn",
         onClick: function onClick($event) {
           return $options.playWordAudio(word.audio);
         }
-      }, _toConsumableArray(_cache[115] || (_cache[115] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[129] || (_cache[129] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-volume-up"
-      }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_47)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]);
-    }), 128 /* KEYED_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 10 /* CLASS, PROPS */, _hoisted_29);
+      }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_65)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]);
+    }), 128 /* KEYED_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 10 /* CLASS, PROPS */, _hoisted_47);
   }), 128 /* KEYED_FRAGMENT */))])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Tools Panel "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("aside", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["tools", {
       open: $data.showTools
     }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_48, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_49, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_50, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.toolsHeaderTitle), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_66, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_67, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_68, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.toolsHeaderTitle), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-x",
-    onClick: _cache[15] || (_cache[15] = function ($event) {
+    onClick: _cache[16] || (_cache[16] = function ($event) {
       return $data.showTools = false;
     }),
     "aria-label": "Close panel"
-  }, _toConsumableArray(_cache[116] || (_cache[116] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[130] || (_cache[130] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_51, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.contextLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_52, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_69, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.contextLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_70, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
       active: $data.tab === 'beginner',
       'active-tab': $data.tab === 'beginner'
     }),
-    onClick: _cache[16] || (_cache[16] = function ($event) {
+    onClick: _cache[17] || (_cache[17] = function ($event) {
       return $data.tab = 'beginner';
     })
   }, "Beginner", 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
@@ -26714,89 +27016,99 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       active: $data.tab === 'advanced',
       'active-tab': $data.tab === 'advanced'
     }),
-    onClick: _cache[17] || (_cache[17] = function ($event) {
+    onClick: _cache[18] || (_cache[18] = function ($event) {
       return $data.tab = 'advanced';
     })
   }, "Advanced", 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
+      active: $data.tab === 'analytics',
+      'active-tab': $data.tab === 'analytics'
+    }),
+    onClick: _cache[19] || (_cache[19] = function ($event) {
+      return $data.tab = 'analytics';
+    })
+  }, _toConsumableArray(_cache[131] || (_cache[131] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-bar-chart"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Stats", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
       active: $data.tab === 'offline',
       'active-tab': $data.tab === 'offline'
     }),
-    onClick: _cache[18] || (_cache[18] = function ($event) {
+    onClick: _cache[20] || (_cache[20] = function ($event) {
       return $data.tab = 'offline';
     })
-  }, _toConsumableArray(_cache[117] || (_cache[117] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[132] || (_cache[132] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-cloud-check"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Offline", -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_53, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Beginner Tab - 4 Consistent Sections "), $data.tab === 'beginner' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_54, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 1: What to Memorise "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_55, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Offline", -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_71, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Beginner Tab - 4 Consistent Sections "), $data.tab === 'beginner' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_72, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 1: What to Memorise "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_73, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[19] || (_cache[19] = function ($event) {
+    onClick: _cache[21] || (_cache[21] = function ($event) {
       return $options.toggleSection('beginner_setup');
     }),
     type: "button"
-  }, [_cache[119] || (_cache[119] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book\"></i></span><span class=\"st-txt\"><span class=\"st-title\">What to memorise</span><span class=\"st-sub\">Choose surah and verses</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[134] || (_cache[134] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book\"></i></span><span class=\"st-txt\"><span class=\"st-title\">What to memorise</span><span class=\"st-sub\">Choose surah and verses</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.beginner_setup
     }])
-  }, _toConsumableArray(_cache[118] || (_cache[118] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[133] || (_cache[133] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_56, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_57, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_58, [_cache[121] || (_cache[121] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_74, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_75, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_76, [_cache[136] || (_cache[136] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     value: $options.chapterId,
-    onChange: _cache[20] || (_cache[20] = function () {
+    onChange: _cache[22] || (_cache[22] = function () {
       return $options.onChapterChange && $options.onChapterChange.apply($options, arguments);
     }),
     "class": "select"
-  }, [_cache[120] || (_cache[120] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+  }, [_cache[135] || (_cache[135] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: 0
   }, "Choose a surah...", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (c) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: c.id,
       value: c.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.id) + ". " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_60);
-  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_59), _cache[122] || (_cache[122] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.id) + ". " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_78);
+  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_77), _cache[137] || (_cache[137] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Select the surah you want to memorise", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_61, [_cache[124] || (_cache[124] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verses", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_62, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "number",
-    "class": "input",
-    "onUpdate:modelValue": _cache[21] || (_cache[21] = function ($event) {
-      return $options.rangeStart = $event;
-    }),
-    onChange: _cache[22] || (_cache[22] = function () {
-      return $options.adjustRange && $options.adjustRange.apply($options, arguments);
-    }),
-    min: "1"
-  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeStart, void 0, {
-    number: true
-  }]]), _cache[123] || (_cache[123] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Select the surah you want to memorise", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_79, [_cache[139] || (_cache[139] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verses", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_80, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
     "onUpdate:modelValue": _cache[23] || (_cache[23] = function ($event) {
-      return $options.rangeEnd = $event;
+      return $options.rangeStart = $event;
     }),
     onChange: _cache[24] || (_cache[24] = function () {
       return $options.adjustRange && $options.adjustRange.apply($options, arguments);
     }),
     min: "1"
+  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeStart, void 0, {
+    number: true
+  }]]), _cache[138] || (_cache[138] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "number",
+    "class": "input",
+    "onUpdate:modelValue": _cache[25] || (_cache[25] = function ($event) {
+      return $options.rangeEnd = $event;
+    }),
+    onChange: _cache[26] || (_cache[26] = function () {
+      return $options.adjustRange && $options.adjustRange.apply($options, arguments);
+    }),
+    min: "1"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeEnd, void 0, {
     number: true
-  }]])]), _cache[125] || (_cache[125] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }]])]), _cache[140] || (_cache[140] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Choose a range of verses to focus on", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 2: Audio Settings "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_63, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Choose a range of verses to focus on", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 2: Audio Settings "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_81, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[25] || (_cache[25] = function ($event) {
+    onClick: _cache[27] || (_cache[27] = function ($event) {
       return $options.toggleSection('beginner_audio');
     }),
     type: "button"
-  }, [_cache[127] || (_cache[127] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Audio settings</span><span class=\"st-sub\">Reciter and playback</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[142] || (_cache[142] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Audio settings</span><span class=\"st-sub\">Reciter and playback</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.beginner_audio
     }])
-  }, _toConsumableArray(_cache[126] || (_cache[126] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[141] || (_cache[141] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_64, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_65, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_66, [_cache[128] || (_cache[128] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[26] || (_cache[26] = function ($event) {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_82, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_83, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_84, [_cache[143] || (_cache[143] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[28] || (_cache[28] = function ($event) {
       return $options.reciterId = $event;
     }),
-    onChange: _cache[27] || (_cache[27] = function () {
+    onChange: _cache[29] || (_cache[29] = function () {
       return $options.refreshVerses && $options.refreshVerses.apply($options, arguments);
     }),
     "class": "select"
@@ -26804,63 +27116,63 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: r.id,
       value: r.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_67);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]]), _cache[129] || (_cache[129] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_85);
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]]), _cache[144] || (_cache[144] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Choose your preferred Quran reciter", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_68, [_cache[134] || (_cache[134] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_69, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_70, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Choose your preferred Quran reciter", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_86, [_cache[149] || (_cache[149] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_87, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_88, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "0.75",
-    "onUpdate:modelValue": _cache[28] || (_cache[28] = function ($event) {
-      return $options.speed = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[130] || (_cache[130] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 0.75x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_71, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "radio",
-    value: "1",
-    "onUpdate:modelValue": _cache[29] || (_cache[29] = function ($event) {
-      return $options.speed = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[131] || (_cache[131] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_72, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "radio",
-    value: "1.25",
     "onUpdate:modelValue": _cache[30] || (_cache[30] = function ($event) {
       return $options.speed = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[132] || (_cache[132] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.25x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_73, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[145] || (_cache[145] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 0.75x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_89, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
-    value: "1.5",
+    value: "1",
     "onUpdate:modelValue": _cache[31] || (_cache[31] = function ($event) {
       return $options.speed = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[133] || (_cache[133] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.5x", -1 /* CACHED */))])]), _cache[135] || (_cache[135] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[146] || (_cache[146] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_90, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "1.25",
+    "onUpdate:modelValue": _cache[32] || (_cache[32] = function ($event) {
+      return $options.speed = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[147] || (_cache[147] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.25x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_91, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "1.5",
+    "onUpdate:modelValue": _cache[33] || (_cache[33] = function ($event) {
+      return $options.speed = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[148] || (_cache[148] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.5x", -1 /* CACHED */))])]), _cache[150] || (_cache[150] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Adjust recitation speed", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_74, [_cache[138] || (_cache[138] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_75, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_76, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Adjust recitation speed", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_92, [_cache[153] || (_cache[153] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_93, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_94, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "auto",
-    "onUpdate:modelValue": _cache[32] || (_cache[32] = function ($event) {
+    "onUpdate:modelValue": _cache[34] || (_cache[34] = function ($event) {
       return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[136] || (_cache[136] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_77, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[151] || (_cache[151] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_95, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "manual",
-    "onUpdate:modelValue": _cache[33] || (_cache[33] = function ($event) {
+    "onUpdate:modelValue": _cache[35] || (_cache[35] = function ($event) {
       return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[137] || (_cache[137] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No (manual)", -1 /* CACHED */))])]), _cache[139] || (_cache[139] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[152] || (_cache[152] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No (manual)", -1 /* CACHED */))])]), _cache[154] || (_cache[154] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Automatically move to next verse", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_audio]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 3: Practice Mode "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_78, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Automatically move to next verse", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_audio]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 3: Practice Mode "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_96, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[34] || (_cache[34] = function ($event) {
+    onClick: _cache[36] || (_cache[36] = function ($event) {
       return $options.toggleSection('beginner_practice');
     }),
     type: "button"
-  }, [_cache[141] || (_cache[141] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-stars\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Practice mode</span><span class=\"st-sub\">Repetition and focus</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[156] || (_cache[156] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-stars\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Practice mode</span><span class=\"st-sub\">Repetition and focus</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.beginner_practice
     }])
-  }, _toConsumableArray(_cache[140] || (_cache[140] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[155] || (_cache[155] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_79, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_80, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_81, [_cache[142] || (_cache[142] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repetition count", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[35] || (_cache[35] = function ($event) {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_97, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_98, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_99, [_cache[157] || (_cache[157] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repetition count", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[37] || (_cache[37] = function ($event) {
       return $options.beginnerRepeats = $event;
     }),
     "class": "select"
@@ -26868,127 +27180,127 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: n,
       value: n
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n) + " " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n === 1 ? 'time' : 'times'), 9 /* TEXT, PROPS */, _hoisted_82);
-  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.beginnerRepeats]]), _cache[143] || (_cache[143] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n) + " " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n === 1 ? 'time' : 'times'), 9 /* TEXT, PROPS */, _hoisted_100);
+  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.beginnerRepeats]]), _cache[158] || (_cache[158] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "How many times to repeat each verse", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_83, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_84, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "How many times to repeat each verse", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_101, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_102, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "checkbox",
-    "onUpdate:modelValue": _cache[36] || (_cache[36] = function ($event) {
+    "onUpdate:modelValue": _cache[38] || (_cache[38] = function ($event) {
       return $options.focusMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.focusMode]]), _cache[144] || (_cache[144] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.focusMode]]), _cache[159] || (_cache[159] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "switch-ui"
-  }, null, -1 /* CACHED */)), _cache[145] || (_cache[145] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, -1 /* CACHED */)), _cache[160] || (_cache[160] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "switch-text"
-  }, "Focus mode (dim other verses)", -1 /* CACHED */))]), _cache[146] || (_cache[146] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, "Focus mode (dim other verses)", -1 /* CACHED */))]), _cache[161] || (_cache[161] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Reduce distraction by dimming non-active verses", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_85, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_86, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Reduce distraction by dimming non-active verses", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_103, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_104, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "checkbox",
-    "onUpdate:modelValue": _cache[37] || (_cache[37] = function ($event) {
+    "onUpdate:modelValue": _cache[39] || (_cache[39] = function ($event) {
       return $options.blurAdjacent = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.blurAdjacent]]), _cache[147] || (_cache[147] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.blurAdjacent]]), _cache[162] || (_cache[162] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "switch-ui"
-  }, null, -1 /* CACHED */)), _cache[148] || (_cache[148] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, -1 /* CACHED */)), _cache[163] || (_cache[163] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "switch-text"
-  }, "Blur non-active verses (active recall)", -1 /* CACHED */))]), _cache[149] || (_cache[149] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, "Blur non-active verses (active recall)", -1 /* CACHED */))]), _cache[164] || (_cache[164] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Test your memory by hiding non-active verses", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_practice]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 4: Saved Sessions "), $options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_87, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Test your memory by hiding non-active verses", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_practice]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 4: Saved Sessions "), $options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_105, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[38] || (_cache[38] = function ($event) {
+    onClick: _cache[40] || (_cache[40] = function ($event) {
       return $options.toggleSection('beginner_saved');
     }),
     type: "button"
-  }, [_cache[151] || (_cache[151] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-save\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Saved sessions</span><span class=\"st-sub\">Save, load, delete</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[166] || (_cache[166] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-save\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Saved sessions</span><span class=\"st-sub\">Save, load, delete</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.beginner_saved
     }])
-  }, _toConsumableArray(_cache[150] || (_cache[150] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[165] || (_cache[165] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_88, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_89, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_90, [_cache[153] || (_cache[153] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Your saved sessions", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[39] || (_cache[39] = function ($event) {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_106, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_107, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_108, [_cache[168] || (_cache[168] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Your saved sessions", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[41] || (_cache[41] = function ($event) {
       return $data.selectedSessionId = $event;
     }),
     "class": "select"
-  }, [_cache[152] || (_cache[152] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+  }, [_cache[167] || (_cache[167] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: ""
   }, "-- Select a session --", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.savedSessions, function (s) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: s.id,
       value: s.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.name), 9 /* TEXT, PROPS */, _hoisted_91);
-  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.selectedSessionId]]), _cache[154] || (_cache[154] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.name), 9 /* TEXT, PROPS */, _hoisted_109);
+  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.selectedSessionId]]), _cache[169] || (_cache[169] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
   }, "Load previously saved sessions", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_saved]])])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 1
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Login message for non-logged users "), _cache[155] || (_cache[155] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section class=\"sheet-section\"><div class=\"sheet-content\"><div class=\"field-stack\"><div class=\"field\"><div class=\"pill\" style=\"text-align:center;padding:16px;\"><i class=\"bi bi-person\"></i><span>Login to save and load sessions</span></div><small class=\"field-hint\">Create an account to save your progress</small></div></div></div></section>", 1))], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Login message for non-logged users "), _cache[170] || (_cache[170] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section class=\"sheet-section\"><div class=\"sheet-content\"><div class=\"field-stack\"><div class=\"field\"><div class=\"pill\" style=\"text-align:center;padding:16px;\"><i class=\"bi bi-person\"></i><span>Login to save and load sessions</span></div><small class=\"field-hint\">Create an account to save your progress</small></div></div></div></section>", 1))], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "start-btn",
-    onClick: _cache[40] || (_cache[40] = function () {
+    onClick: _cache[42] || (_cache[42] = function () {
       return $options.startSession && $options.startSession.apply($options, arguments);
     }),
     disabled: !$options.hasSelectedSurah
-  }, _toConsumableArray(_cache[156] || (_cache[156] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[171] || (_cache[171] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-fill"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Start memorising ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_92)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Advanced Tab - 4 Consistent Sections "), $data.tab === 'advanced' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_93, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 1: Session Setup "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_94, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Start memorising ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_110)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Advanced Tab - 4 Consistent Sections "), $data.tab === 'advanced' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_111, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 1: Session Setup "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_112, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[41] || (_cache[41] = function ($event) {
+    onClick: _cache[43] || (_cache[43] = function ($event) {
       return $options.toggleSection('advanced_setup');
     }),
     type: "button"
-  }, [_cache[158] || (_cache[158] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-compass\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Session setup</span><span class=\"st-sub\">Surah, verses, and reciter</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[173] || (_cache[173] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-compass\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Session setup</span><span class=\"st-sub\">Surah, verses, and reciter</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_setup
     }])
-  }, _toConsumableArray(_cache[157] || (_cache[157] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[172] || (_cache[172] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_95, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_96, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_97, [_cache[160] || (_cache[160] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[42] || (_cache[42] = function ($event) {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_113, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_114, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_115, [_cache[175] || (_cache[175] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[44] || (_cache[44] = function ($event) {
       return $options.chapterId = $event;
     }),
-    onChange: _cache[43] || (_cache[43] = function () {
+    onChange: _cache[45] || (_cache[45] = function () {
       return $options.loadChapter && $options.loadChapter.apply($options, arguments);
     }),
     "class": "select"
-  }, [_cache[159] || (_cache[159] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+  }, [_cache[174] || (_cache[174] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: 0
   }, "Choose a surah...", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (c) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: c.id,
       value: c.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.id) + ". " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_98);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.chapterId]]), _cache[161] || (_cache[161] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.id) + ". " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_116);
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.chapterId]]), _cache[176] || (_cache[176] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Select the surah you want to memorise", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_99, [_cache[163] || (_cache[163] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verses", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_100, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "number",
-    "class": "input",
-    "onUpdate:modelValue": _cache[44] || (_cache[44] = function ($event) {
-      return $options.rangeStart = $event;
-    }),
-    onChange: _cache[45] || (_cache[45] = function () {
-      return $options.adjustRange && $options.adjustRange.apply($options, arguments);
-    }),
-    min: "1"
-  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeStart, void 0, {
-    number: true
-  }]]), _cache[162] || (_cache[162] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Select the surah you want to memorise", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_117, [_cache[178] || (_cache[178] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verses", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_118, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
     "onUpdate:modelValue": _cache[46] || (_cache[46] = function ($event) {
-      return $options.rangeEnd = $event;
+      return $options.rangeStart = $event;
     }),
     onChange: _cache[47] || (_cache[47] = function () {
       return $options.adjustRange && $options.adjustRange.apply($options, arguments);
     }),
     min: "1"
-  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeEnd, void 0, {
+  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeStart, void 0, {
     number: true
-  }]])]), _cache[164] || (_cache[164] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
-    "class": "field-hint"
-  }, "Choose a range of verses to focus on", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_101, [_cache[165] || (_cache[165] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }]]), _cache[177] || (_cache[177] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "number",
+    "class": "input",
     "onUpdate:modelValue": _cache[48] || (_cache[48] = function ($event) {
-      return $options.reciterId = $event;
+      return $options.rangeEnd = $event;
     }),
     onChange: _cache[49] || (_cache[49] = function () {
+      return $options.adjustRange && $options.adjustRange.apply($options, arguments);
+    }),
+    min: "1"
+  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeEnd, void 0, {
+    number: true
+  }]])]), _cache[179] || (_cache[179] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    "class": "field-hint"
+  }, "Choose a range of verses to focus on", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_119, [_cache[180] || (_cache[180] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[50] || (_cache[50] = function ($event) {
+      return $options.reciterId = $event;
+    }),
+    onChange: _cache[51] || (_cache[51] = function () {
       return $options.refreshVerses && $options.refreshVerses.apply($options, arguments);
     }),
     "class": "select"
@@ -26996,63 +27308,63 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: r.id,
       value: r.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_102);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]]), _cache[166] || (_cache[166] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_120);
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]]), _cache[181] || (_cache[181] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Choose your preferred Quran reciter", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 2: Playback "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_103, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Choose your preferred Quran reciter", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 2: Playback "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_121, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[50] || (_cache[50] = function ($event) {
+    onClick: _cache[52] || (_cache[52] = function ($event) {
       return $options.toggleSection('advanced_playback');
     }),
     type: "button"
-  }, [_cache[168] || (_cache[168] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-repeat\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Playback</span><span class=\"st-sub\">Speed, delay, and mode</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[183] || (_cache[183] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-repeat\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Playback</span><span class=\"st-sub\">Speed, delay, and mode</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_playback
     }])
-  }, _toConsumableArray(_cache[167] || (_cache[167] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[182] || (_cache[182] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_104, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_105, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_106, [_cache[173] || (_cache[173] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_107, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_108, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_122, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_123, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_124, [_cache[188] || (_cache[188] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_125, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_126, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "0.75",
-    "onUpdate:modelValue": _cache[51] || (_cache[51] = function ($event) {
-      return $options.speed = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[169] || (_cache[169] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 0.75x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_109, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "radio",
-    value: "1",
-    "onUpdate:modelValue": _cache[52] || (_cache[52] = function ($event) {
-      return $options.speed = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[170] || (_cache[170] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_110, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "radio",
-    value: "1.25",
     "onUpdate:modelValue": _cache[53] || (_cache[53] = function ($event) {
       return $options.speed = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[171] || (_cache[171] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.25x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_111, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[184] || (_cache[184] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 0.75x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_127, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
-    value: "1.5",
+    value: "1",
     "onUpdate:modelValue": _cache[54] || (_cache[54] = function ($event) {
       return $options.speed = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[172] || (_cache[172] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.5x", -1 /* CACHED */))])]), _cache[174] || (_cache[174] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[185] || (_cache[185] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_128, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "1.25",
+    "onUpdate:modelValue": _cache[55] || (_cache[55] = function ($event) {
+      return $options.speed = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[186] || (_cache[186] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.25x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_129, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "1.5",
+    "onUpdate:modelValue": _cache[56] || (_cache[56] = function ($event) {
+      return $options.speed = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[187] || (_cache[187] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.5x", -1 /* CACHED */))])]), _cache[189] || (_cache[189] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Adjust recitation speed", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_112, [_cache[177] || (_cache[177] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_113, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_114, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Adjust recitation speed", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_130, [_cache[192] || (_cache[192] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_131, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_132, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "auto",
-    "onUpdate:modelValue": _cache[55] || (_cache[55] = function ($event) {
+    "onUpdate:modelValue": _cache[57] || (_cache[57] = function ($event) {
       return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[175] || (_cache[175] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_115, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[190] || (_cache[190] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_133, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "manual",
-    "onUpdate:modelValue": _cache[56] || (_cache[56] = function ($event) {
+    "onUpdate:modelValue": _cache[58] || (_cache[58] = function ($event) {
       return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[176] || (_cache[176] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No (manual)", -1 /* CACHED */))])]), _cache[178] || (_cache[178] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[191] || (_cache[191] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No (manual)", -1 /* CACHED */))])]), _cache[193] || (_cache[193] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Automatically move to next verse", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_116, [_cache[179] || (_cache[179] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Delay between verses", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[57] || (_cache[57] = function ($event) {
+  }, "Automatically move to next verse", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_134, [_cache[194] || (_cache[194] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Delay between verses", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[59] || (_cache[59] = function ($event) {
       return $options.delay = $event;
     }),
     "class": "select"
@@ -27060,45 +27372,45 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
       key: d,
       value: d
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(d) + " second" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(d !== 1 ? 's' : ''), 9 /* TEXT, PROPS */, _hoisted_117);
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(d) + " second" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(d !== 1 ? 's' : ''), 9 /* TEXT, PROPS */, _hoisted_135);
   }), 64 /* STABLE_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.delay, void 0, {
     number: true
-  }]]), _cache[180] || (_cache[180] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }]]), _cache[195] || (_cache[195] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Pause between verse transitions", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_playback]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 3: Practice Mode "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_118, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Pause between verse transitions", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_playback]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 3: Practice Mode "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_136, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[58] || (_cache[58] = function ($event) {
+    onClick: _cache[60] || (_cache[60] = function ($event) {
       return $options.toggleSection('advanced_practice');
     }),
     type: "button"
-  }, [_cache[182] || (_cache[182] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-stars\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Practice mode</span><span class=\"st-sub\">Order, repetition, and focus</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[197] || (_cache[197] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-stars\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Practice mode</span><span class=\"st-sub\">Order, repetition, and focus</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_practice
     }])
-  }, _toConsumableArray(_cache[181] || (_cache[181] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[196] || (_cache[196] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_119, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_120, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_121, [_cache[186] || (_cache[186] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verse order", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_122, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_123, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_137, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_138, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_139, [_cache[201] || (_cache[201] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verse order", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_140, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_141, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "seq",
-    "onUpdate:modelValue": _cache[59] || (_cache[59] = function ($event) {
-      return $options.order = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.order]]), _cache[183] || (_cache[183] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Sequential (1,2,3...)", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_124, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "radio",
-    value: "rand",
-    "onUpdate:modelValue": _cache[60] || (_cache[60] = function ($event) {
-      return $options.order = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.order]]), _cache[184] || (_cache[184] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Random order", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_125, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "radio",
-    value: "cum",
     "onUpdate:modelValue": _cache[61] || (_cache[61] = function ($event) {
       return $options.order = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.order]]), _cache[185] || (_cache[185] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Cumulative (1,1-2,1-3...)", -1 /* CACHED */))])]), _cache[187] || (_cache[187] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
-    "class": "field-hint"
-  }, "Choose how verses are presented", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_126, [_cache[188] || (_cache[188] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repetition count", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.order]]), _cache[198] || (_cache[198] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Sequential (1,2,3...)", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_142, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "rand",
     "onUpdate:modelValue": _cache[62] || (_cache[62] = function ($event) {
+      return $options.order = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.order]]), _cache[199] || (_cache[199] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Random order", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_143, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "cum",
+    "onUpdate:modelValue": _cache[63] || (_cache[63] = function ($event) {
+      return $options.order = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.order]]), _cache[200] || (_cache[200] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Cumulative Chaining (1, 1+2, 1+2+3...)", -1 /* CACHED */))])]), _cache[202] || (_cache[202] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    "class": "field-hint"
+  }, "Choose how verses are presented", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_144, [_cache[203] || (_cache[203] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repetition count", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[64] || (_cache[64] = function ($event) {
       return $options.advancedRepeats = $event;
     }),
     "class": "select"
@@ -27106,79 +27418,109 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: n,
       value: n
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n) + " " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n === 1 ? 'time' : 'times'), 9 /* TEXT, PROPS */, _hoisted_127);
-  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.advancedRepeats]]), _cache[189] || (_cache[189] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n) + " " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n === 1 ? 'time' : 'times'), 9 /* TEXT, PROPS */, _hoisted_145);
+  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.advancedRepeats]]), _cache[204] || (_cache[204] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "How many times to repeat each verse", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_128, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_129, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "checkbox",
-    "onUpdate:modelValue": _cache[63] || (_cache[63] = function ($event) {
-      return $options.repeatAndLoopAudio = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.repeatAndLoopAudio]]), _cache[190] || (_cache[190] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "switch-ui"
-  }, null, -1 /* CACHED */)), _cache[191] || (_cache[191] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "switch-text"
-  }, "Repeat and loop audio (ayah by ayah)", -1 /* CACHED */))]), _cache[192] || (_cache[192] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
-    "class": "field-hint"
-  }, "Loop each ayah multiple times before advancing", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_130, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_131, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "checkbox",
-    "onUpdate:modelValue": _cache[64] || (_cache[64] = function ($event) {
-      return $options.focusMode = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.focusMode]]), _cache[193] || (_cache[193] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "switch-ui"
-  }, null, -1 /* CACHED */)), _cache[194] || (_cache[194] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "switch-text"
-  }, "Focus mode (dim other verses)", -1 /* CACHED */))]), _cache[195] || (_cache[195] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
-    "class": "field-hint"
-  }, "Reduce distraction by dimming non-active verses", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_132, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_133, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "How many times to repeat each verse", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_146, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_147, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "checkbox",
     "onUpdate:modelValue": _cache[65] || (_cache[65] = function ($event) {
+      return $options.repeatAndLoopAudio = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.repeatAndLoopAudio]]), _cache[205] || (_cache[205] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "switch-ui"
+  }, null, -1 /* CACHED */)), _cache[206] || (_cache[206] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "switch-text"
+  }, "Repeat and loop audio (ayah by ayah)", -1 /* CACHED */))]), _cache[207] || (_cache[207] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    "class": "field-hint"
+  }, "Loop each ayah multiple times before advancing", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_148, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_149, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "checkbox",
+    "onUpdate:modelValue": _cache[66] || (_cache[66] = function ($event) {
+      return $options.focusMode = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.focusMode]]), _cache[208] || (_cache[208] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "switch-ui"
+  }, null, -1 /* CACHED */)), _cache[209] || (_cache[209] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "switch-text"
+  }, "Focus mode (dim other verses)", -1 /* CACHED */))]), _cache[210] || (_cache[210] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    "class": "field-hint"
+  }, "Reduce distraction by dimming non-active verses", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_150, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_151, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "checkbox",
+    "onUpdate:modelValue": _cache[67] || (_cache[67] = function ($event) {
       return $options.blurAdjacent = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.blurAdjacent]]), _cache[196] || (_cache[196] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.blurAdjacent]]), _cache[211] || (_cache[211] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "switch-ui"
-  }, null, -1 /* CACHED */)), _cache[197] || (_cache[197] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, -1 /* CACHED */)), _cache[212] || (_cache[212] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "switch-text"
-  }, "Blur non-active verses (active recall)", -1 /* CACHED */))]), _cache[198] || (_cache[198] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, "Blur non-active verses (active recall)", -1 /* CACHED */))]), _cache[213] || (_cache[213] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Test your memory by hiding non-active verses", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_practice]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 4: Saved Sessions "), $options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_134, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Test your memory by hiding non-active verses", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_practice]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 4: Saved Sessions "), $options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_152, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[66] || (_cache[66] = function ($event) {
+    onClick: _cache[68] || (_cache[68] = function ($event) {
       return $options.toggleSection('advanced_saved');
     }),
     type: "button"
-  }, [_cache[200] || (_cache[200] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-save\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Saved sessions</span><span class=\"st-sub\">Save, load, delete</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[215] || (_cache[215] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-save\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Saved sessions</span><span class=\"st-sub\">Save, load, delete</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_saved
     }])
-  }, _toConsumableArray(_cache[199] || (_cache[199] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[214] || (_cache[214] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_135, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_136, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_137, [_cache[202] || (_cache[202] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Your saved sessions", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[67] || (_cache[67] = function ($event) {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_153, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_154, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_155, [_cache[217] || (_cache[217] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Your saved sessions", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[69] || (_cache[69] = function ($event) {
       return $data.selectedSessionId = $event;
     }),
     "class": "select"
-  }, [_cache[201] || (_cache[201] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+  }, [_cache[216] || (_cache[216] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: ""
   }, "-- Select a session --", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.savedSessions, function (s) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: s.id,
       value: s.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.name), 9 /* TEXT, PROPS */, _hoisted_138);
-  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.selectedSessionId]]), _cache[203] || (_cache[203] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.name), 9 /* TEXT, PROPS */, _hoisted_156);
+  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.selectedSessionId]]), _cache[218] || (_cache[218] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
   }, "Load previously saved sessions", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_saved]])])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 1
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Login message for non-logged users "), _cache[204] || (_cache[204] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section class=\"sheet-section\"><div class=\"sheet-content\"><div class=\"field-stack\"><div class=\"field\"><div class=\"pill\" style=\"text-align:center;padding:16px;\"><i class=\"bi bi-person\"></i><span>Login to save and load sessions</span></div><small class=\"field-hint\">Create an account to save your progress</small></div></div></div></section>", 1))], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Login message for non-logged users "), _cache[219] || (_cache[219] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section class=\"sheet-section\"><div class=\"sheet-content\"><div class=\"field-stack\"><div class=\"field\"><div class=\"pill\" style=\"text-align:center;padding:16px;\"><i class=\"bi bi-person\"></i><span>Login to save and load sessions</span></div><small class=\"field-hint\">Create an account to save your progress</small></div></div></div></section>", 1))], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "start-btn",
-    onClick: _cache[68] || (_cache[68] = function () {
+    onClick: _cache[70] || (_cache[70] = function () {
       return $options.startSession && $options.startSession.apply($options, arguments);
     }),
     disabled: !$options.hasSelectedSurah
-  }, _toConsumableArray(_cache[205] || (_cache[205] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[220] || (_cache[220] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-fill"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Start session ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_139)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Offline Tab "), $data.tab === 'offline' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_140, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_141, [_cache[211] || (_cache[211] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Start session ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_157)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Analytics Tab "), $data.tab === 'analytics' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_158, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_159, [_cache[233] || (_cache[233] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", {
+    style: {
+      "margin-top": "0",
+      "font-size": "1.1rem",
+      "color": "var(--accent)"
+    }
+  }, "Your Memorisation Stats", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_160, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_161, [_cache[221] || (_cache[221] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-book"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_162, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.totalVersesRead), 1 /* TEXT */), _cache[222] || (_cache[222] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "stat-label"
+  }, "Verses Read", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_163, [_cache[223] || (_cache[223] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-clock-history"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_164, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.totalTimeSpent) + "m", 1 /* TEXT */), _cache[224] || (_cache[224] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "stat-label"
+  }, "Time Spent", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_165, [_cache[225] || (_cache[225] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-fire"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_166, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.currentStreak), 1 /* TEXT */), _cache[226] || (_cache[226] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "stat-label"
+  }, "Day Streak", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_167, [_cache[227] || (_cache[227] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-check-circle"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_168, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.versesMastered), 1 /* TEXT */), _cache[228] || (_cache[228] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "stat-label"
+  }, "Mastered", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_169, [_cache[229] || (_cache[229] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-repeat"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_170, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.totalRepetitions), 1 /* TEXT */), _cache[230] || (_cache[230] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "stat-label"
+  }, "Repetitions", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_171, [_cache[231] || (_cache[231] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-calendar-check"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_172, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.sessionsCompleted), 1 /* TEXT */), _cache[232] || (_cache[232] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "stat-label"
+  }, "Sessions", -1 /* CACHED */))])])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Offline Tab "), $data.tab === 'offline' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_173, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_174, [_cache[239] || (_cache[239] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "sheet-header",
     style: {
       "padding": "16px 16px 0"
@@ -27190,13 +27532,13 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     }
   }, "Downloaded Surahs"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
     "class": "st-sub"
-  }, "Access your saved verses without internet")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_142, [!$data.offlineSurahs.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_143, [_cache[206] || (_cache[206] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, "Access your saved verses without internet")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_175, [!$data.offlineSurahs.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_176, [_cache[234] || (_cache[234] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-cloud-slash",
     style: {
       "font-size": "2rem",
       "opacity": "0.3"
     }
-  }, null, -1 /* CACHED */)), _cache[207] || (_cache[207] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+  }, null, -1 /* CACHED */)), _cache[235] || (_cache[235] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
     style: {
       "margin-top": "8px",
       "opacity": "0.6"
@@ -27207,161 +27549,161 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       "margin-top": "12px",
       "width": "100%"
     },
-    onClick: _cache[69] || (_cache[69] = function ($event) {
+    onClick: _cache[71] || (_cache[71] = function ($event) {
       return $data.tab = 'beginner';
     })
-  }, " Browse surahs ")])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_144, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.offlineSurahs, function (s) {
+  }, " Browse surahs ")])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_177, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.offlineSurahs, function (s) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: s.id,
       "class": "offline-item"
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_145, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_146, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.surah), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_147, "Ayahs " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.range) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.count) + " verses", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_148, "Saved: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.date), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_149, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_178, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_179, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.surah), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_180, "Ayahs " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.range) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.count) + " verses", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_181, "Saved: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.date), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_182, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "oi-btn oi-load",
       onClick: function onClick($event) {
         return $options.loadOfflineSurah(s);
       },
       title: "Load"
-    }, _toConsumableArray(_cache[208] || (_cache[208] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[236] || (_cache[236] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-folder2-open"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_150), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_183), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "oi-btn oi-delete",
       onClick: function onClick($event) {
         return $options.deleteOfflineSurah(s.id);
       },
       title: "Delete"
-    }, _toConsumableArray(_cache[209] || (_cache[209] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[237] || (_cache[237] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-trash"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_151)])]);
-  }), 128 /* KEYED_FRAGMENT */))])), $data.offlineSurahs.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_152, _toConsumableArray(_cache[210] || (_cache[210] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_184)])]);
+  }), 128 /* KEYED_FRAGMENT */))])), $data.offlineSurahs.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_185, _toConsumableArray(_cache[238] || (_cache[238] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-info-circle"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Audio requires an internet connection even for saved surahs.", -1 /* CACHED */)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_153, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Audio requires an internet connection even for saved surahs.", -1 /* CACHED */)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_186, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-btn tools-btn-ghost",
-    onClick: _cache[70] || (_cache[70] = function () {
+    onClick: _cache[72] || (_cache[72] = function () {
       return $options.resetControls && $options.resetControls.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[212] || (_cache[212] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[240] || (_cache[240] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-counterclockwise"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Reset", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-btn tools-btn-ghost",
-    onClick: _cache[71] || (_cache[71] = function ($event) {
+    onClick: _cache[73] || (_cache[73] = function ($event) {
       return $data.showTools = false;
     })
-  }, _toConsumableArray(_cache[213] || (_cache[213] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[241] || (_cache[241] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-circle"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Close", -1 /* CACHED */)])))])], 2 /* CLASS */)], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quiz Overlay "), $data.quizActive ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_154, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_155, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_156, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[214] || (_cache[214] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Close", -1 /* CACHED */)])))])], 2 /* CLASS */)], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quiz Overlay "), $data.quizActive ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_187, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_188, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_189, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[242] || (_cache[242] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", {
     "class": "quiz-title"
-  }, "Retention Check", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_157, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.quizContextLabel), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Retention Check", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_190, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.quizContextLabel), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "quiz-close",
-    onClick: _cache[72] || (_cache[72] = function () {
+    onClick: _cache[74] || (_cache[74] = function () {
       return $options.stopQuiz && $options.stopQuiz.apply($options, arguments);
     })
-  }, "×")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quiz Progress "), !$data.quizComplete ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_158, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_159, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "×")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quiz Progress "), !$data.quizComplete ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_191, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_192, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "quiz-progress-fill",
     style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
       width: ($data.quizIndex + 1) / $data.quizQueue.length * 100 + '%'
     })
-  }, null, 4 /* STYLE */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_160, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizIndex + 1) + " / " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizQueue.length), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$quizCard = $data.quizCard) === null || _$data$quizCard === void 0 ? void 0 : _$data$quizCard.type) === 'flashcard' ? 'Flashcard' : ((_$data$quizCard2 = $data.quizCard) === null || _$data$quizCard2 === void 0 ? void 0 : _$data$quizCard2.type) === 'mcq' ? 'Multiple Choice' : 'Question'), 1 /* TEXT */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quiz Summary (Complete) "), $data.quizComplete ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_161, [_cache[218] || (_cache[218] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, 4 /* STYLE */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_193, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizIndex + 1) + " / " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizQueue.length), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$quizCard = $data.quizCard) === null || _$data$quizCard === void 0 ? void 0 : _$data$quizCard.type) === 'flashcard' ? 'Flashcard' : ((_$data$quizCard2 = $data.quizCard) === null || _$data$quizCard2 === void 0 ? void 0 : _$data$quizCard2.type) === 'mcq' ? 'Multiple Choice' : 'Question'), 1 /* TEXT */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quiz Summary (Complete) "), $data.quizComplete ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_194, [_cache[246] || (_cache[246] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "quiz-summary-icon"
-  }, "🎉", -1 /* CACHED */)), _cache[219] || (_cache[219] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Session Complete!", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_162, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_163, [_cache[215] || (_cache[215] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, "🎉", -1 /* CACHED */)), _cache[247] || (_cache[247] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Session Complete!", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_195, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_196, [_cache[243] || (_cache[243] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "stat-label"
-  }, "Score", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_164, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizScore) + "/" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizQueue.length), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_165, [_cache[216] || (_cache[216] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, "Score", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_197, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizScore) + "/" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizQueue.length), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_198, [_cache[244] || (_cache[244] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "stat-label"
-  }, "Accuracy", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_166, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.quizAccuracy) + "%", 1 /* TEXT */)])]), $data.quizMistakes.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_167, [_cache[217] || (_cache[217] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Verses to review:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_168, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quizMistakes, function (m) {
+  }, "Accuracy", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_199, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.quizAccuracy) + "%", 1 /* TEXT */)])]), $data.quizMistakes.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_200, [_cache[245] || (_cache[245] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Verses to review:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_201, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quizMistakes, function (m) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
       key: m,
       "class": "mistake-tag"
     }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(m), 1 /* TEXT */);
-  }), 128 /* KEYED_FRAGMENT */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_169, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }), 128 /* KEYED_FRAGMENT */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_202, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-outline",
-    onClick: _cache[73] || (_cache[73] = function () {
+    onClick: _cache[75] || (_cache[75] = function () {
       return $options.stopQuiz && $options.stopQuiz.apply($options, arguments);
     })
   }, "Close"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-primary",
-    onClick: _cache[74] || (_cache[74] = function () {
+    onClick: _cache[76] || (_cache[76] = function () {
       return $options.restartQuiz && $options.restartQuiz.apply($options, arguments);
     })
   }, "Try Again")])])) : $data.quizCard ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 2
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quiz Card "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_170, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Flashcard Type "), $data.quizCard.type === 'flashcard' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_171, [_cache[221] || (_cache[221] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quiz Card "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_203, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Flashcard Type "), $data.quizCard.type === 'flashcard' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_204, [_cache[249] || (_cache[249] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "quiz-question"
   }, "Recite this verse:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "quiz-arabic",
     dir: "rtl",
     innerHTML: $data.quizCard.arabic
-  }, null, 8 /* PROPS */, _hoisted_172), !$data.quizRevealed ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
+  }, null, 8 /* PROPS */, _hoisted_205), !$data.quizRevealed ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
     key: 0,
     "class": "quiz-reveal-btn",
-    onClick: _cache[75] || (_cache[75] = function ($event) {
+    onClick: _cache[77] || (_cache[77] = function ($event) {
       return $data.quizRevealed = true;
     })
-  }, _toConsumableArray(_cache[220] || (_cache[220] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[248] || (_cache[248] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-eye"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Reveal Answer ", -1 /* CACHED */)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.quizRevealed ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_173, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_174, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizCard.translation), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_175, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Reveal Answer ", -1 /* CACHED */)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.quizRevealed ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_206, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_207, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizCard.translation), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_208, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "grade-btn",
-    onClick: _cache[76] || (_cache[76] = function ($event) {
+    onClick: _cache[78] || (_cache[78] = function ($event) {
       return $options.submitQuiz(2);
     })
   }, "Again"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "grade-btn",
-    onClick: _cache[77] || (_cache[77] = function ($event) {
+    onClick: _cache[79] || (_cache[79] = function ($event) {
       return $options.submitQuiz(3);
     })
   }, "Hard"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "grade-btn primary",
-    onClick: _cache[78] || (_cache[78] = function ($event) {
+    onClick: _cache[80] || (_cache[80] = function ($event) {
       return $options.submitQuiz(4);
     })
   }, "Good"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "grade-btn",
-    onClick: _cache[79] || (_cache[79] = function ($event) {
+    onClick: _cache[81] || (_cache[81] = function ($event) {
       return $options.submitQuiz(5);
     })
   }, "Easy")])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])) : $data.quizCard.type === 'mcq' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 1
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Multiple Choice Type "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[222] || (_cache[222] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Multiple Choice Type "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[250] || (_cache[250] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "quiz-question"
-  }, "Which verse matches this meaning?", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_176, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizCard.prompt), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_177, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quizOptions, function (opt) {
+  }, "Which verse matches this meaning?", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_209, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizCard.prompt), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_210, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quizOptions, function (opt) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
       key: opt.key,
       "class": "quiz-option",
       onClick: function onClick($event) {
         return $options.submitQuiz(opt.key === $data.quizCard.key ? 4 : 2);
       }
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(opt.label), 9 /* TEXT, PROPS */, _hoisted_178);
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(opt.label), 9 /* TEXT, PROPS */, _hoisted_211);
   }), 128 /* KEYED_FRAGMENT */))])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : $data.quizCard.type === 'audio_mcq' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 2
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio MCQ Type "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[223] || (_cache[223] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio MCQ Type "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[251] || (_cache[251] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "quiz-question"
   }, "Listen and choose the correct verse", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "quiz-play-audio",
-    onClick: _cache[80] || (_cache[80] = function ($event) {
+    onClick: _cache[82] || (_cache[82] = function ($event) {
       return $options.playVerse($data.quizCard);
     })
-  }, "▶ Play Audio"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_179, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quizOptions, function (opt) {
+  }, "▶ Play Audio"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_212, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quizOptions, function (opt) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
       key: opt.key,
       "class": "quiz-option",
       onClick: function onClick($event) {
         return $options.submitQuiz(opt.key === $data.quizCard.key ? 4 : 2);
       }
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(opt.label), 9 /* TEXT, PROPS */, _hoisted_180);
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(opt.label), 9 /* TEXT, PROPS */, _hoisted_213);
   }), 128 /* KEYED_FRAGMENT */))])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : $data.quizCard.type === 'blank' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 3
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Fill Blank Type "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[224] || (_cache[224] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Fill Blank Type "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[252] || (_cache[252] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "quiz-question"
-  }, "Fill in the missing word:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_181, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizCard.prompt), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Fill in the missing word:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_214, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.quizCard.prompt), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "text",
-    "onUpdate:modelValue": _cache[81] || (_cache[81] = function ($event) {
+    "onUpdate:modelValue": _cache[83] || (_cache[83] = function ($event) {
       return $data.quizAnswer = $event;
     }),
     "class": "quiz-input",
     placeholder: "Type your answer",
-    onKeyup: _cache[82] || (_cache[82] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)(function ($event) {
+    onKeyup: _cache[84] || (_cache[84] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)(function ($event) {
       return $options.submitQuiz();
     }, ["enter"]))
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.quizAnswer]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-primary",
-    onClick: _cache[83] || (_cache[83] = function ($event) {
+    onClick: _cache[85] || (_cache[85] = function ($event) {
       return $options.submitQuiz();
     })
   }, "Submit")])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.confettiActive ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
@@ -27379,22 +27721,74 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         animationDelay: Math.random() * 0.2 + 's'
       })
     }, null, 4 /* STYLE */);
-  }), 64 /* STABLE_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Global Audio Player "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(vue__WEBPACK_IMPORTED_MODULE_0__.Transition, {
+  }), 64 /* STABLE_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Planner Modal "), $data.showPlannerModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+    key: 3,
+    "class": "modal-overlay",
+    onClick: _cache[91] || (_cache[91] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
+      return $data.showPlannerModal = false;
+    }, ["self"]))
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_215, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_216, [_cache[254] || (_cache[254] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, "Quick Planner", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "btn-icon",
+    onClick: _cache[86] || (_cache[86] = function ($event) {
+      return $data.showPlannerModal = false;
+    })
+  }, _toConsumableArray(_cache[253] || (_cache[253] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-x-lg"
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_217, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_218, [_cache[255] || (_cache[255] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Target Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[87] || (_cache[87] = function ($event) {
+      return $data.plannerConfig.surah = $event;
+    }),
+    "class": "select",
+    onChange: _cache[88] || (_cache[88] = function () {
+      return $options.updatePlannerSurah && $options.updatePlannerSurah.apply($options, arguments);
+    })
+  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (ch) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
+      key: ch.id,
+      value: ch.id
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ch.name_simple) + " (" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ch.verses_count) + " verses)", 9 /* TEXT, PROPS */, _hoisted_219);
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.plannerConfig.surah]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_220, [_cache[256] || (_cache[256] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verses per day", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "number",
+    "onUpdate:modelValue": _cache[89] || (_cache[89] = function ($event) {
+      return $data.plannerConfig.versesPerDay = $event;
+    }),
+    "class": "input",
+    min: "1",
+    max: "500"
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.plannerConfig.versesPerDay, void 0, {
+    number: true
+  }]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_221, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_222, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_223, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerEstimatedDays), 1 /* TEXT */), _cache[257] || (_cache[257] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "pa-lbl"
+  }, "Days to Finish", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_224, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_225, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerEstimatedTimePerDay) + "m", 1 /* TEXT */), _cache[258] || (_cache[258] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "pa-lbl"
+  }, "Daily Time", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_226, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_227, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerTotalVerses), 1 /* TEXT */), _cache[259] || (_cache[259] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "pa-lbl"
+  }, "Total Verses", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_228, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_229, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerCompletionDate), 1 /* TEXT */), _cache[260] || (_cache[260] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "pa-lbl"
+  }, "Target Date", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_230, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "btn-primary",
+    onClick: _cache[90] || (_cache[90] = function () {
+      return $options.submitPlanner && $options.submitPlanner.apply($options, arguments);
+    }),
+    style: {
+      "width": "100%"
+    }
+  }, "Create Plan")])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Global Audio Player "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(vue__WEBPACK_IMPORTED_MODULE_0__.Transition, {
     name: "slide-up"
   }, {
     "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
       var _$data$currentChapter;
-      return [$data.playerVisible ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_182, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_183, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_184, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_185, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter = $data.currentChapter) === null || _$data$currentChapter === void 0 ? void 0 : _$data$currentChapter.name_simple) || 'Quran'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_186, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.activeVerseKey), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_187, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      return [$data.playerVisible ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_231, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_232, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_233, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_234, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter = $data.currentChapter) === null || _$data$currentChapter === void 0 ? void 0 : _$data$currentChapter.name_simple) || 'Quran'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_235, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.activeVerseKey) + " ", 1 /* TEXT */), $options.etaLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_236, "• " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel) + " remaining", 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_237, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[84] || (_cache[84] = function () {
+        onClick: _cache[92] || (_cache[92] = function () {
           return $options.prev && $options.prev.apply($options, arguments);
         }),
         title: "Previous"
-      }, _toConsumableArray(_cache[225] || (_cache[225] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[261] || (_cache[261] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-skip-start-fill"
       }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn player-play",
-        onClick: _cache[85] || (_cache[85] = function () {
+        onClick: _cache[93] || (_cache[93] = function () {
           return $options.togglePlay && $options.togglePlay.apply($options, arguments);
         }),
         title: "Play/Pause"
@@ -27402,15 +27796,15 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
       }, null, 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[86] || (_cache[86] = function () {
+        onClick: _cache[94] || (_cache[94] = function () {
           return $options.next && $options.next.apply($options, arguments);
         }),
         title: "Next"
-      }, _toConsumableArray(_cache[226] || (_cache[226] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[262] || (_cache[262] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-skip-end-fill"
-      }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_188, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_189, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_238, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_239, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
         "class": "player-progress-bg",
-        onClick: _cache[87] || (_cache[87] = function () {
+        onClick: _cache[95] || (_cache[95] = function () {
           return _ctx.seek && _ctx.seek.apply(_ctx, arguments);
         }),
         ref: "progress"
@@ -27419,18 +27813,18 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
           width: $data.currentTime / ($data.duration || 1) * 100 + '%'
         })
-      }, null, 4 /* STYLE */)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_190, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.duration)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      }, null, 4 /* STYLE */)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_240, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.duration)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[88] || (_cache[88] = function ($event) {
+        onClick: _cache[96] || (_cache[96] = function ($event) {
           return $data.playerVisible = false;
         }),
         title: "Close player"
-      }, _toConsumableArray(_cache[227] || (_cache[227] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[263] || (_cache[263] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-x-lg"
       }, null, -1 /* CACHED */)])))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)];
     }),
     _: 1 /* STABLE */
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio System "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_191, null, 512 /* NEED_PATCH */)], 8 /* PROPS */, _hoisted_1);
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio System "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_241, null, 512 /* NEED_PATCH */)], 8 /* PROPS */, _hoisted_1);
 }
 
 /***/ }),
@@ -33994,7 +34388,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n:root {\n  --bg: #f3eee6;\n  --surface: rgba(255, 250, 243, 0.88);\n  --surface-strong: rgba(255, 255, 255, 0.92);\n  --border: rgba(78, 58, 38, 0.10);\n  --text: #1f1a17;\n  --text-muted: #6c6258;\n  --accent: #9a6738;\n  --accent-strong: #6e4726;\n  --accent-soft: #d8c1a8;\n  --accent-light: rgba(154, 103, 56, 0.10);\n  --accent-wash: rgba(228, 211, 194, 0.42);\n  --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);\n  --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);\n  --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);\n  --radius: 16px;\n  --navbar-offset: 56px;\n  --tools-width: 440px;\n  --tools-footer-h: 78px;\n  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;\n  --font-ui: \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n[data-theme=\"dark\"] {\n  --bg: #15110f;\n  --surface: rgba(33, 27, 24, 0.88);\n  --surface-strong: rgba(44, 36, 31, 0.94);\n  --border: rgba(255, 235, 214, 0.10);\n  --text: #f1e7dc;\n  --text-muted: #bcae9f;\n  --accent: #d0a06b;\n  --accent-strong: #efc18d;\n  --accent-soft: #5f4530;\n  --accent-light: rgba(208, 160, 107, 0.14);\n  --accent-wash: rgba(208, 160, 107, 0.08);\n  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);\n  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);\n  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);\n}\n[data-theme=\"sepia\"] {\n  --bg: #efe2cb;\n  --surface: rgba(250, 241, 227, 0.88);\n  --surface-strong: rgba(255, 248, 237, 0.94);\n  --text: #352516;\n  --text-muted: #75624f;\n  --accent: #b8824e;\n  --accent-strong: #8f6033;\n  --accent-soft: #dcc3a6;\n  --accent-light: rgba(184, 130, 78, 0.12);\n  --accent-wash: rgba(221, 194, 162, 0.35);\n}\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\nbody {\n  font-family: var(--font-ui);\n  background: var(--bg);\n  color: var(--text);\n}\n.app {\n  min-height: 100vh;\n  animation: appFade 260ms ease-out;\n}\n\n/* Active tab indicator with pulse effect */\n.tools-tabs button.active-tab {\n  position: relative;\n  animation: tabPulse 0.3s ease-out;\n}\n@keyframes tabPulse {\n0% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 var(--accent);\n}\n50% {\n    transform: scale(1.02);\n    box-shadow: 0 0 0 3px var(--accent-light);\n}\n100% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Toggle switch animation and visual feedback */\n.switch {\n  transition: all 0.2s ease;\n}\n.switch:active {\n  transform: scale(0.98);\n}\n.switch-ui {\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n  animation: switchPulse 0.3s ease-out;\n}\n@keyframes switchPulse {\n0% {\n    box-shadow: 0 0 0 0 rgba(139, 94, 60, 0.4);\n}\n50% {\n    box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.2);\n}\n100% {\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Field hint styling */\n.field-hint {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 4px;\n  line-height: 1.4;\n  display: block;\n}\n\n/* Verse Arabic styling */\n.verse-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.4rem;\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n.verse-arabic word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-card {\n  background: var(--surface);\n  border-radius: 20px;\n  padding: 24px;\n  transition: all 0.2s ease;\n  border: 1px solid var(--border);\n  position: relative;\n  direction: ltr;\n}\n.verse-card.active {\n  border-left: 4px solid var(--accent);\n  background: var(--accent-light);\n}\n.verse-card.focus-mode {\n  opacity: 0.4;\n}\n.verse-card.focus-mode.active {\n  opacity: 1;\n}\n.verse-card.blurred {\n  filter: blur(4px);\n}\n.verse-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 16px;\n}\n.verse-badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-number {\n  font-size: 0.75rem;\n  padding: 4px 12px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  color: var(--accent);\n}\n.verse-ref {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 8px;\n}\n\n/* Font controls */\n.verse-font-controls {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  padding: 2px 6px;\n  margin-right: 8px;\n}\n.verse-font-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 12px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 10px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.verse-font-btn:hover {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n}\n.verse-font-size-indicator {\n  font-size: 10px;\n  min-width: 35px;\n  text-align: center;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n\n/* Session rail */\n.session-rail {\n  position: sticky;\n  top: 14px;\n  z-index: 18;\n  margin-bottom: 18px;\n  padding: 12px 14px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-md);\n  animation: railIn 280ms ease-out;\n}\n.session-rail-top {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  gap: 12px;\n  align-items: center;\n}\n.session-rail-kicker {\n  font-size: 10px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  margin-top: 2px;\n  font-size: 14px;\n  font-weight: 450;\n}\n.session-rail-meta {\n  margin-top: 2px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.session-rail-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 8px;\n  margin-top: 10px;\n}\n.rail-stat {\n  padding: 8px 10px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-stat span {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n}\n.rail-stat strong {\n  font-size: 0.78rem;\n  font-weight: 500;\n}\n.rail-btn {\n  height: 34px;\n  padding: 0 12px;\n  border-radius: 13px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  color: var(--text);\n  font-size: 12px;\n  font-weight: 450;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.rail-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);\n}\n.progress-bar {\n  flex: 1;\n  height: 4px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-wide {\n  margin-top: 10px;\n}\n.progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s;\n}\n\n/* Mode indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  margin: 8px 0 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n\n/* Reading toolbar */\n.reading-toolbar {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  margin-bottom: 16px;\n  padding: 12px 14px;\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.reading-toolbar-group {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  align-items: flex-start;\n}\n.toolbar-chip {\n  border: 0;\n  border-radius: 999px;\n  padding: 8px 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  font-size: 0.75rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: var(--shadow-sm);\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.toolbar-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.toolbar-chip:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n\n/* Tools panel */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  width: min(var(--tools-width), 100vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n}\n.tools.open {\n  transform: translateX(0);\n}\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n}\n.tools-topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.tools-title {\n  font-size: 1rem;\n  font-weight: 700;\n  letter-spacing: -0.2px;\n  color: var(--text);\n}\n.tools-context {\n  margin-top: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 600;\n}\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n  color: rgba(0, 0, 0, 0.7);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n}\n.tools-tabs button {\n  flex: 1;\n  padding: 7px 10px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.82rem;\n  cursor: pointer;\n  color: rgba(0, 0, 0, 0.55);\n  font-weight: 450;\n  transition: background 140ms ease, color 140ms ease, transform 140ms ease;\n}\n.tools-tabs button.active {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));\n  box-shadow: var(--shadow-sm);\n  color: rgba(0, 0, 0, 0.85);\n}\n.tools-body {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n}\n.sheet {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.sheet-section {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border-radius: 18px;\n  padding: 0;\n  overflow: hidden;\n  box-shadow: var(--shadow-sm);\n  animation: riseSoft 260ms ease-out;\n}\n.sheet-toggle {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border: none;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease;\n}\n.st-left {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.st-ico {\n  width: 24px;\n  height: 24px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));\n  border: 1px solid rgba(139, 94, 60, 0.18);\n  flex: 0 0 auto;\n  font-size: 11px;\n  font-weight: 600;\n  color: var(--accent);\n}\n.st-txt {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 2px;\n  min-width: 0;\n}\n.st-title {\n  font-weight: 450;\n  letter-spacing: -0.2px;\n  color: var(--text);\n  font-size: 0.82rem;\n}\n.st-sub {\n  font-size: 0.66rem;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.st-chev {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  display: grid;\n  place-items: center;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  color: rgba(0, 0, 0, 0.65);\n  transition: transform 0.15s ease;\n  box-shadow: var(--shadow-sm);\n}\n.st-chev.open {\n  transform: rotate(180deg);\n}\n.sheet-content {\n  padding: 16px 16px 18px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.field-stack {\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n}\n.field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  min-width: 0;\n}\n.field label {\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n}\n.field-hint {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 4px;\n  line-height: 1.4;\n  display: block;\n}\n.select,\n.input {\n  width: 100%;\n  min-width: 0;\n  padding: 11px 12px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--text);\n  font-size: 0.8rem;\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n.range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.range-single {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n  align-items: center;\n}\n.range span {\n  color: rgba(0, 0, 0, 0.35);\n  font-weight: 450;\n  font-size: 11px;\n}\n.radio-group {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.radio {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 0.85rem;\n  color: var(--text);\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  transition: all 0.2s ease;\n}\n.radio:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-sm);\n}\n.radio input {\n  margin: 0;\n}\n.switch {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 11px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  cursor: pointer;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  transition: all 0.2s ease;\n}\n.switch input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.switch-ui {\n  width: 44px;\n  height: 26px;\n  border-radius: 999px;\n  background: rgba(0, 0, 0, 0.12);\n  position: relative;\n  flex: 0 0 auto;\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  content: \"\";\n  position: absolute;\n  top: 3px;\n  left: 3px;\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  background: white;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n}\n.switch input:checked+.switch-ui::after {\n  transform: translateX(18px);\n}\n.switch-text {\n  font-size: 0.74rem;\n  color: rgba(0, 0, 0, 0.72);\n  font-weight: 400;\n}\n\n/* Start button */\n.start-btn {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  border-radius: 12px;\n  color: white;\n  font-size: 1rem;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  margin-top: 20px;\n  transition: all 0.2s ease;\n}\n.start-btn:hover:not(:disabled) {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);\n}\n.start-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n\n/* Tools footer */\n.tools-footer {\n  position: absolute;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  height: var(--tools-footer-h);\n  padding: 12px 16px 14px;\n  border-top: 1px solid var(--border);\n  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));\n  display: flex;\n  gap: 10px;\n  justify-content: space-between;\n  align-items: center;\n}\n.tools-btn {\n  flex: 1;\n  min-height: 44px;\n  padding: 10px 10px;\n  border-radius: 15px;\n  font-weight: 500;\n  border: 1px solid rgba(0, 0, 0, 0.1);\n  cursor: pointer;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  line-height: 1;\n}\n\n/* Hero section */\n.hero-card {\n  margin-bottom: 16px;\n  padding: 18px 18px 16px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 236, 226, 0.92));\n  box-shadow: var(--shadow-md);\n  display: grid;\n  gap: 14px;\n  animation: riseSoft 260ms ease-out;\n}\n.hero-kicker {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  color: var(--accent);\n}\n.hero-title {\n  margin-top: 6px;\n  font-size: 1.24rem;\n  font-weight: 500;\n  letter-spacing: -0.03em;\n}\n.hero-sub {\n  margin-top: 8px;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  max-width: 56ch;\n}\n.hero-flow {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n}\n.hero-step {\n  padding: 10px 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.62);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.74rem;\n}\n.hero-step span {\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  display: grid;\n  place-items: center;\n  background: var(--accent-light);\n  color: var(--accent);\n  font-size: 11px;\n}\n.hero-step strong {\n  font-weight: 500;\n}\n.hero-points {\n  display: grid;\n  gap: 8px;\n}\n.hero-point {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.hero-point i {\n  color: var(--accent);\n}\n.hero-actions,\n.empty-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cta {\n  flex: 1;\n  padding: 10px 10px;\n  border-radius: 14px;\n  font-weight: 450;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 11px;\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.cta-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);\n}\n.cta-ghost {\n  background: rgba(255, 255, 255, 0.58);\n  box-shadow: var(--shadow-sm);\n}\n\n/* Empty state */\n.empty {\n  padding: 40px 0;\n}\n.empty-card {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: var(--radius);\n  padding: 32px;\n  text-align: center;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-md);\n}\n.empty-icon {\n  font-family: var(--font-ar);\n  font-size: 2.2rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.empty-card h3 {\n  font-weight: 450;\n  margin-bottom: 6px;\n  font-size: 1rem;\n}\n.empty-card p {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  margin-bottom: 16px;\n}\n\n/* Verses grid */\n.verses-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n  margin-top: 32px;\n}\n.offline-list {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n  margin-bottom: 16px;\n}\n.offline-item {\n  background: var(--bg-elevated);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  transition: all 0.2s ease;\n}\n.offline-item:hover {\n  border-color: var(--accent);\n  background: var(--surface);\n}\n.oi-info {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.oi-name {\n  font-weight: 600;\n  font-size: 1rem;\n}\n.oi-meta {\n  font-size: 0.8rem;\n  opacity: 0.7;\n}\n.oi-date {\n  font-size: 0.7rem;\n  opacity: 0.5;\n}\n.oi-actions {\n  display: flex;\n  gap: 8px;\n}\n.oi-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.oi-load:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.oi-delete:hover {\n  background: #ff4d4d;\n  color: white;\n  border-color: #ff4d4d;\n}\n.empty-mini {\n  text-align: center;\n  padding: 32px 16px;\n  background: var(--bg-elevated);\n  border-radius: 20px;\n  border: 1px dashed var(--border);\n}\n.offline-note {\n  margin-top: 24px;\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  display: flex;\n  gap: 10px;\n  font-size: 0.75rem;\n  line-height: 1.4;\n  color: var(--accent);\n}\n\n/* Floating Player */\n.player-bar {\n  position: fixed;\n  bottom: 32px;\n  left: 50%;\n  transform: translateX(-50%);\n  width: 90%;\n  max-width: 800px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 24px;\n  box-shadow: var(--shadow-lg);\n  z-index: 1000;\n  padding: 12px 24px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  backdrop-filter: blur(12px);\n  -webkit-backdrop-filter: blur(12px);\n}\n.player-main {\n  display: flex;\n  align-items: center;\n  gap: 20px;\n}\n.player-info {\n  min-width: 140px;\n}\n.player-chapter {\n  font-weight: 700;\n  font-size: 0.9rem;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-verse {\n  font-size: 0.75rem;\n  opacity: 0.7;\n}\n.player-controls {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.player-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: none;\n  background: none;\n  color: var(--text);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.2rem;\n  transition: all 0.2s ease;\n}\n.player-btn:hover {\n  background: var(--bg-elevated);\n}\n.player-play {\n  background: var(--accent);\n  color: white;\n  width: 48px;\n  height: 48px;\n  border-radius: 16px;\n  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.3);\n}\n.player-play:hover {\n  background: var(--accent-dark);\n  transform: scale(1.05);\n}\n.player-progress-wrap {\n  flex: 1;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.player-time {\n  font-size: 0.75rem;\n  font-variant-numeric: tabular-nums;\n  opacity: 0.7;\n  min-width: 40px;\n}\n.player-progress-bg {\n  flex: 1;\n  height: 6px;\n  background: var(--bg-elevated);\n  border-radius: 3px;\n  position: relative;\n  cursor: pointer;\n}\n.player-progress-fill {\n  position: absolute;\n  left: 0;\n  top: 0;\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.1s linear;\n}\n\n/* Animations */\n.slide-up-enter-active, .slide-up-leave-active {\n  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.slide-up-enter-from, .slide-up-leave-to {\n  transform: translate(-50%, 100px);\n  opacity: 0;\n}\n.verse-translation {\n  font-size: 0.85rem;\n  color: #5a6b63;\n  line-height: 1.6;\n  padding-top: 12px;\n  margin-top: 8px;\n  border-top: 1px solid var(--border);\n  display: block;\n}\n.verse-transliteration {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  font-style: italic;\n  margin-top: 8px;\n}\n.verse-words {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 12px;\n  direction: rtl;\n  margin-top: 16px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n}\n.word-item {\n  background: var(--accent-light);\n  padding: 6px 12px;\n  border-radius: 20px;\n  display: inline-flex;\n  flex-direction: row-reverse;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.75rem;\n}\n.word-arabic {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n}\n.word-meaning {\n  color: var(--text-muted);\n}\n.word-audio-btn {\n  background: none;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 0 4px;\n}\n\n/* Quiz overlay */\n.quiz-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 80;\n  background: rgba(0, 0, 0, 0.35);\n  backdrop-filter: blur(6px);\n  display: grid;\n  place-items: center;\n  padding: 18px;\n}\n.quiz-card {\n  width: min(680px, 100%);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba, rgba(250, 245, 239, 0.95));\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 22px;\n  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);\n  overflow: hidden;\n}\n.quiz-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 18px 22px 14px;\n  border-bottom: 1px solid rgba(0, 0, 0, 0.08);\n}\n.quiz-title {\n  font-weight: 500;\n  font-size: 1.05rem;\n}\n.quiz-subtitle {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.quiz-close {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.7);\n  cursor: pointer;\n  font-size: 24px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.quiz-progress {\n  padding: 14px 22px 0;\n}\n.quiz-progress-bar {\n  height: 4px;\n  background: var(--border);\n  border-radius: 2px;\n  overflow: hidden;\n}\n.quiz-progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n.quiz-stats {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.quiz-body {\n  padding: 18px 22px 22px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.quiz-question {\n  font-weight: 600;\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.quiz-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.4rem;\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  padding: 16px;\n  background: var(--accent-light);\n  border-radius: 16px;\n}\n.quiz-reveal-btn {\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n}\n.quiz-answer {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.quiz-translation {\n  font-size: 0.9rem;\n  line-height: 1.6;\n  color: var(--text);\n  margin-bottom: 16px;\n}\n.quiz-grade-buttons {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.grade-btn {\n  flex: 1;\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.grade-btn.primary {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.quiz-options {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.quiz-option {\n  padding: 12px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  text-align: left;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.quiz-option:hover {\n  background: var(--accent-light);\n  transform: translateX(4px);\n}\n.quiz-summary {\n  padding: 22px;\n  text-align: center;\n}\n.quiz-summary-icon {\n  font-size: 3rem;\n  margin-bottom: 16px;\n}\n.quiz-summary-stats {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin: 20px 0;\n}\n.quiz-summary-stats .stat {\n  padding: 16px;\n  background: var(--surface);\n  border-radius: 16px;\n}\n.stat-label {\n  display: block;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.stat-value {\n  display: block;\n  font-size: 1.5rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.quiz-summary-mistakes {\n  margin: 20px 0;\n}\n.mistake-tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 8px;\n  justify-content: center;\n}\n.mistake-tag {\n  padding: 6px 12px;\n  background: rgba(190, 73, 73, 0.1);\n  border-radius: 20px;\n  font-size: 0.8rem;\n  color: #c0392b;\n}\n.quiz-actions {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n}\n.btn-outline {\n  padding: 10px 24px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n.btn-primary {\n  padding: 10px 24px;\n  border-radius: 12px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n\n/* Confetti */\n.confetti {\n  position: fixed;\n  inset: 0;\n  pointer-events: none;\n  z-index: 140;\n  overflow: hidden;\n}\n.confetti-piece {\n  position: absolute;\n  top: -10px;\n  width: 8px;\n  height: 12px;\n  border-radius: 3px;\n  opacity: 0.9;\n  animation: confetti-fall 1.35s ease-in forwards;\n}\n\n/* Banner */\n.banner {\n  position: fixed;\n  top: 14px;\n  left: 50%;\n  transform: translateX(-50%);\n  z-index: 120;\n  min-width: min(560px, calc(100vw - 24px));\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px 14px;\n  border-radius: 16px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.92);\n  backdrop-filter: blur(10px);\n  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);\n  font-weight: 450;\n  animation: riseSoft 220ms ease-out;\n}\n.banner-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.banner-action {\n  border: 0;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  padding: 9px 12px;\n  font-size: 0.78rem;\n  font-weight: 500;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n}\n.banner-x {\n  width: 36px;\n  height: 36px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n}\n\n/* Animations */\n@keyframes appFade {\n0% {\n    opacity: 0;\n    transform: translateY(4px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes railIn {\n0% {\n    opacity: 0;\n    transform: translateY(-8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes riseSoft {\n0% {\n    opacity: 0;\n    transform: translateY(8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes confetti-fall {\n0% {\n    transform: translateY(-20px) rotate(0deg);\n    opacity: 0;\n}\n10% {\n    opacity: 0.95;\n}\n100% {\n    transform: translateY(110vh) rotate(480deg);\n    opacity: 0;\n}\n}\n\n/* Responsive */\n@media (max-width: 768px) {\n.main {\n    padding: 16px 16px 100px;\n}\n.main.tools-open {\n    padding-right: 16px;\n}\n.tools {\n    left: 0;\n    right: 0;\n    width: 100%;\n}\n.session-rail-stats {\n    grid-template-columns: 1fr 1fr;\n}\n.hero-flow {\n    grid-template-columns: 1fr 1fr;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 8px);\n    justify-content: center;\n}\n.verse-font-controls {\n    gap: 2px;\n    padding: 2px 4px;\n}\n.verse-font-btn {\n    width: 20px;\n    height: 20px;\n}\n.verse-font-size-indicator {\n    min-width: 30px;\n    font-size: 9px;\n}\n}\n@media (max-width: 640px) {\n.quiz-grade-buttons {\n    flex-direction: column;\n}\n.quiz-actions {\n    flex-direction: column;\n}\n.hero-actions,\n  .empty-actions {\n    flex-direction: column;\n}\n.cta {\n    width: 100%;\n}\n}\n\n/* Dark theme overrides */\n[data-theme=\"dark\"] .tools {\n  background: rgba(18, 18, 18, 0.9);\n  border-left-color: rgba(255, 255, 255, 0.08);\n}\n[data-theme=\"dark\"] .sheet-section {\n  border-color: rgba(255, 255, 255, 0.08);\n  background: rgba(30, 30, 40, 0.45);\n}\n[data-theme=\"dark\"] .select,\n[data-theme=\"dark\"] .input {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.55);\n}\n[data-theme=\"dark\"] .switch {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n}\n[data-theme=\"dark\"] .verse-translation {\n  color: #a0a0b0;\n}\n[data-theme=\"dark\"] .quiz-card {\n  background: rgba(18, 18, 18, 0.92);\n  border-color: rgba(255, 255, 255, 0.10);\n}\n\n/* Sepia theme overrides */\n[data-theme=\"sepia\"] .verse-translation {\n  color: #7a684a;\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n:root {\n  --bg: #f3eee6;\n  --surface: rgba(255, 250, 243, 0.88);\n  --surface-strong: rgba(255, 255, 255, 0.92);\n  --border: rgba(78, 58, 38, 0.10);\n  --text: #1f1a17;\n  --text-muted: #6c6258;\n  --accent: #9a6738;\n  --accent-strong: #6e4726;\n  --accent-soft: #d8c1a8;\n  --accent-light: rgba(154, 103, 56, 0.10);\n  --accent-wash: rgba(228, 211, 194, 0.42);\n  --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);\n  --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);\n  --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);\n  --radius: 16px;\n  --navbar-offset: 56px;\n  --tools-width: 440px;\n  --tools-footer-h: 78px;\n  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;\n  --font-ui: \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n[data-theme=\"dark\"] {\n  --bg: #15110f;\n  --surface: rgba(33, 27, 24, 0.88);\n  --surface-strong: rgba(44, 36, 31, 0.94);\n  --border: rgba(255, 235, 214, 0.10);\n  --text: #f1e7dc;\n  --text-muted: #bcae9f;\n  --accent: #d0a06b;\n  --accent-strong: #efc18d;\n  --accent-soft: #5f4530;\n  --accent-light: rgba(208, 160, 107, 0.14);\n  --accent-wash: rgba(208, 160, 107, 0.08);\n  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);\n  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);\n  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);\n}\n[data-theme=\"sepia\"] {\n  --bg: #efe2cb;\n  --surface: rgba(250, 241, 227, 0.88);\n  --surface-strong: rgba(255, 248, 237, 0.94);\n  --text: #352516;\n  --text-muted: #75624f;\n  --accent: #b8824e;\n  --accent-strong: #8f6033;\n  --accent-soft: #dcc3a6;\n  --accent-light: rgba(184, 130, 78, 0.12);\n  --accent-wash: rgba(221, 194, 162, 0.35);\n}\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\nbody {\n  font-family: var(--font-ui);\n  background: var(--bg);\n  color: var(--text);\n}\n.app {\n  min-height: 100vh;\n  animation: appFade 260ms ease-out;\n}\n\n/* Active tab indicator with pulse effect */\n.tools-tabs button.active-tab {\n  position: relative;\n  animation: tabPulse 0.3s ease-out;\n}\n@keyframes tabPulse {\n0% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 var(--accent);\n}\n50% {\n    transform: scale(1.02);\n    box-shadow: 0 0 0 3px var(--accent-light);\n}\n100% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Toggle switch animation and visual feedback */\n.switch {\n  transition: all 0.2s ease;\n}\n.switch:active {\n  transform: scale(0.98);\n}\n.switch-ui {\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n  animation: switchPulse 0.3s ease-out;\n}\n@keyframes switchPulse {\n0% {\n    box-shadow: 0 0 0 0 rgba(139, 94, 60, 0.4);\n}\n50% {\n    box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.2);\n}\n100% {\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Field hint styling */\n.field-hint {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 4px;\n  line-height: 1.4;\n  display: block;\n}\n\n/* Verse Arabic styling */\n.verse-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.4rem;\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n.verse-arabic word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-card {\n  background: var(--surface);\n  border-radius: 20px;\n  padding: 24px;\n  transition: all 0.2s ease;\n  border: 1px solid var(--border);\n  position: relative;\n  direction: ltr;\n}\n.verse-card.active {\n  border-left: 4px solid var(--accent);\n  background: var(--accent-light);\n}\n.verse-card.focus-mode {\n  opacity: 0.4;\n}\n.verse-card.focus-mode.active {\n  opacity: 1;\n}\n.verse-card.blurred {\n  filter: blur(6px);\n  transition: filter 0.3s ease, transform 0.2s, box-shadow 0.2s, border-color 0.2s;\n}\n.verse-card.blurred:hover {\n  filter: blur(0px);\n}\n.verse-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 16px;\n}\n.verse-badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-number {\n  font-size: 0.75rem;\n  padding: 4px 12px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  color: var(--accent);\n}\n.verse-ref {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 8px;\n}\n\n/* Font controls */\n.verse-font-controls {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  padding: 2px 6px;\n  margin-right: 8px;\n}\n.verse-font-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 12px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 10px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.verse-font-btn:hover {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n}\n.verse-font-size-indicator {\n  font-size: 10px;\n  min-width: 35px;\n  text-align: center;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n\n/* Session rail */\n.session-rail {\n  position: sticky;\n  top: 14px;\n  z-index: 18;\n  margin-bottom: 18px;\n  padding: 12px 14px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-md);\n  animation: railIn 280ms ease-out;\n}\n.session-rail-top {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  gap: 12px;\n  align-items: center;\n}\n.session-rail-kicker {\n  font-size: 10px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  margin-top: 2px;\n  font-size: 14px;\n  font-weight: 450;\n}\n.session-rail-meta {\n  margin-top: 2px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.session-rail-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 8px;\n  margin-top: 10px;\n}\n.rail-stat {\n  padding: 8px 10px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-stat span {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n}\n.rail-stat strong {\n  font-size: 0.78rem;\n  font-weight: 500;\n}\n.rail-btn {\n  height: 34px;\n  padding: 0 12px;\n  border-radius: 13px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  color: var(--text);\n  font-size: 12px;\n  font-weight: 450;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.rail-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);\n}\n.progress-bar {\n  flex: 1;\n  height: 4px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-wide {\n  margin-top: 10px;\n}\n.progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s;\n}\n\n/* Mode indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  margin: 8px 0 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n\n/* Reading toolbar */\n.reading-toolbar {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  margin-bottom: 16px;\n  padding: 12px 14px;\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.reading-toolbar-group {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  align-items: flex-start;\n}\n.toolbar-chip {\n  border: 0;\n  border-radius: 999px;\n  padding: 8px 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  font-size: 0.75rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: var(--shadow-sm);\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.toolbar-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.toolbar-chip:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n\n/* Tools panel */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  width: min(var(--tools-width), 100vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n}\n.tools.open {\n  transform: translateX(0);\n}\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n}\n.tools-topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.tools-title {\n  font-size: 1rem;\n  font-weight: 700;\n  letter-spacing: -0.2px;\n  color: var(--text);\n}\n.tools-context {\n  margin-top: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 600;\n}\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n  color: rgba(0, 0, 0, 0.7);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n}\n.tools-tabs button {\n  flex: 1;\n  padding: 7px 10px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.82rem;\n  cursor: pointer;\n  color: rgba(0, 0, 0, 0.55);\n  font-weight: 450;\n  transition: background 140ms ease, color 140ms ease, transform 140ms ease;\n}\n.tools-tabs button.active {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));\n  box-shadow: var(--shadow-sm);\n  color: rgba(0, 0, 0, 0.85);\n}\n.tools-body {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n}\n.sheet {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.sheet-section {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border-radius: 18px;\n  padding: 0;\n  overflow: hidden;\n  box-shadow: var(--shadow-sm);\n  animation: riseSoft 260ms ease-out;\n}\n.sheet-toggle {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border: none;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease;\n}\n.st-left {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.st-ico {\n  width: 24px;\n  height: 24px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));\n  border: 1px solid rgba(139, 94, 60, 0.18);\n  flex: 0 0 auto;\n  font-size: 11px;\n  font-weight: 600;\n  color: var(--accent);\n}\n.st-txt {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 2px;\n  min-width: 0;\n}\n.st-title {\n  font-weight: 450;\n  letter-spacing: -0.2px;\n  color: var(--text);\n  font-size: 0.82rem;\n}\n.st-sub {\n  font-size: 0.66rem;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.st-chev {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  display: grid;\n  place-items: center;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  color: rgba(0, 0, 0, 0.65);\n  transition: transform 0.15s ease;\n  box-shadow: var(--shadow-sm);\n}\n.st-chev.open {\n  transform: rotate(180deg);\n}\n.sheet-content {\n  padding: 16px 16px 18px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.field-stack {\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n}\n.field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  min-width: 0;\n}\n.field label {\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n}\n.field-hint {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 4px;\n  line-height: 1.4;\n  display: block;\n}\n.select,\n.input {\n  width: 100%;\n  min-width: 0;\n  padding: 11px 12px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--text);\n  font-size: 0.8rem;\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n.range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.range-single {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n  align-items: center;\n}\n.range span {\n  color: rgba(0, 0, 0, 0.35);\n  font-weight: 450;\n  font-size: 11px;\n}\n.radio-group {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.radio {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 0.85rem;\n  color: var(--text);\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  transition: all 0.2s ease;\n}\n.radio:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-sm);\n}\n.radio input {\n  margin: 0;\n}\n.switch {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 11px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  cursor: pointer;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  transition: all 0.2s ease;\n}\n.switch input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.switch-ui {\n  width: 44px;\n  height: 26px;\n  border-radius: 999px;\n  background: rgba(0, 0, 0, 0.12);\n  position: relative;\n  flex: 0 0 auto;\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  content: \"\";\n  position: absolute;\n  top: 3px;\n  left: 3px;\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  background: white;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n}\n.switch input:checked+.switch-ui::after {\n  transform: translateX(18px);\n}\n.switch-text {\n  font-size: 0.74rem;\n  color: rgba(0, 0, 0, 0.72);\n  font-weight: 400;\n}\n\n/* Start button */\n.start-btn {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  border-radius: 12px;\n  color: white;\n  font-size: 1rem;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  margin-top: 20px;\n  transition: all 0.2s ease;\n}\n.start-btn:hover:not(:disabled) {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);\n}\n.start-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n\n/* Tools footer */\n.tools-footer {\n  position: absolute;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  height: var(--tools-footer-h);\n  padding: 12px 16px 14px;\n  border-top: 1px solid var(--border);\n  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));\n  display: flex;\n  gap: 10px;\n  justify-content: space-between;\n  align-items: center;\n}\n.tools-btn {\n  flex: 1;\n  min-height: 44px;\n  padding: 10px 10px;\n  border-radius: 15px;\n  font-weight: 500;\n  border: 1px solid rgba(0, 0, 0, 0.1);\n  cursor: pointer;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  line-height: 1;\n}\n\n/* Hero section */\n.hero-card {\n  margin-bottom: 16px;\n  padding: 18px 18px 16px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 236, 226, 0.92));\n  box-shadow: var(--shadow-md);\n  display: grid;\n  gap: 14px;\n  animation: riseSoft 260ms ease-out;\n}\n.hero-kicker {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  color: var(--accent);\n}\n.hero-title {\n  margin-top: 6px;\n  font-size: 1.24rem;\n  font-weight: 500;\n  letter-spacing: -0.03em;\n}\n.hero-sub {\n  margin-top: 8px;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  max-width: 56ch;\n}\n.hero-flow {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n}\n.hero-step {\n  padding: 10px 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.62);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.74rem;\n}\n.hero-step span {\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  display: grid;\n  place-items: center;\n  background: var(--accent-light);\n  color: var(--accent);\n  font-size: 11px;\n}\n.hero-step strong {\n  font-weight: 500;\n}\n.hero-points {\n  display: grid;\n  gap: 8px;\n}\n.hero-point {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.hero-point i {\n  color: var(--accent);\n}\n.hero-actions,\n.empty-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cta {\n  flex: 1;\n  padding: 10px 10px;\n  border-radius: 14px;\n  font-weight: 450;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 11px;\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.cta-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);\n}\n.cta-ghost {\n  background: rgba(255, 255, 255, 0.58);\n  box-shadow: var(--shadow-sm);\n}\n\n/* Empty state */\n.empty {\n  padding: 40px 0;\n}\n.empty-card {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: var(--radius);\n  padding: 32px;\n  text-align: center;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-md);\n}\n.empty-icon {\n  font-family: var(--font-ar);\n  font-size: 2.2rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.empty-card h3 {\n  font-weight: 450;\n  margin-bottom: 6px;\n  font-size: 1rem;\n}\n.empty-card p {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  margin-bottom: 16px;\n}\n\n/* Verses grid */\n.verses-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n  margin-top: 32px;\n}\n.offline-list {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n  margin-bottom: 16px;\n}\n.offline-item {\n  background: var(--bg-elevated);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  transition: all 0.2s ease;\n}\n.offline-item:hover {\n  border-color: var(--accent);\n  background: var(--surface);\n}\n.oi-info {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.oi-name {\n  font-weight: 600;\n  font-size: 1rem;\n}\n.oi-meta {\n  font-size: 0.8rem;\n  opacity: 0.7;\n}\n.oi-date {\n  font-size: 0.7rem;\n  opacity: 0.5;\n}\n.oi-actions {\n  display: flex;\n  gap: 8px;\n}\n.oi-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.oi-load:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.oi-delete:hover {\n  background: #ff4d4d;\n  color: white;\n  border-color: #ff4d4d;\n}\n.empty-mini {\n  text-align: center;\n  padding: 32px 16px;\n  background: var(--bg-elevated);\n  border-radius: 20px;\n  border: 1px dashed var(--border);\n}\n.offline-note {\n  margin-top: 24px;\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  display: flex;\n  gap: 10px;\n  font-size: 0.75rem;\n  line-height: 1.4;\n  color: var(--accent);\n}\n\n/* Floating Player */\n.player-bar {\n  position: fixed;\n  bottom: 32px;\n  left: 50%;\n  transform: translateX(-50%);\n  width: 90%;\n  max-width: 800px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 24px;\n  box-shadow: var(--shadow-lg);\n  z-index: 1000;\n  padding: 12px 24px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  backdrop-filter: blur(12px);\n  -webkit-backdrop-filter: blur(12px);\n}\n.player-main {\n  display: flex;\n  align-items: center;\n  gap: 20px;\n}\n.player-info {\n  min-width: 140px;\n}\n.player-chapter {\n  font-weight: 700;\n  font-size: 0.9rem;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-verse {\n  font-size: 0.75rem;\n  opacity: 0.7;\n}\n.player-eta {\n  color: var(--accent);\n  font-weight: 500;\n  opacity: 1;\n}\n.player-controls {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n\n/* Chaining UI */\n.chaining-viewer {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  margin-top: 24px;\n  overflow: hidden;\n  box-shadow: var(--shadow-sm);\n}\n.chaining-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px 20px;\n  background: var(--bg-elevated);\n  cursor: pointer;\n  transition: background 0.2s;\n}\n.chaining-header:hover {\n  background: var(--accent-light);\n}\n.chaining-title {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  font-weight: 600;\n  color: var(--accent);\n}\n.chaining-title i {\n  font-size: 1.2rem;\n}\n.chaining-stats {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  font-size: 0.85rem;\n}\n.chaining-badge {\n  background: var(--accent);\n  color: white;\n  padding: 4px 10px;\n  border-radius: 20px;\n  font-weight: 500;\n}\n.chaining-badge.alt {\n  background: var(--border);\n  color: var(--text);\n}\n.chaining-body {\n  padding: 20px;\n  border-top: 1px solid var(--border);\n  max-height: 400px;\n  overflow-y: auto;\n  background: var(--bg-body);\n}\n.chain-timeline {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.chain-step {\n  display: flex;\n  align-items: center;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  padding: 10px 16px;\n  border-radius: 12px;\n  min-width: 120px;\n  cursor: pointer;\n  transition: all 0.2s;\n  opacity: 0.7;\n}\n\n/* Wizard Onboarding CSS */\n.onboarding-wizard {\n  padding: 40px;\n  text-align: center;\n}\n.wizard-step {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 32px;\n  max-width: 600px;\n  margin: 0 auto;\n}\n.wizard-choices {\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  width: 100%;\n}\n.wizard-choice-btn {\n  display: flex;\n  align-items: center;\n  gap: 20px;\n  background: var(--surface);\n  border: 2px solid var(--border);\n  padding: 24px;\n  border-radius: 16px;\n  cursor: pointer;\n  text-align: left;\n  transition: all 0.2s ease;\n  width: 100%;\n}\n.wizard-choice-btn:hover {\n  border-color: var(--accent);\n  background: var(--accent-light);\n  transform: translateY(-2px);\n}\n.wizard-choice-btn.primary-choice {\n  border-color: var(--accent);\n  background: rgba(139, 94, 60, 0.05);\n}\n.wizard-choice-btn.primary-choice:hover {\n  background: var(--accent-light);\n}\n.choice-icon {\n  font-size: 2rem;\n  color: var(--accent);\n  width: 50px;\n  height: 50px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  background: var(--bg-body);\n  border-radius: 12px;\n}\n.choice-text {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.choice-text strong {\n  font-size: 1.1rem;\n  color: var(--text);\n}\n.choice-text span {\n  font-size: 0.9rem;\n  color: var(--text-muted);\n}\n.wizard-back {\n  background: none;\n  border: none;\n  color: var(--text-muted);\n  cursor: pointer;\n  font-size: 0.95rem;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 16px;\n  border-radius: 8px;\n  transition: all 0.2s;\n  margin-top: -10px;\n}\n.wizard-back:hover {\n  background: var(--border);\n  color: var(--text);\n}\n.fade-slide-enter-active,\n.fade-slide-leave-active {\n  transition: all 0.3s ease;\n}\n.fade-slide-enter-from {\n  opacity: 0;\n  transform: translateX(20px);\n}\n.fade-slide-leave-to {\n  opacity: 0;\n  transform: translateX(-20px);\n}\n.chain-step:hover {\n  border-color: var(--accent);\n  opacity: 1;\n}\n.chain-step.completed {\n  border-color: var(--accent-soft);\n  background: var(--accent-light);\n  opacity: 0.8;\n}\n.chain-step.active {\n  border-color: var(--accent);\n  background: var(--accent);\n  color: white;\n  opacity: 1;\n  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.2);\n  transform: translateY(-2px);\n}\n.step-indicator {\n  margin-right: 12px;\n  font-size: 1.2rem;\n}\n.chain-step.completed .step-indicator {\n  color: var(--accent);\n}\n.chain-step.active .step-indicator {\n  color: white;\n}\n.step-content {\n  display: flex;\n  flex-direction: column;\n}\n.step-phase {\n  font-size: 0.7rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  opacity: 0.8;\n}\n.step-verse {\n  font-weight: 600;\n  font-size: 0.95rem;\n}\n.player-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: none;\n  background: none;\n  color: var(--text);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.2rem;\n  transition: all 0.2s ease;\n}\n.player-btn:hover {\n  background: var(--bg-elevated);\n}\n.player-play {\n  background: var(--accent);\n  color: white;\n  width: 48px;\n  height: 48px;\n  border-radius: 16px;\n  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.3);\n}\n.player-play:hover {\n  background: var(--accent-dark);\n  transform: scale(1.05);\n}\n.player-progress-wrap {\n  flex: 1;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.player-time {\n  font-size: 0.75rem;\n  font-variant-numeric: tabular-nums;\n  opacity: 0.7;\n  min-width: 40px;\n}\n.player-progress-bg {\n  flex: 1;\n  height: 6px;\n  background: var(--bg-elevated);\n  border-radius: 3px;\n  position: relative;\n  cursor: pointer;\n}\n.player-progress-fill {\n  position: absolute;\n  left: 0;\n  top: 0;\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.1s linear;\n}\n\n/* Animations */\n.slide-up-enter-active, .slide-up-leave-active {\n  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.slide-up-enter-from, .slide-up-leave-to {\n  transform: translate(-50%, 100px);\n  opacity: 0;\n}\n.verse-translation {\n  font-size: 0.85rem;\n  color: #5a6b63;\n  line-height: 1.6;\n  padding-top: 12px;\n  margin-top: 8px;\n  border-top: 1px solid var(--border);\n  display: block;\n}\n.verse-transliteration {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  font-style: italic;\n  margin-top: 8px;\n}\n.verse-words {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 12px;\n  direction: rtl;\n  margin-top: 16px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n}\n.word-item {\n  background: var(--accent-light);\n  padding: 6px 12px;\n  border-radius: 20px;\n  display: inline-flex;\n  flex-direction: row-reverse;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.75rem;\n}\n.word-arabic {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n}\n.word-meaning {\n  color: var(--text-muted);\n}\n.word-audio-btn {\n  background: none;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 0 4px;\n}\n\n/* Quiz overlay */\n.quiz-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 80;\n  background: rgba(0, 0, 0, 0.35);\n  backdrop-filter: blur(6px);\n  display: grid;\n  place-items: center;\n  padding: 18px;\n}\n.quiz-card {\n  width: min(680px, 100%);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba, rgba(250, 245, 239, 0.95));\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 22px;\n  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);\n  overflow: hidden;\n}\n.quiz-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 18px 22px 14px;\n  border-bottom: 1px solid rgba(0, 0, 0, 0.08);\n}\n.quiz-title {\n  font-weight: 500;\n  font-size: 1.05rem;\n}\n.quiz-subtitle {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.quiz-close {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.7);\n  cursor: pointer;\n  font-size: 24px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.quiz-progress {\n  padding: 14px 22px 0;\n}\n.quiz-progress-bar {\n  height: 4px;\n  background: var(--border);\n  border-radius: 2px;\n  overflow: hidden;\n}\n.quiz-progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n.quiz-stats {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.quiz-body {\n  padding: 18px 22px 22px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.quiz-question {\n  font-weight: 600;\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.quiz-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.4rem;\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  padding: 16px;\n  background: var(--accent-light);\n  border-radius: 16px;\n}\n.quiz-reveal-btn {\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n}\n.quiz-answer {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.quiz-translation {\n  font-size: 0.9rem;\n  line-height: 1.6;\n  color: var(--text);\n  margin-bottom: 16px;\n}\n.quiz-grade-buttons {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.grade-btn {\n  flex: 1;\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.grade-btn.primary {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.quiz-options {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.quiz-option {\n  padding: 12px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  text-align: left;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.quiz-option:hover {\n  background: var(--accent-light);\n  transform: translateX(4px);\n}\n.quiz-summary {\n  padding: 22px;\n  text-align: center;\n}\n.quiz-summary-icon {\n  font-size: 3rem;\n  margin-bottom: 16px;\n}\n.quiz-summary-stats {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin: 20px 0;\n}\n.quiz-summary-stats .stat {\n  padding: 16px;\n  background: var(--surface);\n  border-radius: 16px;\n}\n.stat-label {\n  display: block;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.stat-value {\n  display: block;\n  font-size: 1.5rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.quiz-summary-mistakes {\n  margin: 20px 0;\n}\n.mistake-tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 8px;\n  justify-content: center;\n}\n.mistake-tag {\n  padding: 6px 12px;\n  background: rgba(190, 73, 73, 0.1);\n  border-radius: 20px;\n  font-size: 0.8rem;\n  color: #c0392b;\n}\n.quiz-actions {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n}\n.btn-outline {\n  padding: 10px 24px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n.btn-primary {\n  padding: 10px 24px;\n  border-radius: 12px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n\n/* Confetti */\n.confetti {\n  position: fixed;\n  inset: 0;\n  pointer-events: none;\n  z-index: 140;\n  overflow: hidden;\n}\n.confetti-piece {\n  position: absolute;\n  top: -10px;\n  width: 8px;\n  height: 12px;\n  border-radius: 3px;\n  opacity: 0.9;\n  animation: confetti-fall 1.35s ease-in forwards;\n}\n\n/* Banner */\n.banner {\n  position: fixed;\n  top: 14px;\n  left: 50%;\n  transform: translateX(-50%);\n  z-index: 120;\n  min-width: min(560px, calc(100vw - 24px));\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px 14px;\n  border-radius: 16px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.92);\n  backdrop-filter: blur(10px);\n  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);\n  font-weight: 450;\n  animation: riseSoft 220ms ease-out;\n}\n.banner-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.banner-action {\n  border: 0;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  padding: 9px 12px;\n  font-size: 0.78rem;\n  font-weight: 500;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n}\n.banner-x {\n  width: 36px;\n  height: 36px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n}\n\n/* Animations */\n@keyframes appFade {\n0% {\n    opacity: 0;\n    transform: translateY(4px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes railIn {\n0% {\n    opacity: 0;\n    transform: translateY(-8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes riseSoft {\n0% {\n    opacity: 0;\n    transform: translateY(8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes confetti-fall {\n0% {\n    transform: translateY(-20px) rotate(0deg);\n    opacity: 0;\n}\n10% {\n    opacity: 0.95;\n}\n100% {\n    transform: translateY(110vh) rotate(480deg);\n    opacity: 0;\n}\n}\n\n/* Responsive */\n@media (max-width: 768px) {\n.main {\n    padding: 16px 16px 100px;\n}\n.main.tools-open {\n    padding-right: 16px;\n}\n.tools {\n    left: 0;\n    right: 0;\n    width: 100%;\n}\n.session-rail-stats {\n    grid-template-columns: 1fr 1fr;\n}\n.hero-flow {\n    grid-template-columns: 1fr 1fr;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 8px);\n    justify-content: center;\n}\n.verse-font-controls {\n    gap: 2px;\n    padding: 2px 4px;\n}\n.verse-font-btn {\n    width: 20px;\n    height: 20px;\n}\n.verse-font-size-indicator {\n    min-width: 30px;\n    font-size: 9px;\n}\n}\n@media (max-width: 640px) {\n.quiz-grade-buttons {\n    flex-direction: column;\n}\n.quiz-actions {\n    flex-direction: column;\n}\n.hero-actions,\n  .empty-actions {\n    flex-direction: column;\n}\n.cta {\n    width: 100%;\n}\n}\n\n/* Dark theme overrides */\n[data-theme=\"dark\"] .tools {\n  background: rgba(18, 18, 18, 0.9);\n  border-left-color: rgba(255, 255, 255, 0.08);\n}\n[data-theme=\"dark\"] .sheet-section {\n  border-color: rgba(255, 255, 255, 0.08);\n  background: rgba(30, 30, 40, 0.45);\n}\n[data-theme=\"dark\"] .select,\n[data-theme=\"dark\"] .input {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.55);\n}\n[data-theme=\"dark\"] .switch {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n}\n[data-theme=\"dark\"] .verse-translation {\n  color: #a0a0b0;\n}\n[data-theme=\"dark\"] .quiz-card {\n  background: rgba(18, 18, 18, 0.92);\n  border-color: rgba(255, 255, 255, 0.10);\n}\n\n/* Sepia theme overrides */\n[data-theme=\"sepia\"] .verse-translation {\n  color: #7a684a;\n}\n/* Planner & Analytics UI */\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 9999;\n  backdrop-filter: blur(4px);\n  padding: 20px;\n}\n.modal-content {\n  background: var(--bg-body);\n  border-radius: 20px;\n  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);\n  display: flex;\n  flex-direction: column;\n  max-height: 90vh;\n  overflow: hidden;\n  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n}\n@keyframes modalFadeIn {\nfrom { opacity: 0; transform: translateY(20px) scale(0.95);\n}\nto { opacity: 1; transform: translateY(0) scale(1);\n}\n}\n.modal-header {\n  padding: 20px 24px;\n  border-bottom: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 1.25rem;\n  font-weight: 700;\n}\n.modal-body {\n  padding: 24px;\n  overflow-y: auto;\n}\n.modal-footer {\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--bg-elevated);\n}\n.btn-icon {\n  background: none;\n  border: none;\n  font-size: 1.2rem;\n  color: var(--text-muted);\n  cursor: pointer;\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.btn-icon:hover {\n  background: var(--border);\n  color: var(--text);\n}\n.planner-modal {\n\n  max-width: 450px;\n  width: 100%;\n}\n.planner-analytics-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 12px;\n  margin-top: 24px;\n}\n.pa-card {\n  background: var(--bg-elevated);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 16px;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n}\n.pa-val {\n  font-size: 1.25rem;\n  font-weight: 700;\n  color: var(--accent);\n  margin-bottom: 4px;\n}\n.pa-lbl {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.analytics-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin-top: 20px;\n}\n.stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 20px;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  transition: transform 0.2s;\n}\n.stat-card:hover {\n  transform: translateY(-2px);\n  border-color: var(--accent);\n}\n.stat-card i {\n  font-size: 1.8rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.stat-value {\n  font-size: 1.5rem;\n  font-weight: 700;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.stat-label {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n}\n\n/* Home Dashboard UI */\n.home-dashboard {\n  max-width: 800px;\n  margin: 40px auto;\n  padding: 0 20px;\n  animation: modalFadeIn 0.4s ease-out;\n}\n.dashboard-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-end;\n  margin-bottom: 40px;\n  flex-wrap: wrap;\n  gap: 20px;\n}\n.welcome-text {\n  max-width: 500px;\n}\n.header-stats {\n  display: flex;\n  gap: 16px;\n  background: var(--surface);\n  padding: 12px 20px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.mini-stat {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.9rem;\n}\n.mini-stat strong {\n  color: var(--text);\n  font-size: 1rem;\n}\n.dashboard-actions {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));\n  gap: 20px;\n  margin-bottom: 40px;\n}\n.action-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n  display: flex;\n  flex-direction: column;\n  position: relative;\n  overflow: hidden;\n}\n.action-card:hover {\n  transform: translateY(-4px);\n  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);\n  border-color: var(--accent);\n}\n.action-card.primary-action {\n  background: linear-gradient(145deg, var(--accent), var(--accent-dark));\n  color: white;\n  border: none;\n}\n.action-card.primary-action .action-icon {\n  background: rgba(255, 255, 255, 0.2);\n  color: white;\n}\n.action-card.primary-action h3,\n.action-card.primary-action p,\n.action-card.primary-action .action-arrow {\n  color: white;\n}\n.action-icon {\n  width: 48px;\n  height: 48px;\n  background: var(--bg-body);\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.5rem;\n  color: var(--accent);\n  margin-bottom: 20px;\n}\n.action-content h3 {\n  font-size: 1.15rem;\n  margin: 0 0 8px 0;\n  color: var(--text);\n}\n.action-content p {\n  font-size: 0.9rem;\n  color: var(--text-muted);\n  margin: 0;\n  line-height: 1.4;\n}\n.action-arrow {\n  position: absolute;\n  bottom: 24px;\n  right: 24px;\n  font-size: 1.2rem;\n  color: var(--accent);\n  opacity: 0;\n  transform: translateX(-10px);\n  transition: all 0.2s ease;\n}\n.action-card:hover .action-arrow {\n  opacity: 1;\n  transform: translateX(0);\n}\n.dashboard-recent {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n}\n.recent-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.recent-header h3 {\n  margin: 0;\n  font-size: 1.1rem;\n}\n.btn-ghost {\n  background: none;\n  border: none;\n  color: var(--accent);\n  font-weight: 500;\n  cursor: pointer;\n  padding: 6px 12px;\n  border-radius: 8px;\n  transition: background 0.2s;\n}\n.btn-ghost:hover {\n  background: var(--accent-light);\n}\n.recent-stats {\n  display: flex;\n  gap: 32px;\n  flex-wrap: wrap;\n}\n.r-stat {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.r-stat span {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.r-stat strong {\n  font-size: 1.4rem;\n  color: var(--text);\n}\n\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 

@@ -12,33 +12,73 @@
     <!-- Main Content -->
     <div class="main container" :class="{ 'tools-open': showTools }">
       <div class="content">
-        <section v-if="showOnboarding" class="hero-card">
-          <div class="hero-copy">
-            <div class="hero-kicker">Focused hifz system</div>
-            <h1 class="hero-title">Memorise and retain Quran intelligently.</h1>
-            <p class="hero-sub">Structured memorisation, automatic revision, and retention tracking in one focused
-              system.</p>
-          </div>
-          <div class="hero-flow">
-            <div class="hero-step"><span>1</span><strong>Read</strong></div>
-            <div class="hero-step"><span>2</span><strong>Repeat</strong></div>
-            <div class="hero-step"><span>3</span><strong>Review</strong></div>
-            <div class="hero-step"><span>4</span><strong>Retain</strong></div>
-          </div>
-          <div class="hero-points">
-            <div class="hero-point"><i class="bi bi-shield-check"></i><span>Weak ayahs are tracked automatically.</span>
+        <section v-if="!hasVerses" class="home-dashboard">
+          <div class="dashboard-header">
+            <div class="welcome-text">
+              <div class="hero-kicker">Welcome to Mutqin</div>
+              <h1 class="hero-title">Ready to memorize?</h1>
+              <p class="hero-sub">Generate a fast plan or configure a custom session to start reading.</p>
             </div>
-            <div class="hero-point"><i class="bi bi-clock-history"></i><span>Reviews appear before forgetting.</span>
+            <div class="header-stats">
+              <div class="mini-stat">
+                <i class="bi bi-fire" style="color: #ee964b;"></i>
+                <span><strong>{{ analytics.currentStreak }}</strong> Day Streak</span>
+              </div>
+              <div class="mini-stat">
+                <i class="bi bi-check-circle-fill" style="color: #2a9d8f;"></i>
+                <span><strong>{{ analytics.versesMastered }}</strong> Mastered</span>
+              </div>
             </div>
-            <div class="hero-point"><i class="bi bi-magic"></i><span>Sessions are generated automatically.</span></div>
           </div>
-          <div class="hero-actions">
-            <button class="cta cta-ghost" @click="tab = 'analytics'"><i class="bi bi-bar-chart"></i><span>See
-                stats</span></button>
-            <button class="cta cta-primary" @click="beginPlan"><i class="bi bi-play-circle"></i><span>{{
-              onboardingPrimaryLabel }}</span></button>
-            <button class="cta cta-ghost" @click="showTools = true"><i class="bi bi-sliders"></i><span>Open
-                setup</span></button>
+
+          <div class="dashboard-actions">
+            <div class="action-card primary-action" @click="showPlannerModal = true">
+              <div class="action-icon"><i class="bi bi-magic"></i></div>
+              <div class="action-content">
+                <h3>Quick Plan</h3>
+                <p>Generate a memorization plan in seconds</p>
+              </div>
+              <i class="bi bi-arrow-right action-arrow"></i>
+            </div>
+            
+            <div class="action-card" @click="startWithFatiha">
+              <div class="action-icon"><i class="bi bi-play-circle-fill"></i></div>
+              <div class="action-content">
+                <h3>Quickstart Demo</h3>
+                <p>Try the system with Surah Al-Fatiha</p>
+              </div>
+              <i class="bi bi-arrow-right action-arrow"></i>
+            </div>
+
+            <div class="action-card" @click="openSetup">
+              <div class="action-icon"><i class="bi bi-sliders"></i></div>
+              <div class="action-content">
+                <h3>Custom Setup</h3>
+                <p>Configure everything exactly how you want</p>
+              </div>
+              <i class="bi bi-arrow-right action-arrow"></i>
+            </div>
+          </div>
+          
+          <div class="dashboard-recent">
+            <div class="recent-header">
+              <h3>Activity Summary</h3>
+              <button class="btn-ghost" @click="tab = 'analytics'; showTools = true">View all stats</button>
+            </div>
+            <div class="recent-stats">
+              <div class="r-stat">
+                <span>Verses Read</span>
+                <strong>{{ analytics.totalVersesRead }}</strong>
+              </div>
+              <div class="r-stat">
+                <span>Time Spent</span>
+                <strong>{{ analytics.totalTimeSpent }}m</strong>
+              </div>
+              <div class="r-stat">
+                <span>Repetitions</span>
+                <strong>{{ analytics.totalRepetitions }}</strong>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -51,8 +91,11 @@
               }} · {{ sessionTypeInfo.label }} · {{ progressPercent }}%</div>
             </div>
             <div class="session-rail-actions">
-              <button class="rail-btn rail-btn-ghost" @click="showTools = true">
-                <i class="bi bi-layout-sidebar-inset"></i><span>Plan</span>
+              <button class="rail-btn rail-btn-ghost" @click="showPlannerModal = true">
+                <i class="bi bi-calendar-check"></i><span>Plan</span>
+              </button>
+              <button class="rail-btn rail-btn-ghost" @click="tab = 'analytics'; showTools = true">
+                <i class="bi bi-bar-chart"></i><span>Stats</span>
               </button>
               <button class="rail-btn rail-btn-primary" @click="handlePrimaryAction">
                 <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
@@ -111,19 +154,39 @@
           </div>
         </div>
 
-        <!-- Empty State -->
-        <div v-if="!hasVerses && !showOnboarding" class="empty">
-          <div class="empty-card">
-            <div class="empty-icon">﴿</div>
-            <h3>Begin your journey</h3>
-            <p>{{ nextActionDescription }}</p>
-            <div class="empty-actions">
-              <button class="cta cta-primary" @click="beginPlan"><i class="bi bi-play-circle"></i><span>{{
-                emptyPrimaryLabel }}</span></button>
-              <button class="cta cta-ghost" @click="showTools = true"><i class="bi bi-sliders"></i><span>Open
-                  setup</span></button>
+
+
+        <!-- Chaining / Queue Viewer -->
+        <div class="chaining-viewer" v-if="hasVerses && order === 'cum' && queue.length > 0">
+          <div class="chaining-header" @click="showQueueViewer = !showQueueViewer">
+            <div class="chaining-title">
+              <i class="bi bi-link-45deg"></i>
+              <span>Cumulative Chaining Mode</span>
+            </div>
+            <div class="chaining-stats">
+              <span class="chaining-badge">Phase {{ currentChainPhase }} / {{ verses.length }}</span>
+              <span class="chaining-badge alt">Step {{ queueIndex + 1 }} / {{ queue.length }}</span>
+              <i class="bi" :class="showQueueViewer ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
             </div>
           </div>
+          
+          <transition name="slide-up">
+            <div class="chaining-body" v-if="showQueueViewer">
+              <div class="chain-timeline">
+                <div class="chain-step" v-for="(item, idx) in queue" :key="'chain_'+idx"
+                     :class="{ active: idx === queueIndex, completed: idx < queueIndex }"
+                     @click="queueIndex = idx; activeVerseKey = item.verse.key; playVerse(item.verse)">
+                  <div class="step-indicator">
+                    <i class="bi" :class="idx < queueIndex ? 'bi-check' : (idx === queueIndex ? 'bi-play-fill' : 'bi-circle')"></i>
+                  </div>
+                  <div class="step-content">
+                    <div class="step-phase">Phase {{ item.cumulativePhase }}</div>
+                    <div class="step-verse">Ayah {{ item.verse.number }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </transition>
         </div>
 
         <!-- Verses Grid -->
@@ -132,7 +195,7 @@
             'verse-card': true,
             active: activeVerseKey === verse.key,
             'focus-mode': focusMode && activeVerseKey !== verse.key,
-            blurred: blurAdjacent && activeVerseKey && activeVerseKey !== verse.key && !isAdjacentVerse(verse)
+            blurred: blurAdjacent && activeVerseKey && activeVerseKey !== verse.key
           }">
             <div class="verse-header">
               <div class="verse-badges">
@@ -208,6 +271,8 @@
               @click="tab = 'beginner'">Beginner</button>
             <button :class="{ active: tab === 'advanced', 'active-tab': tab === 'advanced' }"
               @click="tab = 'advanced'">Advanced</button>
+            <button :class="{ active: tab === 'analytics', 'active-tab': tab === 'analytics' }"
+              @click="tab = 'analytics'"><i class="bi bi-bar-chart"></i> Stats</button>
             <button :class="{ active: tab === 'offline', 'active-tab': tab === 'offline' }"
               @click="tab = 'offline'"><i class="bi bi-cloud-check"></i> Offline</button>
           </div>
@@ -497,8 +562,8 @@
                       <label class="radio"><input type="radio" value="seq" v-model="order"> Sequential
                         (1,2,3...)</label>
                       <label class="radio"><input type="radio" value="rand" v-model="order"> Random order</label>
-                      <label class="radio"><input type="radio" value="cum" v-model="order"> Cumulative
-                        (1,1-2,1-3...)</label>
+                      <label class="radio"><input type="radio" value="cum" v-model="order"> Cumulative Chaining
+                        (1, 1+2, 1+2+3...)</label>
                     </div>
                     <small class="field-hint">Choose how verses are presented</small>
                   </div>
@@ -583,6 +648,45 @@
             <button class="start-btn" @click="startSession" :disabled="!hasSelectedSurah">
               <i class="bi bi-play-fill"></i> Start session
             </button>
+          </div>
+
+          <!-- Analytics Tab -->
+          <div v-if="tab === 'analytics'" class="sheet">
+            <div class="sheet-section" style="padding: 20px;">
+              <h3 style="margin-top:0; font-size: 1.1rem; color: var(--accent);">Your Memorisation Stats</h3>
+              <div class="analytics-grid">
+                <div class="stat-card">
+                  <i class="bi bi-book"></i>
+                  <div class="stat-value">{{ analytics.totalVersesRead }}</div>
+                  <div class="stat-label">Verses Read</div>
+                </div>
+                <div class="stat-card">
+                  <i class="bi bi-clock-history"></i>
+                  <div class="stat-value">{{ analytics.totalTimeSpent }}m</div>
+                  <div class="stat-label">Time Spent</div>
+                </div>
+                <div class="stat-card">
+                  <i class="bi bi-fire"></i>
+                  <div class="stat-value">{{ analytics.currentStreak }}</div>
+                  <div class="stat-label">Day Streak</div>
+                </div>
+                <div class="stat-card">
+                  <i class="bi bi-check-circle"></i>
+                  <div class="stat-value">{{ analytics.versesMastered }}</div>
+                  <div class="stat-label">Mastered</div>
+                </div>
+                <div class="stat-card">
+                  <i class="bi bi-repeat"></i>
+                  <div class="stat-value">{{ analytics.totalRepetitions }}</div>
+                  <div class="stat-label">Repetitions</div>
+                </div>
+                <div class="stat-card">
+                  <i class="bi bi-calendar-check"></i>
+                  <div class="stat-value">{{ analytics.sessionsCompleted }}</div>
+                  <div class="stat-label">Sessions</div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Offline Tab -->
@@ -749,13 +853,57 @@
         animationDelay: (Math.random() * 0.2) + 's'
       }"></span>
     </div>
+    <!-- Planner Modal -->
+    <div class="modal-overlay" v-if="showPlannerModal" @click.self="showPlannerModal = false">
+      <div class="modal-content planner-modal">
+        <div class="modal-header">
+          <h2>Quick Planner</h2>
+          <button class="btn-icon" @click="showPlannerModal = false"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="field">
+            <label>Target Surah</label>
+            <select v-model="plannerConfig.surah" class="select" @change="updatePlannerSurah">
+              <option v-for="ch in chapters" :key="ch.id" :value="ch.id">{{ ch.name_simple }} ({{ ch.verses_count }} verses)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Verses per day</label>
+            <input type="number" v-model.number="plannerConfig.versesPerDay" class="input" min="1" max="500">
+          </div>
+          
+          <div class="planner-analytics-grid">
+            <div class="pa-card">
+              <span class="pa-val">{{ plannerEstimatedDays }}</span>
+              <span class="pa-lbl">Days to Finish</span>
+            </div>
+            <div class="pa-card">
+              <span class="pa-val">{{ plannerEstimatedTimePerDay }}m</span>
+              <span class="pa-lbl">Daily Time</span>
+            </div>
+            <div class="pa-card">
+              <span class="pa-val">{{ plannerTotalVerses }}</span>
+              <span class="pa-lbl">Total Verses</span>
+            </div>
+            <div class="pa-card">
+              <span class="pa-val">{{ plannerCompletionDate }}</span>
+              <span class="pa-lbl">Target Date</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:center; padding-top: 20px;">
+          <button class="btn-primary" @click="submitPlanner" style="width: 100%;">Create Plan</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Global Audio Player -->
     <transition name="slide-up">
       <div v-if="playerVisible" class="player-bar">
         <div class="player-main">
           <div class="player-info">
             <div class="player-chapter">{{ currentChapter?.name_simple || 'Quran' }}</div>
-            <div class="player-verse">Ayah {{ activeVerseKey }}</div>
+            <div class="player-verse">Ayah {{ activeVerseKey }} <span v-if="etaLabel" class="player-eta">&bull; {{ etaLabel }} remaining</span></div>
           </div>
           <div class="player-controls">
             <button class="player-btn" @click="prev" title="Previous"><i class="bi bi-skip-start-fill"></i></button>
@@ -864,6 +1012,21 @@ export default {
       theme: 'light',
       tab: 'beginner',
       showTools: false,
+      showPlannerModal: false,
+      plannerConfig: {
+        surah: 1,
+        totalVersesInSurah: 7,
+        versesPerDay: 5,
+        minutesPerVerse: 2
+      },
+      analytics: {
+        totalVersesRead: 124,
+        totalTimeSpent: 86,
+        currentStreak: 5,
+        versesMastered: 12,
+        totalRepetitions: 450,
+        sessionsCompleted: 15
+      },
       playerVisible: false,
       playerCollapsed: true,
       playerMenuOpen: false,
@@ -958,6 +1121,7 @@ export default {
       confettiSeed: 0,
       networkOnline: true,
       onboardingDismissed: false,
+      onboardingStep: 1,
       restoredAudioState: null,
 
       // Word sequence
@@ -1199,6 +1363,27 @@ export default {
       return (this.currentTime / this.duration) * 100
     },
 
+    plannerEstimatedDays() {
+      const perDay = Math.max(1, this.plannerConfig.versesPerDay || 1)
+      return Math.ceil(this.plannerConfig.totalVersesInSurah / perDay)
+    },
+
+    plannerEstimatedTimePerDay() {
+      const perDay = Math.max(1, this.plannerConfig.versesPerDay || 1)
+      return perDay * this.plannerConfig.minutesPerVerse
+    },
+
+    plannerTotalVerses() {
+      return this.plannerConfig.totalVersesInSurah
+    },
+
+    plannerCompletionDate() {
+      const days = this.plannerEstimatedDays
+      const d = new Date()
+      d.setDate(d.getDate() + days)
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    },
+
     isLoggedIn() {
       return !!this.auth?.check
     },
@@ -1243,6 +1428,12 @@ export default {
       const seconds = this.estimateKeysSeconds(remainingQueue)
       const minutes = Math.max(1, Math.ceil(seconds / 60))
       return `${minutes} min`
+    },
+
+    currentChainPhase() {
+      if (!this.queue || this.queue.length === 0) return 0
+      const currentItem = this.queue[this.queueIndex]
+      return currentItem ? currentItem.cumulativePhase : 0
     },
 
     toolsHeaderTitle() {
@@ -1358,19 +1549,8 @@ export default {
     currentTime: 'persistAudioState',
     sectionOpen: { handler: 'persistUiState', deep: true },
 
-    activeVerseKey(newKey, oldKey) {
-      if (this.blurAdjacent) {
-        this.$nextTick(() => {
-          if (oldKey) {
-            const oldAdjacent = this.verses.filter(v => this.isAdjacentToKey(v, oldKey))
-            oldAdjacent.forEach(v => {
-              const el = document.querySelector(`[data-verse-key="${v.key}"]`)
-              if (el) el.classList.remove('blurred')
-            })
-          }
-          this.$forceUpdate()
-        })
-      }
+    activeVerseKey() {
+      // Logic removed since blurring is now global
     },
 
     beginnerRepeats() {
@@ -1386,12 +1566,28 @@ export default {
     tab(newVal) {
       if (newVal === 'beginner' && this.currentMode !== 'beginner') {
         this.currentMode = 'beginner'
-        if (this.beginner.chapterId && this.beginner.verses.length === 0) {
+        // Sync content state from advanced
+        if (this.advanced.chapterId) {
+          this.beginner.chapterId = this.advanced.chapterId
+          this.beginner.rangeStart = this.advanced.rangeStart
+          this.beginner.rangeEnd = this.advanced.rangeEnd
+          this.beginner.reciterId = this.advanced.reciterId
+          this.beginner.verses = [...this.advanced.verses]
+          this.rebuildQueue()
+        } else if (this.beginner.chapterId && this.beginner.verses.length === 0) {
           this.loadVerses()
         }
       } else if (newVal === 'advanced' && this.currentMode !== 'advanced') {
         this.currentMode = 'advanced'
-        if (this.advanced.chapterId && this.advanced.verses.length === 0) {
+        // Sync content state from beginner
+        if (this.beginner.chapterId) {
+          this.advanced.chapterId = this.beginner.chapterId
+          this.advanced.rangeStart = this.beginner.rangeStart
+          this.advanced.rangeEnd = this.beginner.rangeEnd
+          this.advanced.reciterId = this.beginner.reciterId
+          this.advanced.verses = [...this.beginner.verses]
+          this.rebuildQueue()
+        } else if (this.advanced.chapterId && this.advanced.verses.length === 0) {
           this.loadVerses()
         }
       }
@@ -1400,6 +1596,24 @@ export default {
   },
 
   methods: {
+    // Planner functionality
+    updatePlannerSurah() {
+      const ch = this.chapters.find(c => c.id === this.plannerConfig.surah)
+      if (ch) {
+        this.plannerConfig.totalVersesInSurah = ch.verses_count
+      }
+    },
+
+    submitPlanner() {
+      this.showPlannerModal = false
+      this.chapterId = this.plannerConfig.surah
+      this.rangeStart = 1
+      this.rangeEnd = Math.min(this.plannerConfig.versesPerDay, this.plannerConfig.totalVersesInSurah)
+      this.tab = 'beginner'
+      this.loadChapter()
+      this.showBanner('Plan created successfully!', 'success')
+    },
+
     // Font size management
     getVerseFontSize(verseKey) {
       return this.verseFontSizes[verseKey] || this.defaultFontSize
@@ -2485,6 +2699,24 @@ export default {
       this.showTools = true
     },
 
+    setGoal(mode) {
+      this.tab = mode;
+      this.onboardingStep = 2;
+    },
+
+    startWithFatiha() {
+      this.chapterId = 1;
+      this.rangeStart = 1;
+      this.rangeEnd = 7;
+      this.onboardingDismissed = true;
+      this.loadChapter();
+    },
+
+    openSetup() {
+      this.onboardingDismissed = true;
+      this.showTools = true;
+    },
+
     resetControls() {
       if (!confirm('Reset session settings?')) return
       this.rangeStart = 1
@@ -2763,7 +2995,12 @@ body {
 }
 
 .verse-card.blurred {
-  filter: blur(4px);
+  filter: blur(6px);
+  transition: filter 0.3s ease, transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.verse-card.blurred:hover {
+  filter: blur(0px);
 }
 
 .verse-header {
@@ -3719,11 +3956,266 @@ body {
   opacity: 0.7;
 }
 
+.player-eta {
+  color: var(--accent);
+  font-weight: 500;
+  opacity: 1;
+}
+
 .player-controls {
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
+/* Chaining UI */
+.chaining-viewer {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  margin-top: 24px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.chaining-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: var(--bg-elevated);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.chaining-header:hover {
+  background: var(--accent-light);
+}
+
+.chaining-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.chaining-title i {
+  font-size: 1.2rem;
+}
+
+.chaining-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+}
+
+.chaining-badge {
+  background: var(--accent);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.chaining-badge.alt {
+  background: var(--border);
+  color: var(--text);
+}
+
+.chaining-body {
+  padding: 20px;
+  border-top: 1px solid var(--border);
+  max-height: 400px;
+  overflow-y: auto;
+  background: var(--bg-body);
+}
+
+.chain-timeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.chain-step {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 10px 16px;
+  border-radius: 12px;
+  min-width: 120px;
+  cursor: pointer;
+  transition: all 0.2s;
+  opacity: 0.7;
+}
+
+/* Wizard Onboarding CSS */
+.onboarding-wizard {
+  padding: 40px;
+  text-align: center;
+}
+
+.wizard-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.wizard-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.wizard-choice-btn {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  padding: 24px;
+  border-radius: 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.wizard-choice-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  transform: translateY(-2px);
+}
+
+.wizard-choice-btn.primary-choice {
+  border-color: var(--accent);
+  background: rgba(139, 94, 60, 0.05);
+}
+
+.wizard-choice-btn.primary-choice:hover {
+  background: var(--accent-light);
+}
+
+.choice-icon {
+  font-size: 2rem;
+  color: var(--accent);
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-body);
+  border-radius: 12px;
+}
+
+.choice-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.choice-text strong {
+  font-size: 1.1rem;
+  color: var(--text);
+}
+
+.choice-text span {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.wizard-back {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  margin-top: -10px;
+}
+
+.wizard-back:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+
+.chain-step:hover {
+  border-color: var(--accent);
+  opacity: 1;
+}
+
+.chain-step.completed {
+  border-color: var(--accent-soft);
+  background: var(--accent-light);
+  opacity: 0.8;
+}
+
+.chain-step.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+  opacity: 1;
+  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.2);
+  transform: translateY(-2px);
+}
+
+.step-indicator {
+  margin-right: 12px;
+  font-size: 1.2rem;
+}
+
+.chain-step.completed .step-indicator {
+  color: var(--accent);
+}
+
+.chain-step.active .step-indicator {
+  color: white;
+}
+
+.step-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-phase {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.8;
+}
+
+.step-verse {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
 
 .player-btn {
   width: 40px;
@@ -4334,4 +4826,343 @@ body {
 [data-theme="sepia"] .verse-translation {
   color: #7a684a;
 }
+/* Planner & Analytics UI */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+  padding: 20px;
+}
+
+.modal-content {
+  background: var(--bg-body);
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.modal-body {
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  padding: 20px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-elevated);
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-icon:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.planner-modal {
+
+  max-width: 450px;
+  width: 100%;
+}
+.planner-analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 24px;
+}
+.pa-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.pa-val {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.pa-lbl {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.stat-card i {
+  font-size: 1.8rem;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Home Dashboard UI */
+.home-dashboard {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 0 20px;
+  animation: modalFadeIn 0.4s ease-out;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.welcome-text {
+  max-width: 500px;
+}
+
+.header-stats {
+  display: flex;
+  gap: 16px;
+  background: var(--surface);
+  padding: 12px 20px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.mini-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.mini-stat strong {
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.dashboard-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.action-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);
+  border-color: var(--accent);
+}
+
+.action-card.primary-action {
+  background: linear-gradient(145deg, var(--accent), var(--accent-dark));
+  color: white;
+  border: none;
+}
+
+.action-card.primary-action .action-icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.action-card.primary-action h3,
+.action-card.primary-action p,
+.action-card.primary-action .action-arrow {
+  color: white;
+}
+
+.action-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--bg-body);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--accent);
+  margin-bottom: 20px;
+}
+
+.action-content h3 {
+  font-size: 1.15rem;
+  margin: 0 0 8px 0;
+  color: var(--text);
+}
+
+.action-content p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.action-arrow {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  font-size: 1.2rem;
+  color: var(--accent);
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.2s ease;
+}
+
+.action-card:hover .action-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.dashboard-recent {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.recent-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.recent-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.btn-ghost {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.btn-ghost:hover {
+  background: var(--accent-light);
+}
+
+.recent-stats {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.r-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.r-stat span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.r-stat strong {
+  font-size: 1.4rem;
+  color: var(--text);
+}
+
 </style>
