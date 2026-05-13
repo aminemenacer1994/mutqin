@@ -1,18 +1,29 @@
 <template>
   <div class="app" :data-theme="theme" v-cloak>
-    <div v-if="banner" class="banner" :class="banner.kind">
+    <div v-if="appReady && banner" class="banner" :class="banner.kind">
       <span>{{ banner.message }}</span>
       <div class="banner-actions">
         <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
-          }}</button>
+        }}</button>
         <button class="banner-x" @click="banner = null" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
 
     <!-- Main Content -->
-    <div class="main container" :class="{ 'tools-open': showTools }">
+    <div v-if="appReady" class="main container" :class="{ 'tools-open': showTools }">
       <div class="content">
         <section v-if="!hasVerses" class="home-dashboard">
+          <div v-if="hasContinueSession" class="continue-session-card">
+            <div class="continue-session-copy">
+              <span class="continue-session-kicker">Continue where you left off</span>
+              <strong>{{ continueSessionLabel }}</strong>
+              <small>Your ayah, queue position, settings, and player state are ready to restore.</small>
+            </div>
+            <button class="cta cta-primary continue-session-btn" @click="continueLastSession">
+              <i class="bi bi-play-fill"></i> Continue Session
+            </button>
+          </div>
+
           <div class="streak-motivation" v-if="analytics.currentStreak > 0">
             <div class="streak-badge">
               <i class="bi bi-fire" style="color: #ee964b;"></i>
@@ -29,35 +40,6 @@
             </div>
             <div class="motivation-message" v-else-if="analytics.currentStreak >= 30">
               <i class="bi bi-gem"></i> {{ analytics.currentStreak }} days of dedication
-            </div>
-          </div>
-
-          <div class="dashboard-actions">
-            <div class="action-card primary-action" @click="showPlannerModal = true">
-              <div class="action-icon"><i class="bi bi-magic"></i></div>
-              <div class="action-content">
-                <h3>Quick Plan</h3>
-                <p>Generate a memorization plan in seconds</p>
-              </div>
-              <i class="bi bi-arrow-right action-arrow"></i>
-            </div>
-
-            <div class="action-card" @click="startWithFatiha">
-              <div class="action-icon"><i class="bi bi-play-circle-fill"></i></div>
-              <div class="action-content">
-                <h3>Quickstart Demo</h3>
-                <p>Try the system with Surah Al-Fatiha</p>
-              </div>
-              <i class="bi bi-arrow-right action-arrow"></i>
-            </div>
-
-            <div class="action-card" @click="openSetup">
-              <div class="action-icon"><i class="bi bi-sliders"></i></div>
-              <div class="action-content">
-                <h3>Custom Setup</h3>
-                <p>Configure everything exactly how you want</p>
-              </div>
-              <i class="bi bi-arrow-right action-arrow"></i>
             </div>
           </div>
 
@@ -112,6 +94,56 @@
           </div>
         </section>
 
+        <!-- Onboarding Welcome Section - Shows only for new users -->
+        <div class="onboarding-welcome" v-if="showOnboarding">
+          <div class="onboarding-card">
+            <div class="onboarding-icon"><i class="bi bi-compass"></i></div>
+            <h3>Welcome to Mutqin</h3>
+            <p>Start your Quran memorization journey in 3 simple steps</p>
+
+            <div class="onboarding-steps">
+              <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                  <strong>Choose a surah</strong>
+                  <span>Select which surah you want to memorize</span>
+                </div>
+              </div>
+              <div class="step-arrow"><i class="bi bi-arrow-right"></i></div>
+              <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                  <strong>Set your pace</strong>
+                  <span>Choose how many verses per day</span>
+                </div>
+              </div>
+              <div class="step-arrow"><i class="bi bi-arrow-right"></i></div>
+              <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                  <strong>Start memorizing</strong>
+                  <span>Listen, repeat, and track progress</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="onboarding-cta">
+              <button class="cta-primary-large" @click="openSetup">
+                <i class="bi bi-play-fill"></i> Get Started Now
+              </button>
+              <button class="cta-secondary" @click="onboardingDismissed = true">
+                <i class="bi bi-x"></i> Dismiss
+              </button>
+            </div>
+
+            <div class="onboarding-tips">
+              <div class="tip"><i class="bi bi-ear"></i> Listen to each verse</div>
+              <div class="tip"><i class="bi bi-star"></i> Rate your recall (1-5)</div>
+              <div class="tip"><i class="bi bi-calendar"></i> Practice daily for best results</div>
+            </div>
+          </div>
+        </div>
+
         <!-- Updated Session Rail -->
         <div class="session-rail" v-if="currentChapter && hasVerses">
           <div class="session-rail-top">
@@ -119,11 +151,12 @@
               <div class="session-rail-kicker">CURRENT SESSION</div>
               <div class="session-rail-title">{{ currentChapter.name_simple }}</div>
               <div class="session-rail-meta">Ayah {{ currentPosition }}/{{ totalVerses }} · {{ progressPercent }}%</div>
+              <div class="session-rail-hint">{{ modeSummary }}</div>
             </div>
             <div class="session-rail-actions">
               <!-- MODE BUTTON - Added to left side -->
               <button class="rail-btn mode-btn" @click="openModeSettings" title="Change Mode">
-                <i class="bi" :class="currentMode === 'beginner' ? 'bi-star-fill' : 'bi-gear-fill'"></i>
+                <i class="bi bi-layers"></i>
                 <span>{{ currentMode === 'beginner' ? 'Beginner' : 'Advanced' }}</span>
                 <i class="bi bi-chevron-down"></i>
               </button>
@@ -135,13 +168,13 @@
 
               <!-- STATS BUTTON -->
               <button class="rail-btn rail-btn-ghost" @click="tab = 'analytics'; showTools = true">
-                <i class="bi bi-bar-chart"></i><span>Stats</span>
+                <i class="bi bi-grid-1x2"></i><span>Stats</span>
               </button>
 
               <!-- START SESSION BUTTON -->
-              <button class="rail-btn rail-btn-primary" @click="handlePrimaryAction">
+              <button class="rail-btn rail-btn-primary" @click="handlePrimaryAction" :disabled="!isPlaying && !canStartSession">
                 <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-                <span>{{ isPlaying ? 'Pause' : 'Start' }}</span>
+                <span>{{ isPlaying ? 'Pause' : 'Start Session' }}</span>
               </button>
             </div>
           </div>
@@ -162,11 +195,13 @@
             <div class="rail-stat">
               <span>ETA</span>
               <strong>{{ etaLabel }}</strong>
+              <small>{{ etaSubtext }}</small>
             </div>
           </div>
 
           <div class="progress-bar progress-bar-wide">
             <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
+            <div class="progress-label">{{ progressPercent }}%</div>
           </div>
         </div>
 
@@ -221,11 +256,11 @@
 
 
         <!-- Chaining / Queue Viewer -->
-        <div class="chaining-viewer" v-if="hasVerses && order === 'cum' && queue.length > 0">
+        <div class="chaining-viewer" v-if="hasVerses && order === 'spaced' && queue.length > 0">
           <div class="chaining-header" @click="showQueueViewer = !showQueueViewer">
             <div class="chaining-title">
               <i class="bi bi-link-45deg"></i>
-              <span>Cumulative Chaining Mode</span>
+              <span>Spaced Return Flow</span>
             </div>
             <div class="chaining-stats">
               <span class="chaining-badge">Phase {{ currentChainPhase }} / {{ verses.length }}</span>
@@ -261,9 +296,19 @@
         </div>
         <div v-else-if="hasVerses" class="verses-grid">
           <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" class="verse-card"
-            :class="{ active: activeVerseKey === verse.key }">
+            :class="{
+              active: activeVerseKey === verse.key,
+              'focus-mode': visualMode === 'focus' && activeVerseKey !== verse.key,
+              blurred: visualMode === 'blur' && activeVerseKey !== verse.key,
+              'serious-training': visualMode !== 'standard'
+            }">
             <div class="verse-header">
-              <span class="verse-number">Ayah {{ verse.number }}</span>
+              <div class="verse-badges">
+                <span class="verse-number">Ayah {{ verse.number }}</span>
+                <span v-if="activeVerseKey === verse.key" class="verse-status-badge">Active Ayah</span>
+                <span v-else-if="visualMode === 'blur'" class="verse-status-subtle">Active recall</span>
+                <span v-else-if="visualMode === 'focus'" class="verse-status-subtle">Focused review</span>
+              </div>
 
 
               <div class="verse-actions">
@@ -298,19 +343,19 @@
                 'tajweed-enabled': tajweedEnabled,
                 'word-highlight-enabled': showWordByWord && wordByWordAudioEnabled && !tajweedEnabled
               }" :style="{
-                fontSize: getVerseFontSize(verse.key) + '%',
+                '--verse-font-percent': getVerseFontSize(verse.key),
                 fontFamily: quranFontFamily
               }">
-            </div>
-
-            <!-- Translation - shows only if showTranslation is true AND translation exists -->
-            <div v-if="showTranslation && verse.translation" class="verse-translation">
-              {{ verse.translation }}
             </div>
 
             <!-- Transliteration -->
             <div v-if="showTransliteration && verse.transliteration" class="verse-transliteration">
               {{ verse.transliteration }}
+            </div>
+
+            <!-- Translation - shows only if showTranslation is true AND translation exists -->
+            <div v-if="showTranslation && verse.translation" class="verse-translation">
+              {{ verse.translation }}
             </div>
 
             <!-- Words - shows only if showWordByWord is true AND words array has items -->
@@ -339,13 +384,13 @@
           <div class="tools-context">{{ contextLabel }}</div>
           <div class="tools-tabs">
             <button :class="{ active: tab === 'beginner', 'active-tab': tab === 'beginner' }"
-              @click="tab = 'beginner'">Beginner</button>
+              @click="showModeGuideFor('beginner')"><i class="bi bi-layers"></i> Beginner</button>
             <button :class="{ active: tab === 'advanced', 'active-tab': tab === 'advanced' }"
-              @click="tab = 'advanced'">Advanced</button>
+              @click="showModeGuideFor('advanced')"><i class="bi bi-layers"></i> Advanced</button>
             <button :class="{ active: tab === 'analytics', 'active-tab': tab === 'analytics' }"
-              @click="tab = 'analytics'"><i class="bi bi-bar-chart"></i> Stats</button>
+              @click="tab = 'analytics'"><i class="bi bi-grid-1x2"></i> Stats</button>
             <button :class="{ active: tab === 'offline', 'active-tab': tab === 'offline' }" @click="tab = 'offline'"><i
-                class="bi bi-cloud-check"></i> Offline</button>
+                class="bi bi-arrow-down-square"></i> Offline</button>
           </div>
         </div>
 
@@ -517,160 +562,151 @@
               </div>
             </section>
 
-            <button class="start-btn" @click="startSession" :disabled="!hasSelectedSurah">
+            <button class="start-btn" @click="startSession" :disabled="!canStartSession">
               <i class="bi bi-play-fill"></i> Start memorising
             </button>
           </div>
 
           <!-- Advanced Tab - 4 Consistent Sections -->
           <div v-if="tab === 'advanced'" class="sheet">
-            <!-- Section 1: Session Setup -->
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-compass"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Session setup</span>
-                    <span class="st-sub">Surah, verses, and reciter</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.advanced_setup }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.advanced_setup">
-                <div class="field-stack">
-                  <div class="field">
-                    <label>Surah</label>
-                    <select v-model="chapterId" @change="loadChapter" class="select">
-                      <option :value="0">Choose a surah...</option>
-                      <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.id }}. {{ c.name_simple }}</option>
-                    </select>
-                    <small class="field-hint">Select the surah you want to memorise</small>
+            <section class="sheet-section chaining-setup">
+              <div class="chaining-wizard">
+                <div class="chaining-hero">
+                  <div>
+                    <span class="chaining-kicker">Chaining Method</span>
+                    <h3>Start Chaining</h3>
+                    <p>Build your verses in connected steps so recall feels steadier and faster.</p>
                   </div>
-                  <div class="field">
-                    <label>Verses</label>
-                    <div class="range range-single">
-                      <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
-                      <span>to</span>
-                      <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
-                    </div>
-                    <small class="field-hint">Choose a range of verses to focus on</small>
-                  </div>
-                  <div class="field">
-                    <label>Reciter</label>
-                    <select v-model="reciterId" @change="refreshVerses" class="select">
-                      <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
-                    </select>
-                    <small class="field-hint">Choose your preferred Quran reciter</small>
-                  </div>
+                  <div class="chaining-progress-chip">Step {{ chainingStep }}/3</div>
                 </div>
-              </div>
-            </section>
 
-            <!-- Section 2: Playback -->
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('advanced_playback')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-repeat"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Playback</span>
-                    <span class="st-sub">Speed, delay, and mode</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.advanced_playback }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.advanced_playback">
-                <div class="field-stack">
-                  <div class="field">
-                    <label>Speed</label>
-                    <div class="radio-group radio-group-tight">
-                      <label class="radio"><input type="radio" value="0.75" v-model="speed"> 0.75x</label>
-                      <label class="radio"><input type="radio" value="1" v-model="speed"> 1x</label>
-                      <label class="radio"><input type="radio" value="1.25" v-model="speed"> 1.25x</label>
-                      <label class="radio"><input type="radio" value="1.5" v-model="speed"> 1.5x</label>
-                    </div>
-                    <small class="field-hint">Adjust recitation speed</small>
-                  </div>
-                  <div class="field">
-                    <label>Auto-advance</label>
-                    <div class="radio-group radio-group-tight">
-                      <label class="radio"><input type="radio" value="auto" v-model="playMode"> Yes</label>
-                      <label class="radio"><input type="radio" value="manual" v-model="playMode"> No (manual)</label>
-                    </div>
-                    <small class="field-hint">Automatically move to next verse</small>
-                  </div>
-                  <div class="field">
-                    <label>Delay between verses</label>
-                    <select v-model.number="delay" class="select">
-                      <option v-for="d in [0, 1, 2, 3, 5]" :key="d" :value="d">{{ d }} second{{ d !== 1 ? 's' : '' }}
-                      </option>
-                    </select>
-                    <small class="field-hint">Pause between verse transitions</small>
-                  </div>
+                <div class="chaining-progress">
+                  <button class="chain-progress-step" :class="{ active: chainingStep === 1, done: chainingStep > 1 }" @click="setChainingStep(1)" type="button">
+                    <span>1</span>
+                    <strong>Goal</strong>
+                  </button>
+                  <button class="chain-progress-step" :class="{ active: chainingStep === 2, done: chainingStep > 2 }" @click="setChainingStep(2)" type="button">
+                    <span>2</span>
+                    <strong>Range</strong>
+                  </button>
+                  <button class="chain-progress-step" :class="{ active: chainingStep === 3 }" @click="setChainingStep(3)" type="button">
+                    <span>3</span>
+                    <strong>Style</strong>
+                  </button>
                 </div>
-              </div>
-            </section>
 
-            <!-- Section 3: Practice Mode -->
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('advanced_practice')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-stars"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Practice mode</span>
-                    <span class="st-sub">Order, repetition, and focus</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.advanced_practice }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.advanced_practice">
-                <div class="field-stack">
-                  <div class="field">
-                    <label>Verse order</label>
-                    <div class="radio-group">
-                      <label class="radio"><input type="radio" value="seq" v-model="order"> Sequential
-                        (1,2,3...)</label>
-                      <label class="radio"><input type="radio" value="rand" v-model="order"> Random order</label>
-                      <label class="radio"><input type="radio" value="cum" v-model="order"> Cumulative Chaining
-                        (1, 1+2, 1+2+3...)</label>
+                <transition name="sheet-fade" mode="out-in">
+                  <div :key="'chain-step-' + chainingStep" class="chaining-panel">
+                    <div v-if="chainingStep === 1" class="field-stack">
+                      <div class="chain-step-copy">
+                        <h4>Choose your goal</h4>
+                        <p>Pick the outcome you want before the session starts.</p>
+                      </div>
+                      <div class="chain-choice-grid">
+                        <button class="chain-choice-card" :class="{ active: chainingConfig.goal === 'memorise' }" @click="setChainingGoal('memorise')" type="button">
+                          <strong>Memorise</strong>
+                          <span>Guided repetition to lock in new verses.</span>
+                        </button>
+                        <button class="chain-choice-card" :class="{ active: chainingConfig.goal === 'revise' }" @click="setChainingGoal('revise')" type="button">
+                          <strong>Revise</strong>
+                          <span>Move through the passage with lighter support.</span>
+                        </button>
+                        <button class="chain-choice-card" :class="{ active: chainingConfig.goal === 'test' }" @click="setChainingGoal('test')" type="button">
+                          <strong>Test</strong>
+                          <span>Reduce hints and check what you can recall alone.</span>
+                        </button>
+                      </div>
+                      <div class="chain-step-actions">
+                        <button class="start-btn" @click="continueChainingStep" type="button">
+                          Continue to range
+                        </button>
+                      </div>
                     </div>
-                    <small class="field-hint">Choose how verses are presented</small>
+
+                    <div v-else-if="chainingStep === 2" class="field-stack">
+                      <div class="chain-step-copy">
+                        <h4>Choose your surah and ayahs</h4>
+                        <p>Set the exact passage you want to chain today.</p>
+                      </div>
+                      <div class="field">
+                        <label>Surah</label>
+                        <select v-model="chapterId" @change="loadChapter" class="select">
+                          <option :value="0">Choose a surah...</option>
+                          <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.id }}. {{ c.name_simple }}</option>
+                        </select>
+                      </div>
+                      <div class="field">
+                        <label>Ayah range</label>
+                        <div class="range range-single">
+                          <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
+                          <span>to</span>
+                          <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
+                        </div>
+                        <small class="field-hint">Keep it focused for a smoother chaining session.</small>
+                      </div>
+                      <div class="field">
+                        <label>Reciter</label>
+                        <select v-model="reciterId" @change="refreshVerses" class="select">
+                          <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
+                        </select>
+                      </div>
+                      <div class="chain-step-actions split">
+                        <button class="btn-ghost chain-secondary-btn" @click="setChainingStep(1)" type="button">
+                          Back
+                        </button>
+                        <button class="start-btn" @click="continueChainingStep" :disabled="!chainingStepTwoReady" type="button">
+                          Continue to style
+                        </button>
+                      </div>
+                    </div>
+
+                    <div v-else class="field-stack">
+                      <div class="chain-step-copy">
+                        <h4>Choose your chaining style</h4>
+                        <p>{{ chainingGoalHint }}</p>
+                      </div>
+                      <div class="chain-choice-grid chain-choice-grid-two">
+                        <button class="chain-choice-card" :class="{ active: chainingConfig.style === 'sequential' }" @click="setChainingStyle('sequential')" type="button">
+                          <strong>Build in order</strong>
+                          <span>Move ayah by ayah from start to finish.</span>
+                        </button>
+                        <button class="chain-choice-card" :class="{ active: chainingConfig.style === 'spaced' }" @click="setChainingStyle('spaced')" type="button">
+                          <strong>Spaced return</strong>
+                          <span>Return to earlier ayahs at fixed intervals to strengthen retention.</span>
+                        </button>
+                      </div>
+                      <div class="chain-session-preview">
+                        <div class="chain-preview-line">{{ chainingSummary }}</div>
+                        <small>Your chaining settings are saved automatically.</small>
+                      </div>
+                      <div class="field-stack chain-support-settings">
+                        <div class="field">
+                          <label>Speed</label>
+                          <div class="radio-group radio-group-tight">
+                            <label class="radio"><input type="radio" value="0.75" v-model="speed"> 0.75x</label>
+                            <label class="radio"><input type="radio" value="1" v-model="speed"> 1x</label>
+                            <label class="radio"><input type="radio" value="1.25" v-model="speed"> 1.25x</label>
+                          </div>
+                        </div>
+                        <div class="field checkbox">
+                          <label class="switch">
+                            <input type="checkbox" v-model="focusMode">
+                            <span class="switch-ui"></span>
+                            <span class="switch-text">Focus mode</span>
+                          </label>
+                        </div>
+                      </div>
+                      <div class="chain-step-actions split">
+                        <button class="btn-ghost chain-secondary-btn" @click="setChainingStep(2)" type="button">
+                          Back
+                        </button>
+                        <button class="start-btn" @click="startChainingSession" :disabled="!chainingStepThreeReady || !chainingStepTwoReady" type="button">
+                          <i class="bi bi-play-fill"></i> Start Chaining
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div class="field">
-                    <label>Repetition count</label>
-                    <select v-model="advancedRepeats" class="select">
-                      <option v-for="n in repeatOptions" :key="n" :value="n">{{ n }} {{ n === 1 ? 'time' : 'times' }}
-                      </option>
-                    </select>
-                    <small class="field-hint">How many times to repeat each verse</small>
-                  </div>
-                  <div class="field checkbox">
-                    <label class="switch">
-                      <input type="checkbox" v-model="repeatAndLoopAudio">
-                      <span class="switch-ui"></span>
-                      <span class="switch-text">Repeat and loop audio (ayah by ayah)</span>
-                    </label>
-                    <small class="field-hint">Loop each ayah multiple times before advancing</small>
-                  </div>
-                  <div class="field checkbox">
-                    <label class="switch">
-                      <input type="checkbox" v-model="focusMode">
-                      <span class="switch-ui"></span>
-                      <span class="switch-text">Focus mode (dim other verses)</span>
-                    </label>
-                    <small class="field-hint">Reduce distraction by dimming non-active verses</small>
-                  </div>
-                  <div class="field checkbox">
-                    <label class="switch">
-                      <input type="checkbox" v-model="blurAdjacent">
-                      <span class="switch-ui"></span>
-                      <span class="switch-text">Blur non-active verses (active recall)</span>
-                    </label>
-                    <small class="field-hint">Test your memory by hiding non-active verses</small>
-                  </div>
-                </div>
+                </transition>
               </div>
             </section>
 
@@ -716,9 +752,6 @@
               </div>
             </section>
 
-            <button class="start-btn" @click="startSession" :disabled="!hasSelectedSurah">
-              <i class="bi bi-play-fill"></i> Start session
-            </button>
           </div>
 
           <!-- Analytics Tab -->
@@ -730,11 +763,13 @@
                   <i class="bi bi-book"></i>
                   <div class="stat-value">{{ analytics.totalVersesRead }}</div>
                   <div class="stat-label">Verses Read</div>
+                  <div class="mini-trend" v-html="renderMiniTrend(analytics.weeklyVerses)"></div>
                 </div>
                 <div class="stat-card">
                   <i class="bi bi-clock-history"></i>
                   <div class="stat-value">{{ analytics.totalTimeSpent }}m</div>
                   <div class="stat-label">Time Spent</div>
+                  <div class="mini-trend" v-html="renderMiniTrend(analytics.weeklyMinutes)"></div>
                 </div>
                 <div class="stat-card">
                   <i class="bi bi-fire"></i>
@@ -803,7 +838,7 @@
         </div>
 
         <div class="tools-footer">
-          <button class="tools-btn tools-btn-ghost" @click="resetControls"><i
+          <button class="tools-btn tools-btn-ghost tools-btn-danger" @click="resetControls"><i
               class="bi bi-arrow-counterclockwise"></i><span>Reset</span></button>
           <button class="tools-btn tools-btn-ghost" @click="showTools = false"><i
               class="bi bi-x-circle"></i><span>Close</span></button>
@@ -910,9 +945,25 @@
       </div>
     </div>
 
-    <!-- Global Audio Player -->
+    <div class="modal-overlay" v-if="showConfirmModal" @click.self="closeConfirmModal">
+      <div class="modal-content confirm-modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <h2>{{ confirmModal.title }}</h2>
+          <button class="btn-icon" @click="closeConfirmModal"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+          <p class="confirm-copy">{{ confirmModal.message }}</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="closeConfirmModal">{{ confirmModal.cancelLabel }}</button>
+          <button class="btn-primary" :class="{ 'btn-danger': confirmModal.tone === 'danger' }" @click="runConfirmAction">{{ confirmModal.confirmLabel }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Global Audio Player - Updated with Speed Controls -->
     <transition name="slide-up">
-      <div v-if="playerVisible" class="player-bar">
+      <div v-if="appReady && playerVisible" class="player-bar" :class="{ collapsed: playerCollapsed }">
         <div class="player-main">
           <div class="player-info">
             <div class="player-chapter">{{ currentChapter?.name_simple || 'Quran' }}</div>
@@ -923,13 +974,19 @@
               </span>
             </div>
           </div>
+
           <div class="player-controls">
-            <button class="player-btn" @click="prev" title="Previous"><i class="bi bi-skip-start-fill"></i></button>
+            <button class="player-btn" @click="prev" title="Previous">
+              <i class="bi bi-skip-start-fill"></i>
+            </button>
             <button class="player-btn player-play" @click="togglePlay" title="Play/Pause">
               <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
             </button>
-            <button class="player-btn" @click="next" title="Next"><i class="bi bi-skip-end-fill"></i></button>
+            <button class="player-btn" @click="next" title="Next">
+              <i class="bi bi-skip-end-fill"></i>
+            </button>
           </div>
+
           <div class="player-progress-wrap">
             <span class="player-time">{{ formatTime(currentTime) }}</span>
             <div class="player-progress-bg" @click="seek" ref="progress">
@@ -937,6 +994,23 @@
             </div>
             <span class="player-time">{{ formatTime(duration) }}</span>
           </div>
+
+          <!-- ADD SPEED CONTROLS HERE -->
+          <div class="player-speed-controls">
+            <button class="speed-btn-mini" :class="{ active: speed === 0.75 }" @click="setPlaybackSpeed(0.75)">
+              0.75x
+            </button>
+            <button class="speed-btn-mini" :class="{ active: speed === 1 }" @click="setPlaybackSpeed(1)">
+              1x
+            </button>
+            <button class="speed-btn-mini" :class="{ active: speed === 1.25 }" @click="setPlaybackSpeed(1.25)">
+              1.25x
+            </button>
+            <button class="speed-btn-mini" :class="{ active: speed === 1.5 }" @click="setPlaybackSpeed(1.5)">
+              1.5x
+            </button>
+          </div>
+
           <button class="player-btn" @click="playerVisible = false" title="Close player">
             <i class="bi bi-x-lg"></i>
           </button>
@@ -946,11 +1020,94 @@
 
     <!-- Audio System -->
     <audio ref="audio" style="display:none"></audio>
+
+    <div v-if="showModeGuide" class="mode-guide-backdrop" @click.self="closeModeGuide">
+      <div class="mode-guide-modal">
+        <div class="mode-guide-kicker">Session Style</div>
+        <h3>{{ pendingMode === 'advanced' ? 'Advanced Mode' : 'Beginner Mode' }}</h3>
+        <p>{{ pendingMode === 'advanced'
+          ? 'For serious huffadh training with cumulative chaining and active recall.'
+          : 'A gentle sequential flow for building confidence with guided repetition.' }}</p>
+        <div class="mode-guide-points">
+          <div class="mode-guide-point"><strong>Flow</strong><span>{{ pendingMode === 'advanced' ? 'Cumulative chaining' : 'Sequential ayah order' }}</span></div>
+          <div class="mode-guide-point"><strong>Visuals</strong><span>{{ pendingMode === 'advanced' ? 'Blur on for active recall' : 'Focus off by default' }}</span></div>
+          <div class="mode-guide-point"><strong>Repetition</strong><span>{{ pendingMode === 'advanced' ? '5x or more' : '3x baseline' }}</span></div>
+        </div>
+        <div class="mode-guide-actions">
+          <button class="btn-ghost chain-secondary-btn" @click="closeModeGuide" type="button">Cancel</button>
+          <button class="start-btn" @click="applyModePreset" type="button">Use {{ pendingMode === 'advanced' ? 'Advanced' : 'Beginner' }}</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
+
+const MODE_STORAGE_KEYS = {
+  beginner: 'telawa.mode.beginner',
+  advanced: 'telawa.mode.advanced'
+}
+
+const SESSION_STORAGE_KEYS = {
+  beginner: 'telawa.sessionState.beginner',
+  advanced: 'telawa.sessionState.advanced'
+}
+
+function deepClone(value) {
+  if (typeof structuredClone === 'function') return structuredClone(value)
+  return JSON.parse(JSON.stringify(value))
+}
+
+function createBeginnerState() {
+  return {
+    chapterId: 0,
+    rangeStart: 1,
+    rangeEnd: 7,
+    reciterId: 7,
+    speed: 1,
+    delay: 1,
+    playMode: 'auto',
+    repeats: 1,
+    order: 'seq',
+    focusMode: false,
+    blurAdjacent: false,
+    verses: [],
+    activeKey: null,
+    queue: [],
+    queueIndex: 0,
+    sessionActive: false
+  }
+}
+
+function createAdvancedState() {
+  return {
+    chapterId: 0,
+    rangeStart: 1,
+    rangeEnd: 7,
+    reciterId: 7,
+    speed: 1,
+    delay: 1,
+    playMode: 'auto',
+    repeats: 1,
+    order: 'seq',
+    focusMode: false,
+    blurAdjacent: false,
+    repeatAndLoopAudio: false,
+    advancedRepeats: 1,
+    chainingConfig: {
+      step: 1,
+      goal: 'memorise',
+      style: 'sequential'
+    },
+    verses: [],
+    activeKey: null,
+    queue: [],
+    queueIndex: 0,
+    sessionActive: false
+  }
+}
 
 export default {
   name: 'TelawaApp',
@@ -959,6 +1116,8 @@ export default {
   },
   data() {
     return {
+      appReady: false,
+      isBootstrapping: true,
       isDataReady: false,
       fontDropdownOpen: false,
       verseFontSizes: {},
@@ -967,45 +1126,8 @@ export default {
       minFontSize: 80,
       maxFontSize: 250,
       tajweedEnabled: false,
-      // Mode-specific state
-      beginner: {
-        chapterId: 0,
-        rangeStart: 1,
-        rangeEnd: 7,
-        reciterId: 7,
-        speed: 1,
-        delay: 1,
-        playMode: 'auto',
-        repeats: 1,
-        order: 'seq',
-        focusMode: false,
-        blurAdjacent: false,
-        verses: [],
-        activeKey: null,
-        queue: [],
-        queueIndex: 0,
-        sessionActive: false
-      },
-      advanced: {
-        chapterId: 0,
-        rangeStart: 1,
-        rangeEnd: 7,
-        reciterId: 7,
-        speed: 1,
-        delay: 1,
-        playMode: 'auto',
-        repeats: 1,
-        order: 'seq',
-        focusMode: false,
-        blurAdjacent: false,
-        repeatAndLoopAudio: false,
-        advancedRepeats: 1,
-        verses: [],
-        activeKey: null,
-        queue: [],
-        queueIndex: 0,
-        sessionActive: false
-      },
+      beginner: createBeginnerState(),
+      advanced: createAdvancedState(),
       // New chaining UI state
       showQueueViewer: false,
       queueViewCollapsed: true,
@@ -1034,6 +1156,15 @@ export default {
       tab: 'beginner',
       showTools: false,
       showPlannerModal: false,
+      showConfirmModal: false,
+      confirmModal: {
+        title: '',
+        message: '',
+        confirmLabel: 'Confirm',
+        cancelLabel: 'Cancel',
+        tone: 'default',
+        action: ''
+      },
       plannerConfig: {
         surahId: 1,
         totalVersesInSurah: 7,
@@ -1046,11 +1177,20 @@ export default {
         currentStreak: 5,
         versesMastered: 12,
         totalRepetitions: 450,
-        sessionsCompleted: 15
+        sessionsCompleted: 15,
+        weeklyVerses: [3, 5, 4, 7, 6, 8, 9],
+        weeklyMinutes: [12, 18, 15, 24, 21, 27, 30]
       },
       playerVisible: false,
       playerCollapsed: true,
       playerMenuOpen: false,
+      showModeGuide: false,
+      pendingMode: '',
+      hasContinueSession: false,
+      continueSessionLabel: '',
+      continueSessionPayload: null,
+      lastScrollY: 0,
+      pendingDeleteId: '',
 
       // Session State
       activeVerseKey: null,
@@ -1204,6 +1344,10 @@ export default {
       return this.currentMode === 'beginner' ? this.beginner : this.advanced
     },
 
+    sessionConfig() {
+      return this.buildSessionConfig(this.currentMode)
+    },
+
     hasVerses() {
       return this.currentConfig.verses?.length > 0
     },
@@ -1305,6 +1449,12 @@ export default {
       }
     },
 
+    visualMode() {
+      if (this.blurAdjacent) return 'blur'
+      if (this.focusMode) return 'focus'
+      return 'standard'
+    },
+
     verses: {
       get() { return this.currentConfig.verses },
       set(val) {
@@ -1345,6 +1495,23 @@ export default {
     advancedRepeats: {
       get() { return this.advanced.advancedRepeats },
       set(val) { this.advanced.advancedRepeats = val }
+    },
+
+    chainingConfig: {
+      get() {
+        if (!this.advanced.chainingConfig) {
+          this.advanced.chainingConfig = { step: 1, goal: 'memorise', style: 'sequential' }
+        }
+        return this.advanced.chainingConfig
+      },
+      set(val) {
+        this.advanced.chainingConfig = {
+          step: 1,
+          goal: 'memorise',
+          style: 'sequential',
+          ...(val || {})
+        }
+      }
     },
 
     beginnerRepeats: {
@@ -1459,51 +1626,101 @@ export default {
       return this.isPlaying ? 'Pause' : 'Start session'
     },
 
-    // Fix ETA calculation in computed property
+    plannerKeyboardActive() {
+      return this.showPlannerModal
+    },
+
+    canStartSession() {
+      const config = this.sessionConfig
+      return this.appReady &&
+        this.isDataReady &&
+        !!config.chapterId &&
+        config.rangeStart > 0 &&
+        config.rangeEnd >= config.rangeStart &&
+        (!!this.verses.length || !!this.currentConfig.verses.length)
+    },
+
+    modeSummary() {
+      return this.currentMode === 'beginner'
+        ? 'Sequential flow, focus off, repetition 3x.'
+        : 'Cumulative chaining, blur on, repetition 5x+.'
+    },
+
+    chainingStep() {
+      return Math.max(1, Math.min(3, Number(this.chainingConfig.step || 1)))
+    },
+
+    chainingGoalLabel() {
+      const labels = {
+        memorise: 'Memorise',
+        revise: 'Revise',
+        test: 'Test'
+      }
+      return labels[this.chainingConfig.goal] || 'Memorise'
+    },
+
+    chainingStyleLabel() {
+      return this.chainingConfig.style === 'spaced' ? 'Spaced return' : 'Build in order'
+    },
+
+    chainingGoalHint() {
+      const hints = {
+        memorise: 'Build the passage steadily with guided repetition.',
+        revise: 'Move through the range with lighter support.',
+        test: 'Hide support early and check your recall.'
+      }
+      return hints[this.chainingConfig.goal] || hints.memorise
+    },
+
+    chainingStepOneReady() {
+      return !!this.chainingConfig.goal
+    },
+
+    chainingStepTwoReady() {
+      return !!this.chapterId && this.rangeEnd >= this.rangeStart
+    },
+
+    chainingStepThreeReady() {
+      return !!this.chainingConfig.style
+    },
+
+    chainingSummary() {
+      const surah = this.currentChapter?.name_simple || (this.chapterId ? `Surah ${this.chapterId}` : 'Choose a surah')
+      const range = this.chapterId ? `Ayahs ${this.rangeStart}-${this.rangeEnd}` : 'Choose a range'
+      return `${this.chainingGoalLabel} · ${surah} · ${range} · ${this.chainingStyleLabel}`
+    },
+
+    etaSubtext() {
+      if (!this.remainingAyahs) return 'Ready to complete'
+      return `Review + repetition included`
+    },
+
     etaLabel() {
       const remainingItems = (this.queue || []).slice(this.queueIndex)
       if (!remainingItems.length) return '0 min'
 
-      // Get repetition count based on current mode
       const repetitionCount = this.currentMode === 'beginner'
         ? (this.beginner.repeats || 1)
         : (this.repeatAndLoopAudio ? (this.advancedRepeats || 1) : 1)
-
-      // Average audio length per ayah in seconds (typical recitation)
-      const avgAudioLengthPerAyah = 8 // seconds per ayah at normal speed
-
-      // Adjust for playback speed
+      const avgAudioLengthPerAyah = 8
       const speedFactor = this.speed || 1
       const adjustedAudioLength = avgAudioLengthPerAyah / speedFactor
-
-      // Review time per ayah (active recall, repetition)
-      const reviewTimePerAyah = 5 // seconds
-
-      // Calculate total seconds
+      const reviewTimePerAyah = this.visualMode === 'blur' ? 7 : 5
       let totalSeconds = 0
 
       remainingItems.forEach(item => {
         const verse = item.verse || item
-        // Longer verses take more time
         const verseLength = verse.arabic?.length || 100
         const verseComplexity = Math.min(2, Math.max(0.8, verseLength / 150))
-
-        // Audio time for this verse
         const audioTime = adjustedAudioLength * verseComplexity
-
-        // Total time = (audio × repetitions) + review time
         const verseTotal = (audioTime * repetitionCount) + reviewTimePerAyah
         totalSeconds += verseTotal
       })
 
-      // Add delay time between verses
       const delaySeconds = (this.delay || 1) * (remainingItems.length - 1)
       totalSeconds += delaySeconds
-
-      // Convert to minutes, minimum 1 minute
       const minutes = Math.max(1, Math.ceil(totalSeconds / 60))
-
-      return `≈ ${minutes} min`
+      return `Audio time ≈ ${minutes} min`
     },
 
     etaLabelAudioOnly() {
@@ -1583,6 +1800,7 @@ export default {
     this.loadVerseFontSizes()
     this.migrateLocalStorage()
     this.loadUiState()
+    this.restoreSessionState()
     await this.loadChapters()
     await this.loadReciters()
     this.loadSavedSessions()
@@ -1592,14 +1810,18 @@ export default {
     this.loadPlanner()
     this.loadMetrics()
     this.initAudio()
+    this.restoreAudioState()
     this.theme = document.documentElement.getAttribute('data-theme') || this.theme
     this.loadBookmarksPins(),
-      this.setupWordClickHandler()
+    this.setupWordClickHandler()
+    this.showFirstTimeTips()
+    this.loadContinueSessionPrompt()
 
 
     if (this.currentMode === 'advanced' && this.advanced.chapterId) {
       this.currentMode = 'advanced'
       this.tab = 'advanced'
+      this.applyChainingGoalDefaults()
       await this.loadVerses()
     } else if (this.beginner.chapterId) {
       this.currentMode = 'beginner'
@@ -1607,9 +1829,14 @@ export default {
       await this.loadVerses()
     }
 
+    this.isBootstrapping = false
+    this.appReady = true
+
     window.addEventListener('online', this.handleOnline)
     window.addEventListener('offline', this.handleOffline)
     window.addEventListener('beforeunload', this.persistAllState)
+    window.addEventListener('keydown', this.handleGlobalKeydown)
+    window.addEventListener('scroll', this.handleWindowScroll, { passive: true })
     document.addEventListener('click', this.handleClickOutside)
   },
 
@@ -1617,6 +1844,8 @@ export default {
     window.removeEventListener('online', this.handleOnline)
     window.removeEventListener('offline', this.handleOffline)
     window.removeEventListener('beforeunload', this.persistAllState)
+    window.removeEventListener('keydown', this.handleGlobalKeydown)
+    window.removeEventListener('scroll', this.handleWindowScroll)
     if (this.bannerTimer) clearTimeout(this.bannerTimer)
     this.flushPlaybackTime()
     this.stopWordHighlighting()
@@ -1670,112 +1899,523 @@ export default {
     repeatAndLoopAudio() {
       if (this.tab === 'advanced') this.rebuildQueue()
     },
+    'advanced.chainingConfig': {
+      handler() {
+        if (this.currentMode === 'advanced') {
+          this.applyChainingGoalDefaults()
+          this.persistUiState()
+        }
+      },
+      deep: true
+    },
 
     tab(newVal) {
-      const oldMode = this.currentMode
-
       if (newVal === 'beginner' && this.currentMode !== 'beginner') {
         this.currentMode = 'beginner'
-        this.syncModesData()  // Sync data from advanced
         if (!this.beginner.verses.length && this.beginner.chapterId) {
           this.loadVerses()
         }
       } else if (newVal === 'advanced' && this.currentMode !== 'advanced') {
         this.currentMode = 'advanced'
-        this.syncModesData()  // Sync data from beginner
         if (!this.advanced.verses.length && this.advanced.chapterId) {
           this.loadVerses()
         }
       }
-
       this.persistUiState()
       this.$forceUpdate()
     }
   },
 
   methods: {
-    // Open mode settings in offcanvas
-    openModeSettings() {
-      // Open the offcanvas tools panel
-      this.showTools = true
+    cloneModeState(modeState) {
+      return deepClone(modeState)
+    },
 
-      // Set the tab to beginner or advanced based on current mode
-      if (this.currentMode === 'beginner') {
-        this.tab = 'beginner'
+    buildSessionConfig(mode = this.currentMode) {
+      const config = mode === 'beginner' ? this.beginner : this.advanced
+      return this.cloneModeState({
+        ...config,
+        mode,
+        tajweedEnabled: this.tajweedEnabled,
+        quranFont: this.quranFont,
+        fontScale: this.fontScale,
+        script: this.script,
+        showTranslation: this.showTranslation,
+        showTransliteration: this.showTransliteration,
+        showWordByWord: this.showWordByWord,
+        wordByWordAudioEnabled: this.wordByWordAudioEnabled,
+        theme: this.theme
+      })
+    },
+
+    applySessionConfig(config) {
+      if (!config) return
+      const mode = config.mode || this.currentMode
+      this.currentMode = mode
+      this.tab = mode
+      this.chapterId = Number(config.chapterId || 0)
+      this.rangeStart = Number(config.rangeStart || 1)
+      this.rangeEnd = Number(config.rangeEnd || this.rangeStart || 1)
+      this.reciterId = Number(config.reciterId || 7)
+      this.speed = Number(config.speed || 1)
+      this.delay = Number(config.delay || 1)
+      this.playMode = config.playMode || 'auto'
+      this.order = config.order || 'seq'
+      this.focusMode = !!config.focusMode
+      this.blurAdjacent = !!config.blurAdjacent
+      this.tajweedEnabled = !!config.tajweedEnabled
+      this.quranFont = config.quranFont || this.quranFont
+      this.fontScale = Number(config.fontScale || 1)
+      this.script = config.script || this.script
+      this.showTranslation = config.showTranslation ?? this.showTranslation
+      this.showTransliteration = config.showTransliteration ?? this.showTransliteration
+      this.showWordByWord = config.showWordByWord ?? this.showWordByWord
+      this.wordByWordAudioEnabled = config.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
+      this.theme = config.theme || this.theme
+      document.documentElement.setAttribute('data-theme', this.theme)
+      if (mode === 'advanced') {
+        this.chainingConfig = this.normaliseChainingConfig(config.chainingConfig || this.chainingConfig)
+        this.repeatAndLoopAudio = !!config.repeatAndLoopAudio
+        this.advancedRepeats = Number(config.advancedRepeats || 1)
       } else {
-        this.tab = 'advanced'
+        this.beginnerRepeats = Number(config.repeats || 1)
+      }
+    },
+
+    loadModeState(mode) {
+      const defaults = mode === 'beginner' ? createBeginnerState() : createAdvancedState()
+      try {
+        const raw = localStorage.getItem(MODE_STORAGE_KEYS[mode])
+        if (!raw) return this.cloneModeState(defaults)
+        const merged = { ...defaults, ...this.cloneModeState(JSON.parse(raw)) }
+        if (mode === 'advanced') {
+          if (merged.order === 'rand') merged.order = 'seq'
+          if (merged.order === 'cum') merged.order = 'spaced'
+          merged.chainingConfig = this.normaliseChainingConfig(merged.chainingConfig)
+          if (!merged.chainingConfig.style || merged.chainingConfig.style === 'sequential') {
+            merged.chainingConfig.style = merged.order === 'spaced' ? 'spaced' : 'sequential'
+          }
+        }
+        return merged
+      } catch (e) {
+        console.error(e)
+        return this.cloneModeState(defaults)
+      }
+    },
+
+    persistModeState(mode) {
+      const source = mode === 'beginner' ? this.beginner : this.advanced
+      try {
+        localStorage.setItem(MODE_STORAGE_KEYS[mode], JSON.stringify(this.cloneModeState(source)))
+      } catch (e) { console.error(e) }
+    },
+
+    normaliseChainingConfig(config) {
+      return {
+        step: Math.max(1, Math.min(3, Number(config?.step || 1))),
+        goal: ['memorise', 'revise', 'test'].includes(config?.goal) ? config.goal : 'memorise',
+        style: config?.style === 'spaced' ? 'spaced' : 'sequential'
+      }
+    },
+
+    setChainingGoal(goal) {
+      this.chainingConfig = {
+        ...this.chainingConfig,
+        goal
+      }
+    },
+
+    setChainingStyle(style) {
+      this.chainingConfig = {
+        ...this.chainingConfig,
+        style
+      }
+    },
+
+    setChainingStep(step) {
+      const targetStep = Math.max(1, Math.min(3, Number(step || 1)))
+      if (targetStep === 2 && !this.chainingStepOneReady) return
+      if (targetStep === 3 && !this.chainingStepTwoReady) return
+      this.chainingConfig = {
+        ...this.chainingConfig,
+        step: targetStep
+      }
+    },
+
+    continueChainingStep() {
+      if (this.chainingStep === 1) {
+        this.setChainingStep(2)
+        return
+      }
+      if (this.chainingStep === 2) {
+        this.adjustRange()
+        this.setChainingStep(3)
+      }
+    },
+
+    applyChainingGoalDefaults() {
+      if (this.currentMode !== 'advanced') return
+      const config = this.normaliseChainingConfig(this.chainingConfig)
+      this.advanced.chainingConfig = config
+      this.order = config.style === 'spaced' ? 'spaced' : 'seq'
+
+      if (config.goal === 'memorise') {
+        this.repeatAndLoopAudio = true
+        this.advancedRepeats = Math.max(2, Number(this.advancedRepeats || 2))
+        this.playMode = 'auto'
+        this.delay = Number(this.delay || 1)
+        this.focusMode = true
+        this.blurAdjacent = false
+        return
       }
 
-      // Optional: Scroll to the mode section
-      this.$nextTick(() => {
-        const toolsPanel = document.querySelector('.tools-body')
-        if (toolsPanel) {
-          toolsPanel.scrollTop = 0
-        }
-      })
+      if (config.goal === 'revise') {
+        this.repeatAndLoopAudio = false
+        this.advancedRepeats = 1
+        this.playMode = 'auto'
+        this.delay = 1
+        this.focusMode = false
+        this.blurAdjacent = false
+        return
+      }
 
-      this.showBanner(`Switch between Beginner and Advanced modes in the settings panel`, 'info', 3000)
+      this.repeatAndLoopAudio = false
+      this.advancedRepeats = 1
+      this.playMode = 'manual'
+      this.delay = 0
+      this.focusMode = true
+      this.blurAdjacent = true
+    },
+
+    startChainingSession() {
+      this.currentMode = 'advanced'
+      this.tab = 'advanced'
+      this.applyChainingGoalDefaults()
+      this.persistUiState()
+      this.startSession()
+    },
+
+    isEditableElement(target) {
+      if (!target) return false
+      const tag = target.tagName?.toLowerCase()
+      return tag === 'input' || tag === 'textarea' || tag === 'select' || target.isContentEditable
+    },
+
+    handleGlobalKeydown(event) {
+      if (!this.appReady || this.isEditableElement(event.target)) return
+
+      if (event.key === 'Escape') {
+        if (this.showConfirmModal) {
+          event.preventDefault()
+          this.closeConfirmModal()
+          return
+        }
+        if (this.showModeGuide) {
+          event.preventDefault()
+          this.closeModeGuide()
+          return
+        }
+        if (this.showPlannerModal) {
+          event.preventDefault()
+          this.showPlannerModal = false
+          return
+        }
+        if (this.visualMode === 'blur') {
+          event.preventDefault()
+          this.blurAdjacent = false
+          return
+        }
+      }
+
+      if (event.key === ' ' || event.code === 'Space') {
+        event.preventDefault()
+        if (this.audioElement?.src) this.togglePlay()
+        return
+      }
+
+      if (event.key === 'Enter') {
+        event.preventDefault()
+        if (this.plannerKeyboardActive) {
+          this.submitPlanner()
+          return
+        }
+        const verse = this.verses[this.activeVerseIndex >= 0 ? this.activeVerseIndex : 0]
+        if (verse) this.playVerse(verse)
+        return
+      }
+
+      if (event.key === 'ArrowDown') {
+        event.preventDefault()
+        this.navigateKeyboard(1)
+        return
+      }
+
+      if (event.key === 'ArrowUp') {
+        event.preventDefault()
+        this.navigateKeyboard(-1)
+      }
+    },
+
+    navigateKeyboard(direction) {
+      if (this.plannerKeyboardActive) {
+        const nextValue = Math.max(1, Math.min(this.plannerConfig.totalVersesInSurah || 286, (this.plannerConfig.versesPerDay || 1) + direction))
+        this.plannerConfig.versesPerDay = nextValue
+        this.validateVersesPerDay()
+        return
+      }
+
+      const collection = this.verses
+      if (!collection.length) return
+
+      let nextIndex = this.activeVerseIndex
+      if (nextIndex < 0) nextIndex = 0
+      else nextIndex = Math.max(0, Math.min(collection.length - 1, nextIndex + direction))
+
+      const verse = this.verses[nextIndex]
+      if (!verse) return
+      this.activeVerseKey = verse.key
+      this.activeKey = verse.key
+      this.$nextTick(() => {
+        const el = document.querySelector(`.verse-card[data-verse-key="${verse.key}"]`)
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      })
+    },
+
+    handleWindowScroll() {
+      const current = window.scrollY || 0
+      this.playerCollapsed = current > this.lastScrollY && current > 120
+      this.lastScrollY = current
+    },
+
+    buildContinueSessionPayload() {
+      const verse = this.verses[this.activeVerseIndex >= 0 ? this.activeVerseIndex : this.queueIndex]?.key || this.activeVerseKey
+      const source = this.currentMode === 'beginner' ? this.beginner : this.advanced
+      return {
+        timestamp: Date.now(),
+        mode: this.currentMode,
+        tab: this.tab,
+        activeKey: verse || null,
+        activeVerseKey: this.activeVerseKey || null,
+        queueIndex: this.queueIndex || 0,
+        currentTime: this.currentTime || 0,
+        duration: this.duration || 0,
+        isPlaying: !!this.isPlaying,
+        playerVisible: !!this.playerVisible,
+        audioSrc: this.audioElement?.currentSrc || '',
+        config: this.cloneModeState(source)
+      }
+    },
+
+    persistContinueSession() {
+      if (this.isBootstrapping) return
+      try {
+        localStorage.setItem('telawa.continueSession', JSON.stringify(this.buildContinueSessionPayload()))
+      } catch (e) { console.error(e) }
+    },
+
+    loadContinueSessionPrompt() {
+      try {
+        const raw = localStorage.getItem('telawa.continueSession')
+        if (!raw) return
+        const payload = JSON.parse(raw)
+        if (!payload?.config?.chapterId) return
+        this.continueSessionPayload = payload
+        this.hasContinueSession = true
+        this.continueSessionLabel = `${payload.mode === 'advanced' ? 'Advanced' : 'Beginner'} · Surah ${payload.config.chapterId} · Ayahs ${payload.config.rangeStart}-${payload.config.rangeEnd}`
+      } catch (e) { console.error(e) }
+    },
+
+    async continueLastSession() {
+      const payload = this.continueSessionPayload
+      if (!payload) return
+      this.hasContinueSession = false
+      this.currentMode = payload.mode || 'beginner'
+      this.tab = payload.tab || this.currentMode
+      const target = this.currentMode === 'beginner' ? 'beginner' : 'advanced'
+      this[target] = {
+        ...(target === 'beginner' ? createBeginnerState() : createAdvancedState()),
+        ...this.cloneModeState(payload.config || {})
+      }
+      if (target === 'advanced') {
+        this.advanced.chainingConfig = this.normaliseChainingConfig(this.advanced.chainingConfig)
+      }
+      this.applySessionConfig(this.buildSessionConfig(this.currentMode))
+      await this.loadChapter()
+      this.buildQueue()
+      this.queueIndex = Number(payload.queueIndex || 0)
+      this.activeKey = payload.activeKey || null
+      this.activeVerseKey = payload.activeVerseKey || payload.activeKey || null
+      this.playerVisible = !!payload.playerVisible
+      this.restoredAudioState = {
+        src: payload.audioSrc || '',
+        currentTime: Number(payload.currentTime || 0),
+        playerVisible: !!payload.playerVisible,
+        speed: Number(payload.config?.speed || this.speed || 1),
+        isPlaying: !!payload.isPlaying
+      }
+      this.applyRestoredAudioState()
+      this.showBanner('Session restored', 'success', 2200)
+    },
+
+    restoreAudioState() {
+      try {
+        this.restoredAudioState = JSON.parse(localStorage.getItem('telawa.audioState') || 'null')
+      } catch (e) { console.error(e) }
+    },
+
+    applyRestoredAudioState() {
+      const state = this.restoredAudioState
+      if (!state || !this.audioElement || !state.src) return
+      this.audioElement.src = state.src
+      this.audioElement.load()
+      this.playerVisible = !!state.playerVisible
+      this.currentTime = Number(state.currentTime || 0)
+      this.speed = Number(state.speed || this.speed || 1)
+      const seekOnLoad = () => {
+        try {
+          this.audioElement.currentTime = Number(state.currentTime || 0)
+          this.audioElement.playbackRate = Number(state.speed || this.speed || 1)
+          if (state.isPlaying) {
+            this.audioElement.play().then(() => {
+              this.isPlaying = true
+            }).catch(() => {})
+          }
+        } catch (e) {}
+        this.audioElement.removeEventListener('loadedmetadata', seekOnLoad)
+      }
+      this.audioElement.addEventListener('loadedmetadata', seekOnLoad)
+    },
+
+    openConfirmModal(options) {
+      this.confirmModal = {
+        title: options.title || 'Confirm action',
+        message: options.message || '',
+        confirmLabel: options.confirmLabel || 'Confirm',
+        cancelLabel: options.cancelLabel || 'Cancel',
+        tone: options.tone || 'default',
+        action: options.action || ''
+      }
+      this.showConfirmModal = true
+    },
+
+    closeConfirmModal() {
+      this.showConfirmModal = false
+      this.confirmModal.action = ''
+      this.pendingDeleteId = ''
+    },
+
+    runConfirmAction() {
+      const action = this.confirmModal.action
+      this.closeConfirmModal()
+      if (action === 'reset-session') this.performResetControls()
+      if (action === 'switch-mode') this.performToggleMode()
+      if (action === 'delete-offline' && this.pendingDeleteId) this.performDeleteOffline()
+    },
+
+    renderMiniTrend(values = []) {
+      const width = 84
+      const height = 24
+      const max = Math.max(...values, 1)
+      const barWidth = 8
+      const gap = 4
+      return values.map((value, index) => {
+        const x = index * (barWidth + gap)
+        const h = Math.max(3, (value / max) * height)
+        const y = height - h
+        return `<span style="left:${x}px;height:${h}px;top:${y}px"></span>`
+      }).join('')
+    },
+
+    showModeGuideFor(mode) {
+      this.pendingMode = mode
+      this.showModeGuide = true
+    },
+
+    closeModeGuide() {
+      this.showModeGuide = false
+      this.pendingMode = ''
+    },
+
+    applyModePreset() {
+      const mode = this.pendingMode || 'beginner'
+      this.currentMode = mode
+      this.tab = mode
+      if (mode === 'beginner') {
+        this.beginner.repeats = 3
+        this.beginner.focusMode = false
+        this.beginner.blurAdjacent = false
+        this.beginner.order = 'seq'
+      } else {
+        this.advanced.advancedRepeats = Math.max(5, Number(this.advanced.advancedRepeats || 5))
+        this.advanced.repeatAndLoopAudio = true
+        this.advanced.focusMode = false
+        this.advanced.blurAdjacent = true
+        this.advanced.order = 'spaced'
+        this.chainingConfig = {
+          ...this.chainingConfig,
+          style: 'spaced'
+        }
+      }
+      this.persistUiState()
+      this.closeModeGuide()
+    },
+
+    // Show first-time user tips
+    showFirstTimeTips() {
+      if (!this.onboardingDismissed && !this.hasVerses) {
+        setTimeout(() => {
+          this.showBanner(
+            '💡 Tip: Start with "Quick Plan" to create a personalized memorization schedule',
+            'info',
+            5000
+          )
+        }, 1000)
+
+        setTimeout(() => {
+          this.showBanner(
+            '📖 Tip: Try the "Quickstart Demo" with Surah Al-Fatiha to see how it works',
+            'info',
+            8000
+          )
+        }, 6000)
+      }
+    },
+    setPlaybackSpeed(newSpeed) {
+      this.speed = newSpeed
+      if (this.audioElement) {
+        this.audioElement.playbackRate = newSpeed
+      }
+      this.persistUiState()
+      this.showBanner(`Speed changed to ${newSpeed}x`, 'info', 1000)
+    },
+    // Open mode settings in offcanvas
+    openModeSettings() {
+      this.showModeGuideFor(this.currentMode)
     },
 
     // Alternative: Direct mode toggle with confirmation
     toggleMode() {
       const newMode = this.currentMode === 'beginner' ? 'advanced' : 'beginner'
-      if (confirm(`Switch to ${newMode === 'beginner' ? 'Beginner' : 'Advanced'} mode? Your settings will be preserved.`)) {
-        this.currentMode = newMode
-        this.tab = newMode
-        this.persistUiState()
-        this.showBanner(`Switched to ${newMode === 'beginner' ? 'Beginner' : 'Advanced'} Mode`, 'success', 2000)
-      }
-    },
-    // Sync data between beginner and advanced modes
-    syncModesData() {
-      // When switching from beginner to advanced
-      if (this.currentMode === 'advanced' && this.beginner.chapterId) {
-        this.advanced.chapterId = this.beginner.chapterId
-        this.advanced.rangeStart = this.beginner.rangeStart
-        this.advanced.rangeEnd = this.beginner.rangeEnd
-        this.advanced.reciterId = this.beginner.reciterId
-        this.advanced.speed = this.beginner.speed
-        this.advanced.delay = this.beginner.delay
-        this.advanced.playMode = this.beginner.playMode
-        this.advanced.order = this.beginner.order
-        this.advanced.focusMode = this.beginner.focusMode
-        this.advanced.blurAdjacent = this.beginner.blurAdjacent
-        this.advanced.verses = [...this.beginner.verses]
-        this.advanced.activeKey = this.beginner.activeKey
-        this.advanced.queue = [...this.beginner.queue]
-        this.advanced.queueIndex = this.beginner.queueIndex
-      }
-
-      // When switching from advanced to beginner
-      if (this.currentMode === 'beginner' && this.advanced.chapterId) {
-        this.beginner.chapterId = this.advanced.chapterId
-        this.beginner.rangeStart = this.advanced.rangeStart
-        this.beginner.rangeEnd = this.advanced.rangeEnd
-        this.beginner.reciterId = this.advanced.reciterId
-        this.beginner.speed = this.advanced.speed
-        this.beginner.delay = this.advanced.delay
-        this.beginner.playMode = this.advanced.playMode
-        this.beginner.order = this.advanced.order
-        this.beginner.focusMode = this.advanced.focusMode
-        this.beginner.blurAdjacent = this.advanced.blurAdjacent
-        this.beginner.verses = [...this.advanced.verses]
-        this.beginner.activeKey = this.advanced.activeKey
-        this.beginner.queue = [...this.advanced.queue]
-        this.beginner.queueIndex = this.advanced.queueIndex
-      }
+      this.pendingMode = newMode
+      this.openConfirmModal({
+        title: `Switch to ${newMode === 'beginner' ? 'Beginner' : 'Advanced'} mode?`,
+        message: 'Your current settings will be preserved.',
+        confirmLabel: 'Switch',
+        action: 'switch-mode'
+      })
     },
 
-    // Update tab watcher to sync data
+    performToggleMode() {
+      const newMode = this.pendingMode || (this.currentMode === 'beginner' ? 'advanced' : 'beginner')
+      this.currentMode = newMode
+      this.tab = newMode
+      this.persistUiState()
+      this.showBanner(`Switched to ${newMode === 'beginner' ? 'Beginner' : 'Advanced'} Mode`, 'success', 2000)
+      this.pendingMode = ''
+    },
     updateTabAndSync(tabName) {
-      const oldMode = this.currentMode
       this.tab = tabName
       this.currentMode = tabName === 'advanced' ? 'advanced' : 'beginner'
-
-      if (oldMode !== this.currentMode) {
-        this.syncModesData()
-      }
-
       this.persistUiState()
       this.$forceUpdate()
     },
@@ -2100,10 +2740,23 @@ export default {
     },
 
     deleteOfflineSurah(id) {
+      this.pendingDeleteId = id
+      this.openConfirmModal({
+        title: 'Remove offline surah?',
+        message: 'This deletes the saved verses from this device.',
+        confirmLabel: 'Remove',
+        tone: 'danger',
+        action: 'delete-offline'
+      })
+    },
+
+    performDeleteOffline() {
+      const id = this.pendingDeleteId
       localStorage.removeItem(id)
       const catalog = this.offlineSurahs.filter(s => s.id !== id)
       localStorage.setItem('offline_surah_catalog', JSON.stringify(catalog))
       this.offlineSurahs = catalog
+      this.pendingDeleteId = ''
       this.showBanner('Offline surah removed', 'info', 2000)
     },
 
@@ -2689,7 +3342,7 @@ export default {
         rep = this.advanced.repeatAndLoopAudio ? (this.advanced.advancedRepeats || 1) : 1
       }
 
-      const ord = this.order || 'seq'
+      const ord = this.order === 'spaced' ? 'spaced' : 'seq'
       const q = []
 
       if (ord === 'seq') {
@@ -2698,24 +3351,13 @@ export default {
             q.push({ verse, repeatCount: r + 1, totalRepeats: rep })
           })
         }
-      } else if (ord === 'cum') {
+      } else if (ord === 'spaced') {
         for (let r = 0; r < rep; r++) {
           for (let i = 0; i < verses.length; i++) {
             for (let j = 0; j <= i; j++) {
               q.push({ verse: verses[j], repeatCount: r + 1, totalRepeats: rep, cumulativePhase: i + 1 })
             }
           }
-        }
-      } else if (ord === 'rand') {
-        for (let r = 0; r < rep; r++) {
-          const shuffled = [...verses]
-          for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1))
-              ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-          }
-          shuffled.forEach(verse => {
-            q.push({ verse, repeatCount: r + 1, totalRepeats: rep })
-          })
         }
       }
 
@@ -2742,10 +3384,8 @@ export default {
     },
 
     async startSession() {
-      // Get current mode config
-      const config = this.currentMode === 'beginner' ? this.beginner : this.advanced
+      const config = this.sessionConfig
 
-      // Validate surah is selected
       if (!config.chapterId || config.chapterId === 0) {
         this.showTools = true
         this.showBanner('Please select a surah first', 'info', 3000)
@@ -2756,30 +3396,11 @@ export default {
         return
       }
 
-      // Apply ALL settings from config before starting
-      this.chapterId = config.chapterId
-      this.rangeStart = config.rangeStart
-      this.rangeEnd = config.rangeEnd
-      this.reciterId = config.reciterId
-      this.speed = config.speed
-      this.delay = config.delay
-      this.playMode = config.playMode
-      this.order = config.order
-      this.focusMode = config.focusMode
-      this.blurAdjacent = config.blurAdjacent
+      this.applySessionConfig(config)
+      this.persistModeState(this.currentMode)
+      this.persistUiState()
 
-      // Apply advanced specific settings
-      if (this.currentMode === 'advanced') {
-        this.repeatAndLoopAudio = this.advanced.repeatAndLoopAudio
-        this.advancedRepeats = this.advanced.advancedRepeats
-      } else {
-        this.beginnerRepeats = this.beginner.repeats
-      }
-
-      // Load verses if needed
-      const currentVerses = this.currentMode === 'beginner'
-        ? this.beginner.verses
-        : this.advanced.verses
+      const currentVerses = this.currentMode === 'beginner' ? this.beginner.verses : this.advanced.verses
 
       if (!currentVerses || currentVerses.length === 0) {
         await this.loadVerses()
@@ -2885,32 +3506,21 @@ export default {
     },
 
     handlePrimaryAction() {
+      if (this.isPlaying) {
+        if (this.audioElement) this.audioElement.pause()
+        this.isPlaying = false
+        return
+      }
+      if (!this.canStartSession) {
+        this.showTools = true
+        this.showBanner('Choose a valid surah and ayah range before starting.', 'info', 2600)
+        return
+      }
       this.startSession()
     },
 
-    handlePrimaryAction() {
-      // Use the current mode's config
-      const config = this.currentMode === 'beginner' ? this.beginner : this.advanced
-
-      if (config.isPlaying) {
-        // Pause logic
-        if (this.audioElement) {
-          this.audioElement.pause()
-          this.isPlaying = false
-          if (this.currentMode === 'beginner') {
-            this.beginner.isPlaying = false
-          } else {
-            this.advanced.isPlaying = false
-          }
-        }
-      } else {
-        // Start session
-        this.startSession()
-      }
-    },
-
     validateSettings() {
-      const config = this.currentMode === 'beginner' ? this.beginner : this.advanced
+      const config = this.sessionConfig
       const errors = []
 
       if (!config.chapterId || config.chapterId === 0) {
@@ -2976,76 +3586,37 @@ export default {
     loadUiState() {
       try {
         const raw = localStorage.getItem('telawa.uiState')
-        if (!raw) return
-        const state = JSON.parse(raw)
-        this.theme = state.theme || this.theme
-        this.showTools = false
-        this.tab = state.tab || this.tab
-        this.currentMode = state.currentMode || 'beginner'
-
-        if (state.beginner) this.beginner = { ...this.beginner, ...state.beginner }
-        if (state.advanced) this.advanced = { ...this.advanced, ...state.advanced }
-
-        this.showTranslation = state.showTranslation ?? this.showTranslation
-        this.showTransliteration = state.showTransliteration ?? this.showTransliteration
-        this.showWordByWord = state.showWordByWord ?? this.showWordByWord
-        this.wordByWordAudioEnabled = state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
-        this.fontScale = state.fontScale ?? this.fontScale
-        this.quranFont = state.quranFont || this.quranFont
-        this.script = state.script || this.script
-        this.sectionOpen = { ...this.sectionOpen, ...(state.sectionOpen || {}) }
-        this.onboardingDismissed = state.onboardingDismissed ?? false
-
-        // ADD THIS LINE - Load tajweed setting
-        this.tajweedEnabled = state.tajweedEnabled ?? false
-
-      } catch (e) { console.error(e) }
-
-      try {
-        const raw = localStorage.getItem('telawa.sessionState')
         if (raw) {
           const state = JSON.parse(raw)
-          this.activeKey = state.activeKey || this.activeKey
-          this.queueIndex = Number(state.queueIndex || 0)
+          this.theme = state.theme || this.theme
+          this.tab = state.tab || this.tab
+          this.currentMode = state.currentMode || 'beginner'
+          this.showTranslation = state.showTranslation ?? this.showTranslation
+          this.showTransliteration = state.showTransliteration ?? this.showTransliteration
+          this.showWordByWord = state.showWordByWord ?? this.showWordByWord
+          this.wordByWordAudioEnabled = state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
+          this.fontScale = state.fontScale ?? this.fontScale
+          this.quranFont = state.quranFont || this.quranFont
+          this.script = state.script || this.script
+          this.sectionOpen = { ...this.sectionOpen, ...(state.sectionOpen || {}) }
+          this.onboardingDismissed = state.onboardingDismissed ?? false
+          this.tajweedEnabled = state.tajweedEnabled ?? false
         }
       } catch (e) { console.error(e) }
+      this.showTools = false
+      this.beginner = this.loadModeState('beginner')
+      this.advanced = this.loadModeState('advanced')
+      document.documentElement.setAttribute('data-theme', this.theme)
     },
 
     persistUiState() {
+      if (this.isBootstrapping) return
       try {
         localStorage.setItem('telawa.uiState', JSON.stringify({
           theme: this.theme,
           showTools: this.showTools,
           tab: this.tab,
           currentMode: this.currentMode,
-          beginner: {
-            chapterId: this.beginner.chapterId,
-            rangeStart: this.beginner.rangeStart,
-            rangeEnd: this.beginner.rangeEnd,
-            reciterId: this.beginner.reciterId,
-            speed: this.beginner.speed,
-            delay: this.beginner.delay,
-            playMode: this.beginner.playMode,
-            repeats: this.beginner.repeats,
-            order: this.beginner.order,
-            blurAdjacent: this.beginner.blurAdjacent,
-            focusMode: this.beginner.focusMode
-          },
-          advanced: {
-            chapterId: this.advanced.chapterId,
-            rangeStart: this.advanced.rangeStart,
-            rangeEnd: this.advanced.rangeEnd,
-            reciterId: this.advanced.reciterId,
-            speed: this.advanced.speed,
-            delay: this.advanced.delay,
-            playMode: this.advanced.playMode,
-            repeats: this.advanced.repeats,
-            order: this.advanced.order,
-            blurAdjacent: this.advanced.blurAdjacent,
-            focusMode: this.advanced.focusMode,
-            repeatAndLoopAudio: this.advanced.repeatAndLoopAudio,
-            advancedRepeats: this.advanced.advancedRepeats
-          },
           showTranslation: this.showTranslation,
           showTransliteration: this.showTransliteration,
           showWordByWord: this.showWordByWord,
@@ -3055,35 +3626,44 @@ export default {
           script: this.script,
           sectionOpen: this.sectionOpen,
           onboardingDismissed: this.onboardingDismissed,
-
-          // ADD THIS LINE - Save tajweed setting
           tajweedEnabled: this.tajweedEnabled
+        }))
+      } catch (e) { console.error(e) }
+      this.persistModeState('beginner')
+      this.persistModeState('advanced')
+    },
 
+    persistSessionState() {
+      if (this.isBootstrapping) return
+      const mode = this.currentMode
+      try {
+        localStorage.setItem(SESSION_STORAGE_KEYS[mode], JSON.stringify({
+          activeKey: this.activeKey,
+          queueIndex: this.queueIndex,
+          timestamp: Date.now()
         }))
       } catch (e) { console.error(e) }
     },
 
-    persistSessionState() {
-      localStorage.setItem('telawa.sessionState', JSON.stringify({
-        activeKey: this.activeKey,
-        queueIndex: this.queueIndex,
-        timestamp: Date.now()
-      }))
-    },
-
     restoreSessionState() {
-      const saved = localStorage.getItem('telawa.sessionState')
-      if (saved) {
-        const state = JSON.parse(saved)
-        // Only restore if less than 24 hours old
-        if (Date.now() - state.timestamp < 24 * 60 * 60 * 1000) {
-          this.activeKey = state.activeKey
-          this.queueIndex = state.queueIndex
+      ;['beginner', 'advanced'].forEach(mode => {
+        const saved = localStorage.getItem(SESSION_STORAGE_KEYS[mode])
+        if (!saved) return
+        try {
+          const state = JSON.parse(saved)
+          if (Date.now() - state.timestamp < 24 * 60 * 60 * 1000) {
+            const target = mode === 'beginner' ? this.beginner : this.advanced
+            target.activeKey = state.activeKey || null
+            target.queueIndex = Number(state.queueIndex || 0)
+          }
+        } catch (e) {
+          console.error('Failed to restore session:', e)
         }
-      }
+      })
     },
 
     persistAudioState() {
+      if (this.isBootstrapping) return
       try {
         localStorage.setItem('telawa.audioState', JSON.stringify({
           src: this.audioElement?.currentSrc || '',
@@ -3093,12 +3673,14 @@ export default {
           isPlaying: this.isPlaying
         }))
       } catch (e) { console.error(e) }
+      this.persistContinueSession()
     },
 
     persistAllState() {
       this.persistUiState()
       this.persistSessionState()
       this.persistAudioState()
+      this.persistContinueSession()
       this.persistPlanner()
       this.persistTodayPlan()
       this.persistSm2()
@@ -3187,7 +3769,28 @@ export default {
 
     migrateLocalStorage() {
       const key = 'telawa.schemaVersion'
-      if (!localStorage.getItem(key)) localStorage.setItem(key, '1')
+      if (!localStorage.getItem(key)) localStorage.setItem(key, '2')
+      if (localStorage.getItem(key) === '1') {
+        try {
+          const raw = localStorage.getItem('telawa.uiState')
+          if (raw) {
+            const state = JSON.parse(raw)
+            if (state.beginner && !localStorage.getItem(MODE_STORAGE_KEYS.beginner)) {
+              localStorage.setItem(MODE_STORAGE_KEYS.beginner, JSON.stringify(this.cloneModeState({
+                ...createBeginnerState(),
+                ...state.beginner
+              })))
+            }
+            if (state.advanced && !localStorage.getItem(MODE_STORAGE_KEYS.advanced)) {
+              localStorage.setItem(MODE_STORAGE_KEYS.advanced, JSON.stringify(this.cloneModeState({
+                ...createAdvancedState(),
+                ...state.advanced
+              })))
+            }
+          }
+          localStorage.setItem(key, '2')
+        } catch (e) { console.error(e) }
+      }
     },
 
     loadBookmarksPins() {
@@ -3224,12 +3827,27 @@ export default {
     },
 
     resetControls() {
-      if (!confirm('Reset session settings?')) return
+      this.openConfirmModal({
+        title: 'Reset session?',
+        message: 'This will clear the current mode settings and player progress for this flow.',
+        confirmLabel: 'Reset',
+        tone: 'danger',
+        action: 'reset-session'
+      })
+    },
+
+    performResetControls() {
       this.rangeStart = 1
       this.rangeEnd = 7
       this.speed = 1
       this.delay = 1
-      this.repeats = 1
+      if (this.currentMode === 'advanced') {
+        this.repeatAndLoopAudio = false
+        this.advancedRepeats = 1
+        this.chainingConfig = { step: 1, goal: 'memorise', style: 'sequential' }
+      } else {
+        this.beginnerRepeats = 1
+      }
       this.playMode = 'auto'
       this.order = 'seq'
       this.blurAdjacent = false
@@ -3374,6 +3992,249 @@ export default {
   box-sizing: border-box;
 }
 
+.onboarding-cta {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.cta-primary-large {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: white;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 40px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.cta-primary-large:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(154, 103, 56, 0.3);
+}
+
+.cta-secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 12px 24px;
+  border-radius: 40px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cta-secondary:hover {
+  background: var(--accent-light);
+  border-color: var(--accent);
+}
+
+/* Onboarding Welcome Styles */
+.onboarding-welcome {
+  margin-bottom: 32px;
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.onboarding-card {
+  background: linear-gradient(135deg, var(--surface), var(--accent-light));
+  border-radius: 24px;
+  padding: 28px;
+  border: 1px solid var(--accent-soft);
+  text-align: center;
+}
+
+.onboarding-icon {
+  font-size: 3rem;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+.onboarding-card h3 {
+  font-size: 1.3rem;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.onboarding-card > p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  font-size: 0.9rem;
+}
+
+.onboarding-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  padding: 12px 20px;
+  border-radius: 16px;
+  flex: 1;
+  min-width: 160px;
+  text-align: left;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  background: var(--accent);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.step-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-content strong {
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.step-content span {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.step-arrow {
+  color: var(--accent);
+  font-size: 1.2rem;
+}
+
+.onboarding-tips {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.onboarding-tips .tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--surface);
+  padding: 6px 14px;
+  border-radius: 40px;
+}
+
+.onboarding-tips .tip i {
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .onboarding-steps {
+    flex-direction: column;
+  }
+
+  .step-arrow {
+    transform: rotate(90deg);
+  }
+
+  .step {
+    width: 100%;
+  }
+
+  .onboarding-card {
+    padding: 20px;
+  }
+}
+
+/* Player Speed Controls */
+.player-speed-controls {
+  display: flex;
+  gap: 4px;
+  background: var(--accent-light);
+  padding: 4px 8px;
+  border-radius: 40px;
+}
+
+.speed-btn-mini {
+  padding: 4px 8px;
+  border-radius: 20px;
+  border: none;
+  background: transparent;
+  font-size: 0.7rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-muted);
+}
+
+.speed-btn-mini:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.speed-btn-mini.active {
+  background: var(--accent);
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .player-speed-controls {
+    display: none;
+    /* Hide on mobile, too crowded */
+  }
+
+  .chaining-hero {
+    flex-direction: column;
+  }
+
+  .chaining-progress,
+  .chain-choice-grid,
+  .chain-choice-grid-two {
+    grid-template-columns: 1fr;
+  }
+
+  .chain-step-actions.split {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .mode-guide-point {
+    flex-direction: column;
+  }
+
+  .mode-guide-point span {
+    text-align: left;
+  }
+}
+
 /* Mode Button Styling */
 .mode-btn {
   background: var(--surface);
@@ -3453,7 +4314,6 @@ body {
   animation: appFade 260ms ease-out;
 }
 
-/* Prevent FOUC (Flash of Unstyled Content) */
 .verse-arabic {
   min-height: 60px;
 }
@@ -3479,6 +4339,12 @@ body {
 
 .session-rail-copy {
   flex: 1;
+}
+
+.session-rail-hint {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
 }
 
 .session-rail-kicker {
@@ -3568,6 +4434,13 @@ body {
   color: var(--text);
 }
 
+.rail-stat small {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
 /* Mode Indicator */
 .mode-indicator {
   display: inline-flex;
@@ -3604,6 +4477,17 @@ body {
 .progress-bar-wide {
   margin-top: 12px;
   height: 6px;
+  position: relative;
+  overflow: visible;
+}
+
+.progress-label {
+  position: absolute;
+  top: -24px;
+  right: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
 }
 
 /* Responsive */
@@ -4003,12 +4887,13 @@ body {
 /* Tajweed styles - these match what the Quran.com API returns */
 .verse-arabic.tajweed-enabled {
   line-height: 2;
+  font-size: var(--verse-font-size);
 }
 
 /* The API returns spans with these classes */
 .verse-arabic.tajweed-enabled .quran-tajweed {
-  /* Base styles for tajweed text */
   display: inline;
+  font-size: 1em;
 }
 
 /* Color different tajweed rules */
@@ -4046,6 +4931,8 @@ body {
 .tajweed-text {
   direction: rtl;
   text-align: right;
+  font-size: 1em;
+  line-height: inherit;
 }
 
 /* Tajweed rule colors */
@@ -4055,6 +4942,7 @@ body {
   border-radius: 4px;
   padding: 0 2px;
   display: inline-block;
+  font-size: 1em;
 }
 
 .tajweed-madd {
@@ -4063,6 +4951,7 @@ body {
   border-radius: 4px;
   padding: 0 2px;
   display: inline-block;
+  font-size: 1em;
 }
 
 .tajweed-qalqalah {
@@ -4072,6 +4961,7 @@ body {
   padding: 0 2px;
   display: inline-block;
   font-weight: bold;
+  font-size: 1em;
 }
 
 .tajweed-ikhfa {
@@ -4080,6 +4970,7 @@ body {
   border-radius: 4px;
   padding: 0 2px;
   display: inline-block;
+  font-size: 1em;
 }
 
 .tajweed-idgham {
@@ -4088,6 +4979,7 @@ body {
   border-radius: 4px;
   padding: 0 2px;
   display: inline-block;
+  font-size: 1em;
 }
 
 /* Tooltip for tajweed rules */
@@ -4338,8 +5230,10 @@ body {
 
 /* Verse Arabic styling */
 .verse-arabic {
+  --verse-font-percent: 150;
+  --verse-font-size: clamp(1.5rem, calc(var(--verse-font-percent, 150) * 0.0175rem), 3.25rem);
   font-family: var(--font-ar);
-  font-size: 1.4rem;
+  font-size: var(--verse-font-size);
   line-height: 1.8;
   text-align: right;
   direction: rtl;
@@ -4352,6 +5246,7 @@ body {
 
 .verse-arabic word {
   display: inline-block;
+  font-size: 1em;
   transition: all 0.15s ease;
   border-radius: 4px;
   padding: 0 2px;
@@ -4372,32 +5267,53 @@ body {
   border: 1px solid var(--border);
   position: relative;
   direction: ltr;
+  overflow: hidden;
+}
+
+.verse-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(184, 130, 78, 0.03), transparent 22%),
+    radial-gradient(circle at top right, rgba(184, 130, 78, 0.05), transparent 28%);
 }
 
 .verse-card.active {
-  border-left: 4px solid var(--accent);
-  border-radius: 20px;
-  background: linear-gradient(145deg, var(--accent-light), rgba(154, 103, 56, 0.08));
-  box-shadow: 0 0 0 2px var(--accent), 0 8px 25px rgba(154, 103, 56, 0.2);
-  transform: scale(1.01);
+  border-color: var(--accent);
+  background: linear-gradient(145deg, rgba(184, 130, 78, 0.14), rgba(154, 103, 56, 0.04));
+  box-shadow: 0 0 0 1px var(--accent), 0 14px 32px rgba(154, 103, 56, 0.18);
+  transform: translateY(-1px);
   transition: all 0.2s ease;
 }
 
 .verse-card.focus-mode {
-  opacity: 0.4;
-}
-
-.verse-card.focus-mode.active {
-  opacity: 1;
+  opacity: 0.38;
 }
 
 .verse-card.blurred {
-  filter: blur(6px);
-  transition: filter 0.3s ease, transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  filter: blur(4px);
+  opacity: 0.22;
+  transform: scale(0.985);
+  transition: filter 0.3s ease, transform 0.2s, box-shadow 0.2s, border-color 0.2s, opacity 0.2s ease;
 }
 
 .verse-card.blurred:hover {
   filter: blur(0px);
+  opacity: 0.55;
+}
+
+.verse-card.serious-training:not(.active)::after {
+  content: "For serious huffadh training";
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  opacity: 0.7;
 }
 
 .verse-header {
@@ -4414,11 +5330,32 @@ body {
 }
 
 .verse-number {
-  font-size: 0.75rem;
-  padding: 4px 12px;
+  font-size: 0.78rem;
+  padding: 6px 12px;
+  background: var(--accent);
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.24);
+}
+
+.verse-status-badge,
+.verse-status-subtle {
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.verse-status-badge {
   background: var(--accent-light);
-  border-radius: 20px;
   color: var(--accent);
+  border: 1px solid var(--accent-soft);
+}
+
+.verse-status-subtle {
+  background: var(--bg-elevated);
+  color: var(--text-muted);
 }
 
 .verse-ref {
@@ -4641,6 +5578,14 @@ body {
   transition: all 0.2s ease;
 }
 
+.toolbar-chip i,
+.rail-btn i,
+.tools-tabs button i,
+.st-ico i {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
 .toolbar-chip.active {
   background: var(--accent);
   color: #fff;
@@ -4735,6 +5680,10 @@ body {
   cursor: pointer;
   color: rgba(0, 0, 0, 0.55);
   font-weight: 450;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   transition: background 140ms ease, color 140ms ease, transform 140ms ease;
 }
 
@@ -5312,7 +6261,7 @@ body {
 /* Floating Player */
 .player-bar {
   position: fixed;
-  bottom: 32px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
   left: 50%;
   transform: translateX(-50%);
   width: 90%;
@@ -5328,6 +6277,14 @@ body {
   gap: 8px;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  transition: transform 0.22s ease, opacity 0.22s ease, padding 0.22s ease;
+}
+
+.player-bar.collapsed {
+  transform: translateX(-50%) translateY(54px);
+  opacity: 0.92;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 .player-main {
@@ -5363,6 +6320,212 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.sheet-fade-enter-active,
+.sheet-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.sheet-fade-enter-from,
+.sheet-fade-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.chaining-setup {
+  overflow: hidden;
+}
+
+.chaining-wizard {
+  padding: 20px;
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-elevated) 100%);
+}
+
+.chaining-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.chaining-kicker {
+  display: inline-block;
+  margin-bottom: 6px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+
+.chaining-hero h3 {
+  margin-bottom: 6px;
+  font-size: 1.3rem;
+  color: var(--text);
+}
+
+.chaining-hero p {
+  max-width: 46ch;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.chaining-progress-chip {
+  white-space: nowrap;
+  background: var(--accent-light);
+  color: var(--accent);
+  border: 1px solid var(--accent-soft);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.chaining-progress {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.chain-progress-step {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.chain-progress-step span {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  border-radius: 50%;
+  background: var(--border);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.chain-progress-step strong {
+  display: block;
+  font-size: 0.86rem;
+  color: var(--text);
+}
+
+.chain-progress-step.active,
+.chain-progress-step.done {
+  border-color: var(--accent-soft);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+}
+
+.chain-progress-step.active span,
+.chain-progress-step.done span {
+  background: var(--accent);
+  color: #fff;
+}
+
+.chain-progress-step.active {
+  transform: translateY(-1px);
+}
+
+.chaining-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 18px;
+}
+
+.chain-step-copy h4 {
+  margin-bottom: 4px;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.chain-step-copy p {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+}
+
+.chain-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.chain-choice-grid-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.chain-choice-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.chain-choice-card strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text);
+  font-size: 0.92rem;
+}
+
+.chain-choice-card span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.chain-choice-card:hover,
+.chain-choice-card.active {
+  border-color: var(--accent);
+  box-shadow: 0 14px 28px rgba(154, 103, 56, 0.12);
+  transform: translateY(-1px);
+}
+
+.chain-session-preview {
+  background: var(--accent-light);
+  border: 1px solid var(--accent-soft);
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+
+.chain-preview-line {
+  margin-bottom: 4px;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.84rem;
+}
+
+.chain-session-preview small {
+  color: var(--text-muted);
+}
+
+.chain-step-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.chain-step-actions.split {
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.chain-secondary-btn {
+  min-width: 110px;
 }
 
 /* Chaining UI */
@@ -5615,8 +6778,8 @@ body {
 
 
 .player-btn {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
   border: none;
   background: none;
@@ -5636,8 +6799,8 @@ body {
 .player-play {
   background: var(--accent);
   color: white;
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(139, 94, 60, 0.3);
 }
@@ -5692,24 +6855,99 @@ body {
   opacity: 0;
 }
 
+.mode-guide-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 20, 12, 0.4);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1200;
+}
+
+.mode-guide-modal {
+  width: min(520px, 100%);
+  background: linear-gradient(180deg, var(--surface), var(--bg-elevated));
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: var(--shadow-lg);
+}
+
+.mode-guide-kicker {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.mode-guide-modal h3 {
+  margin-bottom: 8px;
+  font-size: 1.2rem;
+}
+
+.mode-guide-modal p {
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.mode-guide-points {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.mode-guide-point {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.mode-guide-point strong {
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.mode-guide-point span {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-align: right;
+}
+
+.mode-guide-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 .verse-translation {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: #5a6b63;
   line-height: 1.6;
   padding-top: 12px;
-  margin-top: 8px;
+  margin-top: 10px;
   border-top: 1px solid var(--border);
   display: block;
+  opacity: 0.92;
 }
 
 .verse-transliteration {
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   color: var(--text-muted);
   font-style: italic;
-  margin-top: 8px;
+  margin-top: 10px;
   padding-top: 8px;
   border-top: 1px solid var(--border);
   line-height: 1.5;
+  opacity: 0.98;
 }
 
 .verse-words {
@@ -6294,6 +7532,24 @@ body {
   background: var(--bg-elevated);
 }
 
+.confirm-modal {
+  max-width: 460px;
+  width: 100%;
+}
+
+.confirm-copy {
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+
+.btn-danger {
+  background: #b55041;
+}
+
+.tools-btn-danger {
+  opacity: 0.82;
+}
+
 .btn-icon {
   background: none;
   border: none;
@@ -6520,6 +7776,21 @@ body {
   color: var(--text-muted);
 }
 
+.mini-trend {
+  position: relative;
+  width: 80px;
+  height: 24px;
+  margin-top: 10px;
+}
+
+.mini-trend span {
+  position: absolute;
+  width: 8px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--accent), var(--accent-soft));
+  opacity: 0.9;
+}
+
 /* Home Dashboard UI */
 .home-dashboard {
   max-width: 800px;
@@ -6568,6 +7839,41 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 20px;
   margin-bottom: 40px;
+}
+
+.continue-session-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+  border: 1px solid var(--accent-soft);
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--surface), var(--accent-light));
+  box-shadow: var(--shadow-sm);
+}
+
+.continue-session-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.continue-session-kicker {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+
+.continue-session-copy small {
+  color: var(--text-muted);
+}
+
+.continue-session-btn {
+  min-height: 44px;
+  white-space: nowrap;
 }
 
 .action-card {
@@ -6704,5 +8010,58 @@ body {
 .r-stat strong {
   font-size: 1.4rem;
   color: var(--text);
+}
+
+@media (max-width: 768px) {
+  .continue-session-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .continue-session-btn,
+  .btn-primary,
+  .btn-secondary,
+  .tools-btn,
+  .player-btn,
+  .toolbar-chip,
+  .tools-tabs button {
+    min-height: 44px;
+  }
+
+  .player-bar {
+    width: calc(100% - 24px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+    padding: 12px 14px;
+  }
+
+  .player-main {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .player-progress-wrap {
+    order: 4;
+    width: 100%;
+  }
+
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-content,
+  .confirm-modal,
+  .mode-guide-modal,
+  .planner-modal {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 18px;
+  }
+
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 }
 </style>
