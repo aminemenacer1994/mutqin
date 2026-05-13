@@ -1,5 +1,5 @@
 <template>
-  <div class="app" :data-theme="theme">
+  <div class="app" :data-theme="theme" v-cloak>
     <div v-if="banner" class="banner" :class="banner.kind">
       <span>{{ banner.message }}</span>
       <div class="banner-actions">
@@ -112,50 +112,65 @@
           </div>
         </section>
 
-        <div class="session-rail-mini" v-if="currentChapter && hasVerses">
-          <!-- No clickable header, no chevron icon -->
-          <div class="rail-mini-content">
-            <div class="rail-mini-info">
-              <div class="rail-mini-icon">
-                <i class="bi bi-book-half"></i>
-              </div>
-              <div class="rail-mini-details">
-                <span class="rail-mini-surah">{{ currentChapter.name_simple }}</span>
-                <span class="rail-mini-progress">{{ currentPosition }}/{{ totalVerses }} · {{ progressPercent }}%</span>
-              </div>
+        <!-- Updated Session Rail -->
+        <div class="session-rail" v-if="currentChapter && hasVerses">
+          <div class="session-rail-top">
+            <div class="session-rail-copy">
+              <div class="session-rail-kicker">CURRENT SESSION</div>
+              <div class="session-rail-title">{{ currentChapter.name_simple }}</div>
+              <div class="session-rail-meta">Ayah {{ currentPosition }}/{{ totalVerses }} · {{ progressPercent }}%</div>
             </div>
+            <div class="session-rail-actions">
+              <!-- MODE BUTTON - Added to left side -->
+              <button class="rail-btn mode-btn" @click="openModeSettings" title="Change Mode">
+                <i class="bi" :class="currentMode === 'beginner' ? 'bi-star-fill' : 'bi-gear-fill'"></i>
+                <span>{{ currentMode === 'beginner' ? 'Beginner' : 'Advanced' }}</span>
+                <i class="bi bi-chevron-down"></i>
+              </button>
 
-            <div class="rail-mini-stats">
-              <div class="mini-stat-item">
-                <i class="bi bi-hourglass-split"></i>
-                <span>{{ etaLabel }}</span>
-              </div>
-              <div class="mini-stat-item">
-                <i class="bi bi-arrow-repeat"></i>
-                <span>{{ remainingAyahs }} left</span>
-              </div>
-            </div>
+              <!-- PLAN BUTTON -->
+              <button class="rail-btn rail-btn-ghost" @click="showPlannerModal = true">
+                <i class="bi bi-calendar-check"></i><span>Plan</span>
+              </button>
 
-            <div class="rail-mini-actions">
-              <button class="mini-btn" @click="handlePrimaryAction" :title="isPlaying ? 'Pause' : 'Start'">
+              <!-- STATS BUTTON -->
+              <button class="rail-btn rail-btn-ghost" @click="tab = 'analytics'; showTools = true">
+                <i class="bi bi-bar-chart"></i><span>Stats</span>
+              </button>
+
+              <!-- START SESSION BUTTON -->
+              <button class="rail-btn rail-btn-primary" @click="handlePrimaryAction">
                 <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-              </button>
-              <button class="mini-btn" @click="showTools = true" title="Settings">
-                <i class="bi bi-sliders2"></i>
+                <span>{{ isPlaying ? 'Pause' : 'Start' }}</span>
               </button>
             </div>
           </div>
-          <!-- Content is ALWAYS visible - no v-show, no transition -->
+
           <div class="session-rail-stats">
-            <div class="rail-stat"><span>Session</span><strong>{{ sessionTypeInfo.label }}</strong></div>
-            <div class="rail-stat"><span>Progress</span><strong>{{ progressPercent }}%</strong></div>
-            <div class="rail-stat"><span>Remaining</span><strong>{{ remainingAyahs }}</strong></div>
-            <div class="rail-stat"><span>ETA</span><strong>{{ etaLabel }}</strong></div>
+            <div class="rail-stat">
+              <span>SESSION</span>
+              <strong>{{ sessionTypeInfo.label }}</strong>
+            </div>
+            <div class="rail-stat">
+              <span>PROGRESS</span>
+              <strong>{{ progressPercent }}%</strong>
+            </div>
+            <div class="rail-stat">
+              <span>REMAINING</span>
+              <strong>{{ remainingAyahs }}</strong>
+            </div>
+            <div class="rail-stat">
+              <span>ETA</span>
+              <strong>{{ etaLabel }}</strong>
+            </div>
           </div>
-          <div class="rail-mini-progress">
-            <div class="progress-fill-mini" :style="{ width: progressPercent + '%' }"></div>
+
+          <div class="progress-bar progress-bar-wide">
+            <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
           </div>
         </div>
+
+        <!-- REMOVE the standalone beginner mode button if it exists elsewhere -->
 
         <div class="reading-toolbar">
           <div class="reading-toolbar-group">
@@ -240,18 +255,16 @@
         </div>
 
         <!-- Verses Grid -->
+        <div v-if="!isDataReady" class="loading-spinner">
+          <i class="bi bi-hourglass-split"></i>
+          <span>Loading...</span>
+        </div>
         <div v-else-if="hasVerses" class="verses-grid">
-          <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" :class="{
-            'verse-card': true,
-            active: activeVerseKey === verse.key,
-            'focus-mode': focusMode && activeVerseKey !== verse.key,
-            blurred: blurAdjacent && activeVerseKey && activeVerseKey !== verse.key
-          }">
+          <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" class="verse-card"
+            :class="{ active: activeVerseKey === verse.key }">
             <div class="verse-header">
-              <div class="verse-badges">
-                <span class="verse-number">Ayah {{ verse.number }}</span>
-                <span class="verse-ref">{{ verse.key }}</span>
-              </div>
+              <span class="verse-number">Ayah {{ verse.number }}</span>
+
 
               <div class="verse-actions">
                 <!-- Font size controls -->
@@ -280,10 +293,14 @@
               </div>
             </div>
 
-            <div class="verse-arabic" dir="rtl" lang="ar" v-html="getDisplayArabic(verse)" :class="{
-              'word-highlight-enabled': wordByWordAudioEnabled && !tajweedEnabled,
-              'tajweed-enabled': tajweedEnabled
-            }" :style="{ fontSize: getVerseFontSize(verse.key) + '%', fontFamily: quranFontFamily }">
+            <div class="verse-arabic" dir="rtl" v-if="verse.arabic && isDataReady" v-html="getDisplayArabic(verse)"
+              :class="{
+                'tajweed-enabled': tajweedEnabled,
+                'word-highlight-enabled': showWordByWord && wordByWordAudioEnabled && !tajweedEnabled
+              }" :style="{
+                fontSize: getVerseFontSize(verse.key) + '%',
+                fontFamily: quranFontFamily
+              }">
             </div>
 
             <!-- Translation - shows only if showTranslation is true AND translation exists -->
@@ -901,7 +918,7 @@
             <div class="player-chapter">{{ currentChapter?.name_simple || 'Quran' }}</div>
             <div class="player-verse">
               Ayah {{ activeVerseKey }}
-              <span v-if="etaLabel && isPlaying" class="player-eta">
+              <span v-if="etaLabel && isPlaying" class="player-eta" :title="getEtaTooltip()">
                 &bull; {{ etaLabel }} remaining
               </span>
             </div>
@@ -942,6 +959,7 @@ export default {
   },
   data() {
     return {
+      isDataReady: false,
       fontDropdownOpen: false,
       verseFontSizes: {},
       defaultFontSize: 150,
@@ -1443,14 +1461,72 @@ export default {
 
     // Fix ETA calculation in computed property
     etaLabel() {
-      const remainingInQueue = (this.queue || []).slice(this.queueIndex)
-      const avgAudioLengthPerAyah = 6 // seconds
-      const repetitions = this.currentMode === 'beginner' ? this.beginnerRepeats : this.advancedRepeats
-      const reviewTimePerAyah = 3 // seconds for review
+      const remainingItems = (this.queue || []).slice(this.queueIndex)
+      if (!remainingItems.length) return '0 min'
 
-      const totalSeconds = remainingInQueue.length * repetitions * avgAudioLengthPerAyah +
-        remainingInQueue.length * reviewTimePerAyah
+      // Get repetition count based on current mode
+      const repetitionCount = this.currentMode === 'beginner'
+        ? (this.beginner.repeats || 1)
+        : (this.repeatAndLoopAudio ? (this.advancedRepeats || 1) : 1)
+
+      // Average audio length per ayah in seconds (typical recitation)
+      const avgAudioLengthPerAyah = 8 // seconds per ayah at normal speed
+
+      // Adjust for playback speed
+      const speedFactor = this.speed || 1
+      const adjustedAudioLength = avgAudioLengthPerAyah / speedFactor
+
+      // Review time per ayah (active recall, repetition)
+      const reviewTimePerAyah = 5 // seconds
+
+      // Calculate total seconds
+      let totalSeconds = 0
+
+      remainingItems.forEach(item => {
+        const verse = item.verse || item
+        // Longer verses take more time
+        const verseLength = verse.arabic?.length || 100
+        const verseComplexity = Math.min(2, Math.max(0.8, verseLength / 150))
+
+        // Audio time for this verse
+        const audioTime = adjustedAudioLength * verseComplexity
+
+        // Total time = (audio × repetitions) + review time
+        const verseTotal = (audioTime * repetitionCount) + reviewTimePerAyah
+        totalSeconds += verseTotal
+      })
+
+      // Add delay time between verses
+      const delaySeconds = (this.delay || 1) * (remainingItems.length - 1)
+      totalSeconds += delaySeconds
+
+      // Convert to minutes, minimum 1 minute
       const minutes = Math.max(1, Math.ceil(totalSeconds / 60))
+
+      return `≈ ${minutes} min`
+    },
+
+    etaLabelAudioOnly() {
+      const remainingItems = (this.queue || []).slice(this.queueIndex)
+      if (!remainingItems.length) return '0 min'
+
+      const repetitionCount = this.currentMode === 'beginner'
+        ? (this.beginner.repeats || 1)
+        : (this.repeatAndLoopAudio ? (this.advancedRepeats || 1) : 1)
+
+      const avgAudioLengthPerAyah = 8
+      const speedFactor = this.speed || 1
+      const adjustedAudioLength = avgAudioLengthPerAyah / speedFactor
+
+      let totalAudioSeconds = 0
+      remainingItems.forEach(item => {
+        const verse = item.verse || item
+        const verseLength = verse.arabic?.length || 100
+        const verseComplexity = Math.min(2, Math.max(0.8, verseLength / 150))
+        totalAudioSeconds += adjustedAudioLength * verseComplexity * repetitionCount
+      })
+
+      const minutes = Math.max(1, Math.ceil(totalAudioSeconds / 60))
       return `Audio time ≈ ${minutes} min`
     },
 
@@ -1517,7 +1593,8 @@ export default {
     this.loadMetrics()
     this.initAudio()
     this.theme = document.documentElement.getAttribute('data-theme') || this.theme
-    this.loadBookmarksPins()
+    this.loadBookmarksPins(),
+      this.setupWordClickHandler()
 
 
     if (this.currentMode === 'advanced' && this.advanced.chapterId) {
@@ -1595,38 +1672,176 @@ export default {
     },
 
     tab(newVal) {
+      const oldMode = this.currentMode
+
       if (newVal === 'beginner' && this.currentMode !== 'beginner') {
         this.currentMode = 'beginner'
-        // Sync content state from advanced
-        if (this.advanced.chapterId) {
-          this.beginner.chapterId = this.advanced.chapterId
-          this.beginner.rangeStart = this.advanced.rangeStart
-          this.beginner.rangeEnd = this.advanced.rangeEnd
-          this.beginner.reciterId = this.advanced.reciterId
-          this.beginner.verses = [...this.advanced.verses]
-          this.rebuildQueue()
-        } else if (this.beginner.chapterId && this.beginner.verses.length === 0) {
+        this.syncModesData()  // Sync data from advanced
+        if (!this.beginner.verses.length && this.beginner.chapterId) {
           this.loadVerses()
         }
       } else if (newVal === 'advanced' && this.currentMode !== 'advanced') {
         this.currentMode = 'advanced'
-        // Sync content state from beginner
-        if (this.beginner.chapterId) {
-          this.advanced.chapterId = this.beginner.chapterId
-          this.advanced.rangeStart = this.beginner.rangeStart
-          this.advanced.rangeEnd = this.beginner.rangeEnd
-          this.advanced.reciterId = this.beginner.reciterId
-          this.advanced.verses = [...this.beginner.verses]
-          this.rebuildQueue()
-        } else if (this.advanced.chapterId && this.advanced.verses.length === 0) {
+        this.syncModesData()  // Sync data from beginner
+        if (!this.advanced.verses.length && this.advanced.chapterId) {
           this.loadVerses()
         }
       }
+
       this.persistUiState()
+      this.$forceUpdate()
     }
   },
 
   methods: {
+    // Open mode settings in offcanvas
+    openModeSettings() {
+      // Open the offcanvas tools panel
+      this.showTools = true
+
+      // Set the tab to beginner or advanced based on current mode
+      if (this.currentMode === 'beginner') {
+        this.tab = 'beginner'
+      } else {
+        this.tab = 'advanced'
+      }
+
+      // Optional: Scroll to the mode section
+      this.$nextTick(() => {
+        const toolsPanel = document.querySelector('.tools-body')
+        if (toolsPanel) {
+          toolsPanel.scrollTop = 0
+        }
+      })
+
+      this.showBanner(`Switch between Beginner and Advanced modes in the settings panel`, 'info', 3000)
+    },
+
+    // Alternative: Direct mode toggle with confirmation
+    toggleMode() {
+      const newMode = this.currentMode === 'beginner' ? 'advanced' : 'beginner'
+      if (confirm(`Switch to ${newMode === 'beginner' ? 'Beginner' : 'Advanced'} mode? Your settings will be preserved.`)) {
+        this.currentMode = newMode
+        this.tab = newMode
+        this.persistUiState()
+        this.showBanner(`Switched to ${newMode === 'beginner' ? 'Beginner' : 'Advanced'} Mode`, 'success', 2000)
+      }
+    },
+    // Sync data between beginner and advanced modes
+    syncModesData() {
+      // When switching from beginner to advanced
+      if (this.currentMode === 'advanced' && this.beginner.chapterId) {
+        this.advanced.chapterId = this.beginner.chapterId
+        this.advanced.rangeStart = this.beginner.rangeStart
+        this.advanced.rangeEnd = this.beginner.rangeEnd
+        this.advanced.reciterId = this.beginner.reciterId
+        this.advanced.speed = this.beginner.speed
+        this.advanced.delay = this.beginner.delay
+        this.advanced.playMode = this.beginner.playMode
+        this.advanced.order = this.beginner.order
+        this.advanced.focusMode = this.beginner.focusMode
+        this.advanced.blurAdjacent = this.beginner.blurAdjacent
+        this.advanced.verses = [...this.beginner.verses]
+        this.advanced.activeKey = this.beginner.activeKey
+        this.advanced.queue = [...this.beginner.queue]
+        this.advanced.queueIndex = this.beginner.queueIndex
+      }
+
+      // When switching from advanced to beginner
+      if (this.currentMode === 'beginner' && this.advanced.chapterId) {
+        this.beginner.chapterId = this.advanced.chapterId
+        this.beginner.rangeStart = this.advanced.rangeStart
+        this.beginner.rangeEnd = this.advanced.rangeEnd
+        this.beginner.reciterId = this.advanced.reciterId
+        this.beginner.speed = this.advanced.speed
+        this.beginner.delay = this.advanced.delay
+        this.beginner.playMode = this.advanced.playMode
+        this.beginner.order = this.advanced.order
+        this.beginner.focusMode = this.advanced.focusMode
+        this.beginner.blurAdjacent = this.advanced.blurAdjacent
+        this.beginner.verses = [...this.advanced.verses]
+        this.beginner.activeKey = this.advanced.activeKey
+        this.beginner.queue = [...this.advanced.queue]
+        this.beginner.queueIndex = this.advanced.queueIndex
+      }
+    },
+
+    // Update tab watcher to sync data
+    updateTabAndSync(tabName) {
+      const oldMode = this.currentMode
+      this.tab = tabName
+      this.currentMode = tabName === 'advanced' ? 'advanced' : 'beginner'
+
+      if (oldMode !== this.currentMode) {
+        this.syncModesData()
+      }
+
+      this.persistUiState()
+      this.$forceUpdate()
+    },
+    setupWordClickHandler() {
+      document.addEventListener('click', (e) => {
+        const wordElement = e.target.closest('.wbw-word')
+        if (wordElement && this.wordByWordAudioEnabled) {
+          const verseKey = wordElement.dataset.verseKey
+          const wordIndex = parseInt(wordElement.dataset.wordIndex)
+          const wordAudio = wordElement.dataset.wordAudio
+
+          if (wordAudio) {
+            this.playWordAudio(wordAudio)
+          } else {
+            // Find verse and play from this word position
+            const verse = this.verses.find(v => v.key === verseKey)
+            if (verse && verse.audio) {
+              this.playVerse(verse)
+              // TODO: Seek to word position if possible
+            }
+          }
+        }
+      })
+    },
+    getRemainingTimeDetails() {
+      const remainingItems = (this.queue || []).slice(this.queueIndex)
+      if (!remainingItems.length) return null
+
+      const repetitionCount = this.currentMode === 'beginner'
+        ? (this.beginner.repeats || 1)
+        : (this.repeatAndLoopAudio ? (this.advancedRepeats || 1) : 1)
+
+      const avgAudioLengthPerAyah = 8
+      const speedFactor = this.speed || 1
+      const reviewTimePerAyah = 5
+
+      let totalAudioSeconds = 0
+      let totalReviewSeconds = 0
+
+      remainingItems.forEach(item => {
+        const verse = item.verse || item
+        const verseLength = verse.arabic?.length || 100
+        const verseComplexity = Math.min(2, Math.max(0.8, verseLength / 150))
+
+        totalAudioSeconds += (avgAudioLengthPerAyah / speedFactor) * verseComplexity * repetitionCount
+        totalReviewSeconds += reviewTimePerAyah
+      })
+
+      const totalSeconds = totalAudioSeconds + totalReviewSeconds
+      const minutes = Math.ceil(totalSeconds / 60)
+      const audioMinutes = Math.ceil(totalAudioSeconds / 60)
+      const reviewMinutes = Math.ceil(totalReviewSeconds / 60)
+
+      return {
+        totalMinutes: minutes,
+        audioMinutes: audioMinutes,
+        reviewMinutes: reviewMinutes,
+        verseCount: remainingItems.length,
+        repetitionCount: repetitionCount
+      }
+    },
+    getEtaTooltip() {
+      const details = this.getRemainingTimeDetails()
+      if (!details) return ''
+      return `${details.audioMinutes} min audio + ${details.reviewMinutes} min review`
+    },
     toggleFontDropdown() {
       this.fontDropdownOpen = !this.fontDropdownOpen
     },
@@ -1922,18 +2137,30 @@ export default {
     getDisplayArabic(verse) {
       if (!verse || !verse.arabic) return ''
 
-      // If tajweed is enabled, use the pre-formatted tajweed text from API
-      if (this.tajweedEnabled && verse.arabic_tajweed) {
-        // The API already provides HTML with proper tajweed coloring
-        return verse.arabic_tajweed
+      // If data is not ready, return plain text
+      if (!this.isDataReady) {
+        return verse.arabic
       }
 
-      // Otherwise use regular Arabic with word highlighting if enabled
-      if (this.wordByWordAudioEnabled) {
-        return this.splitArabicIntoWords(verse.arabic, verse.key)
+      // Tajweed takes priority
+      if (this.tajweedEnabled && verse.arabic_tajweed) {
+        // Sanitize the HTML to prevent XSS and broken rendering
+        return this.sanitizeHtml(verse.arabic_tajweed)
+      }
+
+      // Word by word highlighting
+      if (this.showWordByWord && this.wordByWordAudioEnabled && !this.tajweedEnabled) {
+        return this.splitArabicIntoWords(verse)
       }
 
       return verse.arabic
+    },
+
+    // Add sanitize method
+    sanitizeHtml(html) {
+      if (!html) return ''
+      // Remove any script tags
+      return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
     },
 
     // Arabic text word splitting and highlighting
@@ -1945,32 +2172,40 @@ export default {
       return highlightedHtml
     },
 
-    splitArabicIntoWords(arabicText, verseKey) {
-      if (!arabicText || !this.wordByWordAudioEnabled) {
-        return arabicText
+    splitArabicIntoWords(verse) {
+      if (!verse || !verse.arabic) return ''
+
+      // If we have word objects from API, use them
+      if (verse.words && verse.words.length > 0) {
+        let html = ''
+        verse.words.forEach((word, idx) => {
+          const isActive = this.currentHighlightedVerseKey === verse.key && this.currentWordIndex === idx
+          const highlightClass = isActive ? 'highlighted' : ''
+
+          html += `<word class="wbw-word ${highlightClass}" 
+                     data-word-index="${idx}" 
+                     data-verse-key="${verse.key}"
+                     data-word-audio="${word.audio || ''}">
+                ${word.ar}
+              </word> `
+        })
+        return html
       }
 
-      const isActiveVerse = this.currentHighlightedVerseKey === verseKey
-      const words = arabicText.split(/(\s+)/)
-      let result = ''
-      let wordIndex = 0
+      // Fallback: Split by spaces
+      const words = verse.arabic.split(/\s+/)
+      let html = ''
+      words.forEach((word, idx) => {
+        const isActive = this.currentHighlightedVerseKey === verse.key && this.currentWordIndex === idx
+        const highlightClass = isActive ? 'highlighted' : ''
 
-      for (let i = 0; i < words.length; i++) {
-        let word = words[i]
-
-        if (word.trim() === '') {
-          result += word
-          continue
-        }
-
-        const isHighlighted = isActiveVerse && (this.currentWordIndex === wordIndex)
-        const highlightClass = isHighlighted ? 'highlighted' : ''
-
-        result += `<word data-verse="${verseKey}" data-word-index="${wordIndex}" class="${highlightClass}">${word}</word>`
-        wordIndex++
-      }
-
-      return result
+        html += `<word class="wbw-word ${highlightClass}" 
+                   data-word-index="${idx}" 
+                   data-verse-key="${verse.key}">
+              ${word}
+            </word> `
+      })
+      return html
     },
 
     async getWordTimings(verse, actualDuration = null) {
@@ -2026,30 +2261,76 @@ export default {
       return timestamps
     },
 
+    calculateWordTimings(verse, audioDuration = null) {
+      return new Promise((resolve) => {
+        if (!verse.words || verse.words.length === 0) {
+          resolve([])
+          return
+        }
+
+        const wordCount = verse.words.length
+        const totalDuration = audioDuration || this.estimateVerseDuration(verse)
+        const durationPerWord = totalDuration / wordCount
+
+        const timestamps = []
+        let currentTime = 0
+
+        for (let i = 0; i < wordCount; i++) {
+          timestamps.push({
+            index: i,
+            start: currentTime,
+            end: currentTime + durationPerWord
+          })
+          currentTime += durationPerWord
+        }
+
+        resolve(timestamps)
+      })
+    },
+
+    estimateVerseDuration(verse) {
+      // Estimate based on verse length
+      const arabicLength = verse.arabic?.length || 100
+      const baseDuration = Math.min(45, Math.max(5, arabicLength / 10))
+      return baseDuration / (this.speed || 1)
+    },
+
     async startWordHighlighting(verse) {
       this.stopWordHighlighting()
 
-      if (!this.wordByWordAudioEnabled) {
+      if (!this.showWordByWord || !this.wordByWordAudioEnabled) {
         return
       }
 
       this.currentHighlightedVerseKey = verse.key
+      this.currentWordIndex = -1
 
-      // Use actual audio duration if available for better sync
-      const actualDuration = this.audioElement?.duration || null
-      const timestamps = await this.getWordTimings(verse, actualDuration)
+      // Calculate approximate timing for each word
+      const wordCount = verse.words?.length || verse.arabic.split(/\s+/).length
+      if (wordCount === 0) return
 
-      if (!timestamps.length) return
+      // Get audio duration or estimate
+      const duration = this.audioElement?.duration || this.estimateVerseDuration(verse)
+      const timePerWord = duration / wordCount
+
+      // Create timestamps
+      const timestamps = []
+      for (let i = 0; i < wordCount; i++) {
+        timestamps.push({
+          index: i,
+          start: i * timePerWord,
+          end: (i + 1) * timePerWord
+        })
+      }
 
       const updateHighlight = () => {
-        if (!this.audioElement?.currentTime) return
+        if (!this.audioElement || !this.audioElement.currentTime || !this.isPlaying) return
 
         const currentTime = this.audioElement.currentTime
         let activeIndex = -1
 
         for (let i = 0; i < timestamps.length; i++) {
-          const ts = timestamps[i]
-          if (currentTime >= ts.start && currentTime <= ts.end) {
+          if (currentTime >= timestamps[i].start && currentTime <= timestamps[i].end) {
             activeIndex = i
             break
           }
@@ -2057,7 +2338,7 @@ export default {
 
         if (this.currentWordIndex !== activeIndex) {
           this.currentWordIndex = activeIndex
-          this.updateWordHighlightInDOM(verse.key, activeIndex)
+          this.updateWordHighlight(verse.key, activeIndex)
         }
       }
 
@@ -2065,17 +2346,50 @@ export default {
       this.audioElement.addEventListener('timeupdate', this.wordHighlightHandler)
     },
 
+    updateWordHighlight(verseKey, activeIndex) {
+      this.$nextTick(() => {
+        // Find all word elements in the active verse
+        const words = document.querySelectorAll(`.verse-card[data-verse-key="${verseKey}"] .wbw-word`)
+
+        words.forEach((word, idx) => {
+          if (idx === activeIndex) {
+            word.classList.add('highlighted')
+            // Scroll into view
+            word.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' })
+          } else {
+            word.classList.remove('highlighted')
+          }
+        })
+      })
+    },
+
     updateWordHighlightInDOM(verseKey, activeWordIndex) {
       if (activeWordIndex === -1) return
 
       this.$nextTick(() => {
+        // Find the verse card
         const verseCard = document.querySelector(`.verse-card[data-verse-key="${verseKey}"]`)
         if (!verseCard) return
 
-        const activeWord = verseCard.querySelector(`.verse-arabic word[data-word-index="${activeWordIndex}"]`)
+        // Remove highlight from all words in this verse
+        const allWords = verseCard.querySelectorAll(`.verse-arabic word[data-verse="${verseKey}"]`)
+        allWords.forEach(word => {
+          word.classList.remove('highlighted')
+        })
 
-        if (activeWord && this.wordByWordAudioEnabled && this.isPlaying) {
-          activeWord.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' })
+        // Add highlight to the active word
+        const activeWord = verseCard.querySelector(`.verse-arabic word[data-verse="${verseKey}"][data-word-index="${activeWordIndex}"]`)
+        if (activeWord) {
+          activeWord.classList.add('highlighted')
+
+          // Scroll into view if needed
+          if (this.wordByWordAudioEnabled && this.isPlaying) {
+            activeWord.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+              inline: 'center'
+            })
+          }
         }
       })
     },
@@ -2138,6 +2452,7 @@ export default {
         return
       }
 
+      // Stop current playback and highlighting
       this.stopWordHighlighting()
       if (this.audioElement) {
         try { this.audioElement.pause() } catch (e) { }
@@ -2172,8 +2487,12 @@ export default {
             this.isPlaying = true
             this.markPlaybackStart()
 
+            // Start word highlighting AFTER audio starts playing
             if (this.wordByWordAudioEnabled) {
-              await this.startWordHighlighting(verse)
+              // Small delay to ensure audio is fully playing
+              setTimeout(() => {
+                this.startWordHighlighting(verse)
+              }, 100)
             }
             resolve()
           } catch (err) {
@@ -2277,12 +2596,15 @@ export default {
     async loadVerses() {
       if (!this.chapterId) return
 
+      // Set loading false while loading
+      this.isDataReady = false
+
       const params = {
         per_page: 300,
         audio: this.reciterId,
-        fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs,text_imlaei',
+        fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs',
         words: true,
-        word_fields: 'text_uthmani,translation',
+        word_fields: 'text_uthmani,translation,transliteration',
         translations: '20'
       }
 
@@ -2294,23 +2616,31 @@ export default {
 
         const mappedVerses = all
           .filter(v => v.verse_number >= start && v.verse_number <= end)
-          .map(v => ({
-            key: v.verse_key,
-            number: v.verse_number,
-            arabic: v.text_uthmani || '',
-            arabic_tajweed: v.text_uthmani_tajweed || v.text_uthmani || '',  // Add this line
-            arabic_simple: v.text_qpc_hafs || v.text_uthmani || '',
-            translation: v.translations?.[0]?.text ? this.cleanTranslationText(v.translations[0].text) : '',
-            transliteration: v.words?.map(w => w.transliteration?.text || '').filter(t => t.length > 0).join(' ') || '',
-            audio: this.normalizeAudioUrl(v.audio?.url || ''),
-            words: (v.words || []).map(w => ({
-              ar: w.text_uthmani || '',
-              en: w.translation?.text || '',
-              transliteration: w.transliteration?.text || '',
-              tooltip: `${w.text_uthmani || ''} • ${w.translation?.text || ''}`.trim(),
-              audio: this.normalizeAudioUrl(w.audio_url)
-            }))
-          }))
+          .map(v => {
+            let transliteration = ''
+            if (v.words && v.words.length > 0) {
+              transliteration = v.words
+                .map(w => w.transliteration?.text || '')
+                .filter(t => t.length > 0)
+                .join(' ')
+            }
+
+            return {
+              key: v.verse_key,
+              number: v.verse_number,
+              arabic: v.text_uthmani || '',
+              arabic_tajweed: v.text_uthmani_tajweed || v.text_uthmani || '',
+              translation: v.translations?.[0]?.text ? this.cleanTranslationText(v.translations[0].text) : '',
+              transliteration: transliteration,
+              audio: this.normalizeAudioUrl(v.audio?.url || ''),
+              words: (v.words || []).map(w => ({
+                ar: w.text_uthmani || '',
+                en: w.translation?.text || '',
+                transliteration: w.transliteration?.text || '',
+                audio: w.audio_url ? this.normalizeAudioUrl(w.audio_url) : null
+              }))
+            }
+          })
 
         if (this.currentMode === 'beginner') {
           this.beginner.verses = mappedVerses
@@ -2319,9 +2649,14 @@ export default {
         }
 
         this.buildQueue()
+
+        // Set ready after data loads
+        this.isDataReady = true
+
       } catch (e) {
         console.error('Error loading verses:', e)
         this.showBanner('Failed to load verses', 'error', 3000)
+        this.isDataReady = true
       }
     },
 
@@ -2337,113 +2672,63 @@ export default {
     },
 
     buildQueue() {
-      const verses = this.currentMode === 'beginner'
-        ? this.beginner.verses
-        : this.advanced.verses
+      const config = this.currentMode === 'beginner' ? this.beginner : this.advanced
+      const verses = config.verses
 
       if (!verses || verses.length === 0) {
-        this.beginner.queue = []
-        this.advanced.queue = []
         this.queue = []
         this.queueIndex = 0
-        this.currentChainStats = { totalEntries: 0, uniqueVerses: 0, repeatsPerVerse: 0, totalDuration: 0 }
         return
       }
 
+      // Get repetition count from current mode
       let rep = 1
       if (this.currentMode === 'beginner') {
         rep = this.beginner.repeats || 1
       } else if (this.currentMode === 'advanced') {
-        if (this.advanced.repeatAndLoopAudio) {
-          rep = this.advanced.advancedRepeats || 1
-        }
+        rep = this.advanced.repeatAndLoopAudio ? (this.advanced.advancedRepeats || 1) : 1
       }
 
       const ord = this.order || 'seq'
-
       const q = []
-      const entryGroups = []
 
       if (ord === 'seq') {
         for (let r = 0; r < rep; r++) {
-          verses.forEach((verse, idx) => {
-            q.push({
-              verse: verse,
-              repeatCount: r + 1,
-              totalRepeats: rep,
-              position: q.length,
-              groupId: `repeat_${r}_verse_${verse.number}`
-            })
-          })
-          entryGroups.push({
-            groupIndex: r,
-            type: 'repeat_cycle',
-            verseCount: verses.length,
-            repeats: r + 1
+          verses.forEach(verse => {
+            q.push({ verse, repeatCount: r + 1, totalRepeats: rep })
           })
         }
-      }
-      else if (ord === 'cum') {
+      } else if (ord === 'cum') {
         for (let r = 0; r < rep; r++) {
           for (let i = 0; i < verses.length; i++) {
             for (let j = 0; j <= i; j++) {
-              q.push({
-                verse: verses[j],
-                repeatCount: r + 1,
-                totalRepeats: rep,
-                position: q.length,
-                cumulativePhase: i + 1,
-                groupId: `cum_phase_${i}_repeat_${r}`
-              })
+              q.push({ verse: verses[j], repeatCount: r + 1, totalRepeats: rep, cumulativePhase: i + 1 })
             }
           }
         }
-      }
-      else if (ord === 'rand') {
+      } else if (ord === 'rand') {
         for (let r = 0; r < rep; r++) {
           const shuffled = [...verses]
           for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+            const j = Math.floor(Math.random() * (i + 1))
+              ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
           }
-          shuffled.forEach((verse, idx) => {
-            q.push({
-              verse: verse,
-              repeatCount: r + 1,
-              totalRepeats: rep,
-              position: q.length,
-              randomSeed: r,
-              groupId: `random_${r}_pos_${idx}`
-            })
+          shuffled.forEach(verse => {
+            q.push({ verse, repeatCount: r + 1, totalRepeats: rep })
           })
         }
       }
 
-      const uniqueVerses = new Set(q.map(item => item.verse.key)).size
-      const totalDuration = this.estimateQueueDuration(q)
+      this.queue = q
+      this.queueIndex = 0
 
-      this.currentChainStats = {
-        totalEntries: q.length,
-        uniqueVerses: uniqueVerses,
-        repeatsPerVerse: rep,
-        totalDuration: totalDuration,
-        repeatGroups: entryGroups,
-        orderType: ord
-      }
-
+      // Save to current mode
       if (this.currentMode === 'beginner') {
         this.beginner.queue = q
         this.beginner.queueIndex = 0
       } else {
         this.advanced.queue = q
         this.advanced.queueIndex = 0
-      }
-
-      this.queue = q
-      this.queueIndex = 0
-
-      if (q.length > 10 && !this.queueViewCollapsed) {
-        this.showQueueViewer = true
       }
     },
 
@@ -2457,12 +2742,41 @@ export default {
     },
 
     async startSession() {
-      if (!this.chapterId || this.chapterId === 0) {
+      // Get current mode config
+      const config = this.currentMode === 'beginner' ? this.beginner : this.advanced
+
+      // Validate surah is selected
+      if (!config.chapterId || config.chapterId === 0) {
         this.showTools = true
         this.showBanner('Please select a surah first', 'info', 3000)
         return
       }
 
+      if (!this.validateSettings()) {
+        return
+      }
+
+      // Apply ALL settings from config before starting
+      this.chapterId = config.chapterId
+      this.rangeStart = config.rangeStart
+      this.rangeEnd = config.rangeEnd
+      this.reciterId = config.reciterId
+      this.speed = config.speed
+      this.delay = config.delay
+      this.playMode = config.playMode
+      this.order = config.order
+      this.focusMode = config.focusMode
+      this.blurAdjacent = config.blurAdjacent
+
+      // Apply advanced specific settings
+      if (this.currentMode === 'advanced') {
+        this.repeatAndLoopAudio = this.advanced.repeatAndLoopAudio
+        this.advancedRepeats = this.advanced.advancedRepeats
+      } else {
+        this.beginnerRepeats = this.beginner.repeats
+      }
+
+      // Load verses if needed
       const currentVerses = this.currentMode === 'beginner'
         ? this.beginner.verses
         : this.advanced.verses
@@ -2480,17 +2794,13 @@ export default {
         return
       }
 
+      // Initialize audio
       if (!this.audioElement) {
         this.initAudio()
       }
 
-      const currentQueue = this.currentMode === 'beginner'
-        ? this.beginner.queue
-        : this.advanced.queue
-
-      if (!currentQueue || currentQueue.length === 0) {
-        this.buildQueue()
-      }
+      // Build queue with current settings
+      this.buildQueue()
 
       const builtQueue = this.currentMode === 'beginner'
         ? this.beginner.queue
@@ -2501,17 +2811,28 @@ export default {
         return
       }
 
+      // Start from beginning
       this.queueIndex = 0
-
       const first = builtQueue[0]
+
       if (first && first.verse) {
         this.activeKey = first.verse.key
         this.activeVerseKey = first.verse.key
         await this.$nextTick()
+
+        // Apply speed before playing
+        if (this.audioElement) {
+          this.audioElement.playbackRate = this.speed
+        }
+
         await this.playVerse(first.verse)
       }
 
+      // Close the offcanvas panel
       this.showTools = false
+
+      // Show confirmation banner
+      this.showBanner(`Session started with ${builtQueue.length} verses to memorize`, 'success', 2000)
     },
 
     // Utility methods
@@ -2565,6 +2886,51 @@ export default {
 
     handlePrimaryAction() {
       this.startSession()
+    },
+
+    handlePrimaryAction() {
+      // Use the current mode's config
+      const config = this.currentMode === 'beginner' ? this.beginner : this.advanced
+
+      if (config.isPlaying) {
+        // Pause logic
+        if (this.audioElement) {
+          this.audioElement.pause()
+          this.isPlaying = false
+          if (this.currentMode === 'beginner') {
+            this.beginner.isPlaying = false
+          } else {
+            this.advanced.isPlaying = false
+          }
+        }
+      } else {
+        // Start session
+        this.startSession()
+      }
+    },
+
+    validateSettings() {
+      const config = this.currentMode === 'beginner' ? this.beginner : this.advanced
+      const errors = []
+
+      if (!config.chapterId || config.chapterId === 0) {
+        errors.push('No surah selected')
+      }
+
+      if (config.rangeStart > config.rangeEnd) {
+        errors.push('Invalid verse range')
+      }
+
+      if (this.currentMode === 'advanced' && config.repeatAndLoopAudio && config.advancedRepeats < 1) {
+        errors.push('Repetition count must be at least 1')
+      }
+
+      if (errors.length > 0) {
+        this.showBanner(`Settings issue: ${errors.join(', ')}`, 'warning', 3000)
+        return false
+      }
+
+      return true
     },
 
     // UI methods
@@ -2998,10 +3364,82 @@ export default {
   --accent-wash: rgba(221, 194, 162, 0.35);
 }
 
+[v-cloak] {
+  display: none !important;
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* Mode Button Styling */
+.mode-btn {
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mode-btn i:first-child {
+  font-size: 0.85rem;
+}
+
+.mode-btn .bi-chevron-down {
+  font-size: 0.7rem;
+  transition: transform 0.2s;
+}
+
+.mode-btn:hover .bi-chevron-down {
+  transform: translateY(2px);
+}
+
+.mode-btn:hover {
+  background: var(--accent-light);
+}
+
+/* Make all buttons consistent */
+.session-rail-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rail-btn {
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+}
+
+.rail-btn-ghost {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.rail-btn-ghost:hover {
+  background: var(--accent);
+  color: white;
+}
+
+.rail-btn-primary {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);
+}
+
+.rail-btn-primary:hover {
+  background: var(--accent-strong);
+  transform: translateY(-1px);
 }
 
 body {
@@ -3015,13 +3453,321 @@ body {
   animation: appFade 260ms ease-out;
 }
 
+/* Prevent FOUC (Flash of Unstyled Content) */
+.verse-arabic {
+  min-height: 60px;
+}
+
+/* Session Rail */
+.session-rail {
+  background: var(--surface);
+  border-radius: 20px;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.session-rail-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.session-rail-copy {
+  flex: 1;
+}
+
+.session-rail-kicker {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.session-rail-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.session-rail-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.session-rail-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.rail-btn {
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+}
+
+.rail-btn-ghost {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.rail-btn-ghost:hover {
+  background: var(--accent);
+  color: white;
+}
+
+.rail-btn-primary {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);
+}
+
+.rail-btn-primary:hover {
+  background: var(--accent-strong);
+  transform: translateY(-1px);
+}
+
+.session-rail-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.rail-stat {
+  background: var(--accent-light);
+  padding: 10px 12px;
+  border-radius: 14px;
+  text-align: center;
+}
+
+.rail-stat span {
+  display: block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.rail-stat strong {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Mode Indicator */
+.mode-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  margin: 8px 0 12px 0;
+  background: var(--accent-light);
+  border-radius: 40px;
+  font-size: 0.7rem;
+  color: var(--accent);
+  border: 1px solid var(--accent-soft);
+  width: fit-content;
+}
+
+.mode-switch-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--accent);
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.mode-switch-btn:hover {
+  background: rgba(154, 103, 56, 0.2);
+  transform: rotate(180deg);
+}
+
+.progress-bar-wide {
+  margin-top: 12px;
+  height: 6px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .session-rail-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .session-rail-actions {
+    justify-content: stretch;
+  }
+
+  .rail-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .session-rail-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+}
+
+.verse-arabic-loading {
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Ensure HTML content is styled properly before Vue mounts */
+.verse-arabic word,
+.verse-arabic .wbw-word {
+  display: inline-block;
+  transition: all 0.15s ease;
+}
+
+/* Prevent raw HTML showing */
+.verse-arabic:empty {
+  display: none;
+}
+
+/* Tajweed styles */
+.verse-arabic.tajweed-enabled [class*="tajweed"] {
+  display: inline;
+}
+
+/* Color rules for tajweed - adjust based on what API returns */
+.verse-arabic [class*="ghunnah"],
+.verse-arabic [class*="Ghunnah"] {
+  color: #2ecc71;
+}
+
+.verse-arabic [class*="madd"],
+.verse-arabic [class*="Madd"] {
+  color: #e74c3c;
+}
+
+.verse-arabic [class*="qalqalah"],
+.verse-arabic [class*="Qalqalah"] {
+  color: #f39c12;
+}
+
+.verse-arabic [class*="ikhfa"],
+.verse-arabic [class*="Ikhfa"] {
+  color: #9b59b6;
+}
+
+.verse-arabic [class*="idgham"],
+.verse-arabic [class*="Idgham"] {
+  color: #3498db;
+}
+
+/* Word by Word styles */
+.wbw-word {
+  display: inline-block;
+  padding: 4px 6px;
+  margin: 2px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  font-size: 1.2rem;
+  background: rgba(154, 103, 56, 0.05);
+}
+
+.wbw-word:hover {
+  background: var(--accent-light);
+  transform: scale(1.02);
+}
+
+.wbw-word.highlighted {
+  background: var(--accent);
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
+}
+
+/* Word highlighting styles */
+.verse-arabic word {
+  display: inline-block;
+  transition: all 0.15s ease;
+  border-radius: 4px;
+  padding: 0 2px;
+  cursor: pointer;
+}
+
+.verse-arabic word.highlighted {
+  background: var(--accent);
+  color: white;
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
+}
+
+.verse-arabic word:hover {
+  background: var(--accent-light);
+  cursor: pointer;
+}
+
+.rail-stat strong,
+.player-eta {
+  cursor: help;
+  border-bottom: 1px dotted var(--text-muted);
+}
+
+/* Optional: Show detailed breakdown on hover */
+.rail-stat:hover strong::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface-strong);
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+
 /* Minimized Session Rail */
 .session-rail-mini {
   position: sticky;
   top: 12px;
   z-index: 18;
   padding: 10px;
-  padding-top: 8px ;
+  padding-top: 8px;
   margin-bottom: 20px;
   background: var(--surface);
   border-radius: 12px;
@@ -3156,11 +3902,11 @@ body {
   .rail-mini-stats {
     display: none;
   }
-  
+
   .rail-mini-content {
     padding: 6px 10px 6px 12px;
   }
-  
+
   .rail-mini-surah {
     font-size: 0.75rem;
   }
@@ -4957,10 +5703,13 @@ body {
 }
 
 .verse-transliteration {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   font-style: italic;
   margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  line-height: 1.5;
 }
 
 .verse-words {
