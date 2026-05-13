@@ -4,7 +4,7 @@
       <span>{{ banner.message }}</span>
       <div class="banner-actions">
         <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
-          }}</button>
+        }}</button>
         <button class="banner-x" @click="banner = null" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
@@ -13,21 +13,22 @@
     <div class="main container" :class="{ 'tools-open': showTools }">
       <div class="content">
         <section v-if="!hasVerses" class="home-dashboard">
-          <div class="dashboard-header">
-            <div class="welcome-text">
-              <div class="hero-kicker">Welcome to Mutqin</div>
-              <h1 class="hero-title">Ready to memorize?</h1>
-              <p class="hero-sub">Generate a fast plan or configure a custom session to start reading.</p>
+          <div class="streak-motivation" v-if="analytics.currentStreak > 0">
+            <div class="streak-badge">
+              <i class="bi bi-fire" style="color: #ee964b;"></i>
+              <span>{{ analytics.currentStreak }} day streak</span>
             </div>
-            <div class="header-stats">
-              <div class="mini-stat">
-                <i class="bi bi-fire" style="color: #ee964b;"></i>
-                <span><strong>{{ analytics.currentStreak }}</strong> Day Streak</span>
-              </div>
-              <div class="mini-stat">
-                <i class="bi bi-check-circle-fill" style="color: #2a9d8f;"></i>
-                <span><strong>{{ analytics.versesMastered }}</strong> Mastered</span>
-              </div>
+            <div class="motivation-message" v-if="analytics.currentStreak === 1">
+              <i class="bi bi-star"></i> Great start! Keep going.
+            </div>
+            <div class="motivation-message" v-else-if="analytics.currentStreak === 3">
+              <i class="bi bi-calendar-heart"></i> 3 days! Consistency is beautiful.
+            </div>
+            <div class="motivation-message" v-else-if="analytics.currentStreak === 7">
+              <i class="bi bi-trophy"></i> One week! مَا شَاءَ ٱللَّٰهُ
+            </div>
+            <div class="motivation-message" v-else-if="analytics.currentStreak >= 30">
+              <i class="bi bi-gem"></i> {{ analytics.currentStreak }} days of dedication
             </div>
           </div>
 
@@ -40,7 +41,7 @@
               </div>
               <i class="bi bi-arrow-right action-arrow"></i>
             </div>
-            
+
             <div class="action-card" @click="startWithFatiha">
               <div class="action-icon"><i class="bi bi-play-circle-fill"></i></div>
               <div class="action-content">
@@ -59,11 +60,40 @@
               <i class="bi bi-arrow-right action-arrow"></i>
             </div>
           </div>
-          
+
+          <div class="dashboard-actions">
+            <div class="action-card primary-action" @click="showPlannerModal = true">
+              <div class="action-icon"><i class="bi bi-magic"></i></div>
+              <div class="action-content">
+                <h3>Quick Plan</h3>
+                <p>Generate a memorization plan in seconds</p>
+              </div>
+              <i class="bi bi-arrow-right action-arrow"></i>
+            </div>
+
+            <div class="action-card" @click="startWithFatiha">
+              <div class="action-icon"><i class="bi bi-play-circle-fill"></i></div>
+              <div class="action-content">
+                <h3>Quickstart Demo</h3>
+                <p>Try the system with Surah Al-Fatiha</p>
+              </div>
+              <i class="bi bi-arrow-right action-arrow"></i>
+            </div>
+
+            <div class="action-card" @click="openSetup">
+              <div class="action-icon"><i class="bi bi-sliders"></i></div>
+              <div class="action-content">
+                <h3>Custom Setup</h3>
+                <p>Configure everything exactly how you want</p>
+              </div>
+              <i class="bi bi-arrow-right action-arrow"></i>
+            </div>
+          </div>
+
           <div class="dashboard-recent">
             <div class="recent-header">
               <h3>Activity Summary</h3>
-              <button class="btn-ghost" @click="tab = 'analytics'; showTools = true">View all stats</button>
+              <button class="btn-ghost" @click="tab = 'analytics'; showTools = true">Stats</button>
             </div>
             <div class="recent-stats">
               <div class="r-stat">
@@ -88,7 +118,7 @@
               <div class="session-rail-kicker">Current session</div>
               <div class="session-rail-title">{{ currentChapter.name_simple }}</div>
               <div class="session-rail-meta">Ayah {{ currentPosition }}/{{ totalVerses }} · Remaining {{ remainingAyahs
-              }} · {{ sessionTypeInfo.label }} · {{ progressPercent }}%</div>
+                }} · {{ sessionTypeInfo.label }} · {{ progressPercent }}%</div>
             </div>
             <div class="session-rail-actions">
               <button class="rail-btn rail-btn-ghost" @click="showPlannerModal = true">
@@ -140,13 +170,27 @@
             </button>
           </div>
           <div class="reading-toolbar-group">
-            <div class="toolbar-font-wrap">
-              <div v-if="fontPickerOpen" class="toolbar-font-menu">
-                <button v-for="font in quranFontOptions" :key="font.value" class="toolbar-font-option"
-                  :class="{ active: quranFont === font.value }" @click="setQuranFont(font.value)">
-                  <span>{{ font.label }}</span>
-                </button>
+            <div class="toolbar-group">
+              <span class="speed-label">Speed</span>
+              <div class="speed-controls">
+                <button class="speed-btn" :class="{ active: speed === 0.75 }" @click="speed = 0.75">0.75x</button>
+                <button class="speed-btn" :class="{ active: speed === 1 }" @click="speed = 1">1x</button>
+                <button class="speed-btn" :class="{ active: speed === 1.25 }" @click="speed = 1.25">1.25x</button>
+                <button class="speed-btn" :class="{ active: speed === 1.5 }" @click="speed = 1.5">1.5x</button>
               </div>
+            </div>
+            <div class="toolbar-group">
+              <div class="toolbar-font-wrap">
+                <div v-if="fontPickerOpen" class="toolbar-font-menu">
+                  <button v-for="font in quranFontOptions" :key="font.value" class="toolbar-font-option"
+                    :class="{ active: quranFont === font.value }" @click="setQuranFont(font.value)">
+                    <span>{{ font.label }}</span>
+                  </button>
+                </div>
+              </div>
+              <button class="toolbar-chip" :class="{ active: script === 'tajweed' }" @click="setScriptMode('tajweed')">
+                <i class="bi bi-palette"></i><span>Tajweed</span>
+              </button>
             </div>
             <button class="toolbar-chip" :class="{ active: script === 'tajweed' }" @click="setScriptMode('tajweed')">
               <i class="bi bi-palette"></i><span>Tajweed</span>
@@ -169,15 +213,16 @@
               <i class="bi" :class="showQueueViewer ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
             </div>
           </div>
-          
+
           <transition name="slide-up">
             <div class="chaining-body" v-if="showQueueViewer">
               <div class="chain-timeline">
-                <div class="chain-step" v-for="(item, idx) in queue" :key="'chain_'+idx"
-                     :class="{ active: idx === queueIndex, completed: idx < queueIndex }"
-                     @click="queueIndex = idx; activeVerseKey = item.verse.key; playVerse(item.verse)">
+                <div class="chain-step" v-for="(item, idx) in queue" :key="'chain_' + idx"
+                  :class="{ active: idx === queueIndex, completed: idx < queueIndex }"
+                  @click="queueIndex = idx; activeVerseKey = item.verse.key; playVerse(item.verse)">
                   <div class="step-indicator">
-                    <i class="bi" :class="idx < queueIndex ? 'bi-check' : (idx === queueIndex ? 'bi-play-fill' : 'bi-circle')"></i>
+                    <i class="bi"
+                      :class="idx < queueIndex ? 'bi-check' : (idx === queueIndex ? 'bi-play-fill' : 'bi-circle')"></i>
                   </div>
                   <div class="step-content">
                     <div class="step-phase">Phase {{ item.cumulativePhase }}</div>
@@ -273,8 +318,8 @@
               @click="tab = 'advanced'">Advanced</button>
             <button :class="{ active: tab === 'analytics', 'active-tab': tab === 'analytics' }"
               @click="tab = 'analytics'"><i class="bi bi-bar-chart"></i> Stats</button>
-            <button :class="{ active: tab === 'offline', 'active-tab': tab === 'offline' }"
-              @click="tab = 'offline'"><i class="bi bi-cloud-check"></i> Offline</button>
+            <button :class="{ active: tab === 'offline', 'active-tab': tab === 'offline' }" @click="tab = 'offline'"><i
+                class="bi bi-cloud-check"></i> Offline</button>
           </div>
         </div>
 
@@ -721,10 +766,10 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <div class="offline-note" v-if="offlineSurahs.length">
-                    <i class="bi bi-info-circle"></i>
-                    <span>Audio requires an internet connection even for saved surahs.</span>
+                  <i class="bi bi-info-circle"></i>
+                  <span>Audio requires an internet connection even for saved surahs.</span>
                 </div>
               </div>
             </section>
@@ -864,15 +909,21 @@
           <div class="field">
             <label>Target Surah</label>
             <select v-model="plannerConfig.surah" class="select" @change="updatePlannerSurah">
-              <option v-for="ch in chapters" :key="ch.id" :value="ch.id">{{ ch.name_simple }} ({{ ch.verses_count }} verses)</option>
+              <option v-for="ch in chapters" :key="ch.id" :value="ch.id">{{ ch.name_simple }} ({{ ch.verses_count }}
+                verses)</option>
             </select>
           </div>
           <div class="field">
             <label>Verses per day</label>
             <input type="number" v-model.number="plannerConfig.versesPerDay" class="input" min="1" max="500">
           </div>
-          
+
           <div class="planner-analytics-grid">
+            <div class="pa-card">
+              <span class="pa-val">{{ plannerCompletionDate }}</span>
+              <span class="pa-lbl">Est. completion date</span>
+              <small class="pa-note">Based on verses/day and your past pace</small>
+            </div>
             <div class="pa-card">
               <span class="pa-val">{{ plannerEstimatedDays }}</span>
               <span class="pa-lbl">Days to Finish</span>
@@ -903,7 +954,12 @@
         <div class="player-main">
           <div class="player-info">
             <div class="player-chapter">{{ currentChapter?.name_simple || 'Quran' }}</div>
-            <div class="player-verse">Ayah {{ activeVerseKey }} <span v-if="etaLabel" class="player-eta">&bull; {{ etaLabel }} remaining</span></div>
+            <div class="player-verse">
+              Ayah {{ activeVerseKey }}
+              <span v-if="etaLabel && isPlaying" class="player-eta">
+                &bull; {{ etaLabel }} remaining
+              </span>
+            </div>
           </div>
           <div class="player-controls">
             <button class="player-btn" @click="prev" title="Previous"><i class="bi bi-skip-start-fill"></i></button>
@@ -1423,11 +1479,17 @@ export default {
       return this.isPlaying ? 'Pause' : 'Start session'
     },
 
+    // Fix ETA calculation in computed property
     etaLabel() {
-      const remainingQueue = (this.queue || []).slice(this.queueIndex).map(v => v?.key).filter(Boolean)
-      const seconds = this.estimateKeysSeconds(remainingQueue)
-      const minutes = Math.max(1, Math.ceil(seconds / 60))
-      return `${minutes} min`
+      const remainingInQueue = (this.queue || []).slice(this.queueIndex)
+      const avgAudioLengthPerAyah = 6 // seconds
+      const repetitions = this.currentMode === 'beginner' ? this.beginnerRepeats : this.advancedRepeats
+      const reviewTimePerAyah = 3 // seconds for review
+
+      const totalSeconds = remainingInQueue.length * repetitions * avgAudioLengthPerAyah +
+        remainingInQueue.length * reviewTimePerAyah
+      const minutes = Math.max(1, Math.ceil(totalSeconds / 60))
+      return `Audio time ≈ ${minutes} min`
     },
 
     currentChainPhase() {
@@ -1935,7 +1997,7 @@ export default {
         if (!verseCard) return
 
         const activeWord = verseCard.querySelector(`.verse-arabic word[data-word-index="${activeWordIndex}"]`)
-        
+
         if (activeWord && this.wordByWordAudioEnabled && this.isPlaying) {
           activeWord.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' })
         }
@@ -2569,12 +2631,23 @@ export default {
     },
 
     persistSessionState() {
-      try {
-        localStorage.setItem('telawa.sessionState', JSON.stringify({
-          activeKey: this.activeKey,
-          queueIndex: this.queueIndex
-        }))
-      } catch (e) { console.error(e) }
+      localStorage.setItem('telawa.sessionState', JSON.stringify({
+        activeKey: this.activeKey,
+        queueIndex: this.queueIndex,
+        timestamp: Date.now()
+      }))
+    },
+
+    restoreSessionState() {
+      const saved = localStorage.getItem('telawa.sessionState')
+      if (saved) {
+        const state = JSON.parse(saved)
+        // Only restore if less than 24 hours old
+        if (Date.now() - state.timestamp < 24 * 60 * 60 * 1000) {
+          this.activeKey = state.activeKey
+          this.queueIndex = state.queueIndex
+        }
+      }
     },
 
     persistAudioState() {
@@ -2875,6 +2948,65 @@ body {
   animation: appFade 260ms ease-out;
 }
 
+.speed-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+
+.speed-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.speed-btn {
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.speed-btn.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.streak-motivation {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-radius: 40px;
+  font-size: 0.75rem;
+}
+
+.streak-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.motivation-message {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.pa-note {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  display: block;
+}
+
 /* Active tab indicator with pulse effect */
 .tools-tabs button.active-tab {
   position: relative;
@@ -2983,7 +3115,11 @@ body {
 
 .verse-card.active {
   border-left: 4px solid var(--accent);
-  background: var(--accent-light);
+  border-radius: 20px;
+  background: linear-gradient(145deg, var(--accent-light), rgba(154, 103, 56, 0.08));
+  box-shadow: 0 0 0 2px var(--accent), 0 8px 25px rgba(154, 103, 56, 0.2);
+  transform: scale(1.01);
+  transition: all 0.2s ease;
 }
 
 .verse-card.focus-mode {
@@ -4284,10 +4420,13 @@ body {
 }
 
 /* Animations */
-.slide-up-enter-active, .slide-up-leave-active {
+.slide-up-enter-active,
+.slide-up-leave-active {
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.slide-up-enter-from, .slide-up-leave-to {
+
+.slide-up-enter-from,
+.slide-up-leave-to {
   transform: translate(-50%, 100px);
   opacity: 0;
 }
@@ -4826,6 +4965,7 @@ body {
 [data-theme="sepia"] .verse-translation {
   color: #7a684a;
 }
+
 /* Planner & Analytics UI */
 .modal-overlay {
   position: fixed;
@@ -4854,8 +4994,15 @@ body {
 }
 
 @keyframes modalFadeIn {
-  from { opacity: 0; transform: translateY(20px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .modal-header {
@@ -4908,12 +5055,14 @@ body {
   max-width: 450px;
   width: 100%;
 }
+
 .planner-analytics-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-top: 24px;
 }
+
 .pa-card {
   background: var(--bg-elevated);
   border: 1px solid var(--border);
@@ -4925,12 +5074,14 @@ body {
   justify-content: center;
   text-align: center;
 }
+
 .pa-val {
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--accent);
   margin-bottom: 4px;
 }
+
 .pa-lbl {
   font-size: 0.8rem;
   color: var(--text-muted);
@@ -5164,5 +5315,4 @@ body {
   font-size: 1.4rem;
   color: var(--text);
 }
-
 </style>
