@@ -4,7 +4,7 @@
       <span>{{ banner.message }}</span>
       <div class="banner-actions">
         <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
-        }}</button>
+          }}</button>
         <button class="banner-x" @click="banner = null" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
@@ -112,19 +112,37 @@
           </div>
         </section>
 
-        <div class="session-rail" v-if="currentChapter && hasVerses">
+        <div class="session-rail-mini" v-if="currentChapter && hasVerses">
           <!-- No clickable header, no chevron icon -->
-          <div class="session-rail-top">
-            <div class="session-rail-copy">
-              <div class="session-rail-kicker">Current session</div>
-              <div class="session-rail-title">{{ currentChapter.name_simple }}</div>
-              <div class="session-rail-meta">Ayah {{ currentPosition }}/{{ totalVerses }} · Remaining {{ remainingAyahs
-                }} · {{ progressPercent }}%</div>
+          <div class="rail-mini-content">
+            <div class="rail-mini-info">
+              <div class="rail-mini-icon">
+                <i class="bi bi-book-half"></i>
+              </div>
+              <div class="rail-mini-details">
+                <span class="rail-mini-surah">{{ currentChapter.name_simple }}</span>
+                <span class="rail-mini-progress">{{ currentPosition }}/{{ totalVerses }} · {{ progressPercent }}%</span>
+              </div>
             </div>
-            <div class="session-rail-actions">
-              <button class="rail-btn" @click="showPlannerModal = true">Plan</button>
-              <button class="rail-btn" @click="tab = 'analytics'; showTools = true">Stats</button>
-              <button class="rail-btn rail-btn-primary" @click="handlePrimaryAction">Start</button>
+
+            <div class="rail-mini-stats">
+              <div class="mini-stat-item">
+                <i class="bi bi-hourglass-split"></i>
+                <span>{{ etaLabel }}</span>
+              </div>
+              <div class="mini-stat-item">
+                <i class="bi bi-arrow-repeat"></i>
+                <span>{{ remainingAyahs }} left</span>
+              </div>
+            </div>
+
+            <div class="rail-mini-actions">
+              <button class="mini-btn" @click="handlePrimaryAction" :title="isPlaying ? 'Pause' : 'Start'">
+                <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+              </button>
+              <button class="mini-btn" @click="showTools = true" title="Settings">
+                <i class="bi bi-sliders2"></i>
+              </button>
             </div>
           </div>
           <!-- Content is ALWAYS visible - no v-show, no transition -->
@@ -134,8 +152,8 @@
             <div class="rail-stat"><span>Remaining</span><strong>{{ remainingAyahs }}</strong></div>
             <div class="rail-stat"><span>ETA</span><strong>{{ etaLabel }}</strong></div>
           </div>
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
+          <div class="rail-mini-progress">
+            <div class="progress-fill-mini" :style="{ width: progressPercent + '%' }"></div>
           </div>
         </div>
 
@@ -1500,7 +1518,7 @@ export default {
     this.initAudio()
     this.theme = document.documentElement.getAttribute('data-theme') || this.theme
     this.loadBookmarksPins()
-    
+
 
     if (this.currentMode === 'advanced' && this.advanced.chapterId) {
       this.currentMode = 'advanced'
@@ -2995,6 +3013,157 @@ body {
 .app {
   min-height: 100vh;
   animation: appFade 260ms ease-out;
+}
+
+/* Minimized Session Rail */
+.session-rail-mini {
+  position: sticky;
+  top: 12px;
+  z-index: 18;
+  padding: 10px;
+  padding-top: 8px ;
+  margin-bottom: 20px;
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.session-rail-mini:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent-soft);
+}
+
+.rail-mini-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 12px 8px 16px;
+}
+
+.rail-mini-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.rail-mini-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--accent-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rail-mini-icon i {
+  font-size: 0.9rem;
+  color: var(--accent);
+}
+
+.rail-mini-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rail-mini-surah {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.rail-mini-progress {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.rail-mini-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mini-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.mini-stat-item i {
+  font-size: 0.7rem;
+  color: var(--accent);
+}
+
+.rail-mini-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mini-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: var(--text-muted);
+}
+
+.mini-btn:hover {
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.mini-btn:first-child {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.mini-btn:first-child:hover {
+  transform: scale(1.05);
+  background: var(--accent-strong);
+}
+
+.rail-mini-progress {
+  height: 2px;
+  background: var(--border);
+}
+
+.progress-fill-mini {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .rail-mini-stats {
+    display: none;
+  }
+  
+  .rail-mini-content {
+    padding: 6px 10px 6px 12px;
+  }
+  
+  .rail-mini-surah {
+    font-size: 0.75rem;
+  }
 }
 
 /* Font Dropdown */
