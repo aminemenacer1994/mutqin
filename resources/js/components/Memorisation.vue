@@ -113,42 +113,33 @@
         </section>
 
         <div class="session-rail" v-if="currentChapter && hasVerses">
+          <!-- No clickable header, no chevron icon -->
           <div class="session-rail-top">
             <div class="session-rail-copy">
               <div class="session-rail-kicker">Current session</div>
               <div class="session-rail-title">{{ currentChapter.name_simple }}</div>
               <div class="session-rail-meta">Ayah {{ currentPosition }}/{{ totalVerses }} · Remaining {{ remainingAyahs
-                }} · {{ sessionTypeInfo.label }} · {{ progressPercent }}%</div>
+                }} · {{ progressPercent }}%</div>
             </div>
             <div class="session-rail-actions">
-              <button class="rail-btn rail-btn-ghost" @click="showPlannerModal = true">
-                <i class="bi bi-calendar-check"></i><span>Plan</span>
-              </button>
-              <button class="rail-btn rail-btn-ghost" @click="tab = 'analytics'; showTools = true">
-                <i class="bi bi-bar-chart"></i><span>Stats</span>
-              </button>
-              <button class="rail-btn rail-btn-primary" @click="handlePrimaryAction">
-                <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-                <span>{{ railPrimaryLabel }}</span>
-              </button>
+              <button class="rail-btn" @click="showPlannerModal = true">Plan</button>
+              <button class="rail-btn" @click="tab = 'analytics'; showTools = true">Stats</button>
+              <button class="rail-btn rail-btn-primary" @click="handlePrimaryAction">Start</button>
             </div>
           </div>
+          <!-- Content is ALWAYS visible - no v-show, no transition -->
           <div class="session-rail-stats">
             <div class="rail-stat"><span>Session</span><strong>{{ sessionTypeInfo.label }}</strong></div>
             <div class="rail-stat"><span>Progress</span><strong>{{ progressPercent }}%</strong></div>
             <div class="rail-stat"><span>Remaining</span><strong>{{ remainingAyahs }}</strong></div>
             <div class="rail-stat"><span>ETA</span><strong>{{ etaLabel }}</strong></div>
           </div>
-          <div class="mode-indicator" v-if="currentMode === 'advanced' && repeatAndLoopAudio">
-            <i class="bi bi-arrow-repeat"></i>
-            Loop Mode: {{ advancedRepeats }}x per Ayah
-          </div>
-          <div class="progress-bar progress-bar-wide">
+          <div class="progress-bar">
             <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
           </div>
         </div>
 
-        <div v-if="hasVerses" class="reading-toolbar">
+        <div class="reading-toolbar">
           <div class="reading-toolbar-group">
             <button class="toolbar-chip" :class="{ active: showTranslation }"
               @click="toggleReadingOption('translation')">
@@ -165,36 +156,32 @@
               @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
               <i class="bi bi-volume-up"></i><span>Word audio</span>
             </button>
-            <button class="toolbar-chip" @click="downloadOfflineVerses" title="Download for offline reading">
-              <i class="bi bi-cloud-arrow-down"></i><span>Download</span>
-            </button>
-          </div>
-          <div class="reading-toolbar-group">
-            <div class="toolbar-group">
-              <span class="speed-label">Speed</span>
-              <div class="speed-controls">
-                <button class="speed-btn" :class="{ active: speed === 0.75 }" @click="speed = 0.75">0.75x</button>
-                <button class="speed-btn" :class="{ active: speed === 1 }" @click="speed = 1">1x</button>
-                <button class="speed-btn" :class="{ active: speed === 1.25 }" @click="speed = 1.25">1.25x</button>
-                <button class="speed-btn" :class="{ active: speed === 1.5 }" @click="speed = 1.5">1.5x</button>
-              </div>
-            </div>
-            <div class="toolbar-group">
-              <div class="toolbar-font-wrap">
-                <div v-if="fontPickerOpen" class="toolbar-font-menu">
-                  <button v-for="font in quranFontOptions" :key="font.value" class="toolbar-font-option"
-                    :class="{ active: quranFont === font.value }" @click="setQuranFont(font.value)">
-                    <span>{{ font.label }}</span>
-                  </button>
-                </div>
-              </div>
-              <button class="toolbar-chip" :class="{ active: script === 'tajweed' }" @click="setScriptMode('tajweed')">
-                <i class="bi bi-palette"></i><span>Tajweed</span>
-              </button>
-            </div>
-            <button class="toolbar-chip" :class="{ active: script === 'tajweed' }" @click="setScriptMode('tajweed')">
+
+            <!-- ADD TAJWEED PILL HERE -->
+            <button class="toolbar-chip" :class="{ active: tajweedEnabled }" @click="toggleTajweed">
               <i class="bi bi-palette"></i><span>Tajweed</span>
             </button>
+          </div>
+
+          <div class="reading-toolbar-group">
+            <div class="font-dropdown">
+              <button class="font-dropdown-trigger" @click="toggleFontDropdown">
+                <i class="bi bi-text-paragraph"></i>
+                <span>{{ getCurrentFontLabel() }}</span>
+                <i class="bi bi-chevron-down" :class="{ rotated: fontDropdownOpen }"></i>
+              </button>
+
+              <transition name="dropdown-fade">
+                <div v-if="fontDropdownOpen" class="font-dropdown-menu">
+                  <button v-for="font in quranFontOptions" :key="font.value" class="font-option"
+                    :class="{ active: quranFont === font.value }" @click="selectFont(font.value)">
+                    <i class="bi" :class="getFontIcon(font.value)"></i>
+                    <span>{{ font.label }}</span>
+                    <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon"></i>
+                  </button>
+                </div>
+              </transition>
+            </div>
           </div>
         </div>
 
@@ -266,15 +253,19 @@
                   </button>
                 </div>
 
-                <button class="verse-play-btn" @click="playVerse(verse)" title="Play verse">
-                  <i class="bi bi-play"></i>
+                <!-- Fixed Play Button -->
+                <button class="verse-play-btn" @click="playVerse(verse)"
+                  :title="activeVerseKey === verse.key && isPlaying ? 'Pause' : 'Play verse'">
+                  <i class="bi"
+                    :class="activeVerseKey === verse.key && isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
                 </button>
               </div>
             </div>
 
-            <div class="verse-arabic" dir="rtl" lang="ar" v-html="getHighlightedArabic(verse)"
-              :class="{ 'word-highlight-enabled': wordByWordAudioEnabled }"
-              :style="{ fontSize: getVerseFontSize(verse.key) + '%', fontFamily: quranFontFamily }">
+            <div class="verse-arabic" dir="rtl" lang="ar" v-html="getDisplayArabic(verse)" :class="{
+              'word-highlight-enabled': wordByWordAudioEnabled && !tajweedEnabled,
+              'tajweed-enabled': tajweedEnabled
+            }" :style="{ fontSize: getVerseFontSize(verse.key) + '%', fontFamily: quranFontFamily }">
             </div>
 
             <!-- Translation - shows only if showTranslation is true AND translation exists -->
@@ -785,165 +776,101 @@
       </aside>
     </div>
 
-    <!-- Quiz Overlay -->
-    <div v-if="quizActive" class="quiz-overlay">
-      <div class="quiz-card">
-        <div class="quiz-header">
-          <div>
-            <h3 class="quiz-title">Retention Check</h3>
-            <p class="quiz-subtitle">{{ quizContextLabel }}</p>
-          </div>
-          <button class="quiz-close" @click="stopQuiz">×</button>
-        </div>
-
-        <!-- Quiz Progress -->
-        <div class="quiz-progress" v-if="!quizComplete">
-          <div class="quiz-progress-bar">
-            <div class="quiz-progress-fill" :style="{ width: ((quizIndex + 1) / quizQueue.length) * 100 + '%' }"></div>
-          </div>
-          <div class="quiz-stats">
-            <span>{{ quizIndex + 1 }} / {{ quizQueue.length }}</span>
-            <span>{{ quizCard?.type === 'flashcard' ? 'Flashcard' : quizCard?.type === 'mcq' ? 'Multiple Choice' :
-              'Question' }}</span>
-          </div>
-        </div>
-
-        <!-- Quiz Summary (Complete) -->
-        <div v-if="quizComplete" class="quiz-summary">
-          <div class="quiz-summary-icon">🎉</div>
-          <h3>Session Complete!</h3>
-          <div class="quiz-summary-stats">
-            <div class="stat">
-              <span class="stat-label">Score</span>
-              <span class="stat-value">{{ quizScore }}/{{ quizQueue.length }}</span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Accuracy</span>
-              <span class="stat-value">{{ quizAccuracy }}%</span>
-            </div>
-          </div>
-          <div class="quiz-summary-mistakes" v-if="quizMistakes.length">
-            <p>Verses to review:</p>
-            <div class="mistake-tags">
-              <span v-for="m in quizMistakes" :key="m" class="mistake-tag">{{ m }}</span>
-            </div>
-          </div>
-          <div class="quiz-actions">
-            <button class="btn-outline" @click="stopQuiz">Close</button>
-            <button class="btn-primary" @click="restartQuiz">Try Again</button>
-          </div>
-        </div>
-
-        <!-- Quiz Card -->
-        <div v-else-if="quizCard" class="quiz-body">
-          <!-- Flashcard Type -->
-          <div v-if="quizCard.type === 'flashcard'">
-            <div class="quiz-question">Recite this verse:</div>
-            <div class="quiz-arabic" dir="rtl" v-html="quizCard.arabic"></div>
-            <button v-if="!quizRevealed" class="quiz-reveal-btn" @click="quizRevealed = true">
-              <i class="bi bi-eye"></i> Reveal Answer
-            </button>
-            <div v-if="quizRevealed" class="quiz-answer">
-              <div class="quiz-translation">{{ quizCard.translation }}</div>
-              <div class="quiz-grade-buttons">
-                <button class="grade-btn" @click="submitQuiz(2)">Again</button>
-                <button class="grade-btn" @click="submitQuiz(3)">Hard</button>
-                <button class="grade-btn primary" @click="submitQuiz(4)">Good</button>
-                <button class="grade-btn" @click="submitQuiz(5)">Easy</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Multiple Choice Type -->
-          <div v-else-if="quizCard.type === 'mcq'">
-            <div class="quiz-question">Which verse matches this meaning?</div>
-            <div class="quiz-prompt">{{ quizCard.prompt }}</div>
-            <div class="quiz-options">
-              <button v-for="opt in quizOptions" :key="opt.key" class="quiz-option"
-                @click="submitQuiz(opt.key === quizCard.key ? 4 : 2)">
-                {{ opt.label }}
-              </button>
-            </div>
-          </div>
-
-          <!-- Audio MCQ Type -->
-          <div v-else-if="quizCard.type === 'audio_mcq'">
-            <div class="quiz-question">Listen and choose the correct verse</div>
-            <button class="quiz-play-audio" @click="playVerse(quizCard)">▶ Play Audio</button>
-            <div class="quiz-options">
-              <button v-for="opt in quizOptions" :key="opt.key" class="quiz-option"
-                @click="submitQuiz(opt.key === quizCard.key ? 4 : 2)">
-                {{ opt.label }}
-              </button>
-            </div>
-          </div>
-
-          <!-- Fill Blank Type -->
-          <div v-else-if="quizCard.type === 'blank'">
-            <div class="quiz-question">Fill in the missing word:</div>
-            <div class="quiz-blank-prompt">{{ quizCard.prompt }}</div>
-            <input type="text" v-model="quizAnswer" class="quiz-input" placeholder="Type your answer"
-              @keyup.enter="submitQuiz()">
-            <button class="btn-primary" @click="submitQuiz()">Submit</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div v-if="confettiActive" class="confetti" :key="confettiSeed" aria-hidden="true">
-      <span v-for="n in 26" :key="n" class="confetti-piece" :style="{
-        left: (Math.random() * 100) + '%',
-        background: ['#8b5e3c', '#1f7a8c', '#f4d35e', '#ee964b', '#2a9d8f'][n % 5],
-        transform: `rotate(${Math.random() * 360}deg)`,
-        animationDelay: (Math.random() * 0.2) + 's'
-      }"></span>
-    </div>
     <!-- Planner Modal -->
     <div class="modal-overlay" v-if="showPlannerModal" @click.self="showPlannerModal = false">
       <div class="modal-content planner-modal">
         <div class="modal-header">
-          <h2>Quick Planner</h2>
+          <h2><i class="bi bi-calendar-plus"></i> Quick Planner</h2>
           <button class="btn-icon" @click="showPlannerModal = false"><i class="bi bi-x-lg"></i></button>
         </div>
+
         <div class="modal-body">
-          <div class="field">
-            <label>Target Surah</label>
-            <select v-model="plannerConfig.surah" class="select" @change="updatePlannerSurah">
-              <option v-for="ch in chapters" :key="ch.id" :value="ch.id">{{ ch.name_simple }} ({{ ch.verses_count }}
-                verses)</option>
+          <!-- Surah Selection -->
+          <div class="planner-field">
+            <label><i class="bi bi-book"></i> Target Surah</label>
+            <select v-model="plannerConfig.surahId" class="planner-select" @change="updatePlannerSurah">
+              <option v-for="ch in chapters" :key="ch.id" :value="ch.id">
+                {{ ch.id }}. {{ ch.name_simple }} ({{ ch.verses_count }} verses)
+              </option>
             </select>
-          </div>
-          <div class="field">
-            <label>Verses per day</label>
-            <input type="number" v-model.number="plannerConfig.versesPerDay" class="input" min="1" max="500">
+            <small class="field-hint">Choose the surah you want to memorize</small>
           </div>
 
-          <div class="planner-analytics-grid">
-            <div class="pa-card">
-              <span class="pa-val">{{ plannerCompletionDate }}</span>
-              <span class="pa-lbl">Est. completion date</span>
-              <small class="pa-note">Based on verses/day and your past pace</small>
+          <!-- Verses Per Day -->
+          <div class="planner-field">
+            <label><i class="bi bi-sun"></i> Verses per day</label>
+            <div class="verses-per-day-control">
+              <button class="quantity-btn" @click="adjustVersesPerDay(-1)" :disabled="plannerConfig.versesPerDay <= 1">
+                <i class="bi bi-dash"></i>
+              </button>
+              <input type="number" v-model.number="plannerConfig.versesPerDay" class="planner-input" min="1"
+                :max="plannerConfig.totalVersesInSurah" @change="validateVersesPerDay">
+              <button class="quantity-btn" @click="adjustVersesPerDay(1)"
+                :disabled="plannerConfig.versesPerDay >= plannerConfig.totalVersesInSurah">
+                <i class="bi bi-plus"></i>
+              </button>
             </div>
-            <div class="pa-card">
-              <span class="pa-val">{{ plannerEstimatedDays }}</span>
-              <span class="pa-lbl">Days to Finish</span>
+            <small class="field-hint">How many new verses you want to memorize daily</small>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="planner-stats-grid">
+            <!-- Days to Finish -->
+            <div class="planner-stat-card">
+              <div class="stat-icon"><i class="bi bi-calendar-week"></i></div>
+              <div class="stat-content">
+                <span class="stat-value">{{ plannerEstimatedDays }}</span>
+                <span class="stat-label">Days to Finish</span>
+              </div>
             </div>
-            <div class="pa-card">
-              <span class="pa-val">{{ plannerEstimatedTimePerDay }}m</span>
-              <span class="pa-lbl">Daily Time</span>
+
+            <!-- Daily Time -->
+            <div class="planner-stat-card">
+              <div class="stat-icon"><i class="bi bi-clock"></i></div>
+              <div class="stat-content">
+                <span class="stat-value">{{ plannerEstimatedTimePerDay }}m</span>
+                <span class="stat-label">Daily Time</span>
+              </div>
             </div>
-            <div class="pa-card">
-              <span class="pa-val">{{ plannerTotalVerses }}</span>
-              <span class="pa-lbl">Total Verses</span>
+
+            <!-- Total Verses -->
+            <div class="planner-stat-card">
+              <div class="stat-icon"><i class="bi bi-text-paragraph"></i></div>
+              <div class="stat-content">
+                <span class="stat-value">{{ plannerTotalVerses }}</span>
+                <span class="stat-label">Total Verses</span>
+              </div>
             </div>
-            <div class="pa-card">
-              <span class="pa-val">{{ plannerCompletionDate }}</span>
-              <span class="pa-lbl">Target Date</span>
+
+            <!-- Completion Date -->
+            <div class="planner-stat-card highlight">
+              <div class="stat-icon"><i class="bi bi-calendar-check"></i></div>
+              <div class="stat-content">
+                <span class="stat-value">{{ plannerCompletionDateFormatted }}</span>
+                <span class="stat-label">Est. completion date</span>
+                <small class="stat-note">Based on {{ plannerConfig.versesPerDay }} verses/day</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="planner-progress" v-if="plannerConfig.totalVersesInSurah > 0">
+            <div class="progress-info">
+              <span>Progress breakdown</span>
+              <span>{{ plannerConfig.versesPerDay }} / {{ plannerConfig.totalVersesInSurah }} verses/day</span>
+            </div>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill"
+                :style="{ width: (plannerConfig.versesPerDay / plannerConfig.totalVersesInSurah * 100) + '%' }"></div>
             </div>
           </div>
         </div>
-        <div class="modal-footer" style="display:flex; justify-content:center; padding-top: 20px;">
-          <button class="btn-primary" @click="submitPlanner" style="width: 100%;">Create Plan</button>
+
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="showPlannerModal = false">Cancel</button>
+          <button class="btn-primary" @click="submitPlanner">
+            <i class="bi bi-play-fill"></i> Create Plan
+          </button>
         </div>
       </div>
     </div>
@@ -997,11 +924,13 @@ export default {
   },
   data() {
     return {
+      fontDropdownOpen: false,
       verseFontSizes: {},
       defaultFontSize: 150,
       fontSizeStep: 10,
       minFontSize: 80,
       maxFontSize: 250,
+      tajweedEnabled: false,
       // Mode-specific state
       beginner: {
         chapterId: 0,
@@ -1070,10 +999,10 @@ export default {
       showTools: false,
       showPlannerModal: false,
       plannerConfig: {
-        surah: 1,
+        surahId: 1,
         totalVersesInSurah: 7,
         versesPerDay: 5,
-        minutesPerVerse: 2
+        minutesPerVerse: 2  // Average time per verse in minutes
       },
       analytics: {
         totalVersesRead: 124,
@@ -1103,11 +1032,11 @@ export default {
       quranFont: 'uthmanic',
       fontPickerOpen: false,
       quranFontOptions: [
-        { value: 'uthmanic', label: 'Uthmanic Hafs' },
-        { value: 'amiri', label: 'Amiri Quran' },
-        { value: 'naskh', label: 'Noto Naskh Arabic' },
-        { value: 'scheherazade', label: 'Scheherazade New' },
-        { value: 'lateef', label: 'Lateef' }
+        { value: 'uthmanic', label: 'Uthmanic Hafs', icon: 'bi-book' },
+        { value: 'amiri', label: 'Amiri Quran', icon: 'bi-type' },
+        { value: 'naskh', label: 'Noto Naskh Arabic', icon: 'bi-text-paragraph' },
+        { value: 'scheherazade', label: 'Scheherazade New', icon: 'bi-fonts' },
+        { value: 'lateef', label: 'Lateef', icon: 'bi-pencil' }
       ],
       showTranslation: true,
       showTransliteration: false,
@@ -1421,23 +1350,38 @@ export default {
 
     plannerEstimatedDays() {
       const perDay = Math.max(1, this.plannerConfig.versesPerDay || 1)
-      return Math.ceil(this.plannerConfig.totalVersesInSurah / perDay)
+      const total = this.plannerConfig.totalVersesInSurah || 1
+      return Math.ceil(total / perDay)
     },
 
     plannerEstimatedTimePerDay() {
       const perDay = Math.max(1, this.plannerConfig.versesPerDay || 1)
-      return perDay * this.plannerConfig.minutesPerVerse
+      const minutesPerVerse = this.plannerConfig.minutesPerVerse || 2
+      return perDay * minutesPerVerse
     },
 
     plannerTotalVerses() {
-      return this.plannerConfig.totalVersesInSurah
+      return this.plannerConfig.totalVersesInSurah || 0
     },
 
-    plannerCompletionDate() {
+    plannerCompletionDateFormatted() {
       const days = this.plannerEstimatedDays
+      if (!days || days === 0) return '—'
       const d = new Date()
       d.setDate(d.getDate() + days)
-      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      return d.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      })
+    },
+
+    plannerCompletionDateFull() {
+      const days = this.plannerEstimatedDays
+      if (!days || days === 0) return '—'
+      const d = new Date()
+      d.setDate(d.getDate() + days)
+      return d.toDateString()
     },
 
     isLoggedIn() {
@@ -1556,6 +1500,7 @@ export default {
     this.initAudio()
     this.theme = document.documentElement.getAttribute('data-theme') || this.theme
     this.loadBookmarksPins()
+    
 
     if (this.currentMode === 'advanced' && this.advanced.chapterId) {
       this.currentMode = 'advanced'
@@ -1570,6 +1515,7 @@ export default {
     window.addEventListener('online', this.handleOnline)
     window.addEventListener('offline', this.handleOffline)
     window.addEventListener('beforeunload', this.persistAllState)
+    document.addEventListener('click', this.handleClickOutside)
   },
 
   beforeUnmount() {
@@ -1580,6 +1526,7 @@ export default {
     this.flushPlaybackTime()
     this.stopWordHighlighting()
     this.persistAllState()
+    document.removeEventListener('click', this.handleClickOutside)
   },
 
   watch: {
@@ -1610,6 +1557,10 @@ export default {
     isPlaying: 'persistAudioState',
     currentTime: 'persistAudioState',
     sectionOpen: { handler: 'persistUiState', deep: true },
+
+    tajweedEnabled() {
+      this.persistUiState()
+    },
 
     activeVerseKey() {
       // Logic removed since blurring is now global
@@ -1658,22 +1609,85 @@ export default {
   },
 
   methods: {
-    // Planner functionality
+    toggleFontDropdown() {
+      this.fontDropdownOpen = !this.fontDropdownOpen
+    },
+    selectFont(fontValue) {
+      this.quranFont = fontValue
+      this.fontDropdownOpen = false
+      this.persistUiState()
+    },
+    getCurrentFontLabel() {
+      const font = this.quranFontOptions.find(f => f.value === this.quranFont)
+      return font ? font.label : 'Font'
+    },
+    getFontIcon(fontValue) {
+      const font = this.quranFontOptions.find(f => f.value === fontValue)
+      return font ? font.icon : 'bi-text-paragraph'
+    },
+    // Close dropdown when clicking outside
+    handleClickOutside(event) {
+      if (this.fontDropdownOpen && !event.target.closest('.font-dropdown')) {
+        this.fontDropdownOpen = false
+      }
+    },
+    toggleTajweed() {
+      this.tajweedEnabled = !this.tajweedEnabled
+      // Force re-render of verses to apply tajweed colors
+      this.$forceUpdate()
+      // Save to localStorage immediately
+      this.persistUiState()
+      this.showBanner(
+        this.tajweedEnabled ? 'Tajweed colors enabled' : 'Tajweed colors disabled',
+        'info',
+        1500
+      )
+    },
     updatePlannerSurah() {
-      const ch = this.chapters.find(c => c.id === this.plannerConfig.surah)
-      if (ch) {
-        this.plannerConfig.totalVersesInSurah = ch.verses_count
+      const selectedSurah = this.chapters.find(c => c.id === this.plannerConfig.surahId)
+      if (selectedSurah) {
+        this.plannerConfig.totalVersesInSurah = selectedSurah.verses_count
+        // Reset versesPerDay if it exceeds total verses
+        if (this.plannerConfig.versesPerDay > this.plannerConfig.totalVersesInSurah) {
+          this.plannerConfig.versesPerDay = this.plannerConfig.totalVersesInSurah
+        }
+      }
+    },
+
+    adjustVersesPerDay(change) {
+      const newValue = this.plannerConfig.versesPerDay + change
+      if (newValue >= 1 && newValue <= this.plannerConfig.totalVersesInSurah) {
+        this.plannerConfig.versesPerDay = newValue
+      }
+    },
+
+    validateVersesPerDay() {
+      let value = this.plannerConfig.versesPerDay
+      if (isNaN(value) || value < 1) {
+        this.plannerConfig.versesPerDay = 1
+      } else if (value > this.plannerConfig.totalVersesInSurah) {
+        this.plannerConfig.versesPerDay = this.plannerConfig.totalVersesInSurah
       }
     },
 
     submitPlanner() {
-      this.showPlannerModal = false
-      this.chapterId = this.plannerConfig.surah
+      if (!this.plannerConfig.surahId || this.plannerConfig.surahId === 0) {
+        this.showBanner('Please select a surah', 'warning', 2000)
+        return
+      }
+
+      this.chapterId = this.plannerConfig.surahId
       this.rangeStart = 1
       this.rangeEnd = Math.min(this.plannerConfig.versesPerDay, this.plannerConfig.totalVersesInSurah)
       this.tab = 'beginner'
+      this.showPlannerModal = false
       this.loadChapter()
-      this.showBanner('Plan created successfully!', 'success')
+
+      this.showBanner(
+        `Plan created: ${this.plannerConfig.versesPerDay} verses/day for ${this.plannerEstimatedDays} days`,
+        'success',
+        3000
+      )
     },
 
     // Font size management
@@ -1858,6 +1872,50 @@ export default {
       localStorage.setItem('offline_surah_catalog', JSON.stringify(catalog))
       this.offlineSurahs = catalog
       this.showBanner('Offline surah removed', 'info', 2000)
+    },
+
+    applyTajweedColors(arabicText) {
+      if (!arabicText) return ''
+      // Apply CSS classes for different tajweed rules
+      let highlighted = arabicText
+      // Ghunnah (nasalization) - usually marked with ~ or specific characters
+      highlighted = highlighted.replace(/[ًٌٍَُِّْ~]/g, match =>
+        `<span class="tajweed-ghunnah">${match}</span>`
+      )
+      // Madd (prolongation) marks
+      highlighted = highlighted.replace(/[آإأ]|ا[ً]?/g, match =>
+        `<span class="tajweed-madd">${match}</span>`
+      )
+      // Qalqalah (echoing letters) - ق ط ب ج د
+      highlighted = highlighted.replace(/[قطبجد]/g, match =>
+        `<span class="tajweed-qalqalah">${match}</span>`
+      )
+      // Ikhfa (hiding) - typically noon saakinah rules
+      highlighted = highlighted.replace(/نْ/g, match =>
+        `<span class="tajweed-ikhfa">${match}</span>`
+      )
+      // Idgham (merging)
+      highlighted = highlighted.replace(/[ي ر م ل و ن]/g, match =>
+        `<span class="tajweed-idgham">${match}</span>`
+      )
+      return `<div class="tajweed-text">${highlighted}</div>`
+    },
+
+    getDisplayArabic(verse) {
+      if (!verse || !verse.arabic) return ''
+
+      // If tajweed is enabled, use the pre-formatted tajweed text from API
+      if (this.tajweedEnabled && verse.arabic_tajweed) {
+        // The API already provides HTML with proper tajweed coloring
+        return verse.arabic_tajweed
+      }
+
+      // Otherwise use regular Arabic with word highlighting if enabled
+      if (this.wordByWordAudioEnabled) {
+        return this.splitArabicIntoWords(verse.arabic, verse.key)
+      }
+
+      return verse.arabic
     },
 
     // Arabic text word splitting and highlighting
@@ -2198,14 +2256,13 @@ export default {
       this.persistAudioState()
     },
 
-    // Verse loading methods
     async loadVerses() {
       if (!this.chapterId) return
 
       const params = {
         per_page: 300,
         audio: this.reciterId,
-        fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs',
+        fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs,text_imlaei',
         words: true,
         word_fields: 'text_uthmani,translation',
         translations: '20'
@@ -2219,38 +2276,23 @@ export default {
 
         const mappedVerses = all
           .filter(v => v.verse_number >= start && v.verse_number <= end)
-          .map(v => {
-            const audio = this.normalizeAudioUrl(v.audio?.url || '')
-
-            let translation = ''
-            if (v.translations && v.translations[0]) {
-              translation = this.cleanTranslationText(v.translations[0].text)
-            }
-
-            let transliteration = ''
-            if (v.words && v.words.length > 0) {
-              transliteration = v.words
-                .map(w => w.transliteration?.text || '')
-                .filter(t => t.length > 0)
-                .join(' ')
-            }
-
-            return {
-              key: v.verse_key,
-              number: v.verse_number,
-              arabic: v.text_qpc_hafs || v.text_uthmani_tajweed || v.text_uthmani || '',
-              translation: translation,
-              transliteration: transliteration,
-              audio: audio,
-              words: (v.words || []).map(w => ({
-                ar: w.text_uthmani || '',
-                en: w.translation?.text || '',
-                transliteration: w.transliteration?.text || '',
-                tooltip: `${w.text_uthmani || ''} • ${w.translation?.text || ''}`.trim(),
-                audio: this.normalizeAudioUrl(w.audio_url)
-              }))
-            }
-          })
+          .map(v => ({
+            key: v.verse_key,
+            number: v.verse_number,
+            arabic: v.text_uthmani || '',
+            arabic_tajweed: v.text_uthmani_tajweed || v.text_uthmani || '',  // Add this line
+            arabic_simple: v.text_qpc_hafs || v.text_uthmani || '',
+            translation: v.translations?.[0]?.text ? this.cleanTranslationText(v.translations[0].text) : '',
+            transliteration: v.words?.map(w => w.transliteration?.text || '').filter(t => t.length > 0).join(' ') || '',
+            audio: this.normalizeAudioUrl(v.audio?.url || ''),
+            words: (v.words || []).map(w => ({
+              ar: w.text_uthmani || '',
+              en: w.translation?.text || '',
+              transliteration: w.transliteration?.text || '',
+              tooltip: `${w.text_uthmani || ''} • ${w.translation?.text || ''}`.trim(),
+              audio: this.normalizeAudioUrl(w.audio_url)
+            }))
+          }))
 
         if (this.currentMode === 'beginner') {
           this.beginner.verses = mappedVerses
@@ -2259,7 +2301,6 @@ export default {
         }
 
         this.buildQueue()
-
       } catch (e) {
         console.error('Error loading verses:', e)
         this.showBanner('Failed to load verses', 'error', 3000)
@@ -2570,6 +2611,10 @@ export default {
         this.script = state.script || this.script
         this.sectionOpen = { ...this.sectionOpen, ...(state.sectionOpen || {}) }
         this.onboardingDismissed = state.onboardingDismissed ?? false
+
+        // ADD THIS LINE - Load tajweed setting
+        this.tajweedEnabled = state.tajweedEnabled ?? false
+
       } catch (e) { console.error(e) }
 
       try {
@@ -2625,7 +2670,11 @@ export default {
           quranFont: this.quranFont,
           script: this.script,
           sectionOpen: this.sectionOpen,
-          onboardingDismissed: this.onboardingDismissed
+          onboardingDismissed: this.onboardingDismissed,
+
+          // ADD THIS LINE - Save tajweed setting
+          tajweedEnabled: this.tajweedEnabled
+
         }))
       } catch (e) { console.error(e) }
     },
@@ -2946,6 +2995,303 @@ body {
 .app {
   min-height: 100vh;
   animation: appFade 260ms ease-out;
+}
+
+/* Font Dropdown */
+.font-dropdown {
+  position: relative;
+}
+
+.font-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text);
+}
+
+.font-dropdown-trigger:hover {
+  background: var(--accent-light);
+  border-color: var(--accent);
+}
+
+.font-dropdown-trigger .bi-chevron-down {
+  transition: transform 0.2s;
+  font-size: 0.7rem;
+}
+
+.font-dropdown-trigger .bi-chevron-down.rotated {
+  transform: rotate(180deg);
+}
+
+.font-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 200px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+
+.font-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  text-align: left;
+  transition: all 0.15s;
+  color: var(--text);
+}
+
+.font-option:hover {
+  background: var(--accent-light);
+}
+
+.font-option.active {
+  background: var(--accent);
+  color: white;
+}
+
+.font-option .check-icon {
+  margin-left: auto;
+  font-size: 0.8rem;
+}
+
+/* Dropdown Animation */
+.dropdown-fade-enter-active,
+.dropdown-fade-leave-active {
+  transition: all 0.2s ease;
+}
+
+.dropdown-fade-enter-from,
+.dropdown-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* Tajweed styles - these match what the Quran.com API returns */
+.verse-arabic.tajweed-enabled {
+  line-height: 2;
+}
+
+/* The API returns spans with these classes */
+.verse-arabic.tajweed-enabled .quran-tajweed {
+  /* Base styles for tajweed text */
+  display: inline;
+}
+
+/* Color different tajweed rules */
+.verse-arabic.tajweed-enabled [class*="ghunnah"] {
+  color: #2ecc71;
+  background: rgba(46, 204, 113, 0.1);
+  border-radius: 3px;
+}
+
+.verse-arabic.tajweed-enabled [class*="madd"] {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+  border-radius: 3px;
+}
+
+.verse-arabic.tajweed-enabled [class*="qalqalah"] {
+  color: #f39c12;
+  background: rgba(243, 156, 18, 0.1);
+  border-radius: 3px;
+  font-weight: bold;
+}
+
+.verse-arabic.tajweed-enabled [class*="ikhfa"] {
+  color: #9b59b6;
+  background: rgba(155, 89, 182, 0.1);
+  border-radius: 3px;
+}
+
+.verse-arabic.tajweed-enabled [class*="idgham"] {
+  color: #3498db;
+  background: rgba(52, 152, 219, 0.1);
+  border-radius: 3px;
+}
+
+.tajweed-text {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Tajweed rule colors */
+.tajweed-ghunnah {
+  color: #2ecc71;
+  background: rgba(46, 204, 113, 0.1);
+  border-radius: 4px;
+  padding: 0 2px;
+  display: inline-block;
+}
+
+.tajweed-madd {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+  border-radius: 4px;
+  padding: 0 2px;
+  display: inline-block;
+}
+
+.tajweed-qalqalah {
+  color: #f39c12;
+  background: rgba(243, 156, 18, 0.1);
+  border-radius: 4px;
+  padding: 0 2px;
+  display: inline-block;
+  font-weight: bold;
+}
+
+.tajweed-ikhfa {
+  color: #9b59b6;
+  background: rgba(155, 89, 182, 0.1);
+  border-radius: 4px;
+  padding: 0 2px;
+  display: inline-block;
+}
+
+.tajweed-idgham {
+  color: #3498db;
+  background: rgba(52, 152, 219, 0.1);
+  border-radius: 4px;
+  padding: 0 2px;
+  display: inline-block;
+}
+
+/* Tooltip for tajweed rules */
+.tajweed-enabled .tajweed-ghunnah,
+.tajweed-enabled .tajweed-madd,
+.tajweed-enabled .tajweed-qalqalah,
+.tajweed-enabled .tajweed-ikhfa,
+.tajweed-enabled .tajweed-idgham {
+  cursor: help;
+  position: relative;
+}
+
+.tajweed-enabled .tajweed-ghunnah:hover::after {
+  content: "Ghunnah - Nasalization";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.tajweed-enabled .tajweed-madd:hover::after {
+  content: "Madd - Prolongation";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.tajweed-enabled .tajweed-qalqalah:hover::after {
+  content: "Qalqalah - Echoing sound";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+/* Toolbar chip active state for tajweed */
+.toolbar-chip.active {
+  background: var(--accent);
+  color: white;
+}
+
+.verse-play-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.verse-play-btn i {
+  font-size: 0.9rem;
+}
+
+.verse-play-btn:hover {
+  transform: scale(1.05);
+  background: var(--accent-strong);
+  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);
+}
+
+.verse-play-btn:active {
+  transform: scale(0.98);
+}
+
+.verse-arabic.tajweed-enabled {
+  line-height: 2;
+}
+
+/* Tajweed color rules */
+.verse-arabic.tajweed-enabled .tajweed-ghunnah {
+  color: #2ecc71;
+}
+
+.verse-arabic.tajweed-enabled .tajweed-idgham {
+  color: #3498db;
+}
+
+.verse-arabic.tajweed-enabled .tajweed-iqlab {
+  color: #9b59b6;
+}
+
+.verse-arabic.tajweed-enabled .tajweed-ikhfa {
+  color: #e67e22;
+}
+
+.verse-arabic.tajweed-enabled .tajweed-madd {
+  color: #e74c3c;
+}
+
+.verse-arabic.tajweed-enabled .tajweed-qalqalah {
+  color: #f39c12;
 }
 
 .speed-label {
@@ -5051,35 +5397,161 @@ body {
 }
 
 .planner-modal {
-
-  max-width: 450px;
+  max-width: 500px;
   width: 100%;
 }
 
-.planner-analytics-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 24px;
+.planner-field {
+  margin-bottom: 24px;
 }
 
-.pa-card {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
+.planner-field label {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.planner-select,
+.planner-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.planner-select:focus,
+.planner-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-light);
+}
+
+.verses-per-day-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.quantity-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
+  transition: all 0.2s;
 }
 
-.pa-val {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--accent);
-  margin-bottom: 4px;
+.quantity-btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.quantity-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.planner-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.planner-stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.progress-bar-track {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.btn-secondary {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: var(--border);
+}
+
+.btn-primary {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);
+}
+
+.field-hint {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 6px;
 }
 
 .pa-lbl {
