@@ -23658,8 +23658,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! axios */ "./node_modules/axios/lib/axios.js");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! axios */ "./node_modules/axios/lib/axios.js");
+/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
+/* harmony import */ var _lib_quranApis__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../lib/quranApis */ "./resources/js/lib/quranApis.js");
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 function _objectWithoutProperties(e, t) { if (null == e) return {}; var o, r, i = _objectWithoutPropertiesLoose(e, t); if (Object.getOwnPropertySymbols) { var n = Object.getOwnPropertySymbols(e); for (r = 0; r < n.length; r++) o = n[r], -1 === t.indexOf(o) && {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]); } return i; }
 function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t = {}; for (var n in r) if ({}.hasOwnProperty.call(r, n)) { if (-1 !== e.indexOf(n)) continue; t[n] = r[n]; } return t; }
 function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
@@ -23678,6 +23684,8 @@ function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
+
+
 var MODE_STORAGE_KEYS = {
   beginner: 'telawa.mode.beginner',
   advanced: 'telawa.mode.advanced'
@@ -23686,16 +23694,24 @@ var SESSION_STORAGE_KEYS = {
   beginner: 'telawa.sessionState.beginner',
   advanced: 'telawa.sessionState.advanced'
 };
+var DEFAULT_ALQURAN_RECITER = 'ar.alafasy';
 function deepClone(value) {
-  if (typeof structuredClone === 'function') return structuredClone(value);
-  return JSON.parse(JSON.stringify(value));
+  var rawValue = (0,vue__WEBPACK_IMPORTED_MODULE_0__.toRaw)(value);
+  if (typeof structuredClone === 'function') {
+    try {
+      return structuredClone(rawValue);
+    } catch (error) {
+      console.warn('structuredClone fallback triggered', error);
+    }
+  }
+  return JSON.parse(JSON.stringify(rawValue));
 }
 function createBeginnerState() {
   return {
     chapterId: 0,
     rangeStart: 1,
     rangeEnd: 7,
-    reciterId: 7,
+    reciterId: DEFAULT_ALQURAN_RECITER,
     speed: 1,
     delay: 1,
     playMode: 'auto',
@@ -23715,7 +23731,7 @@ function createAdvancedState() {
     chapterId: 0,
     rangeStart: 1,
     rangeEnd: 7,
-    reciterId: 7,
+    reciterId: DEFAULT_ALQURAN_RECITER,
     speed: 1,
     delay: 1,
     playMode: 'auto',
@@ -23755,9 +23771,10 @@ function createAdvancedState() {
       appReady: false,
       isBootstrapping: true,
       isDataReady: false,
+      applyingChainingDefaults: false,
       fontDropdownOpen: false,
       verseFontSizes: {},
-      defaultFontSize: 150,
+      defaultFontSize: 100,
       fontSizeStep: 10,
       minFontSize: 80,
       maxFontSize: 250,
@@ -23818,8 +23835,6 @@ function createAdvancedState() {
       playerVisible: false,
       playerCollapsed: true,
       playerMenuOpen: false,
-      showModeGuide: false,
-      pendingMode: '',
       hasContinueSession: false,
       continueSessionLabel: '',
       continueSessionPayload: null,
@@ -23865,6 +23880,8 @@ function createAdvancedState() {
       showWordByWord: false,
       wordByWordAudioEnabled: true,
       fontScale: 1,
+      uiScale: 1,
+      enScale: 1,
       // Audio playback settings
       playMode: 'auto',
       speed: 1,
@@ -23946,7 +23963,6 @@ function createAdvancedState() {
       sectionOpen: {
         beginner_setup: true,
         beginner_audio: false,
-        beginner_practice: false,
         beginner_saved: false,
         advanced_setup: true,
         advanced_playback: false,
@@ -23976,8 +23992,36 @@ function createAdvancedState() {
     };
   },
   computed: {
+    appStyleVars: function appStyleVars() {
+      return {
+        '--ui-scale': this.uiScale,
+        '--en-scale': this.enScale
+      };
+    },
     currentConfig: function currentConfig() {
       return this.currentMode === 'beginner' ? this.beginner : this.advanced;
+    },
+    activeAyahNumber: function activeAyahNumber() {
+      var key = this.activeVerseKey;
+      if (!key) return null;
+      var verse = this.verses.find(function (v) {
+        return v.key === key;
+      });
+      if (verse && typeof verse.number !== 'undefined') return verse.number;
+      var parts = String(key).split(':');
+      var n = Number(parts[1]);
+      return Number.isFinite(n) ? n : null;
+    },
+    activeAyahLabel: function activeAyahLabel() {
+      var n = this.activeAyahNumber;
+      return n ? "Ayah ".concat(n) : 'Ayah';
+    },
+    effectiveActiveVerseKey: function effectiveActiveVerseKey() {
+      var _this$queue, _queued$verse;
+      if (this.activeVerseKey) return this.activeVerseKey;
+      if (this.activeKey) return this.activeKey;
+      var queued = (_this$queue = this.queue) === null || _this$queue === void 0 ? void 0 : _this$queue[this.queueIndex];
+      return (queued === null || queued === void 0 || (_queued$verse = queued.verse) === null || _queued$verse === void 0 ? void 0 : _queued$verse.key) || (queued === null || queued === void 0 ? void 0 : queued.key) || null;
     },
     sessionConfig: function sessionConfig() {
       return this.buildSessionConfig(this.currentMode);
@@ -24136,14 +24180,11 @@ function createAdvancedState() {
     },
     chainingConfig: {
       get: function get() {
-        if (!this.advanced.chainingConfig) {
-          this.advanced.chainingConfig = {
-            step: 1,
-            goal: 'memorise',
-            style: 'sequential'
-          };
-        }
-        return this.advanced.chainingConfig;
+        return this.advanced.chainingConfig || {
+          step: 1,
+          goal: 'memorise',
+          style: 'sequential'
+        };
       },
       set: function set(val) {
         this.advanced.chainingConfig = _objectSpread({
@@ -24267,7 +24308,7 @@ function createAdvancedState() {
       return this.appReady && this.isDataReady && !!config.chapterId && config.rangeStart > 0 && config.rangeEnd >= config.rangeStart && (!!this.verses.length || !!this.currentConfig.verses.length);
     },
     modeSummary: function modeSummary() {
-      return this.currentMode === 'beginner' ? 'Sequential flow, focus off, repetition 3x.' : 'Cumulative chaining, blur on, repetition 5x+.';
+      return this.currentMode === 'beginner' ? 'Sequential flow, focus off, repetition 3x.' : 'Sequential flow, focus optional, repetition optional.';
     },
     chainingStep: function chainingStep() {
       return Math.max(1, Math.min(3, Number(this.chainingConfig.step || 1)));
@@ -24281,7 +24322,7 @@ function createAdvancedState() {
       return labels[this.chainingConfig.goal] || 'Memorise';
     },
     chainingStyleLabel: function chainingStyleLabel() {
-      return this.chainingConfig.style === 'spaced' ? 'Spaced return' : 'Build in order';
+      return 'Build in order';
     },
     chainingGoalHint: function chainingGoalHint() {
       var hints = {
@@ -24330,7 +24371,7 @@ function createAdvancedState() {
       });
       var delaySeconds = (this.delay || 1) * (remainingItems.length - 1);
       totalSeconds += delaySeconds;
-      var minutes = Math.max(1, Math.ceil(totalSeconds / 60));
+      var minutes = Math.max(0, Math.ceil(totalSeconds / 60));
       return "Audio time \u2248 ".concat(minutes, " min");
     },
     etaLabelAudioOnly: function etaLabelAudioOnly() {
@@ -24348,13 +24389,11 @@ function createAdvancedState() {
         var verseComplexity = Math.min(2, Math.max(0.8, verseLength / 150));
         totalAudioSeconds += adjustedAudioLength * verseComplexity * repetitionCount;
       });
-      var minutes = Math.max(1, Math.ceil(totalAudioSeconds / 60));
+      var minutes = Math.max(0, Math.ceil(totalAudioSeconds / 60));
       return "Audio time \u2248 ".concat(minutes, " min");
     },
     currentChainPhase: function currentChainPhase() {
-      if (!this.queue || this.queue.length === 0) return 0;
-      var currentItem = this.queue[this.queueIndex];
-      return currentItem ? currentItem.cumulativePhase : 0;
+      return 0;
     },
     toolsHeaderTitle: function toolsHeaderTitle() {
       if (this.tab === 'analytics') return 'Retention and plan';
@@ -24472,7 +24511,7 @@ function createAdvancedState() {
     this.persistAllState();
     document.removeEventListener('click', this.handleClickOutside);
   },
-  watch: _defineProperty({
+  watch: _defineProperty(_defineProperty(_defineProperty(_defineProperty({
     theme: 'persistUiState',
     showTools: 'persistUiState',
     tab: 'persistUiState',
@@ -24517,17 +24556,21 @@ function createAdvancedState() {
     },
     repeatAndLoopAudio: function repeatAndLoopAudio() {
       if (this.tab === 'advanced') this.rebuildQueue();
-    },
-    'advanced.chainingConfig': {
-      handler: function handler() {
-        if (this.currentMode === 'advanced') {
-          this.applyChainingGoalDefaults();
-          this.persistUiState();
-        }
-      },
-      deep: true
     }
-  }, "tab", function tab(newVal) {
+  }, "focusMode", function focusMode(val) {
+    if (val) this.blurAdjacent = false;
+  }), "blurAdjacent", function blurAdjacent(val) {
+    if (val) this.focusMode = false;
+  }), 'advanced.chainingConfig', {
+    handler: function handler() {
+      if (this.applyingChainingDefaults) return;
+      if (this.currentMode === 'advanced') {
+        this.applyChainingGoalDefaults();
+        this.persistUiState();
+      }
+    },
+    deep: true
+  }), "tab", function tab(newVal) {
     if (newVal === 'beginner' && this.currentMode !== 'beginner') {
       this.currentMode = 'beginner';
       if (!this.beginner.verses.length && this.beginner.chapterId) {
@@ -24540,9 +24583,24 @@ function createAdvancedState() {
       }
     }
     this.persistUiState();
-    this.$forceUpdate();
   }),
   methods: {
+    setModeAndExplain: function setModeAndExplain(mode) {
+      this.tab = mode;
+      this.currentMode = mode;
+      this.showTools = true;
+      if (mode === 'beginner') {
+        this.beginnerRepeats = 3;
+        this.focusMode = false;
+        this.blurAdjacent = false;
+      } else {
+        this.repeatAndLoopAudio = true;
+        this.advancedRepeats = Math.max(5, Number(this.advancedRepeats || 5));
+        this.blurAdjacent = true;
+        this.focusMode = false;
+      }
+      this.persistUiState();
+    },
     cloneModeState: function cloneModeState(modeState) {
       return deepClone(modeState);
     },
@@ -24571,11 +24629,12 @@ function createAdvancedState() {
       this.chapterId = Number(config.chapterId || 0);
       this.rangeStart = Number(config.rangeStart || 1);
       this.rangeEnd = Number(config.rangeEnd || this.rangeStart || 1);
-      this.reciterId = Number(config.reciterId || 7);
+      this.reciterId = typeof config.reciterId === 'string' && config.reciterId ? config.reciterId : DEFAULT_ALQURAN_RECITER;
       this.speed = Number(config.speed || 1);
       this.delay = Number(config.delay || 1);
       this.playMode = config.playMode || 'auto';
-      this.order = config.order || 'seq';
+      // Spaced-return/chaining UI removed; force sequential order.
+      this.order = 'seq';
       this.focusMode = !!config.focusMode;
       this.blurAdjacent = !!config.blurAdjacent;
       this.tajweedEnabled = !!config.tajweedEnabled;
@@ -24602,13 +24661,15 @@ function createAdvancedState() {
         var raw = localStorage.getItem(MODE_STORAGE_KEYS[mode]);
         if (!raw) return this.cloneModeState(defaults);
         var merged = _objectSpread(_objectSpread({}, defaults), this.cloneModeState(JSON.parse(raw)));
+        if (typeof merged.reciterId !== 'string' || !merged.reciterId) {
+          merged.reciterId = DEFAULT_ALQURAN_RECITER;
+        }
         if (mode === 'advanced') {
           if (merged.order === 'rand') merged.order = 'seq';
-          if (merged.order === 'cum') merged.order = 'spaced';
+          if (merged.order === 'cum') merged.order = 'seq';
+          if (merged.order === 'spaced') merged.order = 'seq';
           merged.chainingConfig = this.normaliseChainingConfig(merged.chainingConfig);
-          if (!merged.chainingConfig.style || merged.chainingConfig.style === 'sequential') {
-            merged.chainingConfig.style = merged.order === 'spaced' ? 'spaced' : 'sequential';
-          }
+          merged.chainingConfig.style = 'sequential';
         }
         return merged;
       } catch (e) {
@@ -24628,7 +24689,7 @@ function createAdvancedState() {
       return {
         step: Math.max(1, Math.min(3, Number((config === null || config === void 0 ? void 0 : config.step) || 1))),
         goal: ['memorise', 'revise', 'test'].includes(config === null || config === void 0 ? void 0 : config.goal) ? config.goal : 'memorise',
-        style: (config === null || config === void 0 ? void 0 : config.style) === 'spaced' ? 'spaced' : 'sequential'
+        style: 'sequential'
       };
     },
     setChainingGoal: function setChainingGoal(goal) {
@@ -24661,33 +24722,41 @@ function createAdvancedState() {
     },
     applyChainingGoalDefaults: function applyChainingGoalDefaults() {
       if (this.currentMode !== 'advanced') return;
-      var config = this.normaliseChainingConfig(this.chainingConfig);
-      this.advanced.chainingConfig = config;
-      this.order = config.style === 'spaced' ? 'spaced' : 'seq';
-      if (config.goal === 'memorise') {
-        this.repeatAndLoopAudio = true;
-        this.advancedRepeats = Math.max(2, Number(this.advancedRepeats || 2));
-        this.playMode = 'auto';
-        this.delay = Number(this.delay || 1);
-        this.focusMode = true;
-        this.blurAdjacent = false;
-        return;
-      }
-      if (config.goal === 'revise') {
+      if (this.applyingChainingDefaults) return;
+      this.applyingChainingDefaults = true;
+      try {
+        var config = this.normaliseChainingConfig(this.chainingConfig);
+        var current = this.advanced.chainingConfig || {};
+        var same = current.step === config.step && current.goal === config.goal && current.style === config.style;
+        if (!same) this.advanced.chainingConfig = config;
+        this.order = 'seq';
+        if (config.goal === 'memorise') {
+          this.repeatAndLoopAudio = true;
+          this.advancedRepeats = Math.max(2, Number(this.advancedRepeats || 2));
+          this.playMode = 'auto';
+          this.delay = Number(this.delay || 1);
+          this.focusMode = true;
+          this.blurAdjacent = false;
+          return;
+        }
+        if (config.goal === 'revise') {
+          this.repeatAndLoopAudio = false;
+          this.advancedRepeats = 1;
+          this.playMode = 'auto';
+          this.delay = 1;
+          this.focusMode = false;
+          this.blurAdjacent = false;
+          return;
+        }
         this.repeatAndLoopAudio = false;
         this.advancedRepeats = 1;
-        this.playMode = 'auto';
-        this.delay = 1;
-        this.focusMode = false;
-        this.blurAdjacent = false;
-        return;
+        this.playMode = 'manual';
+        this.delay = 0;
+        this.focusMode = true;
+        this.blurAdjacent = true;
+      } finally {
+        this.applyingChainingDefaults = false;
       }
-      this.repeatAndLoopAudio = false;
-      this.advancedRepeats = 1;
-      this.playMode = 'manual';
-      this.delay = 0;
-      this.focusMode = true;
-      this.blurAdjacent = true;
     },
     startChainingSession: function startChainingSession() {
       this.currentMode = 'advanced';
@@ -24708,11 +24777,6 @@ function createAdvancedState() {
         if (this.showConfirmModal) {
           event.preventDefault();
           this.closeConfirmModal();
-          return;
-        }
-        if (this.showModeGuide) {
-          event.preventDefault();
-          this.closeModeGuide();
           return;
         }
         if (this.showPlannerModal) {
@@ -24750,6 +24814,42 @@ function createAdvancedState() {
       if (event.key === 'ArrowUp') {
         event.preventDefault();
         this.navigateKeyboard(-1);
+        return;
+      }
+      if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'j') {
+        event.preventDefault();
+        this.next();
+        return;
+      }
+      if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        this.prev();
+        return;
+      }
+      if (event.key.toLowerCase() === 'f') {
+        event.preventDefault();
+        this.focusMode = !this.focusMode;
+        return;
+      }
+      if (event.key.toLowerCase() === 'b') {
+        event.preventDefault();
+        this.blurAdjacent = !this.blurAdjacent;
+        return;
+      }
+      if (event.key.toLowerCase() === 'p') {
+        event.preventDefault();
+        this.playCurrentVerse();
+        return;
+      }
+      if (event.key === 'Home') {
+        event.preventDefault();
+        this.jumpToVerseIndex(0);
+        return;
+      }
+      if (event.key === 'End') {
+        event.preventDefault();
+        this.jumpToVerseIndex(this.verses.length - 1);
+        return;
       }
     },
     navigateKeyboard: function navigateKeyboard(direction) {
@@ -24764,6 +24864,22 @@ function createAdvancedState() {
       var nextIndex = this.activeVerseIndex;
       if (nextIndex < 0) nextIndex = 0;else nextIndex = Math.max(0, Math.min(collection.length - 1, nextIndex + direction));
       var verse = this.verses[nextIndex];
+      if (!verse) return;
+      this.activeVerseKey = verse.key;
+      this.activeKey = verse.key;
+      this.$nextTick(function () {
+        var el = document.querySelector(".verse-card[data-verse-key=\"".concat(verse.key, "\"]"));
+        if (el) el.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      });
+    },
+    jumpToVerseIndex: function jumpToVerseIndex(index) {
+      var collection = this.verses;
+      if (!collection.length) return;
+      var targetIndex = Math.max(0, Math.min(collection.length - 1, Number(index || 0)));
+      var verse = collection[targetIndex];
       if (!verse) return;
       this.activeVerseKey = verse.key;
       this.activeKey = verse.key;
@@ -24935,36 +25051,6 @@ function createAdvancedState() {
         return "<span style=\"left:".concat(x, "px;height:").concat(h, "px;top:").concat(y, "px\"></span>");
       }).join('');
     },
-    showModeGuideFor: function showModeGuideFor(mode) {
-      this.pendingMode = mode;
-      this.showModeGuide = true;
-    },
-    closeModeGuide: function closeModeGuide() {
-      this.showModeGuide = false;
-      this.pendingMode = '';
-    },
-    applyModePreset: function applyModePreset() {
-      var mode = this.pendingMode || 'beginner';
-      this.currentMode = mode;
-      this.tab = mode;
-      if (mode === 'beginner') {
-        this.beginner.repeats = 3;
-        this.beginner.focusMode = false;
-        this.beginner.blurAdjacent = false;
-        this.beginner.order = 'seq';
-      } else {
-        this.advanced.advancedRepeats = Math.max(5, Number(this.advanced.advancedRepeats || 5));
-        this.advanced.repeatAndLoopAudio = true;
-        this.advanced.focusMode = false;
-        this.advanced.blurAdjacent = true;
-        this.advanced.order = 'spaced';
-        this.chainingConfig = _objectSpread(_objectSpread({}, this.chainingConfig), {}, {
-          style: 'spaced'
-        });
-      }
-      this.persistUiState();
-      this.closeModeGuide();
-    },
     // Show first-time user tips
     showFirstTimeTips: function showFirstTimeTips() {
       var _this6 = this;
@@ -24987,12 +25073,12 @@ function createAdvancedState() {
     },
     // Open mode settings in offcanvas
     openModeSettings: function openModeSettings() {
-      this.showModeGuideFor(this.currentMode);
+      this.tab = this.currentMode;
+      this.showTools = true;
     },
     // Alternative: Direct mode toggle with confirmation
     toggleMode: function toggleMode() {
       var newMode = this.currentMode === 'beginner' ? 'advanced' : 'beginner';
-      this.pendingMode = newMode;
       this.openConfirmModal({
         title: "Switch to ".concat(newMode === 'beginner' ? 'Beginner' : 'Advanced', " mode?"),
         message: 'Your current settings will be preserved.',
@@ -25001,12 +25087,11 @@ function createAdvancedState() {
       });
     },
     performToggleMode: function performToggleMode() {
-      var newMode = this.pendingMode || (this.currentMode === 'beginner' ? 'advanced' : 'beginner');
+      var newMode = this.currentMode === 'beginner' ? 'advanced' : 'beginner';
       this.currentMode = newMode;
       this.tab = newMode;
       this.persistUiState();
       this.showBanner("Switched to ".concat(newMode === 'beginner' ? 'Beginner' : 'Advanced', " Mode"), 'success', 2000);
-      this.pendingMode = '';
     },
     updateTabAndSync: function updateTabAndSync(tabName) {
       this.tab = tabName;
@@ -25187,7 +25272,17 @@ function createAdvancedState() {
         }
         var savedDefault = localStorage.getItem('telawa.defaultFontSize');
         if (savedDefault) {
-          this.defaultFontSize = JSON.parse(savedDefault);
+          var parsed = Number(JSON.parse(savedDefault));
+          // Migrate old default of 150% down to 100% unless the user has explicitly set per-verse sizes.
+          if (parsed === 150 && (!this.verseFontSizes || Object.keys(this.verseFontSizes).length === 0)) {
+            this.defaultFontSize = 100;
+            localStorage.setItem('telawa.defaultFontSize', JSON.stringify(100));
+          } else if (Number.isFinite(parsed) && parsed > 0) {
+            this.defaultFontSize = parsed;
+          }
+        } else {
+          this.defaultFontSize = 100;
+          localStorage.setItem('telawa.defaultFontSize', JSON.stringify(100));
         }
       } catch (e) {
         console.error('Failed to load font sizes:', e);
@@ -25347,32 +25442,6 @@ function createAdvancedState() {
       this.pendingDeleteId = '';
       this.showBanner('Offline surah removed', 'info', 2000);
     },
-    applyTajweedColors: function applyTajweedColors(arabicText) {
-      if (!arabicText) return '';
-      // Apply CSS classes for different tajweed rules
-      var highlighted = arabicText;
-      // Ghunnah (nasalization) - usually marked with ~ or specific characters
-      highlighted = highlighted.replace(/[ًٌٍَُِّْ~]/g, function (match) {
-        return "<span class=\"tajweed-ghunnah\">".concat(match, "</span>");
-      });
-      // Madd (prolongation) marks
-      highlighted = highlighted.replace(/[آإأ]|ا[ً]?/g, function (match) {
-        return "<span class=\"tajweed-madd\">".concat(match, "</span>");
-      });
-      // Qalqalah (echoing letters) - ق ط ب ج د
-      highlighted = highlighted.replace(/[قطبجد]/g, function (match) {
-        return "<span class=\"tajweed-qalqalah\">".concat(match, "</span>");
-      });
-      // Ikhfa (hiding) - typically noon saakinah rules
-      highlighted = highlighted.replace(/نْ/g, function (match) {
-        return "<span class=\"tajweed-ikhfa\">".concat(match, "</span>");
-      });
-      // Idgham (merging)
-      highlighted = highlighted.replace(/[ي ر م ل و ن]/g, function (match) {
-        return "<span class=\"tajweed-idgham\">".concat(match, "</span>");
-      });
-      return "<div class=\"tajweed-text\">".concat(highlighted, "</div>");
-    },
     getDisplayArabic: function getDisplayArabic(verse) {
       if (!verse || !verse.arabic) return '';
 
@@ -25382,9 +25451,11 @@ function createAdvancedState() {
       }
 
       // Tajweed takes priority
-      if (this.tajweedEnabled && verse.arabic_tajweed) {
-        // Sanitize the HTML to prevent XSS and broken rendering
-        return this.sanitizeHtml(verse.arabic_tajweed);
+      if (this.tajweedEnabled) {
+        if (verse.arabic_tajweed) {
+          return this.normalizeTajweedMarkup(verse.arabic_tajweed);
+        }
+        return verse.arabic;
       }
 
       // Word by word highlighting
@@ -25398,6 +25469,17 @@ function createAdvancedState() {
       if (!html) return '';
       // Remove any script tags
       return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    },
+    normalizeTajweedMarkup: function normalizeTajweedMarkup(text) {
+      if (!text) return '';
+      var normalized = this.sanitizeHtml(String(text));
+
+      // Handle AlQuran custom tajweed tags like <tajweed class=ham_wasl>...</tajweed>
+      normalized = normalized.replace(/<\s*tajweed\b([^>]*)class=['"]?([a-zA-Z0-9_-]+)['"]?([^>]*)>/gi, '<span class="tajweed-mark tajweed-$2">').replace(/<\s*\/\s*tajweed\s*>/gi, '</span>');
+
+      // Fallback for bracket syntax like [ham_wasl:ٱ]
+      normalized = normalized.replace(/\[([a-zA-Z0-9_-]+):([^\]]+)\]/g, '<span class="tajweed-mark tajweed-$1">$2</span>');
+      return normalized;
     },
     // Arabic text word splitting and highlighting
     getHighlightedArabic: function getHighlightedArabic(verse) {
@@ -25527,8 +25609,8 @@ function createAdvancedState() {
     startWordHighlighting: function startWordHighlighting(verse) {
       var _this12 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5() {
-        var _verse$words, _this12$audioElement;
-        var wordCount, duration, timePerWord, timestamps, i, updateHighlight;
+        var _this12$audioElement;
+        var duration, timestamps, updateHighlight;
         return _regenerator().w(function (_context5) {
           while (1) switch (_context5.n) {
             case 0:
@@ -25542,32 +25624,25 @@ function createAdvancedState() {
               _this12.currentHighlightedVerseKey = verse.key;
               _this12.currentWordIndex = -1;
 
-              // Calculate approximate timing for each word
-              wordCount = ((_verse$words = verse.words) === null || _verse$words === void 0 ? void 0 : _verse$words.length) || verse.arabic.split(/\s+/).length;
-              if (!(wordCount === 0)) {
-                _context5.n = 2;
+              // Prefer word timings derived from the verse content and actual audio duration.
+              duration = Number((_this12$audioElement = _this12.audioElement) === null || _this12$audioElement === void 0 ? void 0 : _this12$audioElement.duration) || null;
+              _context5.n = 2;
+              return _this12.getWordTimings(verse, duration);
+            case 2:
+              timestamps = _context5.v;
+              if (!(!timestamps || !timestamps.length)) {
+                _context5.n = 3;
                 break;
               }
               return _context5.a(2);
-            case 2:
-              // Get audio duration or estimate
-              duration = ((_this12$audioElement = _this12.audioElement) === null || _this12$audioElement === void 0 ? void 0 : _this12$audioElement.duration) || _this12.estimateVerseDuration(verse);
-              timePerWord = duration / wordCount; // Create timestamps
-              timestamps = [];
-              for (i = 0; i < wordCount; i++) {
-                timestamps.push({
-                  index: i,
-                  start: i * timePerWord,
-                  end: (i + 1) * timePerWord
-                });
-              }
+            case 3:
               updateHighlight = function updateHighlight() {
                 if (!_this12.audioElement || !_this12.audioElement.currentTime || !_this12.isPlaying) return;
                 var currentTime = _this12.audioElement.currentTime;
                 var activeIndex = -1;
-                for (var _i2 = 0; _i2 < timestamps.length; _i2++) {
-                  if (currentTime >= timestamps[_i2].start && currentTime <= timestamps[_i2].end) {
-                    activeIndex = _i2;
+                for (var i = 0; i < timestamps.length; i++) {
+                  if (currentTime >= timestamps[i].start && currentTime <= timestamps[i].end) {
+                    activeIndex = i;
                     break;
                   }
                 }
@@ -25578,7 +25653,7 @@ function createAdvancedState() {
               };
               _this12.wordHighlightHandler = updateHighlight;
               _this12.audioElement.addEventListener('timeupdate', _this12.wordHighlightHandler);
-            case 3:
+            case 4:
               return _context5.a(2);
           }
         }, _callee5);
@@ -25678,6 +25753,7 @@ function createAdvancedState() {
     playVerse: function playVerse(verse) {
       var _this15 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7() {
+        var _this15$audioElement;
         var audioUrl;
         return _regenerator().w(function (_context7) {
           while (1) switch (_context7.n) {
@@ -25696,6 +25772,13 @@ function createAdvancedState() {
               _this15.showBanner("Audio not available for verse ".concat(verse.number), 'info', 2000);
               return _context7.a(2);
             case 2:
+              if (!(_this15.activeKey === verse.key && (_this15$audioElement = _this15.audioElement) !== null && _this15$audioElement !== void 0 && _this15$audioElement.src)) {
+                _context7.n = 3;
+                break;
+              }
+              _this15.togglePlay();
+              return _context7.a(2);
+            case 3:
               // Stop current playback and highlighting
               _this15.stopWordHighlighting();
               if (_this15.audioElement) {
@@ -25706,19 +25789,19 @@ function createAdvancedState() {
               _this15.activeKey = verse.key;
               _this15.activeVerseKey = verse.key;
               if (_this15.audioElement) {
-                _context7.n = 4;
+                _context7.n = 5;
                 break;
               }
               _this15.audioElement = _this15.$refs.audio;
               if (_this15.audioElement) {
-                _context7.n = 3;
+                _context7.n = 4;
                 break;
               }
               _this15.showBanner('Audio system not ready', 'error', 3000);
               return _context7.a(2);
-            case 3:
-              _this15.initAudio();
             case 4:
+              _this15.initAudio();
+            case 5:
               audioUrl = _this15.normalizeAudioUrl(verse.audio);
               _this15.audioElement.src = audioUrl;
               _this15.audioElement.load();
@@ -25868,7 +25951,7 @@ function createAdvancedState() {
     loadVerses: function loadVerses() {
       var _this18 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee8() {
-        var params, _res$data, res, all, start, end, mappedVerses, _t3;
+        var _audioRes$data, _translationRes$data, _translitRes$data, _tajweedRes$data, _yield$Promise$all, _yield$Promise$all2, audioRes, translationRes, translitRes, tajweedRes, audioSurah, translationSurah, translitSurah, tajweedEdition, audioAyahs, translationByNumber, translitByNumber, tajweedByNumber, start, end, mappedVerses, _t3;
         return _regenerator().w(function (_context8) {
           while (1) switch (_context8.p = _context8.n) {
             case 0:
@@ -25878,54 +25961,60 @@ function createAdvancedState() {
               }
               return _context8.a(2);
             case 1:
-              // Set loading false while loading
               _this18.isDataReady = false;
-              params = {
-                per_page: 300,
-                audio: _this18.reciterId,
-                fields: 'text_uthmani,text_uthmani_tajweed,text_qpc_hafs',
-                words: true,
-                word_fields: 'text_uthmani,translation,transliteration',
-                translations: '20'
-              };
               _context8.p = 2;
               _context8.n = 3;
-              return axios__WEBPACK_IMPORTED_MODULE_0__["default"].get("https://api.quran.com/api/v4/verses/by_chapter/".concat(_this18.chapterId), {
-                params: params
-              });
+              return Promise.all([(0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEdition)(_this18.chapterId, _this18.reciterId || DEFAULT_ALQURAN_RECITER), (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEdition)(_this18.chapterId, 'en.asad'), (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEdition)(_this18.chapterId, 'en.transliteration'), (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEditions)(_this18.chapterId, _this18.reciterId || DEFAULT_ALQURAN_RECITER)]);
             case 3:
-              res = _context8.v;
-              all = ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.verses) || [];
+              _yield$Promise$all = _context8.v;
+              _yield$Promise$all2 = _slicedToArray(_yield$Promise$all, 4);
+              audioRes = _yield$Promise$all2[0];
+              translationRes = _yield$Promise$all2[1];
+              translitRes = _yield$Promise$all2[2];
+              tajweedRes = _yield$Promise$all2[3];
+              audioSurah = (_audioRes$data = audioRes.data) === null || _audioRes$data === void 0 ? void 0 : _audioRes$data.data;
+              translationSurah = (_translationRes$data = translationRes.data) === null || _translationRes$data === void 0 ? void 0 : _translationRes$data.data;
+              translitSurah = (_translitRes$data = translitRes.data) === null || _translitRes$data === void 0 ? void 0 : _translitRes$data.data;
+              tajweedEdition = (((_tajweedRes$data = tajweedRes.data) === null || _tajweedRes$data === void 0 ? void 0 : _tajweedRes$data.data) || []).find(function (entry) {
+                var _entry$edition;
+                return (entry === null || entry === void 0 || (_entry$edition = entry.edition) === null || _entry$edition === void 0 ? void 0 : _entry$edition.identifier) === 'quran-tajweed';
+              });
+              audioAyahs = (audioSurah === null || audioSurah === void 0 ? void 0 : audioSurah.ayahs) || [];
+              translationByNumber = new Map(((translationSurah === null || translationSurah === void 0 ? void 0 : translationSurah.ayahs) || []).map(function (ayah) {
+                return [ayah.numberInSurah, ayah.text || ''];
+              }));
+              translitByNumber = new Map(((translitSurah === null || translitSurah === void 0 ? void 0 : translitSurah.ayahs) || []).map(function (ayah) {
+                return [ayah.numberInSurah, ayah.text || ''];
+              }));
+              tajweedByNumber = new Map(((tajweedEdition === null || tajweedEdition === void 0 ? void 0 : tajweedEdition.ayahs) || []).map(function (ayah) {
+                return [ayah.numberInSurah, ayah.text || ''];
+              }));
               start = _this18.rangeStart;
               end = _this18.rangeEnd;
-              mappedVerses = all.filter(function (v) {
-                return v.verse_number >= start && v.verse_number <= end;
-              }).map(function (v) {
-                var _v$translations, _v$audio;
-                var transliteration = '';
-                if (v.words && v.words.length > 0) {
-                  transliteration = v.words.map(function (w) {
-                    var _w$transliteration;
-                    return ((_w$transliteration = w.transliteration) === null || _w$transliteration === void 0 ? void 0 : _w$transliteration.text) || '';
-                  }).filter(function (t) {
-                    return t.length > 0;
-                  }).join(' ');
-                }
+              mappedVerses = audioAyahs.filter(function (ayah) {
+                return ayah.numberInSurah >= start && ayah.numberInSurah <= end;
+              }).map(function (ayah) {
+                var _ayah$audioSecondary;
+                var key = "".concat(_this18.chapterId, ":").concat(ayah.numberInSurah);
+                var transliteration = translitByNumber.get(ayah.numberInSurah) || '';
+                var translation = translationByNumber.get(ayah.numberInSurah) || '';
+                var arabicWords = String(ayah.text || '').split(/\s+/).filter(Boolean);
+                var translitWords = String(transliteration).split(/\s+/).filter(Boolean);
+                var translationWords = String(translation).split(/\s+/).filter(Boolean);
                 return {
-                  key: v.verse_key,
-                  number: v.verse_number,
-                  arabic: v.text_uthmani || '',
-                  arabic_tajweed: v.text_uthmani_tajweed || v.text_uthmani || '',
-                  translation: (_v$translations = v.translations) !== null && _v$translations !== void 0 && (_v$translations = _v$translations[0]) !== null && _v$translations !== void 0 && _v$translations.text ? _this18.cleanTranslationText(v.translations[0].text) : '',
+                  key: key,
+                  number: ayah.numberInSurah,
+                  arabic: ayah.text || '',
+                  arabic_tajweed: tajweedByNumber.get(ayah.numberInSurah) || '',
+                  translation: _this18.cleanTranslationText(translation),
                   transliteration: transliteration,
-                  audio: _this18.normalizeAudioUrl(((_v$audio = v.audio) === null || _v$audio === void 0 ? void 0 : _v$audio.url) || ''),
-                  words: (v.words || []).map(function (w) {
-                    var _w$translation, _w$transliteration2;
+                  audio: _this18.normalizeAudioUrl(ayah.audio || ((_ayah$audioSecondary = ayah.audioSecondary) === null || _ayah$audioSecondary === void 0 ? void 0 : _ayah$audioSecondary[0]) || ''),
+                  words: arabicWords.map(function (word, index) {
                     return {
-                      ar: w.text_uthmani || '',
-                      en: ((_w$translation = w.translation) === null || _w$translation === void 0 ? void 0 : _w$translation.text) || '',
-                      transliteration: ((_w$transliteration2 = w.transliteration) === null || _w$transliteration2 === void 0 ? void 0 : _w$transliteration2.text) || '',
-                      audio: w.audio_url ? _this18.normalizeAudioUrl(w.audio_url) : null
+                      ar: word,
+                      en: translationWords[index] || '',
+                      transliteration: translitWords[index] || '',
+                      audio: null
                     };
                   })
                 };
@@ -25979,7 +26068,7 @@ function createAdvancedState() {
       } else if (this.currentMode === 'advanced') {
         rep = this.advanced.repeatAndLoopAudio ? this.advanced.advancedRepeats || 1 : 1;
       }
-      var ord = this.order === 'spaced' ? 'spaced' : 'seq';
+      var ord = 'seq';
       var q = [];
       if (ord === 'seq') {
         var _loop = function _loop(r) {
@@ -25993,19 +26082,6 @@ function createAdvancedState() {
         };
         for (var r = 0; r < rep; r++) {
           _loop(r);
-        }
-      } else if (ord === 'spaced') {
-        for (var _r = 0; _r < rep; _r++) {
-          for (var i = 0; i < verses.length; i++) {
-            for (var j = 0; j <= i; j++) {
-              q.push({
-                verse: verses[j],
-                repeatCount: _r + 1,
-                totalRepeats: rep,
-                cumulativePhase: i + 1
-              });
-            }
-          }
         }
       }
       this.queue = q;
@@ -26233,7 +26309,7 @@ function createAdvancedState() {
       try {
         var raw = localStorage.getItem('telawa.uiState');
         if (raw) {
-          var _state$showTranslatio, _state$showTransliter, _state$showWordByWord, _state$wordByWordAudi, _state$fontScale, _state$onboardingDism, _state$tajweedEnabled;
+          var _state$showTranslatio, _state$showTransliter, _state$showWordByWord, _state$wordByWordAudi, _state$fontScale, _state$uiScale, _state$enScale, _state$onboardingDism, _state$tajweedEnabled;
           var state = JSON.parse(raw);
           this.theme = state.theme || this.theme;
           this.tab = state.tab || this.tab;
@@ -26243,6 +26319,8 @@ function createAdvancedState() {
           this.showWordByWord = (_state$showWordByWord = state.showWordByWord) !== null && _state$showWordByWord !== void 0 ? _state$showWordByWord : this.showWordByWord;
           this.wordByWordAudioEnabled = (_state$wordByWordAudi = state.wordByWordAudioEnabled) !== null && _state$wordByWordAudi !== void 0 ? _state$wordByWordAudi : this.wordByWordAudioEnabled;
           this.fontScale = (_state$fontScale = state.fontScale) !== null && _state$fontScale !== void 0 ? _state$fontScale : this.fontScale;
+          this.uiScale = Number((_state$uiScale = state.uiScale) !== null && _state$uiScale !== void 0 ? _state$uiScale : this.uiScale);
+          this.enScale = Number((_state$enScale = state.enScale) !== null && _state$enScale !== void 0 ? _state$enScale : this.enScale);
           this.quranFont = state.quranFont || this.quranFont;
           this.script = state.script || this.script;
           this.sectionOpen = _objectSpread(_objectSpread({}, this.sectionOpen), state.sectionOpen || {});
@@ -26270,6 +26348,8 @@ function createAdvancedState() {
           showWordByWord: this.showWordByWord,
           wordByWordAudioEnabled: this.wordByWordAudioEnabled,
           fontScale: this.fontScale,
+          uiScale: this.uiScale,
+          enScale: this.enScale,
           quranFont: this.quranFont,
           script: this.script,
           sectionOpen: this.sectionOpen,
@@ -26288,6 +26368,7 @@ function createAdvancedState() {
       try {
         localStorage.setItem(SESSION_STORAGE_KEYS[mode], JSON.stringify({
           activeKey: this.activeKey,
+          activeVerseKey: this.activeVerseKey,
           queueIndex: this.queueIndex,
           timestamp: Date.now()
         }));
@@ -26307,6 +26388,10 @@ function createAdvancedState() {
             var target = mode === 'beginner' ? _this21.beginner : _this21.advanced;
             target.activeKey = state.activeKey || null;
             target.queueIndex = Number(state.queueIndex || 0);
+            // Keep a parallel pointer for the rendered/highlighted verse.
+            if (mode === _this21.currentMode) {
+              _this21.activeVerseKey = state.activeVerseKey || state.activeKey || null;
+            }
           }
         } catch (e) {
           console.error('Failed to restore session:', e);
@@ -26342,20 +26427,20 @@ function createAdvancedState() {
     loadChapters: function loadChapters() {
       var _this22 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee0() {
-        var _res$data2, res, _t4;
+        var _res$data, res, _t4;
         return _regenerator().w(function (_context0) {
           while (1) switch (_context0.p = _context0.n) {
             case 0:
               _context0.p = 0;
               _context0.n = 1;
-              return axios__WEBPACK_IMPORTED_MODULE_0__["default"].get('https://api.quran.com/api/v4/chapters', {
+              return axios__WEBPACK_IMPORTED_MODULE_2__["default"].get('https://api.quran.com/api/v4/chapters', {
                 params: {
                   language: 'en'
                 }
               });
             case 1:
               res = _context0.v;
-              _this22.chapters = ((_res$data2 = res.data) === null || _res$data2 === void 0 ? void 0 : _res$data2.chapters) || [];
+              _this22.chapters = ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.chapters) || [];
               if (!_this22.chapterId) {
                 _context0.n = 2;
                 break;
@@ -26413,36 +26498,80 @@ function createAdvancedState() {
     loadReciters: function loadReciters() {
       var _this24 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee10() {
-        var _res$data3, res, list, _t5;
+        var _res$data2, res, list, allow, available, filtered, _this24$reciters$, _t5;
         return _regenerator().w(function (_context10) {
           while (1) switch (_context10.p = _context10.n) {
             case 0:
               _context10.p = 0;
               _context10.n = 1;
-              return axios__WEBPACK_IMPORTED_MODULE_0__["default"].get('https://api.quran.com/api/v4/resources/recitations', {
-                params: {
-                  per_page: 30
-                }
+              return (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getEditions)({
+                format: 'audio'
               });
             case 1:
               res = _context10.v;
-              list = ((_res$data3 = res.data) === null || _res$data3 === void 0 ? void 0 : _res$data3.recitations) || [];
-              if (list.length) _this24.reciters = list.map(function (r) {
+              list = ((_res$data2 = res.data) === null || _res$data2 === void 0 ? void 0 : _res$data2.data) || [];
+              if (list.length) {
+                _context10.n = 2;
+                break;
+              }
+              return _context10.a(2);
+            case 2:
+              allow = [{
+                id: 'ar.alafasy',
+                label: 'Alafasy'
+              }, {
+                id: 'ar.abdulbasitmurattal',
+                label: 'Abdul basit'
+              }, {
+                id: 'ar.abdurrahmaansudais',
+                label: 'al sudais'
+              }, {
+                id: 'ar.hanirifai',
+                label: 'hani rifai'
+              }, {
+                id: 'ar.husary',
+                label: 'husari'
+              }, {
+                id: 'ar.minshawi',
+                label: 'minshawi'
+              }, {
+                id: 'ar.saoodshuraym',
+                label: 'ash-shuraym'
+              }];
+              available = new Map(list.map(function (edition) {
+                return [edition.identifier, edition];
+              }));
+              filtered = allow.filter(function (entry) {
+                return available.has(entry.id);
+              }).map(function (entry) {
                 return {
-                  id: r.id,
-                  name: r.reciter_name
+                  id: entry.id,
+                  name: entry.label
                 };
               });
-              _context10.n = 3;
+              _this24.reciters = filtered.length ? filtered : list.filter(function (edition) {
+                return edition.format === 'audio';
+              }).map(function (edition) {
+                return {
+                  id: edition.identifier,
+                  name: edition.englishName || edition.name || edition.identifier
+                };
+              });
+              if (!_this24.reciters.some(function (reciter) {
+                return reciter.id === _this24.reciterId;
+              })) {
+                _this24.reciterId = ((_this24$reciters$ = _this24.reciters[0]) === null || _this24$reciters$ === void 0 ? void 0 : _this24$reciters$.id) || DEFAULT_ALQURAN_RECITER;
+              }
+              _context10.n = 4;
               break;
-            case 2:
-              _context10.p = 2;
+            case 3:
+              _context10.p = 3;
               _t5 = _context10.v;
               console.error(_t5);
-            case 3:
+            case 4:
               return _context10.a(2);
           }
-        }, _callee10, null, [[0, 2]]);
+        }, _callee10, null, [[0, 3]]);
       }))();
     },
     loadSavedSessions: function loadSavedSessions() {
@@ -27063,582 +27192,512 @@ var _hoisted_44 = {
 };
 var _hoisted_45 = {
   key: 3,
-  "class": "chaining-viewer"
-};
-var _hoisted_46 = {
-  "class": "chaining-stats"
-};
-var _hoisted_47 = {
-  "class": "chaining-badge"
-};
-var _hoisted_48 = {
-  "class": "chaining-badge alt"
-};
-var _hoisted_49 = {
-  key: 0,
-  "class": "chaining-body"
-};
-var _hoisted_50 = {
-  "class": "chain-timeline"
-};
-var _hoisted_51 = ["onClick"];
-var _hoisted_52 = {
-  "class": "step-indicator"
-};
-var _hoisted_53 = {
-  "class": "step-content"
-};
-var _hoisted_54 = {
-  "class": "step-phase"
-};
-var _hoisted_55 = {
-  "class": "step-verse"
-};
-var _hoisted_56 = {
-  key: 4,
   "class": "loading-spinner"
 };
-var _hoisted_57 = {
-  key: 5,
+var _hoisted_46 = {
+  key: 4,
   "class": "verses-grid"
 };
-var _hoisted_58 = ["data-verse-key"];
-var _hoisted_59 = {
+var _hoisted_47 = ["data-verse-key"];
+var _hoisted_48 = {
   "class": "verse-header"
 };
-var _hoisted_60 = {
+var _hoisted_49 = {
   "class": "verse-badges"
 };
-var _hoisted_61 = {
+var _hoisted_50 = {
   "class": "verse-number"
 };
-var _hoisted_62 = {
+var _hoisted_51 = {
   key: 0,
   "class": "verse-status-badge"
 };
-var _hoisted_63 = {
+var _hoisted_52 = {
   key: 1,
   "class": "verse-status-subtle"
 };
-var _hoisted_64 = {
+var _hoisted_53 = {
   key: 2,
   "class": "verse-status-subtle"
 };
-var _hoisted_65 = {
+var _hoisted_54 = {
   "class": "verse-actions"
 };
-var _hoisted_66 = {
+var _hoisted_55 = {
   "class": "verse-font-controls"
 };
-var _hoisted_67 = ["onClick"];
-var _hoisted_68 = {
+var _hoisted_56 = ["onClick"];
+var _hoisted_57 = {
   "class": "verse-font-size-indicator"
 };
-var _hoisted_69 = ["onClick"];
-var _hoisted_70 = ["onClick"];
-var _hoisted_71 = ["onClick", "title"];
-var _hoisted_72 = ["innerHTML"];
-var _hoisted_73 = {
+var _hoisted_58 = ["onClick"];
+var _hoisted_59 = ["onClick"];
+var _hoisted_60 = ["onClick", "title"];
+var _hoisted_61 = ["innerHTML"];
+var _hoisted_62 = {
   key: 1,
   "class": "verse-transliteration"
 };
-var _hoisted_74 = {
+var _hoisted_63 = {
   key: 2,
   "class": "verse-translation"
 };
-var _hoisted_75 = {
+var _hoisted_64 = {
   key: 3,
   "class": "verse-words"
 };
-var _hoisted_76 = {
+var _hoisted_65 = {
   "class": "word-arabic",
   dir: "rtl"
 };
-var _hoisted_77 = {
+var _hoisted_66 = {
   "class": "word-meaning"
 };
-var _hoisted_78 = ["onClick"];
-var _hoisted_79 = {
+var _hoisted_67 = ["onClick"];
+var _hoisted_68 = {
   "class": "tools-top"
 };
-var _hoisted_80 = {
+var _hoisted_69 = {
   "class": "tools-topbar"
 };
-var _hoisted_81 = {
+var _hoisted_70 = {
   "class": "tools-title"
 };
-var _hoisted_82 = {
+var _hoisted_71 = {
   "class": "tools-context"
 };
-var _hoisted_83 = {
+var _hoisted_72 = {
   "class": "tools-tabs"
 };
-var _hoisted_84 = {
+var _hoisted_73 = {
   "class": "tools-body"
 };
-var _hoisted_85 = {
+var _hoisted_74 = {
   key: 0,
   "class": "sheet"
 };
-var _hoisted_86 = {
+var _hoisted_75 = {
   "class": "sheet-section"
 };
-var _hoisted_87 = {
+var _hoisted_76 = {
   "class": "sheet-content"
 };
-var _hoisted_88 = {
+var _hoisted_77 = {
   "class": "field-stack"
 };
-var _hoisted_89 = {
+var _hoisted_78 = {
   "class": "field"
 };
-var _hoisted_90 = ["value"];
-var _hoisted_91 = ["value"];
-var _hoisted_92 = {
+var _hoisted_79 = ["value"];
+var _hoisted_80 = ["value"];
+var _hoisted_81 = {
   "class": "field"
 };
-var _hoisted_93 = {
+var _hoisted_82 = {
   "class": "range range-single"
 };
-var _hoisted_94 = {
+var _hoisted_83 = {
   "class": "sheet-section"
+};
+var _hoisted_84 = {
+  "class": "sheet-content"
+};
+var _hoisted_85 = {
+  "class": "field-stack"
+};
+var _hoisted_86 = {
+  "class": "field"
+};
+var _hoisted_87 = ["value"];
+var _hoisted_88 = {
+  "class": "field"
+};
+var _hoisted_89 = {
+  "class": "radio-group radio-group-tight"
+};
+var _hoisted_90 = {
+  "class": "radio"
+};
+var _hoisted_91 = {
+  "class": "radio"
+};
+var _hoisted_92 = {
+  "class": "radio"
+};
+var _hoisted_93 = {
+  "class": "radio"
+};
+var _hoisted_94 = {
+  "class": "field"
 };
 var _hoisted_95 = {
-  "class": "sheet-content"
+  "class": "radio-group radio-group-tight"
 };
 var _hoisted_96 = {
-  "class": "field-stack"
+  "class": "radio"
 };
 var _hoisted_97 = {
-  "class": "field"
-};
-var _hoisted_98 = ["value"];
-var _hoisted_99 = {
-  "class": "field"
-};
-var _hoisted_100 = {
-  "class": "radio-group radio-group-tight"
-};
-var _hoisted_101 = {
   "class": "radio"
 };
-var _hoisted_102 = {
-  "class": "radio"
-};
-var _hoisted_103 = {
-  "class": "radio"
-};
-var _hoisted_104 = {
-  "class": "radio"
-};
-var _hoisted_105 = {
-  "class": "field"
-};
-var _hoisted_106 = {
-  "class": "radio-group radio-group-tight"
-};
-var _hoisted_107 = {
-  "class": "radio"
-};
-var _hoisted_108 = {
-  "class": "radio"
-};
-var _hoisted_109 = {
-  "class": "sheet-section"
-};
-var _hoisted_110 = {
-  "class": "sheet-content"
-};
-var _hoisted_111 = {
-  "class": "field-stack"
-};
-var _hoisted_112 = {
-  "class": "field"
-};
-var _hoisted_113 = ["value"];
-var _hoisted_114 = {
-  "class": "field checkbox"
-};
-var _hoisted_115 = {
-  "class": "switch"
-};
-var _hoisted_116 = {
-  "class": "field checkbox"
-};
-var _hoisted_117 = {
-  "class": "switch"
-};
-var _hoisted_118 = {
+var _hoisted_98 = {
   key: 0,
   "class": "sheet-section"
 };
-var _hoisted_119 = {
+var _hoisted_99 = {
   "class": "sheet-content"
 };
-var _hoisted_120 = {
+var _hoisted_100 = {
   "class": "field-stack"
 };
-var _hoisted_121 = {
+var _hoisted_101 = {
   "class": "field"
 };
-var _hoisted_122 = ["value"];
-var _hoisted_123 = ["disabled"];
-var _hoisted_124 = {
+var _hoisted_102 = ["value"];
+var _hoisted_103 = ["disabled"];
+var _hoisted_104 = {
   key: 1,
   "class": "sheet"
 };
+var _hoisted_105 = {
+  "class": "sheet-section"
+};
+var _hoisted_106 = {
+  "class": "sheet-content"
+};
+var _hoisted_107 = {
+  "class": "field-stack"
+};
+var _hoisted_108 = {
+  "class": "field"
+};
+var _hoisted_109 = ["value"];
+var _hoisted_110 = ["value"];
+var _hoisted_111 = {
+  "class": "field"
+};
+var _hoisted_112 = {
+  "class": "range range-single"
+};
+var _hoisted_113 = {
+  "class": "sheet-section"
+};
+var _hoisted_114 = {
+  "class": "sheet-content"
+};
+var _hoisted_115 = {
+  "class": "field-stack"
+};
+var _hoisted_116 = {
+  "class": "field"
+};
+var _hoisted_117 = ["value"];
+var _hoisted_118 = {
+  "class": "field"
+};
+var _hoisted_119 = {
+  "class": "radio-group radio-group-tight"
+};
+var _hoisted_120 = {
+  "class": "radio"
+};
+var _hoisted_121 = {
+  "class": "radio"
+};
+var _hoisted_122 = {
+  "class": "radio"
+};
+var _hoisted_123 = {
+  "class": "radio"
+};
+var _hoisted_124 = {
+  "class": "field checkbox"
+};
 var _hoisted_125 = {
-  "class": "sheet-section chaining-setup"
+  "class": "switch"
 };
 var _hoisted_126 = {
-  "class": "chaining-wizard"
+  key: 0,
+  "class": "field"
 };
-var _hoisted_127 = {
-  "class": "chaining-hero"
-};
+var _hoisted_127 = ["value"];
 var _hoisted_128 = {
-  "class": "chaining-progress-chip"
+  "class": "sheet-section"
 };
 var _hoisted_129 = {
-  "class": "chaining-progress"
+  "class": "sheet-content"
 };
 var _hoisted_130 = {
-  key: 0,
   "class": "field-stack"
 };
 var _hoisted_131 = {
-  "class": "chain-choice-grid"
+  "class": "field"
 };
 var _hoisted_132 = {
-  "class": "chain-step-actions"
-};
-var _hoisted_133 = {
-  key: 1,
-  "class": "field-stack"
-};
-var _hoisted_134 = {
-  "class": "field"
-};
-var _hoisted_135 = ["value"];
-var _hoisted_136 = {
-  "class": "field"
-};
-var _hoisted_137 = {
-  "class": "range range-single"
-};
-var _hoisted_138 = {
-  "class": "field"
-};
-var _hoisted_139 = ["value"];
-var _hoisted_140 = {
-  "class": "chain-step-actions split"
-};
-var _hoisted_141 = ["disabled"];
-var _hoisted_142 = {
-  key: 2,
-  "class": "field-stack"
-};
-var _hoisted_143 = {
-  "class": "chain-step-copy"
-};
-var _hoisted_144 = {
-  "class": "chain-choice-grid chain-choice-grid-two"
-};
-var _hoisted_145 = {
-  "class": "chain-session-preview"
-};
-var _hoisted_146 = {
-  "class": "chain-preview-line"
-};
-var _hoisted_147 = {
-  "class": "field-stack chain-support-settings"
-};
-var _hoisted_148 = {
-  "class": "field"
-};
-var _hoisted_149 = {
   "class": "radio-group radio-group-tight"
 };
-var _hoisted_150 = {
+var _hoisted_133 = {
   "class": "radio"
 };
-var _hoisted_151 = {
+var _hoisted_134 = {
   "class": "radio"
 };
-var _hoisted_152 = {
-  "class": "radio"
+var _hoisted_135 = {
+  "class": "field"
 };
-var _hoisted_153 = {
+var _hoisted_136 = ["value"];
+var _hoisted_137 = {
   "class": "field checkbox"
 };
-var _hoisted_154 = {
+var _hoisted_138 = {
   "class": "switch"
 };
-var _hoisted_155 = {
-  "class": "chain-step-actions split"
+var _hoisted_139 = {
+  "class": "field checkbox"
 };
-var _hoisted_156 = ["disabled"];
-var _hoisted_157 = {
+var _hoisted_140 = {
+  "class": "switch"
+};
+var _hoisted_141 = {
   key: 0,
   "class": "sheet-section"
 };
-var _hoisted_158 = {
+var _hoisted_142 = {
   "class": "sheet-content"
 };
-var _hoisted_159 = {
+var _hoisted_143 = {
   "class": "field-stack"
 };
-var _hoisted_160 = {
+var _hoisted_144 = {
   "class": "field"
 };
-var _hoisted_161 = ["value"];
-var _hoisted_162 = {
+var _hoisted_145 = ["value"];
+var _hoisted_146 = {
   key: 2,
   "class": "sheet"
 };
-var _hoisted_163 = {
+var _hoisted_147 = {
   "class": "sheet-section",
   style: {
     "padding": "20px"
   }
 };
-var _hoisted_164 = {
+var _hoisted_148 = {
   "class": "analytics-grid"
 };
-var _hoisted_165 = {
+var _hoisted_149 = {
   "class": "stat-card"
 };
-var _hoisted_166 = {
+var _hoisted_150 = {
   "class": "stat-value"
 };
-var _hoisted_167 = ["innerHTML"];
-var _hoisted_168 = {
+var _hoisted_151 = ["innerHTML"];
+var _hoisted_152 = {
   "class": "stat-card"
 };
-var _hoisted_169 = {
+var _hoisted_153 = {
   "class": "stat-value"
 };
-var _hoisted_170 = ["innerHTML"];
-var _hoisted_171 = {
+var _hoisted_154 = ["innerHTML"];
+var _hoisted_155 = {
   "class": "stat-card"
 };
-var _hoisted_172 = {
+var _hoisted_156 = {
   "class": "stat-value"
 };
-var _hoisted_173 = {
+var _hoisted_157 = {
   "class": "stat-card"
 };
-var _hoisted_174 = {
+var _hoisted_158 = {
   "class": "stat-value"
 };
-var _hoisted_175 = {
+var _hoisted_159 = {
   "class": "stat-card"
 };
-var _hoisted_176 = {
+var _hoisted_160 = {
   "class": "stat-value"
 };
-var _hoisted_177 = {
+var _hoisted_161 = {
   "class": "stat-card"
 };
-var _hoisted_178 = {
+var _hoisted_162 = {
   "class": "stat-value"
 };
-var _hoisted_179 = {
+var _hoisted_163 = {
   key: 3,
   "class": "sheet"
 };
-var _hoisted_180 = {
+var _hoisted_164 = {
   "class": "sheet-section"
 };
-var _hoisted_181 = {
+var _hoisted_165 = {
   "class": "sheet-content",
   style: {
     "display": "block",
     "padding": "16px"
   }
 };
-var _hoisted_182 = {
+var _hoisted_166 = {
   key: 0,
   "class": "empty-mini"
 };
-var _hoisted_183 = {
+var _hoisted_167 = {
   key: 1,
   "class": "offline-list"
 };
-var _hoisted_184 = {
+var _hoisted_168 = {
   "class": "oi-info"
 };
-var _hoisted_185 = {
+var _hoisted_169 = {
   "class": "oi-name"
 };
-var _hoisted_186 = {
+var _hoisted_170 = {
   "class": "oi-meta"
 };
-var _hoisted_187 = {
+var _hoisted_171 = {
   "class": "oi-date"
 };
-var _hoisted_188 = {
+var _hoisted_172 = {
   "class": "oi-actions"
 };
-var _hoisted_189 = ["onClick"];
-var _hoisted_190 = ["onClick"];
-var _hoisted_191 = {
+var _hoisted_173 = ["onClick"];
+var _hoisted_174 = ["onClick"];
+var _hoisted_175 = {
   key: 2,
   "class": "offline-note"
 };
-var _hoisted_192 = {
+var _hoisted_176 = {
   "class": "tools-footer"
 };
-var _hoisted_193 = {
+var _hoisted_177 = {
   "class": "modal-content planner-modal"
 };
-var _hoisted_194 = {
+var _hoisted_178 = {
   "class": "modal-header"
 };
-var _hoisted_195 = {
+var _hoisted_179 = {
   "class": "modal-body"
 };
-var _hoisted_196 = {
+var _hoisted_180 = {
   "class": "planner-field"
 };
-var _hoisted_197 = ["value"];
-var _hoisted_198 = {
+var _hoisted_181 = ["value"];
+var _hoisted_182 = {
   "class": "planner-field"
 };
-var _hoisted_199 = {
+var _hoisted_183 = {
   "class": "verses-per-day-control"
 };
-var _hoisted_200 = ["disabled"];
-var _hoisted_201 = ["max"];
-var _hoisted_202 = ["disabled"];
-var _hoisted_203 = {
+var _hoisted_184 = ["disabled"];
+var _hoisted_185 = ["max"];
+var _hoisted_186 = ["disabled"];
+var _hoisted_187 = {
   "class": "planner-stats-grid"
 };
-var _hoisted_204 = {
+var _hoisted_188 = {
   "class": "planner-stat-card"
 };
-var _hoisted_205 = {
+var _hoisted_189 = {
   "class": "stat-content"
 };
-var _hoisted_206 = {
+var _hoisted_190 = {
   "class": "stat-value"
 };
-var _hoisted_207 = {
+var _hoisted_191 = {
   "class": "planner-stat-card"
 };
-var _hoisted_208 = {
+var _hoisted_192 = {
   "class": "stat-content"
 };
-var _hoisted_209 = {
+var _hoisted_193 = {
   "class": "stat-value"
 };
-var _hoisted_210 = {
+var _hoisted_194 = {
   "class": "planner-stat-card"
 };
-var _hoisted_211 = {
+var _hoisted_195 = {
   "class": "stat-content"
 };
-var _hoisted_212 = {
+var _hoisted_196 = {
   "class": "stat-value"
 };
-var _hoisted_213 = {
+var _hoisted_197 = {
   "class": "planner-stat-card highlight"
 };
-var _hoisted_214 = {
+var _hoisted_198 = {
   "class": "stat-content"
 };
-var _hoisted_215 = {
+var _hoisted_199 = {
   "class": "stat-value"
 };
-var _hoisted_216 = {
-  "class": "stat-note"
-};
-var _hoisted_217 = {
+var _hoisted_200 = {
   key: 0,
   "class": "planner-progress"
 };
-var _hoisted_218 = {
+var _hoisted_201 = {
   "class": "progress-info"
 };
-var _hoisted_219 = {
+var _hoisted_202 = {
   "class": "progress-bar-track"
 };
-var _hoisted_220 = {
+var _hoisted_203 = {
   "class": "modal-footer"
 };
-var _hoisted_221 = {
+var _hoisted_204 = {
   "class": "modal-content confirm-modal",
   role: "dialog",
   "aria-modal": "true"
 };
-var _hoisted_222 = {
+var _hoisted_205 = {
   "class": "modal-header"
 };
-var _hoisted_223 = {
+var _hoisted_206 = {
   "class": "modal-body"
 };
-var _hoisted_224 = {
+var _hoisted_207 = {
   "class": "confirm-copy"
 };
-var _hoisted_225 = {
+var _hoisted_208 = {
   "class": "modal-footer"
 };
-var _hoisted_226 = {
+var _hoisted_209 = {
   "class": "player-main"
 };
-var _hoisted_227 = {
+var _hoisted_210 = {
   "class": "player-info"
 };
-var _hoisted_228 = {
+var _hoisted_211 = {
   "class": "player-chapter"
 };
-var _hoisted_229 = {
+var _hoisted_212 = {
   "class": "player-verse"
 };
-var _hoisted_230 = ["title"];
-var _hoisted_231 = {
+var _hoisted_213 = ["title"];
+var _hoisted_214 = {
   "class": "player-controls"
 };
-var _hoisted_232 = {
+var _hoisted_215 = {
   "class": "player-progress-wrap"
 };
-var _hoisted_233 = {
+var _hoisted_216 = {
   "class": "player-time"
 };
-var _hoisted_234 = {
+var _hoisted_217 = {
   "class": "player-time"
 };
-var _hoisted_235 = {
+var _hoisted_218 = {
   "class": "player-speed-controls"
 };
-var _hoisted_236 = {
+var _hoisted_219 = {
   ref: "audio",
   style: {
     "display": "none"
   }
 };
-var _hoisted_237 = {
-  "class": "mode-guide-modal"
-};
-var _hoisted_238 = {
-  "class": "mode-guide-points"
-};
-var _hoisted_239 = {
-  "class": "mode-guide-point"
-};
-var _hoisted_240 = {
-  "class": "mode-guide-point"
-};
-var _hoisted_241 = {
-  "class": "mode-guide-point"
-};
-var _hoisted_242 = {
-  "class": "mode-guide-actions"
-};
 function render(_ctx, _cache, $props, $setup, $data, $options) {
   return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     "class": "app",
-    "data-theme": $data.theme
+    "data-theme": $data.theme,
+    style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)($options.appStyleVars)
   }, [$data.appReady && $data.banner ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 0,
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["banner", $data.banner.kind])
@@ -27654,41 +27713,41 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $data.banner = null;
     }),
     "aria-label": "Dismiss"
-  }, _toConsumableArray(_cache[103] || (_cache[103] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[91] || (_cache[91] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */)])))])], 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Main Content "), $data.appReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 1,
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["main container", {
       'tools-open': $data.showTools
     }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [!$options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [$data.hasContinueSession ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [_cache[104] || (_cache[104] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [!$options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [$data.hasContinueSession ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [_cache[92] || (_cache[92] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "continue-session-kicker"
-  }, "Continue where you left off", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.continueSessionLabel), 1 /* TEXT */), _cache[105] || (_cache[105] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, "Your ayah, queue position, settings, and player state are ready to restore.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Continue where you left off", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.continueSessionLabel), 1 /* TEXT */), _cache[93] || (_cache[93] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, "Your ayah, queue position, settings, and player state are ready to restore.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-primary continue-session-btn",
     onClick: _cache[2] || (_cache[2] = function () {
       return $options.continueLastSession && $options.continueLastSession.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[106] || (_cache[106] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[94] || (_cache[94] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-fill"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Continue Session ", -1 /* CACHED */)])))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.analytics.currentStreak > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [_cache[107] || (_cache[107] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Continue Session ", -1 /* CACHED */)])))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.analytics.currentStreak > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [_cache[95] || (_cache[95] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-fire",
     style: {
       "color": "#ee964b"
     }
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.currentStreak) + " day streak", 1 /* TEXT */)]), $data.analytics.currentStreak === 1 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_9, _toConsumableArray(_cache[108] || (_cache[108] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.currentStreak) + " day streak", 1 /* TEXT */)]), $data.analytics.currentStreak === 1 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_9, _toConsumableArray(_cache[96] || (_cache[96] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-star"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Great start! Keep going. ", -1 /* CACHED */)])))) : $data.analytics.currentStreak === 3 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_10, _toConsumableArray(_cache[109] || (_cache[109] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Great start! Keep going. ", -1 /* CACHED */)])))) : $data.analytics.currentStreak === 3 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_10, _toConsumableArray(_cache[97] || (_cache[97] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-calendar-heart"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 3 days! Consistency is beautiful. ", -1 /* CACHED */)])))) : $data.analytics.currentStreak === 7 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_11, _toConsumableArray(_cache[110] || (_cache[110] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 3 days! Consistency is beautiful. ", -1 /* CACHED */)])))) : $data.analytics.currentStreak === 7 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_11, _toConsumableArray(_cache[98] || (_cache[98] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-trophy"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" One week! مَا شَاءَ ٱللَّٰهُ ", -1 /* CACHED */)])))) : $data.analytics.currentStreak >= 30 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_12, [_cache[111] || (_cache[111] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" One week! مَا شَاءَ ٱللَّٰهُ ", -1 /* CACHED */)])))) : $data.analytics.currentStreak >= 30 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_12, [_cache[99] || (_cache[99] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-gem"
   }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.currentStreak) + " days of dedication ", 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_13, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "action-card primary-action",
     onClick: _cache[3] || (_cache[3] = function ($event) {
       return $data.showPlannerModal = true;
     })
-  }, _toConsumableArray(_cache[112] || (_cache[112] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, _toConsumableArray(_cache[100] || (_cache[100] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "action-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-magic"
@@ -27701,7 +27760,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[4] || (_cache[4] = function () {
       return $options.startWithFatiha && $options.startWithFatiha.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[113] || (_cache[113] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, _toConsumableArray(_cache[101] || (_cache[101] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "action-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-circle-fill"
@@ -27714,7 +27773,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[5] || (_cache[5] = function () {
       return $options.openSetup && $options.openSetup.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[114] || (_cache[114] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, _toConsumableArray(_cache[102] || (_cache[102] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "action-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
@@ -27722,27 +27781,27 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": "action-content"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Custom Setup"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Configure everything exactly how you want")], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-right action-arrow"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_14, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_15, [_cache[115] || (_cache[115] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Activity Summary", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_14, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_15, [_cache[103] || (_cache[103] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Activity Summary", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-ghost",
     onClick: _cache[6] || (_cache[6] = function ($event) {
       $data.tab = 'analytics';
       $data.showTools = true;
     })
-  }, "Stats")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_16, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_17, [_cache[116] || (_cache[116] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Verses Read", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.totalVersesRead), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_18, [_cache[117] || (_cache[117] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Time Spent", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.totalTimeSpent) + "m", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_19, [_cache[118] || (_cache[118] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Repetitions", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.totalRepetitions), 1 /* TEXT */)])])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Onboarding Welcome Section - Shows only for new users "), $options.showOnboarding ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_20, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_21, [_cache[121] || (_cache[121] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"onboarding-icon\"><i class=\"bi bi-compass\"></i></div><h3>Welcome to Mutqin</h3><p>Start your Quran memorization journey in 3 simple steps</p><div class=\"onboarding-steps\"><div class=\"step\"><div class=\"step-number\">1</div><div class=\"step-content\"><strong>Choose a surah</strong><span>Select which surah you want to memorize</span></div></div><div class=\"step-arrow\"><i class=\"bi bi-arrow-right\"></i></div><div class=\"step\"><div class=\"step-number\">2</div><div class=\"step-content\"><strong>Set your pace</strong><span>Choose how many verses per day</span></div></div><div class=\"step-arrow\"><i class=\"bi bi-arrow-right\"></i></div><div class=\"step\"><div class=\"step-number\">3</div><div class=\"step-content\"><strong>Start memorizing</strong><span>Listen, repeat, and track progress</span></div></div></div>", 4)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_22, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Stats")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_16, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_17, [_cache[104] || (_cache[104] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Verses Read", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.totalVersesRead), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_18, [_cache[105] || (_cache[105] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Time Spent", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.totalTimeSpent) + "m", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_19, [_cache[106] || (_cache[106] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Repetitions", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.totalRepetitions), 1 /* TEXT */)])])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Onboarding Welcome Section - Shows only for new users "), $options.showOnboarding ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_20, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_21, [_cache[109] || (_cache[109] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"onboarding-icon\"><i class=\"bi bi-compass\"></i></div><h3>Welcome to Mutqin</h3><p>Start your Quran memorization journey in 3 simple steps</p><div class=\"onboarding-steps\"><div class=\"step\"><div class=\"step-number\">1</div><div class=\"step-content\"><strong>Choose a surah</strong><span>Select which surah you want to memorize</span></div></div><div class=\"step-arrow\"><i class=\"bi bi-arrow-right\"></i></div><div class=\"step\"><div class=\"step-number\">2</div><div class=\"step-content\"><strong>Set your pace</strong><span>Choose how many verses per day</span></div></div><div class=\"step-arrow\"><i class=\"bi bi-arrow-right\"></i></div><div class=\"step\"><div class=\"step-number\">3</div><div class=\"step-content\"><strong>Start memorizing</strong><span>Listen, repeat, and track progress</span></div></div></div>", 4)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_22, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta-primary-large",
     onClick: _cache[7] || (_cache[7] = function () {
       return $options.openSetup && $options.openSetup.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[119] || (_cache[119] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[107] || (_cache[107] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-fill"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Get Started Now ", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta-secondary",
     onClick: _cache[8] || (_cache[8] = function ($event) {
       return $data.onboardingDismissed = true;
     })
-  }, _toConsumableArray(_cache[120] || (_cache[120] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[108] || (_cache[108] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Dismiss ", -1 /* CACHED */)])))]), _cache[122] || (_cache[122] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"onboarding-tips\"><div class=\"tip\"><i class=\"bi bi-ear\"></i> Listen to each verse</div><div class=\"tip\"><i class=\"bi bi-star\"></i> Rate your recall (1-5)</div><div class=\"tip\"><i class=\"bi bi-calendar\"></i> Practice daily for best results</div></div>", 1))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Updated Session Rail "), $data.currentChapter && $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_23, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_24, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, [_cache[123] || (_cache[123] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Dismiss ", -1 /* CACHED */)])))]), _cache[110] || (_cache[110] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"onboarding-tips\"><div class=\"tip\"><i class=\"bi bi-ear\"></i> Listen to each verse</div><div class=\"tip\"><i class=\"bi bi-star\"></i> Rate your recall (1-5)</div><div class=\"tip\"><i class=\"bi bi-calendar\"></i> Practice daily for best results</div></div>", 1))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Updated Session Rail "), $data.currentChapter && $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_23, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_24, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, [_cache[111] || (_cache[111] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "session-rail-kicker"
   }, "CURRENT SESSION", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.currentChapter.name_simple), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + "/" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "%", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_28, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.modeSummary), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_29, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" MODE BUTTON - Added to left side "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "rail-btn mode-btn",
@@ -27750,16 +27809,16 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.openModeSettings && $options.openModeSettings.apply($options, arguments);
     }),
     title: "Change Mode"
-  }, [_cache[124] || (_cache[124] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [_cache[112] || (_cache[112] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-layers"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.currentMode === 'beginner' ? 'Beginner' : 'Advanced'), 1 /* TEXT */), _cache[125] || (_cache[125] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.currentMode === 'beginner' ? 'Beginner' : 'Advanced'), 1 /* TEXT */), _cache[113] || (_cache[113] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
   }, null, -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" PLAN BUTTON "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "rail-btn rail-btn-ghost",
     onClick: _cache[10] || (_cache[10] = function ($event) {
       return $data.showPlannerModal = true;
     })
-  }, _toConsumableArray(_cache[126] || (_cache[126] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[114] || (_cache[114] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-calendar-check"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Plan", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" STATS BUTTON "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "rail-btn rail-btn-ghost",
@@ -27767,7 +27826,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       $data.tab = 'analytics';
       $data.showTools = true;
     })
-  }, _toConsumableArray(_cache[127] || (_cache[127] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[115] || (_cache[115] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-grid-1x2"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Stats", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" START SESSION BUTTON "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "rail-btn rail-btn-primary",
@@ -27777,7 +27836,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     disabled: !$data.isPlaying && !$options.canStartSession
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
-  }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.isPlaying ? 'Pause' : 'Start Session'), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_30)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_31, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_32, [_cache[128] || (_cache[128] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "SESSION", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionTypeInfo.label), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_33, [_cache[129] || (_cache[129] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "PROGRESS", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_34, [_cache[130] || (_cache[130] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "REMAINING", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.remainingAyahs), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_35, [_cache[131] || (_cache[131] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "ETA", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaSubtext), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_36, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.isPlaying ? 'Pause' : 'Start Session'), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_30)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_31, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_32, [_cache[116] || (_cache[116] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "SESSION", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionTypeInfo.label), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_33, [_cache[117] || (_cache[117] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "PROGRESS", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_34, [_cache[118] || (_cache[118] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "REMAINING", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.remainingAyahs), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_35, [_cache[119] || (_cache[119] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "ETA", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaSubtext), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_36, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "progress-fill",
     style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
       width: $options.progressPercent + '%'
@@ -27789,7 +27848,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[13] || (_cache[13] = function ($event) {
       return $options.toggleReadingOption('translation');
     })
-  }, _toConsumableArray(_cache[132] || (_cache[132] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[120] || (_cache[120] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-translate"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Translation", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
@@ -27798,7 +27857,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[14] || (_cache[14] = function ($event) {
       return $options.toggleReadingOption('transliteration');
     })
-  }, _toConsumableArray(_cache[133] || (_cache[133] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[121] || (_cache[121] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-type"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Transliteration", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
@@ -27807,7 +27866,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[15] || (_cache[15] = function ($event) {
       return $options.toggleReadingOption('wbw');
     })
-  }, _toConsumableArray(_cache[134] || (_cache[134] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[122] || (_cache[122] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-grid-3x2-gap"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Word by word", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
@@ -27816,7 +27875,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[16] || (_cache[16] = function ($event) {
       return $data.wordByWordAudioEnabled = !$data.wordByWordAudioEnabled;
     })
-  }, _toConsumableArray(_cache[135] || (_cache[135] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[123] || (_cache[123] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-volume-up"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Word audio", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" ADD TAJWEED PILL HERE "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
@@ -27825,14 +27884,14 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[17] || (_cache[17] = function () {
       return $options.toggleTajweed && $options.toggleTajweed.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[136] || (_cache[136] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[124] || (_cache[124] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-palette"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Tajweed", -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_40, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_41, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "font-dropdown-trigger",
     onClick: _cache[18] || (_cache[18] = function () {
       return $options.toggleFontDropdown && $options.toggleFontDropdown.apply($options, arguments);
     })
-  }, [_cache[137] || (_cache[137] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [_cache[125] || (_cache[125] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-text-paragraph"
   }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getCurrentFontLabel()), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi bi-chevron-down", {
@@ -27857,77 +27916,44 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       }), 128 /* KEYED_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)];
     }),
     _: 1 /* STABLE */
-  })])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Chaining / Queue Viewer "), $options.hasVerses && $options.order === 'spaced' && $options.queue.length > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_45, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "chaining-header",
-    onClick: _cache[19] || (_cache[19] = function ($event) {
-      return $data.showQueueViewer = !$data.showQueueViewer;
-    })
-  }, [_cache[138] || (_cache[138] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "chaining-title"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-link-45deg"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Spaced Return Flow")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_46, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_47, "Phase " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentChainPhase) + " / " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.verses.length), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_48, "Step " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.queueIndex + 1) + " / " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.queue.length), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.showQueueViewer ? 'bi-chevron-up' : 'bi-chevron-down'])
-  }, null, 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(vue__WEBPACK_IMPORTED_MODULE_0__.Transition, {
-    name: "slide-up"
-  }, {
-    "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-      return [$data.showQueueViewer ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_49, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_50, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.queue, function (item, idx) {
-        return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
-          "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["chain-step", {
-            active: idx === $options.queueIndex,
-            completed: idx < $options.queueIndex
-          }]),
-          key: 'chain_' + idx,
-          onClick: function onClick($event) {
-            $options.queueIndex = idx;
-            $data.activeVerseKey = item.verse.key;
-            $options.playVerse(item.verse);
-          }
-        }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_52, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-          "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", idx < $options.queueIndex ? 'bi-check' : idx === $options.queueIndex ? 'bi-play-fill' : 'bi-circle'])
-        }, null, 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_53, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_54, "Phase " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.cumulativePhase), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_55, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.verse.number), 1 /* TEXT */)])], 10 /* CLASS, PROPS */, _hoisted_51);
-      }), 128 /* KEYED_FRAGMENT */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)];
-    }),
-    _: 1 /* STABLE */
-  })])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Grid "), !$data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_56, _toConsumableArray(_cache[139] || (_cache[139] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  })])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Grid "), !$data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_45, _toConsumableArray(_cache[126] || (_cache[126] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-hourglass-split"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Loading...", -1 /* CACHED */)])))) : $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_57, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.verses, function (verse) {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Loading...", -1 /* CACHED */)])))) : $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_46, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.verses, function (verse) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: verse.key,
       "data-verse-key": verse.key,
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["verse-card", {
-        active: $data.activeVerseKey === verse.key,
-        'focus-mode': $options.visualMode === 'focus' && $data.activeVerseKey !== verse.key,
-        blurred: $options.visualMode === 'blur' && $data.activeVerseKey !== verse.key,
-        'serious-training': $options.visualMode !== 'standard'
+        active: $options.effectiveActiveVerseKey === verse.key,
+        'focus-mode': $options.visualMode === 'focus' && $options.effectiveActiveVerseKey && $options.effectiveActiveVerseKey !== verse.key,
+        blurred: $options.visualMode === 'blur' && $options.effectiveActiveVerseKey && $options.effectiveActiveVerseKey !== verse.key,
+        'serious-training': false
       }])
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_59, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_60, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_61, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.number), 1 /* TEXT */), $data.activeVerseKey === verse.key ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_62, "Active Ayah")) : $options.visualMode === 'blur' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_63, "Active recall")) : $options.visualMode === 'focus' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_64, "Focused review")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_65, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Font size controls "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_66, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_48, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_49, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_50, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.number), 1 /* TEXT */), $options.effectiveActiveVerseKey === verse.key ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_51, "Active Ayah")) : $options.visualMode === 'blur' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_52, "Active recall")) : $options.visualMode === 'focus' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_53, "Focus mode")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_54, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Font size controls "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_55, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "verse-font-btn",
       onClick: function onClick($event) {
         return $options.decreaseVerseFont(verse.key, $event);
       },
       title: "Decrease font size"
-    }, _toConsumableArray(_cache[140] || (_cache[140] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[127] || (_cache[127] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-dash"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_67), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_68, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getVerseFontSize(verse.key)) + "%", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_56), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_57, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getVerseFontSize(verse.key)) + "%", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "verse-font-btn",
       onClick: function onClick($event) {
         return $options.increaseVerseFont(verse.key, $event);
       },
       title: "Increase font size"
-    }, _toConsumableArray(_cache[141] || (_cache[141] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[128] || (_cache[128] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-plus"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_69), $data.verseFontSizes[verse.key] ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_58), $data.verseFontSizes[verse.key] ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
       key: 0,
       "class": "verse-font-btn",
       onClick: function onClick($event) {
         return $options.resetVerseFont(verse.key, $event);
       },
       title: "Reset font size"
-    }, _toConsumableArray(_cache[142] || (_cache[142] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[129] || (_cache[129] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-arrow-repeat"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_70)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Fixed Play Button "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_59)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Fixed Play Button "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "verse-play-btn",
       onClick: function onClick($event) {
         return $options.playVerse(verse);
@@ -27935,7 +27961,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       title: $data.activeVerseKey === verse.key && $data.isPlaying ? 'Pause' : 'Play verse'
     }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.activeVerseKey === verse.key && $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
-    }, null, 2 /* CLASS */)], 8 /* PROPS */, _hoisted_71)])]), verse.arabic && $data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+    }, null, 2 /* CLASS */)], 8 /* PROPS */, _hoisted_60)])]), verse.arabic && $data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: 0,
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["verse-arabic", {
         'tajweed-enabled': $data.tajweedEnabled,
@@ -27947,142 +27973,142 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         '--verse-font-percent': $options.getVerseFontSize(verse.key),
         fontFamily: $options.quranFontFamily
       })
-    }, null, 14 /* CLASS, STYLE, PROPS */, _hoisted_72)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Transliteration "), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_73, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Translation - shows only if showTranslation is true AND translation exists "), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_74, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.translation), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Words - shows only if showWordByWord is true AND words array has items "), $data.showWordByWord && verse.words && verse.words.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_75, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(verse.words, function (word, wi) {
+    }, null, 14 /* CLASS, STYLE, PROPS */, _hoisted_61)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Transliteration "), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_62, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Translation - shows only if showTranslation is true AND translation exists "), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_63, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.translation), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Words - shows only if showWordByWord is true AND words array has items "), $data.showWordByWord && verse.words && verse.words.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_64, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(verse.words, function (word, wi) {
       return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
         key: wi,
         "class": "word-item"
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_76, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.ar), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_77, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.en), 1 /* TEXT */), word.audio && $data.wordByWordAudioEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_65, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.ar), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_66, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.en), 1 /* TEXT */), word.audio && $data.wordByWordAudioEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
         key: 0,
         "class": "word-audio-btn",
         onClick: function onClick($event) {
           return $options.playWordAudio(word.audio);
         }
-      }, _toConsumableArray(_cache[143] || (_cache[143] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[130] || (_cache[130] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-volume-up"
-      }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_78)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]);
-    }), 128 /* KEYED_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 10 /* CLASS, PROPS */, _hoisted_58);
+      }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_67)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]);
+    }), 128 /* KEYED_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 10 /* CLASS, PROPS */, _hoisted_47);
   }), 128 /* KEYED_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Tools Panel "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("aside", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["tools", {
       open: $data.showTools
     }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_79, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_80, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_81, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.toolsHeaderTitle), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_68, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_69, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_70, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.toolsHeaderTitle), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-x",
-    onClick: _cache[20] || (_cache[20] = function ($event) {
+    onClick: _cache[19] || (_cache[19] = function ($event) {
       return $data.showTools = false;
     }),
     "aria-label": "Close panel"
-  }, _toConsumableArray(_cache[144] || (_cache[144] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[131] || (_cache[131] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_82, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.contextLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_83, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_71, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.contextLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_72, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
       active: $data.tab === 'beginner',
       'active-tab': $data.tab === 'beginner'
     }),
-    onClick: _cache[21] || (_cache[21] = function ($event) {
-      return $options.showModeGuideFor('beginner');
+    onClick: _cache[20] || (_cache[20] = function ($event) {
+      return $options.setModeAndExplain('beginner');
     })
-  }, _toConsumableArray(_cache[145] || (_cache[145] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[132] || (_cache[132] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-layers"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Beginner", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
       active: $data.tab === 'advanced',
       'active-tab': $data.tab === 'advanced'
     }),
-    onClick: _cache[22] || (_cache[22] = function ($event) {
-      return $options.showModeGuideFor('advanced');
+    onClick: _cache[21] || (_cache[21] = function ($event) {
+      return $options.setModeAndExplain('advanced');
     })
-  }, _toConsumableArray(_cache[146] || (_cache[146] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[133] || (_cache[133] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-layers"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Advanced", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
       active: $data.tab === 'analytics',
       'active-tab': $data.tab === 'analytics'
     }),
-    onClick: _cache[23] || (_cache[23] = function ($event) {
+    onClick: _cache[22] || (_cache[22] = function ($event) {
       return $data.tab = 'analytics';
     })
-  }, _toConsumableArray(_cache[147] || (_cache[147] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[134] || (_cache[134] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-grid-1x2"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Stats", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
       active: $data.tab === 'offline',
       'active-tab': $data.tab === 'offline'
     }),
-    onClick: _cache[24] || (_cache[24] = function ($event) {
+    onClick: _cache[23] || (_cache[23] = function ($event) {
       return $data.tab = 'offline';
     })
-  }, _toConsumableArray(_cache[148] || (_cache[148] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[135] || (_cache[135] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-down-square"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Offline", -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_84, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Beginner Tab - 4 Consistent Sections "), $data.tab === 'beginner' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_85, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 1: What to Memorise "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_86, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Offline", -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_73, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Beginner Tab - 4 Consistent Sections "), $data.tab === 'beginner' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_74, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 1: What to Memorise "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_75, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[25] || (_cache[25] = function ($event) {
+    onClick: _cache[24] || (_cache[24] = function ($event) {
       return $options.toggleSection('beginner_setup');
     }),
     type: "button"
-  }, [_cache[150] || (_cache[150] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book\"></i></span><span class=\"st-txt\"><span class=\"st-title\">What to memorise</span><span class=\"st-sub\">Choose surah and verses</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[137] || (_cache[137] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book\"></i></span><span class=\"st-txt\"><span class=\"st-title\">What to memorise</span><span class=\"st-sub\">Choose surah and verses</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.beginner_setup
     }])
-  }, _toConsumableArray(_cache[149] || (_cache[149] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[136] || (_cache[136] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_87, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_88, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_89, [_cache[152] || (_cache[152] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_76, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_77, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_78, [_cache[139] || (_cache[139] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     value: $options.chapterId,
-    onChange: _cache[26] || (_cache[26] = function () {
+    onChange: _cache[25] || (_cache[25] = function () {
       return $options.onChapterChange && $options.onChapterChange.apply($options, arguments);
     }),
     "class": "select"
-  }, [_cache[151] || (_cache[151] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+  }, [_cache[138] || (_cache[138] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: 0
   }, "Choose a surah...", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (c) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: c.id,
       value: c.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.id) + ". " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_91);
-  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_90), _cache[153] || (_cache[153] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.id) + ". " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_80);
+  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_79), _cache[140] || (_cache[140] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Select the surah you want to memorise", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_92, [_cache[155] || (_cache[155] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verses", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_93, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Select the surah you want to memorise", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_81, [_cache[142] || (_cache[142] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verses", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_82, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
-    "onUpdate:modelValue": _cache[27] || (_cache[27] = function ($event) {
+    "onUpdate:modelValue": _cache[26] || (_cache[26] = function ($event) {
       return $options.rangeStart = $event;
     }),
-    onChange: _cache[28] || (_cache[28] = function () {
+    onChange: _cache[27] || (_cache[27] = function () {
       return $options.adjustRange && $options.adjustRange.apply($options, arguments);
     }),
     min: "1"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeStart, void 0, {
     number: true
-  }]]), _cache[154] || (_cache[154] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }]]), _cache[141] || (_cache[141] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
-    "onUpdate:modelValue": _cache[29] || (_cache[29] = function ($event) {
+    "onUpdate:modelValue": _cache[28] || (_cache[28] = function ($event) {
       return $options.rangeEnd = $event;
     }),
-    onChange: _cache[30] || (_cache[30] = function () {
+    onChange: _cache[29] || (_cache[29] = function () {
       return $options.adjustRange && $options.adjustRange.apply($options, arguments);
     }),
     min: "1"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeEnd, void 0, {
     number: true
-  }]])]), _cache[156] || (_cache[156] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }]])]), _cache[143] || (_cache[143] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Choose a range of verses to focus on", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 2: Audio Settings "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_94, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Choose a range of verses to focus on", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 2: Audio Settings "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_83, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[31] || (_cache[31] = function ($event) {
+    onClick: _cache[30] || (_cache[30] = function ($event) {
       return $options.toggleSection('beginner_audio');
     }),
     type: "button"
-  }, [_cache[158] || (_cache[158] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Audio settings</span><span class=\"st-sub\">Reciter and playback</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[145] || (_cache[145] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Audio settings</span><span class=\"st-sub\">Reciter and playback</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.beginner_audio
     }])
-  }, _toConsumableArray(_cache[157] || (_cache[157] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[144] || (_cache[144] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_95, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_96, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_97, [_cache[159] || (_cache[159] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[32] || (_cache[32] = function ($event) {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_84, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_85, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_86, [_cache[146] || (_cache[146] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[31] || (_cache[31] = function ($event) {
       return $options.reciterId = $event;
     }),
-    onChange: _cache[33] || (_cache[33] = function () {
+    onChange: _cache[32] || (_cache[32] = function () {
       return $options.refreshVerses && $options.refreshVerses.apply($options, arguments);
     }),
     "class": "select"
@@ -28090,394 +28116,353 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: r.id,
       value: r.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_98);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]]), _cache[160] || (_cache[160] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_87);
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]]), _cache[147] || (_cache[147] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Choose your preferred Quran reciter", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_99, [_cache[165] || (_cache[165] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_100, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_101, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Choose your preferred Quran reciter", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_88, [_cache[152] || (_cache[152] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_89, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_90, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "0.75",
+    "onUpdate:modelValue": _cache[33] || (_cache[33] = function ($event) {
+      return $options.speed = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[148] || (_cache[148] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 0.75x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_91, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "1",
     "onUpdate:modelValue": _cache[34] || (_cache[34] = function ($event) {
       return $options.speed = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[161] || (_cache[161] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 0.75x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_102, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[149] || (_cache[149] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_92, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
-    value: "1",
+    value: "1.25",
     "onUpdate:modelValue": _cache[35] || (_cache[35] = function ($event) {
       return $options.speed = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[162] || (_cache[162] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_103, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[150] || (_cache[150] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.25x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_93, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
-    value: "1.25",
+    value: "1.5",
     "onUpdate:modelValue": _cache[36] || (_cache[36] = function ($event) {
       return $options.speed = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[163] || (_cache[163] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.25x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_104, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "radio",
-    value: "1.5",
-    "onUpdate:modelValue": _cache[37] || (_cache[37] = function ($event) {
-      return $options.speed = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[164] || (_cache[164] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.5x", -1 /* CACHED */))])]), _cache[166] || (_cache[166] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[151] || (_cache[151] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.5x", -1 /* CACHED */))])]), _cache[153] || (_cache[153] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Adjust recitation speed", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_105, [_cache[169] || (_cache[169] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_106, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_107, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Adjust recitation speed", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_94, [_cache[156] || (_cache[156] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_95, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_96, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "auto",
+    "onUpdate:modelValue": _cache[37] || (_cache[37] = function ($event) {
+      return $options.playMode = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[154] || (_cache[154] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_97, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "manual",
     "onUpdate:modelValue": _cache[38] || (_cache[38] = function ($event) {
       return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[167] || (_cache[167] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_108, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "radio",
-    value: "manual",
-    "onUpdate:modelValue": _cache[39] || (_cache[39] = function ($event) {
-      return $options.playMode = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[168] || (_cache[168] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No (manual)", -1 /* CACHED */))])]), _cache[170] || (_cache[170] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[155] || (_cache[155] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No (manual)", -1 /* CACHED */))])]), _cache[157] || (_cache[157] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Automatically move to next verse", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_audio]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 3: Practice Mode "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_109, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Automatically move to next verse", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_audio]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 4: Saved Sessions "), $options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_98, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[40] || (_cache[40] = function ($event) {
-      return $options.toggleSection('beginner_practice');
+    onClick: _cache[39] || (_cache[39] = function ($event) {
+      return $options.toggleSection('beginner_saved');
     }),
     type: "button"
-  }, [_cache[172] || (_cache[172] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-stars\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Practice mode</span><span class=\"st-sub\">Repetition and focus</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[159] || (_cache[159] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-save\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Saved sessions</span><span class=\"st-sub\">Save, load, delete</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
-      open: $data.sectionOpen.beginner_practice
+      open: $data.sectionOpen.beginner_saved
     }])
-  }, _toConsumableArray(_cache[171] || (_cache[171] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[158] || (_cache[158] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_110, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_111, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_112, [_cache[173] || (_cache[173] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repetition count", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[41] || (_cache[41] = function ($event) {
-      return $options.beginnerRepeats = $event;
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_99, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_100, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_101, [_cache[161] || (_cache[161] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Your saved sessions", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[40] || (_cache[40] = function ($event) {
+      return $data.selectedSessionId = $event;
+    }),
+    "class": "select"
+  }, [_cache[160] || (_cache[160] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+    value: ""
+  }, "-- Select a session --", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.savedSessions, function (s) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
+      key: s.id,
+      value: s.id
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.name), 9 /* TEXT, PROPS */, _hoisted_102);
+  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.selectedSessionId]]), _cache[162] || (_cache[162] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    "class": "field-hint"
+  }, "Load previously saved sessions", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_saved]])])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+    key: 1
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Login message for non-logged users "), _cache[163] || (_cache[163] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section class=\"sheet-section\"><div class=\"sheet-content\"><div class=\"field-stack\"><div class=\"field\"><div class=\"pill\" style=\"text-align:center;padding:16px;\"><i class=\"bi bi-person\"></i><span>Login to save and load sessions</span></div><small class=\"field-hint\">Create an account to save your progress</small></div></div></div></section>", 1))], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "start-btn",
+    onClick: _cache[41] || (_cache[41] = function () {
+      return $options.startSession && $options.startSession.apply($options, arguments);
+    }),
+    disabled: !$options.canStartSession
+  }, _toConsumableArray(_cache[164] || (_cache[164] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-play-fill"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Start memorising ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_103)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Advanced Tab - without chaining wizard UI "), $data.tab === 'advanced' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_104, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 1: What to Memorise "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_105, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "sheet-toggle",
+    onClick: _cache[42] || (_cache[42] = function ($event) {
+      return $options.toggleSection('advanced_setup');
+    }),
+    type: "button"
+  }, [_cache[166] || (_cache[166] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book\"></i></span><span class=\"st-txt\"><span class=\"st-title\">What to memorise</span><span class=\"st-sub\">Choose surah and verses</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
+      open: $data.sectionOpen.advanced_setup
+    }])
+  }, _toConsumableArray(_cache[165] || (_cache[165] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-chevron-down"
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_106, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_107, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_108, [_cache[168] || (_cache[168] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    value: $options.chapterId,
+    onChange: _cache[43] || (_cache[43] = function () {
+      return $options.onChapterChange && $options.onChapterChange.apply($options, arguments);
+    }),
+    "class": "select"
+  }, [_cache[167] || (_cache[167] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+    value: 0
+  }, "Choose a surah...", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (c) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
+      key: c.id,
+      value: c.id
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.id) + ". " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_110);
+  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_109), _cache[169] || (_cache[169] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    "class": "field-hint"
+  }, "Select the surah you want to memorise", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_111, [_cache[171] || (_cache[171] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verses", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_112, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "number",
+    "class": "input",
+    "onUpdate:modelValue": _cache[44] || (_cache[44] = function ($event) {
+      return $options.rangeStart = $event;
+    }),
+    onChange: _cache[45] || (_cache[45] = function () {
+      return $options.adjustRange && $options.adjustRange.apply($options, arguments);
+    }),
+    min: "1"
+  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeStart, void 0, {
+    number: true
+  }]]), _cache[170] || (_cache[170] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "number",
+    "class": "input",
+    "onUpdate:modelValue": _cache[46] || (_cache[46] = function ($event) {
+      return $options.rangeEnd = $event;
+    }),
+    onChange: _cache[47] || (_cache[47] = function () {
+      return $options.adjustRange && $options.adjustRange.apply($options, arguments);
+    }),
+    min: "1"
+  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeEnd, void 0, {
+    number: true
+  }]])]), _cache[172] || (_cache[172] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    "class": "field-hint"
+  }, "Choose a range of verses to focus on", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 2: Audio Settings "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_113, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "sheet-toggle",
+    onClick: _cache[48] || (_cache[48] = function ($event) {
+      return $options.toggleSection('advanced_playback');
+    }),
+    type: "button"
+  }, [_cache[174] || (_cache[174] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Audio settings</span><span class=\"st-sub\">Reciter and repetition</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
+      open: $data.sectionOpen.advanced_playback
+    }])
+  }, _toConsumableArray(_cache[173] || (_cache[173] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-chevron-down"
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_114, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_115, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_116, [_cache[175] || (_cache[175] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[49] || (_cache[49] = function ($event) {
+      return $options.reciterId = $event;
+    }),
+    onChange: _cache[50] || (_cache[50] = function () {
+      return $options.refreshVerses && $options.refreshVerses.apply($options, arguments);
+    }),
+    "class": "select"
+  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.reciters, function (r) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
+      key: r.id,
+      value: r.id
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_117);
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]]), _cache[176] || (_cache[176] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    "class": "field-hint"
+  }, "Choose your preferred Quran reciter", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_118, [_cache[181] || (_cache[181] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_119, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_120, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "0.75",
+    "onUpdate:modelValue": _cache[51] || (_cache[51] = function ($event) {
+      return $options.speed = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[177] || (_cache[177] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 0.75x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_121, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "1",
+    "onUpdate:modelValue": _cache[52] || (_cache[52] = function ($event) {
+      return $options.speed = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[178] || (_cache[178] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_122, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "1.25",
+    "onUpdate:modelValue": _cache[53] || (_cache[53] = function ($event) {
+      return $options.speed = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[179] || (_cache[179] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.25x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_123, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "1.5",
+    "onUpdate:modelValue": _cache[54] || (_cache[54] = function ($event) {
+      return $options.speed = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[180] || (_cache[180] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.5x", -1 /* CACHED */))])]), _cache[182] || (_cache[182] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    "class": "field-hint"
+  }, "Adjust recitation speed", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_124, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_125, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "checkbox",
+    "onUpdate:modelValue": _cache[55] || (_cache[55] = function ($event) {
+      return $options.repeatAndLoopAudio = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.repeatAndLoopAudio]]), _cache[183] || (_cache[183] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "switch-ui"
+  }, null, -1 /* CACHED */)), _cache[184] || (_cache[184] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "switch-text"
+  }, "Loop and repeat each ayah", -1 /* CACHED */))]), _cache[185] || (_cache[185] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    "class": "field-hint"
+  }, "When enabled, repeats each ayah several times.", -1 /* CACHED */))]), $options.repeatAndLoopAudio ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_126, [_cache[186] || (_cache[186] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repeat count", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[56] || (_cache[56] = function ($event) {
+      return $options.advancedRepeats = $event;
     }),
     "class": "select"
   }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.repeatOptions, function (n) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
-      key: n,
+      key: 'adv_rep_' + n,
       value: n
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n) + " " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n === 1 ? 'time' : 'times'), 9 /* TEXT, PROPS */, _hoisted_113);
-  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.beginnerRepeats]]), _cache[174] || (_cache[174] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n) + " " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n === 1 ? 'time' : 'times'), 9 /* TEXT, PROPS */, _hoisted_127);
+  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.advancedRepeats]]), _cache[187] || (_cache[187] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "How many times to repeat each verse", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_114, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_115, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "checkbox",
-    "onUpdate:modelValue": _cache[42] || (_cache[42] = function ($event) {
-      return $options.focusMode = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.focusMode]]), _cache[175] || (_cache[175] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "switch-ui"
-  }, null, -1 /* CACHED */)), _cache[176] || (_cache[176] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "switch-text"
-  }, "Focus mode (dim other verses)", -1 /* CACHED */))]), _cache[177] || (_cache[177] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
-    "class": "field-hint"
-  }, "Reduce distraction by dimming non-active verses", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_116, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_117, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "checkbox",
-    "onUpdate:modelValue": _cache[43] || (_cache[43] = function ($event) {
-      return $options.blurAdjacent = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.blurAdjacent]]), _cache[178] || (_cache[178] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "switch-ui"
-  }, null, -1 /* CACHED */)), _cache[179] || (_cache[179] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "switch-text"
-  }, "Blur non-active verses (active recall)", -1 /* CACHED */))]), _cache[180] || (_cache[180] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
-    "class": "field-hint"
-  }, "Test your memory by hiding non-active verses", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_practice]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 4: Saved Sessions "), $options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_118, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "How many times to repeat each ayah", -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_playback]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 3: Practice Mode "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_128, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[44] || (_cache[44] = function ($event) {
-      return $options.toggleSection('beginner_saved');
+    onClick: _cache[57] || (_cache[57] = function ($event) {
+      return $options.toggleSection('advanced_practice');
     }),
     type: "button"
-  }, [_cache[182] || (_cache[182] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-save\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Saved sessions</span><span class=\"st-sub\">Save, load, delete</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[189] || (_cache[189] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-stars\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Practice mode</span><span class=\"st-sub\">Focus and recall</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
-      open: $data.sectionOpen.beginner_saved
+      open: $data.sectionOpen.advanced_practice
     }])
-  }, _toConsumableArray(_cache[181] || (_cache[181] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[188] || (_cache[188] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_119, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_120, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_121, [_cache[184] || (_cache[184] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Your saved sessions", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[45] || (_cache[45] = function ($event) {
-      return $data.selectedSessionId = $event;
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_129, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_130, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_131, [_cache[192] || (_cache[192] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_132, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_133, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "auto",
+    "onUpdate:modelValue": _cache[58] || (_cache[58] = function ($event) {
+      return $options.playMode = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[190] || (_cache[190] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_134, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "manual",
+    "onUpdate:modelValue": _cache[59] || (_cache[59] = function ($event) {
+      return $options.playMode = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[191] || (_cache[191] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No (manual)", -1 /* CACHED */))])]), _cache[193] || (_cache[193] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    "class": "field-hint"
+  }, "Automatically move to next verse", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_135, [_cache[194] || (_cache[194] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Delay between ayahs", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[60] || (_cache[60] = function ($event) {
+      return $options.delay = $event;
     }),
     "class": "select"
-  }, [_cache[183] || (_cache[183] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
-    value: ""
-  }, "-- Select a session --", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.savedSessions, function (s) {
+  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.delayOptions, function (d) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
-      key: s.id,
-      value: s.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.name), 9 /* TEXT, PROPS */, _hoisted_122);
-  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.selectedSessionId]]), _cache[185] || (_cache[185] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+      key: 'adv_delay_' + d,
+      value: d
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(d) + "s", 9 /* TEXT, PROPS */, _hoisted_136);
+  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.delay]]), _cache[195] || (_cache[195] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Load previously saved sessions", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.beginner_saved]])])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
-    key: 1
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Login message for non-logged users "), _cache[186] || (_cache[186] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section class=\"sheet-section\"><div class=\"sheet-content\"><div class=\"field-stack\"><div class=\"field\"><div class=\"pill\" style=\"text-align:center;padding:16px;\"><i class=\"bi bi-person\"></i><span>Login to save and load sessions</span></div><small class=\"field-hint\">Create an account to save your progress</small></div></div></div></section>", 1))], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "start-btn",
-    onClick: _cache[46] || (_cache[46] = function () {
-      return $options.startSession && $options.startSession.apply($options, arguments);
-    }),
-    disabled: !$options.canStartSession
-  }, _toConsumableArray(_cache[187] || (_cache[187] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-play-fill"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Start memorising ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_123)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Advanced Tab - 4 Consistent Sections "), $data.tab === 'advanced' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_124, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_125, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_126, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_127, [_cache[188] || (_cache[188] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "chaining-kicker"
-  }, "Chaining Method"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Start Chaining"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Build your verses in connected steps so recall feels steadier and faster.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_128, "Step " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingStep) + "/3", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_129, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["chain-progress-step", {
-      active: $options.chainingStep === 1,
-      done: $options.chainingStep > 1
-    }]),
-    onClick: _cache[47] || (_cache[47] = function ($event) {
-      return $options.setChainingStep(1);
-    }),
-    type: "button"
-  }, _toConsumableArray(_cache[189] || (_cache[189] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "1", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Goal", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["chain-progress-step", {
-      active: $options.chainingStep === 2,
-      done: $options.chainingStep > 2
-    }]),
-    onClick: _cache[48] || (_cache[48] = function ($event) {
-      return $options.setChainingStep(2);
-    }),
-    type: "button"
-  }, _toConsumableArray(_cache[190] || (_cache[190] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "2", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Range", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["chain-progress-step", {
-      active: $options.chainingStep === 3
-    }]),
-    onClick: _cache[49] || (_cache[49] = function ($event) {
-      return $options.setChainingStep(3);
-    }),
-    type: "button"
-  }, _toConsumableArray(_cache[191] || (_cache[191] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "3", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Style", -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(vue__WEBPACK_IMPORTED_MODULE_0__.Transition, {
-    name: "sheet-fade",
-    mode: "out-in"
-  }, {
-    "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-      return [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
-        key: 'chain-step-' + $options.chainingStep,
-        "class": "chaining-panel"
-      }, [$options.chainingStep === 1 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_130, [_cache[195] || (_cache[195] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-        "class": "chain-step-copy"
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h4", null, "Choose your goal"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Pick the outcome you want before the session starts.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_131, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-        "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["chain-choice-card", {
-          active: $options.chainingConfig.goal === 'memorise'
-        }]),
-        onClick: _cache[50] || (_cache[50] = function ($event) {
-          return $options.setChainingGoal('memorise');
-        }),
-        type: "button"
-      }, _toConsumableArray(_cache[192] || (_cache[192] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Memorise", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Guided repetition to lock in new verses.", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-        "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["chain-choice-card", {
-          active: $options.chainingConfig.goal === 'revise'
-        }]),
-        onClick: _cache[51] || (_cache[51] = function ($event) {
-          return $options.setChainingGoal('revise');
-        }),
-        type: "button"
-      }, _toConsumableArray(_cache[193] || (_cache[193] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Revise", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Move through the passage with lighter support.", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-        "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["chain-choice-card", {
-          active: $options.chainingConfig.goal === 'test'
-        }]),
-        onClick: _cache[52] || (_cache[52] = function ($event) {
-          return $options.setChainingGoal('test');
-        }),
-        type: "button"
-      }, _toConsumableArray(_cache[194] || (_cache[194] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Test", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Reduce hints and check what you can recall alone.", -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_132, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-        "class": "start-btn",
-        onClick: _cache[53] || (_cache[53] = function () {
-          return $options.continueChainingStep && $options.continueChainingStep.apply($options, arguments);
-        }),
-        type: "button"
-      }, " Continue to range ")])])) : $options.chainingStep === 2 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_133, [_cache[202] || (_cache[202] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-        "class": "chain-step-copy"
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h4", null, "Choose your surah and ayahs"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Set the exact passage you want to chain today.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_134, [_cache[197] || (_cache[197] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-        "onUpdate:modelValue": _cache[54] || (_cache[54] = function ($event) {
-          return $options.chapterId = $event;
-        }),
-        onChange: _cache[55] || (_cache[55] = function () {
-          return $options.loadChapter && $options.loadChapter.apply($options, arguments);
-        }),
-        "class": "select"
-      }, [_cache[196] || (_cache[196] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
-        value: 0
-      }, "Choose a surah...", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (c) {
-        return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
-          key: c.id,
-          value: c.id
-        }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.id) + ". " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_135);
-      }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.chapterId]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_136, [_cache[199] || (_cache[199] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Ayah range", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_137, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-        type: "number",
-        "class": "input",
-        "onUpdate:modelValue": _cache[56] || (_cache[56] = function ($event) {
-          return $options.rangeStart = $event;
-        }),
-        onChange: _cache[57] || (_cache[57] = function () {
-          return $options.adjustRange && $options.adjustRange.apply($options, arguments);
-        }),
-        min: "1"
-      }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeStart, void 0, {
-        number: true
-      }]]), _cache[198] || (_cache[198] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-        type: "number",
-        "class": "input",
-        "onUpdate:modelValue": _cache[58] || (_cache[58] = function ($event) {
-          return $options.rangeEnd = $event;
-        }),
-        onChange: _cache[59] || (_cache[59] = function () {
-          return $options.adjustRange && $options.adjustRange.apply($options, arguments);
-        }),
-        min: "1"
-      }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeEnd, void 0, {
-        number: true
-      }]])]), _cache[200] || (_cache[200] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
-        "class": "field-hint"
-      }, "Keep it focused for a smoother chaining session.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_138, [_cache[201] || (_cache[201] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-        "onUpdate:modelValue": _cache[60] || (_cache[60] = function ($event) {
-          return $options.reciterId = $event;
-        }),
-        onChange: _cache[61] || (_cache[61] = function () {
-          return $options.refreshVerses && $options.refreshVerses.apply($options, arguments);
-        }),
-        "class": "select"
-      }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.reciters, function (r) {
-        return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
-          key: r.id,
-          value: r.id
-        }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_139);
-      }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_140, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-        "class": "btn-ghost chain-secondary-btn",
-        onClick: _cache[62] || (_cache[62] = function ($event) {
-          return $options.setChainingStep(1);
-        }),
-        type: "button"
-      }, " Back "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-        "class": "start-btn",
-        onClick: _cache[63] || (_cache[63] = function () {
-          return $options.continueChainingStep && $options.continueChainingStep.apply($options, arguments);
-        }),
-        disabled: !$options.chainingStepTwoReady,
-        type: "button"
-      }, " Continue to style ", 8 /* PROPS */, _hoisted_141)])])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_142, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_143, [_cache[203] || (_cache[203] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h4", null, "Choose your chaining style", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingGoalHint), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_144, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-        "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["chain-choice-card", {
-          active: $options.chainingConfig.style === 'sequential'
-        }]),
-        onClick: _cache[64] || (_cache[64] = function ($event) {
-          return $options.setChainingStyle('sequential');
-        }),
-        type: "button"
-      }, _toConsumableArray(_cache[204] || (_cache[204] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Build in order", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Move ayah by ayah from start to finish.", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-        "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["chain-choice-card", {
-          active: $options.chainingConfig.style === 'spaced'
-        }]),
-        onClick: _cache[65] || (_cache[65] = function ($event) {
-          return $options.setChainingStyle('spaced');
-        }),
-        type: "button"
-      }, _toConsumableArray(_cache[205] || (_cache[205] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Spaced return", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Return to earlier ayahs at fixed intervals to strengthen retention.", -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_145, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_146, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingSummary), 1 /* TEXT */), _cache[206] || (_cache[206] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, "Your chaining settings are saved automatically.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_147, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_148, [_cache[210] || (_cache[210] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_149, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_150, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-        type: "radio",
-        value: "0.75",
-        "onUpdate:modelValue": _cache[66] || (_cache[66] = function ($event) {
-          return $options.speed = $event;
-        })
-      }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[207] || (_cache[207] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 0.75x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_151, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-        type: "radio",
-        value: "1",
-        "onUpdate:modelValue": _cache[67] || (_cache[67] = function ($event) {
-          return $options.speed = $event;
-        })
-      }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[208] || (_cache[208] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1x", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_152, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-        type: "radio",
-        value: "1.25",
-        "onUpdate:modelValue": _cache[68] || (_cache[68] = function ($event) {
-          return $options.speed = $event;
-        })
-      }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.speed]]), _cache[209] || (_cache[209] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 1.25x", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_153, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_154, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-        type: "checkbox",
-        "onUpdate:modelValue": _cache[69] || (_cache[69] = function ($event) {
-          return $options.focusMode = $event;
-        })
-      }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.focusMode]]), _cache[211] || (_cache[211] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "switch-ui"
-      }, null, -1 /* CACHED */)), _cache[212] || (_cache[212] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-        "class": "switch-text"
-      }, "Focus mode", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_155, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-        "class": "btn-ghost chain-secondary-btn",
-        onClick: _cache[70] || (_cache[70] = function ($event) {
-          return $options.setChainingStep(2);
-        }),
-        type: "button"
-      }, " Back "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-        "class": "start-btn",
-        onClick: _cache[71] || (_cache[71] = function () {
-          return $options.startChainingSession && $options.startChainingSession.apply($options, arguments);
-        }),
-        disabled: !$options.chainingStepThreeReady || !$options.chainingStepTwoReady,
-        type: "button"
-      }, _toConsumableArray(_cache[213] || (_cache[213] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-        "class": "bi bi-play-fill"
-      }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Start Chaining ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_156)])]))]))];
-    }),
-    _: 1 /* STABLE */
-  })])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 4: Saved Sessions "), $options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_157, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Breathing space between repetitions", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_137, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_138, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "checkbox",
+    "onUpdate:modelValue": _cache[61] || (_cache[61] = function ($event) {
+      return $options.focusMode = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.focusMode]]), _cache[196] || (_cache[196] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "switch-ui"
+  }, null, -1 /* CACHED */)), _cache[197] || (_cache[197] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "switch-text"
+  }, "Focus mode (dim other verses)", -1 /* CACHED */))]), _cache[198] || (_cache[198] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    "class": "field-hint"
+  }, "Reduce distraction by dimming non-active verses", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_139, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_140, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "checkbox",
+    "onUpdate:modelValue": _cache[62] || (_cache[62] = function ($event) {
+      return $options.blurAdjacent = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $options.blurAdjacent]]), _cache[199] || (_cache[199] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "switch-ui"
+  }, null, -1 /* CACHED */)), _cache[200] || (_cache[200] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "switch-text"
+  }, "Blur non-active verses (active recall)", -1 /* CACHED */))]), _cache[201] || (_cache[201] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    "class": "field-hint"
+  }, "Test your memory by hiding non-active verses", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_practice]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Section 4: Saved Sessions "), $options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_141, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[72] || (_cache[72] = function ($event) {
+    onClick: _cache[63] || (_cache[63] = function ($event) {
       return $options.toggleSection('advanced_saved');
     }),
     type: "button"
-  }, [_cache[215] || (_cache[215] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-save\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Saved sessions</span><span class=\"st-sub\">Save, load, delete</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[203] || (_cache[203] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-save\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Saved sessions</span><span class=\"st-sub\">Save, load, delete</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_saved
     }])
-  }, _toConsumableArray(_cache[214] || (_cache[214] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[202] || (_cache[202] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_158, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_159, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_160, [_cache[217] || (_cache[217] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Your saved sessions", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[73] || (_cache[73] = function ($event) {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_142, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_143, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_144, [_cache[205] || (_cache[205] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Your saved sessions", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[64] || (_cache[64] = function ($event) {
       return $data.selectedSessionId = $event;
     }),
     "class": "select"
-  }, [_cache[216] || (_cache[216] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+  }, [_cache[204] || (_cache[204] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: ""
   }, "-- Select a session --", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.savedSessions, function (s) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: s.id,
       value: s.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.name), 9 /* TEXT, PROPS */, _hoisted_161);
-  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.selectedSessionId]]), _cache[218] || (_cache[218] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.name), 9 /* TEXT, PROPS */, _hoisted_145);
+  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.selectedSessionId]]), _cache[206] || (_cache[206] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
   }, "Load previously saved sessions", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_saved]])])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 1
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Login message for non-logged users "), _cache[219] || (_cache[219] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section class=\"sheet-section\"><div class=\"sheet-content\"><div class=\"field-stack\"><div class=\"field\"><div class=\"pill\" style=\"text-align:center;padding:16px;\"><i class=\"bi bi-person\"></i><span>Login to save and load sessions</span></div><small class=\"field-hint\">Create an account to save your progress</small></div></div></div></section>", 1))], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Analytics Tab "), $data.tab === 'analytics' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_162, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_163, [_cache[232] || (_cache[232] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Login message for non-logged users "), _cache[207] || (_cache[207] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section class=\"sheet-section\"><div class=\"sheet-content\"><div class=\"field-stack\"><div class=\"field\"><div class=\"pill\" style=\"text-align:center;padding:16px;\"><i class=\"bi bi-person\"></i><span>Login to save and load sessions</span></div><small class=\"field-hint\">Create an account to save your progress</small></div></div></div></section>", 1))], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Analytics Tab "), $data.tab === 'analytics' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_146, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_147, [_cache[226] || (_cache[226] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", {
     style: {
       "margin-top": "0",
       "font-size": "1.1rem",
       "color": "var(--accent)"
     }
-  }, "Your Memorisation Stats", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_164, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_165, [_cache[220] || (_cache[220] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, "Your Memorisation Stats", -1 /* CACHED */)), _cache[227] || (_cache[227] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+    "class": "analytics-help"
+  }, "These numbers are device-local summaries. Weekly bars show recent days.", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_148, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_149, [_cache[208] || (_cache[208] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-book"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_166, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.totalVersesRead), 1 /* TEXT */), _cache[221] || (_cache[221] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_150, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.totalVersesRead), 1 /* TEXT */), _cache[209] || (_cache[209] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "stat-label"
-  }, "Verses Read", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Verses Read", -1 /* CACHED */)), _cache[210] || (_cache[210] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "stat-help"
+  }, "Counts verses you played or reviewed in sessions.", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "mini-trend",
     innerHTML: $options.renderMiniTrend($data.analytics.weeklyVerses)
-  }, null, 8 /* PROPS */, _hoisted_167)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_168, [_cache[222] || (_cache[222] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, 8 /* PROPS */, _hoisted_151)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_152, [_cache[211] || (_cache[211] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-clock-history"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_169, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.totalTimeSpent) + "m", 1 /* TEXT */), _cache[223] || (_cache[223] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_153, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.totalTimeSpent) + "m", 1 /* TEXT */), _cache[212] || (_cache[212] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "stat-label"
-  }, "Time Spent", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Time Spent", -1 /* CACHED */)), _cache[213] || (_cache[213] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "stat-help"
+  }, "Approximate minutes with audio active.", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "mini-trend",
     innerHTML: $options.renderMiniTrend($data.analytics.weeklyMinutes)
-  }, null, 8 /* PROPS */, _hoisted_170)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_171, [_cache[224] || (_cache[224] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, 8 /* PROPS */, _hoisted_154)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_155, [_cache[214] || (_cache[214] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-fire"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_172, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.currentStreak), 1 /* TEXT */), _cache[225] || (_cache[225] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_156, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.currentStreak), 1 /* TEXT */), _cache[215] || (_cache[215] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "stat-label"
-  }, "Day Streak", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_173, [_cache[226] || (_cache[226] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, "Day Streak", -1 /* CACHED */)), _cache[216] || (_cache[216] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "stat-help"
+  }, "Consecutive days with at least one session.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_157, [_cache[217] || (_cache[217] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-check-circle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_174, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.versesMastered), 1 /* TEXT */), _cache[227] || (_cache[227] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_158, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.versesMastered), 1 /* TEXT */), _cache[218] || (_cache[218] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "stat-label"
-  }, "Mastered", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_175, [_cache[228] || (_cache[228] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, "Mastered", -1 /* CACHED */)), _cache[219] || (_cache[219] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "stat-help"
+  }, "Verses you’ve marked as strong and consistent.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_159, [_cache[220] || (_cache[220] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-repeat"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_176, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.totalRepetitions), 1 /* TEXT */), _cache[229] || (_cache[229] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_160, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.totalRepetitions), 1 /* TEXT */), _cache[221] || (_cache[221] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "stat-label"
-  }, "Repetitions", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_177, [_cache[230] || (_cache[230] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, "Repetitions", -1 /* CACHED */)), _cache[222] || (_cache[222] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "stat-help"
+  }, "Total verse repeats across all sessions.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_161, [_cache[223] || (_cache[223] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-calendar-check"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_178, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.sessionsCompleted), 1 /* TEXT */), _cache[231] || (_cache[231] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_162, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.analytics.sessionsCompleted), 1 /* TEXT */), _cache[224] || (_cache[224] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "stat-label"
-  }, "Sessions", -1 /* CACHED */))])])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Offline Tab "), $data.tab === 'offline' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_179, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_180, [_cache[238] || (_cache[238] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Sessions", -1 /* CACHED */)), _cache[225] || (_cache[225] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "stat-help"
+  }, "How many times you finished a session run.", -1 /* CACHED */))])])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Offline Tab "), $data.tab === 'offline' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_163, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_164, [_cache[233] || (_cache[233] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "sheet-header",
     style: {
       "padding": "16px 16px 0"
@@ -28489,13 +28474,13 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     }
   }, "Downloaded Surahs"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
     "class": "st-sub"
-  }, "Access your saved verses without internet")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_181, [!$data.offlineSurahs.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_182, [_cache[233] || (_cache[233] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, "Access your saved verses without internet")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_165, [!$data.offlineSurahs.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_166, [_cache[228] || (_cache[228] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-cloud-slash",
     style: {
       "font-size": "2rem",
       "opacity": "0.3"
     }
-  }, null, -1 /* CACHED */)), _cache[234] || (_cache[234] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+  }, null, -1 /* CACHED */)), _cache[229] || (_cache[229] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
     style: {
       "margin-top": "8px",
       "opacity": "0.6"
@@ -28506,175 +28491,177 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       "margin-top": "12px",
       "width": "100%"
     },
-    onClick: _cache[74] || (_cache[74] = function ($event) {
+    onClick: _cache[65] || (_cache[65] = function ($event) {
       return $data.tab = 'beginner';
     })
-  }, " Browse surahs ")])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_183, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.offlineSurahs, function (s) {
+  }, " Browse surahs ")])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_167, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.offlineSurahs, function (s) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: s.id,
       "class": "offline-item"
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_184, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_185, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.surah), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_186, "Ayahs " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.range) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.count) + " verses", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_187, "Saved: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.date), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_188, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_168, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_169, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.surah), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_170, "Ayahs " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.range) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.count) + " verses", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_171, "Saved: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(s.date), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_172, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "oi-btn oi-load",
       onClick: function onClick($event) {
         return $options.loadOfflineSurah(s);
       },
       title: "Load"
-    }, _toConsumableArray(_cache[235] || (_cache[235] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[230] || (_cache[230] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-folder2-open"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_189), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_173), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "oi-btn oi-delete",
       onClick: function onClick($event) {
         return $options.deleteOfflineSurah(s.id);
       },
       title: "Delete"
-    }, _toConsumableArray(_cache[236] || (_cache[236] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[231] || (_cache[231] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-trash"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_190)])]);
-  }), 128 /* KEYED_FRAGMENT */))])), $data.offlineSurahs.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_191, _toConsumableArray(_cache[237] || (_cache[237] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_174)])]);
+  }), 128 /* KEYED_FRAGMENT */))])), $data.offlineSurahs.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_175, _toConsumableArray(_cache[232] || (_cache[232] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-info-circle"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Audio requires an internet connection even for saved surahs.", -1 /* CACHED */)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_192, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "tools-btn tools-btn-ghost tools-btn-danger",
-    onClick: _cache[75] || (_cache[75] = function () {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Audio requires an internet connection even for saved surahs.", -1 /* CACHED */)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_176, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "tools-btn tools-btn-ghost tools-btn-soft",
+    onClick: _cache[66] || (_cache[66] = function () {
       return $options.resetControls && $options.resetControls.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[239] || (_cache[239] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[234] || (_cache[234] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-counterclockwise"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Reset", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-btn tools-btn-ghost",
-    onClick: _cache[76] || (_cache[76] = function ($event) {
+    onClick: _cache[67] || (_cache[67] = function ($event) {
       return $data.showTools = false;
     })
-  }, _toConsumableArray(_cache[240] || (_cache[240] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[235] || (_cache[235] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-circle"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Close", -1 /* CACHED */)])))])], 2 /* CLASS */)], 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Planner Modal "), $data.showPlannerModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 2,
     "class": "modal-overlay",
-    onClick: _cache[86] || (_cache[86] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
+    onClick: _cache[77] || (_cache[77] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
       return $data.showPlannerModal = false;
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_193, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_194, [_cache[242] || (_cache[242] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_177, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_178, [_cache[237] || (_cache[237] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-calendar-plus"
   }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Quick Planner")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-icon",
-    onClick: _cache[77] || (_cache[77] = function ($event) {
+    onClick: _cache[68] || (_cache[68] = function ($event) {
       return $data.showPlannerModal = false;
     })
-  }, _toConsumableArray(_cache[241] || (_cache[241] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[236] || (_cache[236] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_195, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Surah Selection "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_196, [_cache[243] || (_cache[243] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_179, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Surah Selection "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_180, [_cache[238] || (_cache[238] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-book"
   }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Target Surah")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[78] || (_cache[78] = function ($event) {
+    "onUpdate:modelValue": _cache[69] || (_cache[69] = function ($event) {
       return $data.plannerConfig.surahId = $event;
     }),
     "class": "planner-select",
-    onChange: _cache[79] || (_cache[79] = function () {
+    onChange: _cache[70] || (_cache[70] = function () {
       return $options.updatePlannerSurah && $options.updatePlannerSurah.apply($options, arguments);
     })
   }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (ch) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: ch.id,
       value: ch.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ch.id) + ". " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ch.name_simple) + " (" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ch.verses_count) + " verses) ", 9 /* TEXT, PROPS */, _hoisted_197);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.plannerConfig.surahId]]), _cache[244] || (_cache[244] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ch.id) + ". " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ch.name_simple) + " (" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ch.verses_count) + " verses) ", 9 /* TEXT, PROPS */, _hoisted_181);
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.plannerConfig.surahId]]), _cache[239] || (_cache[239] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Choose the surah you want to memorize", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Per Day "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_198, [_cache[247] || (_cache[247] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, "Choose the surah you want to memorize", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Per Day "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_182, [_cache[242] || (_cache[242] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sun"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Verses per day")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_199, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Verses per day")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_183, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "quantity-btn",
-    onClick: _cache[80] || (_cache[80] = function ($event) {
+    onClick: _cache[71] || (_cache[71] = function ($event) {
       return $options.adjustVersesPerDay(-1);
     }),
     disabled: $data.plannerConfig.versesPerDay <= 1
-  }, _toConsumableArray(_cache[245] || (_cache[245] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[240] || (_cache[240] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-dash"
-  }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_200), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_184), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
-    "onUpdate:modelValue": _cache[81] || (_cache[81] = function ($event) {
+    "onUpdate:modelValue": _cache[72] || (_cache[72] = function ($event) {
       return $data.plannerConfig.versesPerDay = $event;
     }),
     "class": "planner-input",
     min: "1",
     max: $data.plannerConfig.totalVersesInSurah,
-    onChange: _cache[82] || (_cache[82] = function () {
+    onChange: _cache[73] || (_cache[73] = function () {
       return $options.validateVersesPerDay && $options.validateVersesPerDay.apply($options, arguments);
     })
-  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_201), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.plannerConfig.versesPerDay, void 0, {
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_185), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.plannerConfig.versesPerDay, void 0, {
     number: true
   }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "quantity-btn",
-    onClick: _cache[83] || (_cache[83] = function ($event) {
+    onClick: _cache[74] || (_cache[74] = function ($event) {
       return $options.adjustVersesPerDay(1);
     }),
     disabled: $data.plannerConfig.versesPerDay >= $data.plannerConfig.totalVersesInSurah
-  }, _toConsumableArray(_cache[246] || (_cache[246] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[241] || (_cache[241] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-plus"
-  }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_202)]), _cache[248] || (_cache[248] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_186)]), _cache[243] || (_cache[243] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "How many new verses you want to memorize daily", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Stats Grid "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_203, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Days to Finish "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_204, [_cache[250] || (_cache[250] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "How many new verses you want to memorize daily", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Stats Grid "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_187, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Days to Finish "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_188, [_cache[245] || (_cache[245] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "stat-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-calendar-week"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_205, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_206, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerEstimatedDays), 1 /* TEXT */), _cache[249] || (_cache[249] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_189, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_190, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerEstimatedDays), 1 /* TEXT */), _cache[244] || (_cache[244] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "stat-label"
-  }, "Days to Finish", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Daily Time "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_207, [_cache[252] || (_cache[252] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Days to Finish", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Daily Time "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_191, [_cache[247] || (_cache[247] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "stat-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-clock"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_208, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_209, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerEstimatedTimePerDay) + "m", 1 /* TEXT */), _cache[251] || (_cache[251] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_192, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_193, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerEstimatedTimePerDay) + "m", 1 /* TEXT */), _cache[246] || (_cache[246] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "stat-label"
-  }, "Daily Time", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Total Verses "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_210, [_cache[254] || (_cache[254] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Daily Time", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Total Verses "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_194, [_cache[249] || (_cache[249] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "stat-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-text-paragraph"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_211, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_212, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerTotalVerses), 1 /* TEXT */), _cache[253] || (_cache[253] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_195, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_196, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerTotalVerses), 1 /* TEXT */), _cache[248] || (_cache[248] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "stat-label"
-  }, "Total Verses", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Completion Date "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_213, [_cache[256] || (_cache[256] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Total Verses", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Completion Date "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_197, [_cache[252] || (_cache[252] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "stat-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-calendar-check"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_214, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_215, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerCompletionDateFormatted), 1 /* TEXT */), _cache[255] || (_cache[255] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_198, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_199, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerCompletionDateFormatted), 1 /* TEXT */), _cache[250] || (_cache[250] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "stat-label"
-  }, "Est. completion date", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_216, "Based on " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.plannerConfig.versesPerDay) + " verses/day", 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Progress Bar "), $data.plannerConfig.totalVersesInSurah > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_217, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_218, [_cache[257] || (_cache[257] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Progress breakdown", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.plannerConfig.versesPerDay) + " / " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.plannerConfig.totalVersesInSurah) + " verses/day", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_219, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Est. completion date", -1 /* CACHED */)), _cache[251] || (_cache[251] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    "class": "stat-note"
+  }, "Based on verses/day and your past pace.", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Progress Bar "), $data.plannerConfig.totalVersesInSurah > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_200, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_201, [_cache[253] || (_cache[253] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Progress breakdown", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.plannerConfig.versesPerDay) + " / " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.plannerConfig.totalVersesInSurah) + " verses/day", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_202, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "progress-bar-fill",
     style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
       width: $data.plannerConfig.versesPerDay / $data.plannerConfig.totalVersesInSurah * 100 + '%'
     })
-  }, null, 4 /* STYLE */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_220, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, 4 /* STYLE */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_203, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary",
-    onClick: _cache[84] || (_cache[84] = function ($event) {
+    onClick: _cache[75] || (_cache[75] = function ($event) {
       return $data.showPlannerModal = false;
     })
   }, "Cancel"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-primary",
-    onClick: _cache[85] || (_cache[85] = function () {
+    onClick: _cache[76] || (_cache[76] = function () {
       return $options.submitPlanner && $options.submitPlanner.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[258] || (_cache[258] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[254] || (_cache[254] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-fill"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Create Plan ", -1 /* CACHED */)])))])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showConfirmModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 3,
     "class": "modal-overlay",
-    onClick: _cache[90] || (_cache[90] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onClick: _cache[81] || (_cache[81] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_221, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_222, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_204, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_205, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-icon",
-    onClick: _cache[87] || (_cache[87] = function () {
+    onClick: _cache[78] || (_cache[78] = function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[259] || (_cache[259] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[255] || (_cache[255] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_223, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_224, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.message), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_225, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_206, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_207, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.message), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_208, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary",
-    onClick: _cache[88] || (_cache[88] = function () {
+    onClick: _cache[79] || (_cache[79] = function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     })
   }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.cancelLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["btn-primary", {
       'btn-danger': $data.confirmModal.tone === 'danger'
     }]),
-    onClick: _cache[89] || (_cache[89] = function () {
+    onClick: _cache[80] || (_cache[80] = function () {
       return $options.runConfirmAction && $options.runConfirmAction.apply($options, arguments);
     })
   }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.confirmLabel), 3 /* TEXT, CLASS */)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Global Audio Player - Updated with Speed Controls "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(vue__WEBPACK_IMPORTED_MODULE_0__.Transition, {
@@ -28687,21 +28674,21 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["player-bar", {
           collapsed: $data.playerCollapsed
         }])
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_226, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_227, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_228, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter = $data.currentChapter) === null || _$data$currentChapter === void 0 ? void 0 : _$data$currentChapter.name_simple) || 'Quran'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_229, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.activeVerseKey) + " ", 1 /* TEXT */), $options.etaLabel && $data.isPlaying ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_209, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_210, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_211, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter = $data.currentChapter) === null || _$data$currentChapter === void 0 ? void 0 : _$data$currentChapter.name_simple) || 'Quran'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_212, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activeAyahLabel) + " ", 1 /* TEXT */), $options.etaLabel && $data.isPlaying ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
         key: 0,
         "class": "player-eta",
         title: $options.getEtaTooltip()
-      }, " • " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel) + " remaining ", 9 /* TEXT, PROPS */, _hoisted_230)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_231, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      }, " • " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel) + " remaining ", 9 /* TEXT, PROPS */, _hoisted_213)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_214, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[91] || (_cache[91] = function () {
+        onClick: _cache[82] || (_cache[82] = function () {
           return $options.prev && $options.prev.apply($options, arguments);
         }),
         title: "Previous"
-      }, _toConsumableArray(_cache[260] || (_cache[260] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[256] || (_cache[256] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-skip-start-fill"
       }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn player-play",
-        onClick: _cache[92] || (_cache[92] = function () {
+        onClick: _cache[83] || (_cache[83] = function () {
           return $options.togglePlay && $options.togglePlay.apply($options, arguments);
         }),
         title: "Play/Pause"
@@ -28709,15 +28696,15 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
       }, null, 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[93] || (_cache[93] = function () {
+        onClick: _cache[84] || (_cache[84] = function () {
           return $options.next && $options.next.apply($options, arguments);
         }),
         title: "Next"
-      }, _toConsumableArray(_cache[261] || (_cache[261] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[257] || (_cache[257] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-skip-end-fill"
-      }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_232, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_233, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_215, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_216, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
         "class": "player-progress-bg",
-        onClick: _cache[94] || (_cache[94] = function () {
+        onClick: _cache[85] || (_cache[85] = function () {
           return _ctx.seek && _ctx.seek.apply(_ctx, arguments);
         }),
         ref: "progress"
@@ -28726,66 +28713,46 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
           width: $data.currentTime / ($data.duration || 1) * 100 + '%'
         })
-      }, null, 4 /* STYLE */)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_234, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.duration)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" ADD SPEED CONTROLS HERE "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_235, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      }, null, 4 /* STYLE */)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_217, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.duration)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" ADD SPEED CONTROLS HERE "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_218, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["speed-btn-mini", {
           active: $options.speed === 0.75
         }]),
-        onClick: _cache[95] || (_cache[95] = function ($event) {
+        onClick: _cache[86] || (_cache[86] = function ($event) {
           return $options.setPlaybackSpeed(0.75);
         })
       }, " 0.75x ", 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["speed-btn-mini", {
           active: $options.speed === 1
         }]),
-        onClick: _cache[96] || (_cache[96] = function ($event) {
+        onClick: _cache[87] || (_cache[87] = function ($event) {
           return $options.setPlaybackSpeed(1);
         })
       }, " 1x ", 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["speed-btn-mini", {
           active: $options.speed === 1.25
         }]),
-        onClick: _cache[97] || (_cache[97] = function ($event) {
+        onClick: _cache[88] || (_cache[88] = function ($event) {
           return $options.setPlaybackSpeed(1.25);
         })
       }, " 1.25x ", 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["speed-btn-mini", {
           active: $options.speed === 1.5
         }]),
-        onClick: _cache[98] || (_cache[98] = function ($event) {
+        onClick: _cache[89] || (_cache[89] = function ($event) {
           return $options.setPlaybackSpeed(1.5);
         })
       }, " 1.5x ", 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[99] || (_cache[99] = function ($event) {
+        onClick: _cache[90] || (_cache[90] = function ($event) {
           return $data.playerVisible = false;
         }),
         title: "Close player"
-      }, _toConsumableArray(_cache[262] || (_cache[262] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[258] || (_cache[258] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-x-lg"
       }, null, -1 /* CACHED */)])))])], 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)];
     }),
     _: 1 /* STABLE */
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio System "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_236, null, 512 /* NEED_PATCH */), $data.showModeGuide ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
-    key: 4,
-    "class": "mode-guide-backdrop",
-    onClick: _cache[102] || (_cache[102] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
-      return $options.closeModeGuide && $options.closeModeGuide.apply($options, arguments);
-    }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_237, [_cache[266] || (_cache[266] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "mode-guide-kicker"
-  }, "Session Style", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.pendingMode === 'advanced' ? 'Advanced Mode' : 'Beginner Mode'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.pendingMode === 'advanced' ? 'For serious huffadh training with cumulative chaining and active recall.' : 'A gentle sequential flow for building confidence with guided repetition.'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_238, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_239, [_cache[263] || (_cache[263] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Flow", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.pendingMode === 'advanced' ? 'Cumulative chaining' : 'Sequential ayah order'), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_240, [_cache[264] || (_cache[264] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Visuals", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.pendingMode === 'advanced' ? 'Blur on for active recall' : 'Focus off by default'), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_241, [_cache[265] || (_cache[265] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Repetition", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.pendingMode === 'advanced' ? '5x or more' : '3x baseline'), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_242, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "btn-ghost chain-secondary-btn",
-    onClick: _cache[100] || (_cache[100] = function () {
-      return $options.closeModeGuide && $options.closeModeGuide.apply($options, arguments);
-    }),
-    type: "button"
-  }, "Cancel"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "start-btn",
-    onClick: _cache[101] || (_cache[101] = function () {
-      return $options.applyModePreset && $options.applyModePreset.apply($options, arguments);
-    }),
-    type: "button"
-  }, "Use " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.pendingMode === 'advanced' ? 'Advanced' : 'Beginner'), 1 /* TEXT */)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 8 /* PROPS */, _hoisted_1);
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio System "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_219, null, 512 /* NEED_PATCH */)], 12 /* STYLE, PROPS */, _hoisted_1);
 }
 
 /***/ }),
@@ -28868,6 +28835,68 @@ window.bootstrap = bootstrap__WEBPACK_IMPORTED_MODULE_1__;
 var token = document.head.querySelector('meta[name="csrf-token"]');
 if (token) {
   window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
+}
+
+/***/ }),
+
+/***/ "./resources/js/lib/quranApis.js":
+/*!***************************************!*\
+  !*** ./resources/js/lib/quranApis.js ***!
+  \***************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   getAyahTajweed: () => (/* binding */ getAyahTajweed),
+/* harmony export */   getChapterRecitation: () => (/* binding */ getChapterRecitation),
+/* harmony export */   getEditions: () => (/* binding */ getEditions),
+/* harmony export */   getEditionsByLanguage: () => (/* binding */ getEditionsByLanguage),
+/* harmony export */   getQuranEdition: () => (/* binding */ getQuranEdition),
+/* harmony export */   getSurahEdition: () => (/* binding */ getSurahEdition),
+/* harmony export */   getSurahEditions: () => (/* binding */ getSurahEditions),
+/* harmony export */   getSurahTransliteration: () => (/* binding */ getSurahTransliteration)
+/* harmony export */ });
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! axios */ "./node_modules/axios/lib/axios.js");
+
+var alquranClient = axios__WEBPACK_IMPORTED_MODULE_0__["default"].create({
+  baseURL: 'https://api.alquran.cloud/v1',
+  headers: {
+    Accept: 'application/json'
+  }
+});
+delete alquranClient.defaults.headers.common['X-Requested-With'];
+delete alquranClient.defaults.headers.common['X-CSRF-TOKEN'];
+function getAyahTajweed(ayahNumber) {
+  return alquranClient.get("/ayah/".concat(ayahNumber, "/quran-tajweed"));
+}
+function getEditions() {
+  var params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  return alquranClient.get('/edition', {
+    params: params
+  });
+}
+function getEditionsByLanguage(language) {
+  var params = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  return alquranClient.get("/edition/language/".concat(language), {
+    params: params
+  });
+}
+function getChapterRecitation(recitationId, normalizedSurah) {
+  return axios__WEBPACK_IMPORTED_MODULE_0__["default"].get("https://api.quran.com/api/v4/chapter_recitations/".concat(recitationId, "/").concat(normalizedSurah));
+}
+function getSurahEdition(surahNumber, edition) {
+  return alquranClient.get("/surah/".concat(surahNumber, "/").concat(edition));
+}
+function getSurahEditions(surahNumber, reciterEdition) {
+  var editions = "".concat(reciterEdition, ",quran-tajweed");
+  return alquranClient.get("/surah/".concat(surahNumber, "/editions/").concat(editions));
+}
+function getSurahTransliteration(surahNumber, transliterationIdentifier) {
+  return alquranClient.get("/surah/".concat(surahNumber, "/").concat(transliterationIdentifier));
+}
+function getQuranEdition(edition) {
+  return alquranClient.get("/quran/".concat(edition));
 }
 
 /***/ }),
@@ -35349,7 +35378,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n:root {\n  --bg: #f3eee6;\n  --surface: rgba(255, 250, 243, 0.88);\n  --surface-strong: rgba(255, 255, 255, 0.92);\n  --border: rgba(78, 58, 38, 0.10);\n  --text: #1f1a17;\n  --text-muted: #6c6258;\n  --accent: #9a6738;\n  --accent-strong: #6e4726;\n  --accent-soft: #d8c1a8;\n  --accent-light: rgba(154, 103, 56, 0.10);\n  --accent-wash: rgba(228, 211, 194, 0.42);\n  --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);\n  --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);\n  --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);\n  --radius: 16px;\n  --navbar-offset: 56px;\n  --tools-width: 440px;\n  --tools-footer-h: 78px;\n  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;\n  --font-ui: \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n[data-theme=\"dark\"] {\n  --bg: #15110f;\n  --surface: rgba(33, 27, 24, 0.88);\n  --surface-strong: rgba(44, 36, 31, 0.94);\n  --border: rgba(255, 235, 214, 0.10);\n  --text: #f1e7dc;\n  --text-muted: #bcae9f;\n  --accent: #d0a06b;\n  --accent-strong: #efc18d;\n  --accent-soft: #5f4530;\n  --accent-light: rgba(208, 160, 107, 0.14);\n  --accent-wash: rgba(208, 160, 107, 0.08);\n  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);\n  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);\n  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);\n}\n[data-theme=\"sepia\"] {\n  --bg: #efe2cb;\n  --surface: rgba(250, 241, 227, 0.88);\n  --surface-strong: rgba(255, 248, 237, 0.94);\n  --text: #352516;\n  --text-muted: #75624f;\n  --accent: #b8824e;\n  --accent-strong: #8f6033;\n  --accent-soft: #dcc3a6;\n  --accent-light: rgba(184, 130, 78, 0.12);\n  --accent-wash: rgba(221, 194, 162, 0.35);\n}\n[v-cloak] {\n  display: none !important;\n}\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\n.onboarding-cta {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n  margin-top: 24px;\n}\n.cta-primary-large {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  padding: 12px 28px;\n  border-radius: 40px;\n  font-size: 0.9rem;\n  font-weight: 600;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.cta-primary-large:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 6px 20px rgba(154, 103, 56, 0.3);\n}\n.cta-secondary {\n  background: transparent;\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n  padding: 12px 24px;\n  border-radius: 40px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.cta-secondary:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n\n/* Onboarding Welcome Styles */\n.onboarding-welcome {\n  margin-bottom: 32px;\n  animation: slideUp 0.4s ease-out;\n}\n@keyframes slideUp {\nfrom {\n    opacity: 0;\n    transform: translateY(20px);\n}\nto {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n.onboarding-card {\n  background: linear-gradient(135deg, var(--surface), var(--accent-light));\n  border-radius: 24px;\n  padding: 28px;\n  border: 1px solid var(--accent-soft);\n  text-align: center;\n}\n.onboarding-icon {\n  font-size: 3rem;\n  color: var(--accent);\n  margin-bottom: 16px;\n}\n.onboarding-card h3 {\n  font-size: 1.3rem;\n  margin-bottom: 8px;\n  color: var(--text);\n}\n.onboarding-card > p {\n  color: var(--text-muted);\n  margin-bottom: 24px;\n  font-size: 0.9rem;\n}\n.onboarding-steps {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 16px;\n  flex-wrap: wrap;\n  margin-bottom: 28px;\n}\n.step {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  background: var(--surface);\n  padding: 12px 20px;\n  border-radius: 16px;\n  flex: 1;\n  min-width: 160px;\n  text-align: left;\n}\n.step-number {\n  width: 32px;\n  height: 32px;\n  background: var(--accent);\n  color: white;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: bold;\n  font-size: 1rem;\n}\n.step-content {\n  display: flex;\n  flex-direction: column;\n}\n.step-content strong {\n  font-size: 0.85rem;\n  color: var(--text);\n}\n.step-content span {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.step-arrow {\n  color: var(--accent);\n  font-size: 1.2rem;\n}\n.onboarding-tips {\n  display: flex;\n  justify-content: center;\n  gap: 20px;\n  flex-wrap: wrap;\n  padding-top: 20px;\n  border-top: 1px solid var(--border);\n}\n.onboarding-tips .tip {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  background: var(--surface);\n  padding: 6px 14px;\n  border-radius: 40px;\n}\n.onboarding-tips .tip i {\n  color: var(--accent);\n  font-size: 0.85rem;\n}\n\n/* Responsive */\n@media (max-width: 768px) {\n.onboarding-steps {\n    flex-direction: column;\n}\n.step-arrow {\n    transform: rotate(90deg);\n}\n.step {\n    width: 100%;\n}\n.onboarding-card {\n    padding: 20px;\n}\n}\n\n/* Player Speed Controls */\n.player-speed-controls {\n  display: flex;\n  gap: 4px;\n  background: var(--accent-light);\n  padding: 4px 8px;\n  border-radius: 40px;\n}\n.speed-btn-mini {\n  padding: 4px 8px;\n  border-radius: 20px;\n  border: none;\n  background: transparent;\n  font-size: 0.7rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n}\n.speed-btn-mini:hover {\n  background: rgba(255, 255, 255, 0.5);\n}\n.speed-btn-mini.active {\n  background: var(--accent);\n  color: white;\n}\n@media (max-width: 768px) {\n.player-speed-controls {\n    display: none;\n    /* Hide on mobile, too crowded */\n}\n.chaining-hero {\n    flex-direction: column;\n}\n.chaining-progress,\n  .chain-choice-grid,\n  .chain-choice-grid-two {\n    grid-template-columns: 1fr;\n}\n.chain-step-actions.split {\n    flex-direction: column-reverse;\n    align-items: stretch;\n}\n.mode-guide-point {\n    flex-direction: column;\n}\n.mode-guide-point span {\n    text-align: left;\n}\n}\n\n/* Mode Button Styling */\n.mode-btn {\n  background: var(--surface);\n  border: 1px solid var(--accent);\n  color: var(--accent);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mode-btn i:first-child {\n  font-size: 0.85rem;\n}\n.mode-btn .bi-chevron-down {\n  font-size: 0.7rem;\n  transition: transform 0.2s;\n}\n.mode-btn:hover .bi-chevron-down {\n  transform: translateY(2px);\n}\n.mode-btn:hover {\n  background: var(--accent-light);\n}\n\n/* Make all buttons consistent */\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\nbody {\n  font-family: var(--font-ui);\n  background: var(--bg);\n  color: var(--text);\n}\n.app {\n  min-height: 100vh;\n  animation: appFade 260ms ease-out;\n}\n.verse-arabic {\n  min-height: 60px;\n}\n\n/* Session Rail */\n.session-rail {\n  background: var(--surface);\n  border-radius: 20px;\n  margin-bottom: 20px;\n  padding: 16px 20px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.session-rail-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 16px;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.session-rail-copy {\n  flex: 1;\n}\n.session-rail-hint {\n  margin-top: 4px;\n  color: var(--text-muted);\n  font-size: 0.78rem;\n}\n.session-rail-kicker {\n  font-size: 0.7rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  font-size: 1.1rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.session-rail-meta {\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-top: 2px;\n}\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 12px;\n  margin: 16px 0;\n}\n.rail-stat {\n  background: var(--accent-light);\n  padding: 10px 12px;\n  border-radius: 14px;\n  text-align: center;\n}\n.rail-stat span {\n  display: block;\n  font-size: 0.65rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--text-muted);\n  margin-bottom: 4px;\n}\n.rail-stat strong {\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.rail-stat small {\n  display: block;\n  margin-top: 4px;\n  font-size: 0.68rem;\n  color: var(--text-muted);\n}\n\n/* Mode Indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 10px;\n  padding: 6px 14px;\n  margin: 8px 0 12px 0;\n  background: var(--accent-light);\n  border-radius: 40px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n.mode-switch-btn {\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 4px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.mode-switch-btn:hover {\n  background: rgba(154, 103, 56, 0.2);\n  transform: rotate(180deg);\n}\n.progress-bar-wide {\n  margin-top: 12px;\n  height: 6px;\n  position: relative;\n  overflow: visible;\n}\n.progress-label {\n  position: absolute;\n  top: -24px;\n  right: 0;\n  font-size: 0.72rem;\n  font-weight: 700;\n  color: var(--accent);\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.session-rail-top {\n    flex-direction: column;\n    align-items: stretch;\n}\n.session-rail-actions {\n    justify-content: stretch;\n}\n.rail-btn {\n    flex: 1;\n    justify-content: center;\n}\n.session-rail-stats {\n    grid-template-columns: repeat(2, 1fr);\n    gap: 8px;\n}\n}\n.verse-arabic-loading {\n  min-height: 60px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--text-muted);\n  animation: pulse 1s infinite;\n}\n@keyframes pulse {\n0%,\n  100% {\n    opacity: 0.3;\n}\n50% {\n    opacity: 0.6;\n}\n}\n\n/* Ensure HTML content is styled properly before Vue mounts */\n.verse-arabic word,\n.verse-arabic .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n}\n\n/* Prevent raw HTML showing */\n.verse-arabic:empty {\n  display: none;\n}\n\n/* Tajweed styles */\n.verse-arabic.tajweed-enabled [class*=\"tajweed\"] {\n  display: inline;\n}\n\n/* Color rules for tajweed - adjust based on what API returns */\n.verse-arabic [class*=\"ghunnah\"],\n.verse-arabic [class*=\"Ghunnah\"] {\n  color: #2ecc71;\n}\n.verse-arabic [class*=\"madd\"],\n.verse-arabic [class*=\"Madd\"] {\n  color: #e74c3c;\n}\n.verse-arabic [class*=\"qalqalah\"],\n.verse-arabic [class*=\"Qalqalah\"] {\n  color: #f39c12;\n}\n.verse-arabic [class*=\"ikhfa\"],\n.verse-arabic [class*=\"Ikhfa\"] {\n  color: #9b59b6;\n}\n.verse-arabic [class*=\"idgham\"],\n.verse-arabic [class*=\"Idgham\"] {\n  color: #3498db;\n}\n\n/* Word by Word styles */\n.wbw-word {\n  display: inline-block;\n  padding: 4px 6px;\n  margin: 2px;\n  border-radius: 8px;\n  transition: all 0.2s ease;\n  cursor: pointer;\n  font-size: 1.2rem;\n  background: rgba(154, 103, 56, 0.05);\n}\n.wbw-word:hover {\n  background: var(--accent-light);\n  transform: scale(1.02);\n}\n.wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n\n/* Word highlighting styles */\n.verse-arabic word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n.rail-stat strong,\n.player-eta {\n  cursor: help;\n  border-bottom: 1px dotted var(--text-muted);\n}\n\n/* Optional: Show detailed breakdown on hover */\n.rail-stat:hover strong::after {\n  content: attr(title);\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: var(--surface-strong);\n  color: var(--text);\n  padding: 4px 8px;\n  border-radius: 8px;\n  font-size: 0.7rem;\n  white-space: nowrap;\n  z-index: 100;\n  box-shadow: var(--shadow-sm);\n  border: 1px solid var(--border);\n}\n\n/* Minimized Session Rail */\n.session-rail-mini {\n  position: sticky;\n  top: 12px;\n  z-index: 18;\n  padding: 10px;\n  padding-top: 8px;\n  margin-bottom: 20px;\n  background: var(--surface);\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-sm);\n  overflow: hidden;\n  transition: all 0.2s ease;\n}\n.session-rail-mini:hover {\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent-soft);\n}\n.rail-mini-content {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 8px 12px 8px 16px;\n}\n.rail-mini-info {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  flex: 1;\n}\n.rail-mini-icon {\n  width: 32px;\n  height: 32px;\n  background: var(--accent-light);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.rail-mini-icon i {\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.rail-mini-details {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-mini-surah {\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.rail-mini-progress {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.rail-mini-stats {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.mini-stat-item {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.mini-stat-item i {\n  font-size: 0.7rem;\n  color: var(--accent);\n}\n.rail-mini-actions {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mini-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n}\n.mini-btn:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n}\n.mini-btn:first-child {\n  background: var(--accent);\n  border-color: var(--accent);\n  color: white;\n}\n.mini-btn:first-child:hover {\n  transform: scale(1.05);\n  background: var(--accent-strong);\n}\n.rail-mini-progress {\n  height: 2px;\n  background: var(--border);\n}\n.progress-fill-mini {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.rail-mini-stats {\n    display: none;\n}\n.rail-mini-content {\n    padding: 6px 10px 6px 12px;\n}\n.rail-mini-surah {\n    font-size: 0.75rem;\n}\n}\n\n/* Font Dropdown */\n.font-dropdown {\n  position: relative;\n}\n.font-dropdown-trigger {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 999px;\n  font-size: 0.75rem;\n  cursor: pointer;\n  transition: all 0.2s;\n  color: var(--text);\n}\n.font-dropdown-trigger:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.font-dropdown-trigger .bi-chevron-down {\n  transition: transform 0.2s;\n  font-size: 0.7rem;\n}\n.font-dropdown-trigger .bi-chevron-down.rotated {\n  transform: rotate(180deg);\n}\n.font-dropdown-menu {\n  position: absolute;\n  top: calc(100% + 8px);\n  right: 0;\n  min-width: 200px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  box-shadow: var(--shadow-lg);\n  overflow: hidden;\n  z-index: 100;\n  backdrop-filter: blur(12px);\n}\n.font-option {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  width: 100%;\n  padding: 10px 14px;\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  font-size: 0.8rem;\n  text-align: left;\n  transition: all 0.15s;\n  color: var(--text);\n}\n.font-option:hover {\n  background: var(--accent-light);\n}\n.font-option.active {\n  background: var(--accent);\n  color: white;\n}\n.font-option .check-icon {\n  margin-left: auto;\n  font-size: 0.8rem;\n}\n\n/* Dropdown Animation */\n.dropdown-fade-enter-active,\n.dropdown-fade-leave-active {\n  transition: all 0.2s ease;\n}\n.dropdown-fade-enter-from,\n.dropdown-fade-leave-to {\n  opacity: 0;\n  transform: translateY(-8px);\n}\n\n/* Tajweed styles - these match what the Quran.com API returns */\n.verse-arabic.tajweed-enabled {\n  line-height: 2;\n  font-size: var(--verse-font-size);\n}\n\n/* The API returns spans with these classes */\n.verse-arabic.tajweed-enabled .quran-tajweed {\n  display: inline;\n  font-size: 1em;\n}\n\n/* Color different tajweed rules */\n.verse-arabic.tajweed-enabled [class*=\"ghunnah\"] {\n  color: #2ecc71;\n  background: rgba(46, 204, 113, 0.1);\n  border-radius: 3px;\n}\n.verse-arabic.tajweed-enabled [class*=\"madd\"] {\n  color: #e74c3c;\n  background: rgba(231, 76, 60, 0.1);\n  border-radius: 3px;\n}\n.verse-arabic.tajweed-enabled [class*=\"qalqalah\"] {\n  color: #f39c12;\n  background: rgba(243, 156, 18, 0.1);\n  border-radius: 3px;\n  font-weight: bold;\n}\n.verse-arabic.tajweed-enabled [class*=\"ikhfa\"] {\n  color: #9b59b6;\n  background: rgba(155, 89, 182, 0.1);\n  border-radius: 3px;\n}\n.verse-arabic.tajweed-enabled [class*=\"idgham\"] {\n  color: #3498db;\n  background: rgba(52, 152, 219, 0.1);\n  border-radius: 3px;\n}\n.tajweed-text {\n  direction: rtl;\n  text-align: right;\n  font-size: 1em;\n  line-height: inherit;\n}\n\n/* Tajweed rule colors */\n.tajweed-ghunnah {\n  color: #2ecc71;\n  background: rgba(46, 204, 113, 0.1);\n  border-radius: 4px;\n  padding: 0 2px;\n  display: inline-block;\n  font-size: 1em;\n}\n.tajweed-madd {\n  color: #e74c3c;\n  background: rgba(231, 76, 60, 0.1);\n  border-radius: 4px;\n  padding: 0 2px;\n  display: inline-block;\n  font-size: 1em;\n}\n.tajweed-qalqalah {\n  color: #f39c12;\n  background: rgba(243, 156, 18, 0.1);\n  border-radius: 4px;\n  padding: 0 2px;\n  display: inline-block;\n  font-weight: bold;\n  font-size: 1em;\n}\n.tajweed-ikhfa {\n  color: #9b59b6;\n  background: rgba(155, 89, 182, 0.1);\n  border-radius: 4px;\n  padding: 0 2px;\n  display: inline-block;\n  font-size: 1em;\n}\n.tajweed-idgham {\n  color: #3498db;\n  background: rgba(52, 152, 219, 0.1);\n  border-radius: 4px;\n  padding: 0 2px;\n  display: inline-block;\n  font-size: 1em;\n}\n\n/* Tooltip for tajweed rules */\n.tajweed-enabled .tajweed-ghunnah,\n.tajweed-enabled .tajweed-madd,\n.tajweed-enabled .tajweed-qalqalah,\n.tajweed-enabled .tajweed-ikhfa,\n.tajweed-enabled .tajweed-idgham {\n  cursor: help;\n  position: relative;\n}\n.tajweed-enabled .tajweed-ghunnah:hover::after {\n  content: \"Ghunnah - Nasalization\";\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: #333;\n  color: white;\n  padding: 4px 8px;\n  border-radius: 4px;\n  font-size: 10px;\n  white-space: nowrap;\n  z-index: 10;\n}\n.tajweed-enabled .tajweed-madd:hover::after {\n  content: \"Madd - Prolongation\";\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: #333;\n  color: white;\n  padding: 4px 8px;\n  border-radius: 4px;\n  font-size: 10px;\n  white-space: nowrap;\n  z-index: 10;\n}\n.tajweed-enabled .tajweed-qalqalah:hover::after {\n  content: \"Qalqalah - Echoing sound\";\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: #333;\n  color: white;\n  padding: 4px 8px;\n  border-radius: 4px;\n  font-size: 10px;\n  white-space: nowrap;\n  z-index: 10;\n}\n\n/* Toolbar chip active state for tajweed */\n.toolbar-chip.active {\n  background: var(--accent);\n  color: white;\n}\n.verse-play-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: white;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.verse-play-btn i {\n  font-size: 0.9rem;\n}\n.verse-play-btn:hover {\n  transform: scale(1.05);\n  background: var(--accent-strong);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.verse-play-btn:active {\n  transform: scale(0.98);\n}\n.verse-arabic.tajweed-enabled {\n  line-height: 2;\n}\n\n/* Tajweed color rules */\n.verse-arabic.tajweed-enabled .tajweed-ghunnah {\n  color: #2ecc71;\n}\n.verse-arabic.tajweed-enabled .tajweed-idgham {\n  color: #3498db;\n}\n.verse-arabic.tajweed-enabled .tajweed-iqlab {\n  color: #9b59b6;\n}\n.verse-arabic.tajweed-enabled .tajweed-ikhfa {\n  color: #e67e22;\n}\n.verse-arabic.tajweed-enabled .tajweed-madd {\n  color: #e74c3c;\n}\n.verse-arabic.tajweed-enabled .tajweed-qalqalah {\n  color: #f39c12;\n}\n.speed-label {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-right: 4px;\n}\n.speed-controls {\n  display: flex;\n  gap: 4px;\n}\n.speed-btn {\n  padding: 4px 8px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.speed-btn.active {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.streak-motivation {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border-radius: 40px;\n  font-size: 0.75rem;\n}\n.streak-badge {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-weight: 500;\n}\n.motivation-message {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--text-muted);\n  font-size: 0.7rem;\n}\n.pa-note {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n  margin-top: 4px;\n  display: block;\n}\n\n/* Active tab indicator with pulse effect */\n.tools-tabs button.active-tab {\n  position: relative;\n  animation: tabPulse 0.3s ease-out;\n}\n@keyframes tabPulse {\n0% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 var(--accent);\n}\n50% {\n    transform: scale(1.02);\n    box-shadow: 0 0 0 3px var(--accent-light);\n}\n100% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Toggle switch animation and visual feedback */\n.switch {\n  transition: all 0.2s ease;\n}\n.switch:active {\n  transform: scale(0.98);\n}\n.switch-ui {\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n  animation: switchPulse 0.3s ease-out;\n}\n@keyframes switchPulse {\n0% {\n    box-shadow: 0 0 0 0 rgba(139, 94, 60, 0.4);\n}\n50% {\n    box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.2);\n}\n100% {\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Field hint styling */\n.field-hint {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 4px;\n  line-height: 1.4;\n  display: block;\n}\n\n/* Verse Arabic styling */\n.verse-arabic {\n  --verse-font-percent: 150;\n  --verse-font-size: clamp(1.5rem, calc(var(--verse-font-percent, 150) * 0.0175rem), 3.25rem);\n  font-family: var(--font-ar);\n  font-size: var(--verse-font-size);\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n.verse-arabic word {\n  display: inline-block;\n  font-size: 1em;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-card {\n  background: var(--surface);\n  border-radius: 20px;\n  padding: 24px;\n  transition: all 0.2s ease;\n  border: 1px solid var(--border);\n  position: relative;\n  direction: ltr;\n  overflow: hidden;\n}\n.verse-card::before {\n  content: \"\";\n  position: absolute;\n  inset: 0;\n  pointer-events: none;\n  background:\n    linear-gradient(180deg, rgba(184, 130, 78, 0.03), transparent 22%),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.05), transparent 28%);\n}\n.verse-card.active {\n  border-color: var(--accent);\n  background: linear-gradient(145deg, rgba(184, 130, 78, 0.14), rgba(154, 103, 56, 0.04));\n  box-shadow: 0 0 0 1px var(--accent), 0 14px 32px rgba(154, 103, 56, 0.18);\n  transform: translateY(-1px);\n  transition: all 0.2s ease;\n}\n.verse-card.focus-mode {\n  opacity: 0.38;\n}\n.verse-card.blurred {\n  filter: blur(4px);\n  opacity: 0.22;\n  transform: scale(0.985);\n  transition: filter 0.3s ease, transform 0.2s, box-shadow 0.2s, border-color 0.2s, opacity 0.2s ease;\n}\n.verse-card.blurred:hover {\n  filter: blur(0px);\n  opacity: 0.55;\n}\n.verse-card.serious-training:not(.active)::after {\n  content: \"For serious huffadh training\";\n  position: absolute;\n  top: 14px;\n  right: 16px;\n  font-size: 0.6rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n  opacity: 0.7;\n}\n.verse-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 16px;\n}\n.verse-badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-number {\n  font-size: 0.78rem;\n  padding: 6px 12px;\n  background: var(--accent);\n  border-radius: 999px;\n  color: #fff;\n  font-weight: 700;\n  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.24);\n}\n.verse-status-badge,\n.verse-status-subtle {\n  border-radius: 999px;\n  padding: 5px 10px;\n  font-size: 0.68rem;\n  font-weight: 600;\n}\n.verse-status-badge {\n  background: var(--accent-light);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.verse-status-subtle {\n  background: var(--bg-elevated);\n  color: var(--text-muted);\n}\n.verse-ref {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 8px;\n}\n\n/* Font controls */\n.verse-font-controls {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  padding: 2px 6px;\n  margin-right: 8px;\n}\n.verse-font-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 12px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 10px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.verse-font-btn:hover {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n}\n.verse-font-size-indicator {\n  font-size: 10px;\n  min-width: 35px;\n  text-align: center;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n\n/* Session rail */\n.session-rail {\n  position: sticky;\n  top: 14px;\n  z-index: 18;\n  margin-bottom: 18px;\n  padding: 12px 14px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-md);\n  animation: railIn 280ms ease-out;\n}\n.session-rail-top {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  gap: 12px;\n  align-items: center;\n}\n.session-rail-kicker {\n  font-size: 10px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  margin-top: 2px;\n  font-size: 14px;\n  font-weight: 450;\n}\n.session-rail-meta {\n  margin-top: 2px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.session-rail-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 8px;\n  margin-top: 10px;\n}\n.rail-stat {\n  padding: 8px 10px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-stat span {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n}\n.rail-stat strong {\n  font-size: 0.78rem;\n  font-weight: 500;\n}\n.rail-btn {\n  height: 34px;\n  padding: 0 12px;\n  border-radius: 13px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  color: var(--text);\n  font-size: 12px;\n  font-weight: 450;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.rail-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);\n}\n.progress-bar {\n  flex: 1;\n  height: 4px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-wide {\n  margin-top: 10px;\n}\n.progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s;\n}\n\n/* Mode indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  margin: 8px 0 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n\n/* Reading toolbar */\n.reading-toolbar {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  margin-bottom: 16px;\n  padding: 12px 14px;\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.reading-toolbar-group {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  align-items: flex-start;\n}\n.toolbar-chip {\n  border: 0;\n  border-radius: 999px;\n  padding: 8px 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  font-size: 0.75rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: var(--shadow-sm);\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.toolbar-chip i,\n.rail-btn i,\n.tools-tabs button i,\n.st-ico i {\n  font-size: 0.9rem;\n  line-height: 1;\n}\n.toolbar-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.toolbar-chip:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n\n/* Tools panel */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  width: min(var(--tools-width), 100vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n}\n.tools.open {\n  transform: translateX(0);\n}\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n}\n.tools-topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.tools-title {\n  font-size: 1rem;\n  font-weight: 700;\n  letter-spacing: -0.2px;\n  color: var(--text);\n}\n.tools-context {\n  margin-top: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 600;\n}\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n  color: rgba(0, 0, 0, 0.7);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n}\n.tools-tabs button {\n  flex: 1;\n  padding: 7px 10px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.82rem;\n  cursor: pointer;\n  color: rgba(0, 0, 0, 0.55);\n  font-weight: 450;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: background 140ms ease, color 140ms ease, transform 140ms ease;\n}\n.tools-tabs button.active {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));\n  box-shadow: var(--shadow-sm);\n  color: rgba(0, 0, 0, 0.85);\n}\n.tools-body {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n}\n.sheet {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.sheet-section {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border-radius: 18px;\n  padding: 0;\n  overflow: hidden;\n  box-shadow: var(--shadow-sm);\n  animation: riseSoft 260ms ease-out;\n}\n.sheet-toggle {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border: none;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease;\n}\n.st-left {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.st-ico {\n  width: 24px;\n  height: 24px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));\n  border: 1px solid rgba(139, 94, 60, 0.18);\n  flex: 0 0 auto;\n  font-size: 11px;\n  font-weight: 600;\n  color: var(--accent);\n}\n.st-txt {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 2px;\n  min-width: 0;\n}\n.st-title {\n  font-weight: 450;\n  letter-spacing: -0.2px;\n  color: var(--text);\n  font-size: 0.82rem;\n}\n.st-sub {\n  font-size: 0.66rem;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.st-chev {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  display: grid;\n  place-items: center;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  color: rgba(0, 0, 0, 0.65);\n  transition: transform 0.15s ease;\n  box-shadow: var(--shadow-sm);\n}\n.st-chev.open {\n  transform: rotate(180deg);\n}\n.sheet-content {\n  padding: 16px 16px 18px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.field-stack {\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n}\n.field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  min-width: 0;\n}\n.field label {\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n}\n.field-hint {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 4px;\n  line-height: 1.4;\n  display: block;\n}\n.select,\n.input {\n  width: 100%;\n  min-width: 0;\n  padding: 11px 12px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--text);\n  font-size: 0.8rem;\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n.range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.range-single {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n  align-items: center;\n}\n.range span {\n  color: rgba(0, 0, 0, 0.35);\n  font-weight: 450;\n  font-size: 11px;\n}\n.radio-group {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.radio {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 0.85rem;\n  color: var(--text);\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  transition: all 0.2s ease;\n}\n.radio:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-sm);\n}\n.radio input {\n  margin: 0;\n}\n.switch {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 11px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  cursor: pointer;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  transition: all 0.2s ease;\n}\n.switch input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.switch-ui {\n  width: 44px;\n  height: 26px;\n  border-radius: 999px;\n  background: rgba(0, 0, 0, 0.12);\n  position: relative;\n  flex: 0 0 auto;\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  content: \"\";\n  position: absolute;\n  top: 3px;\n  left: 3px;\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  background: white;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n}\n.switch input:checked+.switch-ui::after {\n  transform: translateX(18px);\n}\n.switch-text {\n  font-size: 0.74rem;\n  color: rgba(0, 0, 0, 0.72);\n  font-weight: 400;\n}\n\n/* Start button */\n.start-btn {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  border-radius: 12px;\n  color: white;\n  font-size: 1rem;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  margin-top: 20px;\n  transition: all 0.2s ease;\n}\n.start-btn:hover:not(:disabled) {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);\n}\n.start-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n\n/* Tools footer */\n.tools-footer {\n  position: absolute;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  height: var(--tools-footer-h);\n  padding: 12px 16px 14px;\n  border-top: 1px solid var(--border);\n  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));\n  display: flex;\n  gap: 10px;\n  justify-content: space-between;\n  align-items: center;\n}\n.tools-btn {\n  flex: 1;\n  min-height: 44px;\n  padding: 10px 10px;\n  border-radius: 15px;\n  font-weight: 500;\n  border: 1px solid rgba(0, 0, 0, 0.1);\n  cursor: pointer;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  line-height: 1;\n}\n\n/* Hero section */\n.hero-card {\n  margin-bottom: 16px;\n  padding: 18px 18px 16px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 236, 226, 0.92));\n  box-shadow: var(--shadow-md);\n  display: grid;\n  gap: 14px;\n  animation: riseSoft 260ms ease-out;\n}\n.hero-kicker {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  color: var(--accent);\n}\n.hero-title {\n  margin-top: 6px;\n  font-size: 1.24rem;\n  font-weight: 500;\n  letter-spacing: -0.03em;\n}\n.hero-sub {\n  margin-top: 8px;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  max-width: 56ch;\n}\n.hero-flow {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n}\n.hero-step {\n  padding: 10px 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.62);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.74rem;\n}\n.hero-step span {\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  display: grid;\n  place-items: center;\n  background: var(--accent-light);\n  color: var(--accent);\n  font-size: 11px;\n}\n.hero-step strong {\n  font-weight: 500;\n}\n.hero-points {\n  display: grid;\n  gap: 8px;\n}\n.hero-point {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.hero-point i {\n  color: var(--accent);\n}\n.hero-actions,\n.empty-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cta {\n  flex: 1;\n  padding: 10px 10px;\n  border-radius: 14px;\n  font-weight: 450;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 11px;\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.cta-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);\n}\n.cta-ghost {\n  background: rgba(255, 255, 255, 0.58);\n  box-shadow: var(--shadow-sm);\n}\n\n/* Empty state */\n.empty {\n  padding: 40px 0;\n}\n.empty-card {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: var(--radius);\n  padding: 32px;\n  text-align: center;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-md);\n}\n.empty-icon {\n  font-family: var(--font-ar);\n  font-size: 2.2rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.empty-card h3 {\n  font-weight: 450;\n  margin-bottom: 6px;\n  font-size: 1rem;\n}\n.empty-card p {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  margin-bottom: 16px;\n}\n\n/* Verses grid */\n.verses-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n  margin-top: 32px;\n}\n.offline-list {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n  margin-bottom: 16px;\n}\n.offline-item {\n  background: var(--bg-elevated);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  transition: all 0.2s ease;\n}\n.offline-item:hover {\n  border-color: var(--accent);\n  background: var(--surface);\n}\n.oi-info {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.oi-name {\n  font-weight: 600;\n  font-size: 1rem;\n}\n.oi-meta {\n  font-size: 0.8rem;\n  opacity: 0.7;\n}\n.oi-date {\n  font-size: 0.7rem;\n  opacity: 0.5;\n}\n.oi-actions {\n  display: flex;\n  gap: 8px;\n}\n.oi-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.oi-load:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.oi-delete:hover {\n  background: #ff4d4d;\n  color: white;\n  border-color: #ff4d4d;\n}\n.empty-mini {\n  text-align: center;\n  padding: 32px 16px;\n  background: var(--bg-elevated);\n  border-radius: 20px;\n  border: 1px dashed var(--border);\n}\n.offline-note {\n  margin-top: 24px;\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  display: flex;\n  gap: 10px;\n  font-size: 0.75rem;\n  line-height: 1.4;\n  color: var(--accent);\n}\n\n/* Floating Player */\n.player-bar {\n  position: fixed;\n  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);\n  left: 50%;\n  transform: translateX(-50%);\n  width: 90%;\n  max-width: 800px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 24px;\n  box-shadow: var(--shadow-lg);\n  z-index: 1000;\n  padding: 12px 24px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  backdrop-filter: blur(12px);\n  -webkit-backdrop-filter: blur(12px);\n  transition: transform 0.22s ease, opacity 0.22s ease, padding 0.22s ease;\n}\n.player-bar.collapsed {\n  transform: translateX(-50%) translateY(54px);\n  opacity: 0.92;\n  padding-top: 8px;\n  padding-bottom: 8px;\n}\n.player-main {\n  display: flex;\n  align-items: center;\n  gap: 20px;\n}\n.player-info {\n  min-width: 140px;\n}\n.player-chapter {\n  font-weight: 700;\n  font-size: 0.9rem;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-verse {\n  font-size: 0.75rem;\n  opacity: 0.7;\n}\n.player-eta {\n  color: var(--accent);\n  font-weight: 500;\n  opacity: 1;\n}\n.player-controls {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.sheet-fade-enter-active,\n.sheet-fade-leave-active {\n  transition: opacity 0.2s ease, transform 0.2s ease;\n}\n.sheet-fade-enter-from,\n.sheet-fade-leave-to {\n  opacity: 0;\n  transform: translateY(8px);\n}\n.chaining-setup {\n  overflow: hidden;\n}\n.chaining-wizard {\n  padding: 20px;\n  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-elevated) 100%);\n}\n.chaining-hero {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-start;\n  gap: 16px;\n  margin-bottom: 18px;\n}\n.chaining-kicker {\n  display: inline-block;\n  margin-bottom: 6px;\n  font-size: 0.72rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--accent);\n}\n.chaining-hero h3 {\n  margin-bottom: 6px;\n  font-size: 1.3rem;\n  color: var(--text);\n}\n.chaining-hero p {\n  max-width: 46ch;\n  color: var(--text-muted);\n  font-size: 0.88rem;\n}\n.chaining-progress-chip {\n  white-space: nowrap;\n  background: var(--accent-light);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  border-radius: 999px;\n  padding: 8px 12px;\n  font-size: 0.76rem;\n  font-weight: 600;\n}\n.chaining-progress {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n  margin-bottom: 18px;\n}\n.chain-progress-step {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 12px;\n  text-align: left;\n  cursor: pointer;\n  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;\n}\n.chain-progress-step span {\n  width: 24px;\n  height: 24px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  margin-bottom: 10px;\n  border-radius: 50%;\n  background: var(--border);\n  color: var(--text-muted);\n  font-size: 0.72rem;\n  font-weight: 700;\n}\n.chain-progress-step strong {\n  display: block;\n  font-size: 0.86rem;\n  color: var(--text);\n}\n.chain-progress-step.active,\n.chain-progress-step.done {\n  border-color: var(--accent-soft);\n  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);\n}\n.chain-progress-step.active span,\n.chain-progress-step.done span {\n  background: var(--accent);\n  color: #fff;\n}\n.chain-progress-step.active {\n  transform: translateY(-1px);\n}\n.chaining-panel {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 20px;\n  padding: 18px;\n}\n.chain-step-copy h4 {\n  margin-bottom: 4px;\n  font-size: 1rem;\n  color: var(--text);\n}\n.chain-step-copy p {\n  font-size: 0.84rem;\n  color: var(--text-muted);\n}\n.chain-choice-grid {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 12px;\n}\n.chain-choice-grid-two {\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.chain-choice-card {\n  background: var(--bg-elevated);\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  padding: 16px;\n  text-align: left;\n  cursor: pointer;\n  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;\n}\n.chain-choice-card strong {\n  display: block;\n  margin-bottom: 8px;\n  color: var(--text);\n  font-size: 0.92rem;\n}\n.chain-choice-card span {\n  display: block;\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  line-height: 1.45;\n}\n.chain-choice-card:hover,\n.chain-choice-card.active {\n  border-color: var(--accent);\n  box-shadow: 0 14px 28px rgba(154, 103, 56, 0.12);\n  transform: translateY(-1px);\n}\n.chain-session-preview {\n  background: var(--accent-light);\n  border: 1px solid var(--accent-soft);\n  border-radius: 16px;\n  padding: 14px 16px;\n}\n.chain-preview-line {\n  margin-bottom: 4px;\n  color: var(--text);\n  font-weight: 600;\n  font-size: 0.84rem;\n}\n.chain-session-preview small {\n  color: var(--text-muted);\n}\n.chain-step-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 4px;\n}\n.chain-step-actions.split {\n  justify-content: space-between;\n  align-items: center;\n  gap: 12px;\n}\n.chain-secondary-btn {\n  min-width: 110px;\n}\n\n/* Chaining UI */\n.chaining-viewer {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  margin-top: 24px;\n  overflow: hidden;\n  box-shadow: var(--shadow-sm);\n}\n.chaining-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px 20px;\n  background: var(--bg-elevated);\n  cursor: pointer;\n  transition: background 0.2s;\n}\n.chaining-header:hover {\n  background: var(--accent-light);\n}\n.chaining-title {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  font-weight: 600;\n  color: var(--accent);\n}\n.chaining-title i {\n  font-size: 1.2rem;\n}\n.chaining-stats {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  font-size: 0.85rem;\n}\n.chaining-badge {\n  background: var(--accent);\n  color: white;\n  padding: 4px 10px;\n  border-radius: 20px;\n  font-weight: 500;\n}\n.chaining-badge.alt {\n  background: var(--border);\n  color: var(--text);\n}\n.chaining-body {\n  padding: 20px;\n  border-top: 1px solid var(--border);\n  max-height: 400px;\n  overflow-y: auto;\n  background: var(--bg-body);\n}\n.chain-timeline {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.chain-step {\n  display: flex;\n  align-items: center;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  padding: 10px 16px;\n  border-radius: 12px;\n  min-width: 120px;\n  cursor: pointer;\n  transition: all 0.2s;\n  opacity: 0.7;\n}\n\n/* Wizard Onboarding CSS */\n.onboarding-wizard {\n  padding: 40px;\n  text-align: center;\n}\n.wizard-step {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 32px;\n  max-width: 600px;\n  margin: 0 auto;\n}\n.wizard-choices {\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  width: 100%;\n}\n.wizard-choice-btn {\n  display: flex;\n  align-items: center;\n  gap: 20px;\n  background: var(--surface);\n  border: 2px solid var(--border);\n  padding: 24px;\n  border-radius: 16px;\n  cursor: pointer;\n  text-align: left;\n  transition: all 0.2s ease;\n  width: 100%;\n}\n.wizard-choice-btn:hover {\n  border-color: var(--accent);\n  background: var(--accent-light);\n  transform: translateY(-2px);\n}\n.wizard-choice-btn.primary-choice {\n  border-color: var(--accent);\n  background: rgba(139, 94, 60, 0.05);\n}\n.wizard-choice-btn.primary-choice:hover {\n  background: var(--accent-light);\n}\n.choice-icon {\n  font-size: 2rem;\n  color: var(--accent);\n  width: 50px;\n  height: 50px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  background: var(--bg-body);\n  border-radius: 12px;\n}\n.choice-text {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.choice-text strong {\n  font-size: 1.1rem;\n  color: var(--text);\n}\n.choice-text span {\n  font-size: 0.9rem;\n  color: var(--text-muted);\n}\n.wizard-back {\n  background: none;\n  border: none;\n  color: var(--text-muted);\n  cursor: pointer;\n  font-size: 0.95rem;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 16px;\n  border-radius: 8px;\n  transition: all 0.2s;\n  margin-top: -10px;\n}\n.wizard-back:hover {\n  background: var(--border);\n  color: var(--text);\n}\n.fade-slide-enter-active,\n.fade-slide-leave-active {\n  transition: all 0.3s ease;\n}\n.fade-slide-enter-from {\n  opacity: 0;\n  transform: translateX(20px);\n}\n.fade-slide-leave-to {\n  opacity: 0;\n  transform: translateX(-20px);\n}\n.chain-step:hover {\n  border-color: var(--accent);\n  opacity: 1;\n}\n.chain-step.completed {\n  border-color: var(--accent-soft);\n  background: var(--accent-light);\n  opacity: 0.8;\n}\n.chain-step.active {\n  border-color: var(--accent);\n  background: var(--accent);\n  color: white;\n  opacity: 1;\n  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.2);\n  transform: translateY(-2px);\n}\n.step-indicator {\n  margin-right: 12px;\n  font-size: 1.2rem;\n}\n.chain-step.completed .step-indicator {\n  color: var(--accent);\n}\n.chain-step.active .step-indicator {\n  color: white;\n}\n.step-content {\n  display: flex;\n  flex-direction: column;\n}\n.step-phase {\n  font-size: 0.7rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  opacity: 0.8;\n}\n.step-verse {\n  font-weight: 600;\n  font-size: 0.95rem;\n}\n.player-btn {\n  width: 44px;\n  height: 44px;\n  border-radius: 12px;\n  border: none;\n  background: none;\n  color: var(--text);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.2rem;\n  transition: all 0.2s ease;\n}\n.player-btn:hover {\n  background: var(--bg-elevated);\n}\n.player-play {\n  background: var(--accent);\n  color: white;\n  width: 52px;\n  height: 52px;\n  border-radius: 16px;\n  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.3);\n}\n.player-play:hover {\n  background: var(--accent-dark);\n  transform: scale(1.05);\n}\n.player-progress-wrap {\n  flex: 1;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.player-time {\n  font-size: 0.75rem;\n  font-variant-numeric: tabular-nums;\n  opacity: 0.7;\n  min-width: 40px;\n}\n.player-progress-bg {\n  flex: 1;\n  height: 6px;\n  background: var(--bg-elevated);\n  border-radius: 3px;\n  position: relative;\n  cursor: pointer;\n}\n.player-progress-fill {\n  position: absolute;\n  left: 0;\n  top: 0;\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.1s linear;\n}\n\n/* Animations */\n.slide-up-enter-active,\n.slide-up-leave-active {\n  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.slide-up-enter-from,\n.slide-up-leave-to {\n  transform: translate(-50%, 100px);\n  opacity: 0;\n}\n.mode-guide-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(28, 20, 12, 0.4);\n  backdrop-filter: blur(6px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  padding: 20px;\n  z-index: 1200;\n}\n.mode-guide-modal {\n  width: min(520px, 100%);\n  background: linear-gradient(180deg, var(--surface), var(--bg-elevated));\n  border: 1px solid var(--border);\n  border-radius: 24px;\n  padding: 22px;\n  box-shadow: var(--shadow-lg);\n}\n.mode-guide-kicker {\n  font-size: 0.72rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--accent);\n  margin-bottom: 8px;\n}\n.mode-guide-modal h3 {\n  margin-bottom: 8px;\n  font-size: 1.2rem;\n}\n.mode-guide-modal p {\n  color: var(--text-muted);\n  line-height: 1.6;\n  margin-bottom: 16px;\n}\n.mode-guide-points {\n  display: grid;\n  gap: 10px;\n  margin-bottom: 18px;\n}\n.mode-guide-point {\n  display: flex;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 12px 14px;\n  background: rgba(255, 255, 255, 0.55);\n  border: 1px solid var(--border);\n  border-radius: 14px;\n}\n.mode-guide-point strong {\n  color: var(--text);\n  font-size: 0.8rem;\n}\n.mode-guide-point span {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  text-align: right;\n}\n.mode-guide-actions {\n  display: flex;\n  justify-content: flex-end;\n  gap: 12px;\n}\n.verse-translation {\n  font-size: 0.82rem;\n  color: #5a6b63;\n  line-height: 1.6;\n  padding-top: 12px;\n  margin-top: 10px;\n  border-top: 1px solid var(--border);\n  display: block;\n  opacity: 0.92;\n}\n.verse-transliteration {\n  font-size: 0.88rem;\n  color: var(--text-muted);\n  font-style: italic;\n  margin-top: 10px;\n  padding-top: 8px;\n  border-top: 1px solid var(--border);\n  line-height: 1.5;\n  opacity: 0.98;\n}\n.verse-words {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 12px;\n  direction: rtl;\n  margin-top: 16px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n}\n.word-item {\n  background: var(--accent-light);\n  padding: 6px 12px;\n  border-radius: 20px;\n  display: inline-flex;\n  flex-direction: row-reverse;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.75rem;\n}\n.word-arabic {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n}\n.word-meaning {\n  color: var(--text-muted);\n}\n.word-audio-btn {\n  background: none;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 0 4px;\n}\n\n/* Quiz overlay */\n.quiz-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 80;\n  background: rgba(0, 0, 0, 0.35);\n  backdrop-filter: blur(6px);\n  display: grid;\n  place-items: center;\n  padding: 18px;\n}\n.quiz-card {\n  width: min(680px, 100%);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba, rgba(250, 245, 239, 0.95));\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 22px;\n  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);\n  overflow: hidden;\n}\n.quiz-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 18px 22px 14px;\n  border-bottom: 1px solid rgba(0, 0, 0, 0.08);\n}\n.quiz-title {\n  font-weight: 500;\n  font-size: 1.05rem;\n}\n.quiz-subtitle {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.quiz-close {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.7);\n  cursor: pointer;\n  font-size: 24px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.quiz-progress {\n  padding: 14px 22px 0;\n}\n.quiz-progress-bar {\n  height: 4px;\n  background: var(--border);\n  border-radius: 2px;\n  overflow: hidden;\n}\n.quiz-progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n.quiz-stats {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.quiz-body {\n  padding: 18px 22px 22px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.quiz-question {\n  font-weight: 600;\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.quiz-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.4rem;\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  padding: 16px;\n  background: var(--accent-light);\n  border-radius: 16px;\n}\n.quiz-reveal-btn {\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n}\n.quiz-answer {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.quiz-translation {\n  font-size: 0.9rem;\n  line-height: 1.6;\n  color: var(--text);\n  margin-bottom: 16px;\n}\n.quiz-grade-buttons {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.grade-btn {\n  flex: 1;\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.grade-btn.primary {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.quiz-options {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.quiz-option {\n  padding: 12px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  text-align: left;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.quiz-option:hover {\n  background: var(--accent-light);\n  transform: translateX(4px);\n}\n.quiz-summary {\n  padding: 22px;\n  text-align: center;\n}\n.quiz-summary-icon {\n  font-size: 3rem;\n  margin-bottom: 16px;\n}\n.quiz-summary-stats {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin: 20px 0;\n}\n.quiz-summary-stats .stat {\n  padding: 16px;\n  background: var(--surface);\n  border-radius: 16px;\n}\n.stat-label {\n  display: block;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.stat-value {\n  display: block;\n  font-size: 1.5rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.quiz-summary-mistakes {\n  margin: 20px 0;\n}\n.mistake-tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 8px;\n  justify-content: center;\n}\n.mistake-tag {\n  padding: 6px 12px;\n  background: rgba(190, 73, 73, 0.1);\n  border-radius: 20px;\n  font-size: 0.8rem;\n  color: #c0392b;\n}\n.quiz-actions {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n}\n.btn-outline {\n  padding: 10px 24px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n.btn-primary {\n  padding: 10px 24px;\n  border-radius: 12px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n\n/* Confetti */\n.confetti {\n  position: fixed;\n  inset: 0;\n  pointer-events: none;\n  z-index: 140;\n  overflow: hidden;\n}\n.confetti-piece {\n  position: absolute;\n  top: -10px;\n  width: 8px;\n  height: 12px;\n  border-radius: 3px;\n  opacity: 0.9;\n  animation: confetti-fall 1.35s ease-in forwards;\n}\n\n/* Banner */\n.banner {\n  position: fixed;\n  top: 14px;\n  left: 50%;\n  transform: translateX(-50%);\n  z-index: 120;\n  min-width: min(560px, calc(100vw - 24px));\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px 14px;\n  border-radius: 16px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.92);\n  backdrop-filter: blur(10px);\n  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);\n  font-weight: 450;\n  animation: riseSoft 220ms ease-out;\n}\n.banner-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.banner-action {\n  border: 0;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  padding: 9px 12px;\n  font-size: 0.78rem;\n  font-weight: 500;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n}\n.banner-x {\n  width: 36px;\n  height: 36px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n}\n\n/* Animations */\n@keyframes appFade {\n0% {\n    opacity: 0;\n    transform: translateY(4px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes railIn {\n0% {\n    opacity: 0;\n    transform: translateY(-8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes riseSoft {\n0% {\n    opacity: 0;\n    transform: translateY(8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes confetti-fall {\n0% {\n    transform: translateY(-20px) rotate(0deg);\n    opacity: 0;\n}\n10% {\n    opacity: 0.95;\n}\n100% {\n    transform: translateY(110vh) rotate(480deg);\n    opacity: 0;\n}\n}\n\n/* Responsive */\n@media (max-width: 768px) {\n.main {\n    padding: 16px 16px 100px;\n}\n.main.tools-open {\n    padding-right: 16px;\n}\n.tools {\n    left: 0;\n    right: 0;\n    width: 100%;\n}\n.session-rail-stats {\n    grid-template-columns: 1fr 1fr;\n}\n.hero-flow {\n    grid-template-columns: 1fr 1fr;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 8px);\n    justify-content: center;\n}\n.verse-font-controls {\n    gap: 2px;\n    padding: 2px 4px;\n}\n.verse-font-btn {\n    width: 20px;\n    height: 20px;\n}\n.verse-font-size-indicator {\n    min-width: 30px;\n    font-size: 9px;\n}\n}\n@media (max-width: 640px) {\n.quiz-grade-buttons {\n    flex-direction: column;\n}\n.quiz-actions {\n    flex-direction: column;\n}\n.hero-actions,\n  .empty-actions {\n    flex-direction: column;\n}\n.cta {\n    width: 100%;\n}\n}\n\n/* Dark theme overrides */\n[data-theme=\"dark\"] .tools {\n  background: rgba(18, 18, 18, 0.9);\n  border-left-color: rgba(255, 255, 255, 0.08);\n}\n[data-theme=\"dark\"] .sheet-section {\n  border-color: rgba(255, 255, 255, 0.08);\n  background: rgba(30, 30, 40, 0.45);\n}\n[data-theme=\"dark\"] .select,\n[data-theme=\"dark\"] .input {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.55);\n}\n[data-theme=\"dark\"] .switch {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n}\n[data-theme=\"dark\"] .verse-translation {\n  color: #a0a0b0;\n}\n[data-theme=\"dark\"] .quiz-card {\n  background: rgba(18, 18, 18, 0.92);\n  border-color: rgba(255, 255, 255, 0.10);\n}\n\n/* Sepia theme overrides */\n[data-theme=\"sepia\"] .verse-translation {\n  color: #7a684a;\n}\n\n/* Planner & Analytics UI */\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 9999;\n  backdrop-filter: blur(4px);\n  padding: 20px;\n}\n.modal-content {\n  background: var(--bg-body);\n  border-radius: 20px;\n  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);\n  display: flex;\n  flex-direction: column;\n  max-height: 90vh;\n  overflow: hidden;\n  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n}\n@keyframes modalFadeIn {\nfrom {\n    opacity: 0;\n    transform: translateY(20px) scale(0.95);\n}\nto {\n    opacity: 1;\n    transform: translateY(0) scale(1);\n}\n}\n.modal-header {\n  padding: 20px 24px;\n  border-bottom: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 1.25rem;\n  font-weight: 700;\n}\n.modal-body {\n  padding: 24px;\n  overflow-y: auto;\n}\n.modal-footer {\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--bg-elevated);\n}\n.confirm-modal {\n  max-width: 460px;\n  width: 100%;\n}\n.confirm-copy {\n  color: var(--text-muted);\n  line-height: 1.65;\n}\n.btn-danger {\n  background: #b55041;\n}\n.tools-btn-danger {\n  opacity: 0.82;\n}\n.btn-icon {\n  background: none;\n  border: none;\n  font-size: 1.2rem;\n  color: var(--text-muted);\n  cursor: pointer;\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.btn-icon:hover {\n  background: var(--border);\n  color: var(--text);\n}\n.planner-modal {\n  max-width: 500px;\n  width: 100%;\n}\n.planner-field {\n  margin-bottom: 24px;\n}\n.planner-field label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.planner-select,\n.planner-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.planner-select:focus,\n.planner-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 2px var(--accent-light);\n}\n.verses-per-day-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.quantity-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.quantity-btn:hover:not(:disabled) {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.quantity-btn:disabled {\n  opacity: 0.4;\n  cursor: not-allowed;\n}\n.planner-stats-grid {\n  display: grid;\n  grid-template-columns: repeat(2, 1fr);\n  gap: 12px;\n  margin: 24px 0;\n}\n.planner-stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  transition: all 0.2s;\n}\n.progress-info {\n  display: flex;\n  justify-content: space-between;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.progress-bar-track {\n  height: 6px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-fill {\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.3s ease;\n}\n.modal-footer {\n  display: flex;\n  gap: 12px;\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.btn-secondary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.btn-secondary:hover {\n  background: var(--border);\n}\n.btn-primary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.9rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.btn-primary:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.field-hint {\n  display: block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 6px;\n}\n.pa-lbl {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.analytics-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin-top: 20px;\n}\n.stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 20px;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  transition: transform 0.2s;\n}\n.stat-card:hover {\n  transform: translateY(-2px);\n  border-color: var(--accent);\n}\n.stat-card i {\n  font-size: 1.8rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.stat-value {\n  font-size: 1.5rem;\n  font-weight: 700;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.stat-label {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n}\n.mini-trend {\n  position: relative;\n  width: 80px;\n  height: 24px;\n  margin-top: 10px;\n}\n.mini-trend span {\n  position: absolute;\n  width: 8px;\n  border-radius: 999px;\n  background: linear-gradient(180deg, var(--accent), var(--accent-soft));\n  opacity: 0.9;\n}\n\n/* Home Dashboard UI */\n.home-dashboard {\n  max-width: 800px;\n  margin: 40px auto;\n  padding: 0 20px;\n  animation: modalFadeIn 0.4s ease-out;\n}\n.dashboard-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-end;\n  margin-bottom: 40px;\n  flex-wrap: wrap;\n  gap: 20px;\n}\n.welcome-text {\n  max-width: 500px;\n}\n.header-stats {\n  display: flex;\n  gap: 16px;\n  background: var(--surface);\n  padding: 12px 20px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.mini-stat {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.9rem;\n}\n.mini-stat strong {\n  color: var(--text);\n  font-size: 1rem;\n}\n.dashboard-actions {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));\n  gap: 20px;\n  margin-bottom: 40px;\n}\n.continue-session-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 16px 18px;\n  margin-bottom: 18px;\n  border: 1px solid var(--accent-soft);\n  border-radius: 18px;\n  background: linear-gradient(135deg, var(--surface), var(--accent-light));\n  box-shadow: var(--shadow-sm);\n}\n.continue-session-copy {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.continue-session-kicker {\n  font-size: 0.72rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--accent);\n}\n.continue-session-copy small {\n  color: var(--text-muted);\n}\n.continue-session-btn {\n  min-height: 44px;\n  white-space: nowrap;\n}\n.action-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n  display: flex;\n  flex-direction: column;\n  position: relative;\n  overflow: hidden;\n}\n.action-card:hover {\n  transform: translateY(-4px);\n  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);\n  border-color: var(--accent);\n}\n.action-card.primary-action {\n  background: linear-gradient(145deg, var(--accent), var(--accent-dark));\n  color: white;\n  border: none;\n}\n.action-card.primary-action .action-icon {\n  background: rgba(255, 255, 255, 0.2);\n  color: white;\n}\n.action-card.primary-action h3,\n.action-card.primary-action p,\n.action-card.primary-action .action-arrow {\n  color: white;\n}\n.action-icon {\n  width: 48px;\n  height: 48px;\n  background: var(--bg-body);\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.5rem;\n  color: var(--accent);\n  margin-bottom: 20px;\n}\n.action-content h3 {\n  font-size: 1.15rem;\n  margin: 0 0 8px 0;\n  color: var(--text);\n}\n.action-content p {\n  font-size: 0.9rem;\n  color: var(--text-muted);\n  margin: 0;\n  line-height: 1.4;\n}\n.action-arrow {\n  position: absolute;\n  bottom: 24px;\n  right: 24px;\n  font-size: 1.2rem;\n  color: var(--accent);\n  opacity: 0;\n  transform: translateX(-10px);\n  transition: all 0.2s ease;\n}\n.action-card:hover .action-arrow {\n  opacity: 1;\n  transform: translateX(0);\n}\n.dashboard-recent {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n}\n.recent-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.recent-header h3 {\n  margin: 0;\n  font-size: 1.1rem;\n}\n.btn-ghost {\n  background: none;\n  border: none;\n  color: var(--accent);\n  font-weight: 500;\n  cursor: pointer;\n  padding: 6px 12px;\n  border-radius: 8px;\n  transition: background 0.2s;\n}\n.btn-ghost:hover {\n  background: var(--accent-light);\n}\n.recent-stats {\n  display: flex;\n  gap: 32px;\n  flex-wrap: wrap;\n}\n.r-stat {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.r-stat span {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.r-stat strong {\n  font-size: 1.4rem;\n  color: var(--text);\n}\n@media (max-width: 768px) {\n.continue-session-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.continue-session-btn,\n  .btn-primary,\n  .btn-secondary,\n  .tools-btn,\n  .player-btn,\n  .toolbar-chip,\n  .tools-tabs button {\n    min-height: 44px;\n}\n.player-bar {\n    width: calc(100% - 24px);\n    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);\n    padding: 12px 14px;\n}\n.player-main {\n    flex-wrap: wrap;\n    gap: 12px;\n}\n.player-progress-wrap {\n    order: 4;\n    width: 100%;\n}\n.analytics-grid {\n    grid-template-columns: 1fr;\n}\n.modal-content,\n  .confirm-modal,\n  .mode-guide-modal,\n  .planner-modal {\n    width: 100%;\n    max-width: 100%;\n    border-radius: 18px;\n}\n.modal-header,\n  .modal-body,\n  .modal-footer {\n    padding-left: 16px;\n    padding-right: 16px;\n}\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n:root {\n  --bg: #f3eee6;\n  --surface: rgba(255, 250, 243, 0.88);\n  --surface-strong: rgba(255, 255, 255, 0.92);\n  --border: rgba(78, 58, 38, 0.10);\n  --text: #1f1a17;\n  --text-muted: #6c6258;\n  --accent: #9a6738;\n  --accent-strong: #6e4726;\n  --accent-soft: #d8c1a8;\n  --accent-light: rgba(154, 103, 56, 0.10);\n  --accent-wash: rgba(228, 211, 194, 0.42);\n  --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);\n  --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);\n  --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);\n  --radius: 16px;\n  --navbar-offset: 56px;\n  --tools-width: 440px;\n  --tools-footer-h: 78px;\n  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;\n  --font-ui: \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n[data-theme=\"dark\"] {\n  --bg: #15110f;\n  --surface: rgba(33, 27, 24, 0.88);\n  --surface-strong: rgba(44, 36, 31, 0.94);\n  --border: rgba(255, 235, 214, 0.10);\n  --text: #f1e7dc;\n  --text-muted: #bcae9f;\n  --accent: #d0a06b;\n  --accent-strong: #efc18d;\n  --accent-soft: #5f4530;\n  --accent-light: rgba(208, 160, 107, 0.14);\n  --accent-wash: rgba(208, 160, 107, 0.08);\n  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);\n  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);\n  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);\n}\n[data-theme=\"sepia\"] {\n  --bg: #efe2cb;\n  --surface: rgba(250, 241, 227, 0.88);\n  --surface-strong: rgba(255, 248, 237, 0.94);\n  --text: #352516;\n  --text-muted: #75624f;\n  --accent: #b8824e;\n  --accent-strong: #8f6033;\n  --accent-soft: #dcc3a6;\n  --accent-light: rgba(184, 130, 78, 0.12);\n  --accent-wash: rgba(221, 194, 162, 0.35);\n}\n[v-cloak] {\n  display: none !important;\n}\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\n.onboarding-cta {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n  margin-top: 24px;\n}\n.cta-primary-large {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  padding: 12px 28px;\n  border-radius: 40px;\n  font-size: 0.9rem;\n  font-weight: 600;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.cta-primary-large:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 6px 20px rgba(154, 103, 56, 0.3);\n}\n.cta-secondary {\n  background: transparent;\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n  padding: 12px 24px;\n  border-radius: 40px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.cta-secondary:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n\n/* Onboarding Welcome Styles */\n.onboarding-welcome {\n  margin-bottom: 32px;\n  animation: slideUp 0.4s ease-out;\n}\n@keyframes slideUp {\nfrom {\n    opacity: 0;\n    transform: translateY(20px);\n}\nto {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n.onboarding-card {\n  background: linear-gradient(135deg, var(--surface), var(--accent-light));\n  border-radius: 24px;\n  padding: 28px;\n  border: 1px solid var(--accent-soft);\n  text-align: center;\n}\n.onboarding-icon {\n  font-size: 3rem;\n  color: var(--accent);\n  margin-bottom: 16px;\n}\n.onboarding-card h3 {\n  font-size: 1.3rem;\n  margin-bottom: 8px;\n  color: var(--text);\n}\n.onboarding-card > p {\n  color: var(--text-muted);\n  margin-bottom: 24px;\n  font-size: 0.9rem;\n}\n.onboarding-steps {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 16px;\n  flex-wrap: wrap;\n  margin-bottom: 28px;\n}\n.step {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  background: var(--surface);\n  padding: 12px 20px;\n  border-radius: 16px;\n  flex: 1;\n  min-width: 160px;\n  text-align: left;\n}\n.step-number {\n  width: 32px;\n  height: 32px;\n  background: var(--accent);\n  color: white;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: bold;\n  font-size: 1rem;\n}\n.step-content {\n  display: flex;\n  flex-direction: column;\n}\n.step-content strong {\n  font-size: 0.85rem;\n  color: var(--text);\n}\n.step-content span {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.step-arrow {\n  color: var(--accent);\n  font-size: 1.2rem;\n}\n.onboarding-tips {\n  display: flex;\n  justify-content: center;\n  gap: 20px;\n  flex-wrap: wrap;\n  padding-top: 20px;\n  border-top: 1px solid var(--border);\n}\n.onboarding-tips .tip {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  background: var(--surface);\n  padding: 6px 14px;\n  border-radius: 40px;\n}\n.onboarding-tips .tip i {\n  color: var(--accent);\n  font-size: 0.85rem;\n}\n\n/* Responsive */\n@media (max-width: 768px) {\n.onboarding-steps {\n    flex-direction: column;\n}\n.step-arrow {\n    transform: rotate(90deg);\n}\n.step {\n    width: 100%;\n}\n.onboarding-card {\n    padding: 20px;\n}\n}\n\n/* Player Speed Controls */\n.player-speed-controls {\n  display: flex;\n  gap: 4px;\n  background: var(--accent-light);\n  padding: 4px 8px;\n  border-radius: 40px;\n}\n.speed-btn-mini {\n  padding: 4px 8px;\n  border-radius: 20px;\n  border: none;\n  background: transparent;\n  font-size: 0.7rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n}\n.speed-btn-mini:hover {\n  background: rgba(255, 255, 255, 0.5);\n}\n.speed-btn-mini.active {\n  background: var(--accent);\n  color: white;\n}\n@media (max-width: 768px) {\n.player-speed-controls {\n    display: none;\n    /* Hide on mobile, too crowded */\n}\n.chaining-hero {\n    flex-direction: column;\n}\n.chaining-progress,\n  .chain-choice-grid,\n  .chain-choice-grid-two {\n    grid-template-columns: 1fr;\n}\n.chain-step-actions.split {\n    flex-direction: column-reverse;\n    align-items: stretch;\n}\n}\n\n/* Mode Button Styling */\n.mode-btn {\n  background: var(--surface);\n  border: 1px solid var(--accent);\n  color: var(--accent);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mode-btn i:first-child {\n  font-size: 0.85rem;\n}\n.mode-btn .bi-chevron-down {\n  font-size: 0.7rem;\n  transition: transform 0.2s;\n}\n.mode-btn:hover .bi-chevron-down {\n  transform: translateY(2px);\n}\n.mode-btn:hover {\n  background: var(--accent-light);\n}\n\n/* Make all buttons consistent */\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\nbody {\n  font-family: var(--font-ui);\n  background: var(--bg);\n  color: var(--text);\n}\nhtml {\n  background: var(--bg);\n}\n.app {\n  min-height: 100vh;\n  background: var(--bg);\n  font-size: calc(16px * var(--ui-scale, 1));\n  animation: appFade 260ms ease-out;\n}\n.verse-arabic {\n  min-height: 60px;\n}\n\n/* Session Rail */\n.session-rail {\n  background: var(--surface);\n  border-radius: 20px;\n  margin-bottom: 20px;\n  padding: 16px 20px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.session-rail-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 16px;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.session-rail-copy {\n  flex: 1;\n}\n.session-rail-hint {\n  margin-top: 4px;\n  color: var(--text-muted);\n  font-size: 0.78rem;\n}\n.session-rail-kicker {\n  font-size: 0.7rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  font-size: 1.1rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.session-rail-meta {\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-top: 2px;\n}\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 12px;\n  margin: 16px 0;\n}\n.rail-stat {\n  background: var(--accent-light);\n  padding: 10px 12px;\n  border-radius: 14px;\n  text-align: center;\n}\n.rail-stat span {\n  display: block;\n  font-size: 0.65rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--text-muted);\n  margin-bottom: 4px;\n}\n.rail-stat strong {\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.rail-stat small {\n  display: block;\n  margin-top: 4px;\n  font-size: 0.68rem;\n  color: var(--text-muted);\n}\n\n/* Mode Indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 10px;\n  padding: 6px 14px;\n  margin: 8px 0 12px 0;\n  background: var(--accent-light);\n  border-radius: 40px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n.mode-switch-btn {\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 4px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.mode-switch-btn:hover {\n  background: rgba(154, 103, 56, 0.2);\n  transform: rotate(180deg);\n}\n.progress-bar-wide {\n  margin-top: 12px;\n  height: 6px;\n  position: relative;\n  overflow: visible;\n}\n.progress-label {\n  position: absolute;\n  top: -24px;\n  right: 0;\n  font-size: 0.72rem;\n  font-weight: 700;\n  color: var(--accent);\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.session-rail-top {\n    flex-direction: column;\n    align-items: stretch;\n}\n.session-rail-actions {\n    justify-content: stretch;\n}\n.rail-btn {\n    flex: 1;\n    justify-content: center;\n}\n.session-rail-stats {\n    grid-template-columns: repeat(2, 1fr);\n    gap: 8px;\n}\n}\n.verse-arabic-loading {\n  min-height: 60px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--text-muted);\n  animation: pulse 1s infinite;\n}\n@keyframes pulse {\n0%,\n  100% {\n    opacity: 0.3;\n}\n50% {\n    opacity: 0.6;\n}\n}\n\n/* Ensure HTML content is styled properly before Vue mounts */\n.verse-arabic word,\n.verse-arabic .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n}\n\n/* Prevent raw HTML showing */\n.verse-arabic:empty {\n  display: none;\n}\n\n/* Tajweed styles */\n.verse-arabic.tajweed-enabled [class*=\"tajweed\"] {\n  display: inline;\n}\n\n/* Color rules for tajweed - adjust based on what API returns */\n.verse-arabic [class*=\"ghunnah\"],\n.verse-arabic [class*=\"Ghunnah\"] {\n  color: #2ecc71;\n}\n.verse-arabic [class*=\"madd\"],\n.verse-arabic [class*=\"Madd\"] {\n  color: #e74c3c;\n}\n.verse-arabic [class*=\"qalqalah\"],\n.verse-arabic [class*=\"Qalqalah\"] {\n  color: #f39c12;\n}\n.verse-arabic [class*=\"ikhfa\"],\n.verse-arabic [class*=\"Ikhfa\"] {\n  color: #9b59b6;\n}\n.verse-arabic [class*=\"idgham\"],\n.verse-arabic [class*=\"Idgham\"] {\n  color: #3498db;\n}\n\n/* Word by Word styles */\n.wbw-word {\n  display: inline-block;\n  padding: 4px 6px;\n  margin: 2px;\n  border-radius: 8px;\n  transition: all 0.2s ease;\n  cursor: pointer;\n  font-size: 1.2rem;\n  background: rgba(154, 103, 56, 0.05);\n}\n.wbw-word:hover {\n  background: var(--accent-light);\n  transform: scale(1.02);\n}\n.wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n\n/* Word highlighting styles */\n.verse-arabic word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n.rail-stat strong,\n.player-eta {\n  cursor: help;\n  border-bottom: 1px dotted var(--text-muted);\n}\n\n/* Optional: Show detailed breakdown on hover */\n.rail-stat:hover strong::after {\n  content: attr(title);\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: var(--surface-strong);\n  color: var(--text);\n  padding: 4px 8px;\n  border-radius: 8px;\n  font-size: 0.7rem;\n  white-space: nowrap;\n  z-index: 100;\n  box-shadow: var(--shadow-sm);\n  border: 1px solid var(--border);\n}\n\n/* Minimized Session Rail */\n.session-rail-mini {\n  position: sticky;\n  top: 12px;\n  z-index: 18;\n  padding: 10px;\n  padding-top: 8px;\n  margin-bottom: 20px;\n  background: var(--surface);\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-sm);\n  overflow: hidden;\n  transition: all 0.2s ease;\n}\n.session-rail-mini:hover {\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent-soft);\n}\n.rail-mini-content {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 8px 12px 8px 16px;\n}\n.rail-mini-info {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  flex: 1;\n}\n.rail-mini-icon {\n  width: 32px;\n  height: 32px;\n  background: var(--accent-light);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.rail-mini-icon i {\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.rail-mini-details {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-mini-surah {\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.rail-mini-progress {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.rail-mini-stats {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.mini-stat-item {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.mini-stat-item i {\n  font-size: 0.7rem;\n  color: var(--accent);\n}\n.rail-mini-actions {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mini-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n}\n.mini-btn:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n}\n.mini-btn:first-child {\n  background: var(--accent);\n  border-color: var(--accent);\n  color: white;\n}\n.mini-btn:first-child:hover {\n  transform: scale(1.05);\n  background: var(--accent-strong);\n}\n.rail-mini-progress {\n  height: 2px;\n  background: var(--border);\n}\n.progress-fill-mini {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.rail-mini-stats {\n    display: none;\n}\n.rail-mini-content {\n    padding: 6px 10px 6px 12px;\n}\n.rail-mini-surah {\n    font-size: 0.75rem;\n}\n}\n\n/* Font Dropdown */\n.font-dropdown {\n  position: relative;\n}\n.font-dropdown-trigger {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 999px;\n  font-size: 0.75rem;\n  cursor: pointer;\n  transition: all 0.2s;\n  color: var(--text);\n}\n.font-dropdown-trigger:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.font-dropdown-trigger .bi-chevron-down {\n  transition: transform 0.2s;\n  font-size: 0.7rem;\n}\n.font-dropdown-trigger .bi-chevron-down.rotated {\n  transform: rotate(180deg);\n}\n.font-dropdown-menu {\n  position: absolute;\n  top: calc(100% + 8px);\n  right: 0;\n  min-width: 200px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  box-shadow: var(--shadow-lg);\n  overflow: hidden;\n  z-index: 100;\n  backdrop-filter: blur(12px);\n}\n.font-option {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  width: 100%;\n  padding: 10px 14px;\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  font-size: 0.8rem;\n  text-align: left;\n  transition: all 0.15s;\n  color: var(--text);\n}\n.font-option:hover {\n  background: var(--accent-light);\n}\n.font-option.active {\n  background: var(--accent);\n  color: white;\n}\n.font-option .check-icon {\n  margin-left: auto;\n  font-size: 0.8rem;\n}\n\n/* Dropdown Animation */\n.dropdown-fade-enter-active,\n.dropdown-fade-leave-active {\n  transition: all 0.2s ease;\n}\n.dropdown-fade-enter-from,\n.dropdown-fade-leave-to {\n  opacity: 0;\n  transform: translateY(-8px);\n}\n\n/* Tajweed styles for AlQuran quran-tajweed edition */\n.verse-arabic.tajweed-enabled {\n  line-height: 2;\n}\n.verse-arabic.tajweed-enabled .tajweed-mark {\n  display: inline;\n  border-radius: 0.2em;\n  padding: 0 0.03em;\n}\n.verse-arabic.tajweed-enabled .tajweed-ham_wasl,\n.verse-arabic.tajweed-enabled .tajweed-slnt {\n  color: #7e8a97;\n}\n.verse-arabic.tajweed-enabled .tajweed-ghn,\n.verse-arabic.tajweed-enabled .tajweed-idgh_ghn,\n.verse-arabic.tajweed-enabled .tajweed-iqlb {\n  color: #2e9d62;\n  background: rgba(46, 157, 98, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,\n.verse-arabic.tajweed-enabled .tajweed-ikhf,\n.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw {\n  color: #9b59b6;\n  background: rgba(155, 89, 182, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-qlq,\n.verse-arabic.tajweed-enabled .tajweed-lqlq {\n  color: #d98824;\n  background: rgba(217, 136, 36, 0.12);\n}\n.verse-arabic.tajweed-enabled .tajweed-madda_normal,\n.verse-arabic.tajweed-enabled .tajweed-madda_permissible,\n.verse-arabic.tajweed-enabled .tajweed-madda_necessary,\n.verse-arabic.tajweed-enabled .tajweed-madda_obligatory {\n  color: #d55245;\n  background: rgba(213, 82, 69, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_mus,\n.verse-arabic.tajweed-enabled .tajweed-idgh_shfw,\n.verse-arabic.tajweed-enabled .tajweed-ghn + .tajweed-mark {\n  color: #2b7bbb;\n  background: rgba(43, 123, 187, 0.10);\n}\n\n/* Toolbar chip active state for tajweed */\n.toolbar-chip.active {\n  background: var(--accent);\n  color: white;\n}\n.verse-play-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: white;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.verse-play-btn i {\n  font-size: 0.9rem;\n}\n.verse-play-btn:hover {\n  transform: scale(1.05);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--accent);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.verse-play-btn:active {\n  transform: scale(0.98);\n}\n.speed-label {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-right: 4px;\n}\n.speed-controls {\n  display: flex;\n  gap: 4px;\n}\n.speed-btn {\n  padding: 4px 8px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.speed-btn.active {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.streak-motivation {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border-radius: 40px;\n  font-size: 0.75rem;\n}\n.streak-badge {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-weight: 500;\n}\n.motivation-message {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--text-muted);\n  font-size: 0.7rem;\n}\n.pa-note {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n  margin-top: 4px;\n  display: block;\n}\n\n/* Active tab indicator with pulse effect */\n.tools-tabs button.active-tab {\n  position: relative;\n  animation: tabPulse 0.3s ease-out;\n}\n@keyframes tabPulse {\n0% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 var(--accent);\n}\n50% {\n    transform: scale(1.02);\n    box-shadow: 0 0 0 3px var(--accent-light);\n}\n100% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Toggle switch animation and visual feedback */\n.switch {\n  transition: all 0.2s ease;\n}\n.switch:active {\n  transform: scale(0.98);\n}\n.switch-ui {\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n  animation: switchPulse 0.3s ease-out;\n}\n@keyframes switchPulse {\n0% {\n    box-shadow: 0 0 0 0 rgba(139, 94, 60, 0.4);\n}\n50% {\n    box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.2);\n}\n100% {\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Field hint styling */\n.field-hint {\n  font-size: calc(0.7rem * var(--en-scale, 1));\n  color: var(--text-muted);\n  margin-top: 4px;\n  line-height: 1.4;\n  display: block;\n}\n\n/* Verse Arabic styling */\n.verse-arabic {\n  --verse-font-percent: 100;\n  --verse-font-size: clamp(1.5rem, calc(var(--verse-font-percent, 150) * 0.0175rem), 3.25rem);\n  font-family: var(--font-ar);\n  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n.verse-arabic word {\n  display: inline-block;\n  font-size: 1em;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-card {\n  background: var(--surface);\n  border-radius: 20px;\n  padding: 20px;\n  transition: all 0.2s ease;\n  border: 1px solid var(--border);\n  position: relative;\n  direction: ltr;\n  overflow: hidden;\n}\n.verse-card::before {\n  content: \"\";\n  position: absolute;\n  inset: 0;\n  pointer-events: none;\n  background:\n    linear-gradient(180deg, rgba(184, 130, 78, 0.03), transparent 22%),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.05), transparent 28%);\n}\n.verse-card.active {\n  border-color: var(--accent);\n  background: linear-gradient(145deg, rgba(184, 130, 78, 0.14), rgba(154, 103, 56, 0.04));\n  box-shadow: 0 0 0 1px var(--accent), 0 14px 32px rgba(154, 103, 56, 0.18);\n  transform: translateY(-1px);\n  transition: all 0.2s ease;\n}\n.verse-card.focus-mode {\n  opacity: 0.38;\n}\n.verse-card.blurred {\n  filter: blur(4px);\n  opacity: 0.22;\n  transform: scale(0.985);\n  transition: filter 0.3s ease, transform 0.2s, box-shadow 0.2s, border-color 0.2s, opacity 0.2s ease;\n}\n.verse-card.blurred:hover {\n  filter: blur(0px);\n  opacity: 0.55;\n}\n\n/* Removed: \"For serious huffadh training\" badge */\n.verse-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 16px;\n}\n.verse-badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-number {\n  font-size: 0.78rem;\n  padding: 6px 12px;\n  background: var(--accent);\n  border-radius: 999px;\n  color: #fff;\n  font-weight: 700;\n  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.24);\n}\n.verse-status-badge,\n.verse-status-subtle {\n  border-radius: 999px;\n  padding: 5px 10px;\n  font-size: 0.68rem;\n  font-weight: 600;\n}\n.verse-status-badge {\n  background: var(--accent-light);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.verse-status-subtle {\n  background: var(--bg-elevated);\n  color: var(--text-muted);\n}\n.verse-ref {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 8px;\n}\n\n/* Font controls */\n.verse-font-controls {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  padding: 2px 6px;\n  margin-right: 8px;\n}\n.verse-font-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 12px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 10px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.verse-font-btn:hover {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n}\n.verse-font-size-indicator {\n  font-size: 10px;\n  min-width: 35px;\n  text-align: center;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n\n/* Session rail */\n.session-rail {\n  position: sticky;\n  top: 14px;\n  z-index: 18;\n  margin-bottom: 18px;\n  padding: 12px 14px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-md);\n  animation: railIn 280ms ease-out;\n}\n.session-rail-top {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  gap: 12px;\n  align-items: center;\n}\n.session-rail-kicker {\n  font-size: 10px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  margin-top: 2px;\n  font-size: 14px;\n  font-weight: 450;\n}\n.session-rail-meta {\n  margin-top: 2px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.session-rail-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 8px;\n  margin-top: 10px;\n}\n.rail-stat {\n  padding: 8px 10px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-stat span {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n}\n.rail-stat strong {\n  font-size: 0.78rem;\n  font-weight: 500;\n}\n.rail-btn {\n  height: 34px;\n  padding: 0 12px;\n  border-radius: 13px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  color: var(--text);\n  font-size: 12px;\n  font-weight: 450;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.rail-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);\n}\n.progress-bar {\n  flex: 1;\n  height: 4px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-wide {\n  margin-top: 10px;\n}\n.progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s;\n}\n\n/* Mode indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  margin: 8px 0 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n\n/* Reading toolbar */\n.reading-toolbar {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  margin-bottom: 16px;\n  padding: 12px 14px;\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.reading-toolbar-group {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  align-items: flex-start;\n}\n.toolbar-chip {\n  border: 0;\n  border-radius: 999px;\n  padding: 8px 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  font-size: 0.75rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: var(--shadow-sm);\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.toolbar-chip i,\n.rail-btn i,\n.tools-tabs button i,\n.st-ico i {\n  font-size: 0.9rem;\n  line-height: 1;\n}\n.toolbar-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.toolbar-chip:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n\n/* Tools panel */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  width: min(var(--tools-width), 100vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n}\n.tools.open {\n  transform: translateX(0);\n}\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n}\n.tools-topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.tools-title {\n  font-size: 1rem;\n  font-weight: 700;\n  letter-spacing: -0.2px;\n  color: var(--text);\n}\n.tools-context {\n  margin-top: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 600;\n}\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n  color: rgba(0, 0, 0, 0.7);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n}\n.tools-tabs button {\n  flex: 1;\n  padding: 7px 10px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.82rem;\n  cursor: pointer;\n  color: rgba(0, 0, 0, 0.55);\n  font-weight: 450;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: background 140ms ease, color 140ms ease, transform 140ms ease;\n}\n.tools-tabs button.active {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));\n  box-shadow: var(--shadow-sm);\n  color: rgba(0, 0, 0, 0.85);\n}\n.tools-body {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n}\n.sheet {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.sheet-section {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border-radius: 18px;\n  padding: 0;\n  overflow: hidden;\n  box-shadow: var(--shadow-sm);\n  animation: riseSoft 260ms ease-out;\n}\n.sheet-toggle {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border: none;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease;\n}\n.st-left {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.st-ico {\n  width: 24px;\n  height: 24px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));\n  border: 1px solid rgba(139, 94, 60, 0.18);\n  flex: 0 0 auto;\n  font-size: 11px;\n  font-weight: 600;\n  color: var(--accent);\n}\n.st-txt {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 2px;\n  min-width: 0;\n}\n.st-title {\n  font-weight: 450;\n  letter-spacing: -0.2px;\n  color: var(--text);\n  font-size: 0.82rem;\n}\n.st-sub {\n  font-size: 0.66rem;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.st-chev {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  display: grid;\n  place-items: center;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  color: rgba(0, 0, 0, 0.65);\n  transition: transform 0.15s ease;\n  box-shadow: var(--shadow-sm);\n}\n.st-chev.open {\n  transform: rotate(180deg);\n}\n.sheet-content {\n  padding: 16px 16px 18px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.field-stack {\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n}\n.field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  min-width: 0;\n}\n.field label {\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n}\n.field-hint {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 4px;\n  line-height: 1.4;\n  display: block;\n}\n.select,\n.input {\n  width: 100%;\n  min-width: 0;\n  padding: 11px 12px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--text);\n  font-size: 0.8rem;\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n.range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.range-single {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n  align-items: center;\n}\n.range span {\n  color: rgba(0, 0, 0, 0.35);\n  font-weight: 450;\n  font-size: 11px;\n}\n.radio-group {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.radio {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 0.85rem;\n  color: var(--text);\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  transition: all 0.2s ease;\n}\n.radio:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-sm);\n}\n.radio input {\n  margin: 0;\n}\n.switch {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 11px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  cursor: pointer;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  transition: all 0.2s ease;\n}\n.switch input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.switch-ui {\n  width: 44px;\n  height: 26px;\n  border-radius: 999px;\n  background: rgba(0, 0, 0, 0.12);\n  position: relative;\n  flex: 0 0 auto;\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  content: \"\";\n  position: absolute;\n  top: 3px;\n  left: 3px;\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  background: white;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n}\n.switch input:checked+.switch-ui::after {\n  transform: translateX(18px);\n}\n.switch-text {\n  font-size: 0.74rem;\n  color: rgba(0, 0, 0, 0.72);\n  font-weight: 400;\n}\n\n/* Start button */\n.start-btn {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  border-radius: 12px;\n  color: white;\n  font-size: 1rem;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  margin-top: 20px;\n  transition: all 0.2s ease;\n}\n.start-btn:hover:not(:disabled) {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);\n}\n.start-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n\n/* Tools footer */\n.tools-footer {\n  position: absolute;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  height: var(--tools-footer-h);\n  padding: 12px 16px 14px;\n  border-top: 1px solid var(--border);\n  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));\n  display: flex;\n  gap: 10px;\n  justify-content: space-between;\n  align-items: center;\n}\n.tools-btn {\n  flex: 1;\n  min-height: 44px;\n  padding: 10px 10px;\n  border-radius: 15px;\n  font-weight: 500;\n  border: 1px solid rgba(0, 0, 0, 0.1);\n  cursor: pointer;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  line-height: 1;\n}\n.tools-btn-soft {\n  color: var(--text-muted);\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.42));\n  box-shadow: none;\n}\n.tools-btn-soft:hover {\n  color: var(--text);\n  border-color: var(--accent-soft);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.6));\n}\n\n/* Hero section */\n.hero-card {\n  margin-bottom: 16px;\n  padding: 18px 18px 16px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 236, 226, 0.92));\n  box-shadow: var(--shadow-md);\n  display: grid;\n  gap: 14px;\n  animation: riseSoft 260ms ease-out;\n}\n.hero-kicker {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  color: var(--accent);\n}\n.hero-title {\n  margin-top: 6px;\n  font-size: 1.24rem;\n  font-weight: 500;\n  letter-spacing: -0.03em;\n}\n.hero-sub {\n  margin-top: 8px;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  max-width: 56ch;\n}\n.hero-flow {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n}\n.hero-step {\n  padding: 10px 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.62);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.74rem;\n}\n.hero-step span {\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  display: grid;\n  place-items: center;\n  background: var(--accent-light);\n  color: var(--accent);\n  font-size: 11px;\n}\n.hero-step strong {\n  font-weight: 500;\n}\n.hero-points {\n  display: grid;\n  gap: 8px;\n}\n.hero-point {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.hero-point i {\n  color: var(--accent);\n}\n.hero-actions,\n.empty-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cta {\n  flex: 1;\n  padding: 10px 10px;\n  border-radius: 14px;\n  font-weight: 450;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 11px;\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.cta-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);\n}\n.cta-ghost {\n  background: rgba(255, 255, 255, 0.58);\n  box-shadow: var(--shadow-sm);\n}\n\n/* Empty state */\n.empty {\n  padding: 40px 0;\n}\n.empty-card {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: var(--radius);\n  padding: 32px;\n  text-align: center;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-md);\n}\n.empty-icon {\n  font-family: var(--font-ar);\n  font-size: 2.2rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.empty-card h3 {\n  font-weight: 450;\n  margin-bottom: 6px;\n  font-size: 1rem;\n}\n.empty-card p {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  margin-bottom: 16px;\n}\n\n/* Verses grid */\n.verses-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n  margin-top: 32px;\n}\n.offline-list {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n  margin-bottom: 16px;\n}\n.offline-item {\n  background: var(--bg-elevated);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  transition: all 0.2s ease;\n}\n.offline-item:hover {\n  border-color: var(--accent);\n  background: var(--surface);\n}\n.oi-info {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.oi-name {\n  font-weight: 600;\n  font-size: 1rem;\n}\n.oi-meta {\n  font-size: 0.8rem;\n  opacity: 0.7;\n}\n.oi-date {\n  font-size: 0.7rem;\n  opacity: 0.5;\n}\n.oi-actions {\n  display: flex;\n  gap: 8px;\n}\n.oi-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.oi-load:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.oi-delete:hover {\n  background: #ff4d4d;\n  color: white;\n  border-color: #ff4d4d;\n}\n.empty-mini {\n  text-align: center;\n  padding: 32px 16px;\n  background: var(--bg-elevated);\n  border-radius: 20px;\n  border: 1px dashed var(--border);\n}\n.offline-note {\n  margin-top: 24px;\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  display: flex;\n  gap: 10px;\n  font-size: 0.75rem;\n  line-height: 1.4;\n  color: var(--accent);\n}\n\n/* Floating Player */\n.player-bar {\n  position: fixed;\n  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);\n  left: 50%;\n  transform: translateX(-50%);\n  width: calc(100vw - 24px);\n  max-width: 980px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 24px;\n  box-shadow: var(--shadow-lg);\n  z-index: 1000;\n  padding: 12px 24px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  /* Avoid iOS Safari compositing artifacts (black bands) from backdrop-filter on fixed elements. */\n  backdrop-filter: none;\n  -webkit-backdrop-filter: none;\n  transition: transform 0.22s ease, opacity 0.22s ease, padding 0.22s ease;\n}\n.player-bar.collapsed {\n  transform: translateX(-50%) translateY(54px);\n  opacity: 0.92;\n  padding-top: 8px;\n  padding-bottom: 8px;\n}\n.player-main {\n  display: flex;\n  align-items: center;\n  gap: 20px;\n  flex-wrap: wrap;\n}\n.player-info {\n  min-width: 0;\n}\n.player-chapter {\n  font-weight: 700;\n  font-size: 0.9rem;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-verse {\n  font-size: 0.75rem;\n  opacity: 0.7;\n}\n.player-eta {\n  color: var(--accent);\n  font-weight: 500;\n  opacity: 1;\n}\n.player-controls {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n}\n.sheet-fade-enter-active,\n.sheet-fade-leave-active {\n  transition: opacity 0.2s ease, transform 0.2s ease;\n}\n.sheet-fade-enter-from,\n.sheet-fade-leave-to {\n  opacity: 0;\n  transform: translateY(8px);\n}\n.chaining-setup {\n  overflow: hidden;\n}\n.chaining-wizard {\n  padding: 20px;\n  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-elevated) 100%);\n}\n.chaining-hero {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-start;\n  gap: 16px;\n  margin-bottom: 18px;\n}\n.chaining-kicker {\n  display: inline-block;\n  margin-bottom: 6px;\n  font-size: 0.72rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--accent);\n}\n.chaining-hero h3 {\n  margin-bottom: 6px;\n  font-size: 1.3rem;\n  color: var(--text);\n}\n.chaining-hero p {\n  max-width: 46ch;\n  color: var(--text-muted);\n  font-size: 0.88rem;\n}\n.chaining-progress-chip {\n  white-space: nowrap;\n  background: var(--accent-light);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  border-radius: 999px;\n  padding: 8px 12px;\n  font-size: 0.76rem;\n  font-weight: 600;\n}\n.chaining-progress {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n  margin-bottom: 18px;\n}\n.chain-progress-step {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 12px;\n  text-align: left;\n  cursor: pointer;\n  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;\n}\n.chain-progress-step span {\n  width: 24px;\n  height: 24px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  margin-bottom: 10px;\n  border-radius: 50%;\n  background: var(--border);\n  color: var(--text-muted);\n  font-size: 0.72rem;\n  font-weight: 700;\n}\n.chain-progress-step strong {\n  display: block;\n  font-size: 0.86rem;\n  color: var(--text);\n}\n.chain-progress-step.active,\n.chain-progress-step.done {\n  border-color: var(--accent-soft);\n  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);\n}\n.chain-progress-step.active span,\n.chain-progress-step.done span {\n  background: var(--accent);\n  color: #fff;\n}\n.chain-progress-step.active {\n  transform: translateY(-1px);\n}\n.chaining-panel {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 20px;\n  padding: 18px;\n}\n.chain-step-copy h4 {\n  margin-bottom: 4px;\n  font-size: 1rem;\n  color: var(--text);\n}\n.chain-step-copy p {\n  font-size: 0.84rem;\n  color: var(--text-muted);\n}\n.chain-choice-grid {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 12px;\n}\n.chain-choice-grid-two {\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.chain-choice-card {\n  background: var(--bg-elevated);\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  padding: 16px;\n  text-align: left;\n  cursor: pointer;\n  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;\n}\n.chain-choice-card strong {\n  display: block;\n  margin-bottom: 8px;\n  color: var(--text);\n  font-size: 0.92rem;\n}\n.chain-choice-card span {\n  display: block;\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  line-height: 1.45;\n}\n.chain-choice-card:hover,\n.chain-choice-card.active {\n  border-color: var(--accent);\n  box-shadow: 0 14px 28px rgba(154, 103, 56, 0.12);\n  transform: translateY(-1px);\n}\n.chain-session-preview {\n  background: var(--accent-light);\n  border: 1px solid var(--accent-soft);\n  border-radius: 16px;\n  padding: 14px 16px;\n}\n.chain-preview-line {\n  margin-bottom: 4px;\n  color: var(--text);\n  font-weight: 600;\n  font-size: 0.84rem;\n}\n.chain-session-preview small {\n  color: var(--text-muted);\n}\n.chain-step-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 4px;\n}\n.chain-step-actions.split {\n  justify-content: space-between;\n  align-items: center;\n  gap: 12px;\n}\n.chain-secondary-btn {\n  min-width: 110px;\n}\n\n/* Chaining UI */\n.chaining-viewer {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  margin-top: 24px;\n  overflow: hidden;\n  box-shadow: var(--shadow-sm);\n}\n.chaining-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px 20px;\n  background: var(--bg-elevated);\n  cursor: pointer;\n  transition: background 0.2s;\n}\n.chaining-header:hover {\n  background: var(--accent-light);\n}\n.chaining-title {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  font-weight: 600;\n  color: var(--accent);\n}\n.chaining-title i {\n  font-size: 1.2rem;\n}\n.chaining-stats {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  font-size: 0.85rem;\n}\n.chaining-badge {\n  background: var(--accent);\n  color: white;\n  padding: 4px 10px;\n  border-radius: 20px;\n  font-weight: 500;\n}\n.chaining-badge.alt {\n  background: var(--border);\n  color: var(--text);\n}\n.chaining-body {\n  padding: 20px;\n  border-top: 1px solid var(--border);\n  max-height: 400px;\n  overflow-y: auto;\n  background: var(--bg-body);\n}\n.chain-timeline {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.chain-step {\n  display: flex;\n  align-items: center;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  padding: 10px 16px;\n  border-radius: 12px;\n  min-width: 120px;\n  cursor: pointer;\n  transition: all 0.2s;\n  opacity: 0.7;\n}\n\n/* Wizard Onboarding CSS */\n.onboarding-wizard {\n  padding: 40px;\n  text-align: center;\n}\n.wizard-step {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 32px;\n  max-width: 600px;\n  margin: 0 auto;\n}\n.wizard-choices {\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  width: 100%;\n}\n.wizard-choice-btn {\n  display: flex;\n  align-items: center;\n  gap: 20px;\n  background: var(--surface);\n  border: 2px solid var(--border);\n  padding: 24px;\n  border-radius: 16px;\n  cursor: pointer;\n  text-align: left;\n  transition: all 0.2s ease;\n  width: 100%;\n}\n.wizard-choice-btn:hover {\n  border-color: var(--accent);\n  background: var(--accent-light);\n  transform: translateY(-2px);\n}\n.wizard-choice-btn.primary-choice {\n  border-color: var(--accent);\n  background: rgba(139, 94, 60, 0.05);\n}\n.wizard-choice-btn.primary-choice:hover {\n  background: var(--accent-light);\n}\n.choice-icon {\n  font-size: 2rem;\n  color: var(--accent);\n  width: 50px;\n  height: 50px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  background: var(--bg-body);\n  border-radius: 12px;\n}\n.choice-text {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.choice-text strong {\n  font-size: 1.1rem;\n  color: var(--text);\n}\n.choice-text span {\n  font-size: 0.9rem;\n  color: var(--text-muted);\n}\n.wizard-back {\n  background: none;\n  border: none;\n  color: var(--text-muted);\n  cursor: pointer;\n  font-size: 0.95rem;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 16px;\n  border-radius: 8px;\n  transition: all 0.2s;\n  margin-top: -10px;\n}\n.wizard-back:hover {\n  background: var(--border);\n  color: var(--text);\n}\n.fade-slide-enter-active,\n.fade-slide-leave-active {\n  transition: all 0.3s ease;\n}\n.fade-slide-enter-from {\n  opacity: 0;\n  transform: translateX(20px);\n}\n.fade-slide-leave-to {\n  opacity: 0;\n  transform: translateX(-20px);\n}\n.chain-step:hover {\n  border-color: var(--accent);\n  opacity: 1;\n}\n.chain-step.completed {\n  border-color: var(--accent-soft);\n  background: var(--accent-light);\n  opacity: 0.8;\n}\n.chain-step.active {\n  border-color: var(--accent);\n  background: var(--accent);\n  color: white;\n  opacity: 1;\n  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.2);\n  transform: translateY(-2px);\n}\n.step-indicator {\n  margin-right: 12px;\n  font-size: 1.2rem;\n}\n.chain-step.completed .step-indicator {\n  color: var(--accent);\n}\n.chain-step.active .step-indicator {\n  color: white;\n}\n.step-content {\n  display: flex;\n  flex-direction: column;\n}\n.step-phase {\n  font-size: 0.7rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  opacity: 0.8;\n}\n.step-verse {\n  font-weight: 600;\n  font-size: 0.95rem;\n}\n.player-btn {\n  width: 44px;\n  height: 44px;\n  border-radius: 12px;\n  border: none;\n  background: none;\n  color: var(--text);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.2rem;\n  transition: all 0.2s ease;\n}\n.player-btn:hover {\n  background: var(--bg-elevated);\n}\n.player-play {\n  background: var(--accent);\n  color: white;\n  width: 52px;\n  height: 52px;\n  border-radius: 16px;\n  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.3);\n}\n.player-play:hover {\n  background: rgba(255, 255, 255, 0.88);\n  color: var(--accent);\n  transform: scale(1.05);\n}\n.player-progress-wrap {\n  flex: 1;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  min-width: 220px;\n}\n.player-time {\n  font-size: 0.75rem;\n  font-variant-numeric: tabular-nums;\n  opacity: 0.7;\n  min-width: 40px;\n}\n.player-progress-bg {\n  flex: 1;\n  height: 6px;\n  background: var(--bg-elevated);\n  border-radius: 3px;\n  position: relative;\n  cursor: pointer;\n}\n.player-progress-fill {\n  position: absolute;\n  left: 0;\n  top: 0;\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.1s linear;\n}\n\n/* Animations */\n.slide-up-enter-active,\n.slide-up-leave-active {\n  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.slide-up-enter-from,\n.slide-up-leave-to {\n  transform: translate(-50%, 100px);\n  opacity: 0;\n}\n.verse-translation {\n  font-size: calc(0.82rem * var(--en-scale, 1));\n  color: #5a6b63;\n  line-height: 1.6;\n  padding-top: 12px;\n  margin-top: 10px;\n  border-top: 1px solid var(--border);\n  display: block;\n  opacity: 0.92;\n}\n.verse-transliteration {\n  font-size: calc(0.88rem * var(--en-scale, 1));\n  color: var(--text-muted);\n  font-style: italic;\n  margin-top: 10px;\n  padding-top: 8px;\n  border-top: 1px solid var(--border);\n  line-height: 1.5;\n  opacity: 0.98;\n}\n.verse-words {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 12px;\n  direction: rtl;\n  margin-top: 16px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n}\n.word-item {\n  background: var(--accent-light);\n  padding: 6px 12px;\n  border-radius: 20px;\n  display: inline-flex;\n  flex-direction: row-reverse;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.75rem;\n}\n.word-arabic {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n}\n.word-meaning {\n  color: var(--text-muted);\n  font-size: calc(0.82rem * var(--en-scale, 1));\n}\n.word-audio-btn {\n  background: none;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 0 4px;\n}\n\n/* Quiz overlay */\n.quiz-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 80;\n  background: rgba(0, 0, 0, 0.35);\n  backdrop-filter: blur(6px);\n  display: grid;\n  place-items: center;\n  padding: 18px;\n}\n.quiz-card {\n  width: min(680px, 100%);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba, rgba(250, 245, 239, 0.95));\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 22px;\n  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);\n  overflow: hidden;\n}\n.quiz-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 18px 22px 14px;\n  border-bottom: 1px solid rgba(0, 0, 0, 0.08);\n}\n.quiz-title {\n  font-weight: 500;\n  font-size: 1.05rem;\n}\n.quiz-subtitle {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.quiz-close {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.7);\n  cursor: pointer;\n  font-size: 24px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.quiz-progress {\n  padding: 14px 22px 0;\n}\n.quiz-progress-bar {\n  height: 4px;\n  background: var(--border);\n  border-radius: 2px;\n  overflow: hidden;\n}\n.quiz-progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n.quiz-stats {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.quiz-body {\n  padding: 18px 22px 22px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.quiz-question {\n  font-weight: 600;\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.quiz-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.4rem;\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  padding: 16px;\n  background: var(--accent-light);\n  border-radius: 16px;\n}\n.quiz-reveal-btn {\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n}\n.quiz-answer {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.quiz-translation {\n  font-size: 0.9rem;\n  line-height: 1.6;\n  color: var(--text);\n  margin-bottom: 16px;\n}\n.quiz-grade-buttons {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.grade-btn {\n  flex: 1;\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.grade-btn.primary {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.quiz-options {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.quiz-option {\n  padding: 12px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  text-align: left;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.quiz-option:hover {\n  background: var(--accent-light);\n  transform: translateX(4px);\n}\n.quiz-summary {\n  padding: 22px;\n  text-align: center;\n}\n.quiz-summary-icon {\n  font-size: 3rem;\n  margin-bottom: 16px;\n}\n.quiz-summary-stats {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin: 20px 0;\n}\n.quiz-summary-stats .stat {\n  padding: 16px;\n  background: var(--surface);\n  border-radius: 16px;\n}\n.stat-label {\n  display: block;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.stat-value {\n  display: block;\n  font-size: 1.5rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.quiz-summary-mistakes {\n  margin: 20px 0;\n}\n.mistake-tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 8px;\n  justify-content: center;\n}\n.mistake-tag {\n  padding: 6px 12px;\n  background: rgba(190, 73, 73, 0.1);\n  border-radius: 20px;\n  font-size: 0.8rem;\n  color: #c0392b;\n}\n.quiz-actions {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n}\n.btn-outline {\n  padding: 10px 24px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n.btn-primary {\n  padding: 10px 24px;\n  border-radius: 12px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n\n/* Confetti */\n.confetti {\n  position: fixed;\n  inset: 0;\n  pointer-events: none;\n  z-index: 140;\n  overflow: hidden;\n}\n.confetti-piece {\n  position: absolute;\n  top: -10px;\n  width: 8px;\n  height: 12px;\n  border-radius: 3px;\n  opacity: 0.9;\n  animation: confetti-fall 1.35s ease-in forwards;\n}\n\n/* Banner */\n.banner {\n  position: fixed;\n  top: 14px;\n  left: 50%;\n  transform: translateX(-50%);\n  z-index: 120;\n  min-width: min(560px, calc(100vw - 24px));\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px 14px;\n  border-radius: 16px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.92);\n  backdrop-filter: blur(10px);\n  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);\n  font-weight: 450;\n  animation: riseSoft 220ms ease-out;\n}\n.banner-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.banner-action {\n  border: 0;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  padding: 9px 12px;\n  font-size: 0.78rem;\n  font-weight: 500;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n}\n.banner-x {\n  width: 36px;\n  height: 36px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n}\n\n/* Animations */\n@keyframes appFade {\n0% {\n    opacity: 0;\n    transform: translateY(4px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes railIn {\n0% {\n    opacity: 0;\n    transform: translateY(-8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes riseSoft {\n0% {\n    opacity: 0;\n    transform: translateY(8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes confetti-fall {\n0% {\n    transform: translateY(-20px) rotate(0deg);\n    opacity: 0;\n}\n10% {\n    opacity: 0.95;\n}\n100% {\n    transform: translateY(110vh) rotate(480deg);\n    opacity: 0;\n}\n}\n\n/* Responsive */\n@media (max-width: 768px) {\n.main {\n    padding: 16px 16px 100px;\n}\n.main.tools-open {\n    padding-right: 16px;\n}\n.tools {\n    left: 0;\n    right: 0;\n    width: 100%;\n}\n.session-rail-stats {\n    grid-template-columns: 1fr 1fr;\n}\n.hero-flow {\n    grid-template-columns: 1fr 1fr;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 8px);\n    justify-content: center;\n}\n.verse-font-controls {\n    gap: 2px;\n    padding: 2px 4px;\n}\n.verse-font-btn {\n    width: 20px;\n    height: 20px;\n}\n.verse-font-size-indicator {\n    min-width: 30px;\n    font-size: 9px;\n}\n}\n@media (max-width: 640px) {\n.quiz-grade-buttons {\n    flex-direction: column;\n}\n.quiz-actions {\n    flex-direction: column;\n}\n.hero-actions,\n  .empty-actions {\n    flex-direction: column;\n}\n.cta {\n    width: 100%;\n}\n}\n\n/* Dark theme overrides */\n[data-theme=\"dark\"] .tools {\n  background: rgba(18, 18, 18, 0.9);\n  border-left-color: rgba(255, 255, 255, 0.08);\n}\n[data-theme=\"dark\"] .sheet-section {\n  border-color: rgba(255, 255, 255, 0.08);\n  background: rgba(30, 30, 40, 0.45);\n}\n[data-theme=\"dark\"] .select,\n[data-theme=\"dark\"] .input {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.55);\n}\n[data-theme=\"dark\"] .switch {\n  border-color: rgba(255, 255, 255, 0.10);\n  background: rgba(30, 30, 40, 0.45);\n}\n[data-theme=\"dark\"] .verse-translation {\n  color: #a0a0b0;\n}\n[data-theme=\"dark\"] .quiz-card {\n  background: rgba(18, 18, 18, 0.92);\n  border-color: rgba(255, 255, 255, 0.10);\n}\n\n/* Sepia theme overrides */\n[data-theme=\"sepia\"] .verse-translation {\n  color: #7a684a;\n}\n\n/* Planner & Analytics UI */\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 9999;\n  backdrop-filter: blur(4px);\n  padding: 20px;\n}\n.modal-content {\n  background: var(--bg-body);\n  border-radius: 20px;\n  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);\n  display: flex;\n  flex-direction: column;\n  max-height: 90vh;\n  overflow: hidden;\n  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n}\n@keyframes modalFadeIn {\nfrom {\n    opacity: 0;\n    transform: translateY(20px) scale(0.95);\n}\nto {\n    opacity: 1;\n    transform: translateY(0) scale(1);\n}\n}\n.modal-header {\n  padding: 20px 24px;\n  border-bottom: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 1.25rem;\n  font-weight: 700;\n}\n.modal-body {\n  padding: 24px;\n  overflow-y: auto;\n}\n.modal-footer {\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--bg-elevated);\n}\n.confirm-modal {\n  max-width: 460px;\n  width: 100%;\n}\n.confirm-copy {\n  color: var(--text-muted);\n  line-height: 1.65;\n}\n.btn-danger {\n  background: #b55041;\n}\n.tools-btn-danger {\n  opacity: 0.82;\n}\n.btn-icon {\n  background: none;\n  border: none;\n  font-size: 1.2rem;\n  color: var(--text-muted);\n  cursor: pointer;\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.btn-icon:hover {\n  background: var(--border);\n  color: var(--text);\n}\n.planner-modal {\n  max-width: 500px;\n  width: 100%;\n}\n.planner-field {\n  margin-bottom: 24px;\n}\n.planner-field label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.planner-select,\n.planner-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.planner-select:focus,\n.planner-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 2px var(--accent-light);\n}\n.verses-per-day-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.quantity-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.quantity-btn:hover:not(:disabled) {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.quantity-btn:disabled {\n  opacity: 0.4;\n  cursor: not-allowed;\n}\n.planner-stats-grid {\n  display: grid;\n  grid-template-columns: repeat(2, 1fr);\n  gap: 12px;\n  margin: 24px 0;\n}\n.planner-stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  transition: all 0.2s;\n}\n.progress-info {\n  display: flex;\n  justify-content: space-between;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.progress-bar-track {\n  height: 6px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-fill {\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.3s ease;\n}\n.modal-footer {\n  display: flex;\n  gap: 12px;\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.btn-secondary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.btn-secondary:hover {\n  background: var(--border);\n}\n.btn-primary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.9rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.btn-primary:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.field-hint {\n  display: block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 6px;\n}\n.pa-lbl {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.analytics-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin-top: 20px;\n}\n.analytics-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.78rem * var(--en-scale, 1));\n  line-height: 1.4;\n}\n.stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 20px;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  transition: transform 0.2s;\n}\n.stat-card:hover {\n  transform: translateY(-2px);\n  border-color: var(--accent);\n}\n.stat-card i {\n  font-size: 1.8rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.stat-value {\n  font-size: 1.5rem;\n  font-weight: 700;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.stat-label {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n}\n.stat-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.72rem * var(--en-scale, 1));\n  line-height: 1.35;\n}\n.mini-trend {\n  position: relative;\n  width: 80px;\n  height: 24px;\n  margin-top: 10px;\n}\n.mini-trend span {\n  position: absolute;\n  width: 8px;\n  border-radius: 999px;\n  background: linear-gradient(180deg, var(--accent), var(--accent-soft));\n  opacity: 0.9;\n}\n\n/* Home Dashboard UI */\n.home-dashboard {\n  max-width: 800px;\n  margin: 40px auto;\n  padding: 0 20px;\n  animation: modalFadeIn 0.4s ease-out;\n}\n.dashboard-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-end;\n  margin-bottom: 40px;\n  flex-wrap: wrap;\n  gap: 20px;\n}\n.welcome-text {\n  max-width: 500px;\n}\n.header-stats {\n  display: flex;\n  gap: 16px;\n  background: var(--surface);\n  padding: 12px 20px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.mini-stat {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.9rem;\n}\n.mini-stat strong {\n  color: var(--text);\n  font-size: 1rem;\n}\n.dashboard-actions {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));\n  gap: 20px;\n  margin-bottom: 40px;\n}\n.continue-session-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 16px 18px;\n  margin-bottom: 18px;\n  border: 1px solid var(--accent-soft);\n  border-radius: 18px;\n  background: linear-gradient(135deg, var(--surface), var(--accent-light));\n  box-shadow: var(--shadow-sm);\n}\n.continue-session-copy {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.continue-session-kicker {\n  font-size: 0.72rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--accent);\n}\n.continue-session-copy small {\n  color: var(--text-muted);\n}\n.continue-session-btn {\n  min-height: 44px;\n  white-space: nowrap;\n}\n.action-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n  display: flex;\n  flex-direction: column;\n  position: relative;\n  overflow: hidden;\n}\n.action-card:hover {\n  transform: translateY(-4px);\n  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);\n  border-color: var(--accent);\n}\n.action-card.primary-action {\n  background: linear-gradient(145deg, var(--accent), var(--accent-dark));\n  color: white;\n  border: none;\n}\n.action-card.primary-action .action-icon {\n  background: rgba(255, 255, 255, 0.2);\n  color: white;\n}\n.action-card.primary-action h3,\n.action-card.primary-action p,\n.action-card.primary-action .action-arrow {\n  color: white;\n}\n.action-icon {\n  width: 48px;\n  height: 48px;\n  background: var(--bg-body);\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.5rem;\n  color: var(--accent);\n  margin-bottom: 20px;\n}\n.action-content h3 {\n  font-size: 1.15rem;\n  margin: 0 0 8px 0;\n  color: var(--text);\n}\n.action-content p {\n  font-size: 0.9rem;\n  color: var(--text-muted);\n  margin: 0;\n  line-height: 1.4;\n}\n.action-arrow {\n  position: absolute;\n  bottom: 24px;\n  right: 24px;\n  font-size: 1.2rem;\n  color: var(--accent);\n  opacity: 0;\n  transform: translateX(-10px);\n  transition: all 0.2s ease;\n}\n.action-card:hover .action-arrow {\n  opacity: 1;\n  transform: translateX(0);\n}\n.dashboard-recent {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n}\n.recent-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.recent-header h3 {\n  margin: 0;\n  font-size: 1.1rem;\n}\n.btn-ghost {\n  background: none;\n  border: none;\n  color: var(--accent);\n  font-weight: 500;\n  cursor: pointer;\n  padding: 6px 12px;\n  border-radius: 8px;\n  transition: background 0.2s;\n}\n.btn-ghost:hover {\n  background: var(--accent-light);\n}\n.recent-stats {\n  display: flex;\n  gap: 32px;\n  flex-wrap: wrap;\n}\n.r-stat {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.r-stat span {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.r-stat strong {\n  font-size: 1.4rem;\n  color: var(--text);\n}\n@media (max-width: 768px) {\n.continue-session-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.continue-session-btn,\n  .btn-primary,\n  .btn-secondary,\n  .tools-btn,\n  .player-btn,\n  .toolbar-chip,\n  .tools-tabs button {\n    min-height: 44px;\n}\n.player-bar {\n    width: calc(100% - 24px);\n    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);\n    padding: 12px 14px;\n}\n.player-main {\n    flex-wrap: wrap;\n    gap: 12px;\n}\n.player-progress-wrap {\n    order: 4;\n    width: 100%;\n}\n.analytics-grid {\n    grid-template-columns: 1fr;\n}\n.modal-content,\n  .confirm-modal,\n  .planner-modal {\n    width: 100%;\n    max-width: 100%;\n    border-radius: 18px;\n}\n.modal-header,\n  .modal-body,\n  .modal-footer {\n    padding-left: 16px;\n    padding-right: 16px;\n}\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
