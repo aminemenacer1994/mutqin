@@ -294,6 +294,11 @@
                   </button>
                 </div>
 
+                <button class="verse-download-btn" @click="downloadVerseAudio(verse)"
+                  :title="`Download ayah ${verse.number} audio`" :disabled="!verse.audio">
+                  <i class="bi bi-download"></i>
+                </button>
+
                 <!-- Fixed Play Button -->
                 <button class="verse-play-btn" @click="playVerse(verse)"
                   :title="activeVerseKey === verse.key && isPlaying ? 'Pause' : 'Play verse'">
@@ -354,8 +359,6 @@
               @click="setModeAndExplain('advanced')"><i class="bi bi-layers"></i> Advanced</button>
             <button :class="{ active: tab === 'analytics', 'active-tab': tab === 'analytics' }"
               @click="tab = 'analytics'"><i class="bi bi-grid-1x2"></i> Stats</button>
-            <button :class="{ active: tab === 'offline', 'active-tab': tab === 'offline' }" @click="tab = 'offline'"><i
-                class="bi bi-arrow-down-square"></i> Offline</button>
           </div>
         </div>
 
@@ -717,52 +720,12 @@
             </div>
           </div>
 
-          <!-- Offline Tab -->
-          <div v-if="tab === 'offline'" class="sheet">
-            <section class="sheet-section">
-              <div class="sheet-header" style="padding: 16px 16px 0;">
-                <h4 style="margin:0; color: var(--accent);">Downloaded Surahs</h4>
-                <p class="st-sub">Access your saved verses without internet</p>
-              </div>
-              <div class="sheet-content" style="display: block; padding: 16px;">
-                <div v-if="!offlineSurahs.length" class="empty-mini">
-                  <i class="bi bi-cloud-slash" style="font-size: 2rem; opacity: 0.3;"></i>
-                  <p style="margin-top: 8px; opacity: 0.6;">No offline surahs yet.</p>
-                  <button class="cta cta-primary" style="margin-top: 12px; width: 100%;" @click="tab = 'beginner'">
-                    Browse surahs
-                  </button>
-                </div>
-                <div v-else class="offline-list">
-                  <div v-for="s in offlineSurahs" :key="s.id" class="offline-item">
-                    <div class="oi-info">
-                      <div class="oi-name">{{ s.surah }}</div>
-                      <div class="oi-meta">Ayahs {{ s.range }} · {{ s.count }} verses</div>
-                      <div class="oi-date">Saved: {{ s.date }}</div>
-                    </div>
-                    <div class="oi-actions">
-                      <button class="oi-btn oi-load" @click="loadOfflineSurah(s)" title="Load">
-                        <i class="bi bi-folder2-open"></i>
-                      </button>
-                      <button class="oi-btn oi-delete" @click="deleteOfflineSurah(s.id)" title="Delete">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="offline-note" v-if="offlineSurahs.length">
-                  <i class="bi bi-info-circle"></i>
-                  <span>Audio requires an internet connection even for saved surahs.</span>
-                </div>
-              </div>
-            </section>
-          </div>
         </div>
 
         <div class="tools-footer">
           <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="resetControls"><i
               class="bi bi-arrow-counterclockwise"></i><span>Reset</span></button>
-          <button class="tools-btn tools-btn-ghost" @click="showTools = false"><i
+          <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="showTools = false"><i
               class="bi bi-x-circle"></i><span>Close</span></button>
         </div>
       </aside>
@@ -1380,14 +1343,6 @@ export default {
       set(val) {
         if (this.currentMode === 'beginner') this.beginner.blurAdjacent = val
         else this.advanced.blurAdjacent = val
-
-        if (!val) {
-          document.querySelectorAll('.verse-card.blurred').forEach(el => {
-            el.classList.remove('blurred')
-          })
-        }
-
-        this.$forceUpdate()
       }
     },
 
@@ -2033,33 +1988,6 @@ export default {
 
         if (!same) this.advanced.chainingConfig = config
         this.order = 'seq'
-
-        if (config.goal === 'memorise') {
-          this.repeatAndLoopAudio = true
-          this.advancedRepeats = Math.max(2, Number(this.advancedRepeats || 2))
-          this.playMode = 'auto'
-          this.delay = Number(this.delay || 1)
-          this.focusMode = true
-          this.blurAdjacent = false
-          return
-        }
-
-        if (config.goal === 'revise') {
-          this.repeatAndLoopAudio = false
-          this.advancedRepeats = 1
-          this.playMode = 'auto'
-          this.delay = 1
-          this.focusMode = false
-          this.blurAdjacent = false
-          return
-        }
-
-        this.repeatAndLoopAudio = false
-        this.advancedRepeats = 1
-        this.playMode = 'manual'
-        this.delay = 0
-        this.focusMode = true
-        this.blurAdjacent = true
       } finally {
         this.applyingChainingDefaults = false
       }
@@ -2764,6 +2692,29 @@ export default {
       this.showBanner('Offline surah removed', 'info', 2000)
     },
 
+    async downloadVerseAudio(verse) {
+      const audioUrl = this.normalizeAudioUrl(verse?.audio || '')
+      if (!audioUrl) {
+        this.showBanner('Audio not available for this ayah', 'info', 2200)
+        return
+      }
+
+      try {
+        const anchor = document.createElement('a')
+        anchor.href = audioUrl
+        anchor.download = `surah-${this.chapterId}-ayah-${verse.number}.mp3`
+        anchor.rel = 'noopener'
+        anchor.target = '_blank'
+        document.body.appendChild(anchor)
+        anchor.click()
+        anchor.remove()
+        this.showBanner(`Downloaded ayah ${verse.number} audio`, 'success', 1800)
+      } catch (error) {
+        console.error('Verse download failed:', error)
+        this.showBanner('Failed to download ayah audio', 'error', 2600)
+      }
+    },
+
     getDisplayArabic(verse) {
       if (!verse || !verse.arabic) return ''
 
@@ -2798,17 +2749,53 @@ export default {
     normalizeTajweedMarkup(text) {
       if (!text) return ''
 
-      let normalized = this.sanitizeHtml(String(text))
+      const tajweedClassMap = {
+        h: 'ham_wasl',
+        s: 'slnt',
+        l: 'slnt',
+        n: 'madda_normal',
+        p: 'madda_permissible',
+        m: 'madda_necessary',
+        q: 'qlq',
+        o: 'madda_obligatory',
+        c: 'ikhf_shfw',
+        f: 'ikhf',
+        w: 'idghm_shfw',
+        i: 'iqlb',
+        a: 'idgh_ghn',
+        u: 'idgh_w_ghn',
+        d: 'idgh_mus',
+        b: 'idgh_mus',
+        g: 'ghn'
+      }
 
-      // Handle AlQuran custom tajweed tags like <tajweed class=ham_wasl>...</tajweed>
+      const source = this.sanitizeHtml(String(text))
+      let normalized = ''
+      let cursor = 0
+      const markerPattern = /\[([a-z]):[0-9]*\[([^\]]+)\]/gi
+      let match
+
+      while ((match = markerPattern.exec(source)) !== null) {
+        normalized += source.slice(cursor, match.index)
+        const ruleCode = String(match[1] || '').toLowerCase()
+        const ruleClass = tajweedClassMap[ruleCode]
+        const content = match[2] || ''
+
+        if (ruleClass) {
+          normalized += `<span class="tajweed-mark tajweed-${ruleClass}">${content}</span>`
+        } else {
+          normalized += content
+        }
+
+        cursor = markerPattern.lastIndex
+      }
+
+      normalized += source.slice(cursor)
       normalized = normalized
         .replace(/<\s*tajweed\b([^>]*)class=['"]?([a-zA-Z0-9_-]+)['"]?([^>]*)>/gi, '<span class="tajweed-mark tajweed-$2">')
         .replace(/<\s*\/\s*tajweed\s*>/gi, '</span>')
 
-      // Fallback for bracket syntax like [ham_wasl:ٱ]
-      normalized = normalized.replace(/\[([a-zA-Z0-9_-]+):([^\]]+)\]/g, '<span class="tajweed-mark tajweed-$1">$2</span>')
-
-      return normalized
+      return normalized.replace(/\[\/?[a-z0-9:_-]+\]?/gi, '')
     },
 
     // Arabic text word splitting and highlighting
@@ -4949,7 +4936,7 @@ html {
 }
 
 .verse-arabic.tajweed-enabled .tajweed-idgh_mus,
-.verse-arabic.tajweed-enabled .tajweed-idgh_shfw,
+.verse-arabic.tajweed-enabled .tajweed-idghm_shfw,
 .verse-arabic.tajweed-enabled .tajweed-ghn + .tajweed-mark {
   color: #2b7bbb;
   background: rgba(43, 123, 187, 0.10);
@@ -4989,6 +4976,32 @@ html {
 
 .verse-play-btn:active {
   transform: scale(0.98);
+}
+
+.verse-download-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: var(--accent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.verse-download-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.verse-download-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .speed-label {
@@ -5897,6 +5910,28 @@ html {
   color: var(--text);
   border-color: var(--accent-soft);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.6));
+}
+
+.tools-btn-primary {
+  color: #fff;
+  border-color: rgba(0, 0, 0, 0.08);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  box-shadow: var(--shadow-sm);
+}
+
+.tools-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.tools-btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.tools-btn-start {
+  flex: 1.6;
 }
 
 /* Hero section */
@@ -7301,12 +7336,11 @@ html {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  backdrop-filter: blur(4px);
   padding: 20px;
 }
 
