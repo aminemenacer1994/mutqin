@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 
@@ -14,6 +16,40 @@ Route::get('/', function () {
 Route::get('/memorisation', function () {
     return view('memorisation');
 })->name('memorisation');
+
+Route::get('/memorisation/audio-download', function (Request $request) {
+    $url = (string) $request->query('url', '');
+    $filename = (string) $request->query('filename', 'ayah.mp3');
+
+    if (!$url) {
+        abort(400, 'Missing audio URL');
+    }
+
+    $parts = parse_url($url);
+    $host = $parts['host'] ?? '';
+    $scheme = $parts['scheme'] ?? '';
+
+    if ($scheme !== 'https' || $host !== 'cdn.islamic.network') {
+        abort(403, 'Unsupported audio host');
+    }
+
+    $safeFilename = preg_replace('/[^A-Za-z0-9._-]/', '-', $filename) ?: 'ayah.mp3';
+    $response = Http::withOptions(['stream' => true])->get($url);
+
+    if (!$response->successful()) {
+        abort($response->status() ?: 502, 'Failed to fetch audio');
+    }
+
+    $stream = $response->toPsrResponse()->getBody();
+
+    return response()->streamDownload(function () use ($stream) {
+        while (!$stream->eof()) {
+            echo $stream->read(8192);
+        }
+    }, $safeFilename, [
+        'Content-Type' => 'audio/mpeg',
+    ]);
+})->name('memorisation.audio-download');
 
 // Protected routes (require authentication)
 Route::middleware(['auth'])->group(function () {

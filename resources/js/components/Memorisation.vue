@@ -149,8 +149,16 @@
           <div class="session-rail-top">
             <div class="session-rail-copy">
               <div class="session-rail-kicker">CURRENT SESSION</div>
-              <div class="session-rail-title">{{ currentChapter.name_simple }}</div>
-              <div class="session-rail-meta">Ayah {{ currentPosition }}/{{ totalVerses }} · {{ progressPercent }}%</div>
+              <div class="session-rail-headline">
+                <div class="session-rail-title">{{ currentChapter.name_simple }}</div>
+                <div class="session-rail-meta">Ayah {{ currentPosition }}/{{ totalVerses }}</div>
+              </div>
+              <div class="session-rail-pills">
+                <span class="session-pill"><strong>{{ sessionTypeInfo.label }}</strong></span>
+                <span class="session-pill"><strong>{{ progressPercent }}%</strong> progress</span>
+                <span class="session-pill"><strong>{{ remainingAyahs }}</strong> left</span>
+                <span class="session-pill"><strong>{{ etaLabel }}</strong></span>
+              </div>
               <div class="session-rail-hint">{{ modeSummary }}</div>
             </div>
             <div class="session-rail-actions">
@@ -179,25 +187,7 @@
             </div>
           </div>
 
-          <div class="session-rail-stats">
-            <div class="rail-stat">
-              <span>SESSION</span>
-              <strong>{{ sessionTypeInfo.label }}</strong>
-            </div>
-            <div class="rail-stat">
-              <span>PROGRESS</span>
-              <strong>{{ progressPercent }}%</strong>
-            </div>
-            <div class="rail-stat">
-              <span>REMAINING</span>
-              <strong>{{ remainingAyahs }}</strong>
-            </div>
-            <div class="rail-stat">
-              <span>ETA</span>
-              <strong>{{ etaLabel }}</strong>
-              <small>{{ etaSubtext }}</small>
-            </div>
-          </div>
+          <div class="session-rail-subnote">{{ etaSubtext }}</div>
 
           <div class="progress-bar progress-bar-wide">
             <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
@@ -2700,11 +2690,11 @@ export default {
       }
 
       try {
+        const filename = `surah-${this.chapterId}-ayah-${verse.number}.mp3`
+        const downloadUrl = `/memorisation/audio-download?url=${encodeURIComponent(audioUrl)}&filename=${encodeURIComponent(filename)}`
         const anchor = document.createElement('a')
-        anchor.href = audioUrl
-        anchor.download = `surah-${this.chapterId}-ayah-${verse.number}.mp3`
-        anchor.rel = 'noopener'
-        anchor.target = '_blank'
+        anchor.href = downloadUrl
+        anchor.download = filename
         document.body.appendChild(anchor)
         anchor.click()
         anchor.remove()
@@ -2749,53 +2739,45 @@ export default {
     normalizeTajweedMarkup(text) {
       if (!text) return ''
 
-      const tajweedClassMap = {
-        h: 'ham_wasl',
-        s: 'slnt',
-        l: 'slnt',
-        n: 'madda_normal',
-        p: 'madda_permissible',
-        m: 'madda_necessary',
-        q: 'qlq',
-        o: 'madda_obligatory',
-        c: 'ikhf_shfw',
-        f: 'ikhf',
-        w: 'idghm_shfw',
-        i: 'iqlb',
-        a: 'idgh_ghn',
-        u: 'idgh_w_ghn',
-        d: 'idgh_mus',
-        b: 'idgh_mus',
-        g: 'ghn'
+      const markerMap = {
+        '[h': 'ham_wasl',
+        '[s': 'slnt',
+        '[l': 'slnt',
+        '[n': 'madda_normal',
+        '[p': 'madda_permissible',
+        '[m': 'madda_necessary',
+        '[q': 'qlq',
+        '[o': 'madda_obligatory',
+        '[c': 'ikhf_shfw',
+        '[f': 'ikhf',
+        '[w': 'idghm_shfw',
+        '[i': 'iqlb',
+        '[a': 'idgh_ghn',
+        '[u': 'idgh_w_ghn',
+        '[d': 'idgh_mus',
+        '[b': 'idgh_mus',
+        '[g': 'ghn'
       }
 
-      const source = this.sanitizeHtml(String(text))
-      let normalized = ''
-      let cursor = 0
-      const markerPattern = /\[([a-z]):[0-9]*\[([^\]]+)\]/gi
-      let match
-
-      while ((match = markerPattern.exec(source)) !== null) {
-        normalized += source.slice(cursor, match.index)
-        const ruleCode = String(match[1] || '').toLowerCase()
-        const ruleClass = tajweedClassMap[ruleCode]
-        const content = match[2] || ''
-
-        if (ruleClass) {
-          normalized += `<span class="tajweed-mark tajweed-${ruleClass}">${content}</span>`
-        } else {
-          normalized += content
-        }
-
-        cursor = markerPattern.lastIndex
-      }
-
-      normalized += source.slice(cursor)
-      normalized = normalized
-        .replace(/<\s*tajweed\b([^>]*)class=['"]?([a-zA-Z0-9_-]+)['"]?([^>]*)>/gi, '<span class="tajweed-mark tajweed-$2">')
+      let normalized = this.sanitizeHtml(String(text))
+        .replace(/<\s*tajweed\b([^>]*)class=['"]?([a-zA-Z0-9_-]+)['"]?([^>]*)>/gi, '<span class="tajweed-mark tajweed-$2"$1$3>')
         .replace(/<\s*\/\s*tajweed\s*>/gi, '</span>')
 
-      return normalized.replace(/\[\/?[a-z0-9:_-]+\]?/gi, '')
+      Object.entries(markerMap).forEach(([marker, className]) => {
+        const escapedMarker = marker.replace('[', '\\[')
+        normalized = normalized.replace(new RegExp(escapedMarker, 'g'), `<span class="tajweed-mark tajweed-${className}" data-tajweed="`)
+      })
+
+      normalized = normalized
+        .replace(/\[/g, '">')
+        .replace(/\]/g, '</span>')
+        .replace(/data-tajweed="([^"]*)">/g, (fullMatch, meta) => {
+          const cleanMeta = String(meta || '').replace(/"/g, '&quot;')
+          return `data-tajweed="${cleanMeta}">`
+        })
+        .replace(/<\/span><\/span>/g, '</span>')
+
+      return normalized
     },
 
     // Arabic text word splitting and highlighting
@@ -4330,7 +4312,7 @@ html {
   background: var(--surface);
   border-radius: 20px;
   margin-bottom: 20px;
-  padding: 16px 20px;
+  padding: 14px 18px 16px;
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
 }
@@ -4346,12 +4328,45 @@ html {
 
 .session-rail-copy {
   flex: 1;
+  min-width: 0;
+}
+
+.session-rail-headline {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.session-rail-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.session-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.73rem;
+  white-space: nowrap;
+}
+
+.session-pill strong {
+  color: var(--text);
+  font-weight: 700;
 }
 
 .session-rail-hint {
-  margin-top: 4px;
+  margin-top: 8px;
   color: var(--text-muted);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
 }
 
 .session-rail-kicker {
@@ -4412,39 +4427,9 @@ html {
   transform: translateY(-1px);
 }
 
-.session-rail-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin: 16px 0;
-}
-
-.rail-stat {
-  background: var(--accent-light);
-  padding: 10px 12px;
-  border-radius: 14px;
-  text-align: center;
-}
-
-.rail-stat span {
-  display: block;
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-muted);
-  margin-bottom: 4px;
-}
-
-.rail-stat strong {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.rail-stat small {
-  display: block;
-  margin-top: 4px;
-  font-size: 0.68rem;
+.session-rail-subnote {
+  margin-top: 10px;
+  font-size: 0.72rem;
   color: var(--text-muted);
 }
 
@@ -4482,7 +4467,7 @@ html {
 }
 
 .progress-bar-wide {
-  margin-top: 12px;
+  margin-top: 10px;
   height: 6px;
   position: relative;
   overflow: visible;
@@ -4506,16 +4491,13 @@ html {
 
   .session-rail-actions {
     justify-content: stretch;
+    width: 100%;
+    flex-wrap: wrap;
   }
 
   .rail-btn {
     flex: 1;
     justify-content: center;
-  }
-
-  .session-rail-stats {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
   }
 }
 
@@ -4930,13 +4912,15 @@ html {
 .verse-arabic.tajweed-enabled .tajweed-madda_normal,
 .verse-arabic.tajweed-enabled .tajweed-madda_permissible,
 .verse-arabic.tajweed-enabled .tajweed-madda_necessary,
-.verse-arabic.tajweed-enabled .tajweed-madda_obligatory {
+.verse-arabic.tajweed-enabled .tajweed-madda_obligatory,
+.verse-arabic.tajweed-enabled .tajweed-madda_pbligatory {
   color: #d55245;
   background: rgba(213, 82, 69, 0.10);
 }
 
 .verse-arabic.tajweed-enabled .tajweed-idgh_mus,
 .verse-arabic.tajweed-enabled .tajweed-idghm_shfw,
+.verse-arabic.tajweed-enabled .tajweed-idgh_shfw,
 .verse-arabic.tajweed-enabled .tajweed-ghn + .tajweed-mark {
   color: #2b7bbb;
   background: rgba(43, 123, 187, 0.10);
@@ -6210,10 +6194,8 @@ html {
 }
 
 .player-bar.collapsed {
-  transform: translateX(-50%) translateY(54px);
-  opacity: 0.92;
-  padding-top: 8px;
-  padding-bottom: 8px;
+  transform: translateX(-50%);
+  opacity: 0.98;
 }
 
 .player-main {
@@ -7906,6 +7888,10 @@ html {
     width: calc(100% - 24px);
     bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
     padding: 12px 14px;
+  }
+
+  .player-bar.collapsed {
+    transform: translateX(-50%);
   }
 
   .player-main {
