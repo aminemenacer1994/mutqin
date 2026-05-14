@@ -17,11 +17,16 @@
             <div class="continue-session-copy">
               <span class="continue-session-kicker">Continue where you left off</span>
               <strong>{{ continueSessionLabel }}</strong>
-              <small>Your ayah, queue position, settings, and player state are ready to restore.</small>
+              <small>{{ continueSessionMeta }}</small>
             </div>
-            <button class="cta cta-primary continue-session-btn" @click="continueLastSession">
-              <i class="bi bi-play-fill"></i> Continue Session
-            </button>
+            <div class="continue-session-actions">
+              <button class="cta cta-primary continue-session-btn" @click="continueLastSession">
+                <i class="bi bi-play-fill"></i> Continue Session
+              </button>
+              <button class="cta cta-ghost continue-session-dismiss" @click="confirmDiscardContinueSession">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
           </div>
 
           <div class="streak-motivation" v-if="analytics.currentStreak > 0">
@@ -44,6 +49,15 @@
           </div>
 
           <div class="dashboard-actions">
+            <div v-if="hasContinueSession" class="action-card resume-action" @click="continueLastSession">
+              <div class="action-icon"><i class="bi bi-arrow-clockwise"></i></div>
+              <div class="action-content">
+                <h3>Resume Session</h3>
+                <p>{{ continueSessionLabel }}</p>
+              </div>
+              <i class="bi bi-play-fill action-arrow"></i>
+            </div>
+
             <div class="action-card primary-action" @click="showPlannerModal = true">
               <div class="action-icon"><i class="bi bi-magic"></i></div>
               <div class="action-content">
@@ -148,20 +162,24 @@
         <div class="session-rail" v-if="currentChapter && hasVerses">
           <div class="session-rail-top">
             <div class="session-rail-copy">
-              <div class="session-rail-kicker">CURRENT SESSION</div>
               <div class="session-rail-headline">
                 <div class="session-rail-title">{{ currentChapter.name_simple }}</div>
                 <div class="session-rail-meta">Ayah {{ currentPosition }}/{{ totalVerses }}</div>
               </div>
               <div class="session-rail-pills">
-                <span class="session-pill"><strong>{{ sessionTypeInfo.label }}</strong></span>
                 <span class="session-pill"><strong>{{ progressPercent }}%</strong> progress</span>
                 <span class="session-pill"><strong>{{ remainingAyahs }}</strong> left</span>
                 <span class="session-pill"><strong>{{ etaLabel }}</strong></span>
+                <span class="session-pill"><strong>{{ currentMode === 'advanced' ? 'Advanced' : 'Beginner' }}</strong></span>
               </div>
-              <div class="session-rail-hint">{{ modeSummary }}</div>
             </div>
             <div class="session-rail-actions">
+              <button v-if="hasContinueSession && continueSessionPayload && continueSessionPayload.activeVerseKey !== activeVerseKey"
+                class="rail-btn rail-btn-resume" @click="continueLastSession" title="Resume saved session">
+                <i class="bi bi-arrow-clockwise"></i>
+                <span>Resume</span>
+              </button>
+
               <!-- MODE BUTTON - Added to left side -->
               <button class="rail-btn mode-btn" @click="openModeSettings" title="Change Mode">
                 <i class="bi bi-layers"></i>
@@ -600,19 +618,19 @@
                   </div>
                   <div class="field checkbox">
                     <label class="switch">
-                      <input type="checkbox" v-model="focusMode">
+                      <input type="checkbox" v-model="focusMode" :disabled="blurAdjacent">
                       <span class="switch-ui"></span>
                       <span class="switch-text">Focus mode (dim other verses)</span>
                     </label>
-                    <small class="field-hint">Reduce distraction by dimming non-active verses</small>
+                    <small class="field-hint">Reduce distraction by dimming non-active verses. Disabled while blur recall is active.</small>
                   </div>
                   <div class="field checkbox">
                     <label class="switch">
-                      <input type="checkbox" v-model="blurAdjacent">
+                      <input type="checkbox" v-model="blurAdjacent" :disabled="focusMode">
                       <span class="switch-ui"></span>
                       <span class="switch-text">Blur non-active verses (active recall)</span>
                     </label>
-                    <small class="field-hint">Test your memory by hiding non-active verses</small>
+                    <small class="field-hint">Test your memory by hiding non-active verses. Disabled while focus mode is active.</small>
                   </div>
                 </div>
               </div>
@@ -660,6 +678,9 @@
               </div>
             </section>
 
+            <button class="start-btn" @click="startSession" :disabled="!canStartSession">
+              <i class="bi bi-play-fill"></i> Start memorising
+            </button>
           </div>
 
           <!-- Analytics Tab -->
@@ -1246,6 +1267,14 @@ export default {
     hasVerses() {
       return this.currentConfig.verses?.length > 0
     },
+    continueSessionMeta() {
+      const payload = this.continueSessionPayload
+      if (!payload) return 'Your ayah, queue position, settings, and player state are ready to restore.'
+      const ayah = payload.activeVerseKey ? String(payload.activeVerseKey).split(':')[1] : null
+      const minutesAgo = Math.max(0, Math.round((Date.now() - Number(payload.timestamp || 0)) / 60000))
+      const timeLabel = minutesAgo < 1 ? 'saved just now' : `saved ${minutesAgo} min ago`
+      return `Resume on ayah ${ayah || payload.config?.rangeStart || 1} with your player state intact, ${timeLabel}.`
+    },
 
     hasSelectedSurah() {
       const chapterId = this.currentConfig.chapterId
@@ -1528,6 +1557,21 @@ export default {
       return this.currentMode === 'beginner'
         ? 'Sequential flow, focus off, repetition 3x.'
         : 'Sequential flow, focus optional, repetition optional.'
+    },
+
+    currentSessionExplanation() {
+      const repeatCount = this.currentMode === 'beginner'
+        ? Number(this.beginnerRepeats || 1)
+        : (this.repeatAndLoopAudio ? Number(this.advancedRepeats || 1) : 1)
+
+      const practiceMode = this.blurAdjacent
+        ? 'blur recall'
+        : (this.focusMode ? 'focus mode' : 'open reading')
+
+      const repeatLabel = repeatCount === 1 ? '1 repeat' : `${repeatCount} repeats`
+      const modeLabel = this.currentMode === 'advanced' ? 'Advanced' : 'Beginner'
+
+      return `${modeLabel} session in sequential order, ${repeatLabel} per ayah, ${practiceMode}.`
     },
 
     chainingStep() {
@@ -2257,6 +2301,27 @@ export default {
       if (action === 'reset-session') this.performResetControls()
       if (action === 'switch-mode') this.performToggleMode()
       if (action === 'delete-offline' && this.pendingDeleteId) this.performDeleteOffline()
+      if (action === 'discard-continue') this.clearContinueSession()
+    },
+
+    confirmDiscardContinueSession() {
+      this.openConfirmModal({
+        title: 'Discard saved session?',
+        message: 'This removes the current continue-where-you-left-off snapshot from this device.',
+        confirmLabel: 'Discard',
+        tone: 'danger',
+        action: 'discard-continue'
+      })
+    },
+
+    clearContinueSession() {
+      this.hasContinueSession = false
+      this.continueSessionPayload = null
+      this.continueSessionLabel = ''
+      try {
+        localStorage.removeItem('telawa.continueSession')
+      } catch (e) { console.error(e) }
+      this.showBanner('Saved session dismissed', 'info', 1800)
     },
 
     renderMiniTrend(values = []) {
@@ -4275,6 +4340,17 @@ export default {
   color: white;
 }
 
+.rail-btn-resume {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--accent);
+  border: 1px solid var(--accent-soft);
+}
+
+.rail-btn-resume:hover {
+  background: var(--accent-light);
+  transform: translateY(-1px);
+}
+
 .rail-btn-primary {
   background: var(--accent);
   color: white;
@@ -4312,7 +4388,7 @@ html {
   background: var(--surface);
   border-radius: 20px;
   margin-bottom: 20px;
-  padding: 14px 18px 16px;
+  padding: 12px 16px 14px;
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
 }
@@ -4321,7 +4397,7 @@ html {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -4341,32 +4417,26 @@ html {
 .session-rail-pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 6px;
+  margin-top: 6px;
 }
 
 .session-pill {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 10px;
+  padding: 5px 9px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid var(--border);
   color: var(--text-muted);
-  font-size: 0.73rem;
+  font-size: 0.71rem;
   white-space: nowrap;
 }
 
 .session-pill strong {
   color: var(--text);
   font-weight: 700;
-}
-
-.session-rail-hint {
-  margin-top: 8px;
-  color: var(--text-muted);
-  font-size: 0.75rem;
 }
 
 .session-rail-kicker {
@@ -4377,13 +4447,13 @@ html {
 }
 
 .session-rail-title {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text);
 }
 
 .session-rail-meta {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   margin-top: 2px;
 }
@@ -7708,12 +7778,25 @@ html {
   border-radius: 18px;
   background: linear-gradient(135deg, var(--surface), var(--accent-light));
   box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.continue-session-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent);
 }
 
 .continue-session-copy {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.continue-session-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .continue-session-kicker {
@@ -7730,6 +7813,26 @@ html {
 .continue-session-btn {
   min-height: 44px;
   white-space: nowrap;
+}
+
+.continue-session-dismiss {
+  min-width: 44px;
+  padding-inline: 0;
+  justify-content: center;
+}
+
+.resume-action {
+  background: linear-gradient(145deg, rgba(154, 103, 56, 0.12), rgba(255, 255, 255, 0.94));
+  border-color: var(--accent-soft);
+}
+
+.resume-action .action-icon {
+  background: rgba(154, 103, 56, 0.15);
+  color: var(--accent);
+}
+
+.resume-action .action-arrow {
+  color: var(--accent);
 }
 
 .action-card {
