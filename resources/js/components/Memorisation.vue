@@ -60,54 +60,6 @@
 	          </div>
 	        </section>
 
-        <!-- Onboarding Welcome Section - Shows only for new users -->
-        <div class="onboarding-welcome" v-if="showOnboarding">
-          <div class="onboarding-card">
-            <div class="onboarding-topline">Start here</div>
-            <div class="onboarding-head">
-              <div>
-                <h3>Choose your first session</h3>
-                <p>Pick a path and start immediately.</p>
-              </div>
-              <button class="cta-secondary onboarding-dismiss" @click="onboardingDismissed = true" aria-label="Dismiss onboarding">
-                <i class="bi bi-x"></i>
-              </button>
-            </div>
-
-            <div class="onboarding-choice-grid">
-              <button class="onboarding-choice onboarding-choice-primary" @click="showPlannerModal = true">
-                <span class="onboarding-choice-icon"><i class="bi bi-magic"></i></span>
-                <span class="onboarding-choice-copy">
-                  <strong>Quick Plan</strong>
-                  <small>Build a schedule in seconds</small>
-                </span>
-              </button>
-
-              <button class="onboarding-choice" @click="startWithFatiha">
-                <span class="onboarding-choice-icon"><i class="bi bi-play-circle-fill"></i></span>
-                <span class="onboarding-choice-copy">
-                  <strong>Try Demo</strong>
-                  <small>Start with Al-Fatiha</small>
-                </span>
-              </button>
-
-              <button class="onboarding-choice" @click="openSetup">
-                <span class="onboarding-choice-icon"><i class="bi bi-sliders"></i></span>
-                <span class="onboarding-choice-copy">
-                  <strong>Custom Setup</strong>
-                  <small>Choose surah, range, and pace</small>
-                </span>
-              </button>
-            </div>
-
-            <div class="onboarding-tips">
-              <div class="tip"><i class="bi bi-ear"></i> Listen</div>
-              <div class="tip"><i class="bi bi-arrow-repeat"></i> Repeat</div>
-              <div class="tip"><i class="bi bi-check2-circle"></i> Track progress</div>
-            </div>
-          </div>
-        </div>
-
         <!-- Updated Session Rail -->
         <div class="session-rail" v-if="currentChapter && hasVerses">
           <div class="session-rail-top">
@@ -137,15 +89,15 @@
                 <i class="bi bi-chevron-down"></i>
               </button>
 
-              <!-- PLAN BUTTON -->
-              <button class="rail-btn rail-btn-ghost" @click="showPlannerModal = true">
-                <i class="bi bi-calendar-check"></i><span>Plan</span>
-              </button>
+	              <!-- PLAN BUTTON (hidden) -->
+	              <button v-if="false" class="rail-btn rail-btn-ghost" @click="showPlannerModal = true" :disabled="!appReady">
+	                <i class="bi bi-calendar-check"></i><span>Plan</span>
+	              </button>
 
-              <!-- STATS BUTTON -->
-              <button class="rail-btn rail-btn-ghost" @click="tab = 'analytics'; showTools = true">
-                <i class="bi bi-grid-1x2"></i><span>Stats</span>
-              </button>
+	              <!-- STATS BUTTON -->
+	              <button class="rail-btn rail-btn-ghost" @click="tab = 'analytics'; showTools = true" :disabled="!appReady">
+	                <i class="bi bi-grid-1x2"></i><span>Stats</span>
+	              </button>
 
               <!-- START SESSION BUTTON -->
               <button class="rail-btn rail-btn-primary" @click="handlePrimaryAction" :disabled="!isPlaying && !canStartSession">
@@ -287,7 +239,8 @@
             </div>
 
             <!-- Words - shows only if showWordByWord is true AND words array has items -->
-            <div v-if="showWordByWord && verse.words && verse.words.length" class="verse-words">
+            <div v-if="showWordByWord && verse.words && verse.words.length" class="verse-words"
+              @scroll="onVerseWordsScroll(verse.key, $event)">
               <div v-for="(word, wi) in verse.words" :key="wi" class="word-item">
                 <span class="word-arabic" dir="rtl">{{ word.ar }}</span>
                 <span class="word-meaning">{{ word.en }}</span>
@@ -315,12 +268,12 @@
               @click="setModeAndExplain('beginner')"><i class="bi bi-layers"></i> Beginner</button>
             <button :class="{ active: tab === 'advanced', 'active-tab': tab === 'advanced' }"
               @click="setModeAndExplain('advanced')"><i class="bi bi-layers"></i> Advanced</button>
-            <button :class="{ active: tab === 'analytics', 'active-tab': tab === 'analytics' }"
+            <button v-if="isLoggedIn" :class="{ active: tab === 'analytics', 'active-tab': tab === 'analytics' }"
               @click="tab = 'analytics'"><i class="bi bi-grid-1x2"></i> Stats</button>
           </div>
         </div>
 
-          <div class="tools-body">
+          <div class="tools-body compact">
           <!-- Beginner Tab - 4 Consistent Sections -->
           <div v-if="tab === 'beginner'" class="sheet">
             <!-- Section 1: What to Memorise -->
@@ -330,7 +283,7 @@
                   <span class="st-ico"><i class="bi bi-book"></i></span>
                   <span class="st-txt">
                     <span class="st-title">What to memorise</span>
-                    <span class="st-sub">Choose surah and verses</span>
+                    <span class="st-sub">Surah and verses</span>
                   </span>
                 </span>
                 <span class="st-chev" :class="{ open: sectionOpen.beginner_setup }"><i
@@ -375,6 +328,13 @@
               <div class="sheet-content" v-show="sectionOpen.beginner_audio">
                 <div class="field-stack">
                   <div class="field">
+                    <label>Repetitions</label>
+                    <select v-model.number="beginnerRepeats" class="select">
+                      <option v-for="n in repeatOptions" :key="'mastery_' + n" :value="n">{{ n }}x</option>
+                    </select>
+                    <small class="field-hint">Repeat each ayah {{ beginnerRepeats }} times.</small>
+                  </div>
+                  <div class="field">
                     <label>Reciter</label>
                     <select v-model="reciterId" @change="refreshVerses" class="select">
                       <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
@@ -391,7 +351,7 @@
                     </div>
                     <small class="field-hint">Adjust recitation speed</small>
                   </div>
-                  <div class="field">
+                  <div v-if="false" class="field">
                     <label>Auto-advance</label>
                     <div class="radio-group radio-group-tight">
                       <label class="radio"><input type="radio" value="auto" v-model="playMode"> Yes</label>
@@ -403,104 +363,84 @@
               </div>
             </section>
 
-            <!-- Section 4: Saved Sessions -->
-            <section class="sheet-section" v-if="isLoggedIn">
-              <button class="sheet-toggle" @click="toggleSection('beginner_saved')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-save"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Saved sessions</span>
-                    <span class="st-sub">Save, load, delete</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.beginner_saved }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.beginner_saved">
-                <div class="field-stack">
-                  <div class="field">
-                    <label>Your saved sessions</label>
-                    <select v-model="selectedSessionId" class="select">
-                      <option value="">-- Select a session --</option>
-                      <option v-for="s in savedSessions" :key="s.id" :value="s.id">{{ s.name }}</option>
-                    </select>
-                    <small class="field-hint">Load previously saved sessions</small>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <!-- Login message for non-logged users -->
-            <section class="sheet-section" v-else>
-              <div class="sheet-content">
-                <div class="field-stack">
-                  <div class="field">
-                    <div class="pill" style="text-align: center; padding: 16px;">
-                      <i class="bi bi-person"></i>
-                      <span>Login to save and load sessions</span>
-                    </div>
-                    <small class="field-hint">Create an account to save your progress</small>
-                  </div>
-                </div>
-              </div>
-            </section>
+            <!-- Beginner: saved sessions hidden -->
+            <section v-if="false" class="sheet-section"></section>
 
             <button class="start-btn" @click="startSession" :disabled="!canStartSession">
               <i class="bi bi-play-fill"></i> Start memorising
             </button>
           </div>
 
-          <!-- Advanced Tab - without chaining wizard UI -->
-          <div v-if="tab === 'advanced'" class="sheet">
-            <!-- Section 1: What to Memorise -->
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-book"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">What to memorise</span>
-                    <span class="st-sub">Choose surah and verses</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.advanced_setup }"><i class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.advanced_setup">
-                <div class="field-stack">
-                  <div class="field">
-                    <label>Surah</label>
-                    <select :value="chapterId" @change="onChapterChange" class="select">
-                      <option :value="0">Choose a surah...</option>
+	          <!-- Advanced Tab - without chaining wizard UI -->
+	          <div v-if="tab === 'advanced'" class="sheet">
+	            <section v-if="false" class="sheet-section chaining-simple-shell">
+	              <div class="sheet-content">
+	                <div class="chaining-simple-summary">
+	                  <div class="chaining-simple-head">
+	                    <div>
+	                      <span class="chaining-simple-kicker">Advanced chaining</span>
+	                      <h3>{{ chainingGoalLabel }} flow</h3>
+	                      <p class="field-hint">{{ chainingGoalHint }}</p>
+	                    </div>
+	                    <span class="chaining-simple-badge">{{ chainingPracticeLabel }}</span>
+	                  </div>
+	                  <div class="chaining-simple-pills">
+	                    <span class="chaining-pill">{{ activeChapterName }}</span>
+	                    <span class="chaining-pill">Ayahs {{ rangeStart }}-{{ rangeEnd }}</span>
+	                    <span class="chaining-pill">{{ repeatAndLoopAudio ? `${advancedRepeats}x repeats` : '1x pass' }}</span>
+	                    <span class="chaining-pill">{{ playMode === 'auto' ? `Auto + ${delay}s gap` : 'Manual advance' }}</span>
+	                  </div>
+	                </div>
+	              </div>
+	            </section>
+
+	            <section class="sheet-section">
+	              <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
+	                <span class="st-left">
+	                  <span class="st-ico"><i class="bi bi-diagram-3"></i></span>
+	                  <span class="st-txt">
+	                    <span class="st-title">What to memorise</span>
+	                    <span class="st-sub">Surah and verses</span>
+	                  </span>
+	                </span>
+	                <span class="st-chev" :class="{ open: sectionOpen.advanced_setup }"><i class="bi bi-chevron-down"></i></span>
+	              </button>
+	              <div class="sheet-content" v-show="sectionOpen.advanced_setup">
+	                <div class="field-stack">
+	                  <div class="field">
+	                    <label>Surah</label>
+	                    <select :value="chapterId" @change="onChapterChange" class="select">
+	                      <option :value="0">Choose a surah...</option>
                       <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.id }}. {{ c.name_simple }}</option>
                     </select>
                     <small class="field-hint">Select the surah you want to memorise</small>
-                  </div>
-                  <div class="field">
-                    <label>Verses</label>
-                    <div class="range range-single">
+	                  </div>
+	                  <div class="field">
+	                    <label>Verses</label>
+	                    <div class="range range-single">
                       <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
                       <span>to</span>
                       <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
-                    </div>
-                    <small class="field-hint">Choose a range of verses to focus on</small>
-                  </div>
-                </div>
-              </div>
-            </section>
+	                    </div>
+	                    <small class="field-hint">Choose a range of verses to focus on</small>
+	                  </div>
+	                </div>
+	              </div>
+	            </section>
 
-            <!-- Section 2: Audio Settings -->
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('advanced_playback')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-mic"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Audio settings</span>
-                    <span class="st-sub">Reciter and repetition</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.advanced_playback }"><i class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.advanced_playback">
-                <div class="field-stack">
+	            <section class="sheet-section">
+	              <button class="sheet-toggle" @click="toggleSection('advanced_playback')" type="button">
+	                <span class="st-left">
+	                  <span class="st-ico"><i class="bi bi-mic"></i></span>
+	                  <span class="st-txt">
+	                    <span class="st-title">Playback and recall</span>
+	                    <span class="st-sub">Reciter, repeats, and practice mode</span>
+	                  </span>
+	                </span>
+	                <span class="st-chev" :class="{ open: sectionOpen.advanced_playback }"><i class="bi bi-chevron-down"></i></span>
+	              </button>
+	              <div class="sheet-content" v-show="sectionOpen.advanced_playback">
+	                <div class="field-stack">
                   <div class="field">
                     <label>Reciter</label>
                     <select v-model="reciterId" @change="refreshVerses" class="select">
@@ -508,83 +448,71 @@
                     </select>
                     <small class="field-hint">Choose your preferred Quran reciter</small>
                   </div>
-                  <div class="field">
-                    <label>Speed</label>
-                    <div class="radio-group radio-group-tight">
+	                  <div class="field">
+	                    <label>Speed</label>
+	                    <div class="radio-group radio-group-tight">
                       <label class="radio"><input type="radio" value="0.75" v-model="speed"> 0.75x</label>
                       <label class="radio"><input type="radio" value="1" v-model="speed"> 1x</label>
                       <label class="radio"><input type="radio" value="1.25" v-model="speed"> 1.25x</label>
                       <label class="radio"><input type="radio" value="1.5" v-model="speed"> 1.5x</label>
-                    </div>
-                    <small class="field-hint">Adjust recitation speed</small>
-                  </div>
-                  <div class="field checkbox">
-                    <label class="switch">
-                      <input type="checkbox" v-model="repeatAndLoopAudio">
-                      <span class="switch-ui"></span>
-                      <span class="switch-text">Loop and repeat each ayah</span>
-                    </label>
-                    <small class="field-hint">When enabled, repeats each ayah several times.</small>
-                  </div>
-                  <div class="field" v-if="repeatAndLoopAudio">
-                    <label>Repeat count</label>
-                    <select v-model="advancedRepeats" class="select">
-                      <option v-for="n in repeatOptions" :key="'adv_rep_' + n" :value="n">{{ n }} {{ n === 1 ? 'time' : 'times' }}</option>
-                    </select>
-                    <small class="field-hint">How many times to repeat each ayah</small>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <!-- Section 3: Practice Mode -->
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('advanced_practice')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-stars"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Practice mode</span>
-                    <span class="st-sub">Focus and recall</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.advanced_practice }"><i class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.advanced_practice">
-                <div class="field-stack">
-                  <div class="field">
-                    <label>Auto-advance</label>
-                    <div class="radio-group radio-group-tight">
+	                    </div>
+	                    <small class="field-hint">Adjust recitation speed</small>
+	                  </div>
+	                  <div class="field">
+	                    <label>Chaining method</label>
+	                    <div class="radio-group radio-group-tight">
+	                      <label class="radio">
+	                        <input type="radio" :value="true" v-model="repeatAndLoopAudio"> On
+	                      </label>
+	                      <label class="radio">
+	                        <input type="radio" :value="false" v-model="repeatAndLoopAudio"> Off
+	                      </label>
+	                    </div>
+	                    <small class="field-hint">Turn chaining on to build the passage through repeated ayah loops. Turn it off for a single pass through the selected range.</small>
+	                  </div>
+	                  <div class="field">
+	                    <label>Repetitions</label>
+	                    <select v-model.number="advancedRepeats" class="select">
+	                      <option v-for="n in repeatOptions" :key="'adv_rep_' + n" :value="n">{{ n }} {{ n === 1 ? 'time' : 'times' }}</option>
+	                    </select>
+	                    <small class="field-hint">Repeat each ayah {{ advancedRepeats }} times.</small>
+	                  </div>
+	                  <div class="field">
+	                    <label>Auto-advance</label>
+	                    <div class="radio-group radio-group-tight">
                       <label class="radio"><input type="radio" value="auto" v-model="playMode"> Yes</label>
                       <label class="radio"><input type="radio" value="manual" v-model="playMode"> No (manual)</label>
-                    </div>
-                    <small class="field-hint">Automatically move to next verse</small>
-                  </div>
-                  <div class="field">
-                    <label>Delay between ayahs</label>
+	                    </div>
+	                    <small class="field-hint">Automatically move to next verse</small>
+	                  </div>
+	                  <div class="field">
+	                    <label>Delay between ayahs</label>
                     <select v-model="delay" class="select">
                       <option v-for="d in delayOptions" :key="'adv_delay_' + d" :value="d">{{ d }}s</option>
-                    </select>
-                    <small class="field-hint">Breathing space between repetitions</small>
-                  </div>
-                  <div class="field checkbox">
-                    <label class="switch">
-                      <input type="checkbox" v-model="focusMode" :disabled="blurAdjacent">
-                      <span class="switch-ui"></span>
-                      <span class="switch-text">Focus mode (dim other verses)</span>
-                    </label>
-                    <small class="field-hint">Reduce distraction by dimming non-active verses. Disabled while blur recall is active.</small>
-                  </div>
-                  <div class="field checkbox">
-                    <label class="switch">
-                      <input type="checkbox" v-model="blurAdjacent" :disabled="focusMode">
-                      <span class="switch-ui"></span>
-                      <span class="switch-text">Blur non-active verses (active recall)</span>
-                    </label>
-                    <small class="field-hint">Test your memory by hiding non-active verses. Disabled while focus mode is active.</small>
-                  </div>
-                </div>
-              </div>
-            </section>
+	                    </select>
+	                    <small class="field-hint">Breathing space between repetitions</small>
+	                  </div>
+	                  <div v-if="false" class="field">
+	                    <label>Recall view</label>
+	                    <div class="chain-goal-grid chain-goal-grid-two">
+	                      <button class="chain-goal-card chain-goal-card-compact" :class="{ active: !focusMode && !blurAdjacent }" type="button" @click="focusMode = false; blurAdjacent = false">
+	                        <strong>Open</strong>
+	                        <span>Show all verses clearly.</span>
+	                      </button>
+	                      <button class="chain-goal-card chain-goal-card-compact" :class="{ active: focusMode }" type="button" @click="focusMode = true; blurAdjacent = false">
+	                        <strong>Focus</strong>
+	                        <span>Dim non-active verses.</span>
+	                      </button>
+	                      <button class="chain-goal-card chain-goal-card-compact" :class="{ active: blurAdjacent }" type="button" @click="blurAdjacent = true; focusMode = false">
+	                        <strong>Recall</strong>
+	                        <span>Blur non-active verses.</span>
+	                      </button>
+	                    </div>
+	                    <small class="field-hint">Choose one clear reading state at a time.</small>
+	                  </div>
+	                </div>
+	              </div>
+	            </section>
 
             <!-- Section 4: Saved Sessions -->
             <section class="sheet-section" v-if="isLoggedIn">
@@ -634,7 +562,7 @@
           </div>
 
           <!-- Analytics Tab -->
-          <div v-if="tab === 'analytics'" class="sheet">
+          <div v-if="tab === 'analytics' && isLoggedIn" class="sheet">
             <div class="sheet-section" style="padding: 20px;">
               <h3 style="margin-top:0; font-size: 1.1rem; color: var(--accent);">Your Memorisation Stats</h3>
               <p class="analytics-help">These numbers are device-local summaries. Weekly bars show recent days.</p>
@@ -661,7 +589,10 @@
                 </div>
                 <div class="stat-card">
                   <i class="bi bi-check-circle"></i>
-                  <div class="stat-value">{{ analytics.versesMastered }}</div>
+                  <div class="stat-value">
+                    {{ analytics.versesMastered }}
+                    <span class="stat-delta" v-if="versesMasteredDeltaThisWeek">+{{ versesMasteredDeltaThisWeek }} this week</span>
+                  </div>
                   <div class="stat-label">Mastered</div>
                   <div class="stat-help">Verses you’ve marked as strong and consistent.</div>
                 </div>
@@ -679,6 +610,20 @@
                 </div>
               </div>
             </div>
+          </div>
+          <div v-if="tab === 'analytics' && !isLoggedIn" class="sheet">
+            <section class="sheet-section">
+              <div class="sheet-content">
+                <div class="field-stack">
+                  <div class="field">
+                    <div class="pill" style="text-align: center; padding: 16px;">
+                      <i class="bi bi-person"></i>
+                      <span>Login to view stats</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
 
         </div>
@@ -887,6 +832,14 @@ const SESSION_STORAGE_KEYS = {
 
 const DEFAULT_ALQURAN_RECITER = 'ar.alafasy'
 
+function tokenizeArabicText(text) {
+  const raw = String(text || '').trim()
+  if (!raw) return []
+  // Prefer whitespace tokenization, but keep Arabic + diacritics together.
+  const tokens = raw.split(/\s+/).filter(Boolean)
+  return tokens
+}
+
 function deepClone(value) {
   const rawValue = toRaw(value)
 
@@ -908,9 +861,9 @@ function createBeginnerState() {
     rangeEnd: 7,
     reciterId: DEFAULT_ALQURAN_RECITER,
     speed: 1,
-    delay: 1,
+    delay: 2,
     playMode: 'auto',
-    repeats: 1,
+    repeats: 3,
     order: 'seq',
     focusMode: false,
     blurAdjacent: false,
@@ -930,14 +883,14 @@ function createAdvancedState() {
     rangeEnd: 7,
     reciterId: DEFAULT_ALQURAN_RECITER,
     speed: 1,
-    delay: 1,
+    delay: 2,
     playMode: 'auto',
     repeats: 1,
     order: 'seq',
     focusMode: false,
     blurAdjacent: false,
     repeatAndLoopAudio: false,
-    advancedRepeats: 1,
+    advancedRepeats: 5,
     loadedConfig: null,
     chainingConfig: {
       step: 1,
@@ -1016,14 +969,14 @@ export default {
         minutesPerVerse: 2  // Average time per verse in minutes
       },
       analytics: {
-        totalVersesRead: 124,
-        totalTimeSpent: 86,
-        currentStreak: 5,
-        versesMastered: 12,
-        totalRepetitions: 450,
-        sessionsCompleted: 15,
-        weeklyVerses: [3, 5, 4, 7, 6, 8, 9],
-        weeklyMinutes: [12, 18, 15, 24, 21, 27, 30]
+        totalVersesRead: 0,
+        totalTimeSpent: 0,
+        currentStreak: 0,
+        versesMastered: 0,
+        totalRepetitions: 0,
+        sessionsCompleted: 0,
+        weeklyVerses: [0, 0, 0, 0, 0, 0, 0],
+        weeklyMinutes: [0, 0, 0, 0, 0, 0, 0]
       },
       playerVisible: false,
       playerCollapsed: true,
@@ -1123,12 +1076,9 @@ export default {
       // UI Helpers
       banner: null,
       bannerTimer: null,
-      confettiActive: false,
-      confettiSeed: 0,
-      networkOnline: true,
-      onboardingDismissed: false,
-      onboardingStep: 1,
-      restoredAudioState: null,
+	      networkOnline: true,
+	      restoredAudioState: null,
+      loadVersesTimer: null,
 
       // Word sequence
       wordSequence: null,
@@ -1150,10 +1100,10 @@ export default {
       // Section open state - Expanded for consistency
       sectionOpen: {
         beginner_setup: true,
-        beginner_audio: false,
+        beginner_audio: true,
         beginner_saved: false,
         advanced_setup: true,
-        advanced_playback: false,
+        advanced_playback: true,
         advanced_practice: false,
         advanced_saved: false,
         analytics_overview: true,
@@ -1176,13 +1126,15 @@ export default {
       isAudioLoading: false,
       sessionCompleted: false,
       hybridPendingKey: null,
-      quizSkill: 'recite_text',
-      quizSessionStats: null,
-      quizLastResult: null,
-      quizSummaryActive: false,
-      verseRequestId: 0
-    }
-  },
+	      quizSkill: 'recite_text',
+	      quizSessionStats: null,
+	      quizLastResult: null,
+	      quizSummaryActive: false,
+	      verseRequestId: 0,
+	      verseDataCache: {},
+	      verseScrollMemory: {}
+	    }
+	  },
 
   computed: {
     appStyleVars() {
@@ -1212,6 +1164,10 @@ export default {
       if (this.activeKey) return this.activeKey
       const queued = this.queue?.[this.queueIndex]
       return queued?.verse?.key || queued?.key || null
+    },
+
+    activeVerseRef() {
+      return this.verses.find(v => v.key === this.effectiveActiveVerseKey) || null
     },
 
     sessionConfig() {
@@ -1458,11 +1414,6 @@ export default {
       return !!this.auth?.check
     },
 
-    showOnboarding() {
-      const hasVersesInCurrentMode = this.hasVerses
-      return !this.onboardingDismissed && !this.chapterId && !hasVersesInCurrentMode && !this.quizActive
-    },
-
     sessionTypeInfo() {
       return { key: 'memorisation', label: 'Memorisation', tone: 'memorisation' }
     },
@@ -1552,6 +1503,12 @@ export default {
         test: 'Hide support early and check your recall.'
       }
       return hints[this.chainingConfig.goal] || hints.memorise
+    },
+
+    chainingPracticeLabel() {
+      if (this.blurAdjacent) return 'Recall view'
+      if (this.focusMode) return 'Focus view'
+      return 'Open view'
     },
 
     chainingStepOneReady() {
@@ -1663,14 +1620,6 @@ export default {
       return Math.round((this.quizScore / this.quizQueue.length) * 100)
     },
 
-    onboardingPrimaryLabel() {
-      return 'Begin plan'
-    },
-
-    emptyPrimaryLabel() {
-      return 'Begin plan'
-    },
-
     nextActionDescription() {
       return 'Select a surah and verses to start memorising'
     }
@@ -1689,13 +1638,14 @@ export default {
     this.loadEvents()
     this.loadPlanner()
     this.loadMetrics()
+    this.loadAnalytics()
     this.initAudio()
     this.restoreAudioState()
     this.theme = document.documentElement.getAttribute('data-theme') || this.theme
     this.loadBookmarksPins(),
     this.setupWordClickHandler()
-    this.showFirstTimeTips()
     this.loadContinueSessionPrompt()
+    this.updateMasteredWeekly()
 
 
     if (this.currentMode === 'advanced' && this.advanced.chapterId) {
@@ -1737,7 +1687,11 @@ export default {
     theme: 'persistUiState',
     showTools: 'persistUiState',
     tab: 'persistUiState',
-    chapterId: 'persistUiState',
+    chapterId(val) {
+      this.persistUiState()
+      const id = Number(val || 0)
+      this.currentChapter = id ? (this.chapters.find(c => Number(c.id) === id) || null) : null
+    },
     rangeStart: 'persistUiState',
     rangeEnd: 'persistUiState',
     reciterId: 'persistUiState',
@@ -1749,12 +1703,14 @@ export default {
     focusMode: 'persistUiState',
     showTranslation: 'persistUiState',
     showTransliteration: 'persistUiState',
-    showWordByWord: 'persistUiState',
+    showWordByWord(newVal) {
+      this.persistUiState()
+      if (newVal) this.restoreWordScroll(this.effectiveActiveVerseKey)
+    },
     wordByWordAudioEnabled: 'persistUiState',
     fontScale: 'persistUiState',
     quranFont: 'persistUiState',
     script: 'persistUiState',
-    onboardingDismissed: 'persistUiState',
     activeKey: 'persistSessionState',
     queueIndex: 'persistSessionState',
     playerVisible: 'persistAudioState',
@@ -1766,8 +1722,9 @@ export default {
       this.persistUiState()
     },
 
-    activeVerseKey() {
-      // Logic removed since blurring is now global
+    activeVerseKey(newVal) {
+      this.persistSessionState()
+      if (this.showWordByWord) this.restoreWordScroll(newVal)
     },
 
     beginnerRepeats() {
@@ -1799,13 +1756,15 @@ export default {
     tab(newVal) {
       if (newVal === 'beginner' && this.currentMode !== 'beginner') {
         this.currentMode = 'beginner'
-        if (!this.beginner.verses.length && this.beginner.chapterId) {
-          this.loadVerses()
+        if (this.beginner.chapterId) {
+          if (!this.modeDataMatchesConfig('beginner')) this.loadVerses('beginner')
+          else this.syncActiveVerseState('beginner')
         }
       } else if (newVal === 'advanced' && this.currentMode !== 'advanced') {
         this.currentMode = 'advanced'
-        if (!this.advanced.verses.length && this.advanced.chapterId) {
-          this.loadVerses()
+        if (this.advanced.chapterId) {
+          if (!this.modeDataMatchesConfig('advanced')) this.loadVerses('advanced')
+          else this.syncActiveVerseState('advanced')
         }
       }
       this.persistUiState()
@@ -1818,17 +1777,24 @@ export default {
       this.currentMode = mode
       this.showTools = true
 
-      if (mode === 'beginner') {
-        this.beginnerRepeats = 3
-        this.focusMode = false
-        this.blurAdjacent = false
-      } else {
-        this.repeatAndLoopAudio = true
-        this.advancedRepeats = Math.max(5, Number(this.advancedRepeats || 5))
-        this.blurAdjacent = true
-        this.focusMode = false
+      const store = this.getModeStore(mode)
+      const isFreshMode = !store.chapterId && !store.verses?.length
+
+      if (isFreshMode && mode === 'beginner') {
+        this.beginner.repeats = Math.max(1, Number(this.beginner.repeats || 3))
+        this.beginner.focusMode = false
+        this.beginner.blurAdjacent = false
       }
 
+      if (isFreshMode && mode === 'advanced') {
+        this.advanced.repeatAndLoopAudio = true
+        this.advanced.advancedRepeats = Math.max(5, Number(this.advanced.advancedRepeats || 5))
+        this.advanced.blurAdjacent = true
+        this.advanced.focusMode = false
+      }
+
+      this.applySessionConfig(this.buildSessionConfig(mode))
+      this.syncActiveVerseState(mode)
       this.persistUiState()
     },
     cloneModeState(modeState) {
@@ -1859,6 +1825,76 @@ export default {
       return this.getConfigFingerprint(store.loadedConfig) === this.getConfigFingerprint(targetConfig)
     },
 
+    getVerseCacheKey(mode = this.currentMode, config = null) {
+      const targetConfig = config || this.buildSessionConfig(mode)
+      return `${mode}:${this.getConfigFingerprint(targetConfig)}`
+    },
+
+    getCachedVerses(mode = this.currentMode, config = null) {
+      const key = this.getVerseCacheKey(mode, config)
+      const memoryHit = this.verseDataCache[key]
+      if (memoryHit) return this.cloneModeState(memoryHit)
+      try {
+        const raw = localStorage.getItem(`telawa.verseCache.${key}`)
+        if (!raw) return null
+        const parsed = JSON.parse(raw)
+        const ts = Number(parsed?.ts || 0)
+        if (ts && Date.now() - ts > 6 * 60 * 60 * 1000) return null
+        this.verseDataCache[key] = parsed
+        return this.cloneModeState(parsed)
+      } catch (e) {
+        return null
+      }
+    },
+
+    setCachedVerses(mode = this.currentMode, config = null, payload = null) {
+      if (!payload) return
+      const key = this.getVerseCacheKey(mode, config)
+      const wrapped = { ...payload, ts: Date.now() }
+      this.verseDataCache[key] = this.cloneModeState(wrapped)
+      try {
+        localStorage.setItem(`telawa.verseCache.${key}`, JSON.stringify(wrapped))
+      } catch (e) {}
+    },
+
+    scheduleLoadVerses(mode = this.currentMode) {
+      if (this.loadVersesTimer) clearTimeout(this.loadVersesTimer)
+      this.loadVersesTimer = setTimeout(() => {
+        this.loadVerses(mode)
+      }, 200)
+    },
+
+    setActiveVerse(verseKey, options = {}) {
+      if (!verseKey) return null
+      const mode = options.mode || this.currentMode
+      const store = this.getModeStore(mode)
+      const queue = Array.isArray(store.queue) ? store.queue : []
+      const requestedQueueIndex = Number.isFinite(options.queueIndex) ? Number(options.queueIndex) : null
+
+      store.activeKey = verseKey
+      if (requestedQueueIndex !== null) {
+        store.queueIndex = requestedQueueIndex
+      } else {
+        const foundQueueIndex = queue.findIndex(item => (item?.verse?.key || item?.key) === verseKey)
+        if (foundQueueIndex >= 0) store.queueIndex = foundQueueIndex
+      }
+
+      if (mode === this.currentMode) {
+        this.activeKey = verseKey
+        this.activeVerseKey = verseKey
+        this.queueIndex = store.queueIndex || 0
+      }
+
+      if (options.scroll !== false) {
+        this.$nextTick(() => {
+          const el = document.querySelector(`.verse-card[data-verse-key="${verseKey}"]`)
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        })
+      }
+
+      return verseKey
+    },
+
     syncActiveVerseState(mode = this.currentMode, requestedKey = null) {
       const store = this.getModeStore(mode)
       const verses = Array.isArray(store?.verses) ? store.verses : []
@@ -1886,16 +1922,7 @@ export default {
         resolvedKey = queue[resolvedQueueIndex]?.verse?.key || queue[resolvedQueueIndex]?.key || resolvedKey
       }
 
-      store.activeKey = resolvedKey
-      store.queueIndex = resolvedQueueIndex
-
-      if (mode === this.currentMode) {
-        this.activeKey = resolvedKey
-        this.activeVerseKey = resolvedKey
-        this.queueIndex = resolvedQueueIndex
-      }
-
-      return resolvedKey
+      return this.setActiveVerse(resolvedKey, { mode, queueIndex: resolvedQueueIndex, scroll: false })
     },
 
     buildSessionConfig(mode = this.currentMode) {
@@ -1927,7 +1954,8 @@ export default {
         ? config.reciterId
         : DEFAULT_ALQURAN_RECITER
       this.speed = Number(config.speed || 1)
-      this.delay = Number(config.delay || 1)
+      const parsedDelay = Number(config.delay)
+      this.delay = Number.isFinite(parsedDelay) && parsedDelay >= 0 ? parsedDelay : 2
       this.playMode = config.playMode || 'auto'
       // Spaced-return/chaining UI removed; force sequential order.
       this.order = 'seq'
@@ -2030,7 +2058,7 @@ export default {
       if (this.applyingChainingDefaults) return
       this.applyingChainingDefaults = true
       try {
-        const config = this.normaliseChainingConfig(this.chainingConfig)
+        const config = this.normaliseChainingConfig({ ...this.chainingConfig, goal: 'memorise' })
         const current = this.advanced.chainingConfig || {}
         const same =
           current.step === config.step &&
@@ -2168,12 +2196,7 @@ export default {
 
       const verse = this.verses[nextIndex]
       if (!verse) return
-      this.activeVerseKey = verse.key
-      this.activeKey = verse.key
-      this.$nextTick(() => {
-        const el = document.querySelector(`.verse-card[data-verse-key="${verse.key}"]`)
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      })
+      this.setActiveVerse(verse.key)
     },
     jumpToVerseIndex(index) {
       const collection = this.verses
@@ -2181,12 +2204,7 @@ export default {
       const targetIndex = Math.max(0, Math.min(collection.length - 1, Number(index || 0)))
       const verse = collection[targetIndex]
       if (!verse) return
-      this.activeVerseKey = verse.key
-      this.activeKey = verse.key
-      this.$nextTick(() => {
-        const el = document.querySelector(`.verse-card[data-verse-key="${verse.key}"]`)
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      })
+      this.setActiveVerse(verse.key)
     },
 
     handleWindowScroll() {
@@ -2237,6 +2255,10 @@ export default {
       const payload = this.continueSessionPayload
       if (!payload) return
       this.hasContinueSession = false
+      if (!payload.config?.chapterId) {
+        this.clearContinueSession()
+        return
+      }
       this.currentMode = payload.mode || 'beginner'
       this.tab = payload.tab || this.currentMode
       const target = this.currentMode === 'beginner' ? 'beginner' : 'advanced'
@@ -2261,6 +2283,7 @@ export default {
         isPlaying: !!payload.isPlaying
       }
       this.applyRestoredAudioState()
+      this.persistAllState()
       this.showBanner('Session restored', 'success', 2200)
     },
 
@@ -2273,6 +2296,9 @@ export default {
     applyRestoredAudioState() {
       const state = this.restoredAudioState
       if (!state || !this.audioElement || !state.src) return
+      const activeAudio = this.activeVerseRef?.audio ? this.normalizeAudioUrl(this.activeVerseRef.audio) : ''
+      const restoredAudio = this.normalizeAudioUrl(state.src)
+      if (activeAudio && restoredAudio && activeAudio !== restoredAudio) return
       this.audioElement.src = state.src
       this.audioElement.load()
       this.playerVisible = !!state.playerVisible
@@ -2354,26 +2380,30 @@ export default {
       }).join('')
     },
 
-    // Show first-time user tips
-    showFirstTimeTips() {
-      if (!this.onboardingDismissed && !this.hasVerses) {
-        setTimeout(() => {
-          this.showBanner(
-            '💡 Tip: Start with "Quick Plan" to create a personalized memorization schedule',
-            'info',
-            5000
-          )
-        }, 1000)
-
-        setTimeout(() => {
-          this.showBanner(
-            '📖 Tip: Try the "Quickstart Demo" with Surah Al-Fatiha to see how it works',
-            'info',
-            8000
-          )
-        }, 6000)
+    updateMasteredWeekly() {
+      // Device-local lightweight weekly delta tracker for the "Mastered" metric.
+      const today = new Date()
+      const dayKey = today.toISOString().slice(0, 10)
+      let state = null
+      try { state = JSON.parse(localStorage.getItem('telawa.masteredWeekly') || 'null') } catch { state = null }
+      if (!state || !Array.isArray(state.series) || state.series.length !== 7) {
+        state = { dayKey, lastTotal: Number(this.analytics.versesMastered || 0), series: [0, 0, 0, 0, 0, 0, 0] }
       }
+      if (state.dayKey !== dayKey) {
+        state.series.shift()
+        state.series.push(0)
+        state.dayKey = dayKey
+        state.lastTotal = Number(this.analytics.versesMastered || 0)
+      }
+      const current = Number(this.analytics.versesMastered || 0)
+      const delta = Math.max(0, current - Number(state.lastTotal || 0))
+      if (delta > 0) {
+        state.series[state.series.length - 1] += delta
+        state.lastTotal = current
+      }
+      try { localStorage.setItem('telawa.masteredWeekly', JSON.stringify(state)) } catch {}
     },
+
     setPlaybackSpeed(newSpeed) {
       this.speed = newSpeed
       if (this.audioElement) {
@@ -2696,9 +2726,7 @@ export default {
         localStorage.setItem(catalogKey, JSON.stringify(filtered))
         this.offlineSurahs = filtered
 
-        this.showBanner(`✓ Saved ${this.verses.length} verses from ${surahName} for offline reading!`, 'success', 3000)
-        this.confettiActive = true
-        setTimeout(() => { this.confettiActive = false }, 1200)
+        this.showBanner(`Saved ${this.verses.length} verses from ${surahName} for offline reading.`, 'success', 3000)
       } catch (err) {
         console.error('Download failed:', err)
         this.showBanner('Failed to download verses', 'error', 3000)
@@ -2813,8 +2841,15 @@ export default {
     // Add sanitize method
     sanitizeHtml(html) {
       if (!html) return ''
-      // Remove any script tags
-      return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      let cleaned = String(html)
+      // Remove scripts entirely.
+      cleaned = cleaned.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      // Drop inline handlers/styles.
+      cleaned = cleaned.replace(/\son\w+\s*=\s*(['"]).*?\1/gi, '')
+      cleaned = cleaned.replace(/\sstyle\s*=\s*(['"]).*?\1/gi, '')
+      // Allow only the tags we intentionally render.
+      cleaned = cleaned.replace(/<(?!\/?(?:span|word|br)\b)[^>]*>/gi, '')
+      return cleaned
     },
 
     normalizeTajweedMarkup(text) {
@@ -2841,6 +2876,8 @@ export default {
       }
 
       let normalized = this.sanitizeHtml(String(text))
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
         .replace(/<\s*tajweed\b([^>]*)class=['"]?([a-zA-Z0-9_-]+)['"]?([^>]*)>/gi, '<span class="tajweed-mark tajweed-$2"$1$3>')
         .replace(/<\s*\/\s*tajweed\s*>/gi, '</span>')
 
@@ -2852,11 +2889,13 @@ export default {
       normalized = normalized
         .replace(/\[/g, '">')
         .replace(/\]/g, '</span>')
+        .replace(/<\/?tajweed[^>]*>/gi, '')
         .replace(/data-tajweed="([^"]*)">/g, (fullMatch, meta) => {
           const cleanMeta = String(meta || '').replace(/"/g, '&quot;')
           return `data-tajweed="${cleanMeta}">`
         })
         .replace(/<\/span><\/span>/g, '</span>')
+        .replace(/(?:class=|data-tajweed=)&quot;[^&]*&quot;/g, '')
 
       return normalized
     },
@@ -2873,25 +2912,7 @@ export default {
     splitArabicIntoWords(verse) {
       if (!verse || !verse.arabic) return ''
 
-      // If we have word objects from API, use them
-      if (verse.words && verse.words.length > 0) {
-        let html = ''
-        verse.words.forEach((word, idx) => {
-          const isActive = this.currentHighlightedVerseKey === verse.key && this.currentWordIndex === idx
-          const highlightClass = isActive ? 'highlighted' : ''
-
-          html += `<word class="wbw-word ${highlightClass}" 
-                     data-word-index="${idx}" 
-                     data-verse-key="${verse.key}"
-                     data-word-audio="${word.audio || ''}">
-                ${word.ar}
-              </word> `
-        })
-        return html
-      }
-
-      // Fallback: Split by spaces
-      const words = verse.arabic.split(/\s+/)
+      const words = tokenizeArabicText(verse.arabic)
       let html = ''
       words.forEach((word, idx) => {
         const isActive = this.currentHighlightedVerseKey === verse.key && this.currentWordIndex === idx
@@ -3033,19 +3054,56 @@ export default {
 
     updateWordHighlight(verseKey, activeIndex) {
       this.$nextTick(() => {
-        // Find all word elements in the active verse
-        const words = document.querySelectorAll(`.verse-card[data-verse-key="${verseKey}"] .wbw-word`)
+        const verseCard = document.querySelector(`.verse-card[data-verse-key="${verseKey}"]`)
+        if (!verseCard) return
+        const wordsWrap = verseCard.querySelector('.verse-words')
+        const words = verseCard.querySelectorAll('.wbw-word')
 
         words.forEach((word, idx) => {
           if (idx === activeIndex) {
             word.classList.add('highlighted')
-            // Scroll into view
-            word.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' })
+            if (wordsWrap) {
+              this.verseScrollMemory[verseKey] = {
+                top: wordsWrap.scrollTop,
+                left: wordsWrap.scrollLeft
+              }
+            }
+
+            const rect = word.getBoundingClientRect()
+            const parentRect = wordsWrap?.getBoundingClientRect()
+            const outOfView = parentRect
+              ? rect.left < parentRect.left || rect.right > parentRect.right || rect.top < parentRect.top || rect.bottom > parentRect.bottom
+              : true
+
+            if (outOfView) {
+              word.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+            }
           } else {
             word.classList.remove('highlighted')
           }
         })
       })
+    },
+
+    restoreWordScroll(verseKey) {
+      this.$nextTick(() => {
+        if (!verseKey) return
+        const verseCard = document.querySelector(`.verse-card[data-verse-key="${verseKey}"]`)
+        const wordsWrap = verseCard?.querySelector('.verse-words')
+        const remembered = this.verseScrollMemory[verseKey]
+        if (!wordsWrap || !remembered) return
+        wordsWrap.scrollTop = Number(remembered.top || 0)
+        wordsWrap.scrollLeft = Number(remembered.left || 0)
+      })
+    },
+
+    onVerseWordsScroll(verseKey, event) {
+      const el = event?.target
+      if (!verseKey || !el) return
+      this.verseScrollMemory[verseKey] = {
+        top: el.scrollTop,
+        left: el.scrollLeft
+      }
     },
 
     updateWordHighlightInDOM(verseKey, activeWordIndex) {
@@ -3087,7 +3145,7 @@ export default {
       this.currentWordIndex = -1
       this.currentHighlightedVerseKey = null
 
-      document.querySelectorAll('.verse-arabic word.highlighted').forEach(word => {
+      document.querySelectorAll('.verse-arabic word.highlighted, .verse-arabic .wbw-word.highlighted').forEach(word => {
         word.classList.remove('highlighted')
       })
     },
@@ -3100,6 +3158,9 @@ export default {
       this.audioElement.removeEventListener('timeupdate', this.audioTimeUpdate)
       this.audioElement.removeEventListener('ended', this.audioEnded)
       this.audioElement.removeEventListener('error', this.audioError)
+      this.audioElement.removeEventListener('seeking', this.audioSeeking)
+      this.audioElement.removeEventListener('seeked', this.audioSeeked)
+      this.audioElement.removeEventListener('pause', this.audioPaused)
 
       this.audioTimeUpdate = () => {
         this.currentTime = this.audioElement.currentTime
@@ -3114,6 +3175,24 @@ export default {
         }
       }
 
+      this.audioSeeking = () => {
+        // Prevent stale highlight when the user scrubs.
+        this.currentWordIndex = -1
+      }
+
+      this.audioSeeked = () => {
+        const verse = this.activeVerseRef
+        if (!verse) return
+        if (this.showWordByWord && this.wordByWordAudioEnabled && this.isPlaying) {
+          this.startWordHighlighting(verse)
+        }
+      }
+
+      this.audioPaused = () => {
+        // Ensure state is consistent even if pause is triggered outside our toggle handler.
+        this.isPlaying = false
+      }
+
       this.audioError = (e) => {
         console.error('Audio error:', e)
         this.isPlaying = false
@@ -3124,6 +3203,9 @@ export default {
       this.audioElement.addEventListener('timeupdate', this.audioTimeUpdate)
       this.audioElement.addEventListener('ended', this.audioEnded)
       this.audioElement.addEventListener('error', this.audioError)
+      this.audioElement.addEventListener('seeking', this.audioSeeking)
+      this.audioElement.addEventListener('seeked', this.audioSeeked)
+      this.audioElement.addEventListener('pause', this.audioPaused)
     },
 
     async playVerse(verse) {
@@ -3152,8 +3234,7 @@ export default {
         try { this.audioElement.pause() } catch (e) { }
       }
 
-      this.activeKey = verse.key
-      this.activeVerseKey = verse.key
+      this.setActiveVerse(verse.key, { scroll: false })
 
       if (!this.audioElement) {
         this.audioElement = this.$refs.audio
@@ -3179,9 +3260,11 @@ export default {
             await this.audioElement.play()
             this.isPlaying = true
             this.markPlaybackStart()
+            this.addActivityEvent({ ts: Date.now(), type: 'play', verseKey: verse.key })
+            this.recomputeAnalytics()
 
             // Start word highlighting AFTER audio starts playing
-            if (this.wordByWordAudioEnabled) {
+            if (this.showWordByWord && this.wordByWordAudioEnabled) {
               // Small delay to ensure audio is fully playing
               setTimeout(() => {
                 this.startWordHighlighting(verse)
@@ -3214,8 +3297,11 @@ export default {
     togglePlay() {
       if (!this.audioElement?.src) return
       if (this.audioElement.paused) {
-        this.audioElement.play()
-        this.isPlaying = true
+        this.audioElement.play().then(() => {
+          this.isPlaying = true
+          const verse = this.activeVerseRef
+          if (verse && this.showWordByWord && this.wordByWordAudioEnabled) this.startWordHighlighting(verse)
+        }).catch(() => {})
       } else {
         this.audioElement.pause()
         this.isPlaying = false
@@ -3233,15 +3319,8 @@ export default {
         const entry = this.queue[this.queueIndex]
         const verseKey = entry?.verse?.key || entry?.key
         if (verseKey) {
-          this.activeVerseKey = verseKey
-          this.activeKey = verseKey
-          this.$nextTick(() => {
-            const el = document.querySelector(`.verse-card[data-verse-key="${verseKey}"]`)
-            if (el) {
-              el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-            }
-            this.$forceUpdate()
-          })
+          this.setActiveVerse(verseKey)
+          this.$nextTick(() => this.$forceUpdate())
         }
         const v = this.queue[this.queueIndex]
         if (v) {
@@ -3260,11 +3339,8 @@ export default {
       const entry = this.queue[this.queueIndex]
       const verseKey = entry?.verse?.key || entry?.key
       if (verseKey) {
-        this.activeVerseKey = verseKey
-        this.activeKey = verseKey
-        this.$nextTick(() => {
-          this.$forceUpdate()
-        })
+        this.setActiveVerse(verseKey, { scroll: false })
+        this.$nextTick(() => this.$forceUpdate())
       }
       const v = this.queue[this.queueIndex]
       if (v) {
@@ -3295,14 +3371,31 @@ export default {
       const rangeEnd = Number(target.rangeEnd || rangeStart || 1)
       const reciterId = target.reciterId || DEFAULT_ALQURAN_RECITER
       const requestId = ++this.verseRequestId
+      const targetConfig = this.buildSessionConfig(mode)
 
       this.isDataReady = false
 
       try {
-        const [audioRes, translationRes, translitRes, tajweedRes] = await Promise.all([
+        const cached = this.getCachedVerses(mode, targetConfig)
+        if (cached?.verses?.length) {
+          if (mode === 'beginner') {
+            this.beginner.verses = cached.verses
+            this.beginner.loadedConfig = cached.loadedConfig
+          } else {
+            this.advanced.verses = cached.verses
+            this.advanced.loadedConfig = cached.loadedConfig
+          }
+          this.buildQueue(mode)
+          this.syncActiveVerseState(mode)
+          this.isDataReady = true
+          return
+        }
+
+        const [audioRes, translationRes, translitRes, arabicRes, tajweedRes] = await Promise.all([
           getSurahEdition(chapterId, reciterId),
           getSurahEdition(chapterId, 'en.asad'),
           getSurahEdition(chapterId, 'en.transliteration'),
+          getSurahEdition(chapterId, 'quran-uthmani'),
           getSurahEditions(chapterId, reciterId)
         ])
 
@@ -3311,9 +3404,11 @@ export default {
         const audioSurah = audioRes.data?.data
         const translationSurah = translationRes.data?.data
         const translitSurah = translitRes.data?.data
+        const arabicSurah = arabicRes.data?.data
         const tajweedEdition = (tajweedRes.data?.data || []).find(entry => entry?.edition?.identifier === 'quran-tajweed')
 
         const audioAyahs = audioSurah?.ayahs || []
+        const arabicByNumber = new Map((arabicSurah?.ayahs || []).map(ayah => [ayah.numberInSurah, ayah.text || '']))
         const translationByNumber = new Map((translationSurah?.ayahs || []).map(ayah => [ayah.numberInSurah, ayah.text || '']))
         const translitByNumber = new Map((translitSurah?.ayahs || []).map(ayah => [ayah.numberInSurah, ayah.text || '']))
         const tajweedByNumber = new Map((tajweedEdition?.ayahs || []).map(ayah => [ayah.numberInSurah, ayah.text || '']))
@@ -3325,9 +3420,10 @@ export default {
           .filter(ayah => ayah.numberInSurah >= start && ayah.numberInSurah <= end)
           .map(ayah => {
             const key = `${chapterId}:${ayah.numberInSurah}`
+            const arabic = arabicByNumber.get(ayah.numberInSurah) || ayah.text || ''
             const transliteration = translitByNumber.get(ayah.numberInSurah) || ''
             const translation = translationByNumber.get(ayah.numberInSurah) || ''
-            const arabicWords = String(ayah.text || '').split(/\s+/).filter(Boolean)
+            const arabicWords = tokenizeArabicText(arabic)
             const translitWords = String(transliteration).split(/\s+/).filter(Boolean)
             const translationWords = String(translation).split(/\s+/).filter(Boolean)
 
@@ -3335,7 +3431,7 @@ export default {
               key,
               number: ayah.numberInSurah,
               chapterId,
-              arabic: ayah.text || '',
+              arabic,
               arabic_tajweed: tajweedByNumber.get(ayah.numberInSurah) || '',
               translation: this.cleanTranslationText(translation),
               transliteration,
@@ -3371,6 +3467,11 @@ export default {
           }
         }
 
+        this.setCachedVerses(mode, targetConfig, {
+          verses: mappedVerses,
+          loadedConfig: mode === 'beginner' ? this.beginner.loadedConfig : this.advanced.loadedConfig
+        })
+
         this.buildQueue(mode)
         this.syncActiveVerseState(mode)
 
@@ -3398,6 +3499,7 @@ export default {
     buildQueue(mode = this.currentMode) {
       const config = mode === 'beginner' ? this.beginner : this.advanced
       const verses = config.verses
+      const previousActiveKey = config.activeKey
 
       if (!verses || verses.length === 0) {
         if (mode === this.currentMode) {
@@ -3414,25 +3516,44 @@ export default {
         return
       }
 
-      // Get repetition count from current mode
-      let rep = 1
-      if (mode === 'beginner') {
-        rep = this.beginner.repeats || 1
-      } else if (mode === 'advanced') {
-        rep = this.advanced.repeatAndLoopAudio ? (this.advanced.advancedRepeats || 1) : 1
-      }
-
-      const ord = 'seq'
       const q = []
-      const previousQueueIndex = Number(config.queueIndex || 0)
+      const safePreviousQueueIndex = Math.max(0, Number(config.queueIndex || 0))
 
-      if (ord === 'seq') {
+      if (mode === 'advanced' && this.advanced.repeatAndLoopAudio) {
+        const rep = Math.max(1, Number(this.advanced.advancedRepeats || 1))
+        verses.forEach((_, endIndex) => {
+          for (let r = 0; r < rep; r++) {
+            for (let verseIndex = 0; verseIndex <= endIndex; verseIndex++) {
+              q.push({
+                verse: verses[verseIndex],
+                repeatCount: r + 1,
+                totalRepeats: rep,
+                chainStage: endIndex + 1,
+                chainSize: endIndex + 1,
+                chainVerseIndex: verseIndex
+              })
+            }
+          }
+        })
+      } else {
+        const rep = mode === 'beginner'
+          ? Math.max(1, Number(this.beginner.repeats || 1))
+          : 1
         for (let r = 0; r < rep; r++) {
           verses.forEach(verse => {
-            q.push({ verse, repeatCount: r + 1, totalRepeats: rep })
+            q.push({
+              verse,
+              repeatCount: r + 1,
+              totalRepeats: rep,
+              chainStage: 1,
+              chainSize: 1,
+              chainVerseIndex: 0
+            })
           })
         }
       }
+
+      const previousQueueIndex = Math.min(safePreviousQueueIndex, Math.max(q.length - 1, 0))
 
       if (mode === this.currentMode) {
         this.queue = q
@@ -3447,6 +3568,8 @@ export default {
         this.advanced.queue = q
         this.advanced.queueIndex = previousQueueIndex
       }
+
+      this.syncActiveVerseState(mode, previousActiveKey)
     },
 
     estimateQueueDuration(queue) {
@@ -3574,11 +3697,17 @@ export default {
       if (!this.playbackStartedAt) return
       const seconds = Math.max(0, Math.round((Date.now() - this.playbackStartedAt) / 1000))
       this.playbackStartedAt = 0
+      if (seconds > 0) {
+        this.addActivityEvent({ ts: Date.now(), type: 'time', seconds })
+        this.recomputeAnalytics()
+      }
     },
 
     handleSessionComplete() {
       if (!this.verses.length) return
       this.sessionCompleted = true
+      this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
+      this.recomputeAnalytics()
       this.showBanner('Session complete', 'success', 4500)
     },
 
@@ -3602,6 +3731,10 @@ export default {
 
       if (!config.chapterId || config.chapterId === 0) {
         errors.push('No surah selected')
+      }
+
+      if (!Number.isFinite(Number(config.rangeStart)) || !Number.isFinite(Number(config.rangeEnd))) {
+        errors.push('Verse range must be numeric')
       }
 
       if (config.rangeStart > config.rangeEnd) {
@@ -3633,7 +3766,7 @@ export default {
 
     setScriptMode(mode) {
       this.script = mode
-      this.loadVerses()
+      this.scheduleLoadVerses(this.currentMode)
     },
 
     setQuranFont(font) {
@@ -3678,7 +3811,6 @@ export default {
           this.quranFont = state.quranFont || this.quranFont
           this.script = state.script || this.script
           this.sectionOpen = { ...this.sectionOpen, ...(state.sectionOpen || {}) }
-          this.onboardingDismissed = state.onboardingDismissed ?? false
           this.tajweedEnabled = state.tajweedEnabled ?? false
         }
       } catch (e) { console.error(e) }
@@ -3706,7 +3838,6 @@ export default {
           quranFont: this.quranFont,
           script: this.script,
           sectionOpen: this.sectionOpen,
-          onboardingDismissed: this.onboardingDismissed,
           tajweedEnabled: this.tajweedEnabled
         }))
       } catch (e) { console.error(e) }
@@ -3735,11 +3866,13 @@ export default {
           const state = JSON.parse(saved)
           if (Date.now() - state.timestamp < 24 * 60 * 60 * 1000) {
             const target = mode === 'beginner' ? this.beginner : this.advanced
-            target.activeKey = state.activeKey || null
+            const restoredKey = state.activeVerseKey || state.activeKey || null
+            target.activeKey = restoredKey
             target.queueIndex = Number(state.queueIndex || 0)
             if (mode === this.currentMode) {
-              this.activeVerseKey = state.activeVerseKey || state.activeKey || null
-              this.activeKey = state.activeKey || state.activeVerseKey || null
+              this.activeVerseKey = restoredKey
+              this.activeKey = restoredKey
+              this.queueIndex = target.queueIndex
             }
           }
         } catch (e) {
@@ -3878,6 +4011,107 @@ export default {
       if (!this.metrics) this.metrics = { avgAyahSeconds: 10, durationsByVerse: {} }
     },
 
+    loadAnalytics() {
+      try {
+        const raw = localStorage.getItem('telawa.analytics') || 'null'
+        const saved = JSON.parse(raw)
+        if (saved && typeof saved === 'object') {
+          this.analytics = { ...this.analytics, ...saved }
+        }
+      } catch {}
+      this.recomputeAnalytics()
+    },
+
+    persistAnalytics() {
+      try { localStorage.setItem('telawa.analytics', JSON.stringify(this.analytics)) } catch {}
+    },
+
+    getActivityDayKey(ts = Date.now()) {
+      return new Date(ts).toISOString().slice(0, 10)
+    },
+
+    addActivityEvent(event) {
+      try {
+        const raw = localStorage.getItem('telawa.activity') || '[]'
+        const list = JSON.parse(raw)
+        if (!Array.isArray(list)) return
+        list.push(event)
+        // cap to keep it lightweight
+        while (list.length > 5000) list.shift()
+        localStorage.setItem('telawa.activity', JSON.stringify(list))
+      } catch {}
+    },
+
+    readActivityEvents() {
+      try {
+        const raw = localStorage.getItem('telawa.activity') || '[]'
+        const list = JSON.parse(raw)
+        return Array.isArray(list) ? list : []
+      } catch {
+        return []
+      }
+    },
+
+    recomputeAnalytics() {
+      const events = this.readActivityEvents()
+      const now = Date.now()
+      const dayKeys = []
+      for (let i = 6; i >= 0; i--) {
+        dayKeys.push(this.getActivityDayKey(now - i * 86400000))
+      }
+
+      const weeklyVerses = new Array(7).fill(0)
+      const weeklyMinutes = new Array(7).fill(0)
+      const versesReadSet = new Set()
+      let totalSeconds = 0
+      let totalPlays = 0
+      let sessionsCompleted = 0
+      const daysWithAny = new Set()
+
+      for (const ev of events) {
+        const ts = Number(ev?.ts || 0)
+        if (!ts) continue
+        const dayKey = this.getActivityDayKey(ts)
+        daysWithAny.add(dayKey)
+        const idx = dayKeys.indexOf(dayKey)
+
+        if (ev.type === 'play') {
+          totalPlays += 1
+          if (ev.verseKey) versesReadSet.add(String(ev.verseKey))
+          if (idx >= 0) weeklyVerses[idx] += 1
+        }
+
+        if (ev.type === 'time') {
+          const sec = Math.max(0, Number(ev.seconds || 0))
+          totalSeconds += sec
+          if (idx >= 0) weeklyMinutes[idx] += sec / 60
+        }
+
+        if (ev.type === 'session_complete') {
+          sessionsCompleted += 1
+        }
+      }
+
+      // streak: consecutive days ending today with any activity
+      const todayKey = this.getActivityDayKey(now)
+      let streak = 0
+      for (let i = 0; i < 365; i++) {
+        const key = this.getActivityDayKey(now - i * 86400000)
+        if (daysWithAny.has(key)) streak += 1
+        else break
+      }
+
+      this.analytics.totalVersesRead = versesReadSet.size
+      this.analytics.totalRepetitions = totalPlays
+      this.analytics.sessionsCompleted = sessionsCompleted
+      this.analytics.totalTimeSpent = Math.round(totalSeconds / 60)
+      this.analytics.currentStreak = todayKey && streak ? streak : 0
+      this.analytics.weeklyVerses = weeklyVerses
+      this.analytics.weeklyMinutes = weeklyMinutes.map(m => Math.round(m))
+      this.persistAnalytics()
+      this.updateMasteredWeekly()
+    },
+
     estimateKeysSeconds(keys = []) {
       return keys.length * 10
     },
@@ -3918,29 +4152,6 @@ export default {
       return `telawa.${suffix}.${uid}`
     },
 
-    beginPlan() {
-      this.onboardingDismissed = true
-      this.showTools = true
-    },
-
-    setGoal(mode) {
-      this.tab = mode;
-      this.onboardingStep = 2;
-    },
-
-    startWithFatiha() {
-      this.chapterId = 1;
-      this.rangeStart = 1;
-      this.rangeEnd = 7;
-      this.onboardingDismissed = true;
-      this.loadChapter();
-    },
-
-    openSetup() {
-      this.onboardingDismissed = true;
-      this.showTools = true;
-    },
-
     resetControls() {
       this.openConfirmModal({
         title: 'Reset session?',
@@ -3976,7 +4187,7 @@ export default {
       const max = this.currentChapter?.verses_count || 286
       this.rangeStart = Math.max(1, Math.min(this.rangeStart, max))
       this.rangeEnd = Math.max(this.rangeStart, Math.min(this.rangeEnd, max))
-      this.loadVerses(this.currentMode)
+      this.scheduleLoadVerses(this.currentMode)
     },
 
     onChapterChange(event) {
@@ -3984,7 +4195,7 @@ export default {
       this.loadChapter(this.currentMode)
     },
 
-    refreshVerses() { this.loadVerses(this.currentMode) },
+    refreshVerses() { this.scheduleLoadVerses(this.currentMode) },
 
     // Quiz methods
     startQuiz() {
@@ -4107,220 +4318,6 @@ export default {
   box-sizing: border-box;
 }
 
-.onboarding-cta {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin-top: 24px;
-}
-
-.cta-primary-large {
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: white;
-  border: none;
-  padding: 12px 28px;
-  border-radius: 40px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
-}
-
-.cta-primary-large:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(154, 103, 56, 0.3);
-}
-
-.cta-secondary {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  padding: 12px 24px;
-  border-radius: 40px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.cta-secondary:hover {
-  background: var(--accent-light);
-  border-color: var(--accent);
-}
-
-/* Onboarding Welcome Styles */
-.onboarding-welcome {
-  margin-bottom: 24px;
-  animation: slideUp 0.4s ease-out;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.onboarding-card {
-  background: linear-gradient(135deg, var(--surface), rgba(245, 236, 224, 0.92));
-  border-radius: 24px;
-  padding: 24px;
-  border: 1px solid var(--accent-soft);
-  text-align: left;
-}
-
-.onboarding-topline {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: rgba(154, 103, 56, 0.08);
-  color: var(--accent);
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 14px;
-}
-
-.onboarding-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 18px;
-}
-
-.onboarding-head h3 {
-  font-size: 1.35rem;
-  margin: 0 0 4px 0;
-  color: var(--text);
-}
-
-.onboarding-head p {
-  color: var(--text-muted);
-  margin: 0;
-  font-size: 0.92rem;
-}
-
-.onboarding-dismiss {
-  min-width: 44px;
-  padding-inline: 0;
-  justify-content: center;
-}
-
-.onboarding-choice-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 18px;
-}
-
-.onboarding-choice {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-  padding: 16px;
-  border-radius: 18px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.82);
-  color: var(--text);
-  cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-  text-align: left;
-}
-
-.onboarding-choice:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-  border-color: var(--accent-soft);
-}
-
-.onboarding-choice-primary {
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: white;
-  border-color: transparent;
-}
-
-.onboarding-choice-primary .onboarding-choice-icon {
-  background: rgba(255, 255, 255, 0.18);
-  color: white;
-}
-
-.onboarding-choice-primary .onboarding-choice-copy small,
-.onboarding-choice-primary .onboarding-choice-copy strong {
-  color: white;
-}
-
-.onboarding-choice-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  background: rgba(154, 103, 56, 0.10);
-  color: var(--accent);
-  font-size: 1.2rem;
-  flex: 0 0 auto;
-}
-
-.onboarding-choice-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.onboarding-choice-copy strong {
-  font-size: 0.95rem;
-  color: var(--text);
-}
-
-.onboarding-choice-copy small {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-}
-
-.onboarding-tips {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.onboarding-tips .tip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.76);
-  padding: 8px 12px;
-  border-radius: 40px;
-  border: 1px solid var(--border);
-}
-
-.onboarding-tips .tip i {
-  color: var(--accent);
-  font-size: 0.85rem;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .onboarding-choice-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .onboarding-card {
-    padding: 20px;
-  }
-}
-
 /* Player Speed Controls */
 .player-speed-controls {
   display: flex;
@@ -4355,6 +4352,16 @@ export default {
   .player-speed-controls {
     display: none;
     /* Hide on mobile, too crowded */
+  }
+
+  .chaining-simple-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .chain-goal-grid,
+  .chain-goal-grid-two {
+    grid-template-columns: 1fr;
   }
 
   .chaining-hero {
@@ -4426,10 +4433,20 @@ export default {
   color: var(--accent);
 }
 
-.rail-btn-ghost:hover {
-  background: var(--accent);
-  color: white;
-}
+    .rail-btn-ghost:hover {
+      background: var(--accent);
+      color: white;
+    }
+
+    .rail-btn:disabled,
+    .rail-btn-ghost:disabled,
+    .rail-btn-primary:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      pointer-events: none;
+      transform: none;
+      box-shadow: none;
+    }
 
 .rail-btn-resume {
   background: rgba(255, 255, 255, 0.92);
@@ -4729,12 +4746,12 @@ html {
 /* Word by Word styles */
 .wbw-word {
   display: inline-block;
-  padding: 4px 6px;
-  margin: 2px;
+  padding: 5px 8px;
+  margin: 2px 3px;
   border-radius: 8px;
   transition: all 0.2s ease;
   cursor: pointer;
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   background: rgba(154, 103, 56, 0.05);
 }
 
@@ -4748,6 +4765,12 @@ html {
   color: white;
   transform: scale(1.05);
   box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
+  animation: pop 180ms ease-out;
+}
+
+@keyframes pop {
+  from { transform: scale(1.01); }
+  to { transform: scale(1.05); }
 }
 
 /* Word highlighting styles */
@@ -5037,6 +5060,8 @@ html {
 /* Tajweed styles for AlQuran quran-tajweed edition */
 .verse-arabic.tajweed-enabled {
   line-height: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .verse-arabic.tajweed-enabled .tajweed-mark {
@@ -5640,7 +5665,7 @@ html {
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(var(--tools-width), 100vw);
+  width: min(var(--tools-width), 92vw);
   background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));
   border-left: 1px solid var(--border);
   backdrop-filter: blur(14px);
@@ -5736,6 +5761,39 @@ html {
   overflow-y: auto;
   overflow-x: hidden;
   padding: 20px 20px calc(var(--tools-footer-h) + 26px);
+}
+
+/* Compact mode (default) to reduce cognitive load */
+.tools-body.compact .st-sub,
+.tools-body.compact .field-hint,
+.tools-body.compact .analytics-help,
+.tools-body.compact .stat-help {
+  display: none !important;
+}
+
+.tools-body.compact .sheet {
+  gap: 12px;
+}
+
+.tools-body.compact .sheet-section {
+  padding: 0;
+  border-radius: 16px;
+}
+
+.tools-body.compact .sheet-toggle {
+  padding: 12px 14px;
+}
+
+.tools-body.compact .sheet-content {
+  padding: 12px 14px 14px;
+}
+
+.tools-body.compact .field-stack {
+  gap: 12px;
+}
+
+.tools-body.compact .field label {
+  margin-bottom: 6px;
 }
 
 .sheet {
@@ -6407,6 +6465,133 @@ html {
   transform: translateY(8px);
 }
 
+.chaining-simple-shell {
+  overflow: hidden;
+}
+
+.chaining-simple-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 2px;
+}
+
+.chaining-simple-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.chaining-simple-kicker {
+  display: inline-block;
+  margin-bottom: 6px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+
+.chaining-simple-head h3 {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.chaining-simple-head p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  max-width: 42ch;
+}
+
+.chaining-simple-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--accent-light);
+  border: 1px solid var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.chaining-simple-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chaining-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 11px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.chain-goal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.chain-goal-grid-two {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.chain-goal-card {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.chain-goal-card strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.chain-goal-card span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.chain-goal-card:hover,
+.chain-goal-card.active {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  box-shadow: 0 10px 24px rgba(154, 103, 56, 0.10);
+  transform: translateY(-1px);
+}
+
+.chain-goal-card.active strong,
+.chain-goal-card.active span {
+  color: var(--accent-strong);
+}
+
+.chain-goal-card-compact {
+  padding: 12px;
+}
+
 .chaining-setup {
   overflow: hidden;
 }
@@ -6685,120 +6870,6 @@ html {
   opacity: 0.7;
 }
 
-/* Wizard Onboarding CSS */
-.onboarding-wizard {
-  padding: 40px;
-  text-align: center;
-}
-
-.wizard-step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 32px;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.wizard-choices {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-}
-
-.wizard-choice-btn {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  background: var(--surface);
-  border: 2px solid var(--border);
-  padding: 24px;
-  border-radius: 16px;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.2s ease;
-  width: 100%;
-}
-
-.wizard-choice-btn:hover {
-  border-color: var(--accent);
-  background: var(--accent-light);
-  transform: translateY(-2px);
-}
-
-.wizard-choice-btn.primary-choice {
-  border-color: var(--accent);
-  background: rgba(139, 94, 60, 0.05);
-}
-
-.wizard-choice-btn.primary-choice:hover {
-  background: var(--accent-light);
-}
-
-.choice-icon {
-  font-size: 2rem;
-  color: var(--accent);
-  width: 50px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-body);
-  border-radius: 12px;
-}
-
-.choice-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.choice-text strong {
-  font-size: 1.1rem;
-  color: var(--text);
-}
-
-.choice-text span {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-}
-
-.wizard-back {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: 0.95rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 8px;
-  transition: all 0.2s;
-  margin-top: -10px;
-}
-
-.wizard-back:hover {
-  background: var(--border);
-  color: var(--text);
-}
-
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: all 0.3s ease;
-}
-
-.fade-slide-enter-from {
-  opacity: 0;
-  transform: translateX(20px);
-}
-
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateX(-20px);
-}
-
 
 .chain-step:hover {
   border-color: var(--accent);
@@ -6955,12 +7026,17 @@ html {
 
 .verse-words {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  flex-wrap: nowrap;
+  gap: 10px;
   direction: rtl;
   margin-top: 16px;
   padding-top: 12px;
   border-top: 1px solid var(--border);
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  padding-bottom: 8px;
 }
 
 .word-item {
@@ -6972,6 +7048,8 @@ html {
   align-items: center;
   gap: 8px;
   font-size: 0.75rem;
+  flex: 0 0 auto;
+  scroll-snap-align: center;
 }
 
 .word-arabic {
@@ -7245,25 +7323,6 @@ html {
   font-size: 0.85rem;
 }
 
-/* Confetti */
-.confetti {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 140;
-  overflow: hidden;
-}
-
-.confetti-piece {
-  position: absolute;
-  top: -10px;
-  width: 8px;
-  height: 12px;
-  border-radius: 3px;
-  opacity: 0.9;
-  animation: confetti-fall 1.35s ease-in forwards;
-}
-
 /* Banner */
 .banner {
   position: fixed;
@@ -7352,21 +7411,6 @@ html {
   }
 }
 
-@keyframes confetti-fall {
-  0% {
-    transform: translateY(-20px) rotate(0deg);
-    opacity: 0;
-  }
-
-  10% {
-    opacity: 0.95;
-  }
-
-  100% {
-    transform: translateY(110vh) rotate(480deg);
-    opacity: 0;
-  }
-}
 
 /* Responsive */
 @media (max-width: 768px) {
@@ -7496,6 +7540,15 @@ html {
   max-height: 90vh;
   overflow: hidden;
   animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-content {
+  animation: modalIn 160ms ease-out;
+}
+
+@keyframes modalIn {
+  from { transform: translateY(10px); opacity: 0.6; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 @keyframes modalFadeIn {
@@ -7761,6 +7814,20 @@ html {
   justify-content: center;
   text-align: center;
   transition: transform 0.2s;
+}
+
+.stat-delta {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 10px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 0.7rem;
+  color: var(--accent-strong);
+  font-weight: 700;
+  vertical-align: middle;
 }
 
 .stat-card:hover {
@@ -8103,23 +8170,46 @@ html {
   }
 
   .player-main {
-    flex-wrap: wrap;
-    gap: 12px;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
   }
 
-  .player-info,
-  .player-controls {
-    width: 100%;
+  .player-info {
+    flex: 0 1 120px;
+    min-width: 0;
+  }
+
+  .player-chapter {
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+  }
+
+  .player-verse {
+    font-size: 0.72rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
   }
 
   .player-controls {
+    flex: 0 0 auto;
     justify-content: center;
+    gap: 8px;
   }
 
   .player-progress-wrap {
-    order: 4;
-    width: 100%;
+    order: 0;
+    flex: 1 1 auto;
     min-width: 0;
+  }
+
+  .player-speed-controls {
+    flex: 0 0 auto;
   }
 
   .analytics-grid {
@@ -8133,12 +8223,40 @@ html {
 
   .session-rail-actions {
     width: 100%;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
   }
 
   .rail-btn {
-    flex: 1 1 calc(50% - 6px);
+    flex: initial;
+    width: 100%;
     justify-content: center;
+  }
+
+  .rail-btn-primary {
+    grid-column: 1 / -1;
+  }
+
+  .reading-toolbar {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .reading-toolbar-group {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .toolbar-chip {
+    flex: initial;
+    width: 100%;
+  }
+
+  .font-dropdown {
+    grid-column: 1 / -1;
   }
 
   .reading-toolbar {
@@ -8163,6 +8281,23 @@ html {
   .font-dropdown-trigger {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .tools-tabs {
+    gap: 6px;
+  }
+
+  .tools-tabs button {
+    font-size: 0;
+    padding: 10px 10px;
+    gap: 0;
+    min-width: 44px;
+    justify-content: center;
+  }
+
+  .tools-tabs button i {
+    font-size: 0.95rem;
+    margin: 0;
   }
 
   .verse-card {
@@ -8304,3 +8439,23 @@ html {
   }
 }
 </style>
+    activeChapter() {
+      const id = Number(this.chapterId || 0)
+      if (!id || !Array.isArray(this.chapters) || !this.chapters.length) return null
+      return this.chapters.find(c => Number(c.id) === id) || null
+    },
+
+    activeChapterName() {
+      return this.activeChapter?.name_simple || (this.chapterId ? `Surah ${this.chapterId}` : 'Choose surah')
+    },
+    versesMasteredDeltaThisWeek() {
+      try {
+        const raw = localStorage.getItem('telawa.masteredWeekly') || 'null'
+        const data = JSON.parse(raw)
+        if (!data || !Array.isArray(data.series)) return 0
+        const sum = data.series.reduce((a, b) => a + Number(b || 0), 0)
+        return sum
+      } catch {
+        return 0
+      }
+    },
