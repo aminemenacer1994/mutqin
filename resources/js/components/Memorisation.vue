@@ -12,8 +12,8 @@
     <!-- Main Content -->
     <div v-if="appReady" class="main container" :class="{ 'tools-open': showTools }">
       <div class="content">
-        <section v-if="!hasVerses" class="home-dashboard">
-          <div v-if="hasContinueSession" class="continue-session-card">
+	        <section v-if="!hasVerses" class="home-dashboard">
+	          <div v-if="hasContinueSession" class="continue-session-card">
             <div class="continue-session-copy">
               <span class="continue-session-kicker">Continue where you left off</span>
               <strong>{{ continueSessionLabel }}</strong>
@@ -25,11 +25,37 @@
               </button>
               <button class="cta cta-ghost continue-session-dismiss" @click="confirmDiscardContinueSession">
                 <i class="bi bi-x-lg"></i>
-              </button>
-            </div>
-          </div>
+	              </button>
+	            </div>
+	          </div>
 
-          <div class="streak-motivation" v-if="analytics.currentStreak > 0">
+	          <div class="setup-start-card">
+	            <div class="setup-start-copy">
+	              <span class="setup-kicker">Memorisation setup</span>
+	              <h2>Choose your ayahs and begin</h2>
+	              <p>{{ setupReadinessHint }}</p>
+	            </div>
+	            <div class="setup-mode-grid" role="group" aria-label="Choose memorisation mode">
+	              <button class="setup-mode-card" :class="{ active: currentMode === 'beginner' }"
+	                @click="startNewSetup('beginner')" title="Beginner: simple sequential practice with repeat count">
+	                <i class="bi bi-layers"></i>
+	                <span>Beginner</span>
+	                <small>Simple repeat flow</small>
+	              </button>
+	              <button class="setup-mode-card" :class="{ active: currentMode === 'advanced' }"
+	                @click="startNewSetup('advanced')" title="Advanced: extra playback controls and optional chaining">
+	                <i class="bi bi-diagram-3"></i>
+	                <span>Advanced</span>
+	                <small>More control</small>
+	              </button>
+	            </div>
+	            <button class="cta cta-primary setup-primary" @click="openModeSettings"
+	              title="Open the setup panel to choose surah, ayah range, reciter, and repetitions">
+	              <i class="bi bi-sliders"></i> Open setup
+	            </button>
+	          </div>
+
+	          <div class="streak-motivation" v-if="analytics.currentStreak > 0">
             <div class="streak-badge">
               <i class="bi bi-fire" style="color: #ee964b;"></i>
               <span>{{ analytics.currentStreak }} day streak</span>
@@ -68,12 +94,13 @@
                 <div class="session-rail-title">{{ currentChapter.name_simple }}</div>
                 <div class="session-rail-meta">Ayah {{ currentPosition }}/{{ totalVerses }}</div>
               </div>
-              <div class="session-rail-pills">
-                <span class="session-pill"><strong>{{ progressPercent }}%</strong> progress</span>
-                <span class="session-pill"><strong>{{ remainingAyahs }}</strong> left</span>
-                <span class="session-pill"><strong>{{ etaLabel }}</strong></span>
-                <span class="session-pill"><strong>{{ currentMode === 'advanced' ? 'Advanced' : 'Beginner' }}</strong></span>
-              </div>
+	              <div class="session-rail-pills">
+	                <span class="session-pill"><strong>{{ progressPercent }}%</strong> progress</span>
+	                <span class="session-pill"><strong>{{ remainingAyahs }}</strong> left</span>
+	                <span class="session-pill"><strong>{{ etaLabel }}</strong></span>
+	                <span class="session-pill"><strong>{{ currentMode === 'advanced' ? 'Advanced' : 'Beginner' }}</strong></span>
+	                <span class="session-pill session-pill-focus"><strong>{{ currentLearningPrompt }}</strong></span>
+	              </div>
             </div>
             <div class="session-rail-actions">
               <button v-if="hasContinueSession && continueSessionPayload && continueSessionPayload.activeVerseKey !== activeVerseKey"
@@ -119,31 +146,31 @@
 
         <div class="reading-toolbar">
           <div class="reading-toolbar-group">
-            <button class="toolbar-chip" :class="{ active: showTranslation }"
-              @click="toggleReadingOption('translation')">
+	            <button class="toolbar-chip" :class="{ active: showTranslation }" title="Show or hide the English translation"
+	              @click="toggleReadingOption('translation')">
               <i class="bi bi-translate"></i><span>Translation</span>
             </button>
-            <button class="toolbar-chip" :class="{ active: showTransliteration }"
-              @click="toggleReadingOption('transliteration')">
+	            <button class="toolbar-chip" :class="{ active: showTransliteration }" title="Show or hide transliteration"
+	              @click="toggleReadingOption('transliteration')">
               <i class="bi bi-type"></i><span>Transliteration</span>
             </button>
-            <button class="toolbar-chip" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')">
+	            <button class="toolbar-chip" :class="{ active: showWordByWord }" title="Show word-by-word meaning chips" @click="toggleReadingOption('wbw')">
               <i class="bi bi-grid-3x2-gap"></i><span>Word by word</span>
             </button>
-            <button class="toolbar-chip" :class="{ active: wordByWordAudioEnabled }"
-              @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
+	            <button class="toolbar-chip" :class="{ active: wordByWordAudioEnabled }" title="Enable audio for individual word chips"
+	              @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
               <i class="bi bi-volume-up"></i><span>Word audio</span>
             </button>
 
             <!-- ADD TAJWEED PILL HERE -->
-            <button class="toolbar-chip" :class="{ active: tajweedEnabled }" @click="toggleTajweed">
+	            <button class="toolbar-chip" :class="{ active: tajweedEnabled }" title="Show tajweed colouring from the Quran API" @click="toggleTajweed">
               <i class="bi bi-palette"></i><span>Tajweed</span>
             </button>
           </div>
 
           <div class="reading-toolbar-group">
             <div class="font-dropdown">
-              <button class="font-dropdown-trigger" @click="toggleFontDropdown">
+	              <button class="font-dropdown-trigger" @click="toggleFontDropdown" title="Change Quran font">
                 <i class="bi bi-text-paragraph"></i>
                 <span>{{ getCurrentFontLabel() }}</span>
                 <i class="bi bi-chevron-down" :class="{ rotated: fontDropdownOpen }"></i>
@@ -218,7 +245,7 @@
               </div>
             </div>
 
-            <div class="verse-arabic" dir="rtl" v-if="verse.arabic && isDataReady" v-html="getDisplayArabic(verse)"
+	            <div class="verse-arabic" dir="rtl" v-if="verse.arabic && isDataReady" v-html="getDisplayArabic(verse)"
               :class="{
                 'tajweed-enabled': tajweedEnabled,
                 'word-highlight-enabled': showWordByWord && wordByWordAudioEnabled && !tajweedEnabled
@@ -226,9 +253,34 @@
                 '--verse-font-percent': getVerseFontSize(verse.key),
                 fontFamily: quranFontFamily
               }">
-            </div>
+	            </div>
 
-            <!-- Transliteration -->
+	            <div v-if="effectiveActiveVerseKey === verse.key" class="learning-actions">
+	              <div class="learning-meta">
+	                <span>{{ takrarLabel(verse.key) }}</span>
+	                <span>{{ retentionLabel(verse.key) }}</span>
+	                <span>{{ currentLearningPrompt }}</span>
+	              </div>
+	              <div class="learning-buttons" aria-label="Memorisation actions">
+	                <button type="button" @click="markTakrarRepeat(verse)" title="Count one repetition for this ayah">
+	                  <i class="bi bi-arrow-repeat"></i> Repeat
+	                </button>
+	                <button type="button" @click="markTakrarHide(verse)" title="Hide only the active ayah for recall">
+	                  <i class="bi bi-eye-slash"></i> Hide
+	                </button>
+	                <button type="button" @click="markTakrarDone(verse, 'Easy')" title="I recited this confidently">
+	                  Easy
+	                </button>
+	                <button type="button" @click="markTakrarDone(verse, 'Shaky')" title="I got through it, but it needs another pass">
+	                  Shaky
+	                </button>
+	                <button type="button" @click="markTakrarDone(verse, 'Forgot')" title="I forgot and need to retry">
+	                  Forgot
+	                </button>
+	              </div>
+	            </div>
+
+	            <!-- Transliteration -->
             <div v-if="showTransliteration && verse.transliteration" class="verse-transliteration">
               {{ verse.transliteration }}
             </div>
@@ -264,13 +316,13 @@
           </div>
           <div class="tools-context">{{ contextLabel }}</div>
           <div class="tools-tabs">
-            <button :class="{ active: tab === 'beginner', 'active-tab': tab === 'beginner' }"
-              @click="setModeAndExplain('beginner')"><i class="bi bi-layers"></i> Beginner</button>
-            <button :class="{ active: tab === 'advanced', 'active-tab': tab === 'advanced' }"
-              @click="setModeAndExplain('advanced')"><i class="bi bi-layers"></i> Advanced</button>
-            <button v-if="isLoggedIn" :class="{ active: tab === 'analytics', 'active-tab': tab === 'analytics' }"
-              @click="tab = 'analytics'"><i class="bi bi-grid-1x2"></i> Stats</button>
-          </div>
+	            <button :class="{ active: tab === 'beginner', 'active-tab': tab === 'beginner' }"
+	              @click="setModeAndExplain('beginner')" title="Beginner: sequential ayahs with repeat count"><i class="bi bi-layers"></i> Beginner</button>
+	            <button :class="{ active: tab === 'advanced', 'active-tab': tab === 'advanced' }"
+	              @click="setModeAndExplain('advanced')" title="Advanced: extra playback controls and optional chaining"><i class="bi bi-diagram-3"></i> Advanced</button>
+	            <button v-if="isLoggedIn" :class="{ active: tab === 'analytics', 'active-tab': tab === 'analytics' }"
+	              @click="tab = 'analytics'" title="Review your device-local memorisation stats"><i class="bi bi-grid-1x2"></i> Stats</button>
+	          </div>
         </div>
 
           <div class="tools-body compact">
@@ -366,7 +418,7 @@
             <!-- Beginner: saved sessions hidden -->
             <section v-if="false" class="sheet-section"></section>
 
-            <button class="start-btn" @click="startSession" :disabled="!canStartSession">
+            <button class="start-btn" @click="startSession" :disabled="!canStartSession" :title="startButtonHelp">
               <i class="bi bi-play-fill"></i> Start memorising
             </button>
           </div>
@@ -556,7 +608,7 @@
               </div>
             </section>
 
-            <button class="start-btn" @click="startSession" :disabled="!canStartSession">
+            <button class="start-btn" @click="startSession" :disabled="!canStartSession" :title="startButtonHelp">
               <i class="bi bi-play-fill"></i> Start memorising
             </button>
           </div>
@@ -819,6 +871,13 @@
 import axios from 'axios'
 import { toRaw } from 'vue'
 import { getEditions, getSurahEdition, getSurahEditions } from '../lib/quranApis'
+import { loadMutqinState, saveMutqinState, watchMutqinState } from '../composables/useMutqinPersistence'
+import { seedAyahs } from '../composables/useAyahState'
+import { buildSessionQueue, startMutqinSession, moveMutqinSession, completeMutqinSession } from '../composables/useSessionEngine'
+import { createDailyPlan } from '../composables/useDailyPlanner'
+import { repeatAyah, hideAyah, completeTakrarStep, getTakrarStep } from '../composables/useTakrarLadder'
+import { recordChainResult } from '../composables/useChaining'
+import { scoreRetention } from '../composables/useRetentionZones'
 
 const MODE_STORAGE_KEYS = {
   beginner: 'telawa.mode.beginner',
@@ -925,8 +984,10 @@ export default {
       tajweedEnabled: false,
       beginner: createBeginnerState(),
       advanced: createAdvancedState(),
-      // New chaining UI state
-      showQueueViewer: false,
+	      // New chaining UI state
+	      mutqinState: loadMutqinState(),
+	      unwatchMutqinState: null,
+	      showQueueViewer: false,
       queueViewCollapsed: true,
       currentChainStats: {
         totalEntries: 0,
@@ -1166,9 +1227,23 @@ export default {
       return queued?.verse?.key || queued?.key || null
     },
 
-    activeVerseRef() {
-      return this.verses.find(v => v.key === this.effectiveActiveVerseKey) || null
-    },
+	    activeVerseRef() {
+	      return this.verses.find(v => v.key === this.effectiveActiveVerseKey) || null
+	    },
+
+	    activeMutqinAyah() {
+	      return this.effectiveActiveVerseKey ? this.mutqinState.ayahs?.[this.effectiveActiveVerseKey] || null : null
+	    },
+
+	    currentLearningPrompt() {
+	      const item = this.mutqinState?.sessionState?.queue?.[this.mutqinState?.sessionState?.current_index || 0]
+	      if (!item) return 'Planner ready'
+	      if (item.prompt) return item.prompt
+	      if (item.phase === 'Chaining') return `Chain ${item.chainStage || ''}`.trim()
+	      if (item.phase === 'Recall') return 'Recall from memory'
+	      if (item.phase === 'Retention') return 'Retention review'
+	      return item.phase || 'Session'
+	    },
 
     sessionConfig() {
       return this.buildSessionConfig(this.currentMode)
@@ -1186,12 +1261,33 @@ export default {
       return `Resume on ayah ${ayah || payload.config?.rangeStart || 1} with your player state intact, ${timeLabel}.`
     },
 
-    hasSelectedSurah() {
-      const chapterId = this.currentConfig.chapterId
-      return chapterId && chapterId > 0
-    },
+	    hasSelectedSurah() {
+	      const chapterId = this.currentConfig.chapterId
+	      return chapterId && chapterId > 0
+	    },
 
-    chapterId: {
+	    activeChapter() {
+	      const id = Number(this.chapterId || 0)
+	      if (!id || !Array.isArray(this.chapters) || !this.chapters.length) return null
+	      return this.chapters.find(c => Number(c.id) === id) || null
+	    },
+
+	    activeChapterName() {
+	      return this.activeChapter?.name_simple || (this.chapterId ? `Surah ${this.chapterId}` : 'Choose surah')
+	    },
+
+	    versesMasteredDeltaThisWeek() {
+	      try {
+	        const raw = localStorage.getItem('telawa.masteredWeekly') || 'null'
+	        const data = JSON.parse(raw)
+	        if (!data || !Array.isArray(data.series)) return 0
+	        return data.series.reduce((a, b) => a + Number(b || 0), 0)
+	      } catch {
+	        return 0
+	      }
+	    },
+
+	    chapterId: {
       get() { return this.currentConfig.chapterId || 0 },
       set(val) {
         const numVal = Number(val) || 0
@@ -1458,16 +1554,18 @@ export default {
         (!!this.verses.length || !!this.currentConfig.verses.length)
     },
 
-    modeSummary() {
-      return this.currentMode === 'beginner'
-        ? 'Sequential flow, focus off, repetition 3x.'
-        : 'Sequential flow, focus optional, repetition optional.'
-    },
+	    modeSummary() {
+	      const repeats = this.currentMode === 'beginner'
+	        ? Number(this.beginnerRepeats || 1)
+	        : Number(this.advancedRepeats || 1)
+	      const mode = this.currentMode === 'advanced' ? 'Advanced' : 'Beginner'
+	      return `${mode} flow, ${repeats}x repetition, ${this.chainingPracticeLabel.toLowerCase()}.`
+	    },
 
-    currentSessionExplanation() {
-      const repeatCount = this.currentMode === 'beginner'
-        ? Number(this.beginnerRepeats || 1)
-        : (this.repeatAndLoopAudio ? Number(this.advancedRepeats || 1) : 1)
+	    currentSessionExplanation() {
+	      const repeatCount = this.currentMode === 'beginner'
+	        ? Number(this.beginnerRepeats || 1)
+	        : Number(this.advancedRepeats || 1)
 
       const practiceMode = this.blurAdjacent
         ? 'blur recall'
@@ -1476,8 +1574,22 @@ export default {
       const repeatLabel = repeatCount === 1 ? '1 repeat' : `${repeatCount} repeats`
       const modeLabel = this.currentMode === 'advanced' ? 'Advanced' : 'Beginner'
 
-      return `${modeLabel} session in sequential order, ${repeatLabel} per ayah, ${practiceMode}.`
-    },
+	      return `${modeLabel} session in sequential order, ${repeatLabel} per ayah, ${practiceMode}.`
+	    },
+
+	    setupReadinessHint() {
+	      if (!this.chapters.length) return 'Loading surah list...'
+	      if (!this.hasSelectedSurah) return 'Select a mode, then choose a surah, range, reciter, and repetitions.'
+	      const range = `${this.rangeStart}-${this.rangeEnd}`
+	      return `${this.activeChapterName} ayahs ${range}. Open setup to review before starting.`
+	    },
+
+	    startButtonHelp() {
+	      if (!this.hasSelectedSurah) return 'Choose a surah first'
+	      if (!this.isDataReady) return 'Verses are still loading'
+	      if (!this.canStartSession) return 'Check the ayah range and settings'
+	      return `Start ${this.currentMode === 'advanced' ? 'advanced' : 'beginner'} memorisation`
+	    },
 
     chainingStep() {
       return Math.max(1, Math.min(3, Number(this.chainingConfig.step || 1)))
@@ -1534,53 +1646,31 @@ export default {
       return `Review + repetition included`
     },
 
-    etaLabel() {
-      const remainingItems = (this.queue || []).slice(this.queueIndex)
-      if (!remainingItems.length) return '0 min'
+	    etaLabel() {
+	      const remainingItems = (this.queue || []).slice(this.queueIndex)
+	      if (!remainingItems.length) return '0 min'
 
-      const repetitionCount = this.currentMode === 'beginner'
-        ? (this.beginner.repeats || 1)
-        : (this.repeatAndLoopAudio ? (this.advancedRepeats || 1) : 1)
-      const avgAudioLengthPerAyah = 8
-      const speedFactor = this.speed || 1
-      const adjustedAudioLength = avgAudioLengthPerAyah / speedFactor
-      const reviewTimePerAyah = this.visualMode === 'blur' ? 7 : 5
-      let totalSeconds = 0
+	      const reviewTimePerAyah = this.visualMode === 'blur' ? 7 : 5
+	      let totalSeconds = 0
 
-      remainingItems.forEach(item => {
-        const verse = item.verse || item
-        const verseLength = verse.arabic?.length || 100
-        const verseComplexity = Math.min(2, Math.max(0.8, verseLength / 150))
-        const audioTime = adjustedAudioLength * verseComplexity
-        const verseTotal = (audioTime * repetitionCount) + reviewTimePerAyah
-        totalSeconds += verseTotal
-      })
+	      remainingItems.forEach((item, index) => {
+	        totalSeconds += this.getQueueItemAudioSeconds(item, index === 0) + reviewTimePerAyah
+	      })
 
-      const delaySeconds = (this.delay || 1) * (remainingItems.length - 1)
+	      const delaySeconds = (this.delay || 1) * (remainingItems.length - 1)
       totalSeconds += delaySeconds
       const minutes = Math.max(0, Math.ceil(totalSeconds / 60))
       return `Audio time ≈ ${minutes} min`
     },
 
-    etaLabelAudioOnly() {
-      const remainingItems = (this.queue || []).slice(this.queueIndex)
-      if (!remainingItems.length) return '0 min'
+	    etaLabelAudioOnly() {
+	      const remainingItems = (this.queue || []).slice(this.queueIndex)
+	      if (!remainingItems.length) return '0 min'
 
-      const repetitionCount = this.currentMode === 'beginner'
-        ? (this.beginner.repeats || 1)
-        : (this.repeatAndLoopAudio ? (this.advancedRepeats || 1) : 1)
-
-      const avgAudioLengthPerAyah = 8
-      const speedFactor = this.speed || 1
-      const adjustedAudioLength = avgAudioLengthPerAyah / speedFactor
-
-      let totalAudioSeconds = 0
-      remainingItems.forEach(item => {
-        const verse = item.verse || item
-        const verseLength = verse.arabic?.length || 100
-        const verseComplexity = Math.min(2, Math.max(0.8, verseLength / 150))
-        totalAudioSeconds += adjustedAudioLength * verseComplexity * repetitionCount
-      })
+	      let totalAudioSeconds = 0
+	      remainingItems.forEach((item, index) => {
+	        totalAudioSeconds += this.getQueueItemAudioSeconds(item, index === 0)
+	      })
 
       const minutes = Math.max(0, Math.ceil(totalAudioSeconds / 60))
       return `Audio time ≈ ${minutes} min`
@@ -1625,8 +1715,9 @@ export default {
     }
   },
 
-  async mounted() {
-    this.loadVerseFontSizes()
+	  async mounted() {
+	    this.unwatchMutqinState = watchMutqinState(this.mutqinState)
+	    this.loadVerseFontSizes()
     this.migrateLocalStorage()
     this.loadUiState()
     this.restoreSessionState()
@@ -1679,9 +1770,11 @@ export default {
     if (this.bannerTimer) clearTimeout(this.bannerTimer)
     this.flushPlaybackTime()
     this.stopWordHighlighting()
-    this.persistAllState()
-    document.removeEventListener('click', this.handleClickOutside)
-  },
+	    this.persistAllState()
+	    saveMutqinState(this.mutqinState)
+	    if (this.unwatchMutqinState) this.unwatchMutqinState()
+	    document.removeEventListener('click', this.handleClickOutside)
+	  },
 
   watch: {
     theme: 'persistUiState',
@@ -1730,9 +1823,9 @@ export default {
     beginnerRepeats() {
       if (this.tab === 'beginner') this.rebuildQueue()
     },
-    advancedRepeats() {
-      if (this.tab === 'advanced' && this.repeatAndLoopAudio) this.rebuildQueue()
-    },
+	    advancedRepeats() {
+	      if (this.tab === 'advanced') this.rebuildQueue()
+	    },
     repeatAndLoopAudio() {
       if (this.tab === 'advanced') this.rebuildQueue()
     },
@@ -1772,10 +1865,10 @@ export default {
   },
 
   methods: {
-    setModeAndExplain(mode) {
-      this.tab = mode
-      this.currentMode = mode
-      this.showTools = true
+	    setModeAndExplain(mode) {
+	      this.tab = mode
+	      this.currentMode = mode
+	      this.showTools = true
 
       const store = this.getModeStore(mode)
       const isFreshMode = !store.chapterId && !store.verses?.length
@@ -1786,17 +1879,22 @@ export default {
         this.beginner.blurAdjacent = false
       }
 
-      if (isFreshMode && mode === 'advanced') {
-        this.advanced.repeatAndLoopAudio = true
-        this.advanced.advancedRepeats = Math.max(5, Number(this.advanced.advancedRepeats || 5))
-        this.advanced.blurAdjacent = true
-        this.advanced.focusMode = false
-      }
+	      if (isFreshMode && mode === 'advanced') {
+	        this.advanced.repeatAndLoopAudio = false
+	        this.advanced.advancedRepeats = Math.max(5, Number(this.advanced.advancedRepeats || 5))
+	        this.advanced.blurAdjacent = false
+	        this.advanced.focusMode = false
+	      }
 
-      this.applySessionConfig(this.buildSessionConfig(mode))
-      this.syncActiveVerseState(mode)
-      this.persistUiState()
-    },
+	      this.applySessionConfig(this.buildSessionConfig(mode))
+	      this.syncActiveVerseState(mode)
+	      this.persistUiState()
+	    },
+
+	    startNewSetup(mode) {
+	      this.setModeAndExplain(mode)
+	      this.showTools = true
+	    },
     cloneModeState(modeState) {
       return deepClone(modeState)
     },
@@ -1916,11 +2014,15 @@ export default {
         resolvedKey = verses[0].key
       }
 
-      let resolvedQueueIndex = queue.findIndex(item => (item?.verse?.key || item?.key) === resolvedKey)
-      if (resolvedQueueIndex < 0) {
-        resolvedQueueIndex = Math.max(0, Math.min(Number(store.queueIndex || 0), Math.max(queue.length - 1, 0)))
-        resolvedKey = queue[resolvedQueueIndex]?.verse?.key || queue[resolvedQueueIndex]?.key || resolvedKey
-      }
+	      const storedQueueIndex = Math.max(0, Math.min(Number(store.queueIndex || 0), Math.max(queue.length - 1, 0)))
+	      const storedQueueKey = queue[storedQueueIndex]?.verse?.key || queue[storedQueueIndex]?.key
+	      let resolvedQueueIndex = storedQueueKey === resolvedKey
+	        ? storedQueueIndex
+	        : queue.findIndex(item => (item?.verse?.key || item?.key) === resolvedKey)
+	      if (resolvedQueueIndex < 0) {
+	        resolvedQueueIndex = storedQueueIndex
+	        resolvedKey = queue[resolvedQueueIndex]?.verse?.key || queue[resolvedQueueIndex]?.key || resolvedKey
+	      }
 
       return this.setActiveVerse(resolvedKey, { mode, queueIndex: resolvedQueueIndex, scroll: false })
     },
@@ -1959,8 +2061,9 @@ export default {
       this.playMode = config.playMode || 'auto'
       // Spaced-return/chaining UI removed; force sequential order.
       this.order = 'seq'
-      this.focusMode = !!config.focusMode
-      this.blurAdjacent = !!config.blurAdjacent
+	      const wantsBlur = !!config.blurAdjacent
+	      this.focusMode = !!config.focusMode && !wantsBlur
+	      this.blurAdjacent = wantsBlur
       this.tajweedEnabled = !!config.tajweedEnabled
       this.quranFont = config.quranFont || this.quranFont
       this.fontScale = Number(config.fontScale || 1)
@@ -2213,17 +2316,22 @@ export default {
       this.lastScrollY = current
     },
 
-    buildContinueSessionPayload() {
-      const verse = this.verses[this.activeVerseIndex >= 0 ? this.activeVerseIndex : this.queueIndex]?.key || this.activeVerseKey
-      const source = this.currentMode === 'beginner' ? this.beginner : this.advanced
-      return {
+		    buildContinueSessionPayload() {
+	      const mutqinSession = this.mutqinState?.sessionState || {}
+	      const mutqinIndex = Math.max(0, Number(mutqinSession.current_index || 0))
+	      const mutqinItem = mutqinSession.queue?.[mutqinIndex]
+	      const verse = mutqinItem?.ayahId || this.verses[this.activeVerseIndex >= 0 ? this.activeVerseIndex : this.queueIndex]?.key || this.activeVerseKey
+	      const source = this.currentMode === 'beginner' ? this.beginner : this.advanced
+	      return {
         timestamp: Date.now(),
         mode: this.currentMode,
         tab: this.tab,
-        activeKey: verse || null,
-        activeVerseKey: this.activeVerseKey || null,
-        queueIndex: this.queueIndex || 0,
-        currentTime: this.currentTime || 0,
+	        activeKey: verse || null,
+	        activeVerseKey: mutqinItem?.ayahId || this.activeVerseKey || null,
+	        queueIndex: this.queueIndex || 0,
+	        mutqinSessionIndex: mutqinIndex,
+	        mutqinPhase: mutqinItem?.phase || mutqinSession.phase || 'Takrar',
+	        currentTime: this.currentTime || 0,
         duration: this.duration || 0,
         isPlaying: !!this.isPlaying,
         playerVisible: !!this.playerVisible,
@@ -2239,12 +2347,31 @@ export default {
       } catch (e) { console.error(e) }
     },
 
-    loadContinueSessionPrompt() {
-      try {
-        const raw = localStorage.getItem('telawa.continueSession')
-        if (!raw) return
-        const payload = JSON.parse(raw)
-        if (!payload?.config?.chapterId) return
+	    loadContinueSessionPrompt() {
+	      try {
+	        const raw = localStorage.getItem('telawa.continueSession')
+	        const mutqinSession = this.mutqinState?.sessionState
+	        if (mutqinSession?.active && mutqinSession?.config?.chapterId) {
+	          const activeItem = mutqinSession.queue?.[mutqinSession.current_index || 0]
+	          const restoredQueueIndex = Math.max(0, Number(mutqinSession.current_index || 0) - 1)
+	          this.continueSessionPayload = {
+	            timestamp: mutqinSession.updated_at ? Date.parse(mutqinSession.updated_at) : Date.now(),
+	            mode: mutqinSession.mode || 'beginner',
+	            tab: mutqinSession.mode || 'beginner',
+	            activeKey: activeItem?.ayahId || null,
+	            activeVerseKey: activeItem?.ayahId || null,
+	            queueIndex: restoredQueueIndex,
+	            mutqinSessionIndex: Number(mutqinSession.current_index || 0),
+	            mutqinPhase: activeItem?.phase || mutqinSession.phase || 'Takrar',
+	            config: mutqinSession.config
+	          }
+	          this.hasContinueSession = true
+	          this.continueSessionLabel = `${mutqinSession.mode === 'advanced' ? 'Advanced' : 'Beginner'} · Surah ${mutqinSession.config.chapterId} · Ayahs ${mutqinSession.config.rangeStart}-${mutqinSession.config.rangeEnd}`
+	          return
+	        }
+	        if (!raw) return
+	        const payload = JSON.parse(raw)
+	        if (!payload?.config?.chapterId) return
         this.continueSessionPayload = payload
         this.hasContinueSession = true
         this.continueSessionLabel = `${payload.mode === 'advanced' ? 'Advanced' : 'Beginner'} · Surah ${payload.config.chapterId} · Ayahs ${payload.config.rangeStart}-${payload.config.rangeEnd}`
@@ -2271,9 +2398,22 @@ export default {
       }
       this.applySessionConfig(this.buildSessionConfig(this.currentMode))
       await this.loadChapter()
-      this.buildQueue(this.currentMode)
-      this.getModeStore(this.currentMode).queueIndex = Number(payload.queueIndex || 0)
-      this.syncActiveVerseState(this.currentMode, payload.activeVerseKey || payload.activeKey || null)
+	      this.buildQueue(this.currentMode)
+	      const store = this.getModeStore(this.currentMode)
+	      const canonicalIndex = Number.isFinite(Number(payload.mutqinSessionIndex)) ? Number(payload.mutqinSessionIndex) : null
+	      if (canonicalIndex !== null) moveMutqinSession(this.mutqinState, canonicalIndex)
+	      const canonicalItem = canonicalIndex !== null ? this.mutqinState.sessionState?.queue?.[canonicalIndex] : null
+	      const targetKey = payload.activeVerseKey || payload.activeKey || canonicalItem?.ayahId || null
+	      let restoredQueueIndex = Math.max(0, Number(payload.queueIndex || 0))
+	      if (targetKey) {
+	        const currentQueueKey = store.queue?.[restoredQueueIndex]?.verse?.key || store.queue?.[restoredQueueIndex]?.key
+	        if (currentQueueKey !== targetKey) {
+	          const exactIndex = store.queue?.findIndex(item => (item?.verse?.key || item?.key) === targetKey)
+	          if (exactIndex >= 0) restoredQueueIndex = exactIndex
+	        }
+	      }
+	      store.queueIndex = restoredQueueIndex
+	      this.syncActiveVerseState(this.currentMode, targetKey)
       this.playerVisible = !!payload.playerVisible
       this.restoredAudioState = {
         src: payload.audioSrc || '',
@@ -2455,10 +2595,9 @@ export default {
           } else {
             // Find verse and play from this word position
             const verse = this.verses.find(v => v.key === verseKey)
-            if (verse && verse.audio) {
-              this.playVerse(verse)
-              // TODO: Seek to word position if possible
-            }
+	            if (verse && verse.audio) {
+	              this.playVerse(verse)
+	            }
           }
         }
       })
@@ -2467,25 +2606,15 @@ export default {
       const remainingItems = (this.queue || []).slice(this.queueIndex)
       if (!remainingItems.length) return null
 
-      const repetitionCount = this.currentMode === 'beginner'
-        ? (this.beginner.repeats || 1)
-        : (this.repeatAndLoopAudio ? (this.advancedRepeats || 1) : 1)
+	      const reviewTimePerAyah = 5
 
-      const avgAudioLengthPerAyah = 8
-      const speedFactor = this.speed || 1
-      const reviewTimePerAyah = 5
+	      let totalAudioSeconds = 0
+	      let totalReviewSeconds = 0
 
-      let totalAudioSeconds = 0
-      let totalReviewSeconds = 0
-
-      remainingItems.forEach(item => {
-        const verse = item.verse || item
-        const verseLength = verse.arabic?.length || 100
-        const verseComplexity = Math.min(2, Math.max(0.8, verseLength / 150))
-
-        totalAudioSeconds += (avgAudioLengthPerAyah / speedFactor) * verseComplexity * repetitionCount
-        totalReviewSeconds += reviewTimePerAyah
-      })
+	      remainingItems.forEach((item, index) => {
+	        totalAudioSeconds += this.getQueueItemAudioSeconds(item, index === 0)
+	        totalReviewSeconds += reviewTimePerAyah
+	      })
 
       const totalSeconds = totalAudioSeconds + totalReviewSeconds
       const minutes = Math.ceil(totalSeconds / 60)
@@ -2494,12 +2623,12 @@ export default {
 
       return {
         totalMinutes: minutes,
-        audioMinutes: audioMinutes,
-        reviewMinutes: reviewMinutes,
-        verseCount: remainingItems.length,
-        repetitionCount: repetitionCount
-      }
-    },
+	        audioMinutes: audioMinutes,
+	        reviewMinutes: reviewMinutes,
+	        verseCount: remainingItems.length,
+	        repetitionCount: remainingItems.length
+	      }
+	    },
     getEtaTooltip() {
       const details = this.getRemainingTimeDetails()
       if (!details) return ''
@@ -3313,10 +3442,11 @@ export default {
     },
 
     next() {
-      if (this.canNext) {
-        this.sessionCompleted = false
-        this.queueIndex++
-        const entry = this.queue[this.queueIndex]
+	      if (this.canNext) {
+	        this.sessionCompleted = false
+	        this.queueIndex++
+	        moveMutqinSession(this.mutqinState, this.queueIndex + 1)
+	        const entry = this.queue[this.queueIndex]
         const verseKey = entry?.verse?.key || entry?.key
         if (verseKey) {
           this.setActiveVerse(verseKey)
@@ -3334,9 +3464,10 @@ export default {
 
     prev() {
       if (!this.canPrev) return
-      this.sessionCompleted = false
-      this.queueIndex--
-      const entry = this.queue[this.queueIndex]
+	      this.sessionCompleted = false
+	      this.queueIndex--
+	      moveMutqinSession(this.mutqinState, this.queueIndex + 1)
+	      const entry = this.queue[this.queueIndex]
       const verseKey = entry?.verse?.key || entry?.key
       if (verseKey) {
         this.setActiveVerse(verseKey, { scroll: false })
@@ -3384,12 +3515,13 @@ export default {
           } else {
             this.advanced.verses = cached.verses
             this.advanced.loadedConfig = cached.loadedConfig
-          }
-          this.buildQueue(mode)
-          this.syncActiveVerseState(mode)
-          this.isDataReady = true
-          return
-        }
+	          }
+	          this.buildQueue(mode)
+	          this.syncActiveVerseState(mode)
+	          this.syncMutqinAyahs(cached.verses)
+	          this.isDataReady = true
+	          return
+	        }
 
         const [audioRes, translationRes, translitRes, arabicRes, tajweedRes] = await Promise.all([
           getSurahEdition(chapterId, reciterId),
@@ -3455,19 +3587,20 @@ export default {
             showWordByWord: this.showWordByWord,
             tajweedEnabled: this.tajweedEnabled
           }
-        } else {
-          this.advanced.verses = mappedVerses
-          this.advanced.loadedConfig = {
+	        } else {
+	          this.advanced.verses = mappedVerses
+	          this.advanced.loadedConfig = {
             chapterId,
             rangeStart: start,
             rangeEnd: end,
             reciterId,
             showWordByWord: this.showWordByWord,
-            tajweedEnabled: this.tajweedEnabled
-          }
-        }
+	            tajweedEnabled: this.tajweedEnabled
+	          }
+	        }
+	        this.syncMutqinAyahs(mappedVerses)
 
-        this.setCachedVerses(mode, targetConfig, {
+	        this.setCachedVerses(mode, targetConfig, {
           verses: mappedVerses,
           loadedConfig: mode === 'beginner' ? this.beginner.loadedConfig : this.advanced.loadedConfig
         })
@@ -3496,7 +3629,7 @@ export default {
       return cleaned
     },
 
-    buildQueue(mode = this.currentMode) {
+	    buildQueue(mode = this.currentMode) {
       const config = mode === 'beginner' ? this.beginner : this.advanced
       const verses = config.verses
       const previousActiveKey = config.activeKey
@@ -3535,15 +3668,17 @@ export default {
             }
           }
         })
-      } else {
-        const rep = mode === 'beginner'
-          ? Math.max(1, Number(this.beginner.repeats || 1))
-          : 1
-        for (let r = 0; r < rep; r++) {
-          verses.forEach(verse => {
-            q.push({
-              verse,
-              repeatCount: r + 1,
+	      } else {
+	        // Sequential queue. Repetitions should apply in BOTH modes.
+	        // Advanced used to hard-force a single pass when chaining is off, which made "Repetitions" feel broken.
+	        const rep = mode === 'beginner'
+	          ? Math.max(1, Number(this.beginner.repeats || 1))
+	          : Math.max(1, Number(this.advanced.advancedRepeats || 1))
+	        for (let r = 0; r < rep; r++) {
+	          verses.forEach(verse => {
+	            q.push({
+	              verse,
+	              repeatCount: r + 1,
               totalRepeats: rep,
               chainStage: 1,
               chainSize: 1,
@@ -3585,11 +3720,11 @@ export default {
       const config = this.sessionConfig
       const mode = config.mode || this.currentMode
 
-      if (!config.chapterId || config.chapterId === 0) {
-        this.showTools = true
-        this.showBanner('Please select a surah first', 'info', 3000)
-        return
-      }
+	      if (!config.chapterId || config.chapterId === 0) {
+	        this.showTools = true
+	        this.showBanner('Please select a surah first', 'info', 3600, { key: 'open-setup', label: 'Open setup' })
+	        return
+	      }
 
       if (!this.validateSettings()) {
         return
@@ -3627,15 +3762,28 @@ export default {
         ? this.beginner.queue
         : this.advanced.queue
 
-      if (!builtQueue || builtQueue.length === 0) {
-        this.showBanner('Nothing to play. Check repeat/loop settings.', 'error')
-        return
-      }
+	      if (!builtQueue || builtQueue.length === 0) {
+	        this.showBanner('Nothing to play. Check repeat/loop settings.', 'error')
+	        return
+	      }
+	      this.syncMutqinAyahs(updatedVerses)
+		      const sessionState = this.syncMutqinSession(builtQueue, mode)
+		      const canonicalIndex = Math.max(0, Number(sessionState?.current_index || 0))
+		      const canonicalItem = sessionState?.queue?.[canonicalIndex]
+		      let playbackIndex = canonicalIndex > 0
+		        ? Math.min(canonicalIndex - 1, builtQueue.length - 1)
+		        : 0
+		      const canonicalKey = canonicalItem?.ayahId || canonicalItem?.verse?.key
+		      if (canonicalKey && (builtQueue[playbackIndex]?.verse?.key || builtQueue[playbackIndex]?.key) !== canonicalKey) {
+		        const exactIndex = builtQueue.findIndex(entry => (entry?.verse?.key || entry?.key) === canonicalKey)
+		        if (exactIndex >= 0) playbackIndex = exactIndex
+		      }
 
-      // Start from beginning
-      this.queueIndex = 0
-      this.getModeStore(mode).queueIndex = 0
-      const first = builtQueue[0]
+		      this.queueIndex = playbackIndex
+		      this.getModeStore(mode).queueIndex = playbackIndex
+		      const nextCanonicalIndex = canonicalIndex > 0 ? canonicalIndex : 1
+		      moveMutqinSession(this.mutqinState, nextCanonicalIndex)
+		      const first = builtQueue[playbackIndex]
 
       if (first && first.verse) {
         this.syncActiveVerseState(mode, first.verse.key)
@@ -3662,22 +3810,156 @@ export default {
       return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`
     },
 
-    normalizeAudioUrl(url) {
-      if (!url) return ''
-      if (url.startsWith('http://') || url.startsWith('https://')) return url
-      if (url.startsWith('//')) return `https:${url}`
-      if (url.startsWith('/')) return `https://verses.quran.com${url}`
-      if (url.includes('mp3')) return `https://verses.quran.com/${url}`
-      return url
-    },
+	    normalizeAudioUrl(url) {
+	      if (!url) return ''
+	      if (url.startsWith('http://') || url.startsWith('https://')) return url
+	      if (url.startsWith('//')) return `https:${url}`
+	      if (url.startsWith('/')) return `https://verses.quran.com${url}`
+	      if (url.includes('mp3')) return `https://verses.quran.com/${url}`
+	      return url
+	    },
 
-    showBanner(message, kind = 'info', ttlMs = 3500, action = null) {
-      if (this.bannerTimer) clearTimeout(this.bannerTimer)
-      this.banner = { message, kind, at: Date.now(), actionKey: action?.key || '', actionLabel: action?.label || '' }
-      this.bannerTimer = setTimeout(() => {
-        if (this.banner && Date.now() - this.banner.at >= ttlMs) this.banner = null
-      }, ttlMs + 50)
-    },
+	    getQueueItemAudioSeconds(item = {}, allowCurrentProgress = false) {
+	      const verse = item.verse || item
+	      const speedFactor = Math.max(0.25, Number(this.speed || 1))
+	      if (allowCurrentProgress && this.duration > 0) {
+	        return Math.max(0, Number(this.duration || 0) - Number(this.currentTime || 0)) / speedFactor
+	      }
+	      const explicitDuration = Number(verse.duration || verse.audioDuration || 0)
+	      if (Number.isFinite(explicitDuration) && explicitDuration > 0) return explicitDuration / speedFactor
+	      const arabicLength = String(verse.arabic || verse.text || '').replace(/[^ء-ي]/g, '').length || 80
+	      return Math.max(5, Math.min(45, arabicLength * 0.12)) / speedFactor
+	    },
+
+		    showBanner(message, kind = 'info', ttlMs = 3500, action = null) {
+	      if (this.bannerTimer) clearTimeout(this.bannerTimer)
+	      this.banner = { message, kind, at: Date.now(), actionKey: action?.key || '', actionLabel: action?.label || '' }
+	      this.bannerTimer = setTimeout(() => {
+	        if (this.banner && Date.now() - this.banner.at >= ttlMs) this.banner = null
+	      }, ttlMs + 50)
+	    },
+
+	    runBannerAction() {
+	      const actionKey = this.banner?.actionKey
+	      this.banner = null
+	      if (actionKey === 'restart-session') {
+	        this.startSession()
+	        return
+	      }
+	      if (actionKey === 'open-setup') {
+	        this.openModeSettings()
+	      }
+	    },
+
+	    syncMutqinAyahs(verses = this.verses) {
+	      if (!Array.isArray(verses) || !verses.length) return
+	      seedAyahs(this.mutqinState, verses)
+	    },
+
+	    syncMutqinSession(queue = this.queue, mode = this.currentMode) {
+	      const playbackQueue = (queue || []).map(item => {
+	        const verse = item?.verse || item
+	        return {
+	          phase: 'Takrar',
+	          ayahId: verse?.key || item?.ayahId || null,
+	          verse,
+	          repeatCount: item?.repeatCount || 1,
+	          totalRepeats: item?.totalRepeats || 1,
+	          chainStage: item?.chainStage || null
+	        }
+	      }).filter(item => item.ayahId)
+	      const uniqueVerses = []
+	      const seen = new Set()
+	      playbackQueue.forEach(item => {
+	        if (seen.has(item.ayahId)) return
+	        seen.add(item.ayahId)
+	        if (item.verse) uniqueVerses.push(item.verse)
+	      })
+	      const repetitions = mode === 'beginner' ? this.beginnerRepeats : this.advancedRepeats
+	      const planner = createDailyPlan(this.mutqinState, uniqueVerses, {
+	        repetitions,
+	        audioDurations: uniqueVerses.reduce((map, verse) => {
+	          map[verse.key] = Number(verse.duration || this.duration || 0)
+	          return map
+	        }, {}),
+	        reviewSeconds: this.visualMode === 'blur' ? 25 : 18
+	      })
+	      const plannerQueue = uniqueVerses.slice(0, 1).map(verse => ({
+	        phase: 'Planner',
+	        ayahId: verse.key,
+	        verse,
+	        prompt: `${this.currentChapter?.name_simple || 'Session'} ayahs ${this.rangeStart}-${this.rangeEnd}`
+	      }))
+	      const chainQueue = planner.chains.map(item => ({
+	        ...item,
+	        ayahId: item.verse?.key || item.ayahId,
+	        prompt: item.prompt || `Recite ayah ${item.verse?.number || ''}`
+	      }))
+	      const recallQueue = uniqueVerses.map(verse => ({
+	        phase: 'Recall',
+	        ayahId: verse.key,
+	        verse,
+	        prompt: `Recite ayah ${verse.number}`
+	      }))
+		      const reviewQueue = planner.reviews.map(ayah => ({ phase: 'Retention', ayahId: ayah.id }))
+	      const fullQueue = buildSessionQueue({
+	        planner: plannerQueue,
+	        takrar: playbackQueue,
+	        chaining: chainQueue,
+	        recall: recallQueue,
+	        review: reviewQueue
+	      })
+		      return startMutqinSession(this.mutqinState, {
+		        mode,
+		        queue: fullQueue,
+		        config: this.buildSessionConfig(mode),
+	        planner: {
+	          new: planner.new.map(verse => verse.key),
+	          chains: planner.chains.map(item => item.verse?.key).filter(Boolean),
+	          reviews: planner.reviews.map(ayah => ayah.id),
+	          ETA: planner.ETA
+	        }
+	      })
+	    },
+
+	    getMutqinAyah(id) {
+	      return this.mutqinState.ayahs?.[id] || null
+	    },
+
+	    takrarLabel(id) {
+	      const ayah = this.getMutqinAyah(id)
+	      if (!ayah) return 'Takrar: ready'
+	      const step = getTakrarStep(ayah)
+	      const target = typeof step === 'number' ? `${ayah.repetition_count}/${step}` : step
+	      return `Takrar: ${target}`
+	    },
+
+	    retentionLabel(id) {
+	      const ayah = this.getMutqinAyah(id)
+	      if (!ayah) return 'Fresh'
+	      return `${ayah.zone} review: ${ayah.next_review || 'today'}`
+	    },
+
+	    markTakrarRepeat(verse) {
+	      this.syncMutqinAyahs([verse])
+	      repeatAyah(this.mutqinState, verse.key)
+	    },
+
+	    markTakrarHide(verse) {
+	      this.syncMutqinAyahs([verse])
+	      hideAyah(this.mutqinState, verse.key)
+	    },
+
+	    markTakrarDone(verse, score) {
+	      this.syncMutqinAyahs([verse])
+	      completeTakrarStep(this.mutqinState, verse.key, score)
+	      scoreRetention(this.mutqinState, verse.key, score)
+	      const previous = this.queue?.[Math.max(0, this.queueIndex - 1)]
+	      const fromId = previous?.verse?.key || previous?.key
+	      if (fromId && fromId !== verse.key) recordChainResult(this.mutqinState, fromId, verse.key, score !== 'Forgot')
+	      this.recomputeAnalytics()
+	      this.showBanner(score === 'Forgot' ? 'Marked for review' : 'Progress saved', score === 'Forgot' ? 'info' : 'success', 1400)
+	    },
 
     handleOnline() {
       this.networkOnline = true
@@ -3703,13 +3985,14 @@ export default {
       }
     },
 
-    handleSessionComplete() {
-      if (!this.verses.length) return
-      this.sessionCompleted = true
-      this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
-      this.recomputeAnalytics()
-      this.showBanner('Session complete', 'success', 4500)
-    },
+	    handleSessionComplete() {
+	      if (!this.verses.length) return
+	      this.sessionCompleted = true
+	      completeMutqinSession(this.mutqinState)
+	      this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
+	      this.recomputeAnalytics()
+	      this.showBanner('Session complete', 'success', 6500, { key: 'restart-session', label: 'Review again' })
+	    },
 
     handlePrimaryAction() {
       if (this.isPlaying) {
@@ -3717,17 +4000,17 @@ export default {
         this.isPlaying = false
         return
       }
-      if (!this.canStartSession) {
-        this.showTools = true
-        this.showBanner('Choose a valid surah and ayah range before starting.', 'info', 2600)
-        return
-      }
+	      if (!this.canStartSession) {
+	        this.showTools = true
+	        this.showBanner('Choose a valid surah and ayah range before starting.', 'info', 3600, { key: 'open-setup', label: 'Open setup' })
+	        return
+	      }
       this.startSession()
     },
 
-    validateSettings() {
-      const config = this.sessionConfig
-      const errors = []
+	    validateSettings() {
+	      const config = this.sessionConfig
+	      const errors = []
 
       if (!config.chapterId || config.chapterId === 0) {
         errors.push('No surah selected')
@@ -3741,9 +4024,12 @@ export default {
         errors.push('Invalid verse range')
       }
 
-      if (this.currentMode === 'advanced' && config.repeatAndLoopAudio && config.advancedRepeats < 1) {
-        errors.push('Repetition count must be at least 1')
-      }
+	      const repeatsRaw = this.currentMode === 'beginner'
+	        ? Number(config.repeats || 1)
+	        : Number(config.advancedRepeats || 1)
+	      if (!Number.isFinite(repeatsRaw) || repeatsRaw < 1) {
+	        errors.push('Repetition count must be at least 1')
+	      }
 
       if (errors.length > 0) {
         this.showBanner(`Settings issue: ${errors.join(', ')}`, 'warning', 3000)
@@ -3901,9 +4187,10 @@ export default {
       this.persistAudioState()
       this.persistContinueSession()
       this.persistPlanner()
-      this.persistTodayPlan()
-      this.persistSm2()
-    },
+	      this.persistTodayPlan()
+	      this.persistSm2()
+	      saveMutqinState(this.mutqinState)
+	    },
 
     // Data loading methods
     async loadChapters() {
@@ -4107,8 +4394,14 @@ export default {
       this.analytics.totalTimeSpent = Math.round(totalSeconds / 60)
       this.analytics.currentStreak = todayKey && streak ? streak : 0
       this.analytics.weeklyVerses = weeklyVerses
-      this.analytics.weeklyMinutes = weeklyMinutes.map(m => Math.round(m))
-      this.persistAnalytics()
+	      this.analytics.weeklyMinutes = weeklyMinutes.map(m => Math.round(m))
+	      const mutqinStats = this.mutqinState?.stats || {}
+	      this.analytics.versesMastered = Number(mutqinStats.ayahs_memorised || this.analytics.versesMastered || 0)
+	      this.analytics.totalRepetitions = Math.max(this.analytics.totalRepetitions, Number(mutqinStats.repetitions || 0))
+	      this.analytics.sessionsCompleted = Math.max(this.analytics.sessionsCompleted, Number(mutqinStats.sessions_completed || 0))
+	      this.simpleStats.weak = Number(mutqinStats.weak_transitions || 0)
+	      this.weakVersesList = Object.values(this.mutqinState?.ayahs || {}).filter(ayah => Number(ayah.weak_count || 0) > 0)
+	      this.persistAnalytics()
       this.updateMasteredWeekly()
     },
 
@@ -4163,17 +4456,17 @@ export default {
     },
 
     performResetControls() {
-      this.rangeStart = 1
-      this.rangeEnd = 7
-      this.speed = 1
-      this.delay = 1
-      if (this.currentMode === 'advanced') {
-        this.repeatAndLoopAudio = false
-        this.advancedRepeats = 1
-        this.chainingConfig = { step: 1, goal: 'memorise', style: 'sequential' }
-      } else {
-        this.beginnerRepeats = 1
-      }
+	      this.rangeStart = 1
+	      this.rangeEnd = 7
+	      this.speed = 1
+	      this.delay = 2
+	      if (this.currentMode === 'advanced') {
+	        this.repeatAndLoopAudio = false
+	        this.advancedRepeats = 5
+	        this.chainingConfig = { step: 1, goal: 'memorise', style: 'sequential' }
+	      } else {
+	        this.beginnerRepeats = 3
+	      }
       this.playMode = 'auto'
       this.order = 'seq'
       this.blurAdjacent = false
@@ -4545,6 +4838,16 @@ html {
 .session-pill strong {
   color: var(--text);
   font-weight: 700;
+}
+
+.session-pill-focus {
+  max-width: min(280px, 100%);
+}
+
+.session-pill-focus strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .session-rail-kicker {
@@ -7925,6 +8228,144 @@ html {
   margin-bottom: 40px;
 }
 
+.setup-start-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 18px;
+  padding: 20px;
+  margin-bottom: 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.setup-start-copy {
+  min-width: 0;
+}
+
+.setup-kicker {
+  display: inline-flex;
+  margin-bottom: 6px;
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.setup-start-copy h2 {
+  margin: 0 0 6px;
+  color: var(--text);
+  font-size: clamp(1.2rem, 2vw, 1.65rem);
+  line-height: 1.1;
+}
+
+.setup-start-copy p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.setup-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(112px, 1fr));
+  gap: 10px;
+}
+
+.setup-mode-card {
+  min-height: 86px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.setup-mode-card:hover,
+.setup-mode-card.active {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.setup-mode-card i {
+  color: var(--accent);
+  font-size: 1.2rem;
+}
+
+.setup-mode-card span {
+  font-weight: 800;
+}
+
+.setup-mode-card small {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.setup-primary {
+  min-height: 48px;
+  white-space: nowrap;
+}
+
+.learning-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.learning-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.learning-meta span {
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: var(--bg-body);
+}
+
+.learning-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.learning-buttons button {
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+
+.learning-buttons button:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
 .continue-session-card {
   display: flex;
   align-items: center;
@@ -8130,6 +8571,36 @@ html {
 }
 
 @media (max-width: 768px) {
+  .setup-start-card {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    padding: 16px;
+  }
+
+  .setup-mode-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .setup-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .learning-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .learning-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+  }
+
+  .learning-buttons button {
+    width: 100%;
+  }
+
   .continue-session-card {
     flex-direction: column;
     align-items: stretch;
@@ -8439,23 +8910,3 @@ html {
   }
 }
 </style>
-    activeChapter() {
-      const id = Number(this.chapterId || 0)
-      if (!id || !Array.isArray(this.chapters) || !this.chapters.length) return null
-      return this.chapters.find(c => Number(c.id) === id) || null
-    },
-
-    activeChapterName() {
-      return this.activeChapter?.name_simple || (this.chapterId ? `Surah ${this.chapterId}` : 'Choose surah')
-    },
-    versesMasteredDeltaThisWeek() {
-      try {
-        const raw = localStorage.getItem('telawa.masteredWeekly') || 'null'
-        const data = JSON.parse(raw)
-        if (!data || !Array.isArray(data.series)) return 0
-        const sum = data.series.reduce((a, b) => a + Number(b || 0), 0)
-        return sum
-      } catch {
-        return 0
-      }
-    },
