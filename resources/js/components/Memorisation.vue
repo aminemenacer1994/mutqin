@@ -83,32 +83,37 @@
                   </div>
                 </div>
               </details>
-	            <button class="cta cta-primary setup-primary" @click="startSession" :disabled="!canStartSession"
+	            <button class="cta cta-primary setup-primary" @click="beginSessionStart" :disabled="!canStartSession"
 	              title="Start session">
 	              <i class="bi bi-play-fill"></i> {{ dueCount ? 'Start Review' : 'Start Session' }}
 	            </button>
 	          </div>
 	        </section>
 
-        <!-- Floating Actions (replaces the session rail bar) -->
-        <div v-if="currentChapter && hasVerses" class="workspace-fab" aria-label="Workspace actions">
-          <div class="workspace-fab-meta">
-            <div class="workspace-fab-title">{{ currentChapter.name_simple }}</div>
-            <div class="workspace-fab-sub">
-              Ayah {{ currentPosition }}/{{ totalVerses }}
-              <span v-if="chainingActive" class="workspace-fab-chip">Chaining</span>
+        <section v-if="currentChapter && hasVerses" class="workspace-status-card">
+          <div class="workspace-status-main">
+            <div class="workspace-status-kicker">This session</div>
+            <h3>{{ currentSessionSummary }}</h3>
+            <p>{{ currentSessionDescription }}</p>
+            <div class="workspace-status-pills">
+              <span class="workspace-info-pill" v-if="chainingActive"><i class="bi bi-diagram-3"></i> Chaining</span>
             </div>
           </div>
-          <div class="workspace-fab-actions">
+          <div class="workspace-status-actions">
             <button class="fab-btn fab-btn-ghost" @click="openAdvancedControls" title="Open session controls">
               <i class="bi bi-sliders"></i><span>Controls</span>
             </button>
             <button class="fab-btn fab-btn-primary" @click="handlePrimaryAction" :disabled="!isPlaying && !canStartSession">
               <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-              <span>{{ isPlaying ? 'Pause' : (guidedUiStep === 'review' ? 'Review' : 'Play') }}</span>
+              <span>{{ primaryWorkspaceCta }}</span>
             </button>
           </div>
-        </div>
+          <div class="workspace-next-card">
+            <div class="workspace-status-kicker">When this session is complete</div>
+            <strong>{{ nextSessionSummary }}</strong>
+            <p>{{ nextSessionDescription }}</p>
+          </div>
+        </section>
 
         <!-- REMOVE the standalone beginner mode button if it exists elsewhere -->
 
@@ -206,13 +211,6 @@
                   }">
                 </div>
 
-                <div v-if="effectiveActiveVerseKey === verse.key" class="learning-actions">
-                  <div class="learning-meta">
-                    <span>{{ guidedPhaseLabel }}</span>
-                    <span>{{ currentLearningPrompt }}</span>
-                  </div>
-                </div>
-
                 <!-- Keep in-workspace aids available, but visually quieter -->
                 <div v-if="showTransliteration && verse.transliteration" class="verse-transliteration verse-aid">
                   {{ verse.transliteration }}
@@ -238,7 +236,7 @@
       </div>
 
       <!-- Advanced Controls Drawer -->
-      <div v-if="hasVerses && showTools" class="tools-backdrop" @click="showTools = false" aria-hidden="true"></div>
+        <div v-if="hasVerses && showTools" class="tools-backdrop" @click="showTools = false" aria-hidden="true"></div>
       <aside v-if="hasVerses" class="tools" :class="{ open: showTools }">
         <div class="tools-top">
           <div class="tools-topbar">
@@ -246,7 +244,6 @@
             <button class="tools-x" @click="showTools = false" aria-label="Close panel"><i
                 class="bi bi-x-lg"></i></button>
           </div>
-          <div class="tools-context">{{ contextLabel }}</div>
           <div class="tools-tabs" role="tablist" aria-label="Controls tabs">
             <button :class="{ active: tab === 'tools', 'active-tab': tab === 'tools' }"
               @click="tab = 'tools'" title="Session tools">
@@ -259,7 +256,7 @@
           </div>
         </div>
 
-          <div class="tools-body compact">
+        <div class="tools-body compact">
             <div v-if="tab === 'tools'" class="sheet">
               <section class="sheet-section">
                 <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
@@ -409,7 +406,7 @@
         </div>
 
         <div class="tools-footer">
-          <button class="tools-btn tools-btn-primary tools-btn-start" @click="startSession" :disabled="!canStartSession">
+          <button class="tools-btn tools-btn-primary tools-btn-start" @click="beginSessionStart" :disabled="!canStartSession">
             <i class="bi bi-play-fill"></i><span>Start memorising</span>
           </button>
           <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="resetControls"><i
@@ -418,6 +415,14 @@
               class="bi bi-x-circle"></i><span>Close</span></button>
         </div>
       </aside>
+    </div>
+
+    <div v-if="startCountdown > 0" class="session-countdown-overlay" aria-live="assertive">
+      <div class="session-countdown-card">
+        <div class="session-countdown-kicker">Starting session</div>
+        <div class="session-countdown-value">{{ startCountdown }}</div>
+        <p>{{ countdownMessage }}</p>
+      </div>
     </div>
 
     <div v-else-if="appReady && !isLoggedIn" class="main container">
@@ -950,6 +955,9 @@ export default {
       compactMode: false,
       bookmarks: [],
       pins: [],
+      startCountdown: 0,
+      countdownTimer: null,
+      pendingSessionStart: false,
 
       // Options
       speedOptions: [0.5, 0.75, 1, 1.25, 1.5],
@@ -1115,6 +1123,56 @@ export default {
         hour: '2-digit',
         minute: '2-digit'
       })
+    },
+
+    primaryWorkspaceCta() {
+      if (this.isPlaying) return 'Pause'
+      if (this.guidedUiStep === 'review') return 'Start review'
+      if (this.guidedUiStep === 'practice') return 'Try reciting'
+      if (this.guidedUiStep === 'recall') return 'Recall'
+      return 'Play'
+    },
+
+    workspaceActionDescription() {
+      if (!this.effectiveActiveVerseKey) return 'Start when you are ready.'
+      if (this.guidedUiStep === 'review') return 'Review what is due.'
+      if (this.guidedUiStep === 'practice') return 'Try reciting with a soft visual cue.'
+      if (this.guidedUiStep === 'recall') return 'Recite before revealing.'
+      return 'Listen and follow.'
+    },
+
+    visualModeLabel() {
+      if (this.visualMode === 'blur') return 'Blur recall'
+      if (this.visualMode === 'focus') return 'Focus mode'
+      return 'Open reading'
+    },
+
+    currentSessionSummary() {
+      if (!this.currentChapter) return 'Prepare your session'
+      return `${this.currentChapter.name_simple} · Ayahs ${this.rangeStart}-${this.rangeEnd}`
+    },
+
+    currentSessionDescription() {
+      if (this.guidedUiStep === 'review') return 'Review what is due.'
+      if (this.guidedUiStep === 'practice') return 'Try reciting with minimal support.'
+      if (this.guidedUiStep === 'recall') return 'Recite first, then reveal if needed.'
+      return 'Listen and follow.'
+    },
+
+    nextSessionSummary() {
+      if (this.dueCount) return 'Next: review what is due'
+      return 'Move to the next small range'
+    },
+
+    nextSessionDescription() {
+      if (this.dueCount) return `After this set, Mutqin will bring back ${this.dueCount} verse${this.dueCount === 1 ? '' : 's'} for review (spaced over time), before adding new ayahs.`
+      return 'After this set, continue with the next few ayahs using the same reciter and pace.'
+    },
+
+    countdownMessage() {
+      return this.effectiveActiveVerseKey
+        ? `Ayah ${this.currentPosition} will start automatically.`
+        : 'Your session will start automatically.'
     },
 
 	    hasSelectedSurah() {
@@ -1654,6 +1712,7 @@ export default {
     window.removeEventListener('keydown', this.handleGlobalKeydown)
     window.removeEventListener('scroll', this.handleWindowScroll)
     if (this.bannerTimer) clearTimeout(this.bannerTimer)
+    if (this.countdownTimer) clearInterval(this.countdownTimer)
     this.flushPlaybackTime()
     this.stopWordHighlighting()
 	    this.persistAllState()
@@ -1740,6 +1799,45 @@ export default {
   },
 
   methods: {
+    beginSessionStart() {
+      if (this.pendingSessionStart || this.startCountdown > 0) return
+      if (!this.canStartSession) {
+        this.showTools = true
+        this.showBanner('Choose a valid surah and ayah range before starting.', 'info', 3600, { key: 'open-setup', label: 'Open setup' })
+        return
+      }
+      this.pendingSessionStart = true
+      this.startCountdown = 3
+      if (this.countdownTimer) clearInterval(this.countdownTimer)
+      this.countdownTimer = setInterval(async () => {
+        if (this.startCountdown <= 1) {
+          clearInterval(this.countdownTimer)
+          this.countdownTimer = null
+          this.startCountdown = 0
+          try {
+            await this.startSession(true)
+          } finally {
+            this.pendingSessionStart = false
+          }
+          return
+        }
+        this.startCountdown -= 1
+      }, 1000)
+    },
+
+    replayCurrentVerse() {
+      const verse = this.activeVerseRef
+      if (verse) this.playVerse(verse, { force: true })
+    },
+
+    toggleFocusMode() {
+      this.focusMode = !this.focusMode
+    },
+
+    toggleBlurMode() {
+      this.blurAdjacent = !this.blurAdjacent
+    },
+
     openAdvancedControls() {
       // Keep power features accessible, but behind a tertiary surface.
       this.tab = 'tools'
@@ -3658,7 +3756,11 @@ export default {
       this.buildQueue(mode)
     },
 
-    async startSession() {
+    async startSession(skipCountdown = false) {
+      if (!skipCountdown) {
+        this.beginSessionStart()
+        return
+      }
       const config = this.sessionConfig
       const mode = config.mode || this.currentMode
 
@@ -3675,6 +3777,7 @@ export default {
       this.applySessionConfig(config)
       this.persistModeState(mode)
       this.persistUiState()
+      this.sessionCompleted = false
 
       const currentVerses = mode === 'beginner' ? this.beginner.verses : this.advanced.verses
       const modeNeedsReload = !currentVerses || !currentVerses.length || !this.modeDataMatchesConfig(mode, config)
@@ -3786,7 +3889,7 @@ export default {
 	      const actionKey = this.banner?.actionKey
 	      this.banner = null
 	      if (actionKey === 'restart-session') {
-	        this.startSession()
+	        this.beginSessionStart()
 	        return
 	      }
 	      if (actionKey === 'open-setup') {
@@ -3966,7 +4069,7 @@ export default {
 	        this.showBanner('Choose a valid surah and ayah range before starting.', 'info', 3600, { key: 'open-setup', label: 'Open setup' })
 	        return
 	      }
-      this.startSession()
+      this.beginSessionStart()
     },
 
 	    validateSettings() {
@@ -6024,7 +6127,7 @@ html {
 }
 
 .tools-tabs button {
-  flex: 0 0 auto;
+  flex: 1 1 50%;
   padding: 7px 10px;
   border-radius: 12px;
   background: transparent;
@@ -6369,15 +6472,14 @@ html {
   padding: 12px 16px 14px;
   border-top: 1px solid var(--border);
   background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));
-  display: flex;
+  display: grid;
   gap: 10px;
-  justify-content: space-between;
   align-items: center;
+  grid-template-columns: 4fr 1fr 1fr;
 }
 
 .tools-btn {
-  flex: 1;
-  min-height: 44px;
+  min-height: 42px;
   padding: 10px 10px;
   border-radius: 15px;
   font-weight: 500;
@@ -6391,6 +6493,7 @@ html {
   justify-content: center;
   gap: 6px;
   line-height: 1;
+  font-size: 0.86rem;
 }
 
 .tools-btn-soft {
@@ -6425,7 +6528,7 @@ html {
 }
 
 .tools-btn-start {
-  flex: 1.6;
+  width: 100%;
 }
 
 /* Hero section */
@@ -6639,6 +6742,14 @@ html {
   font-size: 0.72rem;
 }
 
+.workspace-fab-help {
+  margin-top: 8px;
+  font-size: 0.96rem;
+  line-height: 1.45;
+  color: rgba(45, 35, 23, 0.82);
+  max-width: 52ch;
+}
+
 .workspace-fab-actions {
   display: flex;
   gap: 10px;
@@ -6669,6 +6780,190 @@ html {
 
 .fab-btn-ghost {
   color: rgba(0, 0, 0, 0.78);
+}
+
+.workspace-status-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) auto minmax(280px, 0.95fr);
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 18px;
+  padding: 20px 22px;
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(251, 245, 237, 0.92));
+  box-shadow: 0 20px 52px rgba(154, 103, 56, 0.10);
+}
+
+.workspace-status-kicker {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.workspace-status-main h3 {
+  margin: 0 0 8px;
+  font-size: clamp(1.15rem, 1.6vw, 1.55rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+
+.workspace-status-main p,
+.workspace-next-card p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.workspace-status-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.workspace-info-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(154, 103, 56, 0.14);
+  background: rgba(255, 255, 255, 0.88);
+  color: rgba(68, 49, 29, 0.9);
+  font-weight: 700;
+  font-size: 0.8rem;
+  box-shadow: 0 10px 24px rgba(154, 103, 56, 0.08);
+}
+
+.workspace-status-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  min-width: 168px;
+}
+
+.workspace-status-actions .fab-btn {
+  width: 100%;
+  min-height: 40px;
+  justify-content: center;
+  padding-inline: 16px;
+  border-radius: 14px;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.workspace-next-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 18px 20px;
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 249, 243, 0.82));
+}
+
+.workspace-next-card strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: clamp(0.95rem, 1.2vw, 1.12rem);
+  line-height: 1.32;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.view-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.view-mode-option {
+  width: 100%;
+  text-align: left;
+  padding: 14px 14px 15px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.view-mode-option strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+
+.view-mode-option span {
+  display: block;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.view-mode-option:hover,
+.view-mode-option.active {
+  border-color: rgba(154, 103, 56, 0.38);
+  background: rgba(184, 130, 78, 0.10);
+  box-shadow: 0 16px 34px rgba(154, 103, 56, 0.12);
+  transform: translateY(-1px);
+}
+
+.session-countdown-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(12, 10, 8, 0.58);
+  backdrop-filter: blur(12px);
+}
+
+.session-countdown-card {
+  width: min(420px, 94vw);
+  padding: 28px 24px 26px;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 248, 240, 0.92));
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.28);
+  text-align: center;
+}
+
+.session-countdown-kicker {
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.session-countdown-value {
+  margin: 10px 0 8px;
+  font-size: clamp(3rem, 7vw, 4.6rem);
+  line-height: 1;
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: -0.05em;
+}
+
+.session-countdown-card p {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--text-muted);
 }
 
 .verses-grid {
@@ -7941,11 +8236,12 @@ html {
 }
 
 .resume-modal {
-  width: min(760px, 96vw);
+  width: min(880px, 97vw);
 }
 
 .resume-modal .modal-header h2 {
-  font-size: clamp(1.25rem, 2.3vw, 1.75rem);
+  font-size: clamp(1.02rem, 1.6vw, 1.28rem);
+  letter-spacing: -0.02em;
 }
 
 .resume-saved-at {
@@ -8230,7 +8526,7 @@ html {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 20px;
+  padding: 15px 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -8259,35 +8555,35 @@ html {
 }
 
 .stat-card i {
-  font-size: 1.8rem;
+  font-size: 1.35rem;
   color: var(--accent);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .stat-value {
-  font-size: 1.5rem;
+  font-size: 1.22rem;
   font-weight: 700;
   color: var(--text);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .stat-label {
-  font-size: 0.85rem;
+  font-size: 0.76rem;
   color: var(--text-muted);
 }
 
 .stat-help {
-  margin-top: 10px;
+  margin-top: 6px;
   color: var(--text-muted);
-  font-size: calc(0.72rem * var(--en-scale, 1));
+  font-size: calc(0.66rem * var(--en-scale, 1));
   line-height: 1.35;
 }
 
 .mini-trend {
   position: relative;
   width: 80px;
-  height: 24px;
-  margin-top: 10px;
+  height: 20px;
+  margin-top: 8px;
 }
 
 .mini-trend span {
@@ -8757,6 +9053,44 @@ html {
 }
 
 @media (max-width: 768px) {
+  .workspace-fab {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .workspace-fab-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .workspace-status-card {
+    grid-template-columns: 1fr;
+    padding: 16px;
+    gap: 14px;
+  }
+
+  .workspace-status-actions {
+    order: 2;
+    min-width: 0;
+  }
+
+  .workspace-next-card {
+    padding: 18px;
+  }
+
+  .view-mode-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tools-footer {
+    grid-template-columns: 1fr;
+  }
+
+  .tools-btn-start {
+    grid-column: auto;
+  }
+
   .setup-start-card {
     grid-template-columns: 1fr;
     align-items: stretch;
