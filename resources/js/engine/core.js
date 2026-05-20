@@ -1,6 +1,5 @@
 import { sm2Review } from './sm2'
 import { plannerInitialState } from './planner'
-import { chainingStart, chainingAdvance, chainingStop } from './chaining'
 import { quizStart, quizAnswer, quizStop } from './quiz'
 import { mistakesAdd } from './mistakes'
 import { audioSetSource, audioSetTime, audioSetPlayback } from './audio'
@@ -101,8 +100,7 @@ export function coreStartSession(state, { selectedSurahId, ayahRange } = {}) {
       ayahRange: { ...ayahRange },
       queueVerseKeys,
       currentIndex: 0
-    },
-    chaining: chainingStart(ensured.chaining, queueVerseKeys[0] || null, iso)
+    }
   }
 }
 
@@ -116,8 +114,7 @@ export function coreAdvanceSession(state) {
 
   return {
     ...s,
-    session: { ...s.session, currentIndex: nextIndex, active },
-    chaining: nextKey ? chainingAdvance(s.chaining, nextKey, iso) : chainingStop(s.chaining, iso)
+    session: { ...s.session, currentIndex: nextIndex, active }
   }
 }
 
@@ -160,4 +157,3 @@ export function coreQuizStop(state) {
   const s = coreEnsureState(state)
   return { ...s, quiz: quizStop(s.quiz, iso) }
 }
-

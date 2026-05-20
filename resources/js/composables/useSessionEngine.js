@@ -1,7 +1,7 @@
 import { mutateMutqinState } from './useMutqinPersistence'
 
 function queueKey(item = {}) {
-  return `${item.phase}:${item.ayahId || item.verse?.key || ''}:${item.chainStage || ''}:${item.repeatCount || ''}`
+  return `${item.phase}:${item.ayahId || item.verse?.key || ''}:${item.repeatCount || ''}`
 }
 
 function sessionSignature({ mode = 'beginner', queue = [], config = null } = {}) {
@@ -21,7 +21,6 @@ function normaliseQueueItem(item = {}) {
     verse,
     repeatCount: Math.max(1, Number(item.repeatCount || 1)),
     totalRepeats: Math.max(1, Number(item.totalRepeats || 1)),
-    chainStage: item.chainStage || null,
     prompt: item.prompt || ''
   }
 }
@@ -39,11 +38,10 @@ export function normaliseSessionQueue(queue = []) {
     })
 }
 
-export function buildSessionQueue({ planner = [], takrar = [], chaining = [], recall = [], review = [] } = {}) {
+export function buildSessionQueue({ planner = [], takrar = [], recall = [], review = [] } = {}) {
   return normaliseSessionQueue([
     ...planner.map(item => ({ phase: 'Planner', ...item })),
     ...takrar.map(item => ({ phase: 'Takrar', ...item })),
-    ...chaining.map(item => ({ phase: 'Chaining', ...item })),
     ...recall.map(item => ({ phase: 'Recall', ...item })),
     ...review.map(item => ({ phase: 'Retention', ...item }))
   ])

@@ -1,6 +1,5 @@
 import { sm2InitialState } from './sm2'
 import { plannerInitialState } from './planner'
-import { chainingInitialState } from './chaining'
 import { quizInitialState } from './quiz'
 import { mistakesInitialState } from './mistakes'
 import { audioInitialState } from './audio'
@@ -29,14 +28,11 @@ export function defaultMemorisationState() {
       repetitionCount: 3,
       rangeLoopDelay: 0,
       sessionRepetitions: 1,
-      chainingMethod: 'sequential',
-      blurAyahs: false,
       playbackMode: 'continuous'
     },
     audio: audioInitialState(),
     sm2: sm2InitialState(),
     planner: plannerInitialState(),
-    chaining: chainingInitialState(),
     quiz: quizInitialState(),
     mistakes: mistakesInitialState(),
     session: {

@@ -1,5 +1,4 @@
 import { getDueReviews } from './useRetentionZones'
-import { buildChainQueue } from './useChaining'
 
 function getItemId(item = {}) {
   return item.ayahId || item.verse?.key || item.key || item.id || null
@@ -16,7 +15,6 @@ function estimateActiveQueueSeconds(queue = [], options = {}) {
   const audioDurations = options.audioDurations || {}
   const fallbackAudioSeconds = Math.max(5, Number(options.averageAudioSeconds || 30))
   const reviewSeconds = Math.max(5, Number(options.reviewSeconds || 20))
-  const chainSeconds = Math.max(8, reviewSeconds)
   const speed = Math.max(0.25, Number(options.speed || 1))
   const currentAudioDuration = Number(options.currentAudioDuration || 0)
   const currentAudioTime = Number(options.currentAudioTime || 0)
@@ -24,7 +22,7 @@ function estimateActiveQueueSeconds(queue = [], options = {}) {
   return queue.reduce((sum, item, index) => {
     if (item.phase === 'Planner') return sum
     if (item.phase === 'Retention') return sum + reviewSeconds
-    if (item.phase === 'Chaining' || item.phase === 'Recall') return sum + chainSeconds
+    if (item.phase === 'Recall') return sum + reviewSeconds
 
     const fullAudio = getAudioSeconds(item, audioDurations, fallbackAudioSeconds) / speed
     if (index === 0 && currentAudioDuration > 0) {
@@ -49,15 +47,8 @@ export function createDailyPlan(state, verses = [], options = {}) {
     .slice(0, newLimit)
   const newIds = new Set(newAyahs.map(verse => verse.key))
   const dueReviews = getDueReviews(state).filter(ayah => !newIds.has(ayah.id))
-  const memorisedAyahs = uniqueVerses.filter(verse => {
-    const ayah = state.ayahs?.[verse.key]
-    return ayah && Number(ayah.mastery_level || 0) >= 2
-  })
-  const chainSource = memorisedAyahs.length >= 2 ? memorisedAyahs.slice(0, Math.max(2, Number(options.chains || 3))) : []
-  const chains = buildChainQueue(chainSource)
   const queue = [
     ...newAyahs.map(verse => ({ phase: 'Takrar', verse })),
-    ...chains,
     ...newAyahs.map(verse => ({ phase: 'Recall', verse })),
     ...dueReviews.map(ayah => ({ phase: 'Retention', ayahId: ayah.id }))
   ]
@@ -69,9 +60,8 @@ export function createDailyPlan(state, verses = [], options = {}) {
     const duration = Number(verse.duration || verse.audioDuration || audioDurations[verse.key] || fallbackAudioSeconds)
     return sum + (Number.isFinite(duration) && duration > 0 ? duration : fallbackAudioSeconds) * repeats
   }, 0)
-  const chainSeconds = chains.length * Math.max(8, reviewSeconds)
   const dueReviewSeconds = dueReviews.length * reviewSeconds
-  const generatedEtaSeconds = audioSeconds + chainSeconds + dueReviewSeconds
+  const generatedEtaSeconds = audioSeconds + dueReviewSeconds
   const sessionQueue = Array.isArray(state.sessionState?.queue) ? state.sessionState.queue : []
   const activeIndex = Math.max(0, Math.min(Number(state.sessionState?.current_index || 0), Math.max(sessionQueue.length - 1, 0)))
   const activeEtaSeconds = state.sessionState?.active && sessionQueue.length
@@ -82,7 +72,7 @@ export function createDailyPlan(state, verses = [], options = {}) {
   return {
     new: newAyahs,
     new_ayahs: newAyahs,
-    chains,
+    chains: [],
     reviews: dueReviews,
     due_reviews: dueReviews,
     ETA: etaMinutes,

@@ -16,7 +16,7 @@ function localDateKey(date = new Date()) {
 }
 
 function queueRecordKey(item = {}) {
-  return `${item.phase}:${item.ayahId || item.verse?.key || ''}:${item.chainStage || ''}:${item.repeatCount || ''}`
+  return `${item.phase}:${item.ayahId || item.verse?.key || ''}:${item.repeatCount || ''}`
 }
 
 function normaliseQueueRecord(item = {}) {
@@ -29,7 +29,6 @@ function normaliseQueueRecord(item = {}) {
     verse,
     repeatCount: Math.max(1, Number(item.repeatCount || 1)),
     totalRepeats: Math.max(1, Number(item.totalRepeats || 1)),
-    chainStage: item.chainStage || null,
     prompt: item.prompt || ''
   }
 }
@@ -50,7 +49,6 @@ function normaliseSessionQueueRecords(queue = []) {
 const defaultState = () => ({
   version: 1,
   ayahs: {},
-  chains: {},
   sessionState: {
     active: false,
     mode: 'beginner',
@@ -67,8 +65,6 @@ const defaultState = () => ({
     last_completed_at: null,
     ayahs_memorised: 0,
     repetitions: 0,
-    chains_completed: 0,
-    weak_transitions: 0,
     overdue_reviews: 0,
     streak: 0,
     average_session_time: 0,
@@ -94,11 +90,6 @@ function mergeState(saved) {
   Object.entries(saved?.ayahs || {}).forEach(([id, ayah]) => {
     mergedAyahs[id] = normaliseAyahRecord({ id, ...(ayah || {}) })
   })
-  const mergedChains = { ...base.chains }
-  Object.entries(saved?.chains || {}).forEach(([key, chain]) => {
-    const normalised = normaliseChainRecord(key, chain)
-    if (normalised) mergedChains[key] = normalised
-  })
   const sessionState = {
     ...base.sessionState,
     ...(saved?.sessionState || {})
@@ -112,7 +103,6 @@ function mergeState(saved) {
     ...(saved || {}),
     version: 1,
     ayahs: mergedAyahs,
-    chains: mergedChains,
     sessionState,
     stats: {
       ...base.stats,
@@ -194,7 +184,6 @@ export function mutateMutqinState(state, mutator) {
 
 export function recomputeMutqinStats(state, today = localDateKey()) {
   const ayahs = Object.values(state.ayahs || {})
-  const chains = Object.values(state.chains || {})
   const completed = Number(state.stats?.sessions_completed || 0)
   const totalSeconds = Number(state.stats?.total_session_seconds || 0)
   const zoneDistribution = { Fresh: 0, Stable: 0, Strong: 0 }
@@ -206,8 +195,8 @@ export function recomputeMutqinStats(state, today = localDateKey()) {
     ...state.stats,
     ayahs_memorised: ayahs.filter(ayah => ayah.status === 'mastered' || Number(ayah.mastery_level || 0) >= 5).length,
     repetitions: ayahs.reduce((sum, ayah) => sum + Number(ayah.repetition_count || 0), 0),
-    chains_completed: chains.filter(chain => Number(chain.chain_strength || 0) > 50).length,
-    weak_transitions: chains.reduce((sum, chain) => sum + Number(chain.chain_errors || 0), 0),
+    chains_completed: 0,
+    weak_transitions: 0,
     overdue_reviews: ayahs.filter(ayah => ayah.next_review && ayah.next_review <= today).length,
     average_session_time: completed ? Math.round(totalSeconds / completed / 60) : 0,
     zone_distribution: zoneDistribution
@@ -222,8 +211,6 @@ export function createAyahRecord(verse = {}) {
     text: verse.arabic || verse.text || '',
     mastery_level: 1,
     repetition_count: 0,
-    chain_strength: 50,
-    chain_errors: 0,
     zone: 'Fresh',
     zone_step: 0,
     weak_count: 0,
@@ -242,27 +229,11 @@ export function normaliseAyahRecord(ayah = {}) {
     text: ayah.text || '',
     mastery_level: Math.max(1, Math.min(5, Number(ayah.mastery_level || 1))),
     repetition_count: Math.max(0, Number(ayah.repetition_count || 0)),
-    chain_strength: Math.max(0, Math.min(100, Number(ayah.chain_strength ?? 50))),
-    chain_errors: Math.max(0, Number(ayah.chain_errors || 0)),
     zone,
     zone_step: Math.max(0, Math.min(2, Number(ayah.zone_step || 0))),
     weak_count: Math.max(0, Number(ayah.weak_count || 0)),
     last_review: ayah.last_review || null,
     next_review: ayah.next_review ? localDateKey(ayah.next_review) : now,
     status
-  }
-}
-
-export function normaliseChainRecord(key = '', chain = {}) {
-  const [fromKey, toKey] = String(key).split('->')
-  const from = chain.from || fromKey || ''
-  const to = chain.to || toKey || ''
-  if (!from || !to) return null
-  return {
-    from,
-    to,
-    chain_strength: Math.max(0, Math.min(100, Number(chain.chain_strength ?? 50))),
-    chain_errors: Math.max(0, Number(chain.chain_errors || 0)),
-    attempts: Math.max(0, Number(chain.attempts || 0))
   }
 }

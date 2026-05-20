@@ -19,8 +19,8 @@
         'flow-recall': guidedUiStep === 'recall'
       }"
     >
-      <div class="content">
-	        <section v-if="!hasVerses" class="home-dashboard">
+	      <div class="content">
+	        <section v-if="!hasVerses" class="home-dashboard home-dashboard-minimal">
 	          <div v-if="hasContinueSession" class="continue-session-card">
             <div class="continue-session-copy">
               <span class="continue-session-kicker">Continue where you left off</span>
@@ -36,84 +36,42 @@
 	              </button>
 	            </div>
 	          </div>
-
-	          <div class="setup-start-card">
-	            <div class="setup-start-copy">
-	              <span class="setup-kicker">Session setup</span>
-	              <h2>What are you memorising today?</h2>
-	              <p>{{ setupReadinessHint }}</p>
-                <p v-if="dueCount" class="setup-review-hint">You have {{ dueCount }} verses to review.</p>
-	            </div>
-	            <div class="setup-mode-grid" role="group" aria-label="Session setup">
-                <div class="field">
-                  <label>Surah</label>
-                  <select :value="chapterId" @change="onChapterChange" class="select">
-                    <option :value="0">Choose a surah...</option>
-                    <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.id }}. {{ c.name_simple }}</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label>Verse range</label>
-                  <div class="range range-single">
-                    <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
-                    <span>to</span>
-                    <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
-                  </div>
-                </div>
-	            </div>
-              <details class="setup-optional-panel">
-                <summary>Optional tools</summary>
-                <div class="setup-optional-grid">
-                  <div class="field">
-                    <label>Reciter</label>
-                    <select v-model="reciterId" @change="refreshVerses" class="select">
-                      <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
-                    </select>
-                  </div>
-                  <div class="field field-inline-toggle">
-                    <label>Translation</label>
-                    <button
-                      type="button"
-                      class="toggle-chip"
-                      :class="{ active: showTranslation }"
-                      @click="toggleReadingOption('translation')"
-                    >
-                      {{ showTranslation ? 'On' : 'Off' }}
-                    </button>
-                  </div>
-                </div>
-              </details>
-	            <button class="cta cta-primary setup-primary" @click="beginSessionStart" :disabled="!canStartSession"
-	              title="Start session">
-	              <i class="bi bi-play-fill"></i> {{ dueCount ? 'Start Review' : 'Start Session' }}
-	            </button>
-	          </div>
+            <div class="offcanvas-launcher-card">
+              <button class="cta cta-primary setup-primary" @click="openToolsPanel()" title="Open controls">
+                <i class="bi bi-sliders"></i> Open Session Controls
+              </button>
+              <p class="offcanvas-launcher-copy">
+                Session setup lives in the offcanvas.
+              </p>
+            </div>
 	        </section>
 
-        <section v-if="currentChapter && hasVerses" class="workspace-status-card">
-          <div class="workspace-status-main">
-            <div class="workspace-status-kicker">This session</div>
-            <h3>{{ currentSessionSummary }}</h3>
-            <p>{{ currentSessionDescription }}</p>
-            <div class="workspace-status-pills">
-              <span class="workspace-info-pill" v-if="chainingActive"><i class="bi bi-diagram-3"></i> Chaining</span>
+        <!-- Floating Actions (replaces the session rail bar) -->
+        <div v-if="currentChapter && hasVerses" class="workspace-fab" aria-label="Workspace actions">
+          <div class="workspace-fab-meta">
+            <div class="workspace-fab-kicker">{{ activeCardKicker }}</div>
+            <div class="workspace-fab-title">{{ currentChapter.name_simple }}</div>
+            <div class="workspace-fab-sub">
+              <span>Ayah {{ currentPosition }}/{{ totalVerses }}</span>
+              <span>{{ guidedPhaseLabel }}</span>
+              <span>{{ activeRepeatLabel }}</span>
+              <span v-if="etaLabel">{{ etaLabel }}</span>
             </div>
+            <p class="workspace-fab-copy">{{ activeCardBody }}</p>
           </div>
-          <div class="workspace-status-actions">
+          <div class="workspace-fab-actions">
+            <button class="fab-btn fab-btn-soft" @click="markTakrarRepeat(activeVerseRef)" :disabled="!activeVerseRef" title="Repeat current ayah">
+              <i class="bi bi-arrow-repeat"></i><span>Repeat</span>
+            </button>
             <button class="fab-btn fab-btn-ghost" @click="openAdvancedControls" title="Open session controls">
               <i class="bi bi-sliders"></i><span>Controls</span>
             </button>
             <button class="fab-btn fab-btn-primary" @click="handlePrimaryAction" :disabled="!isPlaying && !canStartSession">
               <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-              <span>{{ primaryWorkspaceCta }}</span>
+              <span>{{ isPlaying ? 'Pause' : (guidedUiStep === 'review' ? 'Review' : 'Play') }}</span>
             </button>
           </div>
-          <div class="workspace-next-card">
-            <div class="workspace-status-kicker">When this session is complete</div>
-            <strong>{{ nextSessionSummary }}</strong>
-            <p>{{ nextSessionDescription }}</p>
-          </div>
-        </section>
+        </div>
 
         <!-- REMOVE the standalone beginner mode button if it exists elsewhere -->
 
@@ -175,8 +133,6 @@
               <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" class="verse-card"
                 :class="{
                   active: effectiveActiveVerseKey === verse.key,
-                  'focus-mode': visualMode === 'focus' && effectiveActiveVerseKey && effectiveActiveVerseKey !== verse.key,
-                  blurred: visualMode === 'blur' && effectiveActiveVerseKey && effectiveActiveVerseKey !== verse.key,
                   'serious-training': false
                 }"
                 @click="onVerseCardClick(verse)"
@@ -188,12 +144,10 @@
                   <div class="verse-badges">
                     <span class="verse-number">Ayah {{ verse.number }}</span>
                     <span v-if="effectiveActiveVerseKey === verse.key" class="verse-status-badge">Active Ayah</span>
-                    <span v-else-if="visualMode === 'blur'" class="verse-status-subtle">Active recall</span>
-                    <span v-else-if="visualMode === 'focus'" class="verse-status-subtle">Focus mode</span>
                   </div>
 
                   <div v-if="effectiveActiveVerseKey === verse.key" class="verse-actions">
-                    <button class="verse-play-btn" @click="playVerse(verse)"
+                    <button class="verse-play-btn" @click.stop="playVerse(verse)"
                       :title="activeVerseKey === verse.key && isPlaying ? 'Pause' : 'Play verse'">
                       <i class="bi"
                         :class="activeVerseKey === verse.key && isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
@@ -224,7 +178,7 @@
                     <span class="word-arabic" dir="rtl">{{ word.ar }}</span>
                     <span class="word-meaning">{{ word.en }}</span>
                     <button v-if="word.audio && wordByWordAudioEnabled" class="word-audio-btn"
-                      @click="playWordAudio(word.audio)">
+                      @click.stop="playWordAudio(word.audio)">
                       <i class="bi bi-volume-up"></i>
                     </button>
                   </div>
@@ -236,14 +190,15 @@
       </div>
 
       <!-- Advanced Controls Drawer -->
-        <div v-if="hasVerses && showTools" class="tools-backdrop" @click="showTools = false" aria-hidden="true"></div>
-      <aside v-if="hasVerses" class="tools" :class="{ open: showTools }">
+      <div v-if="showTools" class="tools-backdrop" @click="closeToolsPanel" aria-hidden="true"></div>
+      <aside class="tools" :class="{ open: showTools }">
         <div class="tools-top">
           <div class="tools-topbar">
             <div class="tools-title">Controls</div>
-            <button class="tools-x" @click="showTools = false" aria-label="Close panel"><i
+            <button class="tools-x" @click="closeToolsPanel" aria-label="Close panel"><i
                 class="bi bi-x-lg"></i></button>
           </div>
+          <div class="tools-context">{{ contextLabel }}</div>
           <div class="tools-tabs" role="tablist" aria-label="Controls tabs">
             <button :class="{ active: tab === 'tools', 'active-tab': tab === 'tools' }"
               @click="tab = 'tools'" title="Session tools">
@@ -256,7 +211,7 @@
           </div>
         </div>
 
-        <div class="tools-body compact">
+          <div class="tools-body compact">
             <div v-if="tab === 'tools'" class="sheet">
               <section class="sheet-section">
                 <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
@@ -330,14 +285,6 @@
                       <small class="field-hint">Applies to the current session queue immediately.</small>
                     </div>
                     <div class="field">
-                      <label>Chaining method</label>
-                      <div class="radio-group radio-group-tight">
-                        <label class="radio"><input type="radio" :value="true" :checked="repeatAndLoopAudio" @change="setChaining(true)"> On</label>
-                        <label class="radio"><input type="radio" :value="false" :checked="!repeatAndLoopAudio" @change="setChaining(false)"> Off</label>
-                      </div>
-                      <small class="field-hint">When on, earlier ayahs are revisited to build the passage.</small>
-                    </div>
-                    <div class="field">
                       <label>Auto-advance</label>
                       <div class="radio-group radio-group-tight">
                         <label class="radio"><input type="radio" value="auto" v-model="playMode"> Yes</label>
@@ -406,23 +353,15 @@
         </div>
 
         <div class="tools-footer">
-          <button class="tools-btn tools-btn-primary tools-btn-start" @click="beginSessionStart" :disabled="!canStartSession">
+          <button class="tools-btn tools-btn-primary tools-btn-start" @click="startSession" :disabled="!canStartSession">
             <i class="bi bi-play-fill"></i><span>Start memorising</span>
           </button>
           <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="resetControls"><i
               class="bi bi-arrow-counterclockwise"></i><span>Reset</span></button>
-          <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="showTools = false"><i
+          <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="closeToolsPanel"><i
               class="bi bi-x-circle"></i><span>Close</span></button>
         </div>
       </aside>
-    </div>
-
-    <div v-if="startCountdown > 0" class="session-countdown-overlay" aria-live="assertive">
-      <div class="session-countdown-card">
-        <div class="session-countdown-kicker">Starting session</div>
-        <div class="session-countdown-value">{{ startCountdown }}</div>
-        <p>{{ countdownMessage }}</p>
-      </div>
     </div>
 
     <div v-else-if="appReady && !isLoggedIn" class="main container">
@@ -431,7 +370,7 @@
           <div class="setup-start-copy">
             <span class="setup-kicker">Login Required</span>
             <h2>Sign in to access your memorisation workspace</h2>
-            <p>Your sessions, progress, chaining flow, and resume history sync after login.</p>
+            <p>Your sessions, progress, and resume history sync after login.</p>
           </div>
           <a class="cta cta-primary setup-primary" href="/login">
             <i class="bi bi-box-arrow-in-right"></i> Login
@@ -577,10 +516,6 @@
               <span>Repetitions: {{ Number(continueSessionPayload?.config?.advancedRepeats || continueSessionPayload?.config?.repeats || 1) }}x</span>
             </div>
             <div class="pill">
-              <i class="bi bi-diagram-3"></i>
-              <span>Chaining: {{ continueSessionPayload?.config?.repeatAndLoopAudio ? 'On' : 'Off' }}</span>
-            </div>
-            <div class="pill">
               <i class="bi bi-stopwatch"></i>
               <span>Resume from ayah {{ continueSessionPayload?.activeVerseKey ? String(continueSessionPayload.activeVerseKey).split(':')[1] : continueSessionPayload?.config?.rangeStart }}</span>
             </div>
@@ -676,7 +611,6 @@ import { seedAyahs } from '../composables/useAyahState'
 import { buildSessionQueue, startMutqinSession, moveMutqinSession, completeMutqinSession } from '../composables/useSessionEngine'
 import { createDailyPlan } from '../composables/useDailyPlanner'
 import { repeatAyah, hideAyah, completeTakrarStep, getTakrarStep } from '../composables/useTakrarLadder'
-import { recordChainResult } from '../composables/useChaining'
 import { scoreRetention } from '../composables/useRetentionZones'
 
 const MODE_STORAGE_KEYS = {
@@ -724,8 +658,6 @@ function createBeginnerState() {
     playMode: 'auto',
     repeats: 3,
     order: 'seq',
-    focusMode: false,
-    blurAdjacent: false,
     loadedConfig: null,
     verses: [],
     activeKey: null,
@@ -746,16 +678,8 @@ function createAdvancedState() {
     playMode: 'auto',
     repeats: 1,
     order: 'seq',
-    focusMode: false,
-    blurAdjacent: false,
-    repeatAndLoopAudio: false,
     advancedRepeats: 5,
     loadedConfig: null,
-    chainingConfig: {
-      step: 1,
-      goal: 'memorise',
-      style: 'sequential'
-    },
     verses: [],
     activeKey: null,
     queue: [],
@@ -774,7 +698,6 @@ export default {
       appReady: false,
       isBootstrapping: true,
       isDataReady: false,
-      applyingChainingDefaults: false,
       fontDropdownOpen: false,
       verseFontSizes: {},
       defaultFontSize: 100,
@@ -784,22 +707,9 @@ export default {
       tajweedEnabled: false,
       beginner: createBeginnerState(),
       advanced: createAdvancedState(),
-	      // New chaining UI state
 	      mutqinState: loadMutqinState(),
 	      unwatchMutqinState: null,
-	      showQueueViewer: false,
-      queueViewCollapsed: true,
-      currentChainStats: {
-        totalEntries: 0,
-        uniqueVerses: 0,
-        repeatsPerVerse: 0,
-        totalDuration: 0
-      },
-      chainViewMode: 'compact',
-      manualChainControl: false,
-      chainBookmarks: [],
-      chainHistory: [],
-      repeatGroups: [],
+      // chaining removed
 
       // Arabic text word highlighting state
       currentWordIndex: -1,
@@ -889,8 +799,6 @@ export default {
       delay: 1,
       repeats: 1,
       order: 'seq',
-      blurAdjacent: false,
-      focusMode: false,
 
       // Quiz state
       quizActive: false,
@@ -955,9 +863,6 @@ export default {
       compactMode: false,
       bookmarks: [],
       pins: [],
-      startCountdown: 0,
-      countdownTimer: null,
-      pendingSessionStart: false,
 
       // Options
       speedOptions: [0.5, 0.75, 1, 1.25, 1.5],
@@ -1071,7 +976,7 @@ export default {
 	      return this.effectiveActiveVerseKey ? this.mutqinState.ayahs?.[this.effectiveActiveVerseKey] || null : null
 	    },
 
-	    currentLearningPrompt() {
+    currentLearningPrompt() {
 	      const item = this.mutqinState?.sessionState?.queue?.[this.mutqinState?.sessionState?.current_index || 0]
 	      if (!item) return 'Listen and follow.'
 	      if (item.phase === 'Retention') return this.dueCount ? `${this.dueCount} verses to review.` : 'Review what is due.'
@@ -1079,6 +984,17 @@ export default {
 	      if (this.guidedUiStep === 'practice') return 'Try reciting with minimal support.'
 	      return 'Listen and follow.'
 	    },
+
+    activeQueueEntry() {
+      return this.queue?.[Math.max(0, Number(this.queueIndex || 0))] || null
+    },
+
+    activeRepeatLabel() {
+      const entry = this.activeQueueEntry
+      const current = Number(entry?.repeatCount || 1)
+      const total = Number(entry?.totalRepeats || 1)
+      return total > 1 ? `Repeat ${current} of ${total}` : 'Single focused pass'
+    },
 
     guidedUiStep() {
       const item = this.mutqinState?.sessionState?.queue?.[this.mutqinState?.sessionState?.current_index || 0]
@@ -1123,56 +1039,6 @@ export default {
         hour: '2-digit',
         minute: '2-digit'
       })
-    },
-
-    primaryWorkspaceCta() {
-      if (this.isPlaying) return 'Pause'
-      if (this.guidedUiStep === 'review') return 'Start review'
-      if (this.guidedUiStep === 'practice') return 'Try reciting'
-      if (this.guidedUiStep === 'recall') return 'Recall'
-      return 'Play'
-    },
-
-    workspaceActionDescription() {
-      if (!this.effectiveActiveVerseKey) return 'Start when you are ready.'
-      if (this.guidedUiStep === 'review') return 'Review what is due.'
-      if (this.guidedUiStep === 'practice') return 'Try reciting with a soft visual cue.'
-      if (this.guidedUiStep === 'recall') return 'Recite before revealing.'
-      return 'Listen and follow.'
-    },
-
-    visualModeLabel() {
-      if (this.visualMode === 'blur') return 'Blur recall'
-      if (this.visualMode === 'focus') return 'Focus mode'
-      return 'Open reading'
-    },
-
-    currentSessionSummary() {
-      if (!this.currentChapter) return 'Prepare your session'
-      return `${this.currentChapter.name_simple} · Ayahs ${this.rangeStart}-${this.rangeEnd}`
-    },
-
-    currentSessionDescription() {
-      if (this.guidedUiStep === 'review') return 'Review what is due.'
-      if (this.guidedUiStep === 'practice') return 'Try reciting with minimal support.'
-      if (this.guidedUiStep === 'recall') return 'Recite first, then reveal if needed.'
-      return 'Listen and follow.'
-    },
-
-    nextSessionSummary() {
-      if (this.dueCount) return 'Next: review what is due'
-      return 'Move to the next small range'
-    },
-
-    nextSessionDescription() {
-      if (this.dueCount) return `After this set, Mutqin will bring back ${this.dueCount} verse${this.dueCount === 1 ? '' : 's'} for review (spaced over time), before adding new ayahs.`
-      return 'After this set, continue with the next few ayahs using the same reciter and pace.'
-    },
-
-    countdownMessage() {
-      return this.effectiveActiveVerseKey
-        ? `Ayah ${this.currentPosition} will start automatically.`
-        : 'Your session will start automatically.'
     },
 
 	    hasSelectedSurah() {
@@ -1269,25 +1135,7 @@ export default {
       }
     },
 
-    focusMode: {
-      get() { return this.currentConfig.focusMode },
-      set(val) {
-        if (this.currentMode === 'beginner') this.beginner.focusMode = val
-        else this.advanced.focusMode = val
-      }
-    },
-
-    blurAdjacent: {
-      get() { return this.currentConfig.blurAdjacent },
-      set(val) {
-        if (this.currentMode === 'beginner') this.beginner.blurAdjacent = val
-        else this.advanced.blurAdjacent = val
-      }
-    },
-
     visualMode() {
-      if (this.blurAdjacent) return 'blur'
-      if (this.focusMode) return 'focus'
       return 'standard'
     },
 
@@ -1323,28 +1171,9 @@ export default {
       }
     },
 
-    repeatAndLoopAudio: {
-      get() { return this.advanced.repeatAndLoopAudio },
-      set(val) { this.advanced.repeatAndLoopAudio = val }
-    },
-
     advancedRepeats: {
       get() { return this.advanced.advancedRepeats },
       set(val) { this.advanced.advancedRepeats = val }
-    },
-
-    chainingConfig: {
-      get() {
-        return this.advanced.chainingConfig || { step: 1, goal: 'memorise', style: 'sequential' }
-      },
-      set(val) {
-        this.advanced.chainingConfig = {
-          step: 1,
-          goal: 'memorise',
-          style: 'sequential',
-          ...(val || {})
-        }
-      }
     },
 
     beginnerRepeats: {
@@ -1460,9 +1289,6 @@ export default {
       return 'Learn'
     },
 
-    chainingActive() {
-      return this.currentMode === 'advanced' && !!this.repeatAndLoopAudio
-    },
     guidedPrimaryCta() {
       if (this.guidedPhaseLabel === 'Learn') return 'Listen & Follow'
       if (this.guidedPhaseLabel === 'Practice') return 'Try Reciting'
@@ -1476,6 +1302,19 @@ export default {
       if (this.guidedPhaseLabel === 'Recall') return 'Recall before you reveal the ayah.'
       if (this.guidedPhaseLabel === 'Review') return 'Review the verses due now.'
       return 'Continue your session.'
+    },
+
+    activeCardKicker() {
+      if (this.guidedUiStep === 'review') return 'Bismillah, time to refresh'
+      if (this.isPlaying) return 'MashaAllah, keep the rhythm steady'
+      return 'Bismillah, keep your heart with the ayah'
+    },
+
+    activeCardBody() {
+      if (this.guidedUiStep === 'review') return this.dueCount
+        ? `You have ${this.dueCount} ayahs awaiting review. Revisit them gently and keep the chain strong.`
+        : 'Return to this ayah with a calm review before moving ahead.'
+      return `${this.currentLearningPrompt} Keep your tongue, eyes, and heart together on this ayah.`
     },
 
     plannerKeyboardActive() {
@@ -1493,27 +1332,15 @@ export default {
         (!!this.verses.length || !!this.currentConfig.verses.length)
     },
 
-	    modeSummary() {
-	      const repeats = this.currentMode === 'beginner'
-	        ? Number(this.beginnerRepeats || 1)
-	        : Number(this.advancedRepeats || 1)
-	      const mode = this.currentMode === 'advanced' ? 'Advanced' : 'Beginner'
-	      return `${mode} flow, ${repeats}x repetition, ${this.chainingPracticeLabel.toLowerCase()}.`
-	    },
-
 	    currentSessionExplanation() {
 	      const repeatCount = this.currentMode === 'beginner'
 	        ? Number(this.beginnerRepeats || 1)
 	        : Number(this.advancedRepeats || 1)
 
-      const practiceMode = this.blurAdjacent
-        ? 'blur recall'
-        : (this.focusMode ? 'focus mode' : 'open reading')
-
       const repeatLabel = repeatCount === 1 ? '1 repeat' : `${repeatCount} repeats`
       const modeLabel = this.currentMode === 'advanced' ? 'Advanced' : 'Beginner'
 
-	      return `${modeLabel} session in sequential order, ${repeatLabel} per ayah, ${practiceMode}.`
+	      return `${modeLabel} session in sequential order, ${repeatLabel} per ayah.`
 	    },
 
 	    setupReadinessHint() {
@@ -1530,56 +1357,6 @@ export default {
 	      return 'Start guided memorisation'
 	    },
 
-    chainingStep() {
-      return Math.max(1, Math.min(3, Number(this.chainingConfig.step || 1)))
-    },
-
-    chainingGoalLabel() {
-      const labels = {
-        memorise: 'Memorise',
-        revise: 'Revise',
-        test: 'Test'
-      }
-      return labels[this.chainingConfig.goal] || 'Memorise'
-    },
-
-    chainingStyleLabel() {
-      return 'Build in order'
-    },
-
-    chainingGoalHint() {
-      const hints = {
-        memorise: 'Build the passage steadily with guided repetition.',
-        revise: 'Move through the range with lighter support.',
-        test: 'Hide support early and check your recall.'
-      }
-      return hints[this.chainingConfig.goal] || hints.memorise
-    },
-
-    chainingPracticeLabel() {
-      if (this.blurAdjacent) return 'Recall view'
-      if (this.focusMode) return 'Focus view'
-      return 'Open view'
-    },
-
-    chainingStepOneReady() {
-      return !!this.chainingConfig.goal
-    },
-
-    chainingStepTwoReady() {
-      return !!this.chapterId && this.rangeEnd >= this.rangeStart
-    },
-
-    chainingStepThreeReady() {
-      return !!this.chainingConfig.style
-    },
-
-    chainingSummary() {
-      const surah = this.currentChapter?.name_simple || (this.chapterId ? `Surah ${this.chapterId}` : 'Choose a surah')
-      const range = this.chapterId ? `Ayahs ${this.rangeStart}-${this.rangeEnd}` : 'Choose a range'
-      return `${this.chainingGoalLabel} · ${surah} · ${range} · ${this.chainingStyleLabel}`
-    },
-
     etaSubtext() {
       if (!this.remainingAyahs) return 'Ready to complete'
       return `Review + repetition included`
@@ -1589,7 +1366,7 @@ export default {
 	      const remainingItems = (this.queue || []).slice(this.queueIndex)
 	      if (!remainingItems.length) return '0 min'
 
-	      const reviewTimePerAyah = this.visualMode === 'blur' ? 7 : 5
+	      const reviewTimePerAyah = 5
 	      let totalSeconds = 0
 
 	      remainingItems.forEach((item, index) => {
@@ -1685,13 +1462,15 @@ export default {
 
     if (this.currentMode === 'advanced' && this.advanced.chapterId) {
       this.currentMode = 'advanced'
-      this.tab = 'advanced'
-      this.applyChainingGoalDefaults()
+      this.tab = 'tools'
       await this.loadVerses()
     } else if (this.beginner.chapterId) {
       this.currentMode = 'beginner'
-      this.tab = 'beginner'
+      this.tab = 'tools'
       await this.loadVerses()
+    } else {
+      this.tab = 'tools'
+      this.showTools = true
     }
 
     this.isBootstrapping = false
@@ -1712,7 +1491,6 @@ export default {
     window.removeEventListener('keydown', this.handleGlobalKeydown)
     window.removeEventListener('scroll', this.handleWindowScroll)
     if (this.bannerTimer) clearTimeout(this.bannerTimer)
-    if (this.countdownTimer) clearInterval(this.countdownTimer)
     this.flushPlaybackTime()
     this.stopWordHighlighting()
 	    this.persistAllState()
@@ -1737,8 +1515,6 @@ export default {
     delay: 'persistUiState',
     playMode: 'persistUiState',
     order: 'persistUiState',
-    blurAdjacent: 'persistUiState',
-    focusMode: 'persistUiState',
     showTranslation: 'persistUiState',
     showTransliteration: 'persistUiState',
     showWordByWord(newVal) {
@@ -1767,31 +1543,11 @@ export default {
     },
 
     beginnerRepeats() {
-      if (this.tab === 'beginner') this.rebuildQueue()
+      if (this.currentMode === 'beginner') this.rebuildQueue()
     },
 	    advancedRepeats() {
-	      if (this.tab === 'advanced') this.rebuildQueue()
+	      if (this.currentMode === 'advanced') this.rebuildQueue()
 	    },
-    repeatAndLoopAudio() {
-      if (this.tab === 'advanced') this.rebuildQueue()
-    },
-    focusMode(val) {
-      if (val) this.blurAdjacent = false
-    },
-    blurAdjacent(val) {
-      if (val) this.focusMode = false
-    },
-    'advanced.chainingConfig': {
-      handler() {
-        if (this.applyingChainingDefaults) return
-        if (this.currentMode === 'advanced') {
-          this.applyChainingGoalDefaults()
-          this.persistUiState()
-        }
-      },
-      deep: true
-    },
-
     tab(newVal) {
       // Unified tools tab: keep mode stable unless explicitly switched by controls.
       this.persistUiState()
@@ -1799,67 +1555,39 @@ export default {
   },
 
   methods: {
-    beginSessionStart() {
-      if (this.pendingSessionStart || this.startCountdown > 0) return
-      if (!this.canStartSession) {
-        this.showTools = true
-        this.showBanner('Choose a valid surah and ayah range before starting.', 'info', 3600, { key: 'open-setup', label: 'Open setup' })
-        return
-      }
-      this.pendingSessionStart = true
-      this.startCountdown = 3
-      if (this.countdownTimer) clearInterval(this.countdownTimer)
-      this.countdownTimer = setInterval(async () => {
-        if (this.startCountdown <= 1) {
-          clearInterval(this.countdownTimer)
-          this.countdownTimer = null
-          this.startCountdown = 0
-          try {
-            await this.startSession(true)
-          } finally {
-            this.pendingSessionStart = false
-          }
-          return
-        }
-        this.startCountdown -= 1
-      }, 1000)
+    focusLinkedAyah(verseKey, options = {}) {
+      if (!verseKey) return null
+      return this.setActiveVerse(verseKey, options)
     },
 
-    replayCurrentVerse() {
-      const verse = this.activeVerseRef
-      if (verse) this.playVerse(verse, { force: true })
-    },
-
-    toggleFocusMode() {
-      this.focusMode = !this.focusMode
-    },
-
-    toggleBlurMode() {
-      this.blurAdjacent = !this.blurAdjacent
-    },
-
-    openAdvancedControls() {
-      // Keep power features accessible, but behind a tertiary surface.
+    openToolsPanel(options = {}) {
+      const { verseKey = null, mode = this.currentMode, scroll = false } = options
+      this.currentMode = mode
       this.tab = 'tools'
+      if (verseKey) this.focusLinkedAyah(verseKey, { mode, scroll })
+      this.showPlannerModal = false
+      this.showConfirmModal = false
+      this.showResumeModal = false
       this.showTools = true
       this.persistUiState()
     },
 
-    setChaining(enabled) {
-      // Chaining is an advanced behavior; switch mode when toggled on.
-      if (enabled && this.currentMode !== 'advanced') {
-        this.currentMode = 'advanced'
-      }
-      this.repeatAndLoopAudio = !!enabled
-      this.rebuildQueue(this.currentMode)
+    closeToolsPanel() {
+      this.showTools = false
       this.persistUiState()
+    },
+
+    openAdvancedControls() {
+      // Keep power features accessible, but behind a tertiary surface.
+      this.openToolsPanel()
     },
 
     onVerseCardClick(verse) {
       if (!verse?.key) return
-      this.setActiveVerse(verse.key)
+      const wasActive = this.effectiveActiveVerseKey === verse.key
+      this.focusLinkedAyah(verse.key)
       // If the user clicks the active ayah card, treat it as an intent to play/pause.
-      if (this.effectiveActiveVerseKey === verse.key && verse.audio) {
+      if (wasActive && verse.audio) {
         this.playVerse(verse)
       }
     },
@@ -1891,29 +1619,22 @@ export default {
       this.next()
     },
 	    setModeAndExplain(mode) {
-	      this.tab = mode
 	      this.currentMode = mode
-	      this.showTools = true
 
       const store = this.getModeStore(mode)
       const isFreshMode = !store.chapterId && !store.verses?.length
 
       if (isFreshMode && mode === 'beginner') {
         this.beginner.repeats = Math.max(1, Number(this.beginner.repeats || 3))
-        this.beginner.focusMode = false
-        this.beginner.blurAdjacent = false
       }
 
 	      if (isFreshMode && mode === 'advanced') {
-	        this.advanced.repeatAndLoopAudio = false
 	        this.advanced.advancedRepeats = Math.max(5, Number(this.advanced.advancedRepeats || 5))
-	        this.advanced.blurAdjacent = false
-	        this.advanced.focusMode = false
 	      }
 
 	      this.applySessionConfig(this.buildSessionConfig(mode))
 	      this.syncActiveVerseState(mode)
-	      this.persistUiState()
+	      this.openToolsPanel({ mode })
 	    },
 
 	    startNewSetup(mode) {
@@ -2073,7 +1794,7 @@ export default {
       if (!config) return
       const mode = config.mode || this.currentMode
       this.currentMode = mode
-      this.tab = mode
+      this.tab = 'tools'
       this.chapterId = Number(config.chapterId || 0)
       this.rangeStart = Number(config.rangeStart || 1)
       this.rangeEnd = Number(config.rangeEnd || this.rangeStart || 1)
@@ -2086,10 +1807,7 @@ export default {
       this.playMode = config.playMode || 'auto'
       // Spaced-return/chaining UI removed; force sequential order.
       this.order = 'seq'
-	      const wantsBlur = !!config.blurAdjacent
-	      this.focusMode = !!config.focusMode && !wantsBlur
-	      this.blurAdjacent = wantsBlur
-      this.tajweedEnabled = !!config.tajweedEnabled
+	            this.tajweedEnabled = !!config.tajweedEnabled
       this.quranFont = config.quranFont || this.quranFont
       this.fontScale = Number(config.fontScale || 1)
       this.script = config.script || this.script
@@ -2100,8 +1818,6 @@ export default {
       this.theme = config.theme || this.theme
       document.documentElement.setAttribute('data-theme', this.theme)
       if (mode === 'advanced') {
-        this.chainingConfig = this.normaliseChainingConfig(config.chainingConfig || this.chainingConfig)
-        this.repeatAndLoopAudio = !!config.repeatAndLoopAudio
         this.advancedRepeats = Number(config.advancedRepeats || 1)
       } else {
         this.beginnerRepeats = Number(config.repeats || 1)
@@ -2121,8 +1837,6 @@ export default {
           if (merged.order === 'rand') merged.order = 'seq'
           if (merged.order === 'cum') merged.order = 'seq'
           if (merged.order === 'spaced') merged.order = 'seq'
-          merged.chainingConfig = this.normaliseChainingConfig(merged.chainingConfig)
-          merged.chainingConfig.style = 'sequential'
         }
         return merged
       } catch (e) {
@@ -2136,76 +1850,6 @@ export default {
       try {
         localStorage.setItem(MODE_STORAGE_KEYS[mode], JSON.stringify(this.cloneModeState(source)))
       } catch (e) { console.error(e) }
-    },
-
-    normaliseChainingConfig(config) {
-      return {
-        step: Math.max(1, Math.min(3, Number(config?.step || 1))),
-        goal: ['memorise', 'revise', 'test'].includes(config?.goal) ? config.goal : 'memorise',
-        style: 'sequential'
-      }
-    },
-
-    setChainingGoal(goal) {
-      this.chainingConfig = {
-        ...this.chainingConfig,
-        goal
-      }
-    },
-
-    setChainingStyle(style) {
-      this.chainingConfig = {
-        ...this.chainingConfig,
-        style
-      }
-    },
-
-    setChainingStep(step) {
-      const targetStep = Math.max(1, Math.min(3, Number(step || 1)))
-      if (targetStep === 2 && !this.chainingStepOneReady) return
-      if (targetStep === 3 && !this.chainingStepTwoReady) return
-      this.chainingConfig = {
-        ...this.chainingConfig,
-        step: targetStep
-      }
-    },
-
-    continueChainingStep() {
-      if (this.chainingStep === 1) {
-        this.setChainingStep(2)
-        return
-      }
-      if (this.chainingStep === 2) {
-        this.adjustRange()
-        this.setChainingStep(3)
-      }
-    },
-
-    applyChainingGoalDefaults() {
-      if (this.currentMode !== 'advanced') return
-      if (this.applyingChainingDefaults) return
-      this.applyingChainingDefaults = true
-      try {
-        const config = this.normaliseChainingConfig({ ...this.chainingConfig, goal: 'memorise' })
-        const current = this.advanced.chainingConfig || {}
-        const same =
-          current.step === config.step &&
-          current.goal === config.goal &&
-          current.style === config.style
-
-        if (!same) this.advanced.chainingConfig = config
-        this.order = 'seq'
-      } finally {
-        this.applyingChainingDefaults = false
-      }
-    },
-
-    startChainingSession() {
-      this.currentMode = 'advanced'
-      this.tab = 'advanced'
-      this.applyChainingGoalDefaults()
-      this.persistUiState()
-      this.startSession()
     },
 
     isEditableElement(target) {
@@ -2226,11 +1870,6 @@ export default {
         if (this.showPlannerModal) {
           event.preventDefault()
           this.showPlannerModal = false
-          return
-        }
-        if (this.visualMode === 'blur') {
-          event.preventDefault()
-          this.blurAdjacent = false
           return
         }
       }
@@ -2273,18 +1912,6 @@ export default {
       if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'k') {
         event.preventDefault()
         this.prev()
-        return
-      }
-
-      if (event.key.toLowerCase() === 'f') {
-        event.preventDefault()
-        this.focusMode = !this.focusMode
-        return
-      }
-
-      if (event.key.toLowerCase() === 'b') {
-        event.preventDefault()
-        this.blurAdjacent = !this.blurAdjacent
         return
       }
 
@@ -2418,9 +2045,7 @@ export default {
         ...(target === 'beginner' ? createBeginnerState() : createAdvancedState()),
         ...this.cloneModeState(payload.config || {})
       }
-      if (target === 'advanced') {
-        this.advanced.chainingConfig = this.normaliseChainingConfig(this.advanced.chainingConfig)
-      }
+      // Chaining removed.
       this.applySessionConfig(this.buildSessionConfig(this.currentMode))
       await this.loadChapter()
 	      this.buildQueue(this.currentMode)
@@ -2448,10 +2073,7 @@ export default {
         isPlaying: !!payload.isPlaying
       }
       this.applyRestoredAudioState()
-      if (this.currentMode === 'advanced' && this.repeatAndLoopAudio) {
-        this.tab = 'advanced'
-        this.showTools = true
-      }
+      // Advanced auto-open used to be driven by chaining/loop settings. Removed.
       this.persistAllState()
       this.showBanner('Session restored', 'success', 2200)
       this.$nextTick(() => {
@@ -2503,6 +2125,9 @@ export default {
         tone: options.tone || 'default',
         action: options.action || ''
       }
+      this.showPlannerModal = false
+      this.showResumeModal = false
+      this.showTools = false
       this.showConfirmModal = true
     },
 
@@ -2589,8 +2214,7 @@ export default {
     },
     // Open mode settings in offcanvas
     openModeSettings() {
-      this.tab = this.currentMode
-      this.showTools = true
+      this.openToolsPanel()
     },
 
     // Alternative: Direct mode toggle with confirmation
@@ -2607,13 +2231,13 @@ export default {
     performToggleMode() {
       const newMode = this.currentMode === 'beginner' ? 'advanced' : 'beginner'
       this.currentMode = newMode
-      this.tab = newMode
+      this.tab = 'tools'
       this.persistUiState()
       this.showBanner(`Switched to ${newMode === 'beginner' ? 'Beginner' : 'Advanced'} Mode`, 'success', 2000)
     },
     updateTabAndSync(tabName) {
-      this.tab = tabName
       this.currentMode = tabName === 'advanced' ? 'advanced' : 'beginner'
+      this.tab = 'tools'
       this.persistUiState()
       this.$forceUpdate()
     },
@@ -2739,8 +2363,8 @@ export default {
       this.chapterId = this.plannerConfig.surahId
       this.rangeStart = 1
       this.rangeEnd = Math.min(this.plannerConfig.versesPerDay, this.plannerConfig.totalVersesInSurah)
-      this.tab = 'beginner'
       this.showPlannerModal = false
+      this.openToolsPanel({ mode: 'beginner' })
       this.loadChapter()
 
       this.showBanner(
@@ -3337,9 +2961,8 @@ export default {
         if (this.guidedUiStep === 'learn') {
           this.flowListenPlays += 1
           this.persistUiState()
-          return
         }
-        if (this.playMode === 'auto' && this.guidedUiStep === 'review') {
+        if (this.playMode === 'auto') {
           setTimeout(() => this.next(), (this.delay || 1) * 1000)
         }
       }
@@ -3692,40 +3315,18 @@ export default {
       const q = []
       const safePreviousQueueIndex = Math.max(0, Number(config.queueIndex || 0))
 
-      if (mode === 'advanced' && this.advanced.repeatAndLoopAudio) {
-        const rep = Math.max(1, Number(this.advanced.advancedRepeats || 1))
-        verses.forEach((_, endIndex) => {
-          for (let r = 0; r < rep; r++) {
-            for (let verseIndex = 0; verseIndex <= endIndex; verseIndex++) {
-              q.push({
-                verse: verses[verseIndex],
-                repeatCount: r + 1,
-                totalRepeats: rep,
-                chainStage: endIndex + 1,
-                chainSize: endIndex + 1,
-                chainVerseIndex: verseIndex
-              })
-            }
-          }
-        })
-	      } else {
-	        // Sequential queue. Repetitions should apply in BOTH modes.
-	        // Advanced used to hard-force a single pass when chaining is off, which made "Repetitions" feel broken.
-	        const rep = mode === 'beginner'
-	          ? Math.max(1, Number(this.beginner.repeats || 1))
-	          : Math.max(1, Number(this.advanced.advancedRepeats || 1))
-	        for (let r = 0; r < rep; r++) {
-	          verses.forEach(verse => {
-	            q.push({
-	              verse,
-	              repeatCount: r + 1,
-              totalRepeats: rep,
-              chainStage: 1,
-              chainSize: 1,
-              chainVerseIndex: 0
-            })
+      // Sequential queue. Repetitions should apply in BOTH modes.
+      const rep = mode === 'beginner'
+        ? Math.max(1, Number(this.beginner.repeats || 1))
+        : Math.max(1, Number(this.advanced.advancedRepeats || 1))
+      for (let r = 0; r < rep; r++) {
+        verses.forEach(verse => {
+          q.push({
+            verse,
+            repeatCount: r + 1,
+            totalRepeats: rep
           })
-        }
+        })
       }
 
       const previousQueueIndex = Math.min(safePreviousQueueIndex, Math.max(q.length - 1, 0))
@@ -3756,11 +3357,7 @@ export default {
       this.buildQueue(mode)
     },
 
-    async startSession(skipCountdown = false) {
-      if (!skipCountdown) {
-        this.beginSessionStart()
-        return
-      }
+    async startSession() {
       const config = this.sessionConfig
       const mode = config.mode || this.currentMode
 
@@ -3777,7 +3374,6 @@ export default {
       this.applySessionConfig(config)
       this.persistModeState(mode)
       this.persistUiState()
-      this.sessionCompleted = false
 
       const currentVerses = mode === 'beginner' ? this.beginner.verses : this.advanced.verses
       const modeNeedsReload = !currentVerses || !currentVerses.length || !this.modeDataMatchesConfig(mode, config)
@@ -3889,7 +3485,7 @@ export default {
 	      const actionKey = this.banner?.actionKey
 	      this.banner = null
 	      if (actionKey === 'restart-session') {
-	        this.beginSessionStart()
+	        this.startSession()
 	        return
 	      }
 	      if (actionKey === 'open-setup') {
@@ -3910,8 +3506,7 @@ export default {
 	          ayahId: verse?.key || item?.ayahId || null,
 	          verse,
 	          repeatCount: item?.repeatCount || 1,
-	          totalRepeats: item?.totalRepeats || 1,
-	          chainStage: item?.chainStage || null
+	          totalRepeats: item?.totalRepeats || 1
 	        }
 	      }).filter(item => item.ayahId)
 	      const uniqueVerses = []
@@ -3928,18 +3523,13 @@ export default {
 	          map[verse.key] = Number(verse.duration || this.duration || 0)
 	          return map
 	        }, {}),
-	        reviewSeconds: this.visualMode === 'blur' ? 25 : 18
+	        reviewSeconds: 18
 	      })
 	      const plannerQueue = uniqueVerses.slice(0, 1).map(verse => ({
 	        phase: 'Planner',
 	        ayahId: verse.key,
 	        verse,
 	        prompt: `${this.currentChapter?.name_simple || 'Session'} ayahs ${this.rangeStart}-${this.rangeEnd}`
-	      }))
-	      const chainQueue = planner.chains.map(item => ({
-	        ...item,
-	        ayahId: item.verse?.key || item.ayahId,
-	        prompt: item.prompt || `Recite ayah ${item.verse?.number || ''}`
 	      }))
 	      const recallQueue = uniqueVerses.map(verse => ({
 	        phase: 'Recall',
@@ -3951,7 +3541,6 @@ export default {
 	      const fullQueue = buildSessionQueue({
 	        planner: plannerQueue,
 	        takrar: playbackQueue,
-	        chaining: chainQueue,
 	        recall: recallQueue,
 	        review: reviewQueue
 	      })
@@ -3961,7 +3550,7 @@ export default {
 		        config: this.buildSessionConfig(mode),
 	        planner: {
 	          new: planner.new.map(verse => verse.key),
-	          chains: planner.chains.map(item => item.verse?.key).filter(Boolean),
+	          chains: [],
 	          reviews: planner.reviews.map(ayah => ayah.id),
 	          ETA: planner.ETA
 	        }
@@ -4020,7 +3609,6 @@ export default {
 	      scoreRetention(this.mutqinState, verse.key, score)
 	      const previous = this.queue?.[Math.max(0, this.queueIndex - 1)]
 	      const fromId = previous?.verse?.key || previous?.key
-	      if (fromId && fromId !== verse.key) recordChainResult(this.mutqinState, fromId, verse.key, score !== 'Forgot')
 	      this.recomputeAnalytics()
 	      this.showBanner(score === 'Forgot' ? 'Marked for review' : 'Progress saved', score === 'Forgot' ? 'info' : 'success', 1400)
 	    },
@@ -4069,7 +3657,7 @@ export default {
 	        this.showBanner('Choose a valid surah and ayah range before starting.', 'info', 3600, { key: 'open-setup', label: 'Open setup' })
 	        return
 	      }
-      this.beginSessionStart()
+      this.startSession()
     },
 
 	    validateSettings() {
@@ -4469,7 +4057,8 @@ export default {
 	      this.analytics.versesMastered = Number(mutqinStats.ayahs_memorised || this.analytics.versesMastered || 0)
 	      this.analytics.totalRepetitions = Math.max(this.analytics.totalRepetitions, Number(mutqinStats.repetitions || 0))
 	      this.analytics.sessionsCompleted = Math.max(this.analytics.sessionsCompleted, Number(mutqinStats.sessions_completed || 0))
-	      this.simpleStats.weak = Number(mutqinStats.weak_transitions || 0)
+	      // Chaining-related stat removed (weak_transitions). Keep field stable.
+	      this.simpleStats.weak = 0
 	      this.weakVersesList = Object.values(this.mutqinState?.ayahs || {}).filter(ayah => Number(ayah.weak_count || 0) > 0)
 	      this.persistAnalytics()
       this.updateMasteredWeekly()
@@ -4529,18 +4118,14 @@ export default {
 	      this.rangeStart = 1
 	      this.rangeEnd = 7
 	      this.speed = 1
-	      this.delay = 2
-	      if (this.currentMode === 'advanced') {
-	        this.repeatAndLoopAudio = false
-	        this.advancedRepeats = 5
-	        this.chainingConfig = { step: 1, goal: 'memorise', style: 'sequential' }
-	      } else {
-	        this.beginnerRepeats = 3
-	      }
+      this.delay = 2
+      if (this.currentMode === 'advanced') {
+        this.advancedRepeats = 5
+      } else {
+        this.beginnerRepeats = 3
+      }
       this.playMode = 'auto'
       this.order = 'seq'
-      this.blurAdjacent = false
-      this.focusMode = false
       this.applySpeed()
       this.rebuildQueue()
       this.persistAllState()
@@ -4716,32 +4301,6 @@ export default {
     display: none;
     /* Hide on mobile, too crowded */
   }
-
-  .chaining-simple-head {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .chain-goal-grid,
-  .chain-goal-grid-two {
-    grid-template-columns: 1fr;
-  }
-
-  .chaining-hero {
-    flex-direction: column;
-  }
-
-  .chaining-progress,
-  .chain-choice-grid,
-  .chain-choice-grid-two {
-    grid-template-columns: 1fr;
-  }
-
-  .chain-step-actions.split {
-    flex-direction: column-reverse;
-    align-items: stretch;
-  }
-
 }
 
 /* Mode Button Styling */
@@ -4918,15 +4477,6 @@ html {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.session-pill-chaining {
-  background: rgba(46, 125, 50, 0.10);
-  border-color: rgba(46, 125, 50, 0.18);
-}
-
-.session-pill-chaining strong {
-  color: rgba(46, 125, 50, 0.95);
 }
 
 .session-rail-kicker {
@@ -5744,22 +5294,6 @@ html {
   transition: all 0.2s ease;
 }
 
-.verse-card.focus-mode {
-  opacity: 0.38;
-}
-
-.verse-card.blurred {
-  filter: blur(4px);
-  opacity: 0.22;
-  transform: scale(0.985);
-  transition: filter 0.3s ease, transform 0.2s, box-shadow 0.2s, border-color 0.2s, opacity 0.2s ease;
-}
-
-.verse-card.blurred:hover {
-  filter: blur(0px);
-  opacity: 0.55;
-}
-
 /* Removed: "For serious huffadh training" badge */
 
 .verse-header {
@@ -6127,7 +5661,7 @@ html {
 }
 
 .tools-tabs button {
-  flex: 1 1 50%;
+  flex: 0 0 auto;
   padding: 7px 10px;
   border-radius: 12px;
   background: transparent;
@@ -6472,14 +6006,15 @@ html {
   padding: 12px 16px 14px;
   border-top: 1px solid var(--border);
   background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));
-  display: grid;
+  display: flex;
   gap: 10px;
+  justify-content: space-between;
   align-items: center;
-  grid-template-columns: 4fr 1fr 1fr;
 }
 
 .tools-btn {
-  min-height: 42px;
+  flex: 1;
+  min-height: 44px;
   padding: 10px 10px;
   border-radius: 15px;
   font-weight: 500;
@@ -6493,7 +6028,6 @@ html {
   justify-content: center;
   gap: 6px;
   line-height: 1;
-  font-size: 0.86rem;
 }
 
 .tools-btn-soft {
@@ -6528,7 +6062,7 @@ html {
 }
 
 .tools-btn-start {
-  width: 100%;
+  flex: 1.6;
 }
 
 /* Hero section */
@@ -6701,33 +6235,71 @@ html {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  padding: 12px 14px;
-  margin: 14px 0 10px;
-  border-radius: 18px;
+  gap: 12px;
+  padding: 10px 12px;
+  margin: 10px 0 8px;
+  border-radius: 16px;
   border: 1px solid rgba(0, 0, 0, 0.06);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.58));
-  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.08);
   backdrop-filter: blur(10px);
 }
 
 .workspace-fab-meta {
   min-width: 0;
+  flex: 1 1 auto;
+  display: grid;
+  gap: 4px;
+}
+
+.workspace-fab-kicker {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(154, 103, 56, 0.10);
+  color: var(--accent-strong);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .workspace-fab-title {
   font-weight: 850;
   color: var(--text);
   letter-spacing: -0.2px;
+  font-size: 0.92rem;
+  line-height: 1.15;
 }
 
 .workspace-fab-sub {
-  margin-top: 2px;
-  font-size: 0.82rem;
+  margin-top: 3px;
+  font-size: 0.74rem;
   color: var(--text-muted);
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
   align-items: center;
+  line-height: 1.2;
+}
+
+.workspace-fab-sub span {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(154, 103, 56, 0.10);
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.workspace-fab-copy {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  max-width: 60ch;
 }
 
 .workspace-fab-chip {
@@ -6742,228 +6314,41 @@ html {
   font-size: 0.72rem;
 }
 
-.workspace-fab-help {
-  margin-top: 8px;
-  font-size: 0.96rem;
-  line-height: 1.45;
-  color: rgba(45, 35, 23, 0.82);
-  max-width: 52ch;
-}
-
 .workspace-fab-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
   flex: 0 0 auto;
 }
 
 .fab-btn {
-  min-height: 44px;
-  padding: 10px 12px;
-  border-radius: 14px;
+  min-height: 40px;
+  padding: 8px 11px;
+  border-radius: 13px;
   border: 1px solid rgba(0, 0, 0, 0.10);
   background: rgba(255, 255, 255, 0.76);
   box-shadow: var(--shadow-sm);
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.84rem;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
+  white-space: nowrap;
 }
 
 .fab-btn-primary {
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: #fff;
   border-color: transparent;
-  box-shadow: 0 18px 52px rgba(154, 103, 56, 0.25);
+  box-shadow: 0 14px 28px rgba(154, 103, 56, 0.22);
+}
+
+.fab-btn-soft {
+  color: rgba(0, 0, 0, 0.78);
 }
 
 .fab-btn-ghost {
   color: rgba(0, 0, 0, 0.78);
-}
-
-.workspace-status-card {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) auto minmax(280px, 0.95fr);
-  gap: 18px;
-  align-items: center;
-  margin-bottom: 18px;
-  padding: 20px 22px;
-  border: 1px solid rgba(154, 103, 56, 0.12);
-  border-radius: 22px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(251, 245, 237, 0.92));
-  box-shadow: 0 20px 52px rgba(154, 103, 56, 0.10);
-}
-
-.workspace-status-kicker {
-  display: inline-flex;
-  align-items: center;
-  margin-bottom: 10px;
-  font-size: 0.74rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-.workspace-status-main h3 {
-  margin: 0 0 8px;
-  font-size: clamp(1.15rem, 1.6vw, 1.55rem);
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-  color: var(--text);
-}
-
-.workspace-status-main p,
-.workspace-next-card p {
-  margin: 0;
-  font-size: 0.88rem;
-  line-height: 1.5;
-  color: var(--text-muted);
-}
-
-.workspace-status-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
-}
-
-.workspace-info-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 36px;
-  padding: 7px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(154, 103, 56, 0.14);
-  background: rgba(255, 255, 255, 0.88);
-  color: rgba(68, 49, 29, 0.9);
-  font-weight: 700;
-  font-size: 0.8rem;
-  box-shadow: 0 10px 24px rgba(154, 103, 56, 0.08);
-}
-
-.workspace-status-actions {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 10px;
-  min-width: 168px;
-}
-
-.workspace-status-actions .fab-btn {
-  width: 100%;
-  min-height: 40px;
-  justify-content: center;
-  padding-inline: 16px;
-  border-radius: 14px;
-  font-size: 0.88rem;
-  font-weight: 700;
-}
-
-.workspace-next-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 18px 20px;
-  border: 1px solid rgba(154, 103, 56, 0.12);
-  border-radius: 18px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 249, 243, 0.82));
-}
-
-.workspace-next-card strong {
-  display: block;
-  margin-bottom: 8px;
-  font-size: clamp(0.95rem, 1.2vw, 1.12rem);
-  line-height: 1.32;
-  color: var(--text);
-  letter-spacing: -0.02em;
-}
-
-.view-mode-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.view-mode-option {
-  width: 100%;
-  text-align: left;
-  padding: 14px 14px 15px;
-  border-radius: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: rgba(255, 255, 255, 0.84);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
-}
-
-.view-mode-option strong {
-  display: block;
-  margin-bottom: 4px;
-  font-size: 0.92rem;
-  color: var(--text);
-}
-
-.view-mode-option span {
-  display: block;
-  font-size: 0.78rem;
-  line-height: 1.45;
-  color: var(--text-muted);
-}
-
-.view-mode-option:hover,
-.view-mode-option.active {
-  border-color: rgba(154, 103, 56, 0.38);
-  background: rgba(184, 130, 78, 0.10);
-  box-shadow: 0 16px 34px rgba(154, 103, 56, 0.12);
-  transform: translateY(-1px);
-}
-
-.session-countdown-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9998;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: rgba(12, 10, 8, 0.58);
-  backdrop-filter: blur(12px);
-}
-
-.session-countdown-card {
-  width: min(420px, 94vw);
-  padding: 28px 24px 26px;
-  border-radius: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.42);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 248, 240, 0.92));
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.28);
-  text-align: center;
-}
-
-.session-countdown-kicker {
-  font-size: 0.8rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-.session-countdown-value {
-  margin: 10px 0 8px;
-  font-size: clamp(3rem, 7vw, 4.6rem);
-  line-height: 1;
-  font-weight: 900;
-  color: var(--text);
-  letter-spacing: -0.05em;
-}
-
-.session-countdown-card p {
-  margin: 0;
-  font-size: 1rem;
-  line-height: 1.55;
-  color: var(--text-muted);
 }
 
 .verses-grid {
@@ -7154,462 +6539,6 @@ html {
 .sheet-fade-leave-to {
   opacity: 0;
   transform: translateY(8px);
-}
-
-.chaining-simple-shell {
-  overflow: hidden;
-}
-
-.chaining-simple-summary {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 2px;
-}
-
-.chaining-simple-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.chaining-simple-kicker {
-  display: inline-block;
-  margin-bottom: 6px;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--accent);
-}
-
-.chaining-simple-head h3 {
-  margin: 0 0 4px;
-  font-size: 1.05rem;
-  color: var(--text);
-}
-
-.chaining-simple-head p {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.82rem;
-  line-height: 1.45;
-  max-width: 42ch;
-}
-
-.chaining-simple-badge {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: var(--accent-light);
-  border: 1px solid var(--accent-soft);
-  color: var(--accent);
-  font-size: 0.76rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.chaining-simple-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.chaining-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 11px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  font-size: 0.76rem;
-  font-weight: 600;
-}
-
-.chain-goal-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.chain-goal-grid-two {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.chain-goal-card {
-  width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.78);
-  padding: 14px;
-  text-align: left;
-  cursor: pointer;
-  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
-}
-
-.chain-goal-card strong {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--text);
-  font-size: 0.9rem;
-}
-
-.chain-goal-card span {
-  display: block;
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-
-.chain-goal-card:hover,
-.chain-goal-card.active {
-  border-color: var(--accent);
-  background: var(--accent-light);
-  box-shadow: 0 10px 24px rgba(154, 103, 56, 0.10);
-  transform: translateY(-1px);
-}
-
-.chain-goal-card.active strong,
-.chain-goal-card.active span {
-  color: var(--accent-strong);
-}
-
-.chain-goal-card-compact {
-  padding: 12px;
-}
-
-.chaining-setup {
-  overflow: hidden;
-}
-
-.chaining-wizard {
-  padding: 20px;
-  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-elevated) 100%);
-}
-
-.chaining-hero {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 18px;
-}
-
-.chaining-kicker {
-  display: inline-block;
-  margin-bottom: 6px;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--accent);
-}
-
-.chaining-hero h3 {
-  margin-bottom: 6px;
-  font-size: 1.3rem;
-  color: var(--text);
-}
-
-.chaining-hero p {
-  max-width: 46ch;
-  color: var(--text-muted);
-  font-size: 0.88rem;
-}
-
-.chaining-progress-chip {
-  white-space: nowrap;
-  background: var(--accent-light);
-  color: var(--accent);
-  border: 1px solid var(--accent-soft);
-  border-radius: 999px;
-  padding: 8px 12px;
-  font-size: 0.76rem;
-  font-weight: 600;
-}
-
-.chaining-progress {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 18px;
-}
-
-.chain-progress-step {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 12px;
-  text-align: left;
-  cursor: pointer;
-  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
-}
-
-.chain-progress-step span {
-  width: 24px;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 10px;
-  border-radius: 50%;
-  background: var(--border);
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-
-.chain-progress-step strong {
-  display: block;
-  font-size: 0.86rem;
-  color: var(--text);
-}
-
-.chain-progress-step.active,
-.chain-progress-step.done {
-  border-color: var(--accent-soft);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
-}
-
-.chain-progress-step.active span,
-.chain-progress-step.done span {
-  background: var(--accent);
-  color: #fff;
-}
-
-.chain-progress-step.active {
-  transform: translateY(-1px);
-}
-
-.chaining-panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 18px;
-}
-
-.chain-step-copy h4 {
-  margin-bottom: 4px;
-  font-size: 1rem;
-  color: var(--text);
-}
-
-.chain-step-copy p {
-  font-size: 0.84rem;
-  color: var(--text-muted);
-}
-
-.chain-choice-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.chain-choice-grid-two {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.chain-choice-card {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 16px;
-  text-align: left;
-  cursor: pointer;
-  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
-}
-
-.chain-choice-card strong {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--text);
-  font-size: 0.92rem;
-}
-
-.chain-choice-card span {
-  display: block;
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  line-height: 1.45;
-}
-
-.chain-choice-card:hover,
-.chain-choice-card.active {
-  border-color: var(--accent);
-  box-shadow: 0 14px 28px rgba(154, 103, 56, 0.12);
-  transform: translateY(-1px);
-}
-
-.chain-session-preview {
-  background: var(--accent-light);
-  border: 1px solid var(--accent-soft);
-  border-radius: 16px;
-  padding: 14px 16px;
-}
-
-.chain-preview-line {
-  margin-bottom: 4px;
-  color: var(--text);
-  font-weight: 600;
-  font-size: 0.84rem;
-}
-
-.chain-session-preview small {
-  color: var(--text-muted);
-}
-
-.chain-step-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 4px;
-}
-
-.chain-step-actions.split {
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-
-.chain-secondary-btn {
-  min-width: 110px;
-}
-
-/* Chaining UI */
-.chaining-viewer {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  margin-top: 24px;
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-}
-
-.chaining-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  background: var(--bg-elevated);
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.chaining-header:hover {
-  background: var(--accent-light);
-}
-
-.chaining-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 600;
-  color: var(--accent);
-}
-
-.chaining-title i {
-  font-size: 1.2rem;
-}
-
-.chaining-stats {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 0.85rem;
-}
-
-.chaining-badge {
-  background: var(--accent);
-  color: white;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-weight: 500;
-}
-
-.chaining-badge.alt {
-  background: var(--border);
-  color: var(--text);
-}
-
-.chaining-body {
-  padding: 20px;
-  border-top: 1px solid var(--border);
-  max-height: 400px;
-  overflow-y: auto;
-  background: var(--bg-body);
-}
-
-.chain-timeline {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.chain-step {
-  display: flex;
-  align-items: center;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  padding: 10px 16px;
-  border-radius: 12px;
-  min-width: 120px;
-  cursor: pointer;
-  transition: all 0.2s;
-  opacity: 0.7;
-}
-
-
-.chain-step:hover {
-  border-color: var(--accent);
-  opacity: 1;
-}
-
-.chain-step.completed {
-  border-color: var(--accent-soft);
-  background: var(--accent-light);
-  opacity: 0.8;
-}
-
-.chain-step.active {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: white;
-  opacity: 1;
-  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.2);
-  transform: translateY(-2px);
-}
-
-.step-indicator {
-  margin-right: 12px;
-  font-size: 1.2rem;
-}
-
-.chain-step.completed .step-indicator {
-  color: var(--accent);
-}
-
-.chain-step.active .step-indicator {
-  color: white;
-}
-
-.step-content {
-  display: flex;
-  flex-direction: column;
-}
-
-.step-phase {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  opacity: 0.8;
-}
-
-.step-verse {
-  font-weight: 600;
-  font-size: 0.95rem;
 }
 
 
@@ -8236,12 +7165,11 @@ html {
 }
 
 .resume-modal {
-  width: min(880px, 97vw);
+  width: min(760px, 96vw);
 }
 
 .resume-modal .modal-header h2 {
-  font-size: clamp(1.02rem, 1.6vw, 1.28rem);
-  letter-spacing: -0.02em;
+  font-size: clamp(1.25rem, 2.3vw, 1.75rem);
 }
 
 .resume-saved-at {
@@ -8526,7 +7454,7 @@ html {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 15px 14px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -8555,35 +7483,35 @@ html {
 }
 
 .stat-card i {
-  font-size: 1.35rem;
+  font-size: 1.8rem;
   color: var(--accent);
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .stat-value {
-  font-size: 1.22rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--text);
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .stat-label {
-  font-size: 0.76rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
 }
 
 .stat-help {
-  margin-top: 6px;
+  margin-top: 10px;
   color: var(--text-muted);
-  font-size: calc(0.66rem * var(--en-scale, 1));
+  font-size: calc(0.72rem * var(--en-scale, 1));
   line-height: 1.35;
 }
 
 .mini-trend {
   position: relative;
   width: 80px;
-  height: 20px;
-  margin-top: 8px;
+  height: 24px;
+  margin-top: 10px;
 }
 
 .mini-trend span {
@@ -8642,6 +7570,33 @@ html {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 20px;
   margin-bottom: 40px;
+}
+
+.home-dashboard-minimal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 160px;
+}
+
+.offcanvas-launcher-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px;
+  margin-bottom: 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.offcanvas-launcher-copy {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
 }
 
 .setup-start-card {
@@ -8796,56 +7751,6 @@ html {
 .toggle-chip.active {
   border-color: var(--accent);
   color: var(--accent);
-}
-
-.learning-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 12px;
-  margin: 14px 0 10px;
-  padding: 10px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.58);
-}
-
-.learning-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  color: var(--text-muted);
-  font-size: 0.78rem;
-}
-
-.learning-meta span {
-  padding: 6px 8px;
-  border-radius: 999px;
-  background: var(--bg-body);
-}
-
-.learning-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.learning-buttons button {
-  min-height: 36px;
-  padding: 7px 10px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-  color: var(--text);
-  font-weight: 700;
-  cursor: pointer;
-  transition: border-color 0.18s ease, transform 0.18s ease;
-}
-
-.learning-buttons button:hover {
-  border-color: var(--accent);
-  transform: translateY(-1px);
 }
 
 .continue-session-card {
@@ -9054,41 +7959,49 @@ html {
 
 @media (max-width: 768px) {
   .workspace-fab {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .workspace-fab-actions {
-    width: 100%;
+    top: 8px;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 10px;
+    margin: 8px 0 6px;
+    border-radius: 14px;
   }
 
-  .workspace-status-card {
-    grid-template-columns: 1fr;
-    padding: 16px;
-    gap: 14px;
-  }
-
-  .workspace-status-actions {
-    order: 2;
+  .workspace-fab-meta {
     min-width: 0;
   }
 
-  .workspace-next-card {
-    padding: 18px;
+  .workspace-fab-kicker {
+    font-size: 0.64rem;
   }
 
-  .view-mode-grid {
-    grid-template-columns: 1fr;
+  .workspace-fab-title {
+    font-size: 0.9rem;
   }
 
-  .tools-footer {
-    grid-template-columns: 1fr;
+  .workspace-fab-sub {
+    font-size: 0.72rem;
+    gap: 6px;
   }
 
-  .tools-btn-start {
-    grid-column: auto;
+  .workspace-fab-copy {
+    font-size: 0.78rem;
+  }
+
+  .workspace-fab-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+  }
+
+  .fab-btn {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 0.82rem;
   }
 
   .setup-start-card {
@@ -9106,21 +8019,6 @@ html {
     justify-content: center;
   }
 
-  .learning-actions {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .learning-buttons {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    justify-content: stretch;
-  }
-
-  .learning-buttons button {
-    width: 100%;
-  }
-
   .continue-session-card {
     flex-direction: column;
     align-items: stretch;
@@ -9130,6 +8028,11 @@ html {
     grid-template-columns: 1fr;
     gap: 14px;
     margin-bottom: 20px;
+  }
+
+  .offcanvas-launcher-card {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .action-card {
@@ -9332,10 +8235,7 @@ html {
     padding-right: 16px;
   }
 
-  .planner-stats-grid,
-  .chain-choice-grid,
-  .chain-choice-grid-two,
-  .chaining-progress {
+  .planner-stats-grid {
     grid-template-columns: 1fr;
   }
 
