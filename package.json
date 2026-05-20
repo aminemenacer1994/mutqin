@@ -4,7 +4,8 @@
         "dev": "mix",
         "watch": "mix watch",
         "prod": "mix --production",
-        "test:mutqin": "node --experimental-vm-modules tests/js/mutqin-flow.test.mjs"
+        "test:mutqin": "node --experimental-vm-modules tests/js/mutqin-flow.test.mjs",
+        "test:mutqin:browser": "node tests/js/mutqin-browser-smoke.mjs"
     },
     "dependencies": {
         "axios": "^1.16.0",

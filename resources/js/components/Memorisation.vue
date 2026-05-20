@@ -10,7 +10,15 @@
     </div>
 
     <!-- Main Content -->
-    <div v-if="appReady" class="main container" :class="{ 'tools-open': showTools }">
+    <div
+      v-if="appReady && isLoggedIn"
+      class="main container"
+      :class="{
+        'tools-open': showTools,
+        'flow-practice': guidedUiStep === 'practice',
+        'flow-recall': guidedUiStep === 'recall'
+      }"
+    >
       <div class="content">
 	        <section v-if="!hasVerses" class="home-dashboard">
 	          <div v-if="hasContinueSession" class="continue-session-card">
@@ -31,120 +39,80 @@
 
 	          <div class="setup-start-card">
 	            <div class="setup-start-copy">
-	              <span class="setup-kicker">Memorisation setup</span>
-	              <h2>Choose your ayahs and begin</h2>
+	              <span class="setup-kicker">Session setup</span>
+	              <h2>What are you memorising today?</h2>
 	              <p>{{ setupReadinessHint }}</p>
+                <p v-if="dueCount" class="setup-review-hint">You have {{ dueCount }} verses to review.</p>
 	            </div>
-	            <div class="setup-mode-grid" role="group" aria-label="Choose memorisation mode">
-	              <button class="setup-mode-card" :class="{ active: currentMode === 'beginner' }"
-	                @click="startNewSetup('beginner')" title="Beginner: simple sequential practice with repeat count">
-	                <i class="bi bi-layers"></i>
-	                <span>Beginner</span>
-	                <small>Simple repeat flow</small>
-	              </button>
-	              <button class="setup-mode-card" :class="{ active: currentMode === 'advanced' }"
-	                @click="startNewSetup('advanced')" title="Advanced: extra playback controls and optional chaining">
-	                <i class="bi bi-diagram-3"></i>
-	                <span>Advanced</span>
-	                <small>More control</small>
-	              </button>
+	            <div class="setup-mode-grid" role="group" aria-label="Session setup">
+                <div class="field">
+                  <label>Surah</label>
+                  <select :value="chapterId" @change="onChapterChange" class="select">
+                    <option :value="0">Choose a surah...</option>
+                    <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.id }}. {{ c.name_simple }}</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Verse range</label>
+                  <div class="range range-single">
+                    <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
+                    <span>to</span>
+                    <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
+                  </div>
+                </div>
 	            </div>
-	            <button class="cta cta-primary setup-primary" @click="openModeSettings"
-	              title="Open the setup panel to choose surah, ayah range, reciter, and repetitions">
-	              <i class="bi bi-sliders"></i> Open setup
+              <details class="setup-optional-panel">
+                <summary>Optional tools</summary>
+                <div class="setup-optional-grid">
+                  <div class="field">
+                    <label>Reciter</label>
+                    <select v-model="reciterId" @change="refreshVerses" class="select">
+                      <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
+                    </select>
+                  </div>
+                  <div class="field field-inline-toggle">
+                    <label>Translation</label>
+                    <button
+                      type="button"
+                      class="toggle-chip"
+                      :class="{ active: showTranslation }"
+                      @click="toggleReadingOption('translation')"
+                    >
+                      {{ showTranslation ? 'On' : 'Off' }}
+                    </button>
+                  </div>
+                </div>
+              </details>
+	            <button class="cta cta-primary setup-primary" @click="startSession" :disabled="!canStartSession"
+	              title="Start session">
+	              <i class="bi bi-play-fill"></i> {{ dueCount ? 'Start Review' : 'Start Session' }}
 	            </button>
-	          </div>
-
-	          <div class="streak-motivation" v-if="analytics.currentStreak > 0">
-            <div class="streak-badge">
-              <i class="bi bi-fire" style="color: #ee964b;"></i>
-              <span>{{ analytics.currentStreak }} day streak</span>
-            </div>
-            <div class="motivation-message" v-if="analytics.currentStreak === 1">
-              <i class="bi bi-star"></i> Great start! Keep going.
-            </div>
-            <div class="motivation-message" v-else-if="analytics.currentStreak === 3">
-              <i class="bi bi-calendar-heart"></i> 3 days! Consistency is beautiful.
-            </div>
-            <div class="motivation-message" v-else-if="analytics.currentStreak === 7">
-              <i class="bi bi-trophy"></i> One week! مَا شَاءَ ٱللَّٰهُ
-            </div>
-            <div class="motivation-message" v-else-if="analytics.currentStreak >= 30">
-              <i class="bi bi-gem"></i> {{ analytics.currentStreak }} days of dedication
-            </div>
-          </div>
-
-	          <div class="dashboard-actions">
-	            <div v-if="hasContinueSession" class="action-card resume-action" @click="continueLastSession">
-	              <div class="action-icon"><i class="bi bi-arrow-clockwise"></i></div>
-	              <div class="action-content">
-	                <h3>Resume Session</h3>
-	                <p>{{ continueSessionLabel }}</p>
-	              </div>
-	              <i class="bi bi-play-fill action-arrow"></i>
-	            </div>
 	          </div>
 	        </section>
 
-        <!-- Updated Session Rail -->
-        <div class="session-rail" v-if="currentChapter && hasVerses">
-          <div class="session-rail-top">
-            <div class="session-rail-copy">
-              <div class="session-rail-headline">
-                <div class="session-rail-title">{{ currentChapter.name_simple }}</div>
-                <div class="session-rail-meta">Ayah {{ currentPosition }}/{{ totalVerses }}</div>
-              </div>
-	              <div class="session-rail-pills">
-	                <span class="session-pill"><strong>{{ progressPercent }}%</strong> progress</span>
-	                <span class="session-pill"><strong>{{ remainingAyahs }}</strong> left</span>
-	                <span class="session-pill"><strong>{{ etaLabel }}</strong></span>
-	                <span class="session-pill"><strong>{{ currentMode === 'advanced' ? 'Advanced' : 'Beginner' }}</strong></span>
-	                <span class="session-pill session-pill-focus"><strong>{{ currentLearningPrompt }}</strong></span>
-	              </div>
-            </div>
-            <div class="session-rail-actions">
-              <button v-if="hasContinueSession && continueSessionPayload && continueSessionPayload.activeVerseKey !== activeVerseKey"
-                class="rail-btn rail-btn-resume" @click="continueLastSession" title="Resume saved session">
-                <i class="bi bi-arrow-clockwise"></i>
-                <span>Resume</span>
-              </button>
-
-              <!-- MODE BUTTON - Added to left side -->
-              <button class="rail-btn mode-btn" @click="openModeSettings" title="Change Mode">
-                <i class="bi bi-layers"></i>
-                <span>{{ currentMode === 'beginner' ? 'Beginner' : 'Advanced' }}</span>
-                <i class="bi bi-chevron-down"></i>
-              </button>
-
-	              <!-- PLAN BUTTON (hidden) -->
-	              <button v-if="false" class="rail-btn rail-btn-ghost" @click="showPlannerModal = true" :disabled="!appReady">
-	                <i class="bi bi-calendar-check"></i><span>Plan</span>
-	              </button>
-
-	              <!-- STATS BUTTON -->
-	              <button class="rail-btn rail-btn-ghost" @click="tab = 'analytics'; showTools = true" :disabled="!appReady">
-	                <i class="bi bi-grid-1x2"></i><span>Stats</span>
-	              </button>
-
-              <!-- START SESSION BUTTON -->
-              <button class="rail-btn rail-btn-primary" @click="handlePrimaryAction" :disabled="!isPlaying && !canStartSession">
-                <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-                <span>{{ isPlaying ? 'Pause' : 'Start Session' }}</span>
-              </button>
+        <!-- Floating Actions (replaces the session rail bar) -->
+        <div v-if="currentChapter && hasVerses" class="workspace-fab" aria-label="Workspace actions">
+          <div class="workspace-fab-meta">
+            <div class="workspace-fab-title">{{ currentChapter.name_simple }}</div>
+            <div class="workspace-fab-sub">
+              Ayah {{ currentPosition }}/{{ totalVerses }}
+              <span v-if="chainingActive" class="workspace-fab-chip">Chaining</span>
             </div>
           </div>
-
-          <div class="session-rail-subnote">{{ etaSubtext }}</div>
-
-          <div class="progress-bar progress-bar-wide">
-            <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
-            <div class="progress-label">{{ progressPercent }}%</div>
+          <div class="workspace-fab-actions">
+            <button class="fab-btn fab-btn-ghost" @click="openAdvancedControls" title="Open session controls">
+              <i class="bi bi-sliders"></i><span>Controls</span>
+            </button>
+            <button class="fab-btn fab-btn-primary" @click="handlePrimaryAction" :disabled="!isPlaying && !canStartSession">
+              <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+              <span>{{ isPlaying ? 'Pause' : (guidedUiStep === 'review' ? 'Review' : 'Play') }}</span>
+            </button>
           </div>
         </div>
 
         <!-- REMOVE the standalone beginner mode button if it exists elsewhere -->
 
-        <div class="reading-toolbar">
+        <div v-if="false" class="reading-toolbar">
           <div class="reading-toolbar-group">
 	            <button class="toolbar-chip" :class="{ active: showTranslation }" title="Show or hide the English translation"
 	              @click="toggleReadingOption('translation')">
@@ -196,497 +164,275 @@
           <i class="bi bi-hourglass-split"></i>
           <span>Loading...</span>
         </div>
-        <div v-else-if="hasVerses" class="verses-grid">
-          <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" class="verse-card"
-            :class="{
-              active: effectiveActiveVerseKey === verse.key,
-              'focus-mode': visualMode === 'focus' && effectiveActiveVerseKey && effectiveActiveVerseKey !== verse.key,
-              blurred: visualMode === 'blur' && effectiveActiveVerseKey && effectiveActiveVerseKey !== verse.key,
-              'serious-training': false
-            }">
-            <div class="verse-header">
-              <div class="verse-badges">
-                <span class="verse-number">Ayah {{ verse.number }}</span>
-                <span v-if="effectiveActiveVerseKey === verse.key" class="verse-status-badge">Active Ayah</span>
-                <span v-else-if="visualMode === 'blur'" class="verse-status-subtle">Active recall</span>
-                <span v-else-if="visualMode === 'focus'" class="verse-status-subtle">Focus mode</span>
-              </div>
+        <div v-else-if="hasVerses" class="workspace">
+          <main class="workspace-main" aria-label="Memorisation workspace">
+            <div class="verses-grid">
+              <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" class="verse-card"
+                :class="{
+                  active: effectiveActiveVerseKey === verse.key,
+                  'focus-mode': visualMode === 'focus' && effectiveActiveVerseKey && effectiveActiveVerseKey !== verse.key,
+                  blurred: visualMode === 'blur' && effectiveActiveVerseKey && effectiveActiveVerseKey !== verse.key,
+                  'serious-training': false
+                }"
+                @click="onVerseCardClick(verse)"
+                role="button"
+                tabindex="0"
+                @keydown.enter.prevent="onVerseCardClick(verse)"
+              >
+                <div class="verse-header">
+                  <div class="verse-badges">
+                    <span class="verse-number">Ayah {{ verse.number }}</span>
+                    <span v-if="effectiveActiveVerseKey === verse.key" class="verse-status-badge">Active Ayah</span>
+                    <span v-else-if="visualMode === 'blur'" class="verse-status-subtle">Active recall</span>
+                    <span v-else-if="visualMode === 'focus'" class="verse-status-subtle">Focus mode</span>
+                  </div>
 
-
-              <div class="verse-actions">
-                <!-- Font size controls -->
-                <div class="verse-font-controls">
-                  <button class="verse-font-btn" @click="decreaseVerseFont(verse.key, $event)"
-                    title="Decrease font size">
-                    <i class="bi bi-dash"></i>
-                  </button>
-                  <span class="verse-font-size-indicator">{{ getVerseFontSize(verse.key) }}%</span>
-                  <button class="verse-font-btn" @click="increaseVerseFont(verse.key, $event)"
-                    title="Increase font size">
-                    <i class="bi bi-plus"></i>
-                  </button>
-                  <button v-if="verseFontSizes[verse.key]" class="verse-font-btn"
-                    @click="resetVerseFont(verse.key, $event)" title="Reset font size">
-                    <i class="bi bi-arrow-repeat"></i>
-                  </button>
+                  <div v-if="effectiveActiveVerseKey === verse.key" class="verse-actions">
+                    <button class="verse-play-btn" @click="playVerse(verse)"
+                      :title="activeVerseKey === verse.key && isPlaying ? 'Pause' : 'Play verse'">
+                      <i class="bi"
+                        :class="activeVerseKey === verse.key && isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                    </button>
+                  </div>
                 </div>
 
-                <button class="verse-download-btn" @click="downloadVerseAudio(verse)"
-                  :title="`Download ayah ${verse.number} audio`" :disabled="!verse.audio">
-                  <i class="bi bi-download"></i>
-                </button>
+                <div class="verse-arabic verse-arabic-primary" dir="rtl" v-if="verse.arabic && isDataReady" v-html="getDisplayArabic(verse)"
+                  :class="{
+                    'tajweed-enabled': tajweedEnabled,
+                    'word-highlight-enabled': showWordByWord && wordByWordAudioEnabled && !tajweedEnabled
+                  }" :style="{
+                    '--verse-font-percent': getVerseFontSize(verse.key),
+                    fontFamily: quranFontFamily
+                  }">
+                </div>
 
-                <!-- Fixed Play Button -->
-                <button class="verse-play-btn" @click="playVerse(verse)"
-                  :title="activeVerseKey === verse.key && isPlaying ? 'Pause' : 'Play verse'">
-                  <i class="bi"
-                    :class="activeVerseKey === verse.key && isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-                </button>
+                <div v-if="effectiveActiveVerseKey === verse.key" class="learning-actions">
+                  <div class="learning-meta">
+                    <span>{{ guidedPhaseLabel }}</span>
+                    <span>{{ currentLearningPrompt }}</span>
+                  </div>
+                </div>
+
+                <!-- Keep in-workspace aids available, but visually quieter -->
+                <div v-if="showTransliteration && verse.transliteration" class="verse-transliteration verse-aid">
+                  {{ verse.transliteration }}
+                </div>
+                <div v-if="showTranslation && verse.translation" class="verse-translation verse-aid">
+                  {{ verse.translation }}
+                </div>
+                <div v-if="showWordByWord && verse.words && verse.words.length" class="verse-words verse-aid"
+                  @scroll="onVerseWordsScroll(verse.key, $event)">
+                  <div v-for="(word, wi) in verse.words" :key="wi" class="word-item">
+                    <span class="word-arabic" dir="rtl">{{ word.ar }}</span>
+                    <span class="word-meaning">{{ word.en }}</span>
+                    <button v-if="word.audio && wordByWordAudioEnabled" class="word-audio-btn"
+                      @click="playWordAudio(word.audio)">
+                      <i class="bi bi-volume-up"></i>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-
-	            <div class="verse-arabic" dir="rtl" v-if="verse.arabic && isDataReady" v-html="getDisplayArabic(verse)"
-              :class="{
-                'tajweed-enabled': tajweedEnabled,
-                'word-highlight-enabled': showWordByWord && wordByWordAudioEnabled && !tajweedEnabled
-              }" :style="{
-                '--verse-font-percent': getVerseFontSize(verse.key),
-                fontFamily: quranFontFamily
-              }">
-	            </div>
-
-	            <div v-if="effectiveActiveVerseKey === verse.key" class="learning-actions">
-	              <div class="learning-meta">
-	                <span>{{ takrarLabel(verse.key) }}</span>
-	                <span>{{ retentionLabel(verse.key) }}</span>
-	                <span>{{ currentLearningPrompt }}</span>
-	              </div>
-	              <div class="learning-buttons" aria-label="Memorisation actions">
-	                <button type="button" @click="markTakrarRepeat(verse)" title="Count one repetition for this ayah">
-	                  <i class="bi bi-arrow-repeat"></i> Repeat
-	                </button>
-	                <button type="button" @click="markTakrarHide(verse)" title="Hide only the active ayah for recall">
-	                  <i class="bi bi-eye-slash"></i> Hide
-	                </button>
-	                <button type="button" @click="markTakrarDone(verse, 'Easy')" title="I recited this confidently">
-	                  Easy
-	                </button>
-	                <button type="button" @click="markTakrarDone(verse, 'Shaky')" title="I got through it, but it needs another pass">
-	                  Shaky
-	                </button>
-	                <button type="button" @click="markTakrarDone(verse, 'Forgot')" title="I forgot and need to retry">
-	                  Forgot
-	                </button>
-	              </div>
-	            </div>
-
-	            <!-- Transliteration -->
-            <div v-if="showTransliteration && verse.transliteration" class="verse-transliteration">
-              {{ verse.transliteration }}
-            </div>
-
-            <!-- Translation - shows only if showTranslation is true AND translation exists -->
-            <div v-if="showTranslation && verse.translation" class="verse-translation">
-              {{ verse.translation }}
-            </div>
-
-            <!-- Words - shows only if showWordByWord is true AND words array has items -->
-            <div v-if="showWordByWord && verse.words && verse.words.length" class="verse-words"
-              @scroll="onVerseWordsScroll(verse.key, $event)">
-              <div v-for="(word, wi) in verse.words" :key="wi" class="word-item">
-                <span class="word-arabic" dir="rtl">{{ word.ar }}</span>
-                <span class="word-meaning">{{ word.en }}</span>
-                <button v-if="word.audio && wordByWordAudioEnabled" class="word-audio-btn"
-                  @click="playWordAudio(word.audio)">
-                  <i class="bi bi-volume-up"></i>
-                </button>
-              </div>
-            </div>
-          </div>
+          </main>
         </div>
       </div>
 
-      <!-- Tools Panel -->
-      <aside class="tools" :class="{ open: showTools }">
+      <!-- Advanced Controls Drawer -->
+      <div v-if="hasVerses && showTools" class="tools-backdrop" @click="showTools = false" aria-hidden="true"></div>
+      <aside v-if="hasVerses" class="tools" :class="{ open: showTools }">
         <div class="tools-top">
           <div class="tools-topbar">
-            <div class="tools-title">{{ toolsHeaderTitle }}</div>
+            <div class="tools-title">Controls</div>
             <button class="tools-x" @click="showTools = false" aria-label="Close panel"><i
                 class="bi bi-x-lg"></i></button>
           </div>
           <div class="tools-context">{{ contextLabel }}</div>
-          <div class="tools-tabs">
-	            <button :class="{ active: tab === 'beginner', 'active-tab': tab === 'beginner' }"
-	              @click="setModeAndExplain('beginner')" title="Beginner: sequential ayahs with repeat count"><i class="bi bi-layers"></i> Beginner</button>
-	            <button :class="{ active: tab === 'advanced', 'active-tab': tab === 'advanced' }"
-	              @click="setModeAndExplain('advanced')" title="Advanced: extra playback controls and optional chaining"><i class="bi bi-diagram-3"></i> Advanced</button>
-	            <button v-if="isLoggedIn" :class="{ active: tab === 'analytics', 'active-tab': tab === 'analytics' }"
-	              @click="tab = 'analytics'" title="Review your device-local memorisation stats"><i class="bi bi-grid-1x2"></i> Stats</button>
-	          </div>
+          <div class="tools-tabs" role="tablist" aria-label="Controls tabs">
+            <button :class="{ active: tab === 'tools', 'active-tab': tab === 'tools' }"
+              @click="tab = 'tools'" title="Session tools">
+              <i class="bi bi-sliders"></i> Tools
+            </button>
+            <button v-if="isLoggedIn" :class="{ active: tab === 'analytics', 'active-tab': tab === 'analytics' }"
+              @click="tab = 'analytics'" title="Device-local stats">
+              <i class="bi bi-grid-1x2"></i> Stats
+            </button>
+          </div>
         </div>
 
           <div class="tools-body compact">
-          <!-- Beginner Tab - 4 Consistent Sections -->
-          <div v-if="tab === 'beginner'" class="sheet">
-            <!-- Section 1: What to Memorise -->
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('beginner_setup')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-book"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">What to memorise</span>
-                    <span class="st-sub">Surah and verses</span>
+            <div v-if="tab === 'tools'" class="sheet">
+              <section class="sheet-section">
+                <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
+                  <span class="st-left">
+                    <span class="st-ico"><i class="bi bi-book"></i></span>
+                    <span class="st-txt">
+                      <span class="st-title">Session</span>
+                      <span class="st-sub">Choose what you memorise</span>
+                    </span>
                   </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.beginner_setup }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.beginner_setup">
-                <div class="field-stack">
-                  <div class="field">
-                    <label>Surah</label>
-                    <select :value="chapterId" @change="onChapterChange" class="select">
-                      <option :value="0">Choose a surah...</option>
-                      <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.id }}. {{ c.name_simple }}</option>
-                    </select>
-                    <small class="field-hint">Select the surah you want to memorise</small>
-                  </div>
-                  <div class="field">
-                    <label>Verses</label>
-                    <div class="range range-single">
-                      <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
-                      <span>to</span>
-                      <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
+                  <span class="st-chev" :class="{ open: sectionOpen.advanced_setup }"><i class="bi bi-chevron-down"></i></span>
+                </button>
+                <div class="sheet-content" v-show="sectionOpen.advanced_setup">
+                  <div class="field-stack">
+                    <div class="field">
+                      <label>Surah</label>
+                      <select :value="chapterId" @change="onChapterChange" class="select">
+                        <option :value="0">Choose a surah...</option>
+                        <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.id }}. {{ c.name_simple }}</option>
+                      </select>
+                      <small class="field-hint">Pick the surah you want to work on.</small>
                     </div>
-                    <small class="field-hint">Choose a range of verses to focus on</small>
+                    <div class="field">
+                      <label>Verse range</label>
+                      <div class="range range-single">
+                        <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
+                        <span>to</span>
+                        <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
+                      </div>
+                      <small class="field-hint">Keep ranges small for focused memorisation.</small>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </section>
+              </section>
 
-            <!-- Section 2: Audio Settings -->
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('beginner_audio')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-mic"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Audio settings</span>
-                    <span class="st-sub">Reciter and playback</span>
+              <section class="sheet-section">
+                <button class="sheet-toggle" @click="toggleSection('advanced_playback')" type="button">
+                  <span class="st-left">
+                    <span class="st-ico"><i class="bi bi-mic"></i></span>
+                    <span class="st-txt">
+                      <span class="st-title">Audio</span>
+                      <span class="st-sub">Reciter and playback</span>
+                    </span>
                   </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.beginner_audio }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.beginner_audio">
-                <div class="field-stack">
-                  <div class="field">
-                    <label>Repetitions</label>
-                    <select v-model.number="beginnerRepeats" class="select">
-                      <option v-for="n in repeatOptions" :key="'mastery_' + n" :value="n">{{ n }}x</option>
-                    </select>
-                    <small class="field-hint">Repeat each ayah {{ beginnerRepeats }} times.</small>
-                  </div>
-                  <div class="field">
-                    <label>Reciter</label>
-                    <select v-model="reciterId" @change="refreshVerses" class="select">
-                      <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
-                    </select>
-                    <small class="field-hint">Choose your preferred Quran reciter</small>
-                  </div>
-                  <div class="field">
-                    <label>Speed</label>
-                    <div class="radio-group radio-group-tight">
-                      <label class="radio"><input type="radio" value="0.75" v-model="speed"> 0.75x</label>
-                      <label class="radio"><input type="radio" value="1" v-model="speed"> 1x</label>
-                      <label class="radio"><input type="radio" value="1.25" v-model="speed"> 1.25x</label>
-                      <label class="radio"><input type="radio" value="1.5" v-model="speed"> 1.5x</label>
+                  <span class="st-chev" :class="{ open: sectionOpen.advanced_playback }"><i class="bi bi-chevron-down"></i></span>
+                </button>
+                <div class="sheet-content" v-show="sectionOpen.advanced_playback">
+                  <div class="field-stack">
+                    <div class="field">
+                      <label>Reciter</label>
+                      <select v-model="reciterId" @change="refreshVerses" class="select">
+                        <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
+                      </select>
+                      <small class="field-hint">Changes the audio voice for the session.</small>
                     </div>
-                    <small class="field-hint">Adjust recitation speed</small>
-                  </div>
-                  <div v-if="false" class="field">
-                    <label>Auto-advance</label>
-                    <div class="radio-group radio-group-tight">
-                      <label class="radio"><input type="radio" value="auto" v-model="playMode"> Yes</label>
-                      <label class="radio"><input type="radio" value="manual" v-model="playMode"> No (manual)</label>
+                    <div class="field">
+                      <label>Speed</label>
+                      <div class="radio-group radio-group-tight">
+                        <label class="radio"><input type="radio" value="0.75" v-model="speed"> 0.75x</label>
+                        <label class="radio"><input type="radio" value="1" v-model="speed"> 1x</label>
+                        <label class="radio"><input type="radio" value="1.25" v-model="speed"> 1.25x</label>
+                        <label class="radio"><input type="radio" value="1.5" v-model="speed"> 1.5x</label>
+                      </div>
+                      <small class="field-hint">Use slower speed for early memorisation.</small>
                     </div>
-                    <small class="field-hint">Automatically move to next verse</small>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <!-- Beginner: saved sessions hidden -->
-            <section v-if="false" class="sheet-section"></section>
-
-            <button class="start-btn" @click="startSession" :disabled="!canStartSession" :title="startButtonHelp">
-              <i class="bi bi-play-fill"></i> Start memorising
-            </button>
-          </div>
-
-	          <!-- Advanced Tab - without chaining wizard UI -->
-	          <div v-if="tab === 'advanced'" class="sheet">
-	            <section v-if="false" class="sheet-section chaining-simple-shell">
-	              <div class="sheet-content">
-	                <div class="chaining-simple-summary">
-	                  <div class="chaining-simple-head">
-	                    <div>
-	                      <span class="chaining-simple-kicker">Advanced chaining</span>
-	                      <h3>{{ chainingGoalLabel }} flow</h3>
-	                      <p class="field-hint">{{ chainingGoalHint }}</p>
-	                    </div>
-	                    <span class="chaining-simple-badge">{{ chainingPracticeLabel }}</span>
-	                  </div>
-	                  <div class="chaining-simple-pills">
-	                    <span class="chaining-pill">{{ activeChapterName }}</span>
-	                    <span class="chaining-pill">Ayahs {{ rangeStart }}-{{ rangeEnd }}</span>
-	                    <span class="chaining-pill">{{ repeatAndLoopAudio ? `${advancedRepeats}x repeats` : '1x pass' }}</span>
-	                    <span class="chaining-pill">{{ playMode === 'auto' ? `Auto + ${delay}s gap` : 'Manual advance' }}</span>
-	                  </div>
-	                </div>
-	              </div>
-	            </section>
-
-	            <section class="sheet-section">
-	              <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
-	                <span class="st-left">
-	                  <span class="st-ico"><i class="bi bi-diagram-3"></i></span>
-	                  <span class="st-txt">
-	                    <span class="st-title">What to memorise</span>
-	                    <span class="st-sub">Surah and verses</span>
-	                  </span>
-	                </span>
-	                <span class="st-chev" :class="{ open: sectionOpen.advanced_setup }"><i class="bi bi-chevron-down"></i></span>
-	              </button>
-	              <div class="sheet-content" v-show="sectionOpen.advanced_setup">
-	                <div class="field-stack">
-	                  <div class="field">
-	                    <label>Surah</label>
-	                    <select :value="chapterId" @change="onChapterChange" class="select">
-	                      <option :value="0">Choose a surah...</option>
-                      <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.id }}. {{ c.name_simple }}</option>
-                    </select>
-                    <small class="field-hint">Select the surah you want to memorise</small>
-	                  </div>
-	                  <div class="field">
-	                    <label>Verses</label>
-	                    <div class="range range-single">
-                      <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
-                      <span>to</span>
-                      <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
-	                    </div>
-	                    <small class="field-hint">Choose a range of verses to focus on</small>
-	                  </div>
-	                </div>
-	              </div>
-	            </section>
-
-	            <section class="sheet-section">
-	              <button class="sheet-toggle" @click="toggleSection('advanced_playback')" type="button">
-	                <span class="st-left">
-	                  <span class="st-ico"><i class="bi bi-mic"></i></span>
-	                  <span class="st-txt">
-	                    <span class="st-title">Playback and recall</span>
-	                    <span class="st-sub">Reciter, repeats, and practice mode</span>
-	                  </span>
-	                </span>
-	                <span class="st-chev" :class="{ open: sectionOpen.advanced_playback }"><i class="bi bi-chevron-down"></i></span>
-	              </button>
-	              <div class="sheet-content" v-show="sectionOpen.advanced_playback">
-	                <div class="field-stack">
-                  <div class="field">
-                    <label>Reciter</label>
-                    <select v-model="reciterId" @change="refreshVerses" class="select">
-                      <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
-                    </select>
-                    <small class="field-hint">Choose your preferred Quran reciter</small>
-                  </div>
-	                  <div class="field">
-	                    <label>Speed</label>
-	                    <div class="radio-group radio-group-tight">
-                      <label class="radio"><input type="radio" value="0.75" v-model="speed"> 0.75x</label>
-                      <label class="radio"><input type="radio" value="1" v-model="speed"> 1x</label>
-                      <label class="radio"><input type="radio" value="1.25" v-model="speed"> 1.25x</label>
-                      <label class="radio"><input type="radio" value="1.5" v-model="speed"> 1.5x</label>
-	                    </div>
-	                    <small class="field-hint">Adjust recitation speed</small>
-	                  </div>
-	                  <div class="field">
-	                    <label>Chaining method</label>
-	                    <div class="radio-group radio-group-tight">
-	                      <label class="radio">
-	                        <input type="radio" :value="true" v-model="repeatAndLoopAudio"> On
-	                      </label>
-	                      <label class="radio">
-	                        <input type="radio" :value="false" v-model="repeatAndLoopAudio"> Off
-	                      </label>
-	                    </div>
-	                    <small class="field-hint">Turn chaining on to build the passage through repeated ayah loops. Turn it off for a single pass through the selected range.</small>
-	                  </div>
-	                  <div class="field">
-	                    <label>Repetitions</label>
-	                    <select v-model.number="advancedRepeats" class="select">
-	                      <option v-for="n in repeatOptions" :key="'adv_rep_' + n" :value="n">{{ n }} {{ n === 1 ? 'time' : 'times' }}</option>
-	                    </select>
-	                    <small class="field-hint">Repeat each ayah {{ advancedRepeats }} times.</small>
-	                  </div>
-	                  <div class="field">
-	                    <label>Auto-advance</label>
-	                    <div class="radio-group radio-group-tight">
-                      <label class="radio"><input type="radio" value="auto" v-model="playMode"> Yes</label>
-                      <label class="radio"><input type="radio" value="manual" v-model="playMode"> No (manual)</label>
-	                    </div>
-	                    <small class="field-hint">Automatically move to next verse</small>
-	                  </div>
-	                  <div class="field">
-	                    <label>Delay between ayahs</label>
-                    <select v-model="delay" class="select">
-                      <option v-for="d in delayOptions" :key="'adv_delay_' + d" :value="d">{{ d }}s</option>
-	                    </select>
-	                    <small class="field-hint">Breathing space between repetitions</small>
-	                  </div>
-	                  <div v-if="false" class="field">
-	                    <label>Recall view</label>
-	                    <div class="chain-goal-grid chain-goal-grid-two">
-	                      <button class="chain-goal-card chain-goal-card-compact" :class="{ active: !focusMode && !blurAdjacent }" type="button" @click="focusMode = false; blurAdjacent = false">
-	                        <strong>Open</strong>
-	                        <span>Show all verses clearly.</span>
-	                      </button>
-	                      <button class="chain-goal-card chain-goal-card-compact" :class="{ active: focusMode }" type="button" @click="focusMode = true; blurAdjacent = false">
-	                        <strong>Focus</strong>
-	                        <span>Dim non-active verses.</span>
-	                      </button>
-	                      <button class="chain-goal-card chain-goal-card-compact" :class="{ active: blurAdjacent }" type="button" @click="blurAdjacent = true; focusMode = false">
-	                        <strong>Recall</strong>
-	                        <span>Blur non-active verses.</span>
-	                      </button>
-	                    </div>
-	                    <small class="field-hint">Choose one clear reading state at a time.</small>
-	                  </div>
-	                </div>
-	              </div>
-	            </section>
-
-            <!-- Section 4: Saved Sessions -->
-            <section class="sheet-section" v-if="isLoggedIn">
-              <button class="sheet-toggle" @click="toggleSection('advanced_saved')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-save"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Saved sessions</span>
-                    <span class="st-sub">Save, load, delete</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.advanced_saved }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.advanced_saved">
-                <div class="field-stack">
-                  <div class="field">
-                    <label>Your saved sessions</label>
-                    <select v-model="selectedSessionId" class="select">
-                      <option value="">-- Select a session --</option>
-                      <option v-for="s in savedSessions" :key="s.id" :value="s.id">{{ s.name }}</option>
-                    </select>
-                    <small class="field-hint">Load previously saved sessions</small>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <!-- Login message for non-logged users -->
-            <section class="sheet-section" v-else>
-              <div class="sheet-content">
-                <div class="field-stack">
-                  <div class="field">
-                    <div class="pill" style="text-align: center; padding: 16px;">
-                      <i class="bi bi-person"></i>
-                      <span>Login to save and load sessions</span>
+                    <div class="field">
+                      <label>Repetitions</label>
+                      <select v-model.number="repetitionCount" class="select">
+                        <option v-for="n in repeatOptions" :key="'unified_rep_' + n" :value="n">{{ n }}x</option>
+                      </select>
+                      <small class="field-hint">Applies to the current session queue immediately.</small>
                     </div>
-                    <small class="field-hint">Create an account to save your progress</small>
+                    <div class="field">
+                      <label>Chaining method</label>
+                      <div class="radio-group radio-group-tight">
+                        <label class="radio"><input type="radio" :value="true" :checked="repeatAndLoopAudio" @change="setChaining(true)"> On</label>
+                        <label class="radio"><input type="radio" :value="false" :checked="!repeatAndLoopAudio" @change="setChaining(false)"> Off</label>
+                      </div>
+                      <small class="field-hint">When on, earlier ayahs are revisited to build the passage.</small>
+                    </div>
+                    <div class="field">
+                      <label>Auto-advance</label>
+                      <div class="radio-group radio-group-tight">
+                        <label class="radio"><input type="radio" value="auto" v-model="playMode"> Yes</label>
+                        <label class="radio"><input type="radio" value="manual" v-model="playMode"> No</label>
+                      </div>
+                      <small class="field-hint">Auto moves to the next queue item when audio ends.</small>
+                    </div>
+                    <div class="field">
+                      <label>Delay between ayahs</label>
+                      <select v-model="delay" class="select">
+                        <option v-for="d in delayOptions" :key="'adv_delay_' + d" :value="d">{{ d }}s</option>
+                      </select>
+                      <small class="field-hint">Adds breathing space between repetitions.</small>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </section>
+              </section>
+            </div>
 
-            <button class="start-btn" @click="startSession" :disabled="!canStartSession" :title="startButtonHelp">
-              <i class="bi bi-play-fill"></i> Start memorising
-            </button>
-          </div>
-
-          <!-- Analytics Tab -->
-          <div v-if="tab === 'analytics' && isLoggedIn" class="sheet">
-            <div class="sheet-section" style="padding: 20px;">
-              <h3 style="margin-top:0; font-size: 1.1rem; color: var(--accent);">Your Memorisation Stats</h3>
-              <p class="analytics-help">These numbers are device-local summaries. Weekly bars show recent days.</p>
-              <div class="analytics-grid">
-                <div class="stat-card">
-                  <i class="bi bi-book"></i>
-                  <div class="stat-value">{{ analytics.totalVersesRead }}</div>
-                  <div class="stat-label">Verses Read</div>
-                  <div class="stat-help">Counts verses you played or reviewed in sessions.</div>
-                  <div class="mini-trend" v-html="renderMiniTrend(analytics.weeklyVerses)"></div>
-                </div>
-                <div class="stat-card">
-                  <i class="bi bi-clock-history"></i>
-                  <div class="stat-value">{{ analytics.totalTimeSpent }}m</div>
-                  <div class="stat-label">Time Spent</div>
-                  <div class="stat-help">Approximate minutes with audio active.</div>
-                  <div class="mini-trend" v-html="renderMiniTrend(analytics.weeklyMinutes)"></div>
-                </div>
-                <div class="stat-card">
-                  <i class="bi bi-fire"></i>
-                  <div class="stat-value">{{ analytics.currentStreak }}</div>
-                  <div class="stat-label">Day Streak</div>
-                  <div class="stat-help">Consecutive days with at least one session.</div>
-                </div>
-                <div class="stat-card">
-                  <i class="bi bi-check-circle"></i>
-                  <div class="stat-value">
-                    {{ analytics.versesMastered }}
-                    <span class="stat-delta" v-if="versesMasteredDeltaThisWeek">+{{ versesMasteredDeltaThisWeek }} this week</span>
+            <div v-else-if="tab === 'analytics'" class="sheet">
+              <div class="sheet-section" style="padding: 20px;">
+                <h3 style="margin-top:0; font-size: 1.1rem; color: var(--accent);">Your Memorisation Stats</h3>
+                <p class="analytics-help">These are device-local summaries. They do not change your memorisation flow.</p>
+                <div class="analytics-grid">
+                  <div class="stat-card">
+                    <i class="bi bi-book"></i>
+                    <div class="stat-value">{{ analytics.totalVersesRead }}</div>
+                    <div class="stat-label">Verses Read</div>
+                    <div class="stat-help">Counts verses you played or reviewed in sessions.</div>
+                    <div class="mini-trend" v-html="renderMiniTrend(analytics.weeklyVerses)"></div>
                   </div>
-                  <div class="stat-label">Mastered</div>
-                  <div class="stat-help">Verses you’ve marked as strong and consistent.</div>
-                </div>
-                <div class="stat-card">
-                  <i class="bi bi-repeat"></i>
-                  <div class="stat-value">{{ analytics.totalRepetitions }}</div>
-                  <div class="stat-label">Repetitions</div>
-                  <div class="stat-help">Total verse repeats across all sessions.</div>
-                </div>
-                <div class="stat-card">
-                  <i class="bi bi-calendar-check"></i>
-                  <div class="stat-value">{{ analytics.sessionsCompleted }}</div>
-                  <div class="stat-label">Sessions</div>
-                  <div class="stat-help">How many times you finished a session run.</div>
+                  <div class="stat-card">
+                    <i class="bi bi-clock-history"></i>
+                    <div class="stat-value">{{ analytics.totalTimeSpent }}m</div>
+                    <div class="stat-label">Time Spent</div>
+                    <div class="stat-help">Approximate minutes with audio active.</div>
+                    <div class="mini-trend" v-html="renderMiniTrend(analytics.weeklyMinutes)"></div>
+                  </div>
+                  <div class="stat-card">
+                    <i class="bi bi-fire"></i>
+                    <div class="stat-value">{{ analytics.currentStreak }}</div>
+                    <div class="stat-label">Day Streak</div>
+                    <div class="stat-help">Days with at least one session.</div>
+                  </div>
+                  <div class="stat-card">
+                    <i class="bi bi-check-circle"></i>
+                    <div class="stat-value">{{ analytics.versesMastered }}</div>
+                    <div class="stat-label">Mastered</div>
+                    <div class="stat-help">Verses marked consistent over time.</div>
+                  </div>
+                  <div class="stat-card">
+                    <i class="bi bi-repeat"></i>
+                    <div class="stat-value">{{ analytics.totalRepetitions }}</div>
+                    <div class="stat-label">Repetitions</div>
+                    <div class="stat-help">Total repeats across all sessions.</div>
+                  </div>
+                  <div class="stat-card">
+                    <i class="bi bi-calendar-check"></i>
+                    <div class="stat-value">{{ analytics.sessionsCompleted }}</div>
+                    <div class="stat-label">Sessions</div>
+                    <div class="stat-help">How many sessions you finished.</div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div v-if="tab === 'analytics' && !isLoggedIn" class="sheet">
-            <section class="sheet-section">
-              <div class="sheet-content">
-                <div class="field-stack">
-                  <div class="field">
-                    <div class="pill" style="text-align: center; padding: 16px;">
-                      <i class="bi bi-person"></i>
-                      <span>Login to view stats</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </div>
-
         </div>
 
         <div class="tools-footer">
+          <button class="tools-btn tools-btn-primary tools-btn-start" @click="startSession" :disabled="!canStartSession">
+            <i class="bi bi-play-fill"></i><span>Start memorising</span>
+          </button>
           <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="resetControls"><i
               class="bi bi-arrow-counterclockwise"></i><span>Reset</span></button>
           <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="showTools = false"><i
               class="bi bi-x-circle"></i><span>Close</span></button>
         </div>
       </aside>
+    </div>
+
+    <div v-else-if="appReady && !isLoggedIn" class="main container">
+      <section class="home-dashboard">
+        <div class="setup-start-card">
+          <div class="setup-start-copy">
+            <span class="setup-kicker">Login Required</span>
+            <h2>Sign in to access your memorisation workspace</h2>
+            <p>Your sessions, progress, chaining flow, and resume history sync after login.</p>
+          </div>
+          <a class="cta cta-primary setup-primary" href="/login">
+            <i class="bi bi-box-arrow-in-right"></i> Login
+          </a>
+        </div>
+      </section>
     </div>
 
     <!-- Planner Modal -->
@@ -800,6 +546,55 @@
         <div class="modal-footer">
           <button class="btn-secondary" @click="closeConfirmModal">{{ confirmModal.cancelLabel }}</button>
           <button class="btn-primary" :class="{ 'btn-danger': confirmModal.tone === 'danger' }" @click="runConfirmAction">{{ confirmModal.confirmLabel }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resume Modal (Logged In) -->
+    <div class="modal-overlay" v-if="showResumeModal && isLoggedIn && hasContinueSession" @click.self="showResumeModal = false">
+      <div class="modal-content confirm-modal resume-modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div>
+            <h2>{{ resumeModalTitle }}</h2>
+            <small class="resume-saved-at" v-if="resumeSavedAtLabel">Last saved at {{ resumeSavedAtLabel }}</small>
+          </div>
+          <button class="btn-icon" @click="showResumeModal = false"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+          <p class="confirm-copy">{{ continueSessionMeta }}</p>
+          <div class="resume-grid">
+            <div class="pill">
+              <i class="bi bi-book"></i>
+              <span>Range: {{ continueSessionPayload?.config?.rangeStart }}-{{ continueSessionPayload?.config?.rangeEnd }}</span>
+            </div>
+            <div class="pill">
+              <i class="bi bi-repeat"></i>
+              <span>Repetitions: {{ Number(continueSessionPayload?.config?.advancedRepeats || continueSessionPayload?.config?.repeats || 1) }}x</span>
+            </div>
+            <div class="pill">
+              <i class="bi bi-diagram-3"></i>
+              <span>Chaining: {{ continueSessionPayload?.config?.repeatAndLoopAudio ? 'On' : 'Off' }}</span>
+            </div>
+            <div class="pill">
+              <i class="bi bi-stopwatch"></i>
+              <span>Resume from ayah {{ continueSessionPayload?.activeVerseKey ? String(continueSessionPayload.activeVerseKey).split(':')[1] : continueSessionPayload?.config?.rangeStart }}</span>
+            </div>
+          </div>
+          <div class="pill" style="margin-top: 10px; padding: 12px 14px;">
+            <strong>Next:</strong> {{ resumeWhatNext }}
+          </div>
+          <div class="pill" style="margin-top: 10px; padding: 12px 14px;">
+            <strong>Last results:</strong>
+            <span style="display:block; margin-top:6px;">
+              {{ analytics.sessionsCompleted }} sessions · {{ analytics.totalRepetitions }} repeats · {{ analytics.currentStreak }} day streak
+            </span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="showResumeModal = false">Not now</button>
+          <button class="btn-primary" @click="showResumeModal = false; continueLastSession()">
+            <i class="bi bi-arrow-right-circle"></i> Go to session
+          </button>
         </div>
       </div>
     </div>
@@ -1011,8 +806,11 @@ export default {
       // UI State
       currentMode: 'beginner',
       theme: 'light',
-      tab: 'beginner',
+      tab: 'tools',
       showTools: false,
+      // Primary guided UX flow: learn -> practice -> recall.
+      flowStep: 'learn',
+      flowListenPlays: 0,
       showPlannerModal: false,
       showConfirmModal: false,
       confirmModal: {
@@ -1045,6 +843,7 @@ export default {
       hasContinueSession: false,
       continueSessionLabel: '',
       continueSessionPayload: null,
+      showResumeModal: false,
       lastScrollY: 0,
       pendingDeleteId: '',
       verseRequestId: 0,
@@ -1198,6 +997,35 @@ export default {
 	  },
 
   computed: {
+    repetitionCount: {
+      get() {
+        return this.currentMode === 'beginner'
+          ? Number(this.beginnerRepeats || 1)
+          : Number(this.advancedRepeats || 1)
+      },
+      set(val) {
+        const next = Math.max(1, Number(val || 1))
+        if (this.currentMode === 'beginner') this.beginnerRepeats = next
+        else this.advancedRepeats = next
+      }
+    },
+    dueCount() {
+      // "Due" is surfaced only as a count; scheduling/intervals remain invisible.
+      const stats = this.mutqinState?.stats || {}
+      const count = Number(stats.overdue_reviews || 0)
+      return Number.isFinite(count) && count > 0 ? count : 0
+    },
+    flowCtaLabel() {
+      if (!this.hasVerses) return 'Start'
+      if (this.guidedUiStep === 'review') return 'Review'
+      return 'Play'
+    },
+    flowHint() {
+      if (!this.hasVerses) return 'Choose a surah and range, then start.'
+      if (this.guidedUiStep === 'review') return this.dueCount ? `You have ${this.dueCount} verses to review.` : 'Review what is due.'
+      return 'Play the active ayah. Use Tools for translation and word-by-word.'
+      return ''
+    },
     appStyleVars() {
       return {
         '--ui-scale': this.uiScale,
@@ -1237,13 +1065,18 @@ export default {
 
 	    currentLearningPrompt() {
 	      const item = this.mutqinState?.sessionState?.queue?.[this.mutqinState?.sessionState?.current_index || 0]
-	      if (!item) return 'Planner ready'
-	      if (item.prompt) return item.prompt
-	      if (item.phase === 'Chaining') return `Chain ${item.chainStage || ''}`.trim()
-	      if (item.phase === 'Recall') return 'Recall from memory'
-	      if (item.phase === 'Retention') return 'Retention review'
-	      return item.phase || 'Session'
+	      if (!item) return 'Listen and follow.'
+	      if (item.phase === 'Retention') return this.dueCount ? `${this.dueCount} verses to review.` : 'Review what is due.'
+	      if (this.guidedUiStep === 'recall') return 'Recite first, then reveal.'
+	      if (this.guidedUiStep === 'practice') return 'Try reciting with minimal support.'
+	      return 'Listen and follow.'
 	    },
+
+    guidedUiStep() {
+      const item = this.mutqinState?.sessionState?.queue?.[this.mutqinState?.sessionState?.current_index || 0]
+      if (item?.phase === 'Retention') return 'review'
+      return 'learn'
+    },
 
     sessionConfig() {
       return this.buildSessionConfig(this.currentMode)
@@ -1254,11 +1087,34 @@ export default {
     },
     continueSessionMeta() {
       const payload = this.continueSessionPayload
-      if (!payload) return 'Your ayah, queue position, settings, and player state are ready to restore.'
+      if (!payload) return 'Your last study session is ready to continue.'
       const ayah = payload.activeVerseKey ? String(payload.activeVerseKey).split(':')[1] : null
       const minutesAgo = Math.max(0, Math.round((Date.now() - Number(payload.timestamp || 0)) / 60000))
       const timeLabel = minutesAgo < 1 ? 'saved just now' : `saved ${minutesAgo} min ago`
-      return `Resume on ayah ${ayah || payload.config?.rangeStart || 1} with your player state intact, ${timeLabel}.`
+      return `Resume from ayah ${ayah || payload.config?.rangeStart || 1}, ${timeLabel}.`
+    },
+
+    resumeModalTitle() {
+      if (!this.continueSessionPayload?.config?.chapterId) return 'Resume last session'
+      const c = this.continueSessionPayload.config
+      return `Resume Surah ${c.chapterId} · Ayahs ${c.rangeStart}-${c.rangeEnd}`
+    },
+
+    resumeWhatNext() {
+      if (this.dueCount) return `You have ${this.dueCount} verses due for review. Continue to pick up where you left off.`
+      return 'Continue from your last saved ayah and keep building consistency.'
+    },
+
+    resumeSavedAtLabel() {
+      const ts = Number(this.continueSessionPayload?.timestamp || 0)
+      if (!ts || !Number.isFinite(ts)) return ''
+      return new Date(ts).toLocaleString('en-GB', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
     },
 
 	    hasSelectedSurah() {
@@ -1539,6 +1395,30 @@ export default {
     railPrimaryLabel() {
       return this.isPlaying ? 'Pause' : 'Start session'
     },
+    guidedPhaseLabel() {
+      if (this.guidedUiStep === 'review') return 'Review'
+      if (this.guidedUiStep === 'recall') return 'Recall'
+      if (this.guidedUiStep === 'practice') return 'Practice'
+      return 'Learn'
+    },
+
+    chainingActive() {
+      return this.currentMode === 'advanced' && !!this.repeatAndLoopAudio
+    },
+    guidedPrimaryCta() {
+      if (this.guidedPhaseLabel === 'Learn') return 'Listen & Follow'
+      if (this.guidedPhaseLabel === 'Practice') return 'Try Reciting'
+      if (this.guidedPhaseLabel === 'Recall') return 'Reveal'
+      if (this.guidedPhaseLabel === 'Review') return 'Continue'
+      return 'Continue'
+    },
+    guidedInstruction() {
+      if (this.guidedPhaseLabel === 'Learn') return 'Listen and follow the recitation.'
+      if (this.guidedPhaseLabel === 'Practice') return 'Try reciting with the ayah still partially visible.'
+      if (this.guidedPhaseLabel === 'Recall') return 'Recall before you reveal the ayah.'
+      if (this.guidedPhaseLabel === 'Review') return 'Review the verses due now.'
+      return 'Continue your session.'
+    },
 
     plannerKeyboardActive() {
       return this.showPlannerModal
@@ -1547,7 +1427,8 @@ export default {
     canStartSession() {
       const config = this.sessionConfig
       return this.appReady &&
-        this.isDataReady &&
+        // Allow starting when verses are already loaded, even if a background refresh is in progress.
+        (this.isDataReady || (!!this.verses.length || !!this.currentConfig.verses.length)) &&
         !!config.chapterId &&
         config.rangeStart > 0 &&
         config.rangeEnd >= config.rangeStart &&
@@ -1579,16 +1460,16 @@ export default {
 
 	    setupReadinessHint() {
 	      if (!this.chapters.length) return 'Loading surah list...'
-	      if (!this.hasSelectedSurah) return 'Select a mode, then choose a surah, range, reciter, and repetitions.'
+	      if (!this.hasSelectedSurah) return 'Choose a surah and verse range.'
 	      const range = `${this.rangeStart}-${this.rangeEnd}`
-	      return `${this.activeChapterName} ayahs ${range}. Open setup to review before starting.`
+	      return `${this.activeChapterName} ayahs ${range}. Start when ready.`
 	    },
 
 	    startButtonHelp() {
 	      if (!this.hasSelectedSurah) return 'Choose a surah first'
 	      if (!this.isDataReady) return 'Verses are still loading'
-	      if (!this.canStartSession) return 'Check the ayah range and settings'
-	      return `Start ${this.currentMode === 'advanced' ? 'advanced' : 'beginner'} memorisation`
+	      if (!this.canStartSession) return 'Check the ayah range and optional tools'
+	      return 'Start guided memorisation'
 	    },
 
     chainingStep() {
@@ -1738,6 +1619,11 @@ export default {
     this.loadContinueSessionPrompt()
     this.updateMasteredWeekly()
 
+    if (this.isLoggedIn && this.hasContinueSession) {
+      // One clear entry point for returning users.
+      this.showResumeModal = true
+    }
+
 
     if (this.currentMode === 'advanced' && this.advanced.chapterId) {
       this.currentMode = 'advanced'
@@ -1809,6 +1695,7 @@ export default {
     playerVisible: 'persistAudioState',
     isPlaying: 'persistAudioState',
     currentTime: 'persistAudioState',
+    flowStep: 'persistUiState',
     sectionOpen: { handler: 'persistUiState', deep: true },
 
     tajweedEnabled() {
@@ -1847,24 +1734,64 @@ export default {
     },
 
     tab(newVal) {
-      if (newVal === 'beginner' && this.currentMode !== 'beginner') {
-        this.currentMode = 'beginner'
-        if (this.beginner.chapterId) {
-          if (!this.modeDataMatchesConfig('beginner')) this.loadVerses('beginner')
-          else this.syncActiveVerseState('beginner')
-        }
-      } else if (newVal === 'advanced' && this.currentMode !== 'advanced') {
-        this.currentMode = 'advanced'
-        if (this.advanced.chapterId) {
-          if (!this.modeDataMatchesConfig('advanced')) this.loadVerses('advanced')
-          else this.syncActiveVerseState('advanced')
-        }
-      }
+      // Unified tools tab: keep mode stable unless explicitly switched by controls.
       this.persistUiState()
     }
   },
 
   methods: {
+    openAdvancedControls() {
+      // Keep power features accessible, but behind a tertiary surface.
+      this.tab = 'tools'
+      this.showTools = true
+      this.persistUiState()
+    },
+
+    setChaining(enabled) {
+      // Chaining is an advanced behavior; switch mode when toggled on.
+      if (enabled && this.currentMode !== 'advanced') {
+        this.currentMode = 'advanced'
+      }
+      this.repeatAndLoopAudio = !!enabled
+      this.rebuildQueue(this.currentMode)
+      this.persistUiState()
+    },
+
+    onVerseCardClick(verse) {
+      if (!verse?.key) return
+      this.setActiveVerse(verse.key)
+      // If the user clicks the active ayah card, treat it as an intent to play/pause.
+      if (this.effectiveActiveVerseKey === verse.key && verse.audio) {
+        this.playVerse(verse)
+      }
+    },
+    runGuidedAction(verse) {
+      // Single visible flow: Learn -> Practice -> Recall -> Continue
+      if (!this.hasVerses) {
+        this.startSession()
+        return
+      }
+      if (this.guidedUiStep === 'learn') {
+        this.flowStep = 'learn'
+        this.flowListenPlays = 0
+        this.playVerse(verse)
+        this.persistUiState()
+        return
+      }
+      if (this.guidedUiStep === 'practice') {
+        this.flowStep = 'recall'
+        this.persistUiState()
+        if (this.audioElement) {
+          try { this.audioElement.pause() } catch {}
+        }
+        this.isPlaying = false
+        return
+      }
+      this.flowStep = 'learn'
+      this.flowListenPlays = 0
+      this.persistUiState()
+      this.next()
+    },
 	    setModeAndExplain(mode) {
 	      this.tab = mode
 	      this.currentMode = mode
@@ -2366,7 +2293,7 @@ export default {
 	            config: mutqinSession.config
 	          }
 	          this.hasContinueSession = true
-	          this.continueSessionLabel = `${mutqinSession.mode === 'advanced' ? 'Advanced' : 'Beginner'} · Surah ${mutqinSession.config.chapterId} · Ayahs ${mutqinSession.config.rangeStart}-${mutqinSession.config.rangeEnd}`
+	          this.continueSessionLabel = `Surah ${mutqinSession.config.chapterId} · Ayahs ${mutqinSession.config.rangeStart}-${mutqinSession.config.rangeEnd}`
 	          return
 	        }
 	        if (!raw) return
@@ -2374,7 +2301,7 @@ export default {
 	        if (!payload?.config?.chapterId) return
         this.continueSessionPayload = payload
         this.hasContinueSession = true
-        this.continueSessionLabel = `${payload.mode === 'advanced' ? 'Advanced' : 'Beginner'} · Surah ${payload.config.chapterId} · Ayahs ${payload.config.rangeStart}-${payload.config.rangeEnd}`
+        this.continueSessionLabel = `Surah ${payload.config.chapterId} · Ayahs ${payload.config.rangeStart}-${payload.config.rangeEnd}`
       } catch (e) { console.error(e) }
     },
 
@@ -2423,8 +2350,18 @@ export default {
         isPlaying: !!payload.isPlaying
       }
       this.applyRestoredAudioState()
+      if (this.currentMode === 'advanced' && this.repeatAndLoopAudio) {
+        this.tab = 'advanced'
+        this.showTools = true
+      }
       this.persistAllState()
       this.showBanner('Session restored', 'success', 2200)
+      this.$nextTick(() => {
+        if (this.effectiveActiveVerseKey) {
+          const el = document.querySelector(`.verse-card[data-verse-key="${this.effectiveActiveVerseKey}"]`)
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      })
     },
 
     restoreAudioState() {
@@ -3299,7 +3236,12 @@ export default {
       this.audioEnded = () => {
         this.isPlaying = false
         this.stopWordHighlighting()
-        if (this.playMode === 'auto') {
+        if (this.guidedUiStep === 'learn') {
+          this.flowListenPlays += 1
+          this.persistUiState()
+          return
+        }
+        if (this.playMode === 'auto' && this.guidedUiStep === 'review') {
           setTimeout(() => this.next(), (this.delay || 1) * 1000)
         }
       }
@@ -3801,7 +3743,8 @@ export default {
       this.showTools = false
 
       // Show confirmation banner
-      this.showBanner(`Session started with ${builtQueue.length} verses to memorize`, 'success', 2000)
+	      this.flowStep = 'learn'
+	      this.showBanner(`Session started with ${builtQueue.length} guided repetitions`, 'success', 2000)
     },
 
     // Utility methods
@@ -3928,21 +3871,39 @@ export default {
 
 	    takrarLabel(id) {
 	      const ayah = this.getMutqinAyah(id)
-	      if (!ayah) return 'Takrar: ready'
+	      if (!ayah) return 'Session progress: ready'
 	      const step = getTakrarStep(ayah)
 	      const target = typeof step === 'number' ? `${ayah.repetition_count}/${step}` : step
-	      return `Takrar: ${target}`
+	      return `Session progress: ${target}`
 	    },
 
 	    retentionLabel(id) {
 	      const ayah = this.getMutqinAyah(id)
-	      if (!ayah) return 'Fresh'
-	      return `${ayah.zone} review: ${ayah.next_review || 'today'}`
+	      if (!ayah) return 'Review: due soon'
+	      return `Review: ${ayah.next_review || 'today'}`
 	    },
 
 	    markTakrarRepeat(verse) {
 	      this.syncMutqinAyahs([verse])
 	      repeatAyah(this.mutqinState, verse.key)
+      const index = Math.max(0, Number(this.queueIndex || 0))
+      const currentEntry = this.queue?.[index]
+      if (currentEntry) {
+        const inserted = {
+          ...currentEntry,
+          repeatCount: Number(currentEntry.repeatCount || 1) + 1,
+          totalRepeats: Math.max(
+            Number(currentEntry.totalRepeats || 1),
+            Number(currentEntry.repeatCount || 1) + 1
+          )
+        }
+        const nextQueue = [...this.queue]
+        nextQueue.splice(index + 1, 0, inserted)
+        this.queue = nextQueue
+        const modeStore = this.getModeStore(this.currentMode)
+        modeStore.queue = nextQueue
+      }
+      if (verse?.audio) this.playVerse(verse, { force: true })
 	    },
 
 	    markTakrarHide(verse) {
@@ -4085,8 +4046,12 @@ export default {
         if (raw) {
           const state = JSON.parse(raw)
           this.theme = state.theme || this.theme
-          this.tab = state.tab || this.tab
+          this.tab = ['beginner', 'advanced'].includes(state.tab) ? 'tools' : (state.tab || this.tab)
           this.currentMode = state.currentMode || 'beginner'
+          this.flowStep = ['learn', 'practice', 'recall'].includes(state.flowStep)
+            ? state.flowStep
+            : (state.flowStep === 'read' ? 'learn' : state.flowStep === 'listen' ? 'practice' : 'learn')
+          this.flowListenPlays = Math.max(0, Number(state.flowListenPlays || 0))
           this.showTranslation = state.showTranslation ?? this.showTranslation
           this.showTransliteration = state.showTransliteration ?? this.showTransliteration
           this.showWordByWord = state.showWordByWord ?? this.showWordByWord
@@ -4114,6 +4079,8 @@ export default {
           showTools: this.showTools,
           tab: this.tab,
           currentMode: this.currentMode,
+          flowStep: this.flowStep,
+          flowListenPlays: this.flowListenPlays,
           showTranslation: this.showTranslation,
           showTransliteration: this.showTransliteration,
           showWordByWord: this.showWordByWord,
@@ -4848,6 +4815,15 @@ html {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.session-pill-chaining {
+  background: rgba(46, 125, 50, 0.10);
+  border-color: rgba(46, 125, 50, 0.18);
+}
+
+.session-pill-chaining strong {
+  color: rgba(46, 125, 50, 0.95);
 }
 
 .session-rail-kicker {
@@ -5638,12 +5614,13 @@ html {
 .verse-card {
   background: var(--surface);
   border-radius: 20px;
-  padding: 20px;
+  padding: 26px;
   transition: all 0.2s ease;
   border: 1px solid var(--border);
   position: relative;
   direction: ltr;
   overflow: hidden;
+  width: 100%;
 }
 
 .verse-card::before {
@@ -5982,6 +5959,14 @@ html {
   isolation: isolate;
 }
 
+.tools-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 12, 8, 0.35);
+  backdrop-filter: blur(1px);
+  z-index: 59;
+}
+
 .tools.open {
   transform: translateX(0);
 }
@@ -6034,10 +6019,12 @@ html {
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tools-tabs button {
-  flex: 1;
+  flex: 0 0 auto;
   padding: 7px 10px;
   border-radius: 12px;
   background: transparent;
@@ -6051,6 +6038,7 @@ html {
   justify-content: center;
   gap: 6px;
   transition: background 140ms ease, color 140ms ease, transform 140ms ease;
+  white-space: nowrap;
 }
 
 .tools-tabs button.active {
@@ -6071,7 +6059,7 @@ html {
 .tools-body.compact .field-hint,
 .tools-body.compact .analytics-help,
 .tools-body.compact .stat-help {
-  display: none !important;
+  display: block !important;
 }
 
 .tools-body.compact .sheet {
@@ -6591,12 +6579,117 @@ html {
 }
 
 /* Verses grid */
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  margin-top: 22px;
+}
+
+.workspace-main {
+  min-width: 0;
+}
+
+.workspace-fab {
+  position: sticky;
+  top: 14px;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  margin: 14px 0 10px;
+  border-radius: 18px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.58));
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.workspace-fab-meta {
+  min-width: 0;
+}
+
+.workspace-fab-title {
+  font-weight: 850;
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+
+.workspace-fab-sub {
+  margin-top: 2px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.workspace-fab-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(46, 125, 50, 0.18);
+  background: rgba(46, 125, 50, 0.10);
+  color: rgba(46, 125, 50, 0.95);
+  font-weight: 800;
+  font-size: 0.72rem;
+}
+
+.workspace-fab-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.fab-btn {
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: var(--shadow-sm);
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fab-btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 18px 52px rgba(154, 103, 56, 0.25);
+}
+
+.fab-btn-ghost {
+  color: rgba(0, 0, 0, 0.78);
+}
+
 .verses-grid {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  margin-top: 32px;
+  margin-top: 0;
 }
+
+.verse-arabic-primary {
+  /* Primary focus: Quran dominates; aids are quieter. */
+  font-size: clamp(2.1rem, 2.75vw, 3.05rem);
+  line-height: 2.25;
+  letter-spacing: 0.01em;
+}
+
+.verse-aid {
+  opacity: 0.78;
+  filter: saturate(0.85);
+}
+
 
 .offline-list {
   display: flex;
@@ -7826,7 +7919,8 @@ html {
   left: 0;
   right: 0;
   bottom: 0;
-  background: transparent;
+  background: rgba(12, 10, 8, 0.62);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -7835,9 +7929,10 @@ html {
 }
 
 .modal-content {
-  background: var(--bg-body);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 250, 243, 0.92));
   border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.55);
   display: flex;
   flex-direction: column;
   max-height: 90vh;
@@ -7845,8 +7940,33 @@ html {
   animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.modal-content {
-  animation: modalIn 160ms ease-out;
+.resume-modal {
+  width: min(760px, 96vw);
+}
+
+.resume-modal .modal-header h2 {
+  font-size: clamp(1.25rem, 2.3vw, 1.75rem);
+}
+
+.resume-saved-at {
+  display: inline-block;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.resume-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.resume-grid .pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
 }
 
 @keyframes modalIn {
@@ -8269,6 +8389,16 @@ html {
   line-height: 1.45;
 }
 
+.setup-review-hint {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(184, 130, 78, 0.10);
+  border: 1px solid rgba(184, 130, 78, 0.18);
+  color: var(--accent);
+  font-weight: 700;
+}
+
 .setup-mode-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(112px, 1fr));
@@ -8316,10 +8446,66 @@ html {
   white-space: nowrap;
 }
 
+.setup-optional-panel,
+.session-tools-panel {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.setup-optional-panel summary,
+.session-tools-panel summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 12px 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.setup-optional-panel summary::-webkit-details-marker,
+.session-tools-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.setup-optional-grid,
+.session-tools-grid {
+  display: grid;
+  gap: 12px;
+  padding: 0 14px 14px;
+}
+
+.setup-optional-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.session-tools-grid {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.field-inline-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toggle-chip {
+  min-height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.toggle-chip.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .learning-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 12px;
   margin: 14px 0 10px;
   padding: 10px;
@@ -8909,4 +9095,22 @@ html {
     text-align: center;
   }
 }
+
+.main.flow-recall .verse-card.active .verse-arabic {
+  color: transparent;
+  text-shadow: 0 0 22px rgba(232, 237, 247, 0.55);
+}
+
+.main.flow-practice .verse-card.active .verse-arabic {
+  opacity: 0.45;
+}
+
+.main.flow-recall .verse-card.active .verse-arabic .tajweed-mark,
+.main.flow-recall .verse-card.active .verse-arabic word,
+.main.flow-recall .verse-card.active .verse-arabic .wbw-word {
+  color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
 </style>

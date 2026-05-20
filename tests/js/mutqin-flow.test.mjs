@@ -59,6 +59,7 @@ const chaining = await loadModule('resources/js/composables/useChaining.js')
 const retention = await loadModule('resources/js/composables/useRetentionZones.js')
 const planner = await loadModule('resources/js/composables/useDailyPlanner.js')
 const session = await loadModule('resources/js/composables/useSessionEngine.js')
+const memorisationSource = await fs.readFile(path.join(root, 'resources/js/components/Memorisation.vue'), 'utf8')
 
 const { loadMutqinState, saveMutqinState, useMutqinPersistence, watchMutqinState } = persistence.namespace
 const { seedAyahs, updateAyah } = ayahState.namespace
@@ -277,5 +278,10 @@ scoreRetention(dayTwo, '110:1', 'Easy')
 recordChainResult(dayTwo, '110:1', '110:2', false)
 assert.equal(dayTwo.chains['110:1->110:2'].chain_errors >= 1, true)
 assert.equal(dayTwo.stats.overdue_reviews >= 1, true)
+
+assert.match(memorisationSource, /async playVerse\(verse, options = \{\}\)/, 'playVerse must accept force option')
+assert.match(memorisationSource, /!options\.force && this\.activeKey === verse\.key/, 'same-ayah manual play may toggle only when not forced')
+assert.equal((memorisationSource.match(/playVerse\(verse, \{ force: true \}\)/g) || []).length >= 2, true, 'queue navigation must force same-ayah replay for repetitions')
+assert.match(memorisationSource, /playVerse\(first\.verse, \{ force: true \}\)/, 'session start must force first playback')
 
 console.log('mutqin-flow composable integration passed')
