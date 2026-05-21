@@ -15,6 +15,8 @@
       class="main container"
       :class="{
         'tools-open': showTools,
+        'focus-mode-active': focusModeEnabled,
+        'blur-mode-active': blurModeEnabled,
         'flow-practice': guidedUiStep === 'practice',
         'flow-recall': guidedUiStep === 'recall'
       }"
@@ -58,9 +60,19 @@
               <span v-if="etaLabel">{{ etaLabel }}</span>
             </div>
             <p class="workspace-fab-copy">{{ activeCardBody }}</p>
+            <div class="workspace-fab-live">
+              <span class="workspace-fab-live-pill">
+                <i class="bi bi-link-45deg"></i>
+                {{ chainingMethodLabel }}
+              </span>
+              <span class="workspace-fab-live-pill">
+                <i class="bi bi-lightning-charge"></i>
+                {{ playMode === 'auto' ? 'Auto advance' : 'Manual advance' }}
+              </span>
+            </div>
           </div>
           <div class="workspace-fab-actions">
-            <button class="fab-btn fab-btn-soft" @click="markTakrarRepeat(activeVerseRef)" :disabled="!activeVerseRef" title="Repeat current ayah">
+            <button class="fab-btn fab-btn-soft" @click="markTakrarRepeat(activeVerseRef)" :disabled="!activeVerseRef || repeatActionLocked" title="Repeat current ayah">
               <i class="bi bi-arrow-repeat"></i><span>Repeat</span>
             </button>
             <button class="fab-btn fab-btn-ghost" @click="openAdvancedControls" title="Open session controls">
@@ -167,14 +179,16 @@
 
                 <!-- Keep in-workspace aids available, but visually quieter -->
                 <div v-if="showTransliteration && verse.transliteration" class="verse-transliteration verse-aid">
+                  <div class="verse-aid-title">Transliteration</div>
                   {{ verse.transliteration }}
                 </div>
                 <div v-if="showTranslation && verse.translation" class="verse-translation verse-aid">
+                  <div class="verse-aid-title">Translation</div>
                   {{ verse.translation }}
                 </div>
                 <div v-if="showWordByWord && verse.words && verse.words.length" class="verse-words verse-aid"
                   @scroll="onVerseWordsScroll(verse.key, $event)">
-                  <div v-for="(word, wi) in verse.words" :key="wi" class="word-item">
+                  <div v-for="(word, wi) in verse.words" :key="wi" class="word-item" :title="wordTooltip(word)" :data-tooltip="wordTooltip(word)" tabindex="0">
                     <span class="word-arabic" dir="rtl">{{ word.ar }}</span>
                     <span class="word-meaning">{{ word.en }}</span>
                     <button v-if="word.audio && wordByWordAudioEnabled" class="word-audio-btn"
@@ -282,22 +296,83 @@
                       <small class="field-hint">Use slower speed for early memorisation.</small>
                     </div>
                     <div class="field">
-                      <label>Repeat count</label>
-                      <input type="number" class="input" v-model.number="repeat_count" min="1" step="1">
-                      <small class="field-hint">Repetitions for each ayah before moving on.</small>
-                    </div>
-                    <div class="field">
-                      <label>Repeat delay</label>
-                      <input type="number" class="input" v-model.number="repeat_delay" min="0" step="0.5">
-                      <small class="field-hint">Delay between repeats (seconds).</small>
-                    </div>
-                    <div class="field">
                       <label>Auto-advance</label>
                       <div class="radio-group radio-group-tight">
                         <label class="radio"><input type="radio" value="auto" v-model="playMode"> Yes</label>
                         <label class="radio"><input type="radio" value="manual" v-model="playMode"> No</label>
                       </div>
                       <small class="field-hint">Auto moves to the next queue item when audio ends.</small>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="sheet-section tools-techniques-section">
+                <button class="sheet-toggle" @click="toggleSection('memorisation_techniques')" type="button">
+                  <span class="st-left">
+                    <span class="st-ico"><i class="bi bi-stars"></i></span>
+                    <span class="st-txt">
+                      <span class="st-title">Memorisation Techniques</span>
+                      <span class="st-sub">Optional focus, recall, and chaining aids</span>
+                    </span>
+                  </span>
+                  <span class="st-chev" :class="{ open: sectionOpen.memorisation_techniques }"><i class="bi bi-chevron-down"></i></span>
+                </button>
+                <div class="sheet-content" v-show="sectionOpen.memorisation_techniques">
+                  <div class="techniques-list">
+                    <div class="technique-row">
+                      <div class="technique-copy">
+                        <label>Focus Mode</label>
+                        <small>Reduces distractions around the active ayah.</small>
+                      </div>
+                      <button class="toggle-chip technique-toggle" :class="{ active: focusModeEnabled }" @click="focusModeEnabled = !focusModeEnabled" type="button">
+                        {{ focusModeEnabled ? 'On' : 'Off' }}
+                      </button>
+                    </div>
+
+                    <div class="technique-row technique-row-stacked">
+                      <div class="technique-row-main">
+                        <div class="technique-copy">
+                          <label>Blur Mode</label>
+                          <small>Supports active recall through progressive concealment.</small>
+                        </div>
+                        <button class="toggle-chip technique-toggle" :class="{ active: blurModeEnabled }" @click="blurModeEnabled = !blurModeEnabled" type="button">
+                          {{ blurModeEnabled ? 'On' : 'Off' }}
+                        </button>
+                      </div>
+                      <div v-if="blurModeEnabled" class="technique-control">
+                        <span>Intensity</span>
+                        <input type="range" min="4" max="18" step="1" v-model.number="blurIntensity" class="input technique-range">
+                        <span class="inline-setting-pill">{{ blurIntensity }}px</span>
+                      </div>
+                    </div>
+
+                    <div class="technique-row technique-row-stacked">
+                      <div class="technique-row-main">
+                        <div class="technique-copy">
+                          <label>Chaining</label>
+                          <small>{{ chainingMethodDescription }}</small>
+                        </div>
+                        <button class="toggle-chip technique-toggle" :class="{ active: chainingEnabled }" @click="chainingEnabled = !chainingEnabled" type="button">
+                          {{ chainingEnabled ? 'On' : 'Off' }}
+                        </button>
+                      </div>
+                      <div v-if="chainingEnabled" class="segmented-control segmented-control-compact" role="group" aria-label="Chaining method">
+                        <button type="button" :class="{ active: chainingMethod === 'linking' }" @click="chainingMethod = 'linking'">
+                          Linking Method
+                        </button>
+                        <button type="button" :class="{ active: chainingMethod === 'cumulative' }" @click="chainingMethod = 'cumulative'">
+                          Cumulative Method
+                        </button>
+                      </div>
+                      <div v-if="chainingEnabled" class="technique-control">
+                        <span>Repetition</span>
+                        <input type="range" min="1" max="5" step="1" v-model.number="chainingRepetitions" class="input technique-range">
+                        <span class="inline-setting-pill">{{ chainingRepetitions }}x</span>
+                      </div>
+                      <div class="technique-preview">
+                        <span>{{ chainingMethodPreview }}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -340,54 +415,61 @@
             </div>
 
             <div v-else-if="tab === 'settings'" class="sheet">
-              <div class="sheet-section" style="padding: 20px;">
-                <h3 style="margin-top:0; font-size: 1.1rem; color: var(--accent);">Reading & Display</h3>
-                <p class="analytics-help">Adjust what you see while studying. Click Apply to save and keep these settings.</p>
+              <div class="sheet-section settings-section">
+                <div class="settings-heading">
+                  <h3>Reading & Display</h3>
+                  <button class="tools-btn tools-btn-primary settings-apply" @click="applySettingsChanges">
+                    <i class="bi bi-check2"></i><span>Apply</span>
+                  </button>
+                </div>
 
-                <div class="field-stack">
-                  <div class="field">
-                    <label>Translation</label>
-                    <button class="toggle-chip" :class="{ active: settingsDraft.showTranslation }" @click="settingsDraft.showTranslation = !settingsDraft.showTranslation">
+                <div class="settings-list">
+                  <div class="settings-row">
+                    <div class="settings-row-copy">
+                      <label>Translation</label>
+                      <small>English meaning</small>
+                    </div>
+                    <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTranslation }" @click="settingsDraft.showTranslation = !settingsDraft.showTranslation">
                       {{ settingsDraft.showTranslation ? 'Enabled' : 'Disabled' }}
                     </button>
-                    <small class="field-hint">Show or hide the English translation.</small>
                   </div>
 
-                  <div class="field">
-                    <label>Transliteration</label>
-                    <button class="toggle-chip" :class="{ active: settingsDraft.showTransliteration }" @click="settingsDraft.showTransliteration = !settingsDraft.showTransliteration">
+                  <div class="settings-row">
+                    <div class="settings-row-copy">
+                      <label>Transliteration</label>
+                      <small>Latin reading aid</small>
+                    </div>
+                    <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTransliteration }" @click="settingsDraft.showTransliteration = !settingsDraft.showTransliteration">
                       {{ settingsDraft.showTransliteration ? 'Enabled' : 'Disabled' }}
                     </button>
-                    <small class="field-hint">Show or hide transliteration.</small>
                   </div>
 
-                  <div class="field">
-                    <label>Word for word</label>
-                    <button class="toggle-chip" :class="{ active: settingsDraft.showWordByWord }" @click="settingsDraft.showWordByWord = !settingsDraft.showWordByWord">
+                  <div class="settings-row">
+                    <div class="settings-row-copy">
+                      <label>Word for word</label>
+                      <small>Word chips</small>
+                    </div>
+                    <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showWordByWord }" @click="settingsDraft.showWordByWord = !settingsDraft.showWordByWord">
                       {{ settingsDraft.showWordByWord ? 'Enabled' : 'Disabled' }}
                     </button>
-                    <small class="field-hint">Show word chips and enable word-level syncing.</small>
                   </div>
 
-                  <div class="field">
-                    <label>Word audio highlighting</label>
-                    <button class="toggle-chip" :class="{ active: settingsDraft.wordByWordAudioEnabled }" @click="settingsDraft.wordByWordAudioEnabled = !settingsDraft.wordByWordAudioEnabled">
+                  <div class="settings-row">
+                    <div class="settings-row-copy">
+                      <label>Word audio</label>
+                      <small>Sync highlighting</small>
+                    </div>
+                    <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.wordByWordAudioEnabled }" @click="settingsDraft.wordByWordAudioEnabled = !settingsDraft.wordByWordAudioEnabled">
                       {{ settingsDraft.wordByWordAudioEnabled ? 'Enabled' : 'Disabled' }}
                     </button>
-                    <small class="field-hint">Highlight words in sync with audio playback.</small>
                   </div>
 
-                  <div class="field">
-                    <label>Font size</label>
-                    <input type="range" min="80" max="140" step="5" v-model.number="settingsDraft.defaultFontSize" class="input">
-                    <small class="field-hint">Adjust Arabic text size for comfort.</small>
-                  </div>
-
-                  <div class="field">
-                    <button class="tools-btn tools-btn-primary w-100" @click="applySettingsChanges">
-                      <i class="bi bi-check2-circle"></i><span>Apply changes</span>
-                    </button>
-                    <small class="field-hint">Saved settings persist after refresh.</small>
+                  <div class="settings-row settings-row-range">
+                    <div class="settings-row-copy">
+                      <label>Font size</label>
+                      <span class="inline-setting-pill">{{ settingsDraft.defaultFontSize }}%</span>
+                    </div>
+                    <input type="range" min="80" max="140" step="5" v-model.number="settingsDraft.defaultFontSize" class="input settings-range">
                   </div>
                 </div>
               </div>
@@ -555,8 +637,8 @@
               <span>Range: {{ continueSessionPayload?.config?.rangeStart }}-{{ continueSessionPayload?.config?.rangeEnd }}</span>
             </div>
             <div class="pill">
-              <i class="bi bi-repeat"></i>
-              <span>Repetitions: {{ Number(continueSessionPayload?.config?.advancedRepeats || continueSessionPayload?.config?.repeats || 1) }}x</span>
+              <i class="bi bi-link-45deg"></i>
+              <span>{{ continueSessionPayload?.config?.chainingEnabled === false ? 'Chaining off' : (continueSessionPayload?.config?.chainingMethod === 'cumulative' ? 'Cumulative chain' : 'Linking chain') }}</span>
             </div>
             <div class="pill">
               <i class="bi bi-stopwatch"></i>
@@ -676,6 +758,15 @@ function tokenizeArabicText(text) {
   return tokens
 }
 
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 function deepClone(value) {
   const rawValue = toRaw(value)
 
@@ -699,7 +790,6 @@ function createBeginnerState() {
     speed: 1,
     delay: 2,
     playMode: 'auto',
-    repeats: 3,
     order: 'seq',
     loadedConfig: null,
     verses: [],
@@ -719,9 +809,7 @@ function createAdvancedState() {
     speed: 1,
     delay: 2,
     playMode: 'auto',
-    repeats: 1,
     order: 'seq',
-    advancedRepeats: 5,
     loadedConfig: null,
     verses: [],
     activeKey: null,
@@ -761,16 +849,27 @@ export default {
       wordHighlightHandler: null,
       currentVerseWords: [],
       wordHighlightFrame: null,
+      wordHighlightTimestamps: [],
+      wordHighlightLoading: false,
       currentPhraseIndex: -1,
       statsTick: Date.now(),
       sessionStartedAt: 0,
       sessionErrorCount: 0,
+      advanceLocked: false,
+      repeatActionLocked: false,
+      playRequestLocked: false,
 
       // UI State
       currentMode: 'beginner',
       theme: 'light',
       tab: 'tools',
       showTools: false,
+      focusModeEnabled: false,
+      blurModeEnabled: false,
+      blurIntensity: 10,
+      chainingEnabled: true,
+      chainingMethod: 'linking',
+      chainingRepetitions: 1,
       // Primary guided UX flow: learn -> practice -> recall.
       flowStep: 'learn',
       flowListenPlays: 0,
@@ -845,12 +944,7 @@ export default {
       playMode: 'auto',
       speed: 1,
       delay: 1,
-      repeats: 1,
       order: 'seq',
-      repeatCountEnabled: true,
-      repeatDelayEnabled: true,
-      repeat_count: 3,
-      repeat_delay: 1,
       settingsDraft: {
         showTranslation: true,
         showTransliteration: false,
@@ -926,7 +1020,6 @@ export default {
       // Options
       speedOptions: [0.5, 0.75, 1, 1.25, 1.5],
       delayOptions: [0, 0.5, 1, 2, 3, 5, 7, 10],
-      repeatOptions: [1, 2, 3, 4, 5, 7, 10],
       rangeLoopDelay: 1,
 
       // Section open state - Expanded for consistency
@@ -938,12 +1031,12 @@ export default {
         advanced_playback: true,
         advanced_practice: false,
         advanced_saved: false,
-        repeat_settings: true,
         session_tools: false,
         live_stats: false,
         analytics_overview: true,
         analytics_planner: true,
-        analytics_weak: false
+        analytics_weak: false,
+        memorisation_techniques: false
       },
 
       // Audio event handlers
@@ -972,17 +1065,6 @@ export default {
 	  },
 
   computed: {
-    repetitionCount: {
-      get() {
-        return Math.max(1, Number(this.repeat_count || 1))
-      },
-      set(val) {
-        const next = Math.max(1, Number(val || 1))
-        this.repeat_count = next
-        if (this.currentMode === 'beginner') this.beginnerRepeats = next
-        else this.advancedRepeats = next
-      }
-    },
     liveSessionStats() {
       const currentIndex = Math.max(0, Number(this.queueIndex || 0))
       const completedEntries = (this.queue || []).slice(0, currentIndex)
@@ -1025,8 +1107,31 @@ export default {
     appStyleVars() {
       return {
         '--ui-scale': this.uiScale,
-        '--en-scale': this.enScale
+        '--en-scale': this.enScale,
+        '--recall-blur': `${this.blurIntensity}px`
       }
+    },
+    chainingMethodDescription() {
+      if (!this.chainingEnabled) {
+        return 'Play the selected ayahs in order without chaining.'
+      }
+      if (this.chainingMethod === 'cumulative') {
+        return 'Build recall progressively across memorised ayahs.'
+      }
+      return 'Connect ayahs sequentially during memorisation.'
+    },
+    chainingMethodLabel() {
+      if (!this.chainingEnabled) return `Chaining off · ${this.chainingRepetitions}x`
+      const label = this.chainingMethod === 'cumulative' ? 'Cumulative chain' : 'Linking chain'
+      return `${label} · ${this.chainingRepetitions}x`
+    },
+    chainingMethodPreview() {
+      if (!this.chainingEnabled) {
+        return `Flow: selected ayahs in order, ${this.chainingRepetitions}x each.`
+      }
+      return this.chainingMethod === 'cumulative'
+        ? `Flow: 1, then 1-2, then 1-2-3 · ${this.chainingRepetitions}x.`
+        : `Flow: current ayah, next ayah, then both together · ${this.chainingRepetitions}x.`
     },
     currentConfig() {
       return this.currentMode === 'beginner' ? this.beginner : this.advanced
@@ -1076,6 +1181,9 @@ export default {
       const entry = this.activeQueueEntry
       const current = Number(entry?.repeatCount || 1)
       const total = Number(entry?.totalRepeats || 1)
+      const repeatLabel = total > 1 ? ` · ${current}/${total}` : ''
+      if (entry?.phase === 'Linking') return `Linking ayahs${repeatLabel}`
+      if (entry?.phase === 'Cumulative') return `Cumulative ${entry.sequencePosition || 1}/${entry.sequenceTotal || 1}${repeatLabel}`
       return total > 1 ? `Repeat ${current} of ${total}` : 'Single focused pass'
     },
 
@@ -1255,23 +1363,14 @@ export default {
       }
     },
 
-    advancedRepeats: {
-      get() { return this.advanced.advancedRepeats },
-      set(val) { this.advanced.advancedRepeats = val }
-    },
-
-    beginnerRepeats: {
-      get() { return this.beginner.repeats },
-      set(val) { this.beginner.repeats = val }
-    },
-
     totalVerses() {
       return Math.max(0, this.rangeEnd - this.rangeStart + 1)
     },
 
     currentPosition() {
-      if (!this.activeKey) return 1
-      const num = parseInt(this.activeKey.split(':')[1])
+      const key = this.effectiveActiveVerseKey || this.activeKey
+      if (!key) return 1
+      const num = parseInt(String(key).split(':')[1])
       return Math.max(1, num - this.rangeStart + 1)
     },
 
@@ -1417,14 +1516,8 @@ export default {
     },
 
 	    currentSessionExplanation() {
-	      const repeatCount = this.currentMode === 'beginner'
-	        ? Number(this.beginnerRepeats || 1)
-	        : Number(this.advancedRepeats || 1)
-
-      const repeatLabel = repeatCount === 1 ? '1 repeat' : `${repeatCount} repeats`
       const modeLabel = this.currentMode === 'advanced' ? 'Advanced' : 'Beginner'
-
-	      return `${modeLabel} session in sequential order, ${repeatLabel} per ayah.`
+	      return `${modeLabel} session using ${this.chainingMethodLabel.toLowerCase()}.`
 	    },
 
 	    setupReadinessHint() {
@@ -1604,20 +1697,20 @@ export default {
     delay: 'persistUiState',
     playMode: 'persistUiState',
     order: 'persistUiState',
-    repeat_count(newVal) {
-      const safeValue = Math.max(1, Number(newVal || 1))
-      if (safeValue !== Number(this.repeat_count)) this.repeat_count = safeValue
-      this.repetitionCount = safeValue
+    chainingEnabled() {
       this.persistUiState()
-      this.rebuildQueue()
+      this.rebuildQueue(this.currentMode)
     },
-    repeat_delay(newVal) {
-      const safeValue = Math.max(0, Number(newVal || 0))
-      if (safeValue !== Number(this.repeat_delay)) this.repeat_delay = safeValue
-      this.delay = safeValue
+    chainingMethod() {
       this.persistUiState()
+      this.rebuildQueue(this.currentMode)
     },
-    // repeatCountEnabled/repeatDelayEnabled are forced on (no UI toggles).
+    chainingRepetitions(newVal) {
+      const safeValue = Math.max(1, Math.min(5, Number(newVal || 1)))
+      if (safeValue !== Number(this.chainingRepetitions)) this.chainingRepetitions = safeValue
+      this.persistUiState()
+      this.rebuildQueue(this.currentMode)
+    },
     showTranslation: 'persistUiState',
     showTransliteration: 'persistUiState',
     showWordByWord(newVal) {
@@ -1645,12 +1738,6 @@ export default {
       if (this.showWordByWord) this.restoreWordScroll(newVal)
     },
 
-    beginnerRepeats() {
-      if (this.currentMode === 'beginner') this.rebuildQueue()
-    },
-	    advancedRepeats() {
-	      if (this.currentMode === 'advanced') this.rebuildQueue()
-	    },
     tab(newVal) {
       // Unified tools tab: keep mode stable unless explicitly switched by controls.
       this.persistUiState()
@@ -1726,14 +1813,6 @@ export default {
 
       const store = this.getModeStore(mode)
       const isFreshMode = !store.chapterId && !store.verses?.length
-
-      if (isFreshMode && mode === 'beginner') {
-        this.beginner.repeats = Math.max(1, Number(this.beginner.repeats || 3))
-      }
-
-	      if (isFreshMode && mode === 'advanced') {
-	        this.advanced.advancedRepeats = Math.max(5, Number(this.advanced.advancedRepeats || 5))
-	      }
 
 	      this.applySessionConfig(this.buildSessionConfig(mode))
 	      this.syncActiveVerseState(mode)
@@ -1889,10 +1968,9 @@ export default {
         showTransliteration: this.showTransliteration,
         showWordByWord: this.showWordByWord,
         wordByWordAudioEnabled: this.wordByWordAudioEnabled,
-          repeatCountEnabled: true,
-          repeatDelayEnabled: true,
-          repeat_count: this.repeat_count,
-          repeat_delay: this.repeat_delay,
+        chainingEnabled: this.chainingEnabled,
+        chainingMethod: this.chainingMethod,
+        chainingRepetitions: this.chainingRepetitions,
         theme: this.theme
       })
     },
@@ -1912,8 +1990,12 @@ export default {
       const parsedDelay = Number(config.delay)
       this.delay = Number.isFinite(parsedDelay) && parsedDelay >= 0 ? parsedDelay : 2
       this.playMode = config.playMode || 'auto'
-      // Spaced-return/chaining UI removed; force sequential order.
       this.order = 'seq'
+      this.chainingEnabled = config.chainingEnabled ?? this.chainingEnabled
+      this.chainingMethod = ['linking', 'cumulative'].includes(config.chainingMethod)
+        ? config.chainingMethod
+        : this.chainingMethod
+      this.chainingRepetitions = Math.max(1, Math.min(5, Number(config.chainingRepetitions || this.chainingRepetitions || 1)))
 	            this.tajweedEnabled = !!config.tajweedEnabled
       this.quranFont = config.quranFont || this.quranFont
       this.fontScale = Number(config.fontScale || 1)
@@ -1922,18 +2004,8 @@ export default {
       this.showTransliteration = config.showTransliteration ?? this.showTransliteration
       this.showWordByWord = config.showWordByWord ?? this.showWordByWord
       this.wordByWordAudioEnabled = config.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
-      this.repeatCountEnabled = true
-      this.repeatDelayEnabled = true
-      this.repeat_count = Math.max(1, Number(config.repeat_count || config.advancedRepeats || config.repeats || this.repeat_count || 1))
-      this.repeat_delay = Math.max(0, Number(config.repeat_delay ?? config.delay ?? this.repeat_delay ?? 0))
       this.theme = config.theme || this.theme
       document.documentElement.setAttribute('data-theme', this.theme)
-      if (mode === 'advanced') {
-        this.advancedRepeats = this.repeat_count
-      } else {
-        this.beginnerRepeats = this.repeat_count
-      }
-      this.delay = this.repeat_delay
     },
 
     loadModeState(mode) {
@@ -2817,63 +2889,44 @@ export default {
       const words = tokenizeArabicText(verse.arabic)
       let html = ''
       words.forEach((word, idx) => {
-        const isActive = this.currentHighlightedVerseKey === verse.key && this.currentWordIndex === idx
-        const highlightClass = isActive ? 'highlighted' : ''
-
-        html += `<word class="wbw-word ${highlightClass}" 
+        html += `<word class="wbw-word" 
                    data-word-index="${idx}" 
-                   data-verse-key="${verse.key}">
-              ${word}
+                   data-verse-key="${verse.key}"
+                   title="Word ${idx + 1}">
+              ${escapeHtml(word)}
             </word> `
       })
       return html
     },
 
     async getWordTimings(verse, actualDuration = null) {
-      if (!verse.words || verse.words.length === 0) {
-        const arabicText = verse.arabic
-        const words = arabicText.split(/\s+/).filter(w => w.trim().length > 0)
-        const totalChars = arabicText.replace(/[^ء-ي]/g, '').length
-        const totalDuration = actualDuration || Math.max(5, Math.min(45, totalChars * 0.12))
+      const sourceWords = verse.words && verse.words.length
+        ? verse.words.map(word => String(word?.ar || '').trim()).filter(Boolean)
+        : tokenizeArabicText(verse.arabic || '')
+      if (!sourceWords.length) return []
 
-        const timestamps = []
-        let currentTime = 0
-
-        for (let i = 0; i < words.length; i++) {
-          const word = words[i]
-          const wordChars = word.replace(/<[^>]+>/g, '').replace(/[^ء-ي]/g, '').length
-          const wordDuration = (wordChars / totalChars) * totalDuration
-
-          timestamps.push({
-            index: i,
-            start: currentTime,
-            end: currentTime + wordDuration
-          })
-          currentTime += wordDuration
-        }
-
-        return timestamps
-      }
-
-      const cacheKey = `${verse.key}_${this.reciterId}`
+      const safeDuration = Number.isFinite(Number(actualDuration)) && Number(actualDuration) > 0
+        ? Number(actualDuration)
+        : this.estimateVerseDuration(verse)
+      const cacheKey = `${verse.key}_${this.reciterId}_${Math.round(safeDuration * 10)}`
       if (this.wordTimestampsMap.has(cacheKey)) {
         return this.wordTimestampsMap.get(cacheKey)
       }
 
       const timestamps = []
-      const totalDuration = actualDuration || Math.max(5, Math.min(45, verse.arabic.replace(/[^ء-ي]/g, '').length * 0.12))
-      const totalChars = verse.arabic.replace(/[^ء-ي]/g, '').length
+      const charCounts = sourceWords.map(word => Math.max(1, word.replace(/<[^>]+>/g, '').replace(/[^ء-ي]/g, '').length))
+      const totalChars = charCounts.reduce((sum, count) => sum + count, 0) || sourceWords.length
       let currentTime = 0
 
-      for (let i = 0; i < verse.words.length; i++) {
-        const word = verse.words[i]
-        const wordChars = word.ar.replace(/[^ء-ي]/g, '').length
-        const wordDuration = (wordChars / totalChars) * totalDuration
+      for (let i = 0; i < sourceWords.length; i++) {
+        const wordDuration = i === sourceWords.length - 1
+          ? Math.max(0.05, safeDuration - currentTime)
+          : Math.max(0.05, (charCounts[i] / totalChars) * safeDuration)
 
         timestamps.push({
           index: i,
           start: currentTime,
-          end: currentTime + wordDuration
+          end: i === sourceWords.length - 1 ? safeDuration + 0.05 : currentTime + wordDuration
         })
         currentTime += wordDuration
       }
@@ -2917,12 +2970,14 @@ export default {
     },
 
     async startWordHighlighting(verse) {
+      if (this.wordHighlightLoading) return
       this.stopWordHighlighting()
 
       if (!this.showWordByWord || !this.wordByWordAudioEnabled) {
         return
       }
 
+      this.wordHighlightLoading = true
       this.currentHighlightedVerseKey = verse.key
       this.currentWordIndex = -1
       this.currentPhraseIndex = -1
@@ -2930,31 +2985,25 @@ export default {
       // Prefer word timings derived from the verse content and actual audio duration.
       const duration = Number(this.audioElement?.duration) || null
       const timestamps = await this.getWordTimings(verse, duration)
+      this.wordHighlightLoading = false
       if (!timestamps || !timestamps.length) return
+      this.wordHighlightTimestamps = timestamps
 
       const updateHighlight = () => {
-        if (!this.audioElement || !this.isPlaying) return
-
-        const currentTime = this.audioElement.currentTime
-        let activeIndex = -1
-
-        for (let i = 0; i < timestamps.length; i++) {
-          if (currentTime >= timestamps[i].start && currentTime < timestamps[i].end) {
-            activeIndex = i
-            break
-          }
-        }
-
-        if (this.currentWordIndex !== activeIndex) {
-          this.currentWordIndex = activeIndex
-          this.updateWordHighlight(verse.key, activeIndex)
-        }
-
+        if (!this.audioElement || this.audioElement.paused || this.audioElement.ended) return
+        this.syncWordHighlightFromAudio(verse)
         this.wordHighlightFrame = window.requestAnimationFrame(updateHighlight)
       }
 
       this.wordHighlightHandler = updateHighlight
-      this.wordHighlightFrame = window.requestAnimationFrame(updateHighlight)
+      updateHighlight()
+    },
+
+    wordTooltip(word) {
+      const ar = String(word?.ar || '').trim()
+      const en = String(word?.en || '').trim()
+      if (ar && en) return `${ar} - ${en}`
+      return ar || en || 'Word'
     },
 
     updateWordHighlight(verseKey, activeIndex) {
@@ -2962,9 +3011,9 @@ export default {
         const verseCard = document.querySelector(`.verse-card[data-verse-key="${verseKey}"]`)
         if (!verseCard) return
         const wordsWrap = verseCard.querySelector('.verse-words')
-        const arabicWords = verseCard.querySelectorAll('.verse-arabic .wbw-word')
+        const arabicWords = verseCard.querySelectorAll('.verse-arabic .wbw-word, .verse-arabic word[data-word-index]')
         const phraseWords = verseCard.querySelectorAll('.verse-words .word-item')
-        const phraseIndex = activeIndex < 0 ? -1 : Math.floor(activeIndex / 3)
+        const phraseIndex = activeIndex
 
         arabicWords.forEach((word, idx) => {
           if (idx === activeIndex) {
@@ -2993,10 +3042,22 @@ export default {
         })
 
         phraseWords.forEach((word, idx) => {
+          word.classList.toggle('highlighted', idx === activeIndex)
           word.classList.toggle('phrase-highlighted', idx === phraseIndex)
         })
         this.currentPhraseIndex = phraseIndex
       })
+    },
+
+    syncWordHighlightFromAudio(verse = this.activeVerseRef) {
+      if (!verse || this.currentHighlightedVerseKey !== verse.key || !this.wordHighlightTimestamps?.length || !this.audioElement) return
+
+      const currentTime = Number(this.audioElement.currentTime || 0)
+      const active = this.wordHighlightTimestamps.find(item => currentTime >= item.start && currentTime <= item.end)
+      const activeIndex = active ? active.index : -1
+
+      this.currentWordIndex = activeIndex
+      this.updateWordHighlight(verse.key, activeIndex)
     },
 
     restoreWordScroll(verseKey) {
@@ -3055,9 +3116,11 @@ export default {
       if (this.wordHighlightFrame) window.cancelAnimationFrame(this.wordHighlightFrame)
       this.wordHighlightFrame = null
       this.wordHighlightHandler = null
+      this.wordHighlightLoading = false
       this.currentWordIndex = -1
       this.currentPhraseIndex = -1
       this.currentHighlightedVerseKey = null
+      this.wordHighlightTimestamps = []
 
       document.querySelectorAll('.verse-arabic word.highlighted, .verse-arabic .wbw-word.highlighted, .verse-arabic .wbw-word.phrase-highlighted, .verse-words .word-item.phrase-highlighted').forEach(word => {
         word.classList.remove('highlighted')
@@ -3080,9 +3143,19 @@ export default {
       this.audioTimeUpdate = () => {
         this.currentTime = this.audioElement.currentTime
         this.duration = this.audioElement.duration
+        if (this.showWordByWord && this.wordByWordAudioEnabled) {
+          const verse = this.activeVerseRef
+          if (verse && this.currentHighlightedVerseKey !== verse.key && !this.wordHighlightLoading) {
+            this.startWordHighlighting(verse)
+          } else {
+            this.syncWordHighlightFromAudio(verse)
+          }
+        }
       }
 
       this.audioEnded = () => {
+        if (this.advanceLocked) return
+        this.advanceLocked = true
         this.isPlaying = false
         this.stopWordHighlighting()
         if (this.guidedUiStep === 'learn') {
@@ -3090,20 +3163,25 @@ export default {
           this.persistUiState()
         }
         if (this.playMode === 'auto') {
-          const transitionDelay = Math.max(0, Number(this.repeat_delay || 0))
-          setTimeout(() => this.next(), transitionDelay * 1000)
+          window.setTimeout(() => {
+            this.advanceLocked = false
+            this.next()
+          }, Math.max(0, Number(this.delay || 0)) * 1000)
+        } else {
+          this.advanceLocked = false
         }
       }
 
       this.audioSeeking = () => {
         // Prevent stale highlight when the user scrubs.
         this.currentWordIndex = -1
+        this.updateWordHighlight(this.currentHighlightedVerseKey, -1)
       }
 
       this.audioSeeked = () => {
         const verse = this.activeVerseRef
         if (!verse) return
-        if (this.showWordByWord && this.wordByWordAudioEnabled && this.isPlaying) {
+        if (this.showWordByWord && this.wordByWordAudioEnabled && !this.audioElement?.paused) {
           this.startWordHighlighting(verse)
         }
       }
@@ -3111,6 +3189,8 @@ export default {
       this.audioPaused = () => {
         // Ensure state is consistent even if pause is triggered outside our toggle handler.
         this.isPlaying = false
+        if (this.wordHighlightFrame) window.cancelAnimationFrame(this.wordHighlightFrame)
+        this.wordHighlightFrame = null
       }
 
       this.audioError = (e) => {
@@ -3130,13 +3210,17 @@ export default {
     },
 
     async playVerse(verse, options = {}) {
+      if (this.playRequestLocked && !options.force) return
+      this.playRequestLocked = true
       if (!verse) {
         console.error('No verse provided')
+        this.playRequestLocked = false
         return
       }
 
       if (!verse.audio) {
         this.showBanner(`Audio not available for verse ${verse.number}`, 'info', 2000)
+        this.playRequestLocked = false
         return
       }
 
@@ -3146,6 +3230,7 @@ export default {
       // Only toggle if both the verse key and actual audio source already match.
       if (!options.force && this.activeKey === verse.key && currentSrc && currentSrc === audioUrl) {
         this.togglePlay()
+        this.playRequestLocked = false
         return
       }
 
@@ -3161,6 +3246,7 @@ export default {
         this.audioElement = this.$refs.audio
         if (!this.audioElement) {
           this.showBanner('Audio system not ready', 'error', 3000)
+          this.playRequestLocked = false
           return
         }
         this.initAudio()
@@ -3186,14 +3272,13 @@ export default {
 
             // Start word highlighting AFTER audio starts playing
             if (this.showWordByWord && this.wordByWordAudioEnabled) {
-              // Small delay to ensure audio is fully playing
-              setTimeout(() => {
-                this.startWordHighlighting(verse)
-              }, 100)
+              this.startWordHighlighting(verse)
             }
+            this.playRequestLocked = false
             resolve()
           } catch (err) {
             this.isPlaying = false
+            this.playRequestLocked = false
             reject(err)
           }
           this.audioElement.removeEventListener('canplay', canPlayHandler)
@@ -3202,6 +3287,7 @@ export default {
         const errorHandler = (err) => {
           clearTimeout(timeout)
           this.isPlaying = false
+          this.playRequestLocked = false
           reject(err)
           this.audioElement.removeEventListener('error', errorHandler)
         }
@@ -3211,6 +3297,7 @@ export default {
       }).catch(err => {
         console.error('playVerse failed:', err)
         this.isPlaying = false
+        this.playRequestLocked = false
         this.showBanner('Failed to play audio', 'error', 3000)
       })
     },
@@ -3234,10 +3321,13 @@ export default {
     },
 
     next() {
+      if (this.advanceLocked) return
+      this.advanceLocked = true
 	      if (this.canNext) {
 	        this.sessionCompleted = false
 	        this.queueIndex++
 	        moveMutqinSession(this.mutqinState, this.queueIndex + 1)
+        this.recomputeAnalytics()
 	        const entry = this.queue[this.queueIndex]
         const verseKey = entry?.verse?.key || entry?.key
         if (verseKey) {
@@ -3247,18 +3337,26 @@ export default {
         const v = this.queue[this.queueIndex]
         if (v) {
           const verse = v.verse || v
-          this.playVerse(verse, { force: true })
+          this.playVerse(verse, { force: true }).finally(() => {
+            this.advanceLocked = false
+          })
+        } else {
+          this.advanceLocked = false
         }
         return
       }
+      this.advanceLocked = false
       this.handleSessionComplete()
     },
 
     prev() {
       if (!this.canPrev) return
+      if (this.advanceLocked) return
+      this.advanceLocked = true
 	      this.sessionCompleted = false
 	      this.queueIndex--
 	      moveMutqinSession(this.mutqinState, this.queueIndex + 1)
+      this.recomputeAnalytics()
 	      const entry = this.queue[this.queueIndex]
       const verseKey = entry?.verse?.key || entry?.key
       if (verseKey) {
@@ -3268,13 +3366,19 @@ export default {
       const v = this.queue[this.queueIndex]
       if (v) {
         const verse = v.verse || v
-        this.playVerse(verse, { force: true })
+        this.playVerse(verse, { force: true }).finally(() => {
+          this.advanceLocked = false
+        })
+      } else {
+        this.advanceLocked = false
       }
     },
 
     closePlayer() {
       this.flushPlaybackTime()
       this.stopWordHighlighting()
+      this.advanceLocked = false
+      this.playRequestLocked = false
       if (this.audioElement) {
         this.audioElement.pause()
         this.audioElement.src = ''
@@ -3427,7 +3531,6 @@ export default {
       const previousActiveKey = config.activeKey
       const previousEntry = Array.isArray(config.queue) ? config.queue[Math.max(0, Number(config.queueIndex || 0))] : null
       const previousEntryKey = previousEntry?.verse?.key || previousEntry?.key || null
-      const previousEntryRepeat = Number(previousEntry?.repeatCount || 1)
 
       if (!verses || verses.length === 0) {
         if (mode === this.currentMode) {
@@ -3447,24 +3550,71 @@ export default {
       const q = []
       const safePreviousQueueIndex = Math.max(0, Number(config.queueIndex || 0))
 
-      // Sequential queue. Repetitions should apply in BOTH modes.
-      const rep = mode === 'beginner'
-        ? Math.max(1, Number(this.beginner.repeats || 1))
-        : Math.max(1, Number(this.advanced.advancedRepeats || 1))
-      verses.forEach(verse => {
-        for (let r = 0; r < rep; r++) {
+      const repetitions = Math.max(1, Math.min(5, Number(this.chainingRepetitions || 1)))
+      const pushQueueEntry = entry => {
+        for (let repeatIndex = 1; repeatIndex <= repetitions; repeatIndex++) {
           q.push({
-            verse,
-            repeatCount: r + 1,
-            totalRepeats: rep
+            ...entry,
+            repeatCount: repeatIndex,
+            totalRepeats: repetitions
           })
         }
-      })
+      }
+
+      if (!this.chainingEnabled) {
+        verses.forEach(verse => {
+          pushQueueEntry({
+            verse,
+            phase: 'Memorise'
+          })
+        })
+      } else if (this.chainingMethod === 'cumulative') {
+        verses.forEach((_, endIndex) => {
+          const chain = verses.slice(0, endIndex + 1)
+          chain.forEach((verse, chainIndex) => {
+            pushQueueEntry({
+              verse,
+              phase: 'Cumulative',
+              chainKey: `cumulative:${endIndex + 1}`,
+              sequencePosition: chainIndex + 1,
+              sequenceTotal: chain.length
+            })
+          })
+        })
+      } else {
+        verses.forEach((verse, index) => {
+          pushQueueEntry({
+            verse,
+            phase: 'Memorise'
+          })
+          if (index > 0) {
+            pushQueueEntry({
+              verse: verses[index - 1],
+              phase: 'Linking',
+              chainKey: `link:${verses[index - 1].key}:${verse.key}`,
+              sequencePosition: 1,
+              sequenceTotal: 2
+            })
+            pushQueueEntry({
+              verse,
+              phase: 'Linking',
+              chainKey: `link:${verses[index - 1].key}:${verse.key}`,
+              sequencePosition: 2,
+              sequenceTotal: 2
+            })
+          }
+        })
+      }
 
       let previousQueueIndex = Math.min(safePreviousQueueIndex, Math.max(q.length - 1, 0))
       if (previousEntryKey) {
-        const targetRepeat = Math.max(1, Math.min(rep, previousEntryRepeat || 1))
-        const exactIndex = q.findIndex(item => (item?.verse?.key || item?.key) === previousEntryKey && Number(item.repeatCount || 1) === targetRepeat)
+        const exactIndex = q.findIndex(item =>
+          (item?.verse?.key || item?.key) === previousEntryKey &&
+          item.phase === previousEntry?.phase &&
+          item.chainKey === previousEntry?.chainKey &&
+          Number(item.sequencePosition || 1) === Number(previousEntry?.sequencePosition || 1) &&
+          Number(item.repeatCount || 1) === Number(previousEntry?.repeatCount || 1)
+        )
         if (exactIndex >= 0) previousQueueIndex = exactIndex
         else {
           const firstIndex = q.findIndex(item => (item?.verse?.key || item?.key) === previousEntryKey)
@@ -3549,7 +3699,7 @@ export default {
         : this.advanced.queue
 
 	      if (!builtQueue || builtQueue.length === 0) {
-	        this.showBanner('Nothing to play. Check repeat/loop settings.', 'error')
+	        this.showBanner('Nothing to play. Check the selected range.', 'error')
 	        return
 	      }
 	      this.syncMutqinAyahs(updatedVerses)
@@ -3647,7 +3797,7 @@ export default {
 	      const playbackQueue = (queue || []).map(item => {
 	        const verse = item?.verse || item
 	        return {
-	          phase: 'Takrar',
+	          phase: item?.phase || 'Takrar',
 	          ayahId: verse?.key || item?.ayahId || null,
 	          verse,
 	          repeatCount: item?.repeatCount || 1,
@@ -3661,9 +3811,8 @@ export default {
 	        seen.add(item.ayahId)
 	        if (item.verse) uniqueVerses.push(item.verse)
 	      })
-	      const repetitions = mode === 'beginner' ? this.beginnerRepeats : this.advancedRepeats
 	      const planner = createDailyPlan(this.mutqinState, uniqueVerses, {
-	        repetitions,
+	        repetitions: 1,
 	        audioDurations: uniqueVerses.reduce((map, verse) => {
 	          map[verse.key] = Number(verse.duration || this.duration || 0)
 	          return map
@@ -3721,6 +3870,8 @@ export default {
 	    },
 
 	    markTakrarRepeat(verse) {
+      if (this.repeatActionLocked || !verse) return
+      this.repeatActionLocked = true
 	      this.syncMutqinAyahs([verse])
 	      repeatAyah(this.mutqinState, verse.key)
       const index = Math.max(0, Number(this.queueIndex || 0))
@@ -3741,6 +3892,11 @@ export default {
         modeStore.queue = nextQueue
       }
       if (verse?.audio) this.playVerse(verse, { force: true })
+      this.recomputeAnalytics()
+      this.persistAllState()
+      window.setTimeout(() => {
+        this.repeatActionLocked = false
+      }, 450)
 	    },
 
 	    markTakrarHide(verse) {
@@ -3822,17 +3978,6 @@ export default {
         errors.push('Invalid verse range')
       }
 
-	      const repeatsRaw = this.currentMode === 'beginner'
-	        ? Number(this.repeat_count || 1)
-	        : Number(this.repeat_count || 1)
-	      if (!Number.isFinite(repeatsRaw) || repeatsRaw < 1) {
-	        errors.push('Repetition count must be at least 1')
-	      }
-      const repeatDelayRaw = Number(this.repeat_delay || 0)
-      if (!Number.isFinite(repeatDelayRaw) || repeatDelayRaw < 0) {
-        errors.push('Repeat delay must be 0 seconds or more')
-      }
-
       if (errors.length > 0) {
         this.showBanner(`Settings issue: ${errors.join(', ')}`, 'warning', 3000)
         return false
@@ -3879,7 +4024,7 @@ export default {
     toggleSection(key) {
       const nextValue = !this.sectionOpen[key]
       Object.keys(this.sectionOpen).forEach(sectionKey => {
-        if (['repeat_settings', 'session_tools', 'live_stats'].includes(sectionKey)) {
+        if (['session_tools', 'live_stats'].includes(sectionKey)) {
           this.sectionOpen[sectionKey] = false
         }
       })
@@ -3916,11 +4061,11 @@ export default {
           this.showTransliteration = state.showTransliteration ?? this.showTransliteration
           this.showWordByWord = state.showWordByWord ?? this.showWordByWord
           this.wordByWordAudioEnabled = state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
-          // Always enabled; keep stored values only for backwards compatibility.
-          this.repeatCountEnabled = true
-          this.repeatDelayEnabled = true
-          this.repeat_count = Math.max(1, Number(state.repeat_count || this.repeat_count || 1))
-          this.repeat_delay = Math.max(0, Number(state.repeat_delay ?? this.repeat_delay ?? 0))
+          this.chainingEnabled = state.chainingEnabled ?? this.chainingEnabled
+          this.chainingMethod = ['linking', 'cumulative'].includes(state.chainingMethod)
+            ? state.chainingMethod
+            : this.chainingMethod
+          this.chainingRepetitions = Math.max(1, Math.min(5, Number(state.chainingRepetitions || this.chainingRepetitions || 1)))
           this.defaultFontSize = Number(state.defaultFontSize ?? this.defaultFontSize ?? 100)
           this.settingsDraft = {
             showTranslation: state.showTranslation ?? this.showTranslation,
@@ -3959,10 +4104,9 @@ export default {
           showWordByWord: this.showWordByWord,
           wordByWordAudioEnabled: this.wordByWordAudioEnabled,
           defaultFontSize: this.defaultFontSize,
-          repeatCountEnabled: true,
-          repeatDelayEnabled: true,
-          repeat_count: this.repeat_count,
-          repeat_delay: this.repeat_delay,
+          chainingEnabled: this.chainingEnabled,
+          chainingMethod: this.chainingMethod,
+          chainingRepetitions: this.chainingRepetitions,
           fontScale: this.fontScale,
           uiScale: this.uiScale,
           enScale: this.enScale,
@@ -4303,14 +4447,12 @@ export default {
 
     performResetControls() {
 	      this.rangeStart = 1
-	      this.rangeEnd = 7
-	      this.speed = 1
+      this.rangeEnd = 7
+      this.speed = 1
       this.delay = 2
-      if (this.currentMode === 'advanced') {
-        this.advancedRepeats = 5
-      } else {
-        this.beginnerRepeats = 3
-      }
+      this.chainingEnabled = true
+      this.chainingMethod = 'linking'
+      this.chainingRepetitions = 1
       this.playMode = 'auto'
       this.order = 'seq'
       this.applySpeed()
@@ -4414,12 +4556,12 @@ export default {
 }
 
 [data-theme="dark"] {
-  --bg: #15110f;
-  --surface: rgba(33, 27, 24, 0.88);
-  --surface-strong: rgba(44, 36, 31, 0.94);
-  --border: rgba(255, 235, 214, 0.10);
-  --text: #f1e7dc;
-  --text-muted: #bcae9f;
+  --bg: #14110f;
+  --surface: rgba(31, 27, 24, 0.92);
+  --surface-strong: rgba(43, 37, 32, 0.96);
+  --border: rgba(255, 236, 216, 0.16);
+  --text: #f7ebdf;
+  --text-muted: #d1c2b3;
   --accent: #d0a06b;
   --accent-strong: #efc18d;
   --accent-soft: #5f4530;
@@ -5355,7 +5497,7 @@ html {
 /* Active tab indicator with pulse effect */
 .tools-tabs button.active-tab {
   position: relative;
-  animation: tabPulse 0.3s ease-out;
+  animation: tabPulse 0.22s ease-out;
 }
 
 @keyframes tabPulse {
@@ -5365,7 +5507,7 @@ html {
   }
 
   50% {
-    transform: scale(1.02);
+    transform: scale(1.012);
     box-shadow: 0 0 0 3px var(--accent-light);
   }
 
@@ -5415,8 +5557,8 @@ html {
 .field-hint {
   font-size: calc(0.7rem * var(--en-scale, 1));
   color: var(--text-muted);
-  margin-top: 4px;
-  line-height: 1.4;
+  margin-top: 3px;
+  line-height: 1.26;
   display: block;
 }
 
@@ -5479,6 +5621,30 @@ html {
   box-shadow: 0 0 0 1px var(--accent), 0 14px 32px rgba(154, 103, 56, 0.18);
   transform: translateY(-1px);
   transition: all 0.2s ease;
+}
+
+.main.focus-mode-active .verse-card:not(.active) {
+  opacity: 0.54;
+  filter: saturate(0.72);
+}
+
+.main.focus-mode-active .workspace-fab-live,
+.main.focus-mode-active .verse-card:not(.active) .verse-aid {
+  opacity: 0.38;
+}
+
+.main.blur-mode-active .verse-card.active .verse-arabic {
+  color: transparent;
+  text-shadow: 0 0 var(--recall-blur, 10px) rgba(22, 18, 14, 0.72);
+}
+
+.main.blur-mode-active .verse-card.active .verse-arabic .tajweed-mark,
+.main.blur-mode-active .verse-card.active .verse-arabic word,
+.main.blur-mode-active .verse-card.active .verse-arabic .wbw-word {
+  color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-shadow: 0 0 var(--recall-blur, 10px) rgba(22, 18, 14, 0.72);
 }
 
 /* Removed: "For serious huffadh training" badge */
@@ -5845,10 +6011,11 @@ html {
   padding: 6px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  width: 100%;
 }
 
 .tools-tabs button {
-  flex: 0 0 auto;
+  flex: 1 1 0;
   padding: 7px 10px;
   border-radius: 12px;
   background: transparent;
@@ -5861,7 +6028,7 @@ html {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  transition: background 140ms ease, color 140ms ease, transform 140ms ease;
+  transition: background 140ms ease, color 140ms ease, transform 140ms ease, box-shadow 160ms ease;
   white-space: nowrap;
 }
 
@@ -5974,6 +6141,7 @@ html {
   letter-spacing: -0.2px;
   color: var(--text);
   font-size: 0.82rem;
+  white-space: nowrap;
 }
 
 .st-sub {
@@ -6155,6 +6323,119 @@ html {
   font-weight: 400;
 }
 
+.tools-techniques-section {
+  border-color: rgba(139, 94, 60, 0.16);
+  box-shadow: none;
+}
+
+.techniques-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.technique-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.technique-row-stacked {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.technique-row-main,
+.technique-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.technique-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.technique-copy label {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.technique-copy small,
+.technique-control span {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.technique-toggle {
+  flex: 0 0 68px;
+  min-height: 36px;
+}
+
+.technique-control {
+  padding-top: 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.technique-range {
+  flex: 1 1 auto;
+  min-width: 96px;
+  padding: 0;
+  box-shadow: none;
+}
+
+.segmented-control {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.035);
+}
+
+.segmented-control button {
+  min-width: 0;
+  min-height: 36px;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.segmented-control button.active {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--accent-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.technique-preview {
+  padding: 9px 10px;
+  border-radius: 11px;
+  background: rgba(154, 103, 56, 0.07);
+  border: 1px solid rgba(154, 103, 56, 0.10);
+  color: var(--accent-strong);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
 /* Start button */
 .start-btn {
   width: 100%;
@@ -6240,6 +6521,20 @@ html {
 .tools-btn-primary:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
+}
+
+.tools-btn:active:not(:disabled),
+.fab-btn:active:not(:disabled),
+.toggle-chip:active:not(:disabled),
+.sheet-toggle:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.tools-btn:hover:not(:disabled),
+.fab-btn:hover:not(:disabled),
+.toggle-chip:hover:not(:disabled),
+.sheet-toggle:hover:not(:disabled) {
+  filter: brightness(1.02);
 }
 
 .tools-btn-primary:disabled {
@@ -6406,9 +6701,9 @@ html {
 .workspace {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 18px;
+  gap: 14px;
   align-items: start;
-  margin-top: 22px;
+  margin-top: 14px;
 }
 
 .workspace-main {
@@ -6420,16 +6715,30 @@ html {
   top: 14px;
   z-index: 25;
   display: flex;
+  min-width: 0;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 10px 12px;
-  margin: 10px 0 8px;
-  border-radius: 16px;
+  gap: 10px;
+  padding: 8px 10px;
+  margin: 8px 0 6px;
+  border-radius: 14px;
   border: 1px solid rgba(0, 0, 0, 0.06);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.58));
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 16px 38px rgba(63, 39, 18, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.38);
   backdrop-filter: blur(10px);
+  animation: cardSoftIn 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.workspace-fab:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 20px 44px rgba(63, 39, 18, 0.18), 0 0 0 1px rgba(154, 103, 56, 0.18);
+  border-color: rgba(154, 103, 56, 0.2);
+}
+
+@keyframes cardSoftIn {
+  from { transform: translateY(6px); opacity: 0.9; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .workspace-fab-meta {
@@ -6467,7 +6776,7 @@ html {
   color: var(--text-muted);
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
   line-height: 1.2;
 }
@@ -6475,18 +6784,41 @@ html {
 .workspace-fab-sub span {
   display: inline-flex;
   align-items: center;
-  padding: 5px 8px;
+  max-width: 100%;
+  padding: 4px 7px;
   border-radius: 999px;
   border: 1px solid rgba(154, 103, 56, 0.10);
   background: rgba(255, 255, 255, 0.62);
+}
+
+.workspace-fab-live {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.workspace-fab-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(154, 103, 56, 0.08);
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  color: var(--accent-strong);
+  font-size: 0.74rem;
+  font-weight: 600;
 }
 
 .workspace-fab-copy {
   margin: 0;
   color: var(--text-muted);
   font-size: 0.82rem;
-  line-height: 1.35;
+  line-height: 1.26;
   max-width: 60ch;
+  overflow-wrap: anywhere;
 }
 
 .workspace-fab-chip {
@@ -6521,6 +6853,8 @@ html {
   align-items: center;
   gap: 7px;
   white-space: nowrap;
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 140ms ease;
 }
 
 .fab-btn-primary {
@@ -6553,8 +6887,137 @@ html {
 }
 
 .verse-aid {
-  opacity: 0.78;
+  opacity: 0.92;
   filter: saturate(0.85);
+  margin-top: 0.55rem;
+}
+
+.verse-aid-title {
+  margin-bottom: 4px;
+  color: var(--accent-strong);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.inline-setting-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.input-compact {
+  flex: 0 0 140px;
+}
+
+.inline-setting-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(154, 103, 56, 0.08);
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  color: var(--accent-strong);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.settings-section {
+  padding: 14px;
+  background: var(--surface-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.settings-heading,
+.settings-row,
+.settings-row-copy {
+  display: flex;
+  align-items: center;
+}
+
+.settings-heading {
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.settings-heading h3 {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.98rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.settings-apply {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 7px 12px;
+  border-radius: 11px;
+  font-size: 0.76rem;
+}
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-row {
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.52);
+}
+
+.settings-row-copy {
+  min-width: 0;
+  gap: 8px;
+}
+
+.settings-row-copy label {
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.settings-row-copy small {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+.settings-toggle {
+  flex: 0 0 86px;
+  min-height: 32px;
+  padding: 5px 10px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  box-shadow: none;
+}
+
+.settings-row-range {
+  align-items: center;
+}
+
+.settings-row-range .settings-row-copy {
+  flex: 0 0 116px;
+  justify-content: space-between;
+}
+
+.settings-range {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  box-shadow: none;
 }
 
 
@@ -6810,21 +7273,21 @@ html {
 }
 
 .verse-translation {
-  font-size: calc(0.82rem * var(--en-scale, 1));
-  color: #5a6b63;
-  line-height: 1.6;
-  padding-top: 12px;
-  margin-top: 10px;
+  font-size: calc(0.94rem * var(--en-scale, 1));
+  color: var(--text);
+  line-height: 1.55;
+  padding-top: 10px;
+  margin-top: 8px;
   border-top: 1px solid var(--border);
   display: block;
   opacity: 0.92;
 }
 
 .verse-transliteration {
-  font-size: calc(0.88rem * var(--en-scale, 1));
-  color: var(--text-muted);
+  font-size: calc(0.98rem * var(--en-scale, 1));
+  color: var(--text);
   font-style: italic;
-  margin-top: 10px;
+  margin-top: 8px;
   padding-top: 8px;
   border-top: 1px solid var(--border);
   line-height: 1.5;
@@ -6834,10 +7297,10 @@ html {
 .verse-words {
   display: flex;
   flex-wrap: nowrap;
-  gap: 10px;
+  gap: 8px;
   direction: rtl;
-  margin-top: 16px;
-  padding-top: 12px;
+  margin-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid var(--border);
   overflow-x: auto;
   overflow-y: hidden;
@@ -6847,6 +7310,7 @@ html {
 }
 
 .word-item {
+  position: relative;
   background: var(--accent-light);
   padding: 6px 12px;
   border-radius: 20px;
@@ -6857,6 +7321,30 @@ html {
   font-size: 0.75rem;
   flex: 0 0 auto;
   scroll-snap-align: center;
+  cursor: help;
+  min-height: 36px;
+}
+
+.word-item:hover::after,
+.word-item:focus::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  z-index: 5;
+  width: max-content;
+  max-width: 220px;
+  padding: 6px 8px;
+  border-radius: 9px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  color: var(--text);
+  direction: ltr;
+  text-align: center;
+  font-size: 0.72rem;
+  line-height: 1.25;
 }
 
 .word-arabic {
@@ -6970,6 +7458,7 @@ html {
   box-shadow: 0 0 0 2px rgba(184, 130, 78, 0.18);
 }
 
+.word-item.highlighted,
 .word-item.phrase-highlighted {
   background: rgba(184, 130, 78, 0.2);
 }
@@ -7386,28 +7875,160 @@ html {
 
 /* Dark theme overrides */
 [data-theme="dark"] .tools {
-  background: rgba(18, 18, 18, 0.9);
-  border-left-color: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(12, 11, 10, 0.96));
+  border-left-color: var(--border);
 }
 
 [data-theme="dark"] .sheet-section {
-  border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(30, 30, 40, 0.45);
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+[data-theme="dark"] .tools-top,
+[data-theme="dark"] .tools-footer {
+  border-color: var(--border);
+  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.92));
+}
+
+[data-theme="dark"] .tools-footer {
+  background: linear-gradient(to top, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.86), rgba(18, 15, 13, 0));
+}
+
+[data-theme="dark"] .tools-tabs {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .tools-tabs button {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .tools-tabs button.active {
+  color: var(--text);
+  background: var(--surface-strong);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .tools-title,
+[data-theme="dark"] .st-title,
+[data-theme="dark"] .technique-copy label,
+[data-theme="dark"] .settings-row-copy label {
+  color: var(--text);
+}
+
+[data-theme="dark"] .tools-context,
+[data-theme="dark"] .st-sub,
+[data-theme="dark"] .technique-copy small,
+[data-theme="dark"] .technique-control span,
+[data-theme="dark"] .settings-row-copy small {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .tools-x,
+[data-theme="dark"] .st-chev,
+[data-theme="dark"] .sheet-toggle,
+[data-theme="dark"] .technique-row,
+[data-theme="dark"] .radio,
+[data-theme="dark"] .toggle-chip,
+[data-theme="dark"] .segmented-control,
+[data-theme="dark"] .technique-preview {
+  color: var(--text);
+  border-color: var(--border);
+  background: var(--surface-strong);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .sheet-toggle {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+[data-theme="dark"] .st-ico {
+  color: var(--accent-strong);
+  border-color: rgba(239, 193, 141, 0.22);
+  background: rgba(239, 193, 141, 0.10);
+}
+
+[data-theme="dark"] .segmented-control button {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .segmented-control button.active,
+[data-theme="dark"] .toggle-chip.active {
+  color: var(--accent-strong);
+  border-color: rgba(239, 193, 141, 0.42);
+  background: rgba(239, 193, 141, 0.12);
+}
+
+[data-theme="dark"] .tools-btn-soft {
+  color: var(--text-muted);
+  background: var(--surface-strong);
+  border-color: var(--border);
 }
 
 [data-theme="dark"] .select,
 [data-theme="dark"] .input {
-  border-color: rgba(255, 255, 255, 0.10);
-  background: rgba(30, 30, 40, 0.55);
+  color: var(--text);
+  border-color: var(--border);
+  background: rgba(255, 255, 255, 0.045);
 }
 
 [data-theme="dark"] .switch {
-  border-color: rgba(255, 255, 255, 0.10);
-  background: rgba(30, 30, 40, 0.45);
+  color: var(--text);
+  border-color: var(--border);
+  background: var(--surface-strong);
 }
 
 [data-theme="dark"] .verse-translation {
-  color: #a0a0b0;
+  color: var(--text);
+}
+
+[data-theme="dark"] .verse-transliteration,
+[data-theme="dark"] .workspace-fab-copy,
+[data-theme="dark"] .workspace-fab-sub,
+[data-theme="dark"] .settings-row-copy small,
+[data-theme="dark"] .field-hint {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .workspace-fab,
+[data-theme="dark"] .workspace-fab-sub span,
+[data-theme="dark"] .workspace-fab-live-pill,
+[data-theme="dark"] .word-item:hover::after,
+[data-theme="dark"] .word-item:focus::after {
+  background: var(--surface-strong);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .workspace-fab {
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.46), 0 0 0 1px rgba(255, 236, 216, 0.12);
+}
+
+[data-theme="dark"] .workspace-fab:hover {
+  box-shadow: 0 26px 64px rgba(0, 0, 0, 0.54), 0 0 0 1px rgba(239, 193, 141, 0.20);
+}
+
+[data-theme="dark"] .settings-section {
+  background: rgba(24, 21, 19, 0.96);
+  border-color: var(--border);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+[data-theme="dark"] .settings-row {
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(255, 236, 216, 0.12);
+}
+
+[data-theme="dark"] .settings-toggle {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 236, 216, 0.14);
+  color: var(--text);
+}
+
+[data-theme="dark"] .settings-toggle.active {
+  background: rgba(239, 193, 141, 0.13);
+  border-color: rgba(239, 193, 141, 0.42);
+  color: var(--accent-strong);
 }
 
 [data-theme="dark"] .quiz-card {
@@ -8246,8 +8867,8 @@ html {
     top: 8px;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-    padding: 10px;
+    gap: 8px;
+    padding: 9px;
     margin: 8px 0 6px;
     border-radius: 14px;
   }
@@ -8266,11 +8887,27 @@ html {
 
   .workspace-fab-sub {
     font-size: 0.72rem;
-    gap: 6px;
+    gap: 5px;
+  }
+
+  .workspace-fab-sub span {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-width: min(128px, 100%);
   }
 
   .workspace-fab-copy {
     font-size: 0.78rem;
+  }
+
+  .workspace-fab-live {
+    gap: 6px;
+  }
+
+  .workspace-fab-live-pill {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
   }
 
   .workspace-fab-actions {
@@ -8286,6 +8923,34 @@ html {
     justify-content: center;
     padding: 8px 10px;
     font-size: 0.82rem;
+    min-height: 44px;
+  }
+
+  .settings-row {
+    gap: 8px;
+  }
+
+  .settings-row-copy {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .settings-toggle {
+    flex-basis: 78px;
+    min-height: 40px;
+  }
+
+  .settings-row-range {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .settings-row-range .settings-row-copy {
+    flex: initial;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
   }
 
   .setup-start-card {
@@ -8335,6 +9000,29 @@ html {
   .toolbar-chip,
   .toggle-chip {
     min-height: 44px;
+  }
+
+  .inline-setting-row {
+    align-items: stretch;
+  }
+
+  .input-compact,
+  .inline-setting-pill {
+    width: 100%;
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+
+  .technique-row,
+  .technique-row-main,
+  .technique-control {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .technique-toggle,
+  .segmented-control {
+    width: 100%;
   }
 
   .player-bar {
@@ -8616,6 +9304,10 @@ html {
 .main.flow-recall .verse-card.active .verse-arabic {
   color: transparent;
   text-shadow: 0 0 22px rgba(232, 237, 247, 0.55);
+}
+
+.main.blur-mode-active.flow-recall .verse-card.active .verse-arabic {
+  text-shadow: 0 0 var(--recall-blur, 10px) rgba(22, 18, 14, 0.72);
 }
 
 .main.flow-practice .verse-card.active .verse-arabic {
