@@ -24017,6 +24017,21 @@ function createAdvancedState() {
     }, "verseRequestId", 0), "verseDataCache", {}), "verseScrollMemory", {});
   },
   computed: {
+    isVerseBlurred: function isVerseBlurred() {
+      var _this = this;
+      return function (verseKey) {
+        if (!_this.blurModeEnabled) return false;
+        var activeKey = _this.effectiveActiveVerseKey;
+        if (!activeKey) return false;
+
+        // Get the current active verse number
+        var activeNumber = parseInt(activeKey.split(':')[1]);
+        var verseNumber = parseInt(verseKey.split(':')[1]);
+
+        // Blur upcoming verses (higher number than active)
+        return verseNumber > activeNumber;
+      };
+    },
     liveSessionStats: function liveSessionStats() {
       var currentIndex = Math.max(0, Number(this.queueIndex || 0));
       var completedEntries = (this.queue || []).slice(0, currentIndex);
@@ -24106,9 +24121,9 @@ function createAdvancedState() {
       return (queued === null || queued === void 0 || (_queued$verse = queued.verse) === null || _queued$verse === void 0 ? void 0 : _queued$verse.key) || (queued === null || queued === void 0 ? void 0 : queued.key) || null;
     },
     activeVerseRef: function activeVerseRef() {
-      var _this = this;
+      var _this2 = this;
       return this.verses.find(function (v) {
-        return v.key === _this.effectiveActiveVerseKey;
+        return v.key === _this2.effectiveActiveVerseKey;
       }) || null;
     },
     activeMutqinAyah: function activeMutqinAyah() {
@@ -24394,11 +24409,11 @@ function createAdvancedState() {
       return fonts[this.quranFont] || fonts.uthmanic;
     },
     collapsedPlayerTitle: function collapsedPlayerTitle() {
-      var _this2 = this,
+      var _this3 = this,
         _this$currentChapter,
         _this$currentChapter2;
       var verse = this.verses.find(function (v) {
-        return v.key === _this2.activeKey;
+        return v.key === _this3.activeKey;
       });
       if (!verse) return ((_this$currentChapter = this.currentChapter) === null || _this$currentChapter === void 0 ? void 0 : _this$currentChapter.name_simple) || 'Now playing';
       return "".concat(((_this$currentChapter2 = this.currentChapter) === null || _this$currentChapter2 === void 0 ? void 0 : _this$currentChapter2.name_simple) || 'Session', " \xB7 Ayah ").concat(verse.number);
@@ -24469,13 +24484,13 @@ function createAdvancedState() {
       return "Review + repetition included";
     },
     etaLabel: function etaLabel() {
-      var _this3 = this;
+      var _this4 = this;
       var remainingItems = (this.queue || []).slice(this.queueIndex);
       if (!remainingItems.length) return '0 min';
       var reviewTimePerAyah = 5;
       var totalSeconds = 0;
       remainingItems.forEach(function (item, index) {
-        totalSeconds += _this3.getQueueItemAudioSeconds(item, index === 0) + reviewTimePerAyah;
+        totalSeconds += _this4.getQueueItemAudioSeconds(item, index === 0) + reviewTimePerAyah;
       });
       var delaySeconds = (this.delay || 1) * (remainingItems.length - 1);
       totalSeconds += delaySeconds;
@@ -24483,12 +24498,12 @@ function createAdvancedState() {
       return "Audio time \u2248 ".concat(minutes, " min");
     },
     etaLabelAudioOnly: function etaLabelAudioOnly() {
-      var _this4 = this;
+      var _this5 = this;
       var remainingItems = (this.queue || []).slice(this.queueIndex);
       if (!remainingItems.length) return '0 min';
       var totalAudioSeconds = 0;
       remainingItems.forEach(function (item, index) {
-        totalAudioSeconds += _this4.getQueueItemAudioSeconds(item, index === 0);
+        totalAudioSeconds += _this5.getQueueItemAudioSeconds(item, index === 0);
       });
       var minutes = Math.max(0, Math.ceil(totalAudioSeconds / 60));
       return "Audio time \u2248 ".concat(minutes, " min");
@@ -24509,10 +24524,10 @@ function createAdvancedState() {
       return "".concat(surah).concat(range ? " \u2022 ".concat(range) : '', " \u2022 ").concat(this.sessionTypeInfo.label);
     },
     activeVerseIndex: function activeVerseIndex() {
-      var _this5 = this;
+      var _this6 = this;
       if (!this.activeVerseKey || !this.verses.length) return -1;
       return this.verses.findIndex(function (v) {
-        return v.key === _this5.activeVerseKey;
+        return v.key === _this6.activeVerseKey;
       });
     },
     canGoPrev: function canGoPrev() {
@@ -24530,78 +24545,78 @@ function createAdvancedState() {
     }
   },
   mounted: function mounted() {
-    var _this6 = this;
+    var _this7 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
       return _regenerator().w(function (_context) {
         while (1) switch (_context.n) {
           case 0:
-            _this6.unwatchMutqinState = (0,_composables_useMutqinPersistence__WEBPACK_IMPORTED_MODULE_2__.watchMutqinState)(_this6.mutqinState);
-            _this6.loadVerseFontSizes();
-            _this6.migrateLocalStorage();
-            _this6.loadUiState();
-            _this6.restoreSessionState();
+            _this7.unwatchMutqinState = (0,_composables_useMutqinPersistence__WEBPACK_IMPORTED_MODULE_2__.watchMutqinState)(_this7.mutqinState);
+            _this7.loadVerseFontSizes();
+            _this7.migrateLocalStorage();
+            _this7.loadUiState();
+            _this7.restoreSessionState();
             _context.n = 1;
-            return _this6.loadChapters();
+            return _this7.loadChapters();
           case 1:
             _context.n = 2;
-            return _this6.loadReciters();
+            return _this7.loadReciters();
           case 2:
-            _this6.loadSavedSessions();
-            _this6.loadOfflineCatalog();
-            _this6.loadSm2();
-            _this6.loadEvents();
-            _this6.loadPlanner();
-            _this6.loadMetrics();
-            _this6.loadAnalytics();
-            _this6.initAudio();
-            _this6.restoreAudioState();
-            _this6.theme = document.documentElement.getAttribute('data-theme') || _this6.theme;
-            _this6.loadBookmarksPins(), _this6.setupWordClickHandler();
-            _this6.loadContinueSessionPrompt();
-            _this6.updateMasteredWeekly();
-            if (_this6.isLoggedIn && _this6.hasContinueSession) {
+            _this7.loadSavedSessions();
+            _this7.loadOfflineCatalog();
+            _this7.loadSm2();
+            _this7.loadEvents();
+            _this7.loadPlanner();
+            _this7.loadMetrics();
+            _this7.loadAnalytics();
+            _this7.initAudio();
+            _this7.restoreAudioState();
+            _this7.theme = document.documentElement.getAttribute('data-theme') || _this7.theme;
+            _this7.loadBookmarksPins(), _this7.setupWordClickHandler();
+            _this7.loadContinueSessionPrompt();
+            _this7.updateMasteredWeekly();
+            if (_this7.isLoggedIn && _this7.hasContinueSession) {
               // One clear entry point for returning users.
-              _this6.showResumeModal = true;
+              _this7.showResumeModal = true;
             }
-            if (!(_this6.currentMode === 'advanced' && _this6.advanced.chapterId)) {
+            if (!(_this7.currentMode === 'advanced' && _this7.advanced.chapterId)) {
               _context.n = 4;
               break;
             }
-            _this6.currentMode = 'advanced';
-            _this6.tab = 'tools';
+            _this7.currentMode = 'advanced';
+            _this7.tab = 'tools';
             _context.n = 3;
-            return _this6.loadVerses();
+            return _this7.loadVerses();
           case 3:
             _context.n = 7;
             break;
           case 4:
-            if (!_this6.beginner.chapterId) {
+            if (!_this7.beginner.chapterId) {
               _context.n = 6;
               break;
             }
-            _this6.currentMode = 'beginner';
-            _this6.tab = 'tools';
+            _this7.currentMode = 'beginner';
+            _this7.tab = 'tools';
             _context.n = 5;
-            return _this6.loadVerses();
+            return _this7.loadVerses();
           case 5:
             _context.n = 7;
             break;
           case 6:
-            _this6.tab = 'tools';
-            _this6.showTools = true;
+            _this7.tab = 'tools';
+            _this7.showTools = true;
           case 7:
-            _this6.isBootstrapping = false;
-            _this6.appReady = true;
-            window.addEventListener('online', _this6.handleOnline);
-            window.addEventListener('offline', _this6.handleOffline);
-            window.addEventListener('beforeunload', _this6.persistAllState);
-            window.addEventListener('keydown', _this6.handleGlobalKeydown);
-            window.addEventListener('scroll', _this6.handleWindowScroll, {
+            _this7.isBootstrapping = false;
+            _this7.appReady = true;
+            window.addEventListener('online', _this7.handleOnline);
+            window.addEventListener('offline', _this7.handleOffline);
+            window.addEventListener('beforeunload', _this7.persistAllState);
+            window.addEventListener('keydown', _this7.handleGlobalKeydown);
+            window.addEventListener('scroll', _this7.handleWindowScroll, {
               passive: true
             });
-            document.addEventListener('click', _this6.handleClickOutside);
-            _this6.statsInterval = window.setInterval(function () {
-              _this6.statsTick = Date.now();
+            document.addEventListener('click', _this7.handleClickOutside);
+            _this7.statsInterval = window.setInterval(function () {
+              _this7.statsTick = Date.now();
             }, 250);
           case 8:
             return _context.a(2);
@@ -24840,11 +24855,11 @@ function createAdvancedState() {
       } catch (e) {}
     },
     scheduleLoadVerses: function scheduleLoadVerses() {
-      var _this7 = this;
+      var _this8 = this;
       var mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.currentMode;
       if (this.loadVersesTimer) clearTimeout(this.loadVersesTimer);
       this.loadVersesTimer = setTimeout(function () {
-        _this7.loadVerses(mode);
+        _this8.loadVerses(mode);
       }, 200);
     },
     setActiveVerse: function setActiveVerse(verseKey) {
@@ -25169,42 +25184,42 @@ function createAdvancedState() {
       }
     },
     continueLastSession: function continueLastSession() {
-      var _this8 = this;
+      var _this9 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
-        var _payload$config3, _this8$mutqinState$se, _payload$config4;
+        var _payload$config3, _this9$mutqinState$se, _payload$config4;
         var payload, target, store, canonicalIndex, canonicalItem, targetKey, restoredQueueIndex, _store$queue, _store$queue2, currentQueueKey, _store$queue3, exactIndex;
         return _regenerator().w(function (_context2) {
           while (1) switch (_context2.n) {
             case 0:
-              payload = _this8.continueSessionPayload;
+              payload = _this9.continueSessionPayload;
               if (payload) {
                 _context2.n = 1;
                 break;
               }
               return _context2.a(2);
             case 1:
-              _this8.hasContinueSession = false;
+              _this9.hasContinueSession = false;
               if ((_payload$config3 = payload.config) !== null && _payload$config3 !== void 0 && _payload$config3.chapterId) {
                 _context2.n = 2;
                 break;
               }
-              _this8.clearContinueSession();
+              _this9.clearContinueSession();
               return _context2.a(2);
             case 2:
-              _this8.currentMode = payload.mode || 'beginner';
-              _this8.tab = payload.tab || _this8.currentMode;
-              target = _this8.currentMode === 'beginner' ? 'beginner' : 'advanced';
-              _this8[target] = _objectSpread(_objectSpread({}, target === 'beginner' ? createBeginnerState() : createAdvancedState()), _this8.cloneModeState(payload.config || {}));
+              _this9.currentMode = payload.mode || 'beginner';
+              _this9.tab = payload.tab || _this9.currentMode;
+              target = _this9.currentMode === 'beginner' ? 'beginner' : 'advanced';
+              _this9[target] = _objectSpread(_objectSpread({}, target === 'beginner' ? createBeginnerState() : createAdvancedState()), _this9.cloneModeState(payload.config || {}));
               // Chaining removed.
-              _this8.applySessionConfig(_this8.buildSessionConfig(_this8.currentMode));
+              _this9.applySessionConfig(_this9.buildSessionConfig(_this9.currentMode));
               _context2.n = 3;
-              return _this8.loadChapter();
+              return _this9.loadChapter();
             case 3:
-              _this8.buildQueue(_this8.currentMode);
-              store = _this8.getModeStore(_this8.currentMode);
+              _this9.buildQueue(_this9.currentMode);
+              store = _this9.getModeStore(_this9.currentMode);
               canonicalIndex = Number.isFinite(Number(payload.mutqinSessionIndex)) ? Number(payload.mutqinSessionIndex) : null;
-              if (canonicalIndex !== null) (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this8.mutqinState, canonicalIndex);
-              canonicalItem = canonicalIndex !== null ? (_this8$mutqinState$se = _this8.mutqinState.sessionState) === null || _this8$mutqinState$se === void 0 || (_this8$mutqinState$se = _this8$mutqinState$se.queue) === null || _this8$mutqinState$se === void 0 ? void 0 : _this8$mutqinState$se[canonicalIndex] : null;
+              if (canonicalIndex !== null) (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this9.mutqinState, canonicalIndex);
+              canonicalItem = canonicalIndex !== null ? (_this9$mutqinState$se = _this9.mutqinState.sessionState) === null || _this9$mutqinState$se === void 0 || (_this9$mutqinState$se = _this9$mutqinState$se.queue) === null || _this9$mutqinState$se === void 0 ? void 0 : _this9$mutqinState$se[canonicalIndex] : null;
               targetKey = payload.activeVerseKey || payload.activeKey || (canonicalItem === null || canonicalItem === void 0 ? void 0 : canonicalItem.ayahId) || null;
               restoredQueueIndex = Math.max(0, Number(payload.queueIndex || 0));
               if (targetKey) {
@@ -25218,22 +25233,22 @@ function createAdvancedState() {
                 }
               }
               store.queueIndex = restoredQueueIndex;
-              _this8.syncActiveVerseState(_this8.currentMode, targetKey);
-              _this8.playerVisible = !!payload.playerVisible;
-              _this8.restoredAudioState = {
+              _this9.syncActiveVerseState(_this9.currentMode, targetKey);
+              _this9.playerVisible = !!payload.playerVisible;
+              _this9.restoredAudioState = {
                 src: payload.audioSrc || '',
                 currentTime: Number(payload.currentTime || 0),
                 playerVisible: !!payload.playerVisible,
-                speed: Number(((_payload$config4 = payload.config) === null || _payload$config4 === void 0 ? void 0 : _payload$config4.speed) || _this8.speed || 1),
+                speed: Number(((_payload$config4 = payload.config) === null || _payload$config4 === void 0 ? void 0 : _payload$config4.speed) || _this9.speed || 1),
                 isPlaying: !!payload.isPlaying
               };
-              _this8.applyRestoredAudioState();
+              _this9.applyRestoredAudioState();
               // Advanced auto-open used to be driven by chaining/loop settings. Removed.
-              _this8.persistAllState();
-              _this8.showBanner('Session restored', 'success', 2200);
-              _this8.$nextTick(function () {
-                if (_this8.effectiveActiveVerseKey) {
-                  var el = document.querySelector(".verse-card[data-verse-key=\"".concat(_this8.effectiveActiveVerseKey, "\"]"));
+              _this9.persistAllState();
+              _this9.showBanner('Session restored', 'success', 2200);
+              _this9.$nextTick(function () {
+                if (_this9.effectiveActiveVerseKey) {
+                  var el = document.querySelector(".verse-card[data-verse-key=\"".concat(_this9.effectiveActiveVerseKey, "\"]"));
                   if (el) el.scrollIntoView({
                     behavior: 'smooth',
                     block: 'center'
@@ -25255,7 +25270,7 @@ function createAdvancedState() {
     },
     applyRestoredAudioState: function applyRestoredAudioState() {
       var _this$activeVerseRef,
-        _this9 = this;
+        _this0 = this;
       var state = this.restoredAudioState;
       if (!state || !this.audioElement || !state.src) return;
       var activeAudio = (_this$activeVerseRef = this.activeVerseRef) !== null && _this$activeVerseRef !== void 0 && _this$activeVerseRef.audio ? this.normalizeAudioUrl(this.activeVerseRef.audio) : '';
@@ -25268,15 +25283,15 @@ function createAdvancedState() {
       this.speed = Number(state.speed || this.speed || 1);
       var _seekOnLoad = function seekOnLoad() {
         try {
-          _this9.audioElement.currentTime = Number(state.currentTime || 0);
-          _this9.audioElement.playbackRate = Number(state.speed || _this9.speed || 1);
+          _this0.audioElement.currentTime = Number(state.currentTime || 0);
+          _this0.audioElement.playbackRate = Number(state.speed || _this0.speed || 1);
           if (state.isPlaying) {
-            _this9.audioElement.play().then(function () {
-              _this9.isPlaying = true;
+            _this0.audioElement.play().then(function () {
+              _this0.isPlaying = true;
             })["catch"](function () {});
           }
         } catch (e) {}
-        _this9.audioElement.removeEventListener('loadedmetadata', _seekOnLoad);
+        _this0.audioElement.removeEventListener('loadedmetadata', _seekOnLoad);
       };
       this.audioElement.addEventListener('loadedmetadata', _seekOnLoad);
     },
@@ -25410,36 +25425,36 @@ function createAdvancedState() {
       this.$forceUpdate();
     },
     setupWordClickHandler: function setupWordClickHandler() {
-      var _this0 = this;
+      var _this1 = this;
       document.addEventListener('click', function (e) {
         var wordElement = e.target.closest('.wbw-word');
-        if (wordElement && _this0.wordByWordAudioEnabled) {
+        if (wordElement && _this1.wordByWordAudioEnabled) {
           var verseKey = wordElement.dataset.verseKey;
           var wordIndex = parseInt(wordElement.dataset.wordIndex);
           var wordAudio = wordElement.dataset.wordAudio;
           if (wordAudio) {
-            _this0.playWordAudio(wordAudio);
+            _this1.playWordAudio(wordAudio);
           } else {
             // Find verse and play from this word position
-            var verse = _this0.verses.find(function (v) {
+            var verse = _this1.verses.find(function (v) {
               return v.key === verseKey;
             });
             if (verse && verse.audio) {
-              _this0.playVerse(verse);
+              _this1.playVerse(verse);
             }
           }
         }
       });
     },
     getRemainingTimeDetails: function getRemainingTimeDetails() {
-      var _this1 = this;
+      var _this10 = this;
       var remainingItems = (this.queue || []).slice(this.queueIndex);
       if (!remainingItems.length) return null;
       var reviewTimePerAyah = 5;
       var totalAudioSeconds = 0;
       var totalReviewSeconds = 0;
       remainingItems.forEach(function (item, index) {
-        totalAudioSeconds += _this1.getQueueItemAudioSeconds(item, index === 0);
+        totalAudioSeconds += _this10.getQueueItemAudioSeconds(item, index === 0);
         totalReviewSeconds += reviewTimePerAyah;
       });
       var totalSeconds = totalAudioSeconds + totalReviewSeconds;
@@ -25468,9 +25483,9 @@ function createAdvancedState() {
       this.persistUiState();
     },
     getCurrentFontLabel: function getCurrentFontLabel() {
-      var _this10 = this;
+      var _this11 = this;
       var font = this.quranFontOptions.find(function (f) {
-        return f.value === _this10.quranFont;
+        return f.value === _this11.quranFont;
       });
       return font ? font.label : 'Font';
     },
@@ -25495,9 +25510,9 @@ function createAdvancedState() {
       this.showBanner(this.tajweedEnabled ? 'Tajweed colors enabled' : 'Tajweed colors disabled', 'info', 1500);
     },
     updatePlannerSurah: function updatePlannerSurah() {
-      var _this11 = this;
+      var _this12 = this;
       var selectedSurah = this.chapters.find(function (c) {
-        return c.id === _this11.plannerConfig.surahId;
+        return c.id === _this12.plannerConfig.surahId;
       });
       if (selectedSurah) {
         this.plannerConfig.totalVersesInSurah = selectedSurah.verses_count;
@@ -25604,26 +25619,26 @@ function createAdvancedState() {
       return Math.abs(verseNumber - targetNumber) === 1;
     },
     downloadOfflineVerses: function downloadOfflineVerses() {
-      var _this12 = this;
+      var _this13 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
-        var _this12$currentChapte, _this12$verses$, surahId, surahName, found, storageKey, offlineData, catalogKey, catalog, entry, filtered, _t;
+        var _this13$currentChapte, _this13$verses$, surahId, surahName, found, storageKey, offlineData, catalogKey, catalog, entry, filtered, _t;
         return _regenerator().w(function (_context3) {
           while (1) switch (_context3.p = _context3.n) {
             case 0:
-              if (!(!_this12.verses || !_this12.verses.length)) {
+              if (!(!_this13.verses || !_this13.verses.length)) {
                 _context3.n = 1;
                 break;
               }
-              _this12.showBanner('Load a surah first before downloading', 'info', 3000);
-              _this12.showTools = true;
+              _this13.showBanner('Load a surah first before downloading', 'info', 3000);
+              _this13.showTools = true;
               return _context3.a(2);
             case 1:
               _context3.p = 1;
-              surahId = _this12.chapterId;
-              surahName = (_this12$currentChapte = _this12.currentChapter) === null || _this12$currentChapte === void 0 ? void 0 : _this12$currentChapte.name_simple;
-              if (!surahId && (_this12$verses$ = _this12.verses[0]) !== null && _this12$verses$ !== void 0 && _this12$verses$.key) {
-                surahId = parseInt(_this12.verses[0].key.split(':')[0]);
-                found = _this12.chapters.find(function (c) {
+              surahId = _this13.chapterId;
+              surahName = (_this13$currentChapte = _this13.currentChapter) === null || _this13$currentChapte === void 0 ? void 0 : _this13$currentChapte.name_simple;
+              if (!surahId && (_this13$verses$ = _this13.verses[0]) !== null && _this13$verses$ !== void 0 && _this13$verses$.key) {
+                surahId = parseInt(_this13.verses[0].key.split(':')[0]);
+                found = _this13.chapters.find(function (c) {
                   return c.id === surahId;
                 });
                 surahName = (found === null || found === void 0 ? void 0 : found.name_simple) || 'Selected surah';
@@ -25632,21 +25647,21 @@ function createAdvancedState() {
                 _context3.n = 2;
                 break;
               }
-              _this12.showBanner('Could not identify surah', 'error', 3000);
+              _this13.showBanner('Could not identify surah', 'error', 3000);
               return _context3.a(2);
             case 2:
-              storageKey = "offline_surah_".concat(surahId, "_").concat(_this12.rangeStart, "_").concat(_this12.rangeEnd);
+              storageKey = "offline_surah_".concat(surahId, "_").concat(_this13.rangeStart, "_").concat(_this13.rangeEnd);
               offlineData = {
                 metadata: {
                   surah: surahName,
                   surahId: surahId,
-                  rangeStart: _this12.rangeStart,
-                  rangeEnd: _this12.rangeEnd,
-                  reciterId: _this12.reciterId,
+                  rangeStart: _this13.rangeStart,
+                  rangeEnd: _this13.rangeEnd,
+                  reciterId: _this13.reciterId,
                   downloadedAt: new Date().toISOString(),
-                  totalVerses: _this12.verses.length
+                  totalVerses: _this13.verses.length
                 },
-                verses: _this12.verses
+                verses: _this13.verses
               };
               localStorage.setItem(storageKey, JSON.stringify(offlineData));
 
@@ -25662,8 +25677,8 @@ function createAdvancedState() {
                 id: storageKey,
                 surah: surahName,
                 surahId: surahId,
-                range: "".concat(_this12.rangeStart, "-").concat(_this12.rangeEnd),
-                count: _this12.verses.length,
+                range: "".concat(_this13.rangeStart, "-").concat(_this13.rangeEnd),
+                count: _this13.verses.length,
                 date: new Date().toLocaleDateString()
               };
               filtered = catalog.filter(function (c) {
@@ -25671,15 +25686,15 @@ function createAdvancedState() {
               });
               filtered.push(entry);
               localStorage.setItem(catalogKey, JSON.stringify(filtered));
-              _this12.offlineSurahs = filtered;
-              _this12.showBanner("Saved ".concat(_this12.verses.length, " verses from ").concat(surahName, " for offline reading."), 'success', 3000);
+              _this13.offlineSurahs = filtered;
+              _this13.showBanner("Saved ".concat(_this13.verses.length, " verses from ").concat(surahName, " for offline reading."), 'success', 3000);
               _context3.n = 4;
               break;
             case 3:
               _context3.p = 3;
               _t = _context3.v;
               console.error('Download failed:', _t);
-              _this12.showBanner('Failed to download verses', 'error', 3000);
+              _this13.showBanner('Failed to download verses', 'error', 3000);
             case 4:
               return _context3.a(2);
           }
@@ -25744,22 +25759,22 @@ function createAdvancedState() {
       this.showBanner('Offline surah removed', 'info', 2000);
     },
     downloadVerseAudio: function downloadVerseAudio(verse) {
-      var _this13 = this;
+      var _this14 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4() {
         var audioUrl, filename, downloadUrl, anchor;
         return _regenerator().w(function (_context4) {
           while (1) switch (_context4.n) {
             case 0:
-              audioUrl = _this13.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
+              audioUrl = _this14.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
               if (audioUrl) {
                 _context4.n = 1;
                 break;
               }
-              _this13.showBanner('Audio not available for this ayah', 'info', 2200);
+              _this14.showBanner('Audio not available for this ayah', 'info', 2200);
               return _context4.a(2);
             case 1:
               try {
-                filename = "surah-".concat(_this13.chapterId, "-ayah-").concat(verse.number, ".mp3");
+                filename = "surah-".concat(_this14.chapterId, "-ayah-").concat(verse.number, ".mp3");
                 downloadUrl = "/memorisation/audio-download?url=".concat(encodeURIComponent(audioUrl), "&filename=").concat(encodeURIComponent(filename));
                 anchor = document.createElement('a');
                 anchor.href = downloadUrl;
@@ -25767,10 +25782,10 @@ function createAdvancedState() {
                 document.body.appendChild(anchor);
                 anchor.click();
                 anchor.remove();
-                _this13.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
+                _this14.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
               } catch (error) {
                 console.error('Verse download failed:', error);
-                _this13.showBanner('Failed to download ayah audio', 'error', 2600);
+                _this14.showBanner('Failed to download ayah audio', 'error', 2600);
               }
             case 2:
               return _context4.a(2);
@@ -25780,25 +25795,130 @@ function createAdvancedState() {
     },
     getDisplayArabic: function getDisplayArabic(verse) {
       if (!verse || !verse.arabic) return '';
-
-      // If data is not ready, return plain text
       if (!this.isDataReady) {
         return verse.arabic;
       }
 
-      // Tajweed takes priority
+      // When word highlighting is enabled (with or without Tajweed)
+      if (this.showWordByWord && this.wordByWordAudioEnabled) {
+        if (this.tajweedEnabled && verse.arabic_tajweed) {
+          // For Tajweed, we need to preserve Tajweed spans while wrapping words
+          return this.wrapTajweedWithWordHighlighting(verse);
+        } else {
+          // Regular word highlighting without Tajweed
+          return this.splitArabicIntoWords(verse);
+        }
+      }
+
+      // Tajweed only (no word highlighting)
       if (this.tajweedEnabled) {
         if (verse.arabic_tajweed) {
           return this.normalizeTajweedMarkup(verse.arabic_tajweed);
         }
         return verse.arabic;
       }
-
-      // Word by word highlighting
-      if (this.showWordByWord && this.wordByWordAudioEnabled && !this.tajweedEnabled) {
-        return this.splitArabicIntoWords(verse);
-      }
       return verse.arabic;
+    },
+    wrapTajweedWithWordHighlighting: function wrapTajweedWithWordHighlighting(verse) {
+      if (!verse.arabic_tajweed) return verse.arabic || '';
+
+      // First normalize the Tajweed markup
+      var tajweedHtml = this.normalizeTajweedMarkup(verse.arabic_tajweed);
+
+      // Get the plain words for tokenization
+      var words = [];
+      if (verse.words && verse.words.length) {
+        words = verse.words.map(function (w) {
+          return w.ar || '';
+        }).filter(Boolean);
+      } else {
+        words = tokenizeArabicText(verse.arabic);
+      }
+      if (!words.length) return tajweedHtml;
+
+      // For each word, wrap it with word highlighting while preserving internal Tajweed spans
+      var result = tajweedHtml;
+      var processedWords = 0;
+
+      // Use a safer approach - match text nodes that contain the words
+      // Create a temporary div to parse and manipulate
+      var tempDiv = document.createElement('div');
+      tempDiv.innerHTML = tajweedHtml;
+      var walker = document.createTreeWalker(tempDiv, NodeFilter.SHOW_TEXT, {
+        acceptNode: function acceptNode(node) {
+          // Only accept text nodes that are not inside already wrapped words
+          if (node.parentElement && node.parentElement.classList && (node.parentElement.classList.contains('wbw-word') || node.parentElement.classList.contains('tajweed-mark'))) {
+            return NodeFilter.FILTER_SKIP;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+      var textNodes = [];
+      while (walker.nextNode()) {
+        textNodes.push(walker.currentNode);
+      }
+
+      // Process each text node to wrap words
+      textNodes.forEach(function (textNode) {
+        var text = textNode.textContent;
+        var newHtml = '';
+        var lastIndex = 0;
+        words.forEach(function (word, idx) {
+          var wordIndex = text.indexOf(word, lastIndex);
+          if (wordIndex !== -1) {
+            // Add text before the word
+            if (wordIndex > lastIndex) {
+              newHtml += text.substring(lastIndex, wordIndex);
+            }
+            // Wrap the word
+            newHtml += "<word class=\"wbw-word\" data-word-index=\"".concat(idx, "\" data-verse-key=\"").concat(verse.key, "\">").concat(word, "</word>");
+            lastIndex = wordIndex + word.length;
+            processedWords++;
+          }
+        });
+
+        // Add remaining text
+        if (lastIndex < text.length) {
+          newHtml += text.substring(lastIndex);
+        }
+        if (newHtml) {
+          var span = document.createElement('span');
+          span.innerHTML = newHtml;
+          textNode.parentNode.replaceChild(span, textNode);
+          // Move children to fragment
+          while (span.firstChild) {
+            textNode.parentNode.insertBefore(span.firstChild, span);
+          }
+          textNode.parentNode.removeChild(span);
+        }
+      });
+      return tempDiv.innerHTML;
+    },
+    getTajweedWithWordHighlighting: function getTajweedWithWordHighlighting(verse) {
+      if (!verse.arabic_tajweed && !verse.arabic) return '';
+      var tajweedText = verse.arabic_tajweed || verse.arabic;
+      if (!tajweedText) return '';
+
+      // First normalize the tajweed markup
+      var normalized = this.normalizeTajweedMarkup(tajweedText);
+
+      // Now wrap each word with word highlighting while preserving tajweed spans
+      var words = tokenizeArabicText(verse.arabic);
+      if (!words.length) return normalized;
+      var result = normalized;
+      var wordIndex = 0;
+
+      // For each word in the original Arabic, wrap the corresponding tajweed-marked text
+      words.forEach(function (word, idx) {
+        // Create a regex that matches this word (accounting for potential tajweed spans inside)
+        var wordPattern = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        var regex = new RegExp("(<span[^>]*class=\"[^\"]*tajweed[^\"]*\"[^>]*>)?(".concat(wordPattern, ")(</span>)?"), 'g');
+        result = result.replace(regex, function (match, openTag, wordText, closeTag) {
+          var preservedMarkup = (openTag || '') + wordText + (closeTag || '');
+          return "<word class=\"wbw-word\" data-word-index=\"".concat(idx, "\" data-verse-key=\"").concat(verse.key, "\" data-tajweed-word=\"true\">").concat(preservedMarkup, "</word> ");
+        });
+      });
+      return result;
     },
     // Add sanitize method
     sanitizeHtml: function sanitizeHtml(html) {
@@ -25857,64 +25977,107 @@ function createAdvancedState() {
     },
     splitArabicIntoWords: function splitArabicIntoWords(verse) {
       if (!verse || !verse.arabic) return '';
-      var words = tokenizeArabicText(verse.arabic);
+
+      // Get words from the verse object or tokenize
+      var words = [];
+      if (verse.words && verse.words.length) {
+        words = verse.words.map(function (w) {
+          return w.ar || '';
+        }).filter(Boolean);
+      } else {
+        words = tokenizeArabicText(verse.arabic);
+      }
+      if (!words.length) return verse.arabic;
       var html = '';
       words.forEach(function (word, idx) {
-        html += "<word class=\"wbw-word\" \n                   data-word-index=\"".concat(idx, "\" \n                   data-verse-key=\"").concat(verse.key, "\"\n                   title=\"Word ").concat(idx + 1, "\">\n              ").concat(escapeHtml(word), "\n            </word> ");
+        var escapedWord = escapeHtml(word);
+        html += "<word class=\"wbw-word\" data-word-index=\"".concat(idx, "\" data-verse-key=\"").concat(verse.key, "\" title=\"Word ").concat(idx + 1, "\">").concat(escapedWord, "</word> ");
       });
       return html;
     },
     getWordTimings: function getWordTimings(verse) {
       var _arguments = arguments,
-        _this14 = this;
+        _this15 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5() {
-        var actualDuration, sourceWords, safeDuration, cacheKey, timestamps, charCounts, totalChars, currentTime, i, wordDuration;
+        var actualDuration, sourceWords, arabicText, safeDuration, cacheKey, timestamps, charCounts, totalChars, currentTime, i, weight, wordDuration;
         return _regenerator().w(function (_context5) {
           while (1) switch (_context5.n) {
             case 0:
               actualDuration = _arguments.length > 1 && _arguments[1] !== undefined ? _arguments[1] : null;
-              sourceWords = verse.words && verse.words.length ? verse.words.map(function (word) {
-                return String((word === null || word === void 0 ? void 0 : word.ar) || '').trim();
-              }).filter(Boolean) : tokenizeArabicText(verse.arabic || '');
-              if (sourceWords.length) {
+              if (!(!verse || !verse.key)) {
                 _context5.n = 1;
                 break;
               }
+              console.warn('getWordTimings: no verse');
               return _context5.a(2, []);
             case 1:
-              safeDuration = Number.isFinite(Number(actualDuration)) && Number(actualDuration) > 0 ? Number(actualDuration) : _this14.estimateVerseDuration(verse);
-              cacheKey = "".concat(verse.key, "_").concat(_this14.reciterId, "_").concat(Math.round(safeDuration * 10));
-              if (!_this14.wordTimestampsMap.has(cacheKey)) {
+              // Get words from the verse object directly (not from HTML)
+              sourceWords = [];
+              if (verse.words && verse.words.length) {
+                sourceWords = verse.words.map(function (word) {
+                  return String((word === null || word === void 0 ? void 0 : word.ar) || '').trim();
+                }).filter(Boolean);
+              } else {
+                // If no pre-parsed words, tokenize the Arabic text
+                arabicText = verse.arabic || '';
+                sourceWords = tokenizeArabicText(arabicText);
+              }
+              if (sourceWords.length) {
                 _context5.n = 2;
                 break;
               }
-              return _context5.a(2, _this14.wordTimestampsMap.get(cacheKey));
+              console.warn('getWordTimings: no words for verse', verse.key);
+              return _context5.a(2, []);
             case 2:
+              // Get actual audio duration or estimate
+              safeDuration = 0;
+              if (Number.isFinite(Number(actualDuration)) && Number(actualDuration) > 0) {
+                safeDuration = Number(actualDuration);
+              } else if (verse.duration && Number(verse.duration) > 0) {
+                safeDuration = Number(verse.duration);
+              } else {
+                safeDuration = _this15.estimateVerseDuration(verse);
+              }
+
+              // Adjust for playback speed
+              safeDuration = safeDuration / (_this15.speed || 1);
+              cacheKey = "".concat(verse.key, "_").concat(_this15.reciterId, "_").concat(Math.round(safeDuration * 10), "_").concat(_this15.speed);
+              if (!_this15.wordTimestampsMap.has(cacheKey)) {
+                _context5.n = 3;
+                break;
+              }
+              return _context5.a(2, _this15.wordTimestampsMap.get(cacheKey));
+            case 3:
+              // Create timestamps based on character count (more accurate than equal distribution)
               timestamps = [];
               charCounts = sourceWords.map(function (word) {
-                return Math.max(1, word.replace(/<[^>]+>/g, '').replace(/[^ء-ي]/g, '').length);
+                // Count Arabic characters (excluding diacritics and HTML)
+                var cleanWord = word.replace(/<[^>]+>/g, '').replace(/[^\u0621-\u064A]/g, '');
+                return Math.max(1, cleanWord.length);
               });
               totalChars = charCounts.reduce(function (sum, count) {
                 return sum + count;
-              }, 0) || sourceWords.length;
+              }, 0);
               currentTime = 0;
               for (i = 0; i < sourceWords.length; i++) {
-                wordDuration = i === sourceWords.length - 1 ? Math.max(0.05, safeDuration - currentTime) : Math.max(0.05, charCounts[i] / totalChars * safeDuration);
+                // Words at the beginning get slightly more time for better pacing
+                weight = i === 0 ? 1.2 : 1.0;
+                wordDuration = i === sourceWords.length - 1 ? Math.max(0.3, safeDuration - currentTime) : Math.max(0.3, charCounts[i] / totalChars * safeDuration * weight);
                 timestamps.push({
                   index: i,
                   start: currentTime,
-                  end: i === sourceWords.length - 1 ? safeDuration + 0.05 : currentTime + wordDuration
+                  end: currentTime + wordDuration
                 });
                 currentTime += wordDuration;
               }
-              _this14.wordTimestampsMap.set(cacheKey, timestamps);
+              _this15.wordTimestampsMap.set(cacheKey, timestamps);
               return _context5.a(2, timestamps);
           }
         }, _callee5);
       }))();
     },
     calculateWordTimings: function calculateWordTimings(verse) {
-      var _this15 = this;
+      var _this16 = this;
       var audioDuration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
       return new Promise(function (resolve) {
         if (!verse.words || verse.words.length === 0) {
@@ -25922,7 +26085,7 @@ function createAdvancedState() {
           return;
         }
         var wordCount = verse.words.length;
-        var totalDuration = audioDuration || _this15.estimateVerseDuration(verse);
+        var totalDuration = audioDuration || _this16.estimateVerseDuration(verse);
         var durationPerWord = totalDuration / wordCount;
         var timestamps = [];
         var currentTime = 0;
@@ -25945,53 +26108,59 @@ function createAdvancedState() {
       return baseDuration / (this.speed || 1);
     },
     startWordHighlighting: function startWordHighlighting(verse) {
-      var _this16 = this;
+      var _this17 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6() {
-        var _this16$audioElement;
+        var _this17$audioElement;
         var duration, timestamps, _updateHighlight;
         return _regenerator().w(function (_context6) {
           while (1) switch (_context6.n) {
             case 0:
-              if (!_this16.wordHighlightLoading) {
+              if (!_this17.wordHighlightLoading) {
                 _context6.n = 1;
                 break;
               }
               return _context6.a(2);
             case 1:
-              _this16.stopWordHighlighting();
-              if (!(!_this16.showWordByWord || !_this16.wordByWordAudioEnabled)) {
+              if (!(!verse || !verse.key)) {
                 _context6.n = 2;
                 break;
               }
               return _context6.a(2);
             case 2:
-              _this16.wordHighlightLoading = true;
-              _this16.currentHighlightedVerseKey = verse.key;
-              _this16.currentWordIndex = -1;
-              _this16.currentPhraseIndex = -1;
-
-              // Prefer word timings derived from the verse content and actual audio duration.
-              duration = Number((_this16$audioElement = _this16.audioElement) === null || _this16$audioElement === void 0 ? void 0 : _this16$audioElement.duration) || null;
-              _context6.n = 3;
-              return _this16.getWordTimings(verse, duration);
-            case 3:
-              timestamps = _context6.v;
-              _this16.wordHighlightLoading = false;
-              if (!(!timestamps || !timestamps.length)) {
-                _context6.n = 4;
+              if (!(!_this17.showWordByWord || !_this17.wordByWordAudioEnabled)) {
+                _context6.n = 3;
                 break;
               }
               return _context6.a(2);
+            case 3:
+              _this17.stopWordHighlighting();
+              _this17.wordHighlightLoading = true;
+              _this17.currentHighlightedVerseKey = verse.key;
+              _this17.currentWordIndex = -1;
+              _this17.currentPhraseIndex = -1;
+
+              // Get word timings regardless of tajweed setting
+              duration = Number((_this17$audioElement = _this17.audioElement) === null || _this17$audioElement === void 0 ? void 0 : _this17$audioElement.duration) || null;
+              _context6.n = 4;
+              return _this17.getWordTimings(verse, duration);
             case 4:
-              _this16.wordHighlightTimestamps = timestamps;
-              _updateHighlight = function updateHighlight() {
-                if (!_this16.audioElement || _this16.audioElement.paused || _this16.audioElement.ended) return;
-                _this16.syncWordHighlightFromAudio(verse);
-                _this16.wordHighlightFrame = window.requestAnimationFrame(_updateHighlight);
-              };
-              _this16.wordHighlightHandler = _updateHighlight;
-              _updateHighlight();
+              timestamps = _context6.v;
+              _this17.wordHighlightLoading = false;
+              if (!(!timestamps || !timestamps.length)) {
+                _context6.n = 5;
+                break;
+              }
+              return _context6.a(2);
             case 5:
+              _this17.wordHighlightTimestamps = timestamps;
+              _updateHighlight = function updateHighlight() {
+                if (!_this17.audioElement || _this17.audioElement.paused || _this17.audioElement.ended) return;
+                _this17.syncWordHighlightFromAudio(verse);
+                _this17.wordHighlightFrame = window.requestAnimationFrame(_updateHighlight);
+              };
+              _this17.wordHighlightHandler = _updateHighlight;
+              _updateHighlight();
+            case 6:
               return _context6.a(2);
           }
         }, _callee6);
@@ -26004,65 +26173,72 @@ function createAdvancedState() {
       return ar || en || 'Word';
     },
     updateWordHighlight: function updateWordHighlight(verseKey, activeIndex) {
-      var _this17 = this;
+      var _this18 = this;
+      if (activeIndex === -1) return;
       this.$nextTick(function () {
         var verseCard = document.querySelector(".verse-card[data-verse-key=\"".concat(verseKey, "\"]"));
         if (!verseCard) return;
         var wordsWrap = verseCard.querySelector('.verse-words');
-        var arabicWords = verseCard.querySelectorAll('.verse-arabic .wbw-word, .verse-arabic word[data-word-index]');
-        var phraseWords = verseCard.querySelectorAll('.verse-words .word-item');
-        var phraseIndex = activeIndex;
-        arabicWords.forEach(function (word, idx) {
-          if (idx === activeIndex) {
+
+        // Find all word elements (both regular and Tajweed-wrapped)
+        var allWordElements = verseCard.querySelectorAll('.verse-arabic .wbw-word, .verse-arabic word[data-word-index]');
+        allWordElements.forEach(function (word) {
+          var wordIndex = parseInt(word.getAttribute('data-word-index'));
+          if (wordIndex === activeIndex) {
             word.classList.add('highlighted');
             word.classList.add('phrase-highlighted');
-            if (wordsWrap) {
-              _this17.verseScrollMemory[verseKey] = {
-                top: wordsWrap.scrollTop,
-                left: wordsWrap.scrollLeft
-              };
-            }
-            var rect = word.getBoundingClientRect();
-            var parentRect = wordsWrap === null || wordsWrap === void 0 ? void 0 : wordsWrap.getBoundingClientRect();
-            var outOfView = parentRect ? rect.left < parentRect.left || rect.right > parentRect.right || rect.top < parentRect.top || rect.bottom > parentRect.bottom : true;
-            if (outOfView) {
-              word.scrollIntoView({
-                behavior: 'smooth',
-                block: 'nearest',
-                inline: 'center'
-              });
+
+            // Auto-scroll for better visibility
+            if (_this18.wordByWordAudioEnabled && wordsWrap) {
+              var rect = word.getBoundingClientRect();
+              var parentRect = wordsWrap.getBoundingClientRect();
+              var isOutOfView = rect.right > parentRect.right || rect.left < parentRect.left;
+              if (isOutOfView) {
+                word.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'nearest',
+                  inline: 'center'
+                });
+              }
             }
           } else {
             word.classList.remove('highlighted');
             word.classList.remove('phrase-highlighted');
           }
         });
+
+        // Also update phrase words if they exist
+        var phraseWords = verseCard.querySelectorAll('.verse-words .word-item');
         phraseWords.forEach(function (word, idx) {
           word.classList.toggle('highlighted', idx === activeIndex);
-          word.classList.toggle('phrase-highlighted', idx === phraseIndex);
+          word.classList.toggle('phrase-highlighted', idx === activeIndex);
         });
-        _this17.currentPhraseIndex = phraseIndex;
+        _this18.currentPhraseIndex = activeIndex;
       });
     },
     syncWordHighlightFromAudio: function syncWordHighlightFromAudio() {
       var _this$wordHighlightTi;
       var verse = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.activeVerseRef;
-      if (!verse || this.currentHighlightedVerseKey !== verse.key || !((_this$wordHighlightTi = this.wordHighlightTimestamps) !== null && _this$wordHighlightTi !== void 0 && _this$wordHighlightTi.length) || !this.audioElement) return;
+      if (!verse || !verse.key || this.currentHighlightedVerseKey !== verse.key || !((_this$wordHighlightTi = this.wordHighlightTimestamps) !== null && _this$wordHighlightTi !== void 0 && _this$wordHighlightTi.length) || !this.audioElement) return;
       var currentTime = Number(this.audioElement.currentTime || 0);
       var active = this.wordHighlightTimestamps.find(function (item) {
         return currentTime >= item.start && currentTime <= item.end;
       });
       var activeIndex = active ? active.index : -1;
-      this.currentWordIndex = activeIndex;
-      this.updateWordHighlight(verse.key, activeIndex);
+
+      // Only update if the index actually changed
+      if (this.currentWordIndex !== activeIndex) {
+        this.currentWordIndex = activeIndex;
+        this.updateWordHighlight(verse.key, activeIndex);
+      }
     },
     restoreWordScroll: function restoreWordScroll(verseKey) {
-      var _this18 = this;
+      var _this19 = this;
       this.$nextTick(function () {
         if (!verseKey) return;
         var verseCard = document.querySelector(".verse-card[data-verse-key=\"".concat(verseKey, "\"]"));
         var wordsWrap = verseCard === null || verseCard === void 0 ? void 0 : verseCard.querySelector('.verse-words');
-        var remembered = _this18.verseScrollMemory[verseKey];
+        var remembered = _this19.verseScrollMemory[verseKey];
         if (!wordsWrap || !remembered) return;
         wordsWrap.scrollTop = Number(remembered.top || 0);
         wordsWrap.scrollLeft = Number(remembered.left || 0);
@@ -26077,7 +26253,7 @@ function createAdvancedState() {
       };
     },
     updateWordHighlightInDOM: function updateWordHighlightInDOM(verseKey, activeWordIndex) {
-      var _this19 = this;
+      var _this20 = this;
       if (activeWordIndex === -1) return;
       this.$nextTick(function () {
         // Find the verse card
@@ -26096,7 +26272,7 @@ function createAdvancedState() {
           activeWord.classList.add('highlighted');
 
           // Scroll into view if needed
-          if (_this19.wordByWordAudioEnabled && _this19.isPlaying) {
+          if (_this20.wordByWordAudioEnabled && _this20.isPlaying) {
             activeWord.scrollIntoView({
               behavior: 'smooth',
               block: 'center',
@@ -26122,7 +26298,7 @@ function createAdvancedState() {
     },
     // Audio methods
     initAudio: function initAudio() {
-      var _this20 = this;
+      var _this21 = this;
       this.audioElement = this.$refs.audio;
       if (!this.audioElement) return;
       this.audioElement.removeEventListener('timeupdate', this.audioTimeUpdate);
@@ -26132,60 +26308,62 @@ function createAdvancedState() {
       this.audioElement.removeEventListener('seeked', this.audioSeeked);
       this.audioElement.removeEventListener('pause', this.audioPaused);
       this.audioTimeUpdate = function () {
-        _this20.currentTime = _this20.audioElement.currentTime;
-        _this20.duration = _this20.audioElement.duration;
-        if (_this20.showWordByWord && _this20.wordByWordAudioEnabled) {
-          var verse = _this20.activeVerseRef;
-          if (verse && _this20.currentHighlightedVerseKey !== verse.key && !_this20.wordHighlightLoading) {
-            _this20.startWordHighlighting(verse);
-          } else {
-            _this20.syncWordHighlightFromAudio(verse);
+        _this21.currentTime = _this21.audioElement.currentTime;
+        _this21.duration = _this21.audioElement.duration;
+        if (_this21.showWordByWord && _this21.wordByWordAudioEnabled) {
+          var verse = _this21.activeVerseRef;
+          if (verse && verse.key) {
+            if (_this21.currentHighlightedVerseKey !== verse.key && !_this21.wordHighlightLoading) {
+              _this21.startWordHighlighting(verse);
+            } else if (!_this21.wordHighlightLoading) {
+              _this21.syncWordHighlightFromAudio(verse);
+            }
           }
         }
       };
       this.audioEnded = function () {
-        if (_this20.advanceLocked) return;
-        _this20.advanceLocked = true;
-        _this20.isPlaying = false;
-        _this20.stopWordHighlighting();
-        if (_this20.guidedUiStep === 'learn') {
-          _this20.flowListenPlays += 1;
-          _this20.persistUiState();
+        if (_this21.advanceLocked) return;
+        _this21.advanceLocked = true;
+        _this21.isPlaying = false;
+        _this21.stopWordHighlighting();
+        if (_this21.guidedUiStep === 'learn') {
+          _this21.flowListenPlays += 1;
+          _this21.persistUiState();
         }
-        if (_this20.playMode === 'auto') {
+        if (_this21.playMode === 'auto') {
           window.setTimeout(function () {
-            _this20.advanceLocked = false;
-            _this20.next();
-          }, Math.max(0, Number(_this20.delay || 0)) * 1000);
+            _this21.advanceLocked = false;
+            _this21.next();
+          }, Math.max(0, Number(_this21.delay || 0)) * 1000);
         } else {
-          _this20.advanceLocked = false;
+          _this21.advanceLocked = false;
         }
       };
       this.audioSeeking = function () {
         // Prevent stale highlight when the user scrubs.
-        _this20.currentWordIndex = -1;
-        _this20.updateWordHighlight(_this20.currentHighlightedVerseKey, -1);
+        _this21.currentWordIndex = -1;
+        _this21.updateWordHighlight(_this21.currentHighlightedVerseKey, -1);
       };
       this.audioSeeked = function () {
-        var _this20$audioElement;
-        var verse = _this20.activeVerseRef;
+        var _this21$audioElement;
+        var verse = _this21.activeVerseRef;
         if (!verse) return;
-        if (_this20.showWordByWord && _this20.wordByWordAudioEnabled && !((_this20$audioElement = _this20.audioElement) !== null && _this20$audioElement !== void 0 && _this20$audioElement.paused)) {
-          _this20.startWordHighlighting(verse);
+        if (_this21.showWordByWord && _this21.wordByWordAudioEnabled && !((_this21$audioElement = _this21.audioElement) !== null && _this21$audioElement !== void 0 && _this21$audioElement.paused)) {
+          _this21.startWordHighlighting(verse);
         }
       };
       this.audioPaused = function () {
         // Ensure state is consistent even if pause is triggered outside our toggle handler.
-        _this20.isPlaying = false;
-        if (_this20.wordHighlightFrame) window.cancelAnimationFrame(_this20.wordHighlightFrame);
-        _this20.wordHighlightFrame = null;
+        _this21.isPlaying = false;
+        if (_this21.wordHighlightFrame) window.cancelAnimationFrame(_this21.wordHighlightFrame);
+        _this21.wordHighlightFrame = null;
       };
       this.audioError = function (e) {
         console.error('Audio error:', e);
-        _this20.isPlaying = false;
-        _this20.sessionErrorCount += 1;
-        _this20.stopWordHighlighting();
-        _this20.showBanner('Audio playback error', 'error', 3000);
+        _this21.isPlaying = false;
+        _this21.sessionErrorCount += 1;
+        _this21.stopWordHighlighting();
+        _this21.showBanner('Audio playback error', 'error', 3000);
       };
       this.audioElement.addEventListener('timeupdate', this.audioTimeUpdate);
       this.audioElement.addEventListener('ended', this.audioEnded);
@@ -26196,75 +26374,75 @@ function createAdvancedState() {
     },
     playVerse: function playVerse(verse) {
       var _arguments2 = arguments,
-        _this21 = this;
+        _this22 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee8() {
-        var _this21$audioElement;
+        var _this22$audioElement;
         var options, audioUrl, currentSrc;
         return _regenerator().w(function (_context8) {
           while (1) switch (_context8.n) {
             case 0:
               options = _arguments2.length > 1 && _arguments2[1] !== undefined ? _arguments2[1] : {};
-              if (!(_this21.playRequestLocked && !options.force)) {
+              if (!(_this22.playRequestLocked && !options.force)) {
                 _context8.n = 1;
                 break;
               }
               return _context8.a(2);
             case 1:
-              _this21.playRequestLocked = true;
+              _this22.playRequestLocked = true;
               if (verse) {
                 _context8.n = 2;
                 break;
               }
               console.error('No verse provided');
-              _this21.playRequestLocked = false;
+              _this22.playRequestLocked = false;
               return _context8.a(2);
             case 2:
               if (verse.audio) {
                 _context8.n = 3;
                 break;
               }
-              _this21.showBanner("Audio not available for verse ".concat(verse.number), 'info', 2000);
-              _this21.playRequestLocked = false;
+              _this22.showBanner("Audio not available for verse ".concat(verse.number), 'info', 2000);
+              _this22.playRequestLocked = false;
               return _context8.a(2);
             case 3:
-              audioUrl = _this21.normalizeAudioUrl(verse.audio);
-              currentSrc = (_this21$audioElement = _this21.audioElement) !== null && _this21$audioElement !== void 0 && _this21$audioElement.currentSrc ? _this21.normalizeAudioUrl(_this21.audioElement.currentSrc) : ''; // Only toggle if both the verse key and actual audio source already match.
-              if (!(!options.force && _this21.activeKey === verse.key && currentSrc && currentSrc === audioUrl)) {
+              audioUrl = _this22.normalizeAudioUrl(verse.audio);
+              currentSrc = (_this22$audioElement = _this22.audioElement) !== null && _this22$audioElement !== void 0 && _this22$audioElement.currentSrc ? _this22.normalizeAudioUrl(_this22.audioElement.currentSrc) : ''; // Only toggle if both the verse key and actual audio source already match.
+              if (!(!options.force && _this22.activeKey === verse.key && currentSrc && currentSrc === audioUrl)) {
                 _context8.n = 4;
                 break;
               }
-              _this21.togglePlay();
-              _this21.playRequestLocked = false;
+              _this22.togglePlay();
+              _this22.playRequestLocked = false;
               return _context8.a(2);
             case 4:
               // Stop current playback and highlighting
-              _this21.stopWordHighlighting();
-              if (_this21.audioElement) {
+              _this22.stopWordHighlighting();
+              if (_this22.audioElement) {
                 try {
-                  _this21.audioElement.pause();
+                  _this22.audioElement.pause();
                 } catch (e) {}
               }
-              _this21.setActiveVerse(verse.key, {
+              _this22.setActiveVerse(verse.key, {
                 scroll: false
               });
-              if (_this21.audioElement) {
+              if (_this22.audioElement) {
                 _context8.n = 6;
                 break;
               }
-              _this21.audioElement = _this21.$refs.audio;
-              if (_this21.audioElement) {
+              _this22.audioElement = _this22.$refs.audio;
+              if (_this22.audioElement) {
                 _context8.n = 5;
                 break;
               }
-              _this21.showBanner('Audio system not ready', 'error', 3000);
-              _this21.playRequestLocked = false;
+              _this22.showBanner('Audio system not ready', 'error', 3000);
+              _this22.playRequestLocked = false;
               return _context8.a(2);
             case 5:
-              _this21.initAudio();
+              _this22.initAudio();
             case 6:
-              _this21.audioElement.src = audioUrl;
-              _this21.audioElement.load();
-              _this21.playerVisible = true;
+              _this22.audioElement.src = audioUrl;
+              _this22.audioElement.load();
+              _this22.playerVisible = true;
               return _context8.a(2, new Promise(function (resolve, reject) {
                 var timeout = setTimeout(function () {
                   return reject(new Error('Timeout'));
@@ -26276,36 +26454,36 @@ function createAdvancedState() {
                       while (1) switch (_context7.p = _context7.n) {
                         case 0:
                           clearTimeout(timeout);
-                          _this21.audioElement.playbackRate = _this21.speed;
+                          _this22.audioElement.playbackRate = _this22.speed;
                           _context7.p = 1;
                           _context7.n = 2;
-                          return _this21.audioElement.play();
+                          return _this22.audioElement.play();
                         case 2:
-                          _this21.isPlaying = true;
-                          _this21.markPlaybackStart();
-                          _this21.addActivityEvent({
+                          _this22.isPlaying = true;
+                          _this22.markPlaybackStart();
+                          _this22.addActivityEvent({
                             ts: Date.now(),
                             type: 'play',
                             verseKey: verse.key
                           });
-                          _this21.recomputeAnalytics();
+                          _this22.recomputeAnalytics();
 
                           // Start word highlighting AFTER audio starts playing
-                          if (_this21.showWordByWord && _this21.wordByWordAudioEnabled) {
-                            _this21.startWordHighlighting(verse);
+                          if (_this22.showWordByWord && _this22.wordByWordAudioEnabled) {
+                            _this22.startWordHighlighting(verse);
                           }
-                          _this21.playRequestLocked = false;
+                          _this22.playRequestLocked = false;
                           resolve();
                           _context7.n = 4;
                           break;
                         case 3:
                           _context7.p = 3;
                           _t2 = _context7.v;
-                          _this21.isPlaying = false;
-                          _this21.playRequestLocked = false;
+                          _this22.isPlaying = false;
+                          _this22.playRequestLocked = false;
                           reject(_t2);
                         case 4:
-                          _this21.audioElement.removeEventListener('canplay', _canPlayHandler);
+                          _this22.audioElement.removeEventListener('canplay', _canPlayHandler);
                         case 5:
                           return _context7.a(2);
                       }
@@ -26317,20 +26495,20 @@ function createAdvancedState() {
                 }();
                 var _errorHandler = function errorHandler(err) {
                   clearTimeout(timeout);
-                  _this21.isPlaying = false;
-                  _this21.playRequestLocked = false;
+                  _this22.isPlaying = false;
+                  _this22.playRequestLocked = false;
                   reject(err);
-                  _this21.audioElement.removeEventListener('error', _errorHandler);
+                  _this22.audioElement.removeEventListener('error', _errorHandler);
                 };
-                _this21.audioElement.addEventListener('canplay', _canPlayHandler);
-                _this21.audioElement.addEventListener('error', _errorHandler, {
+                _this22.audioElement.addEventListener('canplay', _canPlayHandler);
+                _this22.audioElement.addEventListener('error', _errorHandler, {
                   once: true
                 });
               })["catch"](function (err) {
                 console.error('playVerse failed:', err);
-                _this21.isPlaying = false;
-                _this21.playRequestLocked = false;
-                _this21.showBanner('Failed to play audio', 'error', 3000);
+                _this22.isPlaying = false;
+                _this22.playRequestLocked = false;
+                _this22.showBanner('Failed to play audio', 'error', 3000);
               }));
           }
         }, _callee8);
@@ -26338,13 +26516,13 @@ function createAdvancedState() {
     },
     togglePlay: function togglePlay() {
       var _this$audioElement3,
-        _this22 = this;
+        _this23 = this;
       if (!((_this$audioElement3 = this.audioElement) !== null && _this$audioElement3 !== void 0 && _this$audioElement3.src)) return;
       if (this.audioElement.paused) {
         this.audioElement.play().then(function () {
-          _this22.isPlaying = true;
-          var verse = _this22.activeVerseRef;
-          if (verse && _this22.showWordByWord && _this22.wordByWordAudioEnabled) _this22.startWordHighlighting(verse);
+          _this23.isPlaying = true;
+          var verse = _this23.activeVerseRef;
+          if (verse && _this23.showWordByWord && _this23.wordByWordAudioEnabled) _this23.startWordHighlighting(verse);
         })["catch"](function () {});
       } else {
         this.audioElement.pause();
@@ -26355,7 +26533,7 @@ function createAdvancedState() {
       if (this.audioElement) this.audioElement.playbackRate = this.speed;
     },
     next: function next() {
-      var _this23 = this;
+      var _this24 = this;
       if (this.advanceLocked) return;
       this.advanceLocked = true;
       if (this.canNext) {
@@ -26369,7 +26547,7 @@ function createAdvancedState() {
         if (verseKey) {
           this.setActiveVerse(verseKey);
           this.$nextTick(function () {
-            return _this23.$forceUpdate();
+            return _this24.$forceUpdate();
           });
         }
         var v = this.queue[this.queueIndex];
@@ -26378,7 +26556,7 @@ function createAdvancedState() {
           this.playVerse(verse, {
             force: true
           })["finally"](function () {
-            _this23.advanceLocked = false;
+            _this24.advanceLocked = false;
           });
         } else {
           this.advanceLocked = false;
@@ -26390,7 +26568,7 @@ function createAdvancedState() {
     },
     prev: function prev() {
       var _entry$verse2,
-        _this24 = this;
+        _this25 = this;
       if (!this.canPrev) return;
       if (this.advanceLocked) return;
       this.advanceLocked = true;
@@ -26405,7 +26583,7 @@ function createAdvancedState() {
           scroll: false
         });
         this.$nextTick(function () {
-          return _this24.$forceUpdate();
+          return _this25.$forceUpdate();
         });
       }
       var v = this.queue[this.queueIndex];
@@ -26414,7 +26592,7 @@ function createAdvancedState() {
         this.playVerse(verse, {
           force: true
         })["finally"](function () {
-          _this24.advanceLocked = false;
+          _this25.advanceLocked = false;
         });
       } else {
         this.advanceLocked = false;
@@ -26436,14 +26614,14 @@ function createAdvancedState() {
     },
     loadVerses: function loadVerses() {
       var _arguments3 = arguments,
-        _this25 = this;
+        _this26 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee9() {
         var mode, target, chapterId, rangeStart, rangeEnd, reciterId, requestId, targetConfig, _cached$verses, _audioRes$data, _translationRes$data, _translitRes$data, _arabicRes$data, _tajweedRes$data, cached, _yield$Promise$all, _yield$Promise$all2, audioRes, translationRes, translitRes, arabicRes, tajweedRes, audioSurah, translationSurah, translitSurah, arabicSurah, tajweedEdition, audioAyahs, arabicByNumber, translationByNumber, translitByNumber, tajweedByNumber, start, end, mappedVerses, _t3;
         return _regenerator().w(function (_context9) {
           while (1) switch (_context9.p = _context9.n) {
             case 0:
-              mode = _arguments3.length > 0 && _arguments3[0] !== undefined ? _arguments3[0] : _this25.currentMode;
-              target = mode === 'beginner' ? _this25.beginner : _this25.advanced;
+              mode = _arguments3.length > 0 && _arguments3[0] !== undefined ? _arguments3[0] : _this26.currentMode;
+              target = mode === 'beginner' ? _this26.beginner : _this26.advanced;
               chapterId = Number(target.chapterId || 0);
               if (chapterId) {
                 _context9.n = 1;
@@ -26454,26 +26632,26 @@ function createAdvancedState() {
               rangeStart = Number(target.rangeStart || 1);
               rangeEnd = Number(target.rangeEnd || rangeStart || 1);
               reciterId = target.reciterId || DEFAULT_ALQURAN_RECITER;
-              requestId = ++_this25.verseRequestId;
-              targetConfig = _this25.buildSessionConfig(mode);
-              _this25.isDataReady = false;
+              requestId = ++_this26.verseRequestId;
+              targetConfig = _this26.buildSessionConfig(mode);
+              _this26.isDataReady = false;
               _context9.p = 2;
-              cached = _this25.getCachedVerses(mode, targetConfig);
+              cached = _this26.getCachedVerses(mode, targetConfig);
               if (!(cached !== null && cached !== void 0 && (_cached$verses = cached.verses) !== null && _cached$verses !== void 0 && _cached$verses.length)) {
                 _context9.n = 3;
                 break;
               }
               if (mode === 'beginner') {
-                _this25.beginner.verses = cached.verses;
-                _this25.beginner.loadedConfig = cached.loadedConfig;
+                _this26.beginner.verses = cached.verses;
+                _this26.beginner.loadedConfig = cached.loadedConfig;
               } else {
-                _this25.advanced.verses = cached.verses;
-                _this25.advanced.loadedConfig = cached.loadedConfig;
+                _this26.advanced.verses = cached.verses;
+                _this26.advanced.loadedConfig = cached.loadedConfig;
               }
-              _this25.buildQueue(mode);
-              _this25.syncActiveVerseState(mode);
-              _this25.syncMutqinAyahs(cached.verses);
-              _this25.isDataReady = true;
+              _this26.buildQueue(mode);
+              _this26.syncActiveVerseState(mode);
+              _this26.syncMutqinAyahs(cached.verses);
+              _this26.isDataReady = true;
               return _context9.a(2);
             case 3:
               _context9.n = 4;
@@ -26486,7 +26664,7 @@ function createAdvancedState() {
               translitRes = _yield$Promise$all2[2];
               arabicRes = _yield$Promise$all2[3];
               tajweedRes = _yield$Promise$all2[4];
-              if (!(requestId !== _this25.verseRequestId)) {
+              if (!(requestId !== _this26.verseRequestId)) {
                 _context9.n = 5;
                 break;
               }
@@ -26532,9 +26710,9 @@ function createAdvancedState() {
                   chapterId: chapterId,
                   arabic: arabic,
                   arabic_tajweed: tajweedByNumber.get(ayah.numberInSurah) || '',
-                  translation: _this25.cleanTranslationText(translation),
+                  translation: _this26.cleanTranslationText(translation),
                   transliteration: transliteration,
-                  audio: _this25.normalizeAudioUrl(ayah.audio || ((_ayah$audioSecondary = ayah.audioSecondary) === null || _ayah$audioSecondary === void 0 ? void 0 : _ayah$audioSecondary[0]) || ''),
+                  audio: _this26.normalizeAudioUrl(ayah.audio || ((_ayah$audioSecondary = ayah.audioSecondary) === null || _ayah$audioSecondary === void 0 ? void 0 : _ayah$audioSecondary[0]) || ''),
                   words: arabicWords.map(function (word, index) {
                     return {
                       ar: word,
@@ -26546,44 +26724,44 @@ function createAdvancedState() {
                 };
               });
               if (mode === 'beginner') {
-                _this25.beginner.verses = mappedVerses;
-                _this25.beginner.loadedConfig = {
+                _this26.beginner.verses = mappedVerses;
+                _this26.beginner.loadedConfig = {
                   chapterId: chapterId,
                   rangeStart: start,
                   rangeEnd: end,
                   reciterId: reciterId,
-                  showWordByWord: _this25.showWordByWord,
-                  tajweedEnabled: _this25.tajweedEnabled
+                  showWordByWord: _this26.showWordByWord,
+                  tajweedEnabled: _this26.tajweedEnabled
                 };
               } else {
-                _this25.advanced.verses = mappedVerses;
-                _this25.advanced.loadedConfig = {
+                _this26.advanced.verses = mappedVerses;
+                _this26.advanced.loadedConfig = {
                   chapterId: chapterId,
                   rangeStart: start,
                   rangeEnd: end,
                   reciterId: reciterId,
-                  showWordByWord: _this25.showWordByWord,
-                  tajweedEnabled: _this25.tajweedEnabled
+                  showWordByWord: _this26.showWordByWord,
+                  tajweedEnabled: _this26.tajweedEnabled
                 };
               }
-              _this25.syncMutqinAyahs(mappedVerses);
-              _this25.setCachedVerses(mode, targetConfig, {
+              _this26.syncMutqinAyahs(mappedVerses);
+              _this26.setCachedVerses(mode, targetConfig, {
                 verses: mappedVerses,
-                loadedConfig: mode === 'beginner' ? _this25.beginner.loadedConfig : _this25.advanced.loadedConfig
+                loadedConfig: mode === 'beginner' ? _this26.beginner.loadedConfig : _this26.advanced.loadedConfig
               });
-              _this25.buildQueue(mode);
-              _this25.syncActiveVerseState(mode);
+              _this26.buildQueue(mode);
+              _this26.syncActiveVerseState(mode);
 
               // Set ready after data loads
-              _this25.isDataReady = true;
+              _this26.isDataReady = true;
               _context9.n = 7;
               break;
             case 6:
               _context9.p = 6;
               _t3 = _context9.v;
               console.error('Error loading verses:', _t3);
-              _this25.showBanner('Failed to load verses', 'error', 3000);
-              _this25.isDataReady = true;
+              _this26.showBanner('Failed to load verses', 'error', 3000);
+              _this26.isDataReady = true;
             case 7:
               return _context9.a(2);
           }
@@ -26715,73 +26893,73 @@ function createAdvancedState() {
       this.buildQueue(mode);
     },
     startSession: function startSession() {
-      var _this26 = this;
+      var _this27 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee0() {
         var _sessionState$queue, _canonicalItem$verse, _builtQueue$playbackI, _builtQueue$playbackI2;
         var config, mode, currentVerses, modeNeedsReload, updatedVerses, builtQueue, sessionState, canonicalIndex, canonicalItem, playbackIndex, canonicalKey, exactIndex, nextCanonicalIndex, first;
         return _regenerator().w(function (_context0) {
           while (1) switch (_context0.n) {
             case 0:
-              config = _this26.sessionConfig;
-              mode = config.mode || _this26.currentMode;
+              config = _this27.sessionConfig;
+              mode = config.mode || _this27.currentMode;
               if (!(!config.chapterId || config.chapterId === 0)) {
                 _context0.n = 1;
                 break;
               }
-              _this26.showTools = true;
-              _this26.showBanner('Please select a surah first', 'info', 3600, {
+              _this27.showTools = true;
+              _this27.showBanner('Please select a surah first', 'info', 3600, {
                 key: 'open-setup',
                 label: 'Open setup'
               });
               return _context0.a(2);
             case 1:
-              if (_this26.validateSettings()) {
+              if (_this27.validateSettings()) {
                 _context0.n = 2;
                 break;
               }
               return _context0.a(2);
             case 2:
-              _this26.applySessionConfig(config);
-              _this26.persistModeState(mode);
-              _this26.persistUiState();
-              _this26.sessionCompleted = false;
-              _this26.sessionStartedAt = Date.now();
-              _this26.sessionErrorCount = 0;
-              _this26.statsTick = Date.now();
-              currentVerses = mode === 'beginner' ? _this26.beginner.verses : _this26.advanced.verses;
-              modeNeedsReload = !currentVerses || !currentVerses.length || !_this26.modeDataMatchesConfig(mode, config);
+              _this27.applySessionConfig(config);
+              _this27.persistModeState(mode);
+              _this27.persistUiState();
+              _this27.sessionCompleted = false;
+              _this27.sessionStartedAt = Date.now();
+              _this27.sessionErrorCount = 0;
+              _this27.statsTick = Date.now();
+              currentVerses = mode === 'beginner' ? _this27.beginner.verses : _this27.advanced.verses;
+              modeNeedsReload = !currentVerses || !currentVerses.length || !_this27.modeDataMatchesConfig(mode, config);
               if (!modeNeedsReload) {
                 _context0.n = 3;
                 break;
               }
               _context0.n = 3;
-              return _this26.loadVerses(mode);
+              return _this27.loadVerses(mode);
             case 3:
-              updatedVerses = mode === 'beginner' ? _this26.beginner.verses : _this26.advanced.verses;
+              updatedVerses = mode === 'beginner' ? _this27.beginner.verses : _this27.advanced.verses;
               if (!(!updatedVerses || updatedVerses.length === 0)) {
                 _context0.n = 4;
                 break;
               }
-              _this26.showBanner('No verses loaded. Check your network connection.', 'error');
+              _this27.showBanner('No verses loaded. Check your network connection.', 'error');
               return _context0.a(2);
             case 4:
               // Initialize audio
-              if (!_this26.audioElement) {
-                _this26.initAudio();
+              if (!_this27.audioElement) {
+                _this27.initAudio();
               }
 
               // Build queue with current settings
-              _this26.buildQueue(mode);
-              builtQueue = mode === 'beginner' ? _this26.beginner.queue : _this26.advanced.queue;
+              _this27.buildQueue(mode);
+              builtQueue = mode === 'beginner' ? _this27.beginner.queue : _this27.advanced.queue;
               if (!(!builtQueue || builtQueue.length === 0)) {
                 _context0.n = 5;
                 break;
               }
-              _this26.showBanner('Nothing to play. Check the selected range.', 'error');
+              _this27.showBanner('Nothing to play. Check the selected range.', 'error');
               return _context0.a(2);
             case 5:
-              _this26.syncMutqinAyahs(updatedVerses);
-              sessionState = _this26.syncMutqinSession(builtQueue, mode);
+              _this27.syncMutqinAyahs(updatedVerses);
+              sessionState = _this27.syncMutqinSession(builtQueue, mode);
               canonicalIndex = Math.max(0, Number((sessionState === null || sessionState === void 0 ? void 0 : sessionState.current_index) || 0));
               canonicalItem = sessionState === null || sessionState === void 0 || (_sessionState$queue = sessionState.queue) === null || _sessionState$queue === void 0 ? void 0 : _sessionState$queue[canonicalIndex];
               playbackIndex = canonicalIndex > 0 ? Math.min(canonicalIndex - 1, builtQueue.length - 1) : 0;
@@ -26793,34 +26971,34 @@ function createAdvancedState() {
                 });
                 if (exactIndex >= 0) playbackIndex = exactIndex;
               }
-              _this26.queueIndex = playbackIndex;
-              _this26.getModeStore(mode).queueIndex = playbackIndex;
+              _this27.queueIndex = playbackIndex;
+              _this27.getModeStore(mode).queueIndex = playbackIndex;
               nextCanonicalIndex = canonicalIndex > 0 ? canonicalIndex : 1;
-              (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this26.mutqinState, nextCanonicalIndex);
+              (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this27.mutqinState, nextCanonicalIndex);
               first = builtQueue[playbackIndex];
               if (!(first && first.verse)) {
                 _context0.n = 7;
                 break;
               }
-              _this26.syncActiveVerseState(mode, first.verse.key);
+              _this27.syncActiveVerseState(mode, first.verse.key);
               _context0.n = 6;
-              return _this26.$nextTick();
+              return _this27.$nextTick();
             case 6:
               // Apply speed before playing
-              if (_this26.audioElement) {
-                _this26.audioElement.playbackRate = _this26.speed;
+              if (_this27.audioElement) {
+                _this27.audioElement.playbackRate = _this27.speed;
               }
               _context0.n = 7;
-              return _this26.playVerse(first.verse, {
+              return _this27.playVerse(first.verse, {
                 force: true
               });
             case 7:
               // Close the offcanvas panel
-              _this26.showTools = false;
+              _this27.showTools = false;
 
               // Show confirmation banner
-              _this26.flowStep = 'learn';
-              _this26.showBanner("Session started with ".concat(builtQueue.length, " guided repetitions"), 'success', 2000);
+              _this27.flowStep = 'learn';
+              _this27.showBanner("Session started with ".concat(builtQueue.length, " guided repetitions"), 'success', 2000);
             case 8:
               return _context0.a(2);
           }
@@ -26854,7 +27032,7 @@ function createAdvancedState() {
       return Math.max(5, Math.min(45, arabicLength * 0.12)) / speedFactor;
     },
     showBanner: function showBanner(message) {
-      var _this27 = this;
+      var _this28 = this;
       var kind = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'info';
       var ttlMs = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 3500;
       var action = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
@@ -26867,7 +27045,7 @@ function createAdvancedState() {
         actionLabel: (action === null || action === void 0 ? void 0 : action.label) || ''
       };
       this.bannerTimer = setTimeout(function () {
-        if (_this27.banner && Date.now() - _this27.banner.at >= ttlMs) _this27.banner = null;
+        if (_this28.banner && Date.now() - _this28.banner.at >= ttlMs) _this28.banner = null;
       }, ttlMs + 50);
     },
     runBannerAction: function runBannerAction() {
@@ -26888,7 +27066,7 @@ function createAdvancedState() {
       (0,_composables_useAyahState__WEBPACK_IMPORTED_MODULE_3__.seedAyahs)(this.mutqinState, verses);
     },
     syncMutqinSession: function syncMutqinSession() {
-      var _this28 = this;
+      var _this29 = this;
       var queue = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.queue;
       var mode = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.currentMode;
       var playbackQueue = (queue || []).map(function (item) {
@@ -26913,18 +27091,18 @@ function createAdvancedState() {
       var planner = (0,_composables_useDailyPlanner__WEBPACK_IMPORTED_MODULE_5__.createDailyPlan)(this.mutqinState, uniqueVerses, {
         repetitions: 1,
         audioDurations: uniqueVerses.reduce(function (map, verse) {
-          map[verse.key] = Number(verse.duration || _this28.duration || 0);
+          map[verse.key] = Number(verse.duration || _this29.duration || 0);
           return map;
         }, {}),
         reviewSeconds: 18
       });
       var plannerQueue = uniqueVerses.slice(0, 1).map(function (verse) {
-        var _this28$currentChapte;
+        var _this29$currentChapte;
         return {
           phase: 'Planner',
           ayahId: verse.key,
           verse: verse,
-          prompt: "".concat(((_this28$currentChapte = _this28.currentChapter) === null || _this28$currentChapte === void 0 ? void 0 : _this28$currentChapte.name_simple) || 'Session', " ayahs ").concat(_this28.rangeStart, "-").concat(_this28.rangeEnd)
+          prompt: "".concat(((_this29$currentChapte = _this29.currentChapter) === null || _this29$currentChapte === void 0 ? void 0 : _this29$currentChapte.name_simple) || 'Session', " ayahs ").concat(_this29.rangeStart, "-").concat(_this29.rangeEnd)
         };
       });
       var recallQueue = uniqueVerses.map(function (verse) {
@@ -26981,7 +27159,7 @@ function createAdvancedState() {
     },
     markTakrarRepeat: function markTakrarRepeat(verse) {
       var _this$queue3,
-        _this29 = this;
+        _this30 = this;
       if (this.repeatActionLocked || !verse) return;
       this.repeatActionLocked = true;
       this.syncMutqinAyahs([verse]);
@@ -27005,7 +27183,7 @@ function createAdvancedState() {
       this.recomputeAnalytics();
       this.persistAllState();
       window.setTimeout(function () {
-        _this29.repeatActionLocked = false;
+        _this30.repeatActionLocked = false;
       }, 450);
     },
     markTakrarHide: function markTakrarHide(verse) {
@@ -27126,11 +27304,11 @@ function createAdvancedState() {
       this.persistUiState();
     },
     toggleSection: function toggleSection(key) {
-      var _this30 = this;
+      var _this31 = this;
       var nextValue = !this.sectionOpen[key];
       Object.keys(this.sectionOpen).forEach(function (sectionKey) {
         if (['session_tools', 'live_stats'].includes(sectionKey)) {
-          _this30.sectionOpen[sectionKey] = false;
+          _this31.sectionOpen[sectionKey] = false;
         }
       });
       this.sectionOpen[key] = nextValue;
@@ -27239,7 +27417,7 @@ function createAdvancedState() {
       }
     },
     restoreSessionState: function restoreSessionState() {
-      var _this31 = this;
+      var _this32 = this;
       ;
       ['beginner', 'advanced'].forEach(function (mode) {
         var saved = localStorage.getItem(SESSION_STORAGE_KEYS[mode]);
@@ -27247,14 +27425,14 @@ function createAdvancedState() {
         try {
           var state = JSON.parse(saved);
           if (Date.now() - state.timestamp < 24 * 60 * 60 * 1000) {
-            var target = mode === 'beginner' ? _this31.beginner : _this31.advanced;
+            var target = mode === 'beginner' ? _this32.beginner : _this32.advanced;
             var restoredKey = state.activeVerseKey || state.activeKey || null;
             target.activeKey = restoredKey;
             target.queueIndex = Number(state.queueIndex || 0);
-            if (mode === _this31.currentMode) {
-              _this31.activeVerseKey = restoredKey;
-              _this31.activeKey = restoredKey;
-              _this31.queueIndex = target.queueIndex;
+            if (mode === _this32.currentMode) {
+              _this32.activeVerseKey = restoredKey;
+              _this32.activeKey = restoredKey;
+              _this32.queueIndex = target.queueIndex;
             }
           }
         } catch (e) {
@@ -27290,7 +27468,7 @@ function createAdvancedState() {
     },
     // Data loading methods
     loadChapters: function loadChapters() {
-      var _this32 = this;
+      var _this33 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
         var _res$data, res, _t4;
         return _regenerator().w(function (_context1) {
@@ -27305,13 +27483,13 @@ function createAdvancedState() {
               });
             case 1:
               res = _context1.v;
-              _this32.chapters = ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.chapters) || [];
-              if (!_this32.chapterId) {
+              _this33.chapters = ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.chapters) || [];
+              if (!_this33.chapterId) {
                 _context1.n = 2;
                 break;
               }
               _context1.n = 2;
-              return _this32.loadChapter();
+              return _this33.loadChapter();
             case 2:
               _context1.n = 4;
               break;
@@ -27327,36 +27505,36 @@ function createAdvancedState() {
     },
     loadChapter: function loadChapter() {
       var _arguments4 = arguments,
-        _this33 = this;
+        _this34 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee10() {
-        var _this33$currentChapte;
+        var _this34$currentChapte;
         var mode, target, chapterId, max;
         return _regenerator().w(function (_context10) {
           while (1) switch (_context10.n) {
             case 0:
-              mode = _arguments4.length > 0 && _arguments4[0] !== undefined ? _arguments4[0] : _this33.currentMode;
-              target = mode === 'beginner' ? _this33.beginner : _this33.advanced;
+              mode = _arguments4.length > 0 && _arguments4[0] !== undefined ? _arguments4[0] : _this34.currentMode;
+              target = mode === 'beginner' ? _this34.beginner : _this34.advanced;
               chapterId = Number(target.chapterId || 0);
               if (chapterId) {
                 _context10.n = 1;
                 break;
               }
-              _this33.currentChapter = null;
+              _this34.currentChapter = null;
               return _context10.a(2);
             case 1:
-              _this33.currentChapter = _this33.chapters.find(function (c) {
+              _this34.currentChapter = _this34.chapters.find(function (c) {
                 return c.id === chapterId;
               });
-              max = ((_this33$currentChapte = _this33.currentChapter) === null || _this33$currentChapte === void 0 ? void 0 : _this33$currentChapte.verses_count) || 286;
+              max = ((_this34$currentChapte = _this34.currentChapter) === null || _this34$currentChapte === void 0 ? void 0 : _this34$currentChapte.verses_count) || 286;
               if (mode === 'beginner') {
-                _this33.beginner.rangeEnd = Math.min(_this33.beginner.rangeEnd, max);
-                _this33.beginner.rangeStart = Math.max(1, _this33.beginner.rangeStart);
+                _this34.beginner.rangeEnd = Math.min(_this34.beginner.rangeEnd, max);
+                _this34.beginner.rangeStart = Math.max(1, _this34.beginner.rangeStart);
               } else {
-                _this33.advanced.rangeEnd = Math.min(_this33.advanced.rangeEnd, max);
-                _this33.advanced.rangeStart = Math.max(1, _this33.advanced.rangeStart);
+                _this34.advanced.rangeEnd = Math.min(_this34.advanced.rangeEnd, max);
+                _this34.advanced.rangeStart = Math.max(1, _this34.advanced.rangeStart);
               }
               _context10.n = 2;
-              return _this33.loadVerses(mode);
+              return _this34.loadVerses(mode);
             case 2:
               return _context10.a(2);
           }
@@ -27364,9 +27542,9 @@ function createAdvancedState() {
       }))();
     },
     loadReciters: function loadReciters() {
-      var _this34 = this;
+      var _this35 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee11() {
-        var _res$data2, res, list, allow, available, filtered, _this34$reciters$, _t5;
+        var _res$data2, res, list, allow, available, filtered, _this35$reciters$, _t5;
         return _regenerator().w(function (_context11) {
           while (1) switch (_context11.p = _context11.n) {
             case 0:
@@ -27417,7 +27595,7 @@ function createAdvancedState() {
                   name: entry.label
                 };
               });
-              _this34.reciters = filtered.length ? filtered : list.filter(function (edition) {
+              _this35.reciters = filtered.length ? filtered : list.filter(function (edition) {
                 return edition.format === 'audio';
               }).map(function (edition) {
                 return {
@@ -27425,10 +27603,10 @@ function createAdvancedState() {
                   name: edition.englishName || edition.name || edition.identifier
                 };
               });
-              if (!_this34.reciters.some(function (reciter) {
-                return reciter.id === _this34.reciterId;
+              if (!_this35.reciters.some(function (reciter) {
+                return reciter.id === _this35.reciterId;
               })) {
-                _this34.reciterId = ((_this34$reciters$ = _this34.reciters[0]) === null || _this34$reciters$ === void 0 ? void 0 : _this34$reciters$.id) || DEFAULT_ALQURAN_RECITER;
+                _this35.reciterId = ((_this35$reciters$ = _this35.reciters[0]) === null || _this35$reciters$ === void 0 ? void 0 : _this35$reciters$.id) || DEFAULT_ALQURAN_RECITER;
               }
               _context11.n = 4;
               break;
@@ -27756,16 +27934,16 @@ function createAdvancedState() {
       this.nextQuizCard();
     },
     playWordAudio: function playWordAudio(url) {
-      var _this35 = this;
+      var _this36 = this;
       var key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
       if (!url) return;
       this.activeWordAudio = key;
       var a = new Audio(url);
       a.addEventListener('ended', function () {
-        if (_this35.activeWordAudio === key) _this35.activeWordAudio = '';
+        if (_this36.activeWordAudio === key) _this36.activeWordAudio = '';
       });
       a.play()["catch"](function () {
-        _this35.activeWordAudio = '';
+        _this36.activeWordAudio = '';
       });
     }
   }
@@ -28628,7 +28806,8 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       "data-verse-key": verse.key,
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["verse-card", {
         active: $options.effectiveActiveVerseKey === verse.key,
-        'serious-training': false
+        'serious-training': false,
+        'blur-upcoming': $data.blurModeEnabled && $options.isVerseBlurred(verse.key)
       }]),
       onClick: function onClick($event) {
         return $options.onVerseCardClick(verse);
@@ -36734,7 +36913,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n:root {\n  --bg: #f3eee6;\n  --surface: rgba(255, 250, 243, 0.88);\n  --surface-strong: rgba(255, 255, 255, 0.92);\n  --border: rgba(78, 58, 38, 0.10);\n  --text: #1f1a17;\n  --text-muted: #6c6258;\n  --accent: #9a6738;\n  --accent-strong: #6e4726;\n  --accent-soft: #d8c1a8;\n  --accent-light: rgba(154, 103, 56, 0.10);\n  --accent-wash: rgba(228, 211, 194, 0.42);\n  --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);\n  --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);\n  --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);\n  --radius: 16px;\n  --navbar-offset: 56px;\n  --tools-width: 440px;\n  --tools-footer-h: 78px;\n  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;\n  --font-ui: \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n[data-theme=\"dark\"] {\n  --bg: #14110f;\n  --surface: rgba(31, 27, 24, 0.92);\n  --surface-strong: rgba(43, 37, 32, 0.96);\n  --border: rgba(255, 236, 216, 0.16);\n  --text: #f7ebdf;\n  --text-muted: #d1c2b3;\n  --accent: #d0a06b;\n  --accent-strong: #efc18d;\n  --accent-soft: #5f4530;\n  --accent-light: rgba(208, 160, 107, 0.14);\n  --accent-wash: rgba(208, 160, 107, 0.08);\n  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);\n  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);\n  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);\n}\n[data-theme=\"sepia\"] {\n  --bg: #efe2cb;\n  --surface: rgba(250, 241, 227, 0.88);\n  --surface-strong: rgba(255, 248, 237, 0.94);\n  --text: #352516;\n  --text-muted: #75624f;\n  --accent: #b8824e;\n  --accent-strong: #8f6033;\n  --accent-soft: #dcc3a6;\n  --accent-light: rgba(184, 130, 78, 0.12);\n  --accent-wash: rgba(221, 194, 162, 0.35);\n}\n[v-cloak] {\n  display: none !important;\n}\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\n\n/* Player Speed Controls */\n.player-speed-controls {\n  display: flex;\n  gap: 4px;\n  background: var(--accent-light);\n  padding: 4px 8px;\n  border-radius: 40px;\n}\n.speed-btn-mini {\n  padding: 4px 8px;\n  border-radius: 20px;\n  border: none;\n  background: transparent;\n  font-size: 0.7rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n}\n.speed-btn-mini:hover {\n  background: rgba(255, 255, 255, 0.5);\n}\n.speed-btn-mini.active {\n  background: var(--accent);\n  color: white;\n}\n@media (max-width: 768px) {\n.player-speed-controls {\n    display: none;\n    /* Hide on mobile, too crowded */\n}\n}\n\n/* Mode Button Styling */\n.mode-btn {\n  background: var(--surface);\n  border: 1px solid var(--accent);\n  color: var(--accent);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mode-btn i:first-child {\n  font-size: 0.85rem;\n}\n.mode-btn .bi-chevron-down {\n  font-size: 0.7rem;\n  transition: transform 0.2s;\n}\n.mode-btn:hover .bi-chevron-down {\n  transform: translateY(2px);\n}\n.mode-btn:hover {\n  background: var(--accent-light);\n}\n\n/* Make all buttons consistent */\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n      background: var(--accent);\n      color: white;\n}\n.rail-btn:disabled,\n    .rail-btn-ghost:disabled,\n    .rail-btn-primary:disabled {\n      opacity: 0.45;\n      cursor: not-allowed;\n      pointer-events: none;\n      transform: none;\n      box-shadow: none;\n}\n.rail-btn-resume {\n  background: rgba(255, 255, 255, 0.92);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.rail-btn-resume:hover {\n  background: var(--accent-light);\n  transform: translateY(-1px);\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\nbody {\n  font-family: var(--font-ui);\n  background: var(--bg);\n  color: var(--text);\n}\nhtml {\n  background: var(--bg);\n}\n.app {\n  min-height: 100vh;\n  background: var(--bg);\n  font-size: calc(16px * var(--ui-scale, 1));\n  animation: appFade 260ms ease-out;\n}\n.verse-arabic {\n  min-height: 60px;\n}\n\n/* Session Rail */\n.session-rail {\n  background: var(--surface);\n  border-radius: 20px;\n  margin-bottom: 20px;\n  padding: 12px 16px 14px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.session-rail-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 10px;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.session-rail-copy {\n  flex: 1;\n  min-width: 0;\n}\n.session-rail-headline {\n  display: flex;\n  align-items: baseline;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.session-rail-pills {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  margin-top: 6px;\n}\n.session-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 4px;\n  padding: 5px 9px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n  font-size: 0.71rem;\n  white-space: nowrap;\n}\n.session-pill strong {\n  color: var(--text);\n  font-weight: 700;\n}\n.session-pill-focus {\n  max-width: min(280px, 100%);\n}\n.session-pill-focus strong {\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.session-rail-kicker {\n  font-size: 0.7rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.session-rail-meta {\n  font-size: 0.72rem;\n  color: var(--text-muted);\n  margin-top: 2px;\n}\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\n.session-rail-subnote {\n  margin-top: 10px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n}\n\n/* Mode Indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 10px;\n  padding: 6px 14px;\n  margin: 8px 0 12px 0;\n  background: var(--accent-light);\n  border-radius: 40px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n.mode-switch-btn {\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 4px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.mode-switch-btn:hover {\n  background: rgba(154, 103, 56, 0.2);\n  transform: rotate(180deg);\n}\n.progress-bar-wide {\n  margin-top: 10px;\n  height: 6px;\n  position: relative;\n  overflow: visible;\n}\n.progress-label {\n  position: absolute;\n  top: -24px;\n  right: 0;\n  font-size: 0.72rem;\n  font-weight: 700;\n  color: var(--accent);\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.session-rail-top {\n    flex-direction: column;\n    align-items: stretch;\n}\n.session-rail-actions {\n    justify-content: stretch;\n    width: 100%;\n    flex-wrap: wrap;\n}\n.rail-btn {\n    flex: 1;\n    justify-content: center;\n}\n}\n.verse-arabic-loading {\n  min-height: 60px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--text-muted);\n  animation: pulse 1s infinite;\n}\n@keyframes pulse {\n0%,\n  100% {\n    opacity: 0.3;\n}\n50% {\n    opacity: 0.6;\n}\n}\n\n/* Ensure HTML content is styled properly before Vue mounts */\n.verse-arabic word,\n.verse-arabic .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n}\n\n/* Prevent raw HTML showing */\n.verse-arabic:empty {\n  display: none;\n}\n\n/* Tajweed styles */\n.verse-arabic.tajweed-enabled [class*=\"tajweed\"] {\n  display: inline;\n}\n\n/* Color rules for tajweed - adjust based on what API returns */\n.verse-arabic [class*=\"ghunnah\"],\n.verse-arabic [class*=\"Ghunnah\"] {\n  color: #2ecc71;\n}\n.verse-arabic [class*=\"madd\"],\n.verse-arabic [class*=\"Madd\"] {\n  color: #e74c3c;\n}\n.verse-arabic [class*=\"qalqalah\"],\n.verse-arabic [class*=\"Qalqalah\"] {\n  color: #f39c12;\n}\n.verse-arabic [class*=\"ikhfa\"],\n.verse-arabic [class*=\"Ikhfa\"] {\n  color: #9b59b6;\n}\n.verse-arabic [class*=\"idgham\"],\n.verse-arabic [class*=\"Idgham\"] {\n  color: #3498db;\n}\n\n/* Word by Word styles */\n.wbw-word {\n  display: inline-block;\n  padding: 5px 8px;\n  margin: 2px 3px;\n  border-radius: 8px;\n  transition: all 0.2s ease;\n  cursor: pointer;\n  font-size: 1.05rem;\n  background: rgba(154, 103, 56, 0.05);\n}\n.wbw-word:hover {\n  background: var(--accent-light);\n  transform: scale(1.02);\n}\n.wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n  animation: pop 180ms ease-out;\n}\n@keyframes pop {\nfrom { transform: scale(1.01);\n}\nto { transform: scale(1.05);\n}\n}\n\n/* Word highlighting styles */\n.verse-arabic word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n.rail-stat strong,\n.player-eta {\n  cursor: help;\n  border-bottom: 1px dotted var(--text-muted);\n}\n\n/* Optional: Show detailed breakdown on hover */\n.rail-stat:hover strong::after {\n  content: attr(title);\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: var(--surface-strong);\n  color: var(--text);\n  padding: 4px 8px;\n  border-radius: 8px;\n  font-size: 0.7rem;\n  white-space: nowrap;\n  z-index: 100;\n  box-shadow: var(--shadow-sm);\n  border: 1px solid var(--border);\n}\n\n/* Minimized Session Rail */\n.session-rail-mini {\n  position: sticky;\n  top: 12px;\n  z-index: 18;\n  padding: 10px;\n  padding-top: 8px;\n  margin-bottom: 20px;\n  background: var(--surface);\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-sm);\n  overflow: hidden;\n  transition: all 0.2s ease;\n}\n.session-rail-mini:hover {\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent-soft);\n}\n.rail-mini-content {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 8px 12px 8px 16px;\n}\n.rail-mini-info {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  flex: 1;\n}\n.rail-mini-icon {\n  width: 32px;\n  height: 32px;\n  background: var(--accent-light);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.rail-mini-icon i {\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.rail-mini-details {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-mini-surah {\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.rail-mini-progress {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.rail-mini-stats {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.mini-stat-item {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.mini-stat-item i {\n  font-size: 0.7rem;\n  color: var(--accent);\n}\n.rail-mini-actions {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mini-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n}\n.mini-btn:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n}\n.mini-btn:first-child {\n  background: var(--accent);\n  border-color: var(--accent);\n  color: white;\n}\n.mini-btn:first-child:hover {\n  transform: scale(1.05);\n  background: var(--accent-strong);\n}\n.rail-mini-progress {\n  height: 2px;\n  background: var(--border);\n}\n.progress-fill-mini {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.rail-mini-stats {\n    display: none;\n}\n.rail-mini-content {\n    padding: 6px 10px 6px 12px;\n}\n.rail-mini-surah {\n    font-size: 0.75rem;\n}\n}\n\n/* Font Dropdown */\n.font-dropdown {\n  position: relative;\n}\n.font-dropdown-trigger {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 999px;\n  font-size: 0.75rem;\n  cursor: pointer;\n  transition: all 0.2s;\n  color: var(--text);\n}\n.font-dropdown-trigger:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.font-dropdown-trigger .bi-chevron-down {\n  transition: transform 0.2s;\n  font-size: 0.7rem;\n}\n.font-dropdown-trigger .bi-chevron-down.rotated {\n  transform: rotate(180deg);\n}\n.font-dropdown-menu {\n  position: absolute;\n  top: calc(100% + 8px);\n  right: 0;\n  min-width: 200px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  box-shadow: var(--shadow-lg);\n  overflow: hidden;\n  z-index: 100;\n  backdrop-filter: blur(12px);\n}\n.font-option {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  width: 100%;\n  padding: 10px 14px;\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  font-size: 0.8rem;\n  text-align: left;\n  transition: all 0.15s;\n  color: var(--text);\n}\n.font-option:hover {\n  background: var(--accent-light);\n}\n.font-option.active {\n  background: var(--accent);\n  color: white;\n}\n.font-option .check-icon {\n  margin-left: auto;\n  font-size: 0.8rem;\n}\n\n/* Dropdown Animation */\n.dropdown-fade-enter-active,\n.dropdown-fade-leave-active {\n  transition: all 0.2s ease;\n}\n.dropdown-fade-enter-from,\n.dropdown-fade-leave-to {\n  opacity: 0;\n  transform: translateY(-8px);\n}\n\n/* Tajweed styles for AlQuran quran-tajweed edition */\n.verse-arabic.tajweed-enabled {\n  line-height: 2;\n  white-space: normal;\n  overflow-wrap: anywhere;\n}\n.verse-arabic.tajweed-enabled .tajweed-mark {\n  display: inline;\n  border-radius: 0.2em;\n  padding: 0 0.03em;\n}\n.verse-arabic.tajweed-enabled .tajweed-ham_wasl,\n.verse-arabic.tajweed-enabled .tajweed-slnt {\n  color: #7e8a97;\n}\n.verse-arabic.tajweed-enabled .tajweed-ghn,\n.verse-arabic.tajweed-enabled .tajweed-idgh_ghn,\n.verse-arabic.tajweed-enabled .tajweed-iqlb {\n  color: #2e9d62;\n  background: rgba(46, 157, 98, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,\n.verse-arabic.tajweed-enabled .tajweed-ikhf,\n.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw {\n  color: #9b59b6;\n  background: rgba(155, 89, 182, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-qlq,\n.verse-arabic.tajweed-enabled .tajweed-lqlq {\n  color: #d98824;\n  background: rgba(217, 136, 36, 0.12);\n}\n.verse-arabic.tajweed-enabled .tajweed-madda_normal,\n.verse-arabic.tajweed-enabled .tajweed-madda_permissible,\n.verse-arabic.tajweed-enabled .tajweed-madda_necessary,\n.verse-arabic.tajweed-enabled .tajweed-madda_obligatory,\n.verse-arabic.tajweed-enabled .tajweed-madda_pbligatory {\n  color: #d55245;\n  background: rgba(213, 82, 69, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_mus,\n.verse-arabic.tajweed-enabled .tajweed-idghm_shfw,\n.verse-arabic.tajweed-enabled .tajweed-idgh_shfw,\n.verse-arabic.tajweed-enabled .tajweed-ghn + .tajweed-mark {\n  color: #2b7bbb;\n  background: rgba(43, 123, 187, 0.10);\n}\n\n/* Toolbar chip active state for tajweed */\n.toolbar-chip.active {\n  background: var(--accent);\n  color: white;\n}\n.verse-play-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: white;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.verse-play-btn i {\n  font-size: 0.9rem;\n}\n.verse-play-btn:hover {\n  transform: scale(1.05);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--accent);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.verse-play-btn:active {\n  transform: scale(0.98);\n}\n.verse-download-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.82);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--accent);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.verse-download-btn:hover:not(:disabled) {\n  transform: scale(1.05);\n  border-color: var(--accent);\n  background: rgba(255, 255, 255, 0.96);\n}\n.verse-download-btn:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n.speed-label {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-right: 4px;\n}\n.speed-controls {\n  display: flex;\n  gap: 4px;\n}\n.speed-btn {\n  padding: 4px 8px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.speed-btn.active {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.streak-motivation {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border-radius: 40px;\n  font-size: 0.75rem;\n}\n.streak-badge {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-weight: 500;\n}\n.motivation-message {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--text-muted);\n  font-size: 0.7rem;\n}\n.pa-note {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n  margin-top: 4px;\n  display: block;\n}\n\n/* Active tab indicator with pulse effect */\n.tools-tabs button.active-tab {\n  position: relative;\n  animation: tabPulse 0.22s ease-out;\n}\n@keyframes tabPulse {\n0% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 var(--accent);\n}\n50% {\n    transform: scale(1.012);\n    box-shadow: 0 0 0 3px var(--accent-light);\n}\n100% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Toggle switch animation and visual feedback */\n.switch {\n  transition: all 0.2s ease;\n}\n.switch:active {\n  transform: scale(0.98);\n}\n.switch-ui {\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n  animation: switchPulse 0.3s ease-out;\n}\n@keyframes switchPulse {\n0% {\n    box-shadow: 0 0 0 0 rgba(139, 94, 60, 0.4);\n}\n50% {\n    box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.2);\n}\n100% {\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Field hint styling */\n.field-hint {\n  font-size: calc(0.7rem * var(--en-scale, 1));\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.26;\n  display: block;\n}\n\n/* Verse Arabic styling */\n.verse-arabic {\n  --verse-font-percent: 100;\n  --verse-font-size: clamp(1.5rem, calc(var(--verse-font-percent, 150) * 0.0175rem), 3.25rem);\n  font-family: var(--font-ar);\n  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n.verse-arabic word {\n  display: inline-block;\n  font-size: 1em;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-card {\n  background: var(--surface);\n  border-radius: 20px;\n  padding: 26px;\n  transition: all 0.2s ease;\n  border: 1px solid var(--border);\n  position: relative;\n  direction: ltr;\n  overflow: hidden;\n  width: 100%;\n}\n.verse-card::before {\n  content: \"\";\n  position: absolute;\n  inset: 0;\n  pointer-events: none;\n  background:\n    linear-gradient(180deg, rgba(184, 130, 78, 0.03), transparent 22%),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.05), transparent 28%);\n}\n.verse-card.active {\n  border-color: var(--accent);\n  background: linear-gradient(145deg, rgba(184, 130, 78, 0.14), rgba(154, 103, 56, 0.04));\n  box-shadow: 0 0 0 1px var(--accent), 0 14px 32px rgba(154, 103, 56, 0.18);\n  transform: translateY(-1px);\n  transition: all 0.2s ease;\n}\n.main.focus-mode-active .verse-card:not(.active) {\n  opacity: 0.54;\n  filter: saturate(0.72);\n}\n.main.focus-mode-active .workspace-fab-live,\n.main.focus-mode-active .verse-card:not(.active) .verse-aid {\n  opacity: 0.38;\n}\n.main.blur-mode-active .verse-card.active .verse-arabic {\n  color: transparent;\n  text-shadow: 0 0 var(--recall-blur, 10px) rgba(22, 18, 14, 0.72);\n}\n.main.blur-mode-active .verse-card.active .verse-arabic .tajweed-mark,\n.main.blur-mode-active .verse-card.active .verse-arabic word,\n.main.blur-mode-active .verse-card.active .verse-arabic .wbw-word {\n  color: transparent !important;\n  background: transparent !important;\n  box-shadow: none !important;\n  text-shadow: 0 0 var(--recall-blur, 10px) rgba(22, 18, 14, 0.72);\n}\n\n/* Removed: \"For serious huffadh training\" badge */\n.verse-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 16px;\n}\n.verse-badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-number {\n  font-size: 0.78rem;\n  padding: 6px 12px;\n  background: var(--accent);\n  border-radius: 999px;\n  color: #fff;\n  font-weight: 700;\n  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.24);\n}\n.verse-status-badge,\n.verse-status-subtle {\n  border-radius: 999px;\n  padding: 5px 10px;\n  font-size: 0.68rem;\n  font-weight: 600;\n}\n.verse-status-badge {\n  background: var(--accent-light);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.verse-status-subtle {\n  background: var(--bg-elevated);\n  color: var(--text-muted);\n}\n.verse-ref {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 8px;\n}\n\n/* Font controls */\n.verse-font-controls {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  padding: 2px 6px;\n  margin-right: 8px;\n}\n.verse-font-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 12px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 10px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.verse-font-btn:hover {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n}\n.verse-font-size-indicator {\n  font-size: 10px;\n  min-width: 35px;\n  text-align: center;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n\n/* Session rail */\n.session-rail {\n  position: sticky;\n  top: 14px;\n  z-index: 18;\n  margin-bottom: 18px;\n  padding: 12px 14px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-md);\n  animation: railIn 280ms ease-out;\n}\n.session-rail-top {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  gap: 12px;\n  align-items: center;\n}\n.session-rail-kicker {\n  font-size: 10px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  margin-top: 2px;\n  font-size: 14px;\n  font-weight: 450;\n}\n.session-rail-meta {\n  margin-top: 2px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.session-rail-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 8px;\n  margin-top: 10px;\n}\n.rail-stat {\n  padding: 8px 10px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-stat span {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n}\n.rail-stat strong {\n  font-size: 0.78rem;\n  font-weight: 500;\n}\n.rail-btn {\n  height: 34px;\n  padding: 0 12px;\n  border-radius: 13px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  color: var(--text);\n  font-size: 12px;\n  font-weight: 450;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.rail-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);\n}\n.progress-bar {\n  flex: 1;\n  height: 4px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-wide {\n  margin-top: 10px;\n}\n.progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s;\n}\n\n/* Mode indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  margin: 8px 0 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n\n/* Reading toolbar */\n.reading-toolbar {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  margin-bottom: 16px;\n  padding: 12px 14px;\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.reading-toolbar-group {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  align-items: flex-start;\n}\n.toolbar-chip {\n  border: 0;\n  border-radius: 999px;\n  padding: 8px 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  font-size: 0.75rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: var(--shadow-sm);\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.toolbar-chip i,\n.rail-btn i,\n.tools-tabs button i,\n.st-ico i {\n  font-size: 0.9rem;\n  line-height: 1;\n}\n.toolbar-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.toolbar-chip:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n\n/* Tools panel */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  width: min(var(--tools-width), 92vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n}\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(15, 12, 8, 0.35);\n  backdrop-filter: blur(1px);\n  z-index: 59;\n}\n.tools.open {\n  transform: translateX(0);\n}\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n}\n.tools-topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.tools-title {\n  font-size: 1rem;\n  font-weight: 700;\n  letter-spacing: -0.2px;\n  color: var(--text);\n}\n.tools-context {\n  margin-top: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 600;\n}\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n  color: rgba(0, 0, 0, 0.7);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n  overflow-x: auto;\n  -webkit-overflow-scrolling: touch;\n  width: 100%;\n}\n.tools-tabs button {\n  flex: 1 1 0;\n  padding: 7px 10px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.82rem;\n  cursor: pointer;\n  color: rgba(0, 0, 0, 0.55);\n  font-weight: 450;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: background 140ms ease, color 140ms ease, transform 140ms ease, box-shadow 160ms ease;\n  white-space: nowrap;\n}\n.tools-tabs button.active {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));\n  box-shadow: var(--shadow-sm);\n  color: rgba(0, 0, 0, 0.85);\n}\n.tools-body {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n}\n\n/* Compact mode (default) to reduce cognitive load */\n.tools-body.compact .st-sub,\n.tools-body.compact .field-hint,\n.tools-body.compact .analytics-help,\n.tools-body.compact .stat-help {\n  display: block !important;\n}\n.tools-body.compact .sheet {\n  gap: 12px;\n}\n.tools-body.compact .sheet-section {\n  padding: 0;\n  border-radius: 16px;\n}\n.tools-body.compact .sheet-toggle {\n  padding: 12px 14px;\n}\n.tools-body.compact .sheet-content {\n  padding: 12px 14px 14px;\n}\n.tools-body.compact .field-stack {\n  gap: 12px;\n}\n.tools-body.compact .field label {\n  margin-bottom: 6px;\n}\n.sheet {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.sheet-section {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border-radius: 18px;\n  padding: 0;\n  overflow: hidden;\n  box-shadow: var(--shadow-sm);\n  animation: riseSoft 260ms ease-out;\n}\n.sheet-toggle {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border: none;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease;\n}\n.st-left {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.st-ico {\n  width: 24px;\n  height: 24px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));\n  border: 1px solid rgba(139, 94, 60, 0.18);\n  flex: 0 0 auto;\n  font-size: 11px;\n  font-weight: 600;\n  color: var(--accent);\n}\n.st-txt {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 2px;\n  min-width: 0;\n}\n.st-title {\n  font-weight: 450;\n  letter-spacing: -0.2px;\n  color: var(--text);\n  font-size: 0.82rem;\n  white-space: nowrap;\n}\n.st-sub {\n  font-size: 0.66rem;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.st-chev {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  display: grid;\n  place-items: center;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  color: rgba(0, 0, 0, 0.65);\n  transition: transform 0.15s ease;\n  box-shadow: var(--shadow-sm);\n}\n.st-chev.open {\n  transform: rotate(180deg);\n}\n.sheet-content {\n  padding: 12px 12px 14px;\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field-stack {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  min-width: 0;\n}\n.field label {\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n}\n.field-hint {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.35;\n  display: block;\n}\n.select,\n.input {\n  width: 100%;\n  min-width: 0;\n  padding: 11px 12px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--text);\n  font-size: 0.8rem;\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n.range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.range-single {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n  align-items: center;\n}\n.range span {\n  color: rgba(0, 0, 0, 0.35);\n  font-weight: 450;\n  font-size: 11px;\n}\n.radio-group {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.radio {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 0.85rem;\n  color: var(--text);\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  transition: all 0.2s ease;\n}\n.radio:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-sm);\n}\n.radio input {\n  margin: 0;\n}\n.switch {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 11px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  cursor: pointer;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  transition: all 0.2s ease;\n}\n.switch input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.switch-ui {\n  width: 44px;\n  height: 26px;\n  border-radius: 999px;\n  background: rgba(0, 0, 0, 0.12);\n  position: relative;\n  flex: 0 0 auto;\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  content: \"\";\n  position: absolute;\n  top: 3px;\n  left: 3px;\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  background: white;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n}\n.switch input:checked+.switch-ui::after {\n  transform: translateX(18px);\n}\n.switch-text {\n  font-size: 0.74rem;\n  color: rgba(0, 0, 0, 0.72);\n  font-weight: 400;\n}\n.tools-techniques-section {\n  border-color: rgba(139, 94, 60, 0.16);\n  box-shadow: none;\n}\n.techniques-list {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.technique-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.62);\n}\n.technique-row-stacked {\n  align-items: stretch;\n  flex-direction: column;\n}\n.technique-row-main,\n.technique-control {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.technique-copy {\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  gap: 3px;\n}\n.technique-copy label {\n  margin: 0;\n  color: var(--text);\n  font-size: 0.8rem;\n  font-weight: 650;\n  white-space: nowrap;\n}\n.technique-copy small,\n.technique-control span {\n  color: var(--text-muted);\n  font-size: 0.7rem;\n  line-height: 1.35;\n}\n.technique-toggle {\n  flex: 0 0 68px;\n  min-height: 36px;\n}\n.technique-control {\n  padding-top: 10px;\n  border-top: 1px solid rgba(0, 0, 0, 0.06);\n}\n.technique-range {\n  flex: 1 1 auto;\n  min-width: 96px;\n  padding: 0;\n  box-shadow: none;\n}\n.segmented-control {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 6px;\n  padding: 5px;\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 12px;\n  background: rgba(0, 0, 0, 0.035);\n}\n.segmented-control button {\n  min-width: 0;\n  min-height: 36px;\n  padding: 7px 8px;\n  border: 0;\n  border-radius: 9px;\n  background: transparent;\n  color: var(--text-muted);\n  font-size: 0.74rem;\n  font-weight: 650;\n  cursor: pointer;\n}\n.segmented-control button.active {\n  background: rgba(255, 255, 255, 0.9);\n  color: var(--accent-strong);\n  box-shadow: var(--shadow-sm);\n}\n.technique-preview {\n  padding: 9px 10px;\n  border-radius: 11px;\n  background: rgba(154, 103, 56, 0.07);\n  border: 1px solid rgba(154, 103, 56, 0.10);\n  color: var(--accent-strong);\n  font-size: 0.72rem;\n  line-height: 1.35;\n}\n\n/* Start button */\n.start-btn {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  border-radius: 12px;\n  color: white;\n  font-size: 1rem;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  margin-top: 20px;\n  transition: all 0.2s ease;\n}\n.start-btn:hover:not(:disabled) {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);\n}\n.start-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n\n/* Tools footer */\n.tools-footer {\n  position: absolute;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  height: var(--tools-footer-h);\n  padding: 12px 16px 14px;\n  border-top: 1px solid var(--border);\n  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));\n  display: flex;\n  gap: 10px;\n  justify-content: space-between;\n  align-items: center;\n}\n.tools-btn {\n  flex: 1;\n  min-height: 44px;\n  padding: 10px 10px;\n  border-radius: 15px;\n  font-weight: 500;\n  border: 1px solid rgba(0, 0, 0, 0.1);\n  cursor: pointer;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  line-height: 1;\n}\n.tools-btn-soft {\n  color: var(--text-muted);\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.42));\n  box-shadow: none;\n}\n.tools-btn-soft:hover {\n  color: var(--text);\n  border-color: var(--accent-soft);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.6));\n}\n.tools-btn-primary {\n  color: #fff;\n  border-color: rgba(0, 0, 0, 0.08);\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  box-shadow: var(--shadow-sm);\n}\n.tools-btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n.tools-btn:active:not(:disabled),\n.fab-btn:active:not(:disabled),\n.toggle-chip:active:not(:disabled),\n.sheet-toggle:active:not(:disabled) {\n  transform: translateY(0);\n}\n.tools-btn:hover:not(:disabled),\n.fab-btn:hover:not(:disabled),\n.toggle-chip:hover:not(:disabled),\n.sheet-toggle:hover:not(:disabled) {\n  filter: brightness(1.02);\n}\n.tools-btn-primary:disabled {\n  opacity: 0.55;\n  cursor: not-allowed;\n  box-shadow: none;\n}\n.tools-btn-start {\n  flex: 1.6;\n}\n\n/* Hero section */\n.hero-card {\n  margin-bottom: 16px;\n  padding: 18px 18px 16px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 236, 226, 0.92));\n  box-shadow: var(--shadow-md);\n  display: grid;\n  gap: 14px;\n  animation: riseSoft 260ms ease-out;\n}\n.hero-kicker {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  color: var(--accent);\n}\n.hero-title {\n  margin-top: 6px;\n  font-size: 1.24rem;\n  font-weight: 500;\n  letter-spacing: -0.03em;\n}\n.hero-sub {\n  margin-top: 8px;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  max-width: 56ch;\n}\n.hero-flow {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n}\n.hero-step {\n  padding: 10px 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.62);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.74rem;\n}\n.hero-step span {\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  display: grid;\n  place-items: center;\n  background: var(--accent-light);\n  color: var(--accent);\n  font-size: 11px;\n}\n.hero-step strong {\n  font-weight: 500;\n}\n.hero-points {\n  display: grid;\n  gap: 8px;\n}\n.hero-point {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.hero-point i {\n  color: var(--accent);\n}\n.hero-actions,\n.empty-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cta {\n  flex: 1;\n  padding: 10px 10px;\n  border-radius: 14px;\n  font-weight: 450;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 11px;\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.cta-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);\n}\n.cta-ghost {\n  background: rgba(255, 255, 255, 0.58);\n  box-shadow: var(--shadow-sm);\n}\n\n/* Empty state */\n.empty {\n  padding: 40px 0;\n}\n.empty-card {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: var(--radius);\n  padding: 32px;\n  text-align: center;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-md);\n}\n.empty-icon {\n  font-family: var(--font-ar);\n  font-size: 2.2rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.empty-card h3 {\n  font-weight: 450;\n  margin-bottom: 6px;\n  font-size: 1rem;\n}\n.empty-card p {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  margin-bottom: 16px;\n}\n\n/* Verses grid */\n.workspace {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr);\n  gap: 14px;\n  align-items: start;\n  margin-top: 14px;\n}\n.workspace-main {\n  min-width: 0;\n}\n.workspace-fab {\n  position: sticky;\n  top: 14px;\n  z-index: 25;\n  display: flex;\n  min-width: 0;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 8px 10px;\n  margin: 8px 0 6px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.06);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.58));\n  box-shadow: 0 16px 38px rgba(63, 39, 18, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.38);\n  backdrop-filter: blur(10px);\n  animation: cardSoftIn 220ms cubic-bezier(0.16, 1, 0.3, 1);\n  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;\n}\n.workspace-fab:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 20px 44px rgba(63, 39, 18, 0.18), 0 0 0 1px rgba(154, 103, 56, 0.18);\n  border-color: rgba(154, 103, 56, 0.2);\n}\n@keyframes cardSoftIn {\nfrom { transform: translateY(6px); opacity: 0.9;\n}\nto { transform: translateY(0); opacity: 1;\n}\n}\n.workspace-fab-meta {\n  min-width: 0;\n  flex: 1 1 auto;\n  display: grid;\n  gap: 4px;\n}\n.workspace-fab-kicker {\n  display: inline-flex;\n  align-items: center;\n  width: -moz-fit-content;\n  width: fit-content;\n  padding: 4px 8px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.10);\n  color: var(--accent-strong);\n  font-size: 0.68rem;\n  font-weight: 650;\n  letter-spacing: 0.06em;\n  text-transform: uppercase;\n}\n.workspace-fab-title {\n  font-weight: 650;\n  color: var(--text);\n  letter-spacing: -0.2px;\n  font-size: 0.92rem;\n  line-height: 1.15;\n}\n.workspace-fab-sub {\n  margin-top: 3px;\n  font-size: 0.74rem;\n  color: var(--text-muted);\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  align-items: center;\n  line-height: 1.2;\n}\n.workspace-fab-sub span {\n  display: inline-flex;\n  align-items: center;\n  max-width: 100%;\n  padding: 4px 7px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.10);\n  background: rgba(255, 255, 255, 0.62);\n}\n.workspace-fab-live {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  margin-top: 2px;\n}\n.workspace-fab-live-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  max-width: 100%;\n  padding: 5px 8px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.08);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: var(--accent-strong);\n  font-size: 0.74rem;\n  font-weight: 600;\n}\n.workspace-fab-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n  line-height: 1.26;\n  max-width: 60ch;\n  overflow-wrap: anywhere;\n}\n.workspace-fab-chip {\n  display: inline-flex;\n  align-items: center;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(46, 125, 50, 0.18);\n  background: rgba(46, 125, 50, 0.10);\n  color: rgba(46, 125, 50, 0.95);\n  font-weight: 650;\n  font-size: 0.72rem;\n}\n.workspace-fab-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex: 0 0 auto;\n}\n.fab-btn {\n  min-height: 40px;\n  padding: 8px 11px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.76);\n  box-shadow: var(--shadow-sm);\n  font-weight: 600;\n  font-size: 0.84rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  white-space: nowrap;\n  cursor: pointer;\n  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 140ms ease;\n}\n.fab-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  border-color: transparent;\n  box-shadow: 0 14px 28px rgba(154, 103, 56, 0.22);\n}\n.fab-btn-soft {\n  color: rgba(0, 0, 0, 0.78);\n}\n.fab-btn-ghost {\n  color: rgba(0, 0, 0, 0.78);\n}\n.verses-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n  margin-top: 0;\n}\n.verse-arabic-primary {\n  /* Primary focus: Quran dominates; aids are quieter. */\n  font-size: clamp(2.1rem, 2.75vw, 3.05rem);\n  line-height: 2.25;\n  letter-spacing: 0.01em;\n}\n.verse-aid {\n  opacity: 0.92;\n  filter: saturate(0.85);\n  margin-top: 0.55rem;\n}\n.verse-aid-title {\n  margin-bottom: 4px;\n  color: var(--accent-strong);\n  font-size: 0.72rem;\n  font-weight: 700;\n  font-style: normal;\n  text-transform: uppercase;\n  letter-spacing: 0.04em;\n}\n.inline-setting-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.input-compact {\n  flex: 0 0 140px;\n}\n.inline-setting-pill {\n  display: inline-flex;\n  align-items: center;\n  min-height: 38px;\n  padding: 0 12px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.08);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: var(--accent-strong);\n  font-size: 0.78rem;\n  font-weight: 600;\n}\n.settings-section {\n  padding: 14px;\n  background: var(--surface-strong);\n  box-shadow: var(--shadow-sm);\n}\n.settings-heading,\n.settings-row,\n.settings-row-copy {\n  display: flex;\n  align-items: center;\n}\n.settings-heading {\n  justify-content: space-between;\n  gap: 12px;\n  margin-bottom: 8px;\n}\n.settings-heading h3 {\n  margin: 0;\n  color: var(--accent);\n  font-size: 0.98rem;\n  line-height: 1.2;\n  white-space: nowrap;\n}\n.settings-apply {\n  flex: 0 0 auto;\n  min-height: 34px;\n  padding: 7px 12px;\n  border-radius: 11px;\n  font-size: 0.76rem;\n}\n.settings-list {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n}\n.settings-row {\n  justify-content: space-between;\n  gap: 12px;\n  min-height: 48px;\n  padding: 8px 10px;\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.52);\n}\n.settings-row-copy {\n  min-width: 0;\n  gap: 8px;\n}\n.settings-row-copy label {\n  color: var(--text);\n  font-size: 0.78rem;\n  font-weight: 650;\n  white-space: nowrap;\n}\n.settings-row-copy small {\n  color: var(--text-muted);\n  font-size: 0.68rem;\n  white-space: nowrap;\n}\n.settings-toggle {\n  flex: 0 0 86px;\n  min-height: 32px;\n  padding: 5px 10px;\n  border-radius: 10px;\n  font-size: 0.72rem;\n  box-shadow: none;\n}\n.settings-row-range {\n  align-items: center;\n}\n.settings-row-range .settings-row-copy {\n  flex: 0 0 116px;\n  justify-content: space-between;\n}\n.settings-range {\n  flex: 1 1 auto;\n  min-width: 0;\n  padding: 0;\n  box-shadow: none;\n}\n.offline-list {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n  margin-bottom: 16px;\n}\n.offline-item {\n  background: var(--bg-elevated);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  transition: all 0.2s ease;\n}\n.offline-item:hover {\n  border-color: var(--accent);\n  background: var(--surface);\n}\n.oi-info {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.oi-name {\n  font-weight: 600;\n  font-size: 1rem;\n}\n.oi-meta {\n  font-size: 0.8rem;\n  opacity: 0.7;\n}\n.oi-date {\n  font-size: 0.7rem;\n  opacity: 0.5;\n}\n.oi-actions {\n  display: flex;\n  gap: 8px;\n}\n.oi-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.oi-load:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.oi-delete:hover {\n  background: #ff4d4d;\n  color: white;\n  border-color: #ff4d4d;\n}\n.empty-mini {\n  text-align: center;\n  padding: 32px 16px;\n  background: var(--bg-elevated);\n  border-radius: 20px;\n  border: 1px dashed var(--border);\n}\n.offline-note {\n  margin-top: 24px;\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  display: flex;\n  gap: 10px;\n  font-size: 0.75rem;\n  line-height: 1.4;\n  color: var(--accent);\n}\n\n/* Floating Player */\n.player-bar {\n  position: fixed;\n  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);\n  left: 50%;\n  transform: translateX(-50%);\n  width: calc(100vw - 24px);\n  max-width: 980px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 24px;\n  box-shadow: var(--shadow-lg);\n  z-index: 1000;\n  padding: 12px 24px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  /* Avoid iOS Safari compositing artifacts (black bands) from backdrop-filter on fixed elements. */\n  backdrop-filter: none;\n  -webkit-backdrop-filter: none;\n  transition: transform 0.22s ease, opacity 0.22s ease, padding 0.22s ease;\n}\n.player-bar.collapsed {\n  transform: translateX(-50%);\n  opacity: 0.98;\n}\n.player-main {\n  display: flex;\n  align-items: center;\n  gap: 20px;\n  flex-wrap: wrap;\n}\n.player-info {\n  min-width: 0;\n}\n.player-chapter {\n  font-weight: 700;\n  font-size: 0.9rem;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-verse {\n  font-size: 0.75rem;\n  opacity: 0.7;\n}\n.player-eta {\n  color: var(--accent);\n  font-weight: 500;\n  opacity: 1;\n}\n.player-controls {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n}\n.sheet-fade-enter-active,\n.sheet-fade-leave-active {\n  transition: opacity 0.2s ease, transform 0.2s ease;\n}\n.sheet-fade-enter-from,\n.sheet-fade-leave-to {\n  opacity: 0;\n  transform: translateY(8px);\n}\n.player-btn {\n  width: 44px;\n  height: 44px;\n  border-radius: 12px;\n  border: none;\n  background: none;\n  color: var(--text);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.2rem;\n  transition: all 0.2s ease;\n}\n.player-btn:hover {\n  background: var(--bg-elevated);\n}\n.player-play {\n  background: var(--accent);\n  color: white;\n  width: 52px;\n  height: 52px;\n  border-radius: 16px;\n  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.3);\n}\n.player-play:hover {\n  background: rgba(255, 255, 255, 0.88);\n  color: var(--accent);\n  transform: scale(1.05);\n}\n.player-progress-wrap {\n  flex: 1;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  min-width: 220px;\n}\n.player-time {\n  font-size: 0.75rem;\n  font-variant-numeric: tabular-nums;\n  opacity: 0.7;\n  min-width: 40px;\n}\n.player-progress-bg {\n  flex: 1;\n  height: 6px;\n  background: var(--bg-elevated);\n  border-radius: 3px;\n  position: relative;\n  cursor: pointer;\n}\n.player-progress-fill {\n  position: absolute;\n  left: 0;\n  top: 0;\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.1s linear;\n}\n\n/* Animations */\n.slide-up-enter-active,\n.slide-up-leave-active {\n  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.slide-up-enter-from,\n.slide-up-leave-to {\n  transform: translate(-50%, 100px);\n  opacity: 0;\n}\n.verse-translation {\n  font-size: calc(0.94rem * var(--en-scale, 1));\n  color: var(--text);\n  line-height: 1.55;\n  padding-top: 10px;\n  margin-top: 8px;\n  border-top: 1px solid var(--border);\n  display: block;\n  opacity: 0.92;\n}\n.verse-transliteration {\n  font-size: calc(0.98rem * var(--en-scale, 1));\n  color: var(--text);\n  font-style: italic;\n  margin-top: 8px;\n  padding-top: 8px;\n  border-top: 1px solid var(--border);\n  line-height: 1.5;\n  opacity: 0.98;\n}\n.verse-words {\n  display: flex;\n  flex-wrap: nowrap;\n  gap: 8px;\n  direction: rtl;\n  margin-top: 12px;\n  padding-top: 10px;\n  border-top: 1px solid var(--border);\n  overflow-x: auto;\n  overflow-y: hidden;\n  -webkit-overflow-scrolling: touch;\n  scroll-snap-type: x proximity;\n  padding-bottom: 8px;\n}\n.word-item {\n  position: relative;\n  background: var(--accent-light);\n  padding: 6px 12px;\n  border-radius: 20px;\n  display: inline-flex;\n  flex-direction: row-reverse;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.75rem;\n  flex: 0 0 auto;\n  scroll-snap-align: center;\n  cursor: help;\n  min-height: 36px;\n}\n.word-item:hover::after,\n.word-item:focus::after {\n  content: attr(data-tooltip);\n  position: absolute;\n  left: 50%;\n  bottom: calc(100% + 8px);\n  transform: translateX(-50%);\n  z-index: 5;\n  width: -moz-max-content;\n  width: max-content;\n  max-width: 220px;\n  padding: 6px 8px;\n  border-radius: 9px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n  color: var(--text);\n  direction: ltr;\n  text-align: center;\n  font-size: 0.72rem;\n  line-height: 1.25;\n}\n.word-arabic {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n}\n.word-meaning {\n  color: var(--text-muted);\n  font-size: calc(0.82rem * var(--en-scale, 1));\n}\n.word-audio-btn {\n  background: none;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 0 4px;\n}\n.field-switch {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.reading-aid-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 8px;\n}\n.tools,\n.tools-body,\n.sheet-content {\n  overflow-x: hidden;\n}\n.live-stats-grid {\n  display: grid;\n  gap: 10px;\n}\n.live-stat-card {\n  min-height: 72px;\n  padding: 14px 16px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 252, 247, 0.9);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.live-stat-label {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  font-weight: 500;\n}\n.live-stat-card strong {\n  color: var(--text);\n  font-size: 1rem;\n  font-weight: 600;\n}\n.resume-copy {\n  margin-bottom: 8px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(251, 245, 238, 0.96));\n  border-radius: 18px;\n  box-shadow: 0 24px 72px rgba(31, 24, 17, 0.22);\n}\n.modal-header h2 {\n  font-size: 1.05rem;\n  font-weight: 600;\n}\n.resume-modal {\n  background: linear-gradient(180deg, rgba(255, 251, 245, 0.99), rgba(248, 241, 233, 0.97));\n}\n.resume-modal .modal-header,\n.resume-modal .modal-body,\n.resume-modal .modal-footer {\n  padding-top: 18px;\n  padding-bottom: 18px;\n}\n.resume-grid .pill,\n.resume-modal .pill {\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid rgba(184, 130, 78, 0.16);\n}\n.wbw-word.highlighted,\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.03);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.24);\n}\n.wbw-word.phrase-highlighted {\n  box-shadow: 0 0 0 2px rgba(184, 130, 78, 0.18);\n}\n.word-item.highlighted,\n.word-item.phrase-highlighted {\n  background: rgba(184, 130, 78, 0.2);\n}\n\n/* Quiz overlay */\n.quiz-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 80;\n  background: rgba(0, 0, 0, 0.35);\n  backdrop-filter: blur(6px);\n  display: grid;\n  place-items: center;\n  padding: 18px;\n}\n.quiz-card {\n  width: min(680px, 100%);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba, rgba(250, 245, 239, 0.95));\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 22px;\n  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);\n  overflow: hidden;\n}\n.quiz-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 18px 22px 14px;\n  border-bottom: 1px solid rgba(0, 0, 0, 0.08);\n}\n.quiz-title {\n  font-weight: 500;\n  font-size: 1.05rem;\n}\n.quiz-subtitle {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.quiz-close {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.7);\n  cursor: pointer;\n  font-size: 24px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.quiz-progress {\n  padding: 14px 22px 0;\n}\n.quiz-progress-bar {\n  height: 4px;\n  background: var(--border);\n  border-radius: 2px;\n  overflow: hidden;\n}\n.quiz-progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n.quiz-stats {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.quiz-body {\n  padding: 18px 22px 22px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.quiz-question {\n  font-weight: 600;\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.quiz-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.4rem;\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  padding: 16px;\n  background: var(--accent-light);\n  border-radius: 16px;\n}\n.quiz-reveal-btn {\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n}\n.quiz-answer {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.quiz-translation {\n  font-size: 0.9rem;\n  line-height: 1.6;\n  color: var(--text);\n  margin-bottom: 16px;\n}\n.quiz-grade-buttons {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.grade-btn {\n  flex: 1;\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.grade-btn.primary {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.quiz-options {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.quiz-option {\n  padding: 12px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  text-align: left;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.quiz-option:hover {\n  background: var(--accent-light);\n  transform: translateX(4px);\n}\n.quiz-summary {\n  padding: 22px;\n  text-align: center;\n}\n.quiz-summary-icon {\n  font-size: 3rem;\n  margin-bottom: 16px;\n}\n.quiz-summary-stats {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin: 20px 0;\n}\n.quiz-summary-stats .stat {\n  padding: 16px;\n  background: var(--surface);\n  border-radius: 16px;\n}\n.stat-label {\n  display: block;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.stat-value {\n  display: block;\n  font-size: 1.5rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.quiz-summary-mistakes {\n  margin: 20px 0;\n}\n.mistake-tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 8px;\n  justify-content: center;\n}\n.mistake-tag {\n  padding: 6px 12px;\n  background: rgba(190, 73, 73, 0.1);\n  border-radius: 20px;\n  font-size: 0.8rem;\n  color: #c0392b;\n}\n.quiz-actions {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n}\n.btn-outline {\n  padding: 10px 24px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n.btn-primary {\n  padding: 10px 24px;\n  border-radius: 12px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n\n/* Banner */\n.banner {\n  position: fixed;\n  top: 14px;\n  left: 50%;\n  transform: translateX(-50%);\n  z-index: 120;\n  min-width: min(560px, calc(100vw - 24px));\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px 14px;\n  border-radius: 16px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.92);\n  backdrop-filter: blur(10px);\n  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);\n  font-weight: 450;\n  animation: riseSoft 220ms ease-out;\n}\n.banner-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.banner-action {\n  border: 0;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  padding: 9px 12px;\n  font-size: 0.78rem;\n  font-weight: 500;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n}\n.banner-x {\n  width: 36px;\n  height: 36px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n}\n\n/* Animations */\n@keyframes appFade {\n0% {\n    opacity: 0;\n    transform: translateY(4px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes railIn {\n0% {\n    opacity: 0;\n    transform: translateY(-8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes riseSoft {\n0% {\n    opacity: 0;\n    transform: translateY(8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n\n/* Responsive */\n@media (max-width: 768px) {\n.main {\n    padding: 16px 16px 100px;\n}\n.main.tools-open {\n    padding-right: 16px;\n}\n.tools {\n    left: 0;\n    right: 0;\n    width: 100%;\n}\n.session-rail-stats {\n    grid-template-columns: 1fr 1fr;\n}\n.hero-flow {\n    grid-template-columns: 1fr 1fr;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 8px);\n    justify-content: center;\n}\n.verse-font-controls {\n    gap: 2px;\n    padding: 2px 4px;\n}\n.verse-font-btn {\n    width: 20px;\n    height: 20px;\n}\n.verse-font-size-indicator {\n    min-width: 30px;\n    font-size: 9px;\n}\n}\n@media (max-width: 640px) {\n.quiz-grade-buttons {\n    flex-direction: column;\n}\n.quiz-actions {\n    flex-direction: column;\n}\n.hero-actions,\n  .empty-actions {\n    flex-direction: column;\n}\n.cta {\n    width: 100%;\n}\n}\n\n/* Dark theme overrides */\n[data-theme=\"dark\"] .tools {\n  color: var(--text);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(12, 11, 10, 0.96));\n  border-left-color: var(--border);\n}\n[data-theme=\"dark\"] .sheet-section {\n  border-color: var(--border);\n  background: var(--surface);\n}\n[data-theme=\"dark\"] .tools-top,\n[data-theme=\"dark\"] .tools-footer {\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.92));\n}\n[data-theme=\"dark\"] .tools-footer {\n  background: linear-gradient(to top, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.86), rgba(18, 15, 13, 0));\n}\n[data-theme=\"dark\"] .tools-tabs {\n  background: rgba(255, 255, 255, 0.035);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .tools-tabs button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-tabs button.active {\n  color: var(--text);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .tools-title,\n[data-theme=\"dark\"] .st-title,\n[data-theme=\"dark\"] .technique-copy label,\n[data-theme=\"dark\"] .settings-row-copy label {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .tools-context,\n[data-theme=\"dark\"] .st-sub,\n[data-theme=\"dark\"] .technique-copy small,\n[data-theme=\"dark\"] .technique-control span,\n[data-theme=\"dark\"] .settings-row-copy small {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-x,\n[data-theme=\"dark\"] .st-chev,\n[data-theme=\"dark\"] .sheet-toggle,\n[data-theme=\"dark\"] .technique-row,\n[data-theme=\"dark\"] .radio,\n[data-theme=\"dark\"] .toggle-chip,\n[data-theme=\"dark\"] .segmented-control,\n[data-theme=\"dark\"] .technique-preview {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .sheet-toggle {\n  background: rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .st-ico {\n  color: var(--accent-strong);\n  border-color: rgba(239, 193, 141, 0.22);\n  background: rgba(239, 193, 141, 0.10);\n}\n[data-theme=\"dark\"] .segmented-control button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .segmented-control button.active,\n[data-theme=\"dark\"] .toggle-chip.active {\n  color: var(--accent-strong);\n  border-color: rgba(239, 193, 141, 0.42);\n  background: rgba(239, 193, 141, 0.12);\n}\n[data-theme=\"dark\"] .tools-btn-soft {\n  color: var(--text-muted);\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .select,\n[data-theme=\"dark\"] .input {\n  color: var(--text);\n  border-color: var(--border);\n  background: rgba(255, 255, 255, 0.045);\n}\n[data-theme=\"dark\"] .switch {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n}\n[data-theme=\"dark\"] .verse-translation {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .verse-transliteration,\n[data-theme=\"dark\"] .workspace-fab-copy,\n[data-theme=\"dark\"] .workspace-fab-sub,\n[data-theme=\"dark\"] .settings-row-copy small,\n[data-theme=\"dark\"] .field-hint {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .workspace-fab,\n[data-theme=\"dark\"] .workspace-fab-sub span,\n[data-theme=\"dark\"] .workspace-fab-live-pill,\n[data-theme=\"dark\"] .word-item:hover::after,\n[data-theme=\"dark\"] .word-item:focus::after {\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .workspace-fab {\n  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.46), 0 0 0 1px rgba(255, 236, 216, 0.12);\n}\n[data-theme=\"dark\"] .workspace-fab:hover {\n  box-shadow: 0 26px 64px rgba(0, 0, 0, 0.54), 0 0 0 1px rgba(239, 193, 141, 0.20);\n}\n[data-theme=\"dark\"] .settings-section {\n  background: rgba(24, 21, 19, 0.96);\n  border-color: var(--border);\n  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .settings-row {\n  background: rgba(255, 255, 255, 0.045);\n  border-color: rgba(255, 236, 216, 0.12);\n}\n[data-theme=\"dark\"] .settings-toggle {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 236, 216, 0.14);\n  color: var(--text);\n}\n[data-theme=\"dark\"] .settings-toggle.active {\n  background: rgba(239, 193, 141, 0.13);\n  border-color: rgba(239, 193, 141, 0.42);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .quiz-card {\n  background: rgba(18, 18, 18, 0.92);\n  border-color: rgba(255, 255, 255, 0.10);\n}\n\n/* Sepia theme overrides */\n[data-theme=\"sepia\"] .verse-translation {\n  color: #7a684a;\n}\n\n/* Planner & Analytics UI */\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(12, 10, 8, 0.62);\n  backdrop-filter: blur(8px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 9999;\n  padding: 20px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 250, 243, 0.92));\n  border-radius: 20px;\n  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42);\n  border: 1px solid rgba(255, 255, 255, 0.55);\n  display: flex;\n  flex-direction: column;\n  max-height: 90vh;\n  overflow: hidden;\n  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.resume-modal {\n  width: min(760px, 96vw);\n}\n.resume-modal .modal-header h2 {\n  font-size: clamp(1.25rem, 2.3vw, 1.75rem);\n}\n.resume-saved-at {\n  display: inline-block;\n  margin-top: 4px;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n}\n.resume-grid {\n  margin-top: 12px;\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 10px;\n}\n.resume-grid .pill {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 12px 14px;\n}\n@keyframes modalIn {\nfrom { transform: translateY(10px); opacity: 0.6;\n}\nto { transform: translateY(0); opacity: 1;\n}\n}\n@keyframes modalFadeIn {\nfrom {\n    opacity: 0;\n    transform: translateY(20px) scale(0.95);\n}\nto {\n    opacity: 1;\n    transform: translateY(0) scale(1);\n}\n}\n.modal-header {\n  padding: 20px 24px;\n  border-bottom: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 1.25rem;\n  font-weight: 700;\n}\n.modal-body {\n  padding: 24px;\n  overflow-y: auto;\n}\n.modal-footer {\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--bg-elevated);\n}\n.confirm-modal {\n  max-width: 460px;\n  width: 100%;\n}\n.confirm-copy {\n  color: var(--text-muted);\n  line-height: 1.65;\n}\n.btn-danger {\n  background: #b55041;\n}\n.tools-btn-danger {\n  opacity: 0.82;\n}\n.btn-icon {\n  background: none;\n  border: none;\n  font-size: 1.2rem;\n  color: var(--text-muted);\n  cursor: pointer;\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.btn-icon:hover {\n  background: var(--border);\n  color: var(--text);\n}\n.planner-modal {\n  max-width: 500px;\n  width: 100%;\n}\n.planner-field {\n  margin-bottom: 24px;\n}\n.planner-field label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.planner-select,\n.planner-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.planner-select:focus,\n.planner-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 2px var(--accent-light);\n}\n.verses-per-day-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.quantity-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.quantity-btn:hover:not(:disabled) {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.quantity-btn:disabled {\n  opacity: 0.4;\n  cursor: not-allowed;\n}\n.planner-stats-grid {\n  display: grid;\n  grid-template-columns: repeat(2, 1fr);\n  gap: 12px;\n  margin: 24px 0;\n}\n.planner-stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  transition: all 0.2s;\n}\n.progress-info {\n  display: flex;\n  justify-content: space-between;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.progress-bar-track {\n  height: 6px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-fill {\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.3s ease;\n}\n.modal-footer {\n  display: flex;\n  gap: 12px;\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.btn-secondary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.btn-secondary:hover {\n  background: var(--border);\n}\n.btn-primary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.9rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.btn-primary:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.field-hint {\n  display: block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 6px;\n}\n.pa-lbl {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.analytics-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin-top: 20px;\n}\n.analytics-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.78rem * var(--en-scale, 1));\n  line-height: 1.4;\n}\n.stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 20px;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  transition: transform 0.2s;\n}\n.stat-delta {\n  display: inline-flex;\n  align-items: center;\n  margin-left: 10px;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  font-size: 0.7rem;\n  color: var(--accent-strong);\n  font-weight: 700;\n  vertical-align: middle;\n}\n.stat-card:hover {\n  transform: translateY(-2px);\n  border-color: var(--accent);\n}\n.stat-card i {\n  font-size: 1.8rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.stat-value {\n  font-size: 1.5rem;\n  font-weight: 700;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.stat-label {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n}\n.stat-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.72rem * var(--en-scale, 1));\n  line-height: 1.35;\n}\n.mini-trend {\n  position: relative;\n  width: 80px;\n  height: 24px;\n  margin-top: 10px;\n}\n.mini-trend span {\n  position: absolute;\n  width: 8px;\n  border-radius: 999px;\n  background: linear-gradient(180deg, var(--accent), var(--accent-soft));\n  opacity: 0.9;\n}\n\n/* Home Dashboard UI */\n.home-dashboard {\n  max-width: 800px;\n  margin: 40px auto;\n  padding: 0 20px;\n  animation: modalFadeIn 0.4s ease-out;\n}\n.dashboard-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-end;\n  margin-bottom: 40px;\n  flex-wrap: wrap;\n  gap: 20px;\n}\n.welcome-text {\n  max-width: 500px;\n}\n.header-stats {\n  display: flex;\n  gap: 16px;\n  background: var(--surface);\n  padding: 12px 20px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.mini-stat {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.9rem;\n}\n.mini-stat strong {\n  color: var(--text);\n  font-size: 1rem;\n}\n.dashboard-actions {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));\n  gap: 20px;\n  margin-bottom: 40px;\n}\n.home-dashboard-minimal {\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  min-height: 160px;\n}\n.offcanvas-launcher-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.offcanvas-launcher-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-start-card {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto auto;\n  align-items: center;\n  gap: 18px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.setup-start-copy {\n  min-width: 0;\n}\n.setup-kicker {\n  display: inline-flex;\n  margin-bottom: 6px;\n  color: var(--accent);\n  font-size: 0.72rem;\n  font-weight: 800;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n}\n.setup-start-copy h2 {\n  margin: 0 0 6px;\n  color: var(--text);\n  font-size: clamp(1.2rem, 2vw, 1.65rem);\n  line-height: 1.1;\n}\n.setup-start-copy p {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-review-hint {\n  margin-top: 10px;\n  padding: 10px 12px;\n  border-radius: 12px;\n  background: rgba(184, 130, 78, 0.10);\n  border: 1px solid rgba(184, 130, 78, 0.18);\n  color: var(--accent);\n  font-weight: 700;\n}\n.setup-mode-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(112px, 1fr));\n  gap: 10px;\n}\n.setup-mode-card {\n  min-height: 86px;\n  padding: 12px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: var(--surface);\n  color: var(--text);\n  cursor: pointer;\n  display: grid;\n  justify-items: center;\n  align-content: center;\n  gap: 4px;\n  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;\n}\n.setup-mode-card:hover,\n.setup-mode-card.active {\n  border-color: var(--accent);\n  box-shadow: var(--shadow-sm);\n  transform: translateY(-1px);\n}\n.setup-mode-card i {\n  color: var(--accent);\n  font-size: 1.2rem;\n}\n.setup-mode-card span {\n  font-weight: 800;\n}\n.setup-mode-card small {\n  color: var(--text-muted);\n  font-size: 0.78rem;\n}\n.setup-primary {\n  min-height: 48px;\n  white-space: nowrap;\n}\n.setup-optional-panel,\n.session-tools-panel {\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.68);\n}\n.setup-optional-panel summary,\n.session-tools-panel summary {\n  cursor: pointer;\n  list-style: none;\n  padding: 12px 14px;\n  font-weight: 700;\n  color: var(--text);\n}\n.setup-optional-panel summary::-webkit-details-marker,\n.session-tools-panel summary::-webkit-details-marker {\n  display: none;\n}\n.setup-optional-grid,\n.session-tools-grid {\n  display: grid;\n  gap: 12px;\n  padding: 0 14px 14px;\n}\n.setup-optional-grid {\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.session-tools-grid {\n  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));\n}\n.field-inline-toggle {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.toggle-chip {\n  min-height: 42px;\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  background: var(--surface);\n  color: var(--text);\n  font-weight: 700;\n}\n.toggle-chip.active {\n  border-color: var(--accent);\n  color: var(--accent);\n}\n.continue-session-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 16px 18px;\n  margin-bottom: 18px;\n  border: 1px solid var(--accent-soft);\n  border-radius: 18px;\n  background: linear-gradient(135deg, var(--surface), var(--accent-light));\n  box-shadow: var(--shadow-sm);\n  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;\n}\n.continue-session-card:hover {\n  transform: translateY(-2px);\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent);\n}\n.continue-session-copy {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.continue-session-actions {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.continue-session-kicker {\n  font-size: 0.72rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--accent);\n}\n.continue-session-copy small {\n  color: var(--text-muted);\n}\n.continue-session-btn {\n  min-height: 44px;\n  white-space: nowrap;\n}\n.continue-session-dismiss {\n  min-width: 44px;\n  padding-inline: 0;\n  justify-content: center;\n}\n.resume-action {\n  background: linear-gradient(145deg, rgba(154, 103, 56, 0.12), rgba(255, 255, 255, 0.94));\n  border-color: var(--accent-soft);\n}\n.resume-action .action-icon {\n  background: rgba(154, 103, 56, 0.15);\n  color: var(--accent);\n}\n.resume-action .action-arrow {\n  color: var(--accent);\n}\n.action-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n  display: flex;\n  flex-direction: column;\n  position: relative;\n  overflow: hidden;\n}\n.action-card:hover {\n  transform: translateY(-4px);\n  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);\n  border-color: var(--accent);\n}\n.action-card.primary-action {\n  background: linear-gradient(145deg, var(--accent), var(--accent-dark));\n  color: white;\n  border: none;\n}\n.action-card.primary-action .action-icon {\n  background: rgba(255, 255, 255, 0.2);\n  color: white;\n}\n.action-card.primary-action h3,\n.action-card.primary-action p,\n.action-card.primary-action .action-arrow {\n  color: white;\n}\n.action-icon {\n  width: 48px;\n  height: 48px;\n  background: var(--bg-body);\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.5rem;\n  color: var(--accent);\n  margin-bottom: 20px;\n}\n.action-content h3 {\n  font-size: 1.15rem;\n  margin: 0 0 8px 0;\n  color: var(--text);\n}\n.action-content p {\n  font-size: 0.9rem;\n  color: var(--text-muted);\n  margin: 0;\n  line-height: 1.4;\n}\n.action-arrow {\n  position: absolute;\n  bottom: 24px;\n  right: 24px;\n  font-size: 1.2rem;\n  color: var(--accent);\n  opacity: 0;\n  transform: translateX(-10px);\n  transition: all 0.2s ease;\n}\n.action-card:hover .action-arrow {\n  opacity: 1;\n  transform: translateX(0);\n}\n.dashboard-recent {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n}\n.recent-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.recent-header h3 {\n  margin: 0;\n  font-size: 1.1rem;\n}\n.btn-ghost {\n  background: none;\n  border: none;\n  color: var(--accent);\n  font-weight: 500;\n  cursor: pointer;\n  padding: 6px 12px;\n  border-radius: 8px;\n  transition: background 0.2s;\n}\n.btn-ghost:hover {\n  background: var(--accent-light);\n}\n.recent-stats {\n  display: flex;\n  gap: 32px;\n  flex-wrap: wrap;\n}\n.r-stat {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.r-stat span {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.r-stat strong {\n  font-size: 1.4rem;\n  color: var(--text);\n}\n@media (max-width: 768px) {\n.workspace-fab {\n    top: 8px;\n    display: grid;\n    grid-template-columns: minmax(0, 1fr);\n    gap: 8px;\n    padding: 9px;\n    margin: 8px 0 6px;\n    border-radius: 14px;\n}\n.workspace-fab-meta {\n    min-width: 0;\n}\n.workspace-fab-kicker {\n    font-size: 0.64rem;\n}\n.workspace-fab-title {\n    font-size: 0.9rem;\n}\n.workspace-fab-sub {\n    font-size: 0.72rem;\n    gap: 5px;\n}\n.workspace-fab-sub span {\n    flex: 1 1 auto;\n    justify-content: center;\n    min-width: min(128px, 100%);\n}\n.workspace-fab-copy {\n    font-size: 0.78rem;\n}\n.workspace-fab-live {\n    gap: 6px;\n}\n.workspace-fab-live-pill {\n    flex: 1 1 0;\n    min-width: 0;\n    justify-content: center;\n}\n.workspace-fab-actions {\n    display: grid;\n    grid-template-columns: repeat(3, minmax(0, 1fr));\n    gap: 8px;\n    width: 100%;\n}\n.fab-btn {\n    width: 100%;\n    min-width: 0;\n    justify-content: center;\n    padding: 8px 10px;\n    font-size: 0.82rem;\n    min-height: 44px;\n}\n.settings-row {\n    gap: 8px;\n}\n.settings-row-copy {\n    flex-direction: column;\n    align-items: flex-start;\n    gap: 2px;\n}\n.settings-toggle {\n    flex-basis: 78px;\n    min-height: 40px;\n}\n.settings-row-range {\n    align-items: stretch;\n    flex-direction: column;\n}\n.settings-row-range .settings-row-copy {\n    flex: initial;\n    flex-direction: row;\n    align-items: center;\n    width: 100%;\n}\n.setup-start-card {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n    padding: 16px;\n}\n.setup-mode-grid {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.setup-primary {\n    width: 100%;\n    justify-content: center;\n}\n.continue-session-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.dashboard-actions {\n    grid-template-columns: 1fr;\n    gap: 14px;\n    margin-bottom: 20px;\n}\n.offcanvas-launcher-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.action-card {\n    padding: 18px;\n}\n.action-icon {\n    margin-bottom: 14px;\n}\n.continue-session-btn,\n  .btn-primary,\n  .btn-secondary,\n  .tools-btn,\n  .player-btn,\n  .toolbar-chip,\n  .toggle-chip {\n    min-height: 44px;\n}\n.inline-setting-row {\n    align-items: stretch;\n}\n.input-compact,\n  .inline-setting-pill {\n    width: 100%;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.technique-row,\n  .technique-row-main,\n  .technique-control {\n    align-items: stretch;\n    flex-direction: column;\n}\n.technique-toggle,\n  .segmented-control {\n    width: 100%;\n}\n.player-bar {\n    width: calc(100% - 24px);\n    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);\n    padding: 12px 14px;\n}\n.player-bar.collapsed {\n    transform: translateX(-50%);\n}\n.player-main {\n    flex-wrap: nowrap;\n    align-items: center;\n    gap: 10px;\n}\n.player-info {\n    flex: 0 1 120px;\n    min-width: 0;\n}\n.player-chapter {\n    font-size: 0.78rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-verse {\n    font-size: 0.72rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-controls {\n    flex: 0 0 auto;\n    justify-content: center;\n    gap: 8px;\n}\n.player-progress-wrap {\n    order: 0;\n    flex: 1 1 auto;\n    min-width: 0;\n}\n.player-speed-controls {\n    flex: 0 0 auto;\n}\n.analytics-grid {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n}\n.session-rail-actions {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.rail-btn {\n    flex: initial;\n    width: 100%;\n    justify-content: center;\n}\n.rail-btn-primary {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.toolbar-chip {\n    flex: initial;\n    width: 100%;\n}\n.font-dropdown {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 4px);\n    justify-content: center;\n    min-width: 0;\n}\n.font-dropdown {\n    width: 100%;\n}\n.font-dropdown-trigger {\n    width: 100%;\n    justify-content: space-between;\n}\n.verse-card {\n    padding: 16px;\n    border-radius: 18px;\n}\n.verse-header {\n    flex-direction: column;\n    align-items: stretch;\n    gap: 12px;\n}\n.verse-badges,\n  .verse-actions {\n    flex-wrap: wrap;\n}\n.verse-actions {\n    justify-content: space-between;\n}\n.verse-font-controls {\n    margin-right: 0;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.modal-content,\n  .confirm-modal,\n  .planner-modal {\n    width: 100%;\n    max-width: 100%;\n    border-radius: 18px;\n}\n.modal-header,\n  .modal-body,\n  .modal-footer {\n    padding-left: 16px;\n    padding-right: 16px;\n}\n.planner-stats-grid {\n    grid-template-columns: 1fr;\n}\n.tools {\n    width: 100vw;\n    max-width: 100vw;\n}\n.tools-top,\n  .tools-body,\n  .tools-footer {\n    padding-left: 14px;\n    padding-right: 14px;\n}\n.tools-tabs {\n    overflow-x: hidden;\n    display: grid;\n    grid-template-columns: repeat(3, minmax(0, 1fr));\n    gap: 8px;\n}\n.tools-tabs button {\n    width: 100%;\n    min-width: 0;\n}\n.reading-aid-grid,\n  .session-tools-grid {\n    grid-template-columns: 1fr;\n}\n.verse-card,\n  .tools,\n  .sheet,\n  .sheet-content {\n    overflow-x: hidden;\n}\n}\n@media (min-width: 769px) and (max-width: 1024px) {\n.dashboard-actions {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n}\n.session-rail-actions {\n    flex-wrap: wrap;\n}\n.reading-toolbar {\n    align-items: flex-start;\n}\n.reading-toolbar-group:first-child {\n    flex: 1 1 100%;\n}\n.toolbar-chip {\n    flex: 0 1 auto;\n}\n.player-bar {\n    width: calc(100vw - 40px);\n}\n.player-main {\n    gap: 14px;\n}\n.player-progress-wrap {\n    min-width: 0;\n    width: 100%;\n    order: 4;\n}\n}\n@media (max-width: 480px) {\n.session-pill {\n    white-space: normal;\n    text-align: center;\n    justify-content: center;\n}\n.rail-btn,\n  .toolbar-chip {\n    flex: 1 1 100%;\n}\n.player-time {\n    min-width: auto;\n    font-size: 0.7rem;\n}\n.player-progress-wrap {\n    gap: 8px;\n}\n.verse-number,\n  .verse-status-badge,\n  .verse-status-subtle {\n    width: 100%;\n    justify-content: center;\n    text-align: center;\n}\n}\n.main.flow-recall .verse-card.active .verse-arabic {\n  color: transparent;\n  text-shadow: 0 0 22px rgba(232, 237, 247, 0.55);\n}\n.main.blur-mode-active.flow-recall .verse-card.active .verse-arabic {\n  text-shadow: 0 0 var(--recall-blur, 10px) rgba(22, 18, 14, 0.72);\n}\n.main.flow-practice .verse-card.active .verse-arabic {\n  opacity: 0.45;\n}\n.main.flow-recall .verse-card.active .verse-arabic .tajweed-mark,\n.main.flow-recall .verse-card.active .verse-arabic word,\n.main.flow-recall .verse-card.active .verse-arabic .wbw-word {\n  color: transparent !important;\n  background: transparent !important;\n  box-shadow: none !important;\n}\n\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n:root {\n  --bg: #f3eee6;\n  --surface: rgba(255, 250, 243, 0.88);\n  --surface-strong: rgba(255, 255, 255, 0.92);\n  --border: rgba(78, 58, 38, 0.10);\n  --text: #1f1a17;\n  --text-muted: #6c6258;\n  --accent: #9a6738;\n  --accent-strong: #6e4726;\n  --accent-soft: #d8c1a8;\n  --accent-light: rgba(154, 103, 56, 0.10);\n  --accent-wash: rgba(228, 211, 194, 0.42);\n  --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);\n  --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);\n  --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);\n  --radius: 16px;\n  --navbar-offset: 56px;\n  --tools-width: 440px;\n  --tools-footer-h: 78px;\n  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;\n  --font-ui: \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n[data-theme=\"dark\"] {\n  --bg: #14110f;\n  --surface: rgba(31, 27, 24, 0.92);\n  --surface-strong: rgba(43, 37, 32, 0.96);\n  --border: rgba(255, 236, 216, 0.16);\n  --text: #f7ebdf;\n  --text-muted: #d1c2b3;\n  --accent: #d0a06b;\n  --accent-strong: #efc18d;\n  --accent-soft: #5f4530;\n  --accent-light: rgba(208, 160, 107, 0.14);\n  --accent-wash: rgba(208, 160, 107, 0.08);\n  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);\n  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);\n  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);\n}\n[data-theme=\"sepia\"] {\n  --bg: #efe2cb;\n  --surface: rgba(250, 241, 227, 0.88);\n  --surface-strong: rgba(255, 248, 237, 0.94);\n  --text: #352516;\n  --text-muted: #75624f;\n  --accent: #b8824e;\n  --accent-strong: #8f6033;\n  --accent-soft: #dcc3a6;\n  --accent-light: rgba(184, 130, 78, 0.12);\n  --accent-wash: rgba(221, 194, 162, 0.35);\n}\n[v-cloak] {\n  display: none !important;\n}\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\n\n/* Replace the existing blur mode CSS with this */\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-aid {\n  filter: blur(var(--recall-blur, 10px));\n  opacity: 0.7;\n  transition: filter 0.3s ease, opacity 0.3s ease;\n}\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .tajweed-mark,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic word,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .wbw-word {\n  filter: blur(var(--recall-blur, 10px));\n}\n\n/* Keep active verse clear */\n.main.blur-mode-active .verse-card.active .verse-arabic,\n.main.blur-mode-active .verse-card.active .verse-aid {\n  filter: none;\n  opacity: 1;\n}\n\n/* Player Speed Controls */\n.player-speed-controls {\n  display: flex;\n  gap: 4px;\n  background: var(--accent-light);\n  padding: 4px 8px;\n  border-radius: 40px;\n}\n\n/* Word highlighting with Tajweed */\n.verse-arabic.tajweed-enabled .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n  position: relative;\n}\n.verse-arabic.tajweed-enabled .wbw-word.highlighted {\n  background: var(--accent);\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n\n/* Preserve Tajweed colors inside highlighted words */\n.verse-arabic.tajweed-enabled .wbw-word.highlighted,\n.verse-arabic.tajweed-enabled .wbw-word.highlighted * {\n  color: inherit !important;\n}\n\n/* Make Tajweed marks more visible on highlight */\n.verse-arabic.tajweed-enabled .wbw-word.highlighted .tajweed-mark {\n  filter: brightness(1.2);\n}\n.verse-arabic.tajweed-enabled .wbw-word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n.verse-arabic.tajweed-enabled .wbw-word.highlighted {\n  animation: wordHighlightPulse 0.2s ease-out;\n}\n@keyframes wordHighlightPulse {\n0% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.03);\n}\n100% {\n    transform: scale(1.02);\n}\n}\n\n/* Combined Tajweed + Word Highlighting */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n\n/* Preserve tajweed colors inside highlighted words but make them visible */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {\n  color: inherit !important;\n  background: transparent !important;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*=\"tajweed-\"] {\n  color: white !important;\n  background: transparent !important;\n}\n.speed-btn-mini {\n  padding: 4px 8px;\n  border-radius: 20px;\n  border: none;\n  background: transparent;\n  font-size: 0.7rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n}\n.speed-btn-mini:hover {\n  background: rgba(255, 255, 255, 0.5);\n}\n.speed-btn-mini.active {\n  background: var(--accent);\n  color: white;\n}\n@media (max-width: 768px) {\n.player-speed-controls {\n    display: none;\n    /* Hide on mobile, too crowded */\n}\n}\n\n/* Mode Button Styling */\n.mode-btn {\n  background: var(--surface);\n  border: 1px solid var(--accent);\n  color: var(--accent);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mode-btn i:first-child {\n  font-size: 0.85rem;\n}\n.mode-btn .bi-chevron-down {\n  font-size: 0.7rem;\n  transition: transform 0.2s;\n}\n.mode-btn:hover .bi-chevron-down {\n  transform: translateY(2px);\n}\n.mode-btn:hover {\n  background: var(--accent-light);\n}\n\n/* Make all buttons consistent */\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn:disabled,\n.rail-btn-ghost:disabled,\n.rail-btn-primary:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n  pointer-events: none;\n  transform: none;\n  box-shadow: none;\n}\n.rail-btn-resume {\n  background: rgba(255, 255, 255, 0.92);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.rail-btn-resume:hover {\n  background: var(--accent-light);\n  transform: translateY(-1px);\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\nbody {\n  font-family: var(--font-ui);\n  background: var(--bg);\n  color: var(--text);\n}\nhtml {\n  background: var(--bg);\n}\n.app {\n  min-height: 100vh;\n  background: var(--bg);\n  font-size: calc(16px * var(--ui-scale, 1));\n  animation: appFade 260ms ease-out;\n}\n.verse-arabic {\n  min-height: 60px;\n}\n\n/* Session Rail */\n.session-rail {\n  background: var(--surface);\n  border-radius: 20px;\n  margin-bottom: 20px;\n  padding: 12px 16px 14px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.session-rail-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 10px;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.session-rail-copy {\n  flex: 1;\n  min-width: 0;\n}\n.session-rail-headline {\n  display: flex;\n  align-items: baseline;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.session-rail-pills {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  margin-top: 6px;\n}\n.session-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 4px;\n  padding: 5px 9px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n  font-size: 0.71rem;\n  white-space: nowrap;\n}\n.session-pill strong {\n  color: var(--text);\n  font-weight: 700;\n}\n.session-pill-focus {\n  max-width: min(280px, 100%);\n}\n.session-pill-focus strong {\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.session-rail-kicker {\n  font-size: 0.7rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.session-rail-meta {\n  font-size: 0.72rem;\n  color: var(--text-muted);\n  margin-top: 2px;\n}\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\n.session-rail-subnote {\n  margin-top: 10px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n}\n\n/* Mode Indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 10px;\n  padding: 6px 14px;\n  margin: 8px 0 12px 0;\n  background: var(--accent-light);\n  border-radius: 40px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n.mode-switch-btn {\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 4px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.mode-switch-btn:hover {\n  background: rgba(154, 103, 56, 0.2);\n  transform: rotate(180deg);\n}\n.progress-bar-wide {\n  margin-top: 10px;\n  height: 6px;\n  position: relative;\n  overflow: visible;\n}\n.progress-label {\n  position: absolute;\n  top: -24px;\n  right: 0;\n  font-size: 0.72rem;\n  font-weight: 700;\n  color: var(--accent);\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.session-rail-top {\n    flex-direction: column;\n    align-items: stretch;\n}\n.session-rail-actions {\n    justify-content: stretch;\n    width: 100%;\n    flex-wrap: wrap;\n}\n.rail-btn {\n    flex: 1;\n    justify-content: center;\n}\n}\n.verse-arabic-loading {\n  min-height: 60px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--text-muted);\n  animation: pulse 1s infinite;\n}\n@keyframes pulse {\n0%,\n  100% {\n    opacity: 0.3;\n}\n50% {\n    opacity: 0.6;\n}\n}\n\n/* Ensure HTML content is styled properly before Vue mounts */\n.verse-arabic word,\n.verse-arabic .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n}\n\n/* Prevent raw HTML showing */\n.verse-arabic:empty {\n  display: none;\n}\n\n/* Tajweed styles */\n.verse-arabic.tajweed-enabled [class*=\"tajweed\"] {\n  display: inline;\n}\n\n/* Color rules for tajweed - adjust based on what API returns */\n.verse-arabic [class*=\"ghunnah\"],\n.verse-arabic [class*=\"Ghunnah\"] {\n  color: #2ecc71;\n}\n.verse-arabic [class*=\"madd\"],\n.verse-arabic [class*=\"Madd\"] {\n  color: #e74c3c;\n}\n.verse-arabic [class*=\"qalqalah\"],\n.verse-arabic [class*=\"Qalqalah\"] {\n  color: #f39c12;\n}\n.verse-arabic [class*=\"ikhfa\"],\n.verse-arabic [class*=\"Ikhfa\"] {\n  color: #9b59b6;\n}\n.verse-arabic [class*=\"idgham\"],\n.verse-arabic [class*=\"Idgham\"] {\n  color: #3498db;\n}\n\n/* Word by Word styles */\n.wbw-word {\n  display: inline-block;\n  padding: 5px 8px;\n  margin: 2px 3px;\n  border-radius: 8px;\n  transition: all 0.2s ease;\n  cursor: pointer;\n  font-size: 1.05rem;\n  background: rgba(154, 103, 56, 0.05);\n}\n.wbw-word:hover {\n  background: var(--accent-light);\n  transform: scale(1.02);\n}\n.wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n  animation: pop 180ms ease-out;\n}\n@keyframes pop {\nfrom {\n    transform: scale(1.01);\n}\nto {\n    transform: scale(1.05);\n}\n}\n\n/* Word highlighting styles */\n.verse-arabic word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n.rail-stat strong,\n.player-eta {\n  cursor: help;\n  border-bottom: 1px dotted var(--text-muted);\n}\n\n/* Optional: Show detailed breakdown on hover */\n.rail-stat:hover strong::after {\n  content: attr(title);\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: var(--surface-strong);\n  color: var(--text);\n  padding: 4px 8px;\n  border-radius: 8px;\n  font-size: 0.7rem;\n  white-space: nowrap;\n  z-index: 100;\n  box-shadow: var(--shadow-sm);\n  border: 1px solid var(--border);\n}\n\n/* Minimized Session Rail */\n.session-rail-mini {\n  position: sticky;\n  top: 12px;\n  z-index: 18;\n  padding: 10px;\n  padding-top: 8px;\n  margin-bottom: 20px;\n  background: var(--surface);\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-sm);\n  overflow: hidden;\n  transition: all 0.2s ease;\n}\n.session-rail-mini:hover {\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent-soft);\n}\n.rail-mini-content {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 8px 12px 8px 16px;\n}\n.rail-mini-info {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  flex: 1;\n}\n.rail-mini-icon {\n  width: 32px;\n  height: 32px;\n  background: var(--accent-light);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.rail-mini-icon i {\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.rail-mini-details {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-mini-surah {\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.rail-mini-progress {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.rail-mini-stats {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.mini-stat-item {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.mini-stat-item i {\n  font-size: 0.7rem;\n  color: var(--accent);\n}\n.rail-mini-actions {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mini-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n}\n.mini-btn:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n}\n.mini-btn:first-child {\n  background: var(--accent);\n  border-color: var(--accent);\n  color: white;\n}\n.mini-btn:first-child:hover {\n  transform: scale(1.05);\n  background: var(--accent-strong);\n}\n.rail-mini-progress {\n  height: 2px;\n  background: var(--border);\n}\n.progress-fill-mini {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.rail-mini-stats {\n    display: none;\n}\n.rail-mini-content {\n    padding: 6px 10px 6px 12px;\n}\n.rail-mini-surah {\n    font-size: 0.75rem;\n}\n}\n\n/* Font Dropdown */\n.font-dropdown {\n  position: relative;\n}\n.font-dropdown-trigger {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 999px;\n  font-size: 0.75rem;\n  cursor: pointer;\n  transition: all 0.2s;\n  color: var(--text);\n}\n.font-dropdown-trigger:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.font-dropdown-trigger .bi-chevron-down {\n  transition: transform 0.2s;\n  font-size: 0.7rem;\n}\n.font-dropdown-trigger .bi-chevron-down.rotated {\n  transform: rotate(180deg);\n}\n.font-dropdown-menu {\n  position: absolute;\n  top: calc(100% + 8px);\n  right: 0;\n  min-width: 200px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  box-shadow: var(--shadow-lg);\n  overflow: hidden;\n  z-index: 100;\n  backdrop-filter: blur(12px);\n}\n.font-option {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  width: 100%;\n  padding: 10px 14px;\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  font-size: 0.8rem;\n  text-align: left;\n  transition: all 0.15s;\n  color: var(--text);\n}\n.font-option:hover {\n  background: var(--accent-light);\n}\n.font-option.active {\n  background: var(--accent);\n  color: white;\n}\n.font-option .check-icon {\n  margin-left: auto;\n  font-size: 0.8rem;\n}\n\n/* Dropdown Animation */\n.dropdown-fade-enter-active,\n.dropdown-fade-leave-active {\n  transition: all 0.2s ease;\n}\n.dropdown-fade-enter-from,\n.dropdown-fade-leave-to {\n  opacity: 0;\n  transform: translateY(-8px);\n}\n\n/* Tajweed styles for AlQuran quran-tajweed edition */\n.verse-arabic.tajweed-enabled {\n  line-height: 2;\n  white-space: normal;\n  overflow-wrap: anywhere;\n}\n.verse-arabic.tajweed-enabled .tajweed-mark {\n  display: inline;\n  border-radius: 0.2em;\n  padding: 0 0.03em;\n}\n.verse-arabic.tajweed-enabled .tajweed-ham_wasl,\n.verse-arabic.tajweed-enabled .tajweed-slnt {\n  color: #7e8a97;\n}\n.verse-arabic.tajweed-enabled .tajweed-ghn,\n.verse-arabic.tajweed-enabled .tajweed-idgh_ghn,\n.verse-arabic.tajweed-enabled .tajweed-iqlb {\n  color: #2e9d62;\n  background: rgba(46, 157, 98, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,\n.verse-arabic.tajweed-enabled .tajweed-ikhf,\n.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw {\n  color: #9b59b6;\n  background: rgba(155, 89, 182, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-qlq,\n.verse-arabic.tajweed-enabled .tajweed-lqlq {\n  color: #d98824;\n  background: rgba(217, 136, 36, 0.12);\n}\n.verse-arabic.tajweed-enabled .tajweed-madda_normal,\n.verse-arabic.tajweed-enabled .tajweed-madda_permissible,\n.verse-arabic.tajweed-enabled .tajweed-madda_necessary,\n.verse-arabic.tajweed-enabled .tajweed-madda_obligatory,\n.verse-arabic.tajweed-enabled .tajweed-madda_pbligatory {\n  color: #d55245;\n  background: rgba(213, 82, 69, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_mus,\n.verse-arabic.tajweed-enabled .tajweed-idghm_shfw,\n.verse-arabic.tajweed-enabled .tajweed-idgh_shfw,\n.verse-arabic.tajweed-enabled .tajweed-ghn+.tajweed-mark {\n  color: #2b7bbb;\n  background: rgba(43, 123, 187, 0.10);\n}\n\n/* Toolbar chip active state for tajweed */\n.toolbar-chip.active {\n  background: var(--accent);\n  color: white;\n}\n.verse-play-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: white;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.verse-play-btn i {\n  font-size: 0.9rem;\n}\n.verse-play-btn:hover {\n  transform: scale(1.05);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--accent);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.verse-play-btn:active {\n  transform: scale(0.98);\n}\n.verse-download-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.82);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--accent);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.verse-download-btn:hover:not(:disabled) {\n  transform: scale(1.05);\n  border-color: var(--accent);\n  background: rgba(255, 255, 255, 0.96);\n}\n.verse-download-btn:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n.speed-label {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-right: 4px;\n}\n.speed-controls {\n  display: flex;\n  gap: 4px;\n}\n.speed-btn {\n  padding: 4px 8px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.speed-btn.active {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.streak-motivation {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border-radius: 40px;\n  font-size: 0.75rem;\n}\n.streak-badge {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-weight: 500;\n}\n.motivation-message {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--text-muted);\n  font-size: 0.7rem;\n}\n.pa-note {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n  margin-top: 4px;\n  display: block;\n}\n\n/* Active tab indicator with pulse effect */\n.tools-tabs button.active-tab {\n  position: relative;\n  animation: tabPulse 0.22s ease-out;\n}\n@keyframes tabPulse {\n0% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 var(--accent);\n}\n50% {\n    transform: scale(1.012);\n    box-shadow: 0 0 0 3px var(--accent-light);\n}\n100% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Toggle switch animation and visual feedback */\n.switch {\n  transition: all 0.2s ease;\n}\n.switch:active {\n  transform: scale(0.98);\n}\n.switch-ui {\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n  animation: switchPulse 0.3s ease-out;\n}\n@keyframes switchPulse {\n0% {\n    box-shadow: 0 0 0 0 rgba(139, 94, 60, 0.4);\n}\n50% {\n    box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.2);\n}\n100% {\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Field hint styling */\n.field-hint {\n  font-size: calc(0.7rem * var(--en-scale, 1));\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.26;\n  display: block;\n}\n\n/* Verse Arabic styling */\n.verse-arabic {\n  --verse-font-percent: 100;\n  --verse-font-size: clamp(1.5rem, calc(var(--verse-font-percent, 150) * 0.0175rem), 3.25rem);\n  font-family: var(--font-ar);\n  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n.verse-arabic word {\n  display: inline-block;\n  font-size: 1em;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-card {\n  background: var(--surface);\n  border-radius: 20px;\n  padding: 26px;\n  transition: all 0.2s ease;\n  border: 1px solid var(--border);\n  position: relative;\n  direction: ltr;\n  overflow: hidden;\n  width: 100%;\n}\n.verse-card::before {\n  content: \"\";\n  position: absolute;\n  inset: 0;\n  pointer-events: none;\n  background:\n    linear-gradient(180deg, rgba(184, 130, 78, 0.03), transparent 22%),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.05), transparent 28%);\n}\n.verse-card.active {\n  border-color: var(--accent);\n  background: linear-gradient(145deg, rgba(184, 130, 78, 0.14), rgba(154, 103, 56, 0.04));\n  box-shadow: 0 0 0 1px var(--accent), 0 14px 32px rgba(154, 103, 56, 0.18);\n  transform: translateY(-1px);\n  transition: all 0.2s ease;\n}\n.main.focus-mode-active .verse-card:not(.active) {\n  opacity: 0.54;\n  filter: saturate(0.72);\n}\n.main.focus-mode-active .workspace-fab-live,\n.main.focus-mode-active .verse-card:not(.active) .verse-aid {\n  opacity: 0.38;\n}\n\n\n\n/* Removed: \"For serious huffadh training\" badge */\n.verse-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 16px;\n}\n.verse-badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-number {\n  font-size: 0.78rem;\n  padding: 6px 12px;\n  background: var(--accent);\n  border-radius: 999px;\n  color: #fff;\n  font-weight: 700;\n  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.24);\n}\n.verse-status-badge,\n.verse-status-subtle {\n  border-radius: 999px;\n  padding: 5px 10px;\n  font-size: 0.68rem;\n  font-weight: 600;\n}\n.verse-status-badge {\n  background: var(--accent-light);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.verse-status-subtle {\n  background: var(--bg-elevated);\n  color: var(--text-muted);\n}\n.verse-ref {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 8px;\n}\n\n/* Font controls */\n.verse-font-controls {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  padding: 2px 6px;\n  margin-right: 8px;\n}\n.verse-font-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 12px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 10px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.verse-font-btn:hover {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n}\n.verse-font-size-indicator {\n  font-size: 10px;\n  min-width: 35px;\n  text-align: center;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n\n/* Session rail */\n.session-rail {\n  position: sticky;\n  top: 14px;\n  z-index: 18;\n  margin-bottom: 18px;\n  padding: 12px 14px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-md);\n  animation: railIn 280ms ease-out;\n}\n.session-rail-top {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  gap: 12px;\n  align-items: center;\n}\n.session-rail-kicker {\n  font-size: 10px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  margin-top: 2px;\n  font-size: 14px;\n  font-weight: 450;\n}\n.session-rail-meta {\n  margin-top: 2px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.session-rail-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 8px;\n  margin-top: 10px;\n}\n.rail-stat {\n  padding: 8px 10px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-stat span {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n}\n.rail-stat strong {\n  font-size: 0.78rem;\n  font-weight: 500;\n}\n.rail-btn {\n  height: 34px;\n  padding: 0 12px;\n  border-radius: 13px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  color: var(--text);\n  font-size: 12px;\n  font-weight: 450;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.rail-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);\n}\n.progress-bar {\n  flex: 1;\n  height: 4px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-wide {\n  margin-top: 10px;\n}\n.progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s;\n}\n\n/* Mode indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  margin: 8px 0 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n\n/* Reading toolbar */\n.reading-toolbar {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  margin-bottom: 16px;\n  padding: 12px 14px;\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.reading-toolbar-group {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  align-items: flex-start;\n}\n.toolbar-chip {\n  border: 0;\n  border-radius: 999px;\n  padding: 8px 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  font-size: 0.75rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: var(--shadow-sm);\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.toolbar-chip i,\n.rail-btn i,\n.tools-tabs button i,\n.st-ico i {\n  font-size: 0.9rem;\n  line-height: 1;\n}\n.toolbar-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.toolbar-chip:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n\n/* Tools panel */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  width: min(var(--tools-width), 92vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n}\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(15, 12, 8, 0.35);\n  backdrop-filter: blur(1px);\n  z-index: 59;\n}\n.tools.open {\n  transform: translateX(0);\n}\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n}\n.tools-topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.tools-title {\n  font-size: 1rem;\n  font-weight: 700;\n  letter-spacing: -0.2px;\n  color: var(--text);\n}\n.tools-context {\n  margin-top: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 600;\n}\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n  color: rgba(0, 0, 0, 0.7);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n  overflow-x: auto;\n  -webkit-overflow-scrolling: touch;\n  width: 100%;\n}\n.tools-tabs button {\n  flex: 1 1 0;\n  padding: 7px 10px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.82rem;\n  cursor: pointer;\n  color: rgba(0, 0, 0, 0.55);\n  font-weight: 450;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: background 140ms ease, color 140ms ease, transform 140ms ease, box-shadow 160ms ease;\n  white-space: nowrap;\n}\n.tools-tabs button.active {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));\n  box-shadow: var(--shadow-sm);\n  color: rgba(0, 0, 0, 0.85);\n}\n.tools-body {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n}\n\n/* Compact mode (default) to reduce cognitive load */\n.tools-body.compact .st-sub,\n.tools-body.compact .field-hint,\n.tools-body.compact .analytics-help,\n.tools-body.compact .stat-help {\n  display: block !important;\n}\n.tools-body.compact .sheet {\n  gap: 12px;\n}\n.tools-body.compact .sheet-section {\n  padding: 0;\n  border-radius: 16px;\n}\n.tools-body.compact .sheet-toggle {\n  padding: 12px 14px;\n}\n.tools-body.compact .sheet-content {\n  padding: 12px 14px 14px;\n}\n.tools-body.compact .field-stack {\n  gap: 12px;\n}\n.tools-body.compact .field label {\n  margin-bottom: 6px;\n}\n.sheet {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.sheet-section {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border-radius: 18px;\n  padding: 0;\n  overflow: hidden;\n  box-shadow: var(--shadow-sm);\n  animation: riseSoft 260ms ease-out;\n}\n.sheet-toggle {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border: none;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease;\n}\n.st-left {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.st-ico {\n  width: 24px;\n  height: 24px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));\n  border: 1px solid rgba(139, 94, 60, 0.18);\n  flex: 0 0 auto;\n  font-size: 11px;\n  font-weight: 600;\n  color: var(--accent);\n}\n.st-txt {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 2px;\n  min-width: 0;\n}\n.st-title {\n  font-weight: 450;\n  letter-spacing: -0.2px;\n  color: var(--text);\n  font-size: 0.82rem;\n  white-space: nowrap;\n}\n.st-sub {\n  font-size: 0.66rem;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.st-chev {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  display: grid;\n  place-items: center;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  color: rgba(0, 0, 0, 0.65);\n  transition: transform 0.15s ease;\n  box-shadow: var(--shadow-sm);\n}\n.st-chev.open {\n  transform: rotate(180deg);\n}\n.sheet-content {\n  padding: 12px 12px 14px;\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field-stack {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  min-width: 0;\n}\n.field label {\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n}\n.field-hint {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.35;\n  display: block;\n}\n.select,\n.input {\n  width: 100%;\n  min-width: 0;\n  padding: 11px 12px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--text);\n  font-size: 0.8rem;\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n.range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.range-single {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n  align-items: center;\n}\n.range span {\n  color: rgba(0, 0, 0, 0.35);\n  font-weight: 450;\n  font-size: 11px;\n}\n.radio-group {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.radio {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 0.85rem;\n  color: var(--text);\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  transition: all 0.2s ease;\n}\n.radio:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-sm);\n}\n.radio input {\n  margin: 0;\n}\n.switch {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 11px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  cursor: pointer;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  transition: all 0.2s ease;\n}\n.switch input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.switch-ui {\n  width: 44px;\n  height: 26px;\n  border-radius: 999px;\n  background: rgba(0, 0, 0, 0.12);\n  position: relative;\n  flex: 0 0 auto;\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  content: \"\";\n  position: absolute;\n  top: 3px;\n  left: 3px;\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  background: white;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n}\n.switch input:checked+.switch-ui::after {\n  transform: translateX(18px);\n}\n.switch-text {\n  font-size: 0.74rem;\n  color: rgba(0, 0, 0, 0.72);\n  font-weight: 400;\n}\n.tools-techniques-section {\n  border-color: rgba(139, 94, 60, 0.16);\n  box-shadow: none;\n}\n.techniques-list {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.technique-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.62);\n}\n.technique-row-stacked {\n  align-items: stretch;\n  flex-direction: column;\n}\n.technique-row-main,\n.technique-control {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.technique-copy {\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  gap: 3px;\n}\n.technique-copy label {\n  margin: 0;\n  color: var(--text);\n  font-size: 0.8rem;\n  font-weight: 650;\n  white-space: nowrap;\n}\n.technique-copy small,\n.technique-control span {\n  color: var(--text-muted);\n  font-size: 0.7rem;\n  line-height: 1.35;\n}\n.technique-toggle {\n  flex: 0 0 68px;\n  min-height: 36px;\n}\n.technique-control {\n  padding-top: 10px;\n  border-top: 1px solid rgba(0, 0, 0, 0.06);\n}\n.technique-range {\n  flex: 1 1 auto;\n  min-width: 96px;\n  padding: 0;\n  box-shadow: none;\n}\n.segmented-control {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 6px;\n  padding: 5px;\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 12px;\n  background: rgba(0, 0, 0, 0.035);\n}\n.segmented-control button {\n  min-width: 0;\n  min-height: 36px;\n  padding: 7px 8px;\n  border: 0;\n  border-radius: 9px;\n  background: transparent;\n  color: var(--text-muted);\n  font-size: 0.74rem;\n  font-weight: 650;\n  cursor: pointer;\n}\n.segmented-control button.active {\n  background: rgba(255, 255, 255, 0.9);\n  color: var(--accent-strong);\n  box-shadow: var(--shadow-sm);\n}\n.technique-preview {\n  padding: 9px 10px;\n  border-radius: 11px;\n  background: rgba(154, 103, 56, 0.07);\n  border: 1px solid rgba(154, 103, 56, 0.10);\n  color: var(--accent-strong);\n  font-size: 0.72rem;\n  line-height: 1.35;\n}\n\n/* Start button */\n.start-btn {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  border-radius: 12px;\n  color: white;\n  font-size: 1rem;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  margin-top: 20px;\n  transition: all 0.2s ease;\n}\n.start-btn:hover:not(:disabled) {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);\n}\n.start-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n\n/* Tools footer */\n.tools-footer {\n  position: absolute;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  height: var(--tools-footer-h);\n  padding: 12px 16px 14px;\n  border-top: 1px solid var(--border);\n  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));\n  display: flex;\n  gap: 10px;\n  justify-content: space-between;\n  align-items: center;\n}\n.tools-btn {\n  flex: 1;\n  min-height: 44px;\n  padding: 10px 10px;\n  border-radius: 15px;\n  font-weight: 500;\n  border: 1px solid rgba(0, 0, 0, 0.1);\n  cursor: pointer;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  line-height: 1;\n}\n.tools-btn-soft {\n  color: var(--text-muted);\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.42));\n  box-shadow: none;\n}\n.tools-btn-soft:hover {\n  color: var(--text);\n  border-color: var(--accent-soft);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.6));\n}\n.tools-btn-primary {\n  color: #fff;\n  border-color: rgba(0, 0, 0, 0.08);\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  box-shadow: var(--shadow-sm);\n}\n.tools-btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n.tools-btn:active:not(:disabled),\n.fab-btn:active:not(:disabled),\n.toggle-chip:active:not(:disabled),\n.sheet-toggle:active:not(:disabled) {\n  transform: translateY(0);\n}\n.tools-btn:hover:not(:disabled),\n.fab-btn:hover:not(:disabled),\n.toggle-chip:hover:not(:disabled),\n.sheet-toggle:hover:not(:disabled) {\n  filter: brightness(1.02);\n}\n.tools-btn-primary:disabled {\n  opacity: 0.55;\n  cursor: not-allowed;\n  box-shadow: none;\n}\n.tools-btn-start {\n  flex: 1.6;\n}\n\n/* Hero section */\n.hero-card {\n  margin-bottom: 16px;\n  padding: 18px 18px 16px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 236, 226, 0.92));\n  box-shadow: var(--shadow-md);\n  display: grid;\n  gap: 14px;\n  animation: riseSoft 260ms ease-out;\n}\n.hero-kicker {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  color: var(--accent);\n}\n.hero-title {\n  margin-top: 6px;\n  font-size: 1.24rem;\n  font-weight: 500;\n  letter-spacing: -0.03em;\n}\n.hero-sub {\n  margin-top: 8px;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  max-width: 56ch;\n}\n.hero-flow {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n}\n.hero-step {\n  padding: 10px 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.62);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.74rem;\n}\n.hero-step span {\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  display: grid;\n  place-items: center;\n  background: var(--accent-light);\n  color: var(--accent);\n  font-size: 11px;\n}\n.hero-step strong {\n  font-weight: 500;\n}\n.hero-points {\n  display: grid;\n  gap: 8px;\n}\n.hero-point {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.hero-point i {\n  color: var(--accent);\n}\n.hero-actions,\n.empty-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cta {\n  flex: 1;\n  padding: 10px 10px;\n  border-radius: 14px;\n  font-weight: 450;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 11px;\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.cta-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);\n}\n.cta-ghost {\n  background: rgba(255, 255, 255, 0.58);\n  box-shadow: var(--shadow-sm);\n}\n\n/* Empty state */\n.empty {\n  padding: 40px 0;\n}\n.empty-card {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: var(--radius);\n  padding: 32px;\n  text-align: center;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-md);\n}\n.empty-icon {\n  font-family: var(--font-ar);\n  font-size: 2.2rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.empty-card h3 {\n  font-weight: 450;\n  margin-bottom: 6px;\n  font-size: 1rem;\n}\n.empty-card p {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  margin-bottom: 16px;\n}\n\n/* Verses grid */\n.workspace {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr);\n  gap: 14px;\n  align-items: start;\n  margin-top: 14px;\n}\n.workspace-main {\n  min-width: 0;\n}\n.workspace-fab {\n  position: sticky;\n  top: 14px;\n  z-index: 25;\n  display: flex;\n  min-width: 0;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 8px 10px;\n  margin: 8px 0 6px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.06);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.58));\n  box-shadow: 0 16px 38px rgba(63, 39, 18, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.38);\n  backdrop-filter: blur(10px);\n  animation: cardSoftIn 220ms cubic-bezier(0.16, 1, 0.3, 1);\n  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;\n}\n.workspace-fab:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 20px 44px rgba(63, 39, 18, 0.18), 0 0 0 1px rgba(154, 103, 56, 0.18);\n  border-color: rgba(154, 103, 56, 0.2);\n}\n@keyframes cardSoftIn {\nfrom {\n    transform: translateY(6px);\n    opacity: 0.9;\n}\nto {\n    transform: translateY(0);\n    opacity: 1;\n}\n}\n.workspace-fab-meta {\n  min-width: 0;\n  flex: 1 1 auto;\n  display: grid;\n  gap: 4px;\n}\n.workspace-fab-kicker {\n  display: inline-flex;\n  align-items: center;\n  width: -moz-fit-content;\n  width: fit-content;\n  padding: 4px 8px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.10);\n  color: var(--accent-strong);\n  font-size: 0.68rem;\n  font-weight: 650;\n  letter-spacing: 0.06em;\n  text-transform: uppercase;\n}\n.workspace-fab-title {\n  font-weight: 650;\n  color: var(--text);\n  letter-spacing: -0.2px;\n  font-size: 0.92rem;\n  line-height: 1.15;\n}\n.workspace-fab-sub {\n  margin-top: 3px;\n  font-size: 0.74rem;\n  color: var(--text-muted);\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  align-items: center;\n  line-height: 1.2;\n}\n.workspace-fab-sub span {\n  display: inline-flex;\n  align-items: center;\n  max-width: 100%;\n  padding: 4px 7px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.10);\n  background: rgba(255, 255, 255, 0.62);\n}\n.workspace-fab-live {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  margin-top: 2px;\n}\n.workspace-fab-live-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  max-width: 100%;\n  padding: 5px 8px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.08);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: var(--accent-strong);\n  font-size: 0.74rem;\n  font-weight: 600;\n}\n.workspace-fab-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n  line-height: 1.26;\n  max-width: 60ch;\n  overflow-wrap: anywhere;\n}\n.workspace-fab-chip {\n  display: inline-flex;\n  align-items: center;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(46, 125, 50, 0.18);\n  background: rgba(46, 125, 50, 0.10);\n  color: rgba(46, 125, 50, 0.95);\n  font-weight: 650;\n  font-size: 0.72rem;\n}\n.workspace-fab-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex: 0 0 auto;\n}\n.fab-btn {\n  min-height: 40px;\n  padding: 8px 11px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.76);\n  box-shadow: var(--shadow-sm);\n  font-weight: 600;\n  font-size: 0.84rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  white-space: nowrap;\n  cursor: pointer;\n  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 140ms ease;\n}\n.fab-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  border-color: transparent;\n  box-shadow: 0 14px 28px rgba(154, 103, 56, 0.22);\n}\n.fab-btn-soft {\n  color: rgba(0, 0, 0, 0.78);\n}\n.fab-btn-ghost {\n  color: rgba(0, 0, 0, 0.78);\n}\n.verses-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n  margin-top: 0;\n}\n.verse-arabic-primary {\n  /* Primary focus: Quran dominates; aids are quieter. */\n  font-size: clamp(2.1rem, 2.75vw, 3.05rem);\n  line-height: 2.25;\n  letter-spacing: 0.01em;\n}\n.verse-aid {\n  opacity: 0.92;\n  filter: saturate(0.85);\n  margin-top: 0.55rem;\n}\n.verse-aid-title {\n  margin-bottom: 4px;\n  color: var(--accent-strong);\n  font-size: 0.72rem;\n  font-weight: 700;\n  font-style: normal;\n  text-transform: uppercase;\n  letter-spacing: 0.04em;\n}\n.inline-setting-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.input-compact {\n  flex: 0 0 140px;\n}\n.inline-setting-pill {\n  display: inline-flex;\n  align-items: center;\n  min-height: 38px;\n  padding: 0 12px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.08);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: var(--accent-strong);\n  font-size: 0.78rem;\n  font-weight: 600;\n}\n.settings-section {\n  padding: 14px;\n  background: var(--surface-strong);\n  box-shadow: var(--shadow-sm);\n}\n.settings-heading,\n.settings-row,\n.settings-row-copy {\n  display: flex;\n  align-items: center;\n}\n.settings-heading {\n  justify-content: space-between;\n  gap: 12px;\n  margin-bottom: 8px;\n}\n.settings-heading h3 {\n  margin: 0;\n  color: var(--accent);\n  font-size: 0.98rem;\n  line-height: 1.2;\n  white-space: nowrap;\n}\n.settings-apply {\n  flex: 0 0 auto;\n  min-height: 34px;\n  padding: 7px 12px;\n  border-radius: 11px;\n  font-size: 0.76rem;\n}\n.settings-list {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n}\n.settings-row {\n  justify-content: space-between;\n  gap: 12px;\n  min-height: 48px;\n  padding: 8px 10px;\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.52);\n}\n.settings-row-copy {\n  min-width: 0;\n  gap: 8px;\n}\n.settings-row-copy label {\n  color: var(--text);\n  font-size: 0.78rem;\n  font-weight: 650;\n  white-space: nowrap;\n}\n.settings-row-copy small {\n  color: var(--text-muted);\n  font-size: 0.68rem;\n  white-space: nowrap;\n}\n.settings-toggle {\n  flex: 0 0 86px;\n  min-height: 32px;\n  padding: 5px 10px;\n  border-radius: 10px;\n  font-size: 0.72rem;\n  box-shadow: none;\n}\n.settings-row-range {\n  align-items: center;\n}\n.settings-row-range .settings-row-copy {\n  flex: 0 0 116px;\n  justify-content: space-between;\n}\n.settings-range {\n  flex: 1 1 auto;\n  min-width: 0;\n  padding: 0;\n  box-shadow: none;\n}\n.offline-list {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n  margin-bottom: 16px;\n}\n.offline-item {\n  background: var(--bg-elevated);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  transition: all 0.2s ease;\n}\n.offline-item:hover {\n  border-color: var(--accent);\n  background: var(--surface);\n}\n.oi-info {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.oi-name {\n  font-weight: 600;\n  font-size: 1rem;\n}\n.oi-meta {\n  font-size: 0.8rem;\n  opacity: 0.7;\n}\n.oi-date {\n  font-size: 0.7rem;\n  opacity: 0.5;\n}\n.oi-actions {\n  display: flex;\n  gap: 8px;\n}\n.oi-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.oi-load:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.oi-delete:hover {\n  background: #ff4d4d;\n  color: white;\n  border-color: #ff4d4d;\n}\n.empty-mini {\n  text-align: center;\n  padding: 32px 16px;\n  background: var(--bg-elevated);\n  border-radius: 20px;\n  border: 1px dashed var(--border);\n}\n.offline-note {\n  margin-top: 24px;\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  display: flex;\n  gap: 10px;\n  font-size: 0.75rem;\n  line-height: 1.4;\n  color: var(--accent);\n}\n\n/* Floating Player */\n.player-bar {\n  position: fixed;\n  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);\n  left: 50%;\n  transform: translateX(-50%);\n  width: calc(100vw - 24px);\n  max-width: 980px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 24px;\n  box-shadow: var(--shadow-lg);\n  z-index: 1000;\n  padding: 12px 24px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  /* Avoid iOS Safari compositing artifacts (black bands) from backdrop-filter on fixed elements. */\n  backdrop-filter: none;\n  -webkit-backdrop-filter: none;\n  transition: transform 0.22s ease, opacity 0.22s ease, padding 0.22s ease;\n}\n.player-bar.collapsed {\n  transform: translateX(-50%);\n  opacity: 0.98;\n}\n.player-main {\n  display: flex;\n  align-items: center;\n  gap: 20px;\n  flex-wrap: wrap;\n}\n.player-info {\n  min-width: 0;\n}\n.player-chapter {\n  font-weight: 700;\n  font-size: 0.9rem;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-verse {\n  font-size: 0.75rem;\n  opacity: 0.7;\n}\n.player-eta {\n  color: var(--accent);\n  font-weight: 500;\n  opacity: 1;\n}\n.player-controls {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n}\n.sheet-fade-enter-active,\n.sheet-fade-leave-active {\n  transition: opacity 0.2s ease, transform 0.2s ease;\n}\n.sheet-fade-enter-from,\n.sheet-fade-leave-to {\n  opacity: 0;\n  transform: translateY(8px);\n}\n.player-btn {\n  width: 44px;\n  height: 44px;\n  border-radius: 12px;\n  border: none;\n  background: none;\n  color: var(--text);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.2rem;\n  transition: all 0.2s ease;\n}\n.player-btn:hover {\n  background: var(--bg-elevated);\n}\n.player-play {\n  background: var(--accent);\n  color: white;\n  width: 52px;\n  height: 52px;\n  border-radius: 16px;\n  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.3);\n}\n.player-play:hover {\n  background: rgba(255, 255, 255, 0.88);\n  color: var(--accent);\n  transform: scale(1.05);\n}\n.player-progress-wrap {\n  flex: 1;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  min-width: 220px;\n}\n.player-time {\n  font-size: 0.75rem;\n  font-variant-numeric: tabular-nums;\n  opacity: 0.7;\n  min-width: 40px;\n}\n.player-progress-bg {\n  flex: 1;\n  height: 6px;\n  background: var(--bg-elevated);\n  border-radius: 3px;\n  position: relative;\n  cursor: pointer;\n}\n.player-progress-fill {\n  position: absolute;\n  left: 0;\n  top: 0;\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.1s linear;\n}\n\n/* Animations */\n.slide-up-enter-active,\n.slide-up-leave-active {\n  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.slide-up-enter-from,\n.slide-up-leave-to {\n  transform: translate(-50%, 100px);\n  opacity: 0;\n}\n.verse-translation {\n  font-size: calc(0.94rem * var(--en-scale, 1));\n  color: var(--text);\n  line-height: 1.55;\n  padding-top: 10px;\n  margin-top: 8px;\n  border-top: 1px solid var(--border);\n  display: block;\n  opacity: 0.92;\n}\n.verse-transliteration {\n  font-size: calc(0.98rem * var(--en-scale, 1));\n  color: var(--text);\n  font-style: italic;\n  margin-top: 8px;\n  padding-top: 8px;\n  border-top: 1px solid var(--border);\n  line-height: 1.5;\n  opacity: 0.98;\n}\n.verse-words {\n  display: flex;\n  flex-wrap: nowrap;\n  gap: 8px;\n  direction: rtl;\n  margin-top: 12px;\n  padding-top: 10px;\n  border-top: 1px solid var(--border);\n  overflow-x: auto;\n  overflow-y: hidden;\n  -webkit-overflow-scrolling: touch;\n  scroll-snap-type: x proximity;\n  padding-bottom: 8px;\n}\n.word-item {\n  position: relative;\n  background: var(--accent-light);\n  padding: 6px 12px;\n  border-radius: 20px;\n  display: inline-flex;\n  flex-direction: row-reverse;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.75rem;\n  flex: 0 0 auto;\n  scroll-snap-align: center;\n  cursor: help;\n  min-height: 36px;\n}\n.word-item:hover::after,\n.word-item:focus::after {\n  content: attr(data-tooltip);\n  position: absolute;\n  left: 50%;\n  bottom: calc(100% + 8px);\n  transform: translateX(-50%);\n  z-index: 5;\n  width: -moz-max-content;\n  width: max-content;\n  max-width: 220px;\n  padding: 6px 8px;\n  border-radius: 9px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n  color: var(--text);\n  direction: ltr;\n  text-align: center;\n  font-size: 0.72rem;\n  line-height: 1.25;\n}\n.word-arabic {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n}\n.word-meaning {\n  color: var(--text-muted);\n  font-size: calc(0.82rem * var(--en-scale, 1));\n}\n.word-audio-btn {\n  background: none;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 0 4px;\n}\n.field-switch {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.reading-aid-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 8px;\n}\n.tools,\n.tools-body,\n.sheet-content {\n  overflow-x: hidden;\n}\n.live-stats-grid {\n  display: grid;\n  gap: 10px;\n}\n.live-stat-card {\n  min-height: 72px;\n  padding: 14px 16px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 252, 247, 0.9);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.live-stat-label {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  font-weight: 500;\n}\n.live-stat-card strong {\n  color: var(--text);\n  font-size: 1rem;\n  font-weight: 600;\n}\n.resume-copy {\n  margin-bottom: 8px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(251, 245, 238, 0.96));\n  border-radius: 18px;\n  box-shadow: 0 24px 72px rgba(31, 24, 17, 0.22);\n}\n.modal-header h2 {\n  font-size: 1.05rem;\n  font-weight: 600;\n}\n.resume-modal {\n  background: linear-gradient(180deg, rgba(255, 251, 245, 0.99), rgba(248, 241, 233, 0.97));\n}\n.resume-modal .modal-header,\n.resume-modal .modal-body,\n.resume-modal .modal-footer {\n  padding-top: 18px;\n  padding-bottom: 18px;\n}\n.resume-grid .pill,\n.resume-modal .pill {\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid rgba(184, 130, 78, 0.16);\n}\n.wbw-word.highlighted,\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.03);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.24);\n}\n.wbw-word.phrase-highlighted {\n  box-shadow: 0 0 0 2px rgba(184, 130, 78, 0.18);\n}\n.word-item.highlighted,\n.word-item.phrase-highlighted {\n  background: rgba(184, 130, 78, 0.2);\n}\n\n/* Quiz overlay */\n.quiz-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 80;\n  background: rgba(0, 0, 0, 0.35);\n  backdrop-filter: blur(6px);\n  display: grid;\n  place-items: center;\n  padding: 18px;\n}\n.quiz-card {\n  width: min(680px, 100%);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba, rgba(250, 245, 239, 0.95));\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 22px;\n  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);\n  overflow: hidden;\n}\n.quiz-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 18px 22px 14px;\n  border-bottom: 1px solid rgba(0, 0, 0, 0.08);\n}\n.quiz-title {\n  font-weight: 500;\n  font-size: 1.05rem;\n}\n.quiz-subtitle {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.quiz-close {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.7);\n  cursor: pointer;\n  font-size: 24px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.quiz-progress {\n  padding: 14px 22px 0;\n}\n.quiz-progress-bar {\n  height: 4px;\n  background: var(--border);\n  border-radius: 2px;\n  overflow: hidden;\n}\n.quiz-progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n.quiz-stats {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.quiz-body {\n  padding: 18px 22px 22px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.quiz-question {\n  font-weight: 600;\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.quiz-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.4rem;\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  padding: 16px;\n  background: var(--accent-light);\n  border-radius: 16px;\n}\n.quiz-reveal-btn {\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n}\n.quiz-answer {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.quiz-translation {\n  font-size: 0.9rem;\n  line-height: 1.6;\n  color: var(--text);\n  margin-bottom: 16px;\n}\n.quiz-grade-buttons {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.grade-btn {\n  flex: 1;\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.grade-btn.primary {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.quiz-options {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.quiz-option {\n  padding: 12px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  text-align: left;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.quiz-option:hover {\n  background: var(--accent-light);\n  transform: translateX(4px);\n}\n.quiz-summary {\n  padding: 22px;\n  text-align: center;\n}\n.quiz-summary-icon {\n  font-size: 3rem;\n  margin-bottom: 16px;\n}\n.quiz-summary-stats {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin: 20px 0;\n}\n.quiz-summary-stats .stat {\n  padding: 16px;\n  background: var(--surface);\n  border-radius: 16px;\n}\n.stat-label {\n  display: block;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.stat-value {\n  display: block;\n  font-size: 1.5rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.quiz-summary-mistakes {\n  margin: 20px 0;\n}\n.mistake-tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 8px;\n  justify-content: center;\n}\n.mistake-tag {\n  padding: 6px 12px;\n  background: rgba(190, 73, 73, 0.1);\n  border-radius: 20px;\n  font-size: 0.8rem;\n  color: #c0392b;\n}\n.quiz-actions {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n}\n.btn-outline {\n  padding: 10px 24px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n.btn-primary {\n  padding: 10px 24px;\n  border-radius: 12px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n\n/* Banner */\n.banner {\n  position: fixed;\n  top: 14px;\n  left: 50%;\n  transform: translateX(-50%);\n  z-index: 120;\n  min-width: min(560px, calc(100vw - 24px));\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px 14px;\n  border-radius: 16px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.92);\n  backdrop-filter: blur(10px);\n  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);\n  font-weight: 450;\n  animation: riseSoft 220ms ease-out;\n}\n.banner-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.banner-action {\n  border: 0;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  padding: 9px 12px;\n  font-size: 0.78rem;\n  font-weight: 500;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n}\n.banner-x {\n  width: 36px;\n  height: 36px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n}\n\n/* Animations */\n@keyframes appFade {\n0% {\n    opacity: 0;\n    transform: translateY(4px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes railIn {\n0% {\n    opacity: 0;\n    transform: translateY(-8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes riseSoft {\n0% {\n    opacity: 0;\n    transform: translateY(8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n\n/* Responsive */\n@media (max-width: 768px) {\n.main {\n    padding: 16px 16px 100px;\n}\n.main.tools-open {\n    padding-right: 16px;\n}\n.tools {\n    left: 0;\n    right: 0;\n    width: 100%;\n}\n.session-rail-stats {\n    grid-template-columns: 1fr 1fr;\n}\n.hero-flow {\n    grid-template-columns: 1fr 1fr;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 8px);\n    justify-content: center;\n}\n.verse-font-controls {\n    gap: 2px;\n    padding: 2px 4px;\n}\n.verse-font-btn {\n    width: 20px;\n    height: 20px;\n}\n.verse-font-size-indicator {\n    min-width: 30px;\n    font-size: 9px;\n}\n}\n@media (max-width: 640px) {\n.quiz-grade-buttons {\n    flex-direction: column;\n}\n.quiz-actions {\n    flex-direction: column;\n}\n.hero-actions,\n  .empty-actions {\n    flex-direction: column;\n}\n.cta {\n    width: 100%;\n}\n}\n\n/* Dark theme overrides */\n[data-theme=\"dark\"] .tools {\n  color: var(--text);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(12, 11, 10, 0.96));\n  border-left-color: var(--border);\n}\n[data-theme=\"dark\"] .sheet-section {\n  border-color: var(--border);\n  background: var(--surface);\n}\n[data-theme=\"dark\"] .tools-top,\n[data-theme=\"dark\"] .tools-footer {\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.92));\n}\n[data-theme=\"dark\"] .tools-footer {\n  background: linear-gradient(to top, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.86), rgba(18, 15, 13, 0));\n}\n[data-theme=\"dark\"] .tools-tabs {\n  background: rgba(255, 255, 255, 0.035);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .tools-tabs button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-tabs button.active {\n  color: var(--text);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .tools-title,\n[data-theme=\"dark\"] .st-title,\n[data-theme=\"dark\"] .technique-copy label,\n[data-theme=\"dark\"] .settings-row-copy label {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .tools-context,\n[data-theme=\"dark\"] .st-sub,\n[data-theme=\"dark\"] .technique-copy small,\n[data-theme=\"dark\"] .technique-control span,\n[data-theme=\"dark\"] .settings-row-copy small {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-x,\n[data-theme=\"dark\"] .st-chev,\n[data-theme=\"dark\"] .sheet-toggle,\n[data-theme=\"dark\"] .technique-row,\n[data-theme=\"dark\"] .radio,\n[data-theme=\"dark\"] .toggle-chip,\n[data-theme=\"dark\"] .segmented-control,\n[data-theme=\"dark\"] .technique-preview {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .sheet-toggle {\n  background: rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .st-ico {\n  color: var(--accent-strong);\n  border-color: rgba(239, 193, 141, 0.22);\n  background: rgba(239, 193, 141, 0.10);\n}\n[data-theme=\"dark\"] .segmented-control button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .segmented-control button.active,\n[data-theme=\"dark\"] .toggle-chip.active {\n  color: var(--accent-strong);\n  border-color: rgba(239, 193, 141, 0.42);\n  background: rgba(239, 193, 141, 0.12);\n}\n[data-theme=\"dark\"] .tools-btn-soft {\n  color: var(--text-muted);\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .select,\n[data-theme=\"dark\"] .input {\n  color: var(--text);\n  border-color: var(--border);\n  background: rgba(255, 255, 255, 0.045);\n}\n[data-theme=\"dark\"] .switch {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n}\n[data-theme=\"dark\"] .verse-translation {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .verse-transliteration,\n[data-theme=\"dark\"] .workspace-fab-copy,\n[data-theme=\"dark\"] .workspace-fab-sub,\n[data-theme=\"dark\"] .settings-row-copy small,\n[data-theme=\"dark\"] .field-hint {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .workspace-fab,\n[data-theme=\"dark\"] .workspace-fab-sub span,\n[data-theme=\"dark\"] .workspace-fab-live-pill,\n[data-theme=\"dark\"] .word-item:hover::after,\n[data-theme=\"dark\"] .word-item:focus::after {\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .workspace-fab {\n  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.46), 0 0 0 1px rgba(255, 236, 216, 0.12);\n}\n[data-theme=\"dark\"] .workspace-fab:hover {\n  box-shadow: 0 26px 64px rgba(0, 0, 0, 0.54), 0 0 0 1px rgba(239, 193, 141, 0.20);\n}\n[data-theme=\"dark\"] .settings-section {\n  background: rgba(24, 21, 19, 0.96);\n  border-color: var(--border);\n  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .settings-row {\n  background: rgba(255, 255, 255, 0.045);\n  border-color: rgba(255, 236, 216, 0.12);\n}\n[data-theme=\"dark\"] .settings-toggle {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 236, 216, 0.14);\n  color: var(--text);\n}\n[data-theme=\"dark\"] .settings-toggle.active {\n  background: rgba(239, 193, 141, 0.13);\n  border-color: rgba(239, 193, 141, 0.42);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .quiz-card {\n  background: rgba(18, 18, 18, 0.92);\n  border-color: rgba(255, 255, 255, 0.10);\n}\n\n/* Sepia theme overrides */\n[data-theme=\"sepia\"] .verse-translation {\n  color: #7a684a;\n}\n\n/* Planner & Analytics UI */\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(12, 10, 8, 0.62);\n  backdrop-filter: blur(8px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 9999;\n  padding: 20px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 250, 243, 0.92));\n  border-radius: 20px;\n  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42);\n  border: 1px solid rgba(255, 255, 255, 0.55);\n  display: flex;\n  flex-direction: column;\n  max-height: 90vh;\n  overflow: hidden;\n  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.resume-modal {\n  width: min(760px, 96vw);\n}\n.resume-modal .modal-header h2 {\n  font-size: clamp(1.25rem, 2.3vw, 1.75rem);\n}\n.resume-saved-at {\n  display: inline-block;\n  margin-top: 4px;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n}\n.resume-grid {\n  margin-top: 12px;\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 10px;\n}\n.resume-grid .pill {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 12px 14px;\n}\n@keyframes modalIn {\nfrom {\n    transform: translateY(10px);\n    opacity: 0.6;\n}\nto {\n    transform: translateY(0);\n    opacity: 1;\n}\n}\n@keyframes modalFadeIn {\nfrom {\n    opacity: 0;\n    transform: translateY(20px) scale(0.95);\n}\nto {\n    opacity: 1;\n    transform: translateY(0) scale(1);\n}\n}\n.modal-header {\n  padding: 20px 24px;\n  border-bottom: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 1.25rem;\n  font-weight: 700;\n}\n.modal-body {\n  padding: 24px;\n  overflow-y: auto;\n}\n.modal-footer {\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--bg-elevated);\n}\n.confirm-modal {\n  max-width: 460px;\n  width: 100%;\n}\n.confirm-copy {\n  color: var(--text-muted);\n  line-height: 1.65;\n}\n.btn-danger {\n  background: #b55041;\n}\n.tools-btn-danger {\n  opacity: 0.82;\n}\n.btn-icon {\n  background: none;\n  border: none;\n  font-size: 1.2rem;\n  color: var(--text-muted);\n  cursor: pointer;\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.btn-icon:hover {\n  background: var(--border);\n  color: var(--text);\n}\n.planner-modal {\n  max-width: 500px;\n  width: 100%;\n}\n.planner-field {\n  margin-bottom: 24px;\n}\n.planner-field label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.planner-select,\n.planner-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.planner-select:focus,\n.planner-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 2px var(--accent-light);\n}\n.verses-per-day-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.quantity-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.quantity-btn:hover:not(:disabled) {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.quantity-btn:disabled {\n  opacity: 0.4;\n  cursor: not-allowed;\n}\n.planner-stats-grid {\n  display: grid;\n  grid-template-columns: repeat(2, 1fr);\n  gap: 12px;\n  margin: 24px 0;\n}\n.planner-stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  transition: all 0.2s;\n}\n.progress-info {\n  display: flex;\n  justify-content: space-between;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.progress-bar-track {\n  height: 6px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-fill {\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.3s ease;\n}\n.modal-footer {\n  display: flex;\n  gap: 12px;\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.btn-secondary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.btn-secondary:hover {\n  background: var(--border);\n}\n.btn-primary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.9rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.btn-primary:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.field-hint {\n  display: block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 6px;\n}\n.pa-lbl {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.analytics-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin-top: 20px;\n}\n.analytics-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.78rem * var(--en-scale, 1));\n  line-height: 1.4;\n}\n.stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 20px;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  transition: transform 0.2s;\n}\n.stat-delta {\n  display: inline-flex;\n  align-items: center;\n  margin-left: 10px;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  font-size: 0.7rem;\n  color: var(--accent-strong);\n  font-weight: 700;\n  vertical-align: middle;\n}\n.stat-card:hover {\n  transform: translateY(-2px);\n  border-color: var(--accent);\n}\n.stat-card i {\n  font-size: 1.8rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.stat-value {\n  font-size: 1.5rem;\n  font-weight: 700;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.stat-label {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n}\n.stat-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.72rem * var(--en-scale, 1));\n  line-height: 1.35;\n}\n.mini-trend {\n  position: relative;\n  width: 80px;\n  height: 24px;\n  margin-top: 10px;\n}\n.mini-trend span {\n  position: absolute;\n  width: 8px;\n  border-radius: 999px;\n  background: linear-gradient(180deg, var(--accent), var(--accent-soft));\n  opacity: 0.9;\n}\n\n/* Home Dashboard UI */\n.home-dashboard {\n  max-width: 800px;\n  margin: 40px auto;\n  padding: 0 20px;\n  animation: modalFadeIn 0.4s ease-out;\n}\n.dashboard-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-end;\n  margin-bottom: 40px;\n  flex-wrap: wrap;\n  gap: 20px;\n}\n.welcome-text {\n  max-width: 500px;\n}\n.header-stats {\n  display: flex;\n  gap: 16px;\n  background: var(--surface);\n  padding: 12px 20px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.mini-stat {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.9rem;\n}\n.mini-stat strong {\n  color: var(--text);\n  font-size: 1rem;\n}\n.dashboard-actions {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));\n  gap: 20px;\n  margin-bottom: 40px;\n}\n.home-dashboard-minimal {\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  min-height: 160px;\n}\n.offcanvas-launcher-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.offcanvas-launcher-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-start-card {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto auto;\n  align-items: center;\n  gap: 18px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.setup-start-copy {\n  min-width: 0;\n}\n.setup-kicker {\n  display: inline-flex;\n  margin-bottom: 6px;\n  color: var(--accent);\n  font-size: 0.72rem;\n  font-weight: 800;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n}\n.setup-start-copy h2 {\n  margin: 0 0 6px;\n  color: var(--text);\n  font-size: clamp(1.2rem, 2vw, 1.65rem);\n  line-height: 1.1;\n}\n.setup-start-copy p {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-review-hint {\n  margin-top: 10px;\n  padding: 10px 12px;\n  border-radius: 12px;\n  background: rgba(184, 130, 78, 0.10);\n  border: 1px solid rgba(184, 130, 78, 0.18);\n  color: var(--accent);\n  font-weight: 700;\n}\n.setup-mode-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(112px, 1fr));\n  gap: 10px;\n}\n.setup-mode-card {\n  min-height: 86px;\n  padding: 12px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: var(--surface);\n  color: var(--text);\n  cursor: pointer;\n  display: grid;\n  justify-items: center;\n  align-content: center;\n  gap: 4px;\n  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;\n}\n.setup-mode-card:hover,\n.setup-mode-card.active {\n  border-color: var(--accent);\n  box-shadow: var(--shadow-sm);\n  transform: translateY(-1px);\n}\n.setup-mode-card i {\n  color: var(--accent);\n  font-size: 1.2rem;\n}\n.setup-mode-card span {\n  font-weight: 800;\n}\n.setup-mode-card small {\n  color: var(--text-muted);\n  font-size: 0.78rem;\n}\n.setup-primary {\n  min-height: 48px;\n  white-space: nowrap;\n}\n.setup-optional-panel,\n.session-tools-panel {\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.68);\n}\n.setup-optional-panel summary,\n.session-tools-panel summary {\n  cursor: pointer;\n  list-style: none;\n  padding: 12px 14px;\n  font-weight: 700;\n  color: var(--text);\n}\n.setup-optional-panel summary::-webkit-details-marker,\n.session-tools-panel summary::-webkit-details-marker {\n  display: none;\n}\n.setup-optional-grid,\n.session-tools-grid {\n  display: grid;\n  gap: 12px;\n  padding: 0 14px 14px;\n}\n.setup-optional-grid {\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.session-tools-grid {\n  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));\n}\n.field-inline-toggle {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.toggle-chip {\n  min-height: 42px;\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  background: var(--surface);\n  color: var(--text);\n  font-weight: 700;\n}\n.toggle-chip.active {\n  border-color: var(--accent);\n  color: var(--accent);\n}\n.continue-session-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 16px 18px;\n  margin-bottom: 18px;\n  border: 1px solid var(--accent-soft);\n  border-radius: 18px;\n  background: linear-gradient(135deg, var(--surface), var(--accent-light));\n  box-shadow: var(--shadow-sm);\n  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;\n}\n.continue-session-card:hover {\n  transform: translateY(-2px);\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent);\n}\n.continue-session-copy {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.continue-session-actions {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.continue-session-kicker {\n  font-size: 0.72rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--accent);\n}\n.continue-session-copy small {\n  color: var(--text-muted);\n}\n.continue-session-btn {\n  min-height: 44px;\n  white-space: nowrap;\n}\n.continue-session-dismiss {\n  min-width: 44px;\n  padding-inline: 0;\n  justify-content: center;\n}\n.resume-action {\n  background: linear-gradient(145deg, rgba(154, 103, 56, 0.12), rgba(255, 255, 255, 0.94));\n  border-color: var(--accent-soft);\n}\n.resume-action .action-icon {\n  background: rgba(154, 103, 56, 0.15);\n  color: var(--accent);\n}\n.resume-action .action-arrow {\n  color: var(--accent);\n}\n.action-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n  display: flex;\n  flex-direction: column;\n  position: relative;\n  overflow: hidden;\n}\n.action-card:hover {\n  transform: translateY(-4px);\n  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);\n  border-color: var(--accent);\n}\n.action-card.primary-action {\n  background: linear-gradient(145deg, var(--accent), var(--accent-dark));\n  color: white;\n  border: none;\n}\n.action-card.primary-action .action-icon {\n  background: rgba(255, 255, 255, 0.2);\n  color: white;\n}\n.action-card.primary-action h3,\n.action-card.primary-action p,\n.action-card.primary-action .action-arrow {\n  color: white;\n}\n.action-icon {\n  width: 48px;\n  height: 48px;\n  background: var(--bg-body);\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.5rem;\n  color: var(--accent);\n  margin-bottom: 20px;\n}\n.action-content h3 {\n  font-size: 1.15rem;\n  margin: 0 0 8px 0;\n  color: var(--text);\n}\n.action-content p {\n  font-size: 0.9rem;\n  color: var(--text-muted);\n  margin: 0;\n  line-height: 1.4;\n}\n.action-arrow {\n  position: absolute;\n  bottom: 24px;\n  right: 24px;\n  font-size: 1.2rem;\n  color: var(--accent);\n  opacity: 0;\n  transform: translateX(-10px);\n  transition: all 0.2s ease;\n}\n.action-card:hover .action-arrow {\n  opacity: 1;\n  transform: translateX(0);\n}\n.dashboard-recent {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n}\n.recent-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.recent-header h3 {\n  margin: 0;\n  font-size: 1.1rem;\n}\n.btn-ghost {\n  background: none;\n  border: none;\n  color: var(--accent);\n  font-weight: 500;\n  cursor: pointer;\n  padding: 6px 12px;\n  border-radius: 8px;\n  transition: background 0.2s;\n}\n.btn-ghost:hover {\n  background: var(--accent-light);\n}\n.recent-stats {\n  display: flex;\n  gap: 32px;\n  flex-wrap: wrap;\n}\n.r-stat {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.r-stat span {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.r-stat strong {\n  font-size: 1.4rem;\n  color: var(--text);\n}\n@media (max-width: 768px) {\n.workspace-fab {\n    top: 8px;\n    display: grid;\n    grid-template-columns: minmax(0, 1fr);\n    gap: 8px;\n    padding: 9px;\n    margin: 8px 0 6px;\n    border-radius: 14px;\n}\n.workspace-fab-meta {\n    min-width: 0;\n}\n.workspace-fab-kicker {\n    font-size: 0.64rem;\n}\n.workspace-fab-title {\n    font-size: 0.9rem;\n}\n.workspace-fab-sub {\n    font-size: 0.72rem;\n    gap: 5px;\n}\n.workspace-fab-sub span {\n    flex: 1 1 auto;\n    justify-content: center;\n    min-width: min(128px, 100%);\n}\n.workspace-fab-copy {\n    font-size: 0.78rem;\n}\n.workspace-fab-live {\n    gap: 6px;\n}\n.workspace-fab-live-pill {\n    flex: 1 1 0;\n    min-width: 0;\n    justify-content: center;\n}\n.workspace-fab-actions {\n    display: grid;\n    grid-template-columns: repeat(3, minmax(0, 1fr));\n    gap: 8px;\n    width: 100%;\n}\n.fab-btn {\n    width: 100%;\n    min-width: 0;\n    justify-content: center;\n    padding: 8px 10px;\n    font-size: 0.82rem;\n    min-height: 44px;\n}\n.settings-row {\n    gap: 8px;\n}\n.settings-row-copy {\n    flex-direction: column;\n    align-items: flex-start;\n    gap: 2px;\n}\n.settings-toggle {\n    flex-basis: 78px;\n    min-height: 40px;\n}\n.settings-row-range {\n    align-items: stretch;\n    flex-direction: column;\n}\n.settings-row-range .settings-row-copy {\n    flex: initial;\n    flex-direction: row;\n    align-items: center;\n    width: 100%;\n}\n.setup-start-card {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n    padding: 16px;\n}\n.setup-mode-grid {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.setup-primary {\n    width: 100%;\n    justify-content: center;\n}\n.continue-session-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.dashboard-actions {\n    grid-template-columns: 1fr;\n    gap: 14px;\n    margin-bottom: 20px;\n}\n.offcanvas-launcher-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.action-card {\n    padding: 18px;\n}\n.action-icon {\n    margin-bottom: 14px;\n}\n.continue-session-btn,\n  .btn-primary,\n  .btn-secondary,\n  .tools-btn,\n  .player-btn,\n  .toolbar-chip,\n  .toggle-chip {\n    min-height: 44px;\n}\n.inline-setting-row {\n    align-items: stretch;\n}\n.input-compact,\n  .inline-setting-pill {\n    width: 100%;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.technique-row,\n  .technique-row-main,\n  .technique-control {\n    align-items: stretch;\n    flex-direction: column;\n}\n.technique-toggle,\n  .segmented-control {\n    width: 100%;\n}\n.player-bar {\n    width: calc(100% - 24px);\n    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);\n    padding: 12px 14px;\n}\n.player-bar.collapsed {\n    transform: translateX(-50%);\n}\n.player-main {\n    flex-wrap: nowrap;\n    align-items: center;\n    gap: 10px;\n}\n.player-info {\n    flex: 0 1 120px;\n    min-width: 0;\n}\n.player-chapter {\n    font-size: 0.78rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-verse {\n    font-size: 0.72rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-controls {\n    flex: 0 0 auto;\n    justify-content: center;\n    gap: 8px;\n}\n.player-progress-wrap {\n    order: 0;\n    flex: 1 1 auto;\n    min-width: 0;\n}\n.player-speed-controls {\n    flex: 0 0 auto;\n}\n.analytics-grid {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n}\n.session-rail-actions {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.rail-btn {\n    flex: initial;\n    width: 100%;\n    justify-content: center;\n}\n.rail-btn-primary {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.toolbar-chip {\n    flex: initial;\n    width: 100%;\n}\n.font-dropdown {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 4px);\n    justify-content: center;\n    min-width: 0;\n}\n.font-dropdown {\n    width: 100%;\n}\n.font-dropdown-trigger {\n    width: 100%;\n    justify-content: space-between;\n}\n.verse-card {\n    padding: 16px;\n    border-radius: 18px;\n}\n.verse-header {\n    flex-direction: column;\n    align-items: stretch;\n    gap: 12px;\n}\n.verse-badges,\n  .verse-actions {\n    flex-wrap: wrap;\n}\n.verse-actions {\n    justify-content: space-between;\n}\n.verse-font-controls {\n    margin-right: 0;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.modal-content,\n  .confirm-modal,\n  .planner-modal {\n    width: 100%;\n    max-width: 100%;\n    border-radius: 18px;\n}\n.modal-header,\n  .modal-body,\n  .modal-footer {\n    padding-left: 16px;\n    padding-right: 16px;\n}\n.planner-stats-grid {\n    grid-template-columns: 1fr;\n}\n.tools {\n    width: 100vw;\n    max-width: 100vw;\n}\n.tools-top,\n  .tools-body,\n  .tools-footer {\n    padding-left: 14px;\n    padding-right: 14px;\n}\n.tools-tabs {\n    overflow-x: hidden;\n    display: grid;\n    grid-template-columns: repeat(3, minmax(0, 1fr));\n    gap: 8px;\n}\n.tools-tabs button {\n    width: 100%;\n    min-width: 0;\n}\n.reading-aid-grid,\n  .session-tools-grid {\n    grid-template-columns: 1fr;\n}\n.verse-card,\n  .tools,\n  .sheet,\n  .sheet-content {\n    overflow-x: hidden;\n}\n}\n@media (min-width: 769px) and (max-width: 1024px) {\n.dashboard-actions {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n}\n.session-rail-actions {\n    flex-wrap: wrap;\n}\n.reading-toolbar {\n    align-items: flex-start;\n}\n.reading-toolbar-group:first-child {\n    flex: 1 1 100%;\n}\n.toolbar-chip {\n    flex: 0 1 auto;\n}\n.player-bar {\n    width: calc(100vw - 40px);\n}\n.player-main {\n    gap: 14px;\n}\n.player-progress-wrap {\n    min-width: 0;\n    width: 100%;\n    order: 4;\n}\n}\n@media (max-width: 480px) {\n.session-pill {\n    white-space: normal;\n    text-align: center;\n    justify-content: center;\n}\n.rail-btn,\n  .toolbar-chip {\n    flex: 1 1 100%;\n}\n.player-time {\n    min-width: auto;\n    font-size: 0.7rem;\n}\n.player-progress-wrap {\n    gap: 8px;\n}\n.verse-number,\n  .verse-status-badge,\n  .verse-status-subtle {\n    width: 100%;\n    justify-content: center;\n    text-align: center;\n}\n}\n.main.flow-recall .verse-card.active .verse-arabic {\n  color: transparent;\n  text-shadow: 0 0 22px rgba(232, 237, 247, 0.55);\n}\n.main.flow-practice .verse-card.active .verse-arabic {\n  opacity: 0.45;\n}\n.main.flow-recall .verse-card.active .verse-arabic .tajweed-mark,\n.main.flow-recall .verse-card.active .verse-arabic word,\n.main.flow-recall .verse-card.active .verse-arabic .wbw-word {\n  color: transparent !important;\n  background: transparent !important;\n  box-shadow: none !important;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 

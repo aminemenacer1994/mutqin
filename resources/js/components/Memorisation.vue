@@ -10,20 +10,16 @@
     </div>
 
     <!-- Main Content -->
-    <div
-      v-if="appReady && isLoggedIn"
-      class="main container"
-      :class="{
-        'tools-open': showTools,
-        'focus-mode-active': focusModeEnabled,
-        'blur-mode-active': blurModeEnabled,
-        'flow-practice': guidedUiStep === 'practice',
-        'flow-recall': guidedUiStep === 'recall'
-      }"
-    >
-	      <div class="content">
-	        <section v-if="!hasVerses" class="home-dashboard home-dashboard-minimal">
-	          <div v-if="hasContinueSession" class="continue-session-card">
+    <div v-if="appReady && isLoggedIn" class="main container" :class="{
+      'tools-open': showTools,
+      'focus-mode-active': focusModeEnabled,
+      'blur-mode-active': blurModeEnabled,
+      'flow-practice': guidedUiStep === 'practice',
+      'flow-recall': guidedUiStep === 'recall'
+    }">
+      <div class="content">
+        <section v-if="!hasVerses" class="home-dashboard home-dashboard-minimal">
+          <div v-if="hasContinueSession" class="continue-session-card">
             <div class="continue-session-copy">
               <span class="continue-session-kicker">Continue where you left off</span>
               <strong>{{ continueSessionLabel }}</strong>
@@ -35,18 +31,18 @@
               </button>
               <button class="cta cta-ghost continue-session-dismiss" @click="confirmDiscardContinueSession">
                 <i class="bi bi-x-lg"></i>
-	              </button>
-	            </div>
-	          </div>
-            <div class="offcanvas-launcher-card">
-              <button class="cta cta-primary setup-primary" @click="openToolsPanel()" title="Open controls">
-                <i class="bi bi-sliders"></i> Open Session Controls
               </button>
-              <p class="offcanvas-launcher-copy">
-                Session setup lives in the offcanvas.
-              </p>
             </div>
-	        </section>
+          </div>
+          <div class="offcanvas-launcher-card">
+            <button class="cta cta-primary setup-primary" @click="openToolsPanel()" title="Open controls">
+              <i class="bi bi-sliders"></i> Open Session Controls
+            </button>
+            <p class="offcanvas-launcher-copy">
+              Session setup lives in the offcanvas.
+            </p>
+          </div>
+        </section>
 
         <!-- Floating Actions (replaces the session rail bar) -->
         <div v-if="currentChapter && hasVerses" class="workspace-fab" aria-label="Workspace actions">
@@ -72,13 +68,15 @@
             </div>
           </div>
           <div class="workspace-fab-actions">
-            <button class="fab-btn fab-btn-soft" @click="markTakrarRepeat(activeVerseRef)" :disabled="!activeVerseRef || repeatActionLocked" title="Repeat current ayah">
+            <button class="fab-btn fab-btn-soft" @click="markTakrarRepeat(activeVerseRef)"
+              :disabled="!activeVerseRef || repeatActionLocked" title="Repeat current ayah">
               <i class="bi bi-arrow-repeat"></i><span>Repeat</span>
             </button>
             <button class="fab-btn fab-btn-ghost" @click="openAdvancedControls" title="Open session controls">
               <i class="bi bi-sliders"></i><span>Controls</span>
             </button>
-            <button class="fab-btn fab-btn-primary" @click="handlePrimaryAction" :disabled="!isPlaying && !canStartSession">
+            <button class="fab-btn fab-btn-primary" @click="handlePrimaryAction"
+              :disabled="!isPlaying && !canStartSession">
               <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
               <span>{{ isPlaying ? 'Pause' : (guidedUiStep === 'review' ? 'Review' : 'Play') }}</span>
             </button>
@@ -89,31 +87,33 @@
 
         <div v-if="false" class="reading-toolbar">
           <div class="reading-toolbar-group">
-	            <button class="toolbar-chip" :class="{ active: showTranslation }" title="Show or hide the English translation"
-	              @click="toggleReadingOption('translation')">
+            <button class="toolbar-chip" :class="{ active: showTranslation }"
+              title="Show or hide the English translation" @click="toggleReadingOption('translation')">
               <i class="bi bi-translate"></i><span>Translation</span>
             </button>
-	            <button class="toolbar-chip" :class="{ active: showTransliteration }" title="Show or hide transliteration"
-	              @click="toggleReadingOption('transliteration')">
+            <button class="toolbar-chip" :class="{ active: showTransliteration }" title="Show or hide transliteration"
+              @click="toggleReadingOption('transliteration')">
               <i class="bi bi-type"></i><span>Transliteration</span>
             </button>
-	            <button class="toolbar-chip" :class="{ active: showWordByWord }" title="Show word-by-word meaning chips" @click="toggleReadingOption('wbw')">
+            <button class="toolbar-chip" :class="{ active: showWordByWord }" title="Show word-by-word meaning chips"
+              @click="toggleReadingOption('wbw')">
               <i class="bi bi-grid-3x2-gap"></i><span>Word by word</span>
             </button>
-	            <button class="toolbar-chip" :class="{ active: wordByWordAudioEnabled }" title="Enable audio for individual word chips"
-	              @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
+            <button class="toolbar-chip" :class="{ active: wordByWordAudioEnabled }"
+              title="Enable audio for individual word chips" @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
               <i class="bi bi-volume-up"></i><span>Word audio</span>
             </button>
 
             <!-- ADD TAJWEED PILL HERE -->
-	            <button class="toolbar-chip" :class="{ active: tajweedEnabled }" title="Show tajweed colouring from the Quran API" @click="toggleTajweed">
+            <button class="toolbar-chip" :class="{ active: tajweedEnabled }"
+              title="Show tajweed colouring from the Quran API" @click="toggleTajweed">
               <i class="bi bi-palette"></i><span>Tajweed</span>
             </button>
           </div>
 
           <div class="reading-toolbar-group">
             <div class="font-dropdown">
-	              <button class="font-dropdown-trigger" @click="toggleFontDropdown" title="Change Quran font">
+              <button class="font-dropdown-trigger" @click="toggleFontDropdown" title="Change Quran font">
                 <i class="bi bi-text-paragraph"></i>
                 <span>{{ getCurrentFontLabel() }}</span>
                 <i class="bi bi-chevron-down" :class="{ rotated: fontDropdownOpen }"></i>
@@ -142,16 +142,11 @@
         <div v-else-if="hasVerses" class="workspace">
           <main class="workspace-main" aria-label="Memorisation workspace">
             <div class="verses-grid">
-              <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" class="verse-card"
-                :class="{
-                  active: effectiveActiveVerseKey === verse.key,
-                  'serious-training': false
-                }"
-                @click="onVerseCardClick(verse)"
-                role="button"
-                tabindex="0"
-                @keydown.enter.prevent="onVerseCardClick(verse)"
-              >
+              <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" class="verse-card" :class="{
+                active: effectiveActiveVerseKey === verse.key,
+                'serious-training': false,
+                'blur-upcoming': blurModeEnabled && isVerseBlurred(verse.key)
+              }" @click="onVerseCardClick(verse)" role="button" tabindex="0" @keydown.enter.prevent="onVerseCardClick(verse)">
                 <div class="verse-header">
                   <div class="verse-badges">
                     <span class="verse-number">Ayah {{ verse.number }}</span>
@@ -167,8 +162,8 @@
                   </div>
                 </div>
 
-                <div class="verse-arabic verse-arabic-primary" dir="rtl" v-if="verse.arabic && isDataReady" v-html="getDisplayArabic(verse)"
-                  :class="{
+                <div class="verse-arabic verse-arabic-primary" dir="rtl" v-if="verse.arabic && isDataReady"
+                  v-html="getDisplayArabic(verse)" :class="{
                     'tajweed-enabled': tajweedEnabled,
                     'word-highlight-enabled': showWordByWord && wordByWordAudioEnabled && !tajweedEnabled
                   }" :style="{
@@ -188,7 +183,8 @@
                 </div>
                 <div v-if="showWordByWord && verse.words && verse.words.length" class="verse-words verse-aid"
                   @scroll="onVerseWordsScroll(verse.key, $event)">
-                  <div v-for="(word, wi) in verse.words" :key="wi" class="word-item" :title="wordTooltip(word)" :data-tooltip="wordTooltip(word)" tabindex="0">
+                  <div v-for="(word, wi) in verse.words" :key="wi" class="word-item" :title="wordTooltip(word)"
+                    :data-tooltip="wordTooltip(word)" tabindex="0">
                     <span class="word-arabic" dir="rtl">{{ word.ar }}</span>
                     <span class="word-meaning">{{ word.en }}</span>
                     <button v-if="word.audio && wordByWordAudioEnabled" class="word-audio-btn"
@@ -214,270 +210,287 @@
           </div>
           <div class="tools-context">{{ contextLabel }}</div>
           <div class="tools-tabs" role="tablist" aria-label="Controls tabs">
-            <button :class="{ active: tab === 'tools', 'active-tab': tab === 'tools' }"
-              @click="tab = 'tools'" title="Session tools">
+            <button :class="{ active: tab === 'tools', 'active-tab': tab === 'tools' }" @click="tab = 'tools'"
+              title="Session tools">
               <i class="bi bi-sliders"></i> Tools
             </button>
-            <button :class="{ active: tab === 'stats', 'active-tab': tab === 'stats' }"
-              @click="tab = 'stats'" title="Session stats">
+            <button :class="{ active: tab === 'stats', 'active-tab': tab === 'stats' }" @click="tab = 'stats'"
+              title="Session stats">
               <i class="bi bi-grid-1x2"></i> Stats
             </button>
-            <button :class="{ active: tab === 'settings', 'active-tab': tab === 'settings' }"
-              @click="tab = 'settings'" title="Reading and display settings">
+            <button :class="{ active: tab === 'settings', 'active-tab': tab === 'settings' }" @click="tab = 'settings'"
+              title="Reading and display settings">
               <i class="bi bi-gear"></i> Settings
             </button>
           </div>
         </div>
 
-          <div class="tools-body compact">
-            <div v-if="tab === 'tools'" class="sheet">
-              <section class="sheet-section">
-                <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
-                  <span class="st-left">
-                    <span class="st-ico"><i class="bi bi-book"></i></span>
-                    <span class="st-txt">
-                      <span class="st-title">Session</span>
-                      <span class="st-sub">Choose what you memorise</span>
-                    </span>
+        <div class="tools-body compact">
+          <div v-if="tab === 'tools'" class="sheet">
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-book"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">Session</span>
+                    <span class="st-sub">Choose what you memorise</span>
                   </span>
-                  <span class="st-chev" :class="{ open: sectionOpen.advanced_setup }"><i class="bi bi-chevron-down"></i></span>
-                </button>
-                <div class="sheet-content" v-show="sectionOpen.advanced_setup">
-                  <div class="field-stack">
-                    <div class="field">
-                      <label>Surah</label>
-                      <select :value="chapterId" @change="onChapterChange" class="select">
-                        <option :value="0">Choose a surah...</option>
-                        <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.name_simple }}</option>
-                      </select>
-                      <small class="field-hint">Pick the surah you want to work on.</small>
-                    </div>
-                    <div class="field">
-                      <label>Verse range</label>
-                      <div class="range range-single">
-                        <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
-                        <span>to</span>
-                        <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
-                      </div>
-                      <small class="field-hint">Keep ranges small for focused memorisation.</small>
-                    </div>
-                    <div class="field">
-                      <label>Reciter</label>
-                      <select v-model="reciterId" @change="refreshVerses" class="select">
-                        <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
-                      </select>
-                      <small class="field-hint">Changes the audio voice for the session.</small>
-                    </div>
+                </span>
+                <span class="st-chev" :class="{ open: sectionOpen.advanced_setup }"><i
+                    class="bi bi-chevron-down"></i></span>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.advanced_setup">
+                <div class="field-stack">
+                  <div class="field">
+                    <label>Surah</label>
+                    <select :value="chapterId" @change="onChapterChange" class="select">
+                      <option :value="0">Choose a surah...</option>
+                      <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.name_simple }}</option>
+                    </select>
+                    <small class="field-hint">Pick the surah you want to work on.</small>
                   </div>
-                </div>
-              </section>
-
-              <section class="sheet-section">
-                <button class="sheet-toggle" @click="toggleSection('advanced_playback')" type="button">
-                  <span class="st-left">
-                    <span class="st-ico"><i class="bi bi-mic"></i></span>
-                    <span class="st-txt">
-                      <span class="st-title">Audio</span>
-                      <span class="st-sub">Reciter and playback</span>
-                    </span>
-                  </span>
-                  <span class="st-chev" :class="{ open: sectionOpen.advanced_playback }"><i class="bi bi-chevron-down"></i></span>
-                </button>
-                <div class="sheet-content" v-show="sectionOpen.advanced_playback">
-                  <div class="field-stack">
-                    <div class="field">
-                      <label>Speed</label>
-                      <div class="radio-group radio-group-tight">
-                        <label class="radio"><input type="radio" value="0.75" v-model="speed"> 0.75x</label>
-                        <label class="radio"><input type="radio" value="1" v-model="speed"> 1x</label>
-                        <label class="radio"><input type="radio" value="1.25" v-model="speed"> 1.25x</label>
-                        <label class="radio"><input type="radio" value="1.5" v-model="speed"> 1.5x</label>
-                      </div>
-                      <small class="field-hint">Use slower speed for early memorisation.</small>
+                  <div class="field">
+                    <label>Verse range</label>
+                    <div class="range range-single">
+                      <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
+                      <span>to</span>
+                      <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
                     </div>
-                    <div class="field">
-                      <label>Auto-advance</label>
-                      <div class="radio-group radio-group-tight">
-                        <label class="radio"><input type="radio" value="auto" v-model="playMode"> Yes</label>
-                        <label class="radio"><input type="radio" value="manual" v-model="playMode"> No</label>
-                      </div>
-                      <small class="field-hint">Auto moves to the next queue item when audio ends.</small>
-                    </div>
+                    <small class="field-hint">Keep ranges small for focused memorisation.</small>
                   </div>
-                </div>
-              </section>
-
-              <section class="sheet-section tools-techniques-section">
-                <button class="sheet-toggle" @click="toggleSection('memorisation_techniques')" type="button">
-                  <span class="st-left">
-                    <span class="st-ico"><i class="bi bi-stars"></i></span>
-                    <span class="st-txt">
-                      <span class="st-title">Memorisation Techniques</span>
-                      <span class="st-sub">Optional focus, recall, and chaining aids</span>
-                    </span>
-                  </span>
-                  <span class="st-chev" :class="{ open: sectionOpen.memorisation_techniques }"><i class="bi bi-chevron-down"></i></span>
-                </button>
-                <div class="sheet-content" v-show="sectionOpen.memorisation_techniques">
-                  <div class="techniques-list">
-                    <div class="technique-row">
-                      <div class="technique-copy">
-                        <label>Focus Mode</label>
-                        <small>Reduces distractions around the active ayah.</small>
-                      </div>
-                      <button class="toggle-chip technique-toggle" :class="{ active: focusModeEnabled }" @click="focusModeEnabled = !focusModeEnabled" type="button">
-                        {{ focusModeEnabled ? 'On' : 'Off' }}
-                      </button>
-                    </div>
-
-                    <div class="technique-row technique-row-stacked">
-                      <div class="technique-row-main">
-                        <div class="technique-copy">
-                          <label>Blur Mode</label>
-                          <small>Supports active recall through progressive concealment.</small>
-                        </div>
-                        <button class="toggle-chip technique-toggle" :class="{ active: blurModeEnabled }" @click="blurModeEnabled = !blurModeEnabled" type="button">
-                          {{ blurModeEnabled ? 'On' : 'Off' }}
-                        </button>
-                      </div>
-                      <div v-if="blurModeEnabled" class="technique-control">
-                        <span>Intensity</span>
-                        <input type="range" min="4" max="18" step="1" v-model.number="blurIntensity" class="input technique-range">
-                        <span class="inline-setting-pill">{{ blurIntensity }}px</span>
-                      </div>
-                    </div>
-
-                    <div class="technique-row technique-row-stacked">
-                      <div class="technique-row-main">
-                        <div class="technique-copy">
-                          <label>Chaining</label>
-                          <small>{{ chainingMethodDescription }}</small>
-                        </div>
-                        <button class="toggle-chip technique-toggle" :class="{ active: chainingEnabled }" @click="chainingEnabled = !chainingEnabled" type="button">
-                          {{ chainingEnabled ? 'On' : 'Off' }}
-                        </button>
-                      </div>
-                      <div v-if="chainingEnabled" class="segmented-control segmented-control-compact" role="group" aria-label="Chaining method">
-                        <button type="button" :class="{ active: chainingMethod === 'linking' }" @click="chainingMethod = 'linking'">
-                          Linking Method
-                        </button>
-                        <button type="button" :class="{ active: chainingMethod === 'cumulative' }" @click="chainingMethod = 'cumulative'">
-                          Cumulative Method
-                        </button>
-                      </div>
-                      <div v-if="chainingEnabled" class="technique-control">
-                        <span>Repetition</span>
-                        <input type="range" min="1" max="5" step="1" v-model.number="chainingRepetitions" class="input technique-range">
-                        <span class="inline-setting-pill">{{ chainingRepetitions }}x</span>
-                      </div>
-                      <div class="technique-preview">
-                        <span>{{ chainingMethodPreview }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </section>
-            </div>
-
-            <div v-else-if="tab === 'stats'" class="sheet">
-              <div class="sheet-section" style="padding: 20px;">
-                <h3 style="margin-top:0; font-size: 1.1rem; color: var(--accent);">Your Memorisation Stats</h3>
-                <p class="analytics-help">These are device-local summaries. They do not change your memorisation flow.</p>
-                <div class="analytics-grid">
-                  <div class="stat-card">
-                    <i class="bi bi-book"></i>
-                    <div class="stat-value">{{ analytics.totalVersesRead }}</div>
-                    <div class="stat-label">Verses Read</div>
-                    <div class="stat-help">Counts verses you played or reviewed in sessions.</div>
-                    <div class="mini-trend" v-html="renderMiniTrend(analytics.weeklyVerses)"></div>
-                  </div>
-                  <div class="stat-card">
-                    <i class="bi bi-clock-history"></i>
-                    <div class="stat-value">{{ analytics.totalTimeSpent }}m</div>
-                    <div class="stat-label">Time Spent</div>
-                    <div class="stat-help">Approximate minutes with audio active.</div>
-                    <div class="mini-trend" v-html="renderMiniTrend(analytics.weeklyMinutes)"></div>
-                  </div>
-                  <div class="stat-card">
-                    <i class="bi bi-repeat"></i>
-                    <div class="stat-value">{{ analytics.totalRepetitions }}</div>
-                    <div class="stat-label">Repetitions</div>
-                    <div class="stat-help">Total repeats across all sessions.</div>
-                  </div>
-                  <div class="stat-card">
-                    <i class="bi bi-calendar-check"></i>
-                    <div class="stat-value">{{ analytics.sessionsCompleted }}</div>
-                    <div class="stat-label">Sessions</div>
-                    <div class="stat-help">How many sessions you finished.</div>
+                  <div class="field">
+                    <label>Reciter</label>
+                    <select v-model="reciterId" @change="refreshVerses" class="select">
+                      <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
+                    </select>
+                    <small class="field-hint">Changes the audio voice for the session.</small>
                   </div>
                 </div>
               </div>
-            </div>
+            </section>
 
-            <div v-else-if="tab === 'settings'" class="sheet">
-              <div class="sheet-section settings-section">
-                <div class="settings-heading">
-                  <h3>Reading & Display</h3>
-                  <button class="tools-btn tools-btn-primary settings-apply" @click="applySettingsChanges">
-                    <i class="bi bi-check2"></i><span>Apply</span>
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('advanced_playback')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-mic"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">Audio</span>
+                    <span class="st-sub">Reciter and playback</span>
+                  </span>
+                </span>
+                <span class="st-chev" :class="{ open: sectionOpen.advanced_playback }"><i
+                    class="bi bi-chevron-down"></i></span>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.advanced_playback">
+                <div class="field-stack">
+                  <div class="field">
+                    <label>Speed</label>
+                    <div class="radio-group radio-group-tight">
+                      <label class="radio"><input type="radio" value="0.75" v-model="speed"> 0.75x</label>
+                      <label class="radio"><input type="radio" value="1" v-model="speed"> 1x</label>
+                      <label class="radio"><input type="radio" value="1.25" v-model="speed"> 1.25x</label>
+                      <label class="radio"><input type="radio" value="1.5" v-model="speed"> 1.5x</label>
+                    </div>
+                    <small class="field-hint">Use slower speed for early memorisation.</small>
+                  </div>
+                  <div class="field">
+                    <label>Auto-advance</label>
+                    <div class="radio-group radio-group-tight">
+                      <label class="radio"><input type="radio" value="auto" v-model="playMode"> Yes</label>
+                      <label class="radio"><input type="radio" value="manual" v-model="playMode"> No</label>
+                    </div>
+                    <small class="field-hint">Auto moves to the next queue item when audio ends.</small>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="sheet-section tools-techniques-section">
+              <button class="sheet-toggle" @click="toggleSection('memorisation_techniques')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-stars"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">Memorisation Techniques</span>
+                    <span class="st-sub">Optional focus, recall, and chaining aids</span>
+                  </span>
+                </span>
+                <span class="st-chev" :class="{ open: sectionOpen.memorisation_techniques }"><i
+                    class="bi bi-chevron-down"></i></span>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.memorisation_techniques">
+                <div class="techniques-list">
+                  <div class="technique-row">
+                    <div class="technique-copy">
+                      <label>Focus Mode</label>
+                      <small>Reduces distractions around the active ayah.</small>
+                    </div>
+                    <button class="toggle-chip technique-toggle" :class="{ active: focusModeEnabled }"
+                      @click="focusModeEnabled = !focusModeEnabled" type="button">
+                      {{ focusModeEnabled ? 'On' : 'Off' }}
+                    </button>
+                  </div>
+
+                  <div class="technique-row technique-row-stacked">
+                    <div class="technique-row-main">
+                      <div class="technique-copy">
+                        <label>Blur Mode</label>
+                        <small>Supports active recall through progressive concealment.</small>
+                      </div>
+                      <button class="toggle-chip technique-toggle" :class="{ active: blurModeEnabled }"
+                        @click="blurModeEnabled = !blurModeEnabled" type="button">
+                        {{ blurModeEnabled ? 'On' : 'Off' }}
+                      </button>
+                    </div>
+                    <div v-if="blurModeEnabled" class="technique-control">
+                      <span>Intensity</span>
+                      <input type="range" min="4" max="18" step="1" v-model.number="blurIntensity"
+                        class="input technique-range">
+                      <span class="inline-setting-pill">{{ blurIntensity }}px</span>
+                    </div>
+                  </div>
+
+                  <div class="technique-row technique-row-stacked">
+                    <div class="technique-row-main">
+                      <div class="technique-copy">
+                        <label>Chaining</label>
+                        <small>{{ chainingMethodDescription }}</small>
+                      </div>
+                      <button class="toggle-chip technique-toggle" :class="{ active: chainingEnabled }"
+                        @click="chainingEnabled = !chainingEnabled" type="button">
+                        {{ chainingEnabled ? 'On' : 'Off' }}
+                      </button>
+                    </div>
+                    <div v-if="chainingEnabled" class="segmented-control segmented-control-compact" role="group"
+                      aria-label="Chaining method">
+                      <button type="button" :class="{ active: chainingMethod === 'linking' }"
+                        @click="chainingMethod = 'linking'">
+                        Linking Method
+                      </button>
+                      <button type="button" :class="{ active: chainingMethod === 'cumulative' }"
+                        @click="chainingMethod = 'cumulative'">
+                        Cumulative Method
+                      </button>
+                    </div>
+                    <div v-if="chainingEnabled" class="technique-control">
+                      <span>Repetition</span>
+                      <input type="range" min="1" max="5" step="1" v-model.number="chainingRepetitions"
+                        class="input technique-range">
+                      <span class="inline-setting-pill">{{ chainingRepetitions }}x</span>
+                    </div>
+                    <div class="technique-preview">
+                      <span>{{ chainingMethodPreview }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div v-else-if="tab === 'stats'" class="sheet">
+            <div class="sheet-section" style="padding: 20px;">
+              <h3 style="margin-top:0; font-size: 1.1rem; color: var(--accent);">Your Memorisation Stats</h3>
+              <p class="analytics-help">These are device-local summaries. They do not change your memorisation flow.</p>
+              <div class="analytics-grid">
+                <div class="stat-card">
+                  <i class="bi bi-book"></i>
+                  <div class="stat-value">{{ analytics.totalVersesRead }}</div>
+                  <div class="stat-label">Verses Read</div>
+                  <div class="stat-help">Counts verses you played or reviewed in sessions.</div>
+                  <div class="mini-trend" v-html="renderMiniTrend(analytics.weeklyVerses)"></div>
+                </div>
+                <div class="stat-card">
+                  <i class="bi bi-clock-history"></i>
+                  <div class="stat-value">{{ analytics.totalTimeSpent }}m</div>
+                  <div class="stat-label">Time Spent</div>
+                  <div class="stat-help">Approximate minutes with audio active.</div>
+                  <div class="mini-trend" v-html="renderMiniTrend(analytics.weeklyMinutes)"></div>
+                </div>
+                <div class="stat-card">
+                  <i class="bi bi-repeat"></i>
+                  <div class="stat-value">{{ analytics.totalRepetitions }}</div>
+                  <div class="stat-label">Repetitions</div>
+                  <div class="stat-help">Total repeats across all sessions.</div>
+                </div>
+                <div class="stat-card">
+                  <i class="bi bi-calendar-check"></i>
+                  <div class="stat-value">{{ analytics.sessionsCompleted }}</div>
+                  <div class="stat-label">Sessions</div>
+                  <div class="stat-help">How many sessions you finished.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="tab === 'settings'" class="sheet">
+            <div class="sheet-section settings-section">
+              <div class="settings-heading">
+                <h3>Reading & Display</h3>
+                <button class="tools-btn tools-btn-primary settings-apply" @click="applySettingsChanges">
+                  <i class="bi bi-check2"></i><span>Apply</span>
+                </button>
+              </div>
+
+              <div class="settings-list">
+                <div class="settings-row">
+                  <div class="settings-row-copy">
+                    <label>Translation</label>
+                    <small>English meaning</small>
+                  </div>
+                  <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTranslation }"
+                    @click="settingsDraft.showTranslation = !settingsDraft.showTranslation">
+                    {{ settingsDraft.showTranslation ? 'Enabled' : 'Disabled' }}
                   </button>
                 </div>
 
-                <div class="settings-list">
-                  <div class="settings-row">
-                    <div class="settings-row-copy">
-                      <label>Translation</label>
-                      <small>English meaning</small>
-                    </div>
-                    <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTranslation }" @click="settingsDraft.showTranslation = !settingsDraft.showTranslation">
-                      {{ settingsDraft.showTranslation ? 'Enabled' : 'Disabled' }}
-                    </button>
+                <div class="settings-row">
+                  <div class="settings-row-copy">
+                    <label>Transliteration</label>
+                    <small>Latin reading aid</small>
                   </div>
+                  <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTransliteration }"
+                    @click="settingsDraft.showTransliteration = !settingsDraft.showTransliteration">
+                    {{ settingsDraft.showTransliteration ? 'Enabled' : 'Disabled' }}
+                  </button>
+                </div>
 
-                  <div class="settings-row">
-                    <div class="settings-row-copy">
-                      <label>Transliteration</label>
-                      <small>Latin reading aid</small>
-                    </div>
-                    <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTransliteration }" @click="settingsDraft.showTransliteration = !settingsDraft.showTransliteration">
-                      {{ settingsDraft.showTransliteration ? 'Enabled' : 'Disabled' }}
-                    </button>
+                <div class="settings-row">
+                  <div class="settings-row-copy">
+                    <label>Word for word</label>
+                    <small>Word chips</small>
                   </div>
+                  <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showWordByWord }"
+                    @click="settingsDraft.showWordByWord = !settingsDraft.showWordByWord">
+                    {{ settingsDraft.showWordByWord ? 'Enabled' : 'Disabled' }}
+                  </button>
+                </div>
 
-                  <div class="settings-row">
-                    <div class="settings-row-copy">
-                      <label>Word for word</label>
-                      <small>Word chips</small>
-                    </div>
-                    <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showWordByWord }" @click="settingsDraft.showWordByWord = !settingsDraft.showWordByWord">
-                      {{ settingsDraft.showWordByWord ? 'Enabled' : 'Disabled' }}
-                    </button>
+                <div class="settings-row">
+                  <div class="settings-row-copy">
+                    <label>Word audio</label>
+                    <small>Sync highlighting</small>
                   </div>
+                  <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.wordByWordAudioEnabled }"
+                    @click="settingsDraft.wordByWordAudioEnabled = !settingsDraft.wordByWordAudioEnabled">
+                    {{ settingsDraft.wordByWordAudioEnabled ? 'Enabled' : 'Disabled' }}
+                  </button>
+                </div>
 
-                  <div class="settings-row">
-                    <div class="settings-row-copy">
-                      <label>Word audio</label>
-                      <small>Sync highlighting</small>
-                    </div>
-                    <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.wordByWordAudioEnabled }" @click="settingsDraft.wordByWordAudioEnabled = !settingsDraft.wordByWordAudioEnabled">
-                      {{ settingsDraft.wordByWordAudioEnabled ? 'Enabled' : 'Disabled' }}
-                    </button>
+                <div class="settings-row settings-row-range">
+                  <div class="settings-row-copy">
+                    <label>Font size</label>
+                    <span class="inline-setting-pill">{{ settingsDraft.defaultFontSize }}%</span>
                   </div>
-
-                  <div class="settings-row settings-row-range">
-                    <div class="settings-row-copy">
-                      <label>Font size</label>
-                      <span class="inline-setting-pill">{{ settingsDraft.defaultFontSize }}%</span>
-                    </div>
-                    <input type="range" min="80" max="140" step="5" v-model.number="settingsDraft.defaultFontSize" class="input settings-range">
-                  </div>
+                  <input type="range" min="80" max="140" step="5" v-model.number="settingsDraft.defaultFontSize"
+                    class="input settings-range">
                 </div>
               </div>
             </div>
+          </div>
         </div>
 
         <div class="tools-footer">
-          <button class="tools-btn tools-btn-primary tools-btn-start" @click="startSession" :disabled="!canStartSession">
+          <button class="tools-btn tools-btn-primary tools-btn-start" @click="startSession"
+            :disabled="!canStartSession">
             <i class="bi bi-play-fill"></i><span>Start memorising</span>
           </button>
           <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="resetControls"><i
@@ -613,13 +626,15 @@
         </div>
         <div class="modal-footer">
           <button class="btn-secondary" @click="closeConfirmModal">{{ confirmModal.cancelLabel }}</button>
-          <button class="btn-primary" :class="{ 'btn-danger': confirmModal.tone === 'danger' }" @click="runConfirmAction">{{ confirmModal.confirmLabel }}</button>
+          <button class="btn-primary" :class="{ 'btn-danger': confirmModal.tone === 'danger' }"
+            @click="runConfirmAction">{{ confirmModal.confirmLabel }}</button>
         </div>
       </div>
     </div>
 
     <!-- Resume Modal (Logged In) -->
-    <div class="modal-overlay" v-if="showResumeModal && isLoggedIn && hasContinueSession" @click.self="showResumeModal = false">
+    <div class="modal-overlay" v-if="showResumeModal && isLoggedIn && hasContinueSession"
+      @click.self="showResumeModal = false">
       <div class="modal-content confirm-modal resume-modal" role="dialog" aria-modal="true">
         <div class="modal-header">
           <div>
@@ -629,20 +644,26 @@
           <button class="btn-icon" @click="showResumeModal = false"><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="modal-body">
-          <p class="confirm-copy resume-copy">Pick up gently from where you paused. Everything is ready for a calm restart.</p>
+          <p class="confirm-copy resume-copy">Pick up gently from where you paused. Everything is ready for a calm
+            restart.</p>
           <p class="confirm-copy">{{ continueSessionMeta }}</p>
           <div class="resume-grid">
             <div class="pill">
               <i class="bi bi-book"></i>
-              <span>Range: {{ continueSessionPayload?.config?.rangeStart }}-{{ continueSessionPayload?.config?.rangeEnd }}</span>
+              <span>Range: {{ continueSessionPayload?.config?.rangeStart }}-{{ continueSessionPayload?.config?.rangeEnd
+              }}</span>
             </div>
             <div class="pill">
               <i class="bi bi-link-45deg"></i>
-              <span>{{ continueSessionPayload?.config?.chainingEnabled === false ? 'Chaining off' : (continueSessionPayload?.config?.chainingMethod === 'cumulative' ? 'Cumulative chain' : 'Linking chain') }}</span>
+              <span>{{ continueSessionPayload?.config?.chainingEnabled === false ? 'Chaining off' :
+                (continueSessionPayload?.config?.chainingMethod === 'cumulative' ? 'Cumulative chain' : 'Linking chain')
+              }}</span>
             </div>
             <div class="pill">
               <i class="bi bi-stopwatch"></i>
-              <span>Resume from ayah {{ continueSessionPayload?.activeVerseKey ? String(continueSessionPayload.activeVerseKey).split(':')[1] : continueSessionPayload?.config?.rangeStart }}</span>
+              <span>Resume from ayah {{ continueSessionPayload?.activeVerseKey ?
+                String(continueSessionPayload.activeVerseKey).split(':')[1] : continueSessionPayload?.config?.rangeStart
+              }}</span>
             </div>
           </div>
           <div class="pill" style="margin-top: 10px; padding: 12px 14px;">
@@ -651,7 +672,8 @@
           <div class="pill" style="margin-top: 10px; padding: 12px 14px;">
             <strong>Last results:</strong>
             <span style="display:block; margin-top:6px;">
-              {{ analytics.sessionsCompleted }} sessions · {{ analytics.totalRepetitions }} repeats · {{ analytics.currentStreak }} day streak
+              {{ analytics.sessionsCompleted }} sessions · {{ analytics.totalRepetitions }} repeats · {{
+                analytics.currentStreak }} day streak
             </span>
           </div>
         </div>
@@ -838,8 +860,8 @@ export default {
       tajweedEnabled: false,
       beginner: createBeginnerState(),
       advanced: createAdvancedState(),
-	      mutqinState: loadMutqinState(),
-	      unwatchMutqinState: null,
+      mutqinState: loadMutqinState(),
+      unwatchMutqinState: null,
       // chaining removed
 
       // Arabic text word highlighting state
@@ -1002,8 +1024,8 @@ export default {
       // UI Helpers
       banner: null,
       bannerTimer: null,
-	      networkOnline: true,
-	      restoredAudioState: null,
+      networkOnline: true,
+      restoredAudioState: null,
       loadVersesTimer: null,
 
       // Word sequence
@@ -1054,17 +1076,31 @@ export default {
       isAudioLoading: false,
       sessionCompleted: false,
       hybridPendingKey: null,
-	      quizSkill: 'recite_text',
-	      quizSessionStats: null,
-	      quizLastResult: null,
-	      quizSummaryActive: false,
-	      verseRequestId: 0,
-	      verseDataCache: {},
-	      verseScrollMemory: {}
-	    }
-	  },
+      quizSkill: 'recite_text',
+      quizSessionStats: null,
+      quizLastResult: null,
+      quizSummaryActive: false,
+      verseRequestId: 0,
+      verseDataCache: {},
+      verseScrollMemory: {}
+    }
+  },
 
   computed: {
+    isVerseBlurred() {
+      return (verseKey) => {
+        if (!this.blurModeEnabled) return false
+        const activeKey = this.effectiveActiveVerseKey
+        if (!activeKey) return false
+
+        // Get the current active verse number
+        const activeNumber = parseInt(activeKey.split(':')[1])
+        const verseNumber = parseInt(verseKey.split(':')[1])
+
+        // Blur upcoming verses (higher number than active)
+        return verseNumber > activeNumber
+      }
+    },
     liveSessionStats() {
       const currentIndex = Math.max(0, Number(this.queueIndex || 0))
       const completedEntries = (this.queue || []).slice(0, currentIndex)
@@ -1156,22 +1192,22 @@ export default {
       return queued?.verse?.key || queued?.key || null
     },
 
-	    activeVerseRef() {
-	      return this.verses.find(v => v.key === this.effectiveActiveVerseKey) || null
-	    },
+    activeVerseRef() {
+      return this.verses.find(v => v.key === this.effectiveActiveVerseKey) || null
+    },
 
-	    activeMutqinAyah() {
-	      return this.effectiveActiveVerseKey ? this.mutqinState.ayahs?.[this.effectiveActiveVerseKey] || null : null
-	    },
+    activeMutqinAyah() {
+      return this.effectiveActiveVerseKey ? this.mutqinState.ayahs?.[this.effectiveActiveVerseKey] || null : null
+    },
 
     currentLearningPrompt() {
-	      const item = this.mutqinState?.sessionState?.queue?.[this.mutqinState?.sessionState?.current_index || 0]
-	      if (!item) return 'Listen and follow.'
-	      if (item.phase === 'Retention') return this.dueCount ? `${this.dueCount} verses to review.` : 'Review what is due.'
-	      if (this.guidedUiStep === 'recall') return 'Recite first, then reveal.'
-	      if (this.guidedUiStep === 'practice') return 'Try reciting with minimal support.'
-	      return 'Listen and follow.'
-	    },
+      const item = this.mutqinState?.sessionState?.queue?.[this.mutqinState?.sessionState?.current_index || 0]
+      if (!item) return 'Listen and follow.'
+      if (item.phase === 'Retention') return this.dueCount ? `${this.dueCount} verses to review.` : 'Review what is due.'
+      if (this.guidedUiStep === 'recall') return 'Recite first, then reveal.'
+      if (this.guidedUiStep === 'practice') return 'Try reciting with minimal support.'
+      return 'Listen and follow.'
+    },
 
     activeQueueEntry() {
       return this.queue?.[Math.max(0, Number(this.queueIndex || 0))] || null
@@ -1233,33 +1269,33 @@ export default {
       })
     },
 
-	    hasSelectedSurah() {
-	      const chapterId = this.currentConfig.chapterId
-	      return chapterId && chapterId > 0
-	    },
+    hasSelectedSurah() {
+      const chapterId = this.currentConfig.chapterId
+      return chapterId && chapterId > 0
+    },
 
-	    activeChapter() {
-	      const id = Number(this.chapterId || 0)
-	      if (!id || !Array.isArray(this.chapters) || !this.chapters.length) return null
-	      return this.chapters.find(c => Number(c.id) === id) || null
-	    },
+    activeChapter() {
+      const id = Number(this.chapterId || 0)
+      if (!id || !Array.isArray(this.chapters) || !this.chapters.length) return null
+      return this.chapters.find(c => Number(c.id) === id) || null
+    },
 
-	    activeChapterName() {
-	      return this.activeChapter?.name_simple || 'Choose surah'
-	    },
+    activeChapterName() {
+      return this.activeChapter?.name_simple || 'Choose surah'
+    },
 
-	    versesMasteredDeltaThisWeek() {
-	      try {
-	        const raw = localStorage.getItem('telawa.masteredWeekly') || 'null'
-	        const data = JSON.parse(raw)
-	        if (!data || !Array.isArray(data.series)) return 0
-	        return data.series.reduce((a, b) => a + Number(b || 0), 0)
-	      } catch {
-	        return 0
-	      }
-	    },
+    versesMasteredDeltaThisWeek() {
+      try {
+        const raw = localStorage.getItem('telawa.masteredWeekly') || 'null'
+        const data = JSON.parse(raw)
+        if (!data || !Array.isArray(data.series)) return 0
+        return data.series.reduce((a, b) => a + Number(b || 0), 0)
+      } catch {
+        return 0
+      }
+    },
 
-	    chapterId: {
+    chapterId: {
       get() { return this.currentConfig.chapterId || 0 },
       set(val) {
         const numVal = Number(val) || 0
@@ -1515,55 +1551,55 @@ export default {
         (!!this.verses.length || !!this.currentConfig.verses.length)
     },
 
-	    currentSessionExplanation() {
+    currentSessionExplanation() {
       const modeLabel = this.currentMode === 'advanced' ? 'Advanced' : 'Beginner'
-	      return `${modeLabel} session using ${this.chainingMethodLabel.toLowerCase()}.`
-	    },
+      return `${modeLabel} session using ${this.chainingMethodLabel.toLowerCase()}.`
+    },
 
-	    setupReadinessHint() {
-	      if (!this.chapters.length) return 'Loading surah list...'
-	      if (!this.hasSelectedSurah) return 'Choose a surah and verse range.'
-	      const range = `${this.rangeStart}-${this.rangeEnd}`
-	      return `${this.activeChapterName} ayahs ${range}. Start when ready.`
-	    },
+    setupReadinessHint() {
+      if (!this.chapters.length) return 'Loading surah list...'
+      if (!this.hasSelectedSurah) return 'Choose a surah and verse range.'
+      const range = `${this.rangeStart}-${this.rangeEnd}`
+      return `${this.activeChapterName} ayahs ${range}. Start when ready.`
+    },
 
-	    startButtonHelp() {
-	      if (!this.hasSelectedSurah) return 'Choose a surah first'
-	      if (!this.isDataReady) return 'Verses are still loading'
-	      if (!this.canStartSession) return 'Check the ayah range and optional tools'
-	      return 'Start guided memorisation'
-	    },
+    startButtonHelp() {
+      if (!this.hasSelectedSurah) return 'Choose a surah first'
+      if (!this.isDataReady) return 'Verses are still loading'
+      if (!this.canStartSession) return 'Check the ayah range and optional tools'
+      return 'Start guided memorisation'
+    },
 
     etaSubtext() {
       if (!this.remainingAyahs) return 'Ready to complete'
       return `Review + repetition included`
     },
 
-	    etaLabel() {
-	      const remainingItems = (this.queue || []).slice(this.queueIndex)
-	      if (!remainingItems.length) return '0 min'
+    etaLabel() {
+      const remainingItems = (this.queue || []).slice(this.queueIndex)
+      if (!remainingItems.length) return '0 min'
 
-	      const reviewTimePerAyah = 5
-	      let totalSeconds = 0
+      const reviewTimePerAyah = 5
+      let totalSeconds = 0
 
-	      remainingItems.forEach((item, index) => {
-	        totalSeconds += this.getQueueItemAudioSeconds(item, index === 0) + reviewTimePerAyah
-	      })
+      remainingItems.forEach((item, index) => {
+        totalSeconds += this.getQueueItemAudioSeconds(item, index === 0) + reviewTimePerAyah
+      })
 
-	      const delaySeconds = (this.delay || 1) * (remainingItems.length - 1)
+      const delaySeconds = (this.delay || 1) * (remainingItems.length - 1)
       totalSeconds += delaySeconds
       const minutes = Math.max(0, Math.ceil(totalSeconds / 60))
       return `Audio time ≈ ${minutes} min`
     },
 
-	    etaLabelAudioOnly() {
-	      const remainingItems = (this.queue || []).slice(this.queueIndex)
-	      if (!remainingItems.length) return '0 min'
+    etaLabelAudioOnly() {
+      const remainingItems = (this.queue || []).slice(this.queueIndex)
+      if (!remainingItems.length) return '0 min'
 
-	      let totalAudioSeconds = 0
-	      remainingItems.forEach((item, index) => {
-	        totalAudioSeconds += this.getQueueItemAudioSeconds(item, index === 0)
-	      })
+      let totalAudioSeconds = 0
+      remainingItems.forEach((item, index) => {
+        totalAudioSeconds += this.getQueueItemAudioSeconds(item, index === 0)
+      })
 
       const minutes = Math.max(0, Math.ceil(totalAudioSeconds / 60))
       return `Audio time ≈ ${minutes} min`
@@ -1609,9 +1645,9 @@ export default {
     }
   },
 
-	  async mounted() {
-	    this.unwatchMutqinState = watchMutqinState(this.mutqinState)
-	    this.loadVerseFontSizes()
+  async mounted() {
+    this.unwatchMutqinState = watchMutqinState(this.mutqinState)
+    this.loadVerseFontSizes()
     this.migrateLocalStorage()
     this.loadUiState()
     this.restoreSessionState()
@@ -1628,7 +1664,7 @@ export default {
     this.restoreAudioState()
     this.theme = document.documentElement.getAttribute('data-theme') || this.theme
     this.loadBookmarksPins(),
-    this.setupWordClickHandler()
+      this.setupWordClickHandler()
     this.loadContinueSessionPrompt()
     this.updateMasteredWeekly()
 
@@ -1674,12 +1710,12 @@ export default {
     if (this.bannerTimer) clearTimeout(this.bannerTimer)
     this.flushPlaybackTime()
     this.stopWordHighlighting()
-	    this.persistAllState()
-	    saveMutqinState(this.mutqinState)
-	    if (this.unwatchMutqinState) this.unwatchMutqinState()
-	    document.removeEventListener('click', this.handleClickOutside)
-      if (this.statsInterval) window.clearInterval(this.statsInterval)
-	  },
+    this.persistAllState()
+    saveMutqinState(this.mutqinState)
+    if (this.unwatchMutqinState) this.unwatchMutqinState()
+    document.removeEventListener('click', this.handleClickOutside)
+    if (this.statsInterval) window.clearInterval(this.statsInterval)
+  },
 
   watch: {
     theme: 'persistUiState',
@@ -1798,7 +1834,7 @@ export default {
         this.flowStep = 'recall'
         this.persistUiState()
         if (this.audioElement) {
-          try { this.audioElement.pause() } catch {}
+          try { this.audioElement.pause() } catch { }
         }
         this.isPlaying = false
         return
@@ -1808,21 +1844,21 @@ export default {
       this.persistUiState()
       this.next()
     },
-	    setModeAndExplain(mode) {
-	      this.currentMode = mode
+    setModeAndExplain(mode) {
+      this.currentMode = mode
 
       const store = this.getModeStore(mode)
       const isFreshMode = !store.chapterId && !store.verses?.length
 
-	      this.applySessionConfig(this.buildSessionConfig(mode))
-	      this.syncActiveVerseState(mode)
-	      this.openToolsPanel({ mode })
-	    },
+      this.applySessionConfig(this.buildSessionConfig(mode))
+      this.syncActiveVerseState(mode)
+      this.openToolsPanel({ mode })
+    },
 
-	    startNewSetup(mode) {
-	      this.setModeAndExplain(mode)
-	      this.showTools = true
-	    },
+    startNewSetup(mode) {
+      this.setModeAndExplain(mode)
+      this.showTools = true
+    },
     cloneModeState(modeState) {
       return deepClone(modeState)
     },
@@ -1880,7 +1916,7 @@ export default {
       this.verseDataCache[key] = this.cloneModeState(wrapped)
       try {
         localStorage.setItem(`telawa.verseCache.${key}`, JSON.stringify(wrapped))
-      } catch (e) {}
+      } catch (e) { }
     },
 
     scheduleLoadVerses(mode = this.currentMode) {
@@ -1942,15 +1978,15 @@ export default {
         resolvedKey = verses[0].key
       }
 
-	      const storedQueueIndex = Math.max(0, Math.min(Number(store.queueIndex || 0), Math.max(queue.length - 1, 0)))
-	      const storedQueueKey = queue[storedQueueIndex]?.verse?.key || queue[storedQueueIndex]?.key
-	      let resolvedQueueIndex = storedQueueKey === resolvedKey
-	        ? storedQueueIndex
-	        : queue.findIndex(item => (item?.verse?.key || item?.key) === resolvedKey)
-	      if (resolvedQueueIndex < 0) {
-	        resolvedQueueIndex = storedQueueIndex
-	        resolvedKey = queue[resolvedQueueIndex]?.verse?.key || queue[resolvedQueueIndex]?.key || resolvedKey
-	      }
+      const storedQueueIndex = Math.max(0, Math.min(Number(store.queueIndex || 0), Math.max(queue.length - 1, 0)))
+      const storedQueueKey = queue[storedQueueIndex]?.verse?.key || queue[storedQueueIndex]?.key
+      let resolvedQueueIndex = storedQueueKey === resolvedKey
+        ? storedQueueIndex
+        : queue.findIndex(item => (item?.verse?.key || item?.key) === resolvedKey)
+      if (resolvedQueueIndex < 0) {
+        resolvedQueueIndex = storedQueueIndex
+        resolvedKey = queue[resolvedQueueIndex]?.verse?.key || queue[resolvedQueueIndex]?.key || resolvedKey
+      }
 
       return this.setActiveVerse(resolvedKey, { mode, queueIndex: resolvedQueueIndex, scroll: false })
     },
@@ -1996,7 +2032,7 @@ export default {
         ? config.chainingMethod
         : this.chainingMethod
       this.chainingRepetitions = Math.max(1, Math.min(5, Number(config.chainingRepetitions || this.chainingRepetitions || 1)))
-	            this.tajweedEnabled = !!config.tajweedEnabled
+      this.tajweedEnabled = !!config.tajweedEnabled
       this.quranFont = config.quranFont || this.quranFont
       this.fontScale = Number(config.fontScale || 1)
       this.script = config.script || this.script
@@ -2152,22 +2188,22 @@ export default {
       this.lastScrollY = current
     },
 
-		    buildContinueSessionPayload() {
-	      const mutqinSession = this.mutqinState?.sessionState || {}
-	      const mutqinIndex = Math.max(0, Number(mutqinSession.current_index || 0))
-	      const mutqinItem = mutqinSession.queue?.[mutqinIndex]
-	      const verse = mutqinItem?.ayahId || this.verses[this.activeVerseIndex >= 0 ? this.activeVerseIndex : this.queueIndex]?.key || this.activeVerseKey
-	      const source = this.currentMode === 'beginner' ? this.beginner : this.advanced
-	      return {
+    buildContinueSessionPayload() {
+      const mutqinSession = this.mutqinState?.sessionState || {}
+      const mutqinIndex = Math.max(0, Number(mutqinSession.current_index || 0))
+      const mutqinItem = mutqinSession.queue?.[mutqinIndex]
+      const verse = mutqinItem?.ayahId || this.verses[this.activeVerseIndex >= 0 ? this.activeVerseIndex : this.queueIndex]?.key || this.activeVerseKey
+      const source = this.currentMode === 'beginner' ? this.beginner : this.advanced
+      return {
         timestamp: Date.now(),
         mode: this.currentMode,
         tab: this.tab,
-	        activeKey: verse || null,
-	        activeVerseKey: mutqinItem?.ayahId || this.activeVerseKey || null,
-	        queueIndex: this.queueIndex || 0,
-	        mutqinSessionIndex: mutqinIndex,
-	        mutqinPhase: mutqinItem?.phase || mutqinSession.phase || 'Takrar',
-	        currentTime: this.currentTime || 0,
+        activeKey: verse || null,
+        activeVerseKey: mutqinItem?.ayahId || this.activeVerseKey || null,
+        queueIndex: this.queueIndex || 0,
+        mutqinSessionIndex: mutqinIndex,
+        mutqinPhase: mutqinItem?.phase || mutqinSession.phase || 'Takrar',
+        currentTime: this.currentTime || 0,
         duration: this.duration || 0,
         isPlaying: !!this.isPlaying,
         playerVisible: !!this.playerVisible,
@@ -2183,32 +2219,32 @@ export default {
       } catch (e) { console.error(e) }
     },
 
-	    loadContinueSessionPrompt() {
-	      try {
-	        const raw = localStorage.getItem('telawa.continueSession')
-	        const mutqinSession = this.mutqinState?.sessionState
-	        if (mutqinSession?.active && mutqinSession?.config?.chapterId) {
-	          const activeItem = mutqinSession.queue?.[mutqinSession.current_index || 0]
-	          const restoredQueueIndex = Math.max(0, Number(mutqinSession.current_index || 0) - 1)
-	          this.continueSessionPayload = {
-	            timestamp: mutqinSession.updated_at ? Date.parse(mutqinSession.updated_at) : Date.now(),
-	            mode: mutqinSession.mode || 'beginner',
-	            tab: mutqinSession.mode || 'beginner',
-	            activeKey: activeItem?.ayahId || null,
-	            activeVerseKey: activeItem?.ayahId || null,
-	            queueIndex: restoredQueueIndex,
-	            mutqinSessionIndex: Number(mutqinSession.current_index || 0),
-	            mutqinPhase: activeItem?.phase || mutqinSession.phase || 'Takrar',
-	            config: mutqinSession.config
-	          }
-	          this.hasContinueSession = true
-	          const chapterName = this.chapters.find(c => Number(c.id) === Number(mutqinSession.config.chapterId))?.name_simple || 'Saved session'
-	          this.continueSessionLabel = `${chapterName} · Ayahs ${mutqinSession.config.rangeStart}-${mutqinSession.config.rangeEnd}`
-	          return
-	        }
-	        if (!raw) return
-	        const payload = JSON.parse(raw)
-	        if (!payload?.config?.chapterId) return
+    loadContinueSessionPrompt() {
+      try {
+        const raw = localStorage.getItem('telawa.continueSession')
+        const mutqinSession = this.mutqinState?.sessionState
+        if (mutqinSession?.active && mutqinSession?.config?.chapterId) {
+          const activeItem = mutqinSession.queue?.[mutqinSession.current_index || 0]
+          const restoredQueueIndex = Math.max(0, Number(mutqinSession.current_index || 0) - 1)
+          this.continueSessionPayload = {
+            timestamp: mutqinSession.updated_at ? Date.parse(mutqinSession.updated_at) : Date.now(),
+            mode: mutqinSession.mode || 'beginner',
+            tab: mutqinSession.mode || 'beginner',
+            activeKey: activeItem?.ayahId || null,
+            activeVerseKey: activeItem?.ayahId || null,
+            queueIndex: restoredQueueIndex,
+            mutqinSessionIndex: Number(mutqinSession.current_index || 0),
+            mutqinPhase: activeItem?.phase || mutqinSession.phase || 'Takrar',
+            config: mutqinSession.config
+          }
+          this.hasContinueSession = true
+          const chapterName = this.chapters.find(c => Number(c.id) === Number(mutqinSession.config.chapterId))?.name_simple || 'Saved session'
+          this.continueSessionLabel = `${chapterName} · Ayahs ${mutqinSession.config.rangeStart}-${mutqinSession.config.rangeEnd}`
+          return
+        }
+        if (!raw) return
+        const payload = JSON.parse(raw)
+        if (!payload?.config?.chapterId) return
         this.continueSessionPayload = payload
         this.hasContinueSession = true
         const chapterName = this.chapters.find(c => Number(c.id) === Number(payload.config.chapterId))?.name_simple || 'Saved session'
@@ -2234,22 +2270,22 @@ export default {
       // Chaining removed.
       this.applySessionConfig(this.buildSessionConfig(this.currentMode))
       await this.loadChapter()
-	      this.buildQueue(this.currentMode)
-	      const store = this.getModeStore(this.currentMode)
-	      const canonicalIndex = Number.isFinite(Number(payload.mutqinSessionIndex)) ? Number(payload.mutqinSessionIndex) : null
-	      if (canonicalIndex !== null) moveMutqinSession(this.mutqinState, canonicalIndex)
-	      const canonicalItem = canonicalIndex !== null ? this.mutqinState.sessionState?.queue?.[canonicalIndex] : null
-	      const targetKey = payload.activeVerseKey || payload.activeKey || canonicalItem?.ayahId || null
-	      let restoredQueueIndex = Math.max(0, Number(payload.queueIndex || 0))
-	      if (targetKey) {
-	        const currentQueueKey = store.queue?.[restoredQueueIndex]?.verse?.key || store.queue?.[restoredQueueIndex]?.key
-	        if (currentQueueKey !== targetKey) {
-	          const exactIndex = store.queue?.findIndex(item => (item?.verse?.key || item?.key) === targetKey)
-	          if (exactIndex >= 0) restoredQueueIndex = exactIndex
-	        }
-	      }
-	      store.queueIndex = restoredQueueIndex
-	      this.syncActiveVerseState(this.currentMode, targetKey)
+      this.buildQueue(this.currentMode)
+      const store = this.getModeStore(this.currentMode)
+      const canonicalIndex = Number.isFinite(Number(payload.mutqinSessionIndex)) ? Number(payload.mutqinSessionIndex) : null
+      if (canonicalIndex !== null) moveMutqinSession(this.mutqinState, canonicalIndex)
+      const canonicalItem = canonicalIndex !== null ? this.mutqinState.sessionState?.queue?.[canonicalIndex] : null
+      const targetKey = payload.activeVerseKey || payload.activeKey || canonicalItem?.ayahId || null
+      let restoredQueueIndex = Math.max(0, Number(payload.queueIndex || 0))
+      if (targetKey) {
+        const currentQueueKey = store.queue?.[restoredQueueIndex]?.verse?.key || store.queue?.[restoredQueueIndex]?.key
+        if (currentQueueKey !== targetKey) {
+          const exactIndex = store.queue?.findIndex(item => (item?.verse?.key || item?.key) === targetKey)
+          if (exactIndex >= 0) restoredQueueIndex = exactIndex
+        }
+      }
+      store.queueIndex = restoredQueueIndex
+      this.syncActiveVerseState(this.currentMode, targetKey)
       this.playerVisible = !!payload.playerVisible
       this.restoredAudioState = {
         src: payload.audioSrc || '',
@@ -2294,9 +2330,9 @@ export default {
           if (state.isPlaying) {
             this.audioElement.play().then(() => {
               this.isPlaying = true
-            }).catch(() => {})
+            }).catch(() => { })
           }
-        } catch (e) {}
+        } catch (e) { }
         this.audioElement.removeEventListener('loadedmetadata', seekOnLoad)
       }
       this.audioElement.addEventListener('loadedmetadata', seekOnLoad)
@@ -2387,7 +2423,7 @@ export default {
         state.series[state.series.length - 1] += delta
         state.lastTotal = current
       }
-      try { localStorage.setItem('telawa.masteredWeekly', JSON.stringify(state)) } catch {}
+      try { localStorage.setItem('telawa.masteredWeekly', JSON.stringify(state)) } catch { }
     },
 
     setPlaybackSpeed(newSpeed) {
@@ -2440,9 +2476,9 @@ export default {
           } else {
             // Find verse and play from this word position
             const verse = this.verses.find(v => v.key === verseKey)
-	            if (verse && verse.audio) {
-	              this.playVerse(verse)
-	            }
+            if (verse && verse.audio) {
+              this.playVerse(verse)
+            }
           }
         }
       })
@@ -2451,15 +2487,15 @@ export default {
       const remainingItems = (this.queue || []).slice(this.queueIndex)
       if (!remainingItems.length) return null
 
-	      const reviewTimePerAyah = 5
+      const reviewTimePerAyah = 5
 
-	      let totalAudioSeconds = 0
-	      let totalReviewSeconds = 0
+      let totalAudioSeconds = 0
+      let totalReviewSeconds = 0
 
-	      remainingItems.forEach((item, index) => {
-	        totalAudioSeconds += this.getQueueItemAudioSeconds(item, index === 0)
-	        totalReviewSeconds += reviewTimePerAyah
-	      })
+      remainingItems.forEach((item, index) => {
+        totalAudioSeconds += this.getQueueItemAudioSeconds(item, index === 0)
+        totalReviewSeconds += reviewTimePerAyah
+      })
 
       const totalSeconds = totalAudioSeconds + totalReviewSeconds
       const minutes = Math.ceil(totalSeconds / 60)
@@ -2468,12 +2504,12 @@ export default {
 
       return {
         totalMinutes: minutes,
-	        audioMinutes: audioMinutes,
-	        reviewMinutes: reviewMinutes,
-	        verseCount: remainingItems.length,
-	        repetitionCount: remainingItems.length
-	      }
-	    },
+        audioMinutes: audioMinutes,
+        reviewMinutes: reviewMinutes,
+        verseCount: remainingItems.length,
+        repetitionCount: remainingItems.length
+      }
+    },
     getEtaTooltip() {
       const details = this.getRemainingTimeDetails()
       if (!details) return ''
@@ -2791,12 +2827,22 @@ export default {
     getDisplayArabic(verse) {
       if (!verse || !verse.arabic) return ''
 
-      // If data is not ready, return plain text
       if (!this.isDataReady) {
         return verse.arabic
       }
 
-      // Tajweed takes priority
+      // When word highlighting is enabled (with or without Tajweed)
+      if (this.showWordByWord && this.wordByWordAudioEnabled) {
+        if (this.tajweedEnabled && verse.arabic_tajweed) {
+          // For Tajweed, we need to preserve Tajweed spans while wrapping words
+          return this.wrapTajweedWithWordHighlighting(verse)
+        } else {
+          // Regular word highlighting without Tajweed
+          return this.splitArabicIntoWords(verse)
+        }
+      }
+
+      // Tajweed only (no word highlighting)
       if (this.tajweedEnabled) {
         if (verse.arabic_tajweed) {
           return this.normalizeTajweedMarkup(verse.arabic_tajweed)
@@ -2804,12 +2850,124 @@ export default {
         return verse.arabic
       }
 
-      // Word by word highlighting
-      if (this.showWordByWord && this.wordByWordAudioEnabled && !this.tajweedEnabled) {
-        return this.splitArabicIntoWords(verse)
+      return verse.arabic
+    },
+
+    wrapTajweedWithWordHighlighting(verse) {
+      if (!verse.arabic_tajweed) return verse.arabic || ''
+
+      // First normalize the Tajweed markup
+      let tajweedHtml = this.normalizeTajweedMarkup(verse.arabic_tajweed)
+
+      // Get the plain words for tokenization
+      let words = []
+      if (verse.words && verse.words.length) {
+        words = verse.words.map(w => w.ar || '').filter(Boolean)
+      } else {
+        words = tokenizeArabicText(verse.arabic)
       }
 
-      return verse.arabic
+      if (!words.length) return tajweedHtml
+
+      // For each word, wrap it with word highlighting while preserving internal Tajweed spans
+      let result = tajweedHtml
+      let processedWords = 0
+
+      // Use a safer approach - match text nodes that contain the words
+      // Create a temporary div to parse and manipulate
+      const tempDiv = document.createElement('div')
+      tempDiv.innerHTML = tajweedHtml
+
+      const walker = document.createTreeWalker(
+        tempDiv,
+        NodeFilter.SHOW_TEXT,
+        {
+          acceptNode: function (node) {
+            // Only accept text nodes that are not inside already wrapped words
+            if (node.parentElement && node.parentElement.classList &&
+              (node.parentElement.classList.contains('wbw-word') ||
+                node.parentElement.classList.contains('tajweed-mark'))) {
+              return NodeFilter.FILTER_SKIP
+            }
+            return NodeFilter.FILTER_ACCEPT
+          }
+        }
+      )
+
+      const textNodes = []
+      while (walker.nextNode()) {
+        textNodes.push(walker.currentNode)
+      }
+
+      // Process each text node to wrap words
+      textNodes.forEach(textNode => {
+        let text = textNode.textContent
+        let newHtml = ''
+        let lastIndex = 0
+
+        words.forEach((word, idx) => {
+          const wordIndex = text.indexOf(word, lastIndex)
+          if (wordIndex !== -1) {
+            // Add text before the word
+            if (wordIndex > lastIndex) {
+              newHtml += text.substring(lastIndex, wordIndex)
+            }
+            // Wrap the word
+            newHtml += `<word class="wbw-word" data-word-index="${idx}" data-verse-key="${verse.key}">${word}</word>`
+            lastIndex = wordIndex + word.length
+            processedWords++
+          }
+        })
+
+        // Add remaining text
+        if (lastIndex < text.length) {
+          newHtml += text.substring(lastIndex)
+        }
+
+        if (newHtml) {
+          const span = document.createElement('span')
+          span.innerHTML = newHtml
+          textNode.parentNode.replaceChild(span, textNode)
+          // Move children to fragment
+          while (span.firstChild) {
+            textNode.parentNode.insertBefore(span.firstChild, span)
+          }
+          textNode.parentNode.removeChild(span)
+        }
+      })
+
+      return tempDiv.innerHTML
+    },
+
+    getTajweedWithWordHighlighting(verse) {
+      if (!verse.arabic_tajweed && !verse.arabic) return ''
+
+      const tajweedText = verse.arabic_tajweed || verse.arabic
+      if (!tajweedText) return ''
+
+      // First normalize the tajweed markup
+      let normalized = this.normalizeTajweedMarkup(tajweedText)
+
+      // Now wrap each word with word highlighting while preserving tajweed spans
+      const words = tokenizeArabicText(verse.arabic)
+      if (!words.length) return normalized
+
+      let result = normalized
+      let wordIndex = 0
+
+      // For each word in the original Arabic, wrap the corresponding tajweed-marked text
+      words.forEach((word, idx) => {
+        // Create a regex that matches this word (accounting for potential tajweed spans inside)
+        const wordPattern = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        const regex = new RegExp(`(<span[^>]*class="[^"]*tajweed[^"]*"[^>]*>)?(${wordPattern})(</span>)?`, 'g')
+
+        result = result.replace(regex, (match, openTag, wordText, closeTag) => {
+          const preservedMarkup = (openTag || '') + wordText + (closeTag || '')
+          return `<word class="wbw-word" data-word-index="${idx}" data-verse-key="${verse.key}" data-tajweed-word="true">${preservedMarkup}</word> `
+        })
+      })
+
+      return result
     },
 
     // Add sanitize method
@@ -2886,47 +3044,87 @@ export default {
     splitArabicIntoWords(verse) {
       if (!verse || !verse.arabic) return ''
 
-      const words = tokenizeArabicText(verse.arabic)
+      // Get words from the verse object or tokenize
+      let words = []
+      if (verse.words && verse.words.length) {
+        words = verse.words.map(w => w.ar || '').filter(Boolean)
+      } else {
+        words = tokenizeArabicText(verse.arabic)
+      }
+
+      if (!words.length) return verse.arabic
+
       let html = ''
       words.forEach((word, idx) => {
-        html += `<word class="wbw-word" 
-                   data-word-index="${idx}" 
-                   data-verse-key="${verse.key}"
-                   title="Word ${idx + 1}">
-              ${escapeHtml(word)}
-            </word> `
+        const escapedWord = escapeHtml(word)
+        html += `<word class="wbw-word" data-word-index="${idx}" data-verse-key="${verse.key}" title="Word ${idx + 1}">${escapedWord}</word> `
       })
+
       return html
     },
 
     async getWordTimings(verse, actualDuration = null) {
-      const sourceWords = verse.words && verse.words.length
-        ? verse.words.map(word => String(word?.ar || '').trim()).filter(Boolean)
-        : tokenizeArabicText(verse.arabic || '')
-      if (!sourceWords.length) return []
+      if (!verse || !verse.key) {
+        console.warn('getWordTimings: no verse')
+        return []
+      }
 
-      const safeDuration = Number.isFinite(Number(actualDuration)) && Number(actualDuration) > 0
-        ? Number(actualDuration)
-        : this.estimateVerseDuration(verse)
-      const cacheKey = `${verse.key}_${this.reciterId}_${Math.round(safeDuration * 10)}`
+      // Get words from the verse object directly (not from HTML)
+      let sourceWords = []
+      if (verse.words && verse.words.length) {
+        sourceWords = verse.words.map(word => String(word?.ar || '').trim()).filter(Boolean)
+      } else {
+        // If no pre-parsed words, tokenize the Arabic text
+        const arabicText = verse.arabic || ''
+        sourceWords = tokenizeArabicText(arabicText)
+      }
+
+      if (!sourceWords.length) {
+        console.warn('getWordTimings: no words for verse', verse.key)
+        return []
+      }
+
+      // Get actual audio duration or estimate
+      let safeDuration = 0
+      if (Number.isFinite(Number(actualDuration)) && Number(actualDuration) > 0) {
+        safeDuration = Number(actualDuration)
+      } else if (verse.duration && Number(verse.duration) > 0) {
+        safeDuration = Number(verse.duration)
+      } else {
+        safeDuration = this.estimateVerseDuration(verse)
+      }
+
+      // Adjust for playback speed
+      safeDuration = safeDuration / (this.speed || 1)
+
+      const cacheKey = `${verse.key}_${this.reciterId}_${Math.round(safeDuration * 10)}_${this.speed}`
+
       if (this.wordTimestampsMap.has(cacheKey)) {
         return this.wordTimestampsMap.get(cacheKey)
       }
 
+      // Create timestamps based on character count (more accurate than equal distribution)
       const timestamps = []
-      const charCounts = sourceWords.map(word => Math.max(1, word.replace(/<[^>]+>/g, '').replace(/[^ء-ي]/g, '').length))
-      const totalChars = charCounts.reduce((sum, count) => sum + count, 0) || sourceWords.length
+      const charCounts = sourceWords.map(word => {
+        // Count Arabic characters (excluding diacritics and HTML)
+        const cleanWord = word.replace(/<[^>]+>/g, '').replace(/[^\u0621-\u064A]/g, '')
+        return Math.max(1, cleanWord.length)
+      })
+
+      const totalChars = charCounts.reduce((sum, count) => sum + count, 0)
       let currentTime = 0
 
       for (let i = 0; i < sourceWords.length; i++) {
+        // Words at the beginning get slightly more time for better pacing
+        const weight = i === 0 ? 1.2 : 1.0
         const wordDuration = i === sourceWords.length - 1
-          ? Math.max(0.05, safeDuration - currentTime)
-          : Math.max(0.05, (charCounts[i] / totalChars) * safeDuration)
+          ? Math.max(0.3, safeDuration - currentTime)
+          : Math.max(0.3, (charCounts[i] / totalChars) * safeDuration * weight)
 
         timestamps.push({
           index: i,
           start: currentTime,
-          end: i === sourceWords.length - 1 ? safeDuration + 0.05 : currentTime + wordDuration
+          end: currentTime + wordDuration
         })
         currentTime += wordDuration
       }
@@ -2971,21 +3169,24 @@ export default {
 
     async startWordHighlighting(verse) {
       if (this.wordHighlightLoading) return
-      this.stopWordHighlighting()
+      if (!verse || !verse.key) return
 
+      // Allow highlighting even when tajweed is enabled
       if (!this.showWordByWord || !this.wordByWordAudioEnabled) {
         return
       }
 
+      this.stopWordHighlighting()
       this.wordHighlightLoading = true
       this.currentHighlightedVerseKey = verse.key
       this.currentWordIndex = -1
       this.currentPhraseIndex = -1
 
-      // Prefer word timings derived from the verse content and actual audio duration.
+      // Get word timings regardless of tajweed setting
       const duration = Number(this.audioElement?.duration) || null
       const timestamps = await this.getWordTimings(verse, duration)
       this.wordHighlightLoading = false
+
       if (!timestamps || !timestamps.length) return
       this.wordHighlightTimestamps = timestamps
 
@@ -3007,33 +3208,32 @@ export default {
     },
 
     updateWordHighlight(verseKey, activeIndex) {
+      if (activeIndex === -1) return
+
       this.$nextTick(() => {
         const verseCard = document.querySelector(`.verse-card[data-verse-key="${verseKey}"]`)
         if (!verseCard) return
-        const wordsWrap = verseCard.querySelector('.verse-words')
-        const arabicWords = verseCard.querySelectorAll('.verse-arabic .wbw-word, .verse-arabic word[data-word-index]')
-        const phraseWords = verseCard.querySelectorAll('.verse-words .word-item')
-        const phraseIndex = activeIndex
 
-        arabicWords.forEach((word, idx) => {
-          if (idx === activeIndex) {
+        const wordsWrap = verseCard.querySelector('.verse-words')
+
+        // Find all word elements (both regular and Tajweed-wrapped)
+        const allWordElements = verseCard.querySelectorAll('.verse-arabic .wbw-word, .verse-arabic word[data-word-index]')
+
+        allWordElements.forEach(word => {
+          const wordIndex = parseInt(word.getAttribute('data-word-index'))
+          if (wordIndex === activeIndex) {
             word.classList.add('highlighted')
             word.classList.add('phrase-highlighted')
-            if (wordsWrap) {
-              this.verseScrollMemory[verseKey] = {
-                top: wordsWrap.scrollTop,
-                left: wordsWrap.scrollLeft
+
+            // Auto-scroll for better visibility
+            if (this.wordByWordAudioEnabled && wordsWrap) {
+              const rect = word.getBoundingClientRect()
+              const parentRect = wordsWrap.getBoundingClientRect()
+              const isOutOfView = rect.right > parentRect.right || rect.left < parentRect.left
+
+              if (isOutOfView) {
+                word.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
               }
-            }
-
-            const rect = word.getBoundingClientRect()
-            const parentRect = wordsWrap?.getBoundingClientRect()
-            const outOfView = parentRect
-              ? rect.left < parentRect.left || rect.right > parentRect.right || rect.top < parentRect.top || rect.bottom > parentRect.bottom
-              : true
-
-            if (outOfView) {
-              word.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
             }
           } else {
             word.classList.remove('highlighted')
@@ -3041,23 +3241,29 @@ export default {
           }
         })
 
+        // Also update phrase words if they exist
+        const phraseWords = verseCard.querySelectorAll('.verse-words .word-item')
         phraseWords.forEach((word, idx) => {
           word.classList.toggle('highlighted', idx === activeIndex)
-          word.classList.toggle('phrase-highlighted', idx === phraseIndex)
+          word.classList.toggle('phrase-highlighted', idx === activeIndex)
         })
-        this.currentPhraseIndex = phraseIndex
+
+        this.currentPhraseIndex = activeIndex
       })
     },
 
     syncWordHighlightFromAudio(verse = this.activeVerseRef) {
-      if (!verse || this.currentHighlightedVerseKey !== verse.key || !this.wordHighlightTimestamps?.length || !this.audioElement) return
+      if (!verse || !verse.key || this.currentHighlightedVerseKey !== verse.key || !this.wordHighlightTimestamps?.length || !this.audioElement) return
 
       const currentTime = Number(this.audioElement.currentTime || 0)
       const active = this.wordHighlightTimestamps.find(item => currentTime >= item.start && currentTime <= item.end)
       const activeIndex = active ? active.index : -1
 
-      this.currentWordIndex = activeIndex
-      this.updateWordHighlight(verse.key, activeIndex)
+      // Only update if the index actually changed
+      if (this.currentWordIndex !== activeIndex) {
+        this.currentWordIndex = activeIndex
+        this.updateWordHighlight(verse.key, activeIndex)
+      }
     },
 
     restoreWordScroll(verseKey) {
@@ -3145,10 +3351,12 @@ export default {
         this.duration = this.audioElement.duration
         if (this.showWordByWord && this.wordByWordAudioEnabled) {
           const verse = this.activeVerseRef
-          if (verse && this.currentHighlightedVerseKey !== verse.key && !this.wordHighlightLoading) {
-            this.startWordHighlighting(verse)
-          } else {
-            this.syncWordHighlightFromAudio(verse)
+          if (verse && verse.key) {
+            if (this.currentHighlightedVerseKey !== verse.key && !this.wordHighlightLoading) {
+              this.startWordHighlighting(verse)
+            } else if (!this.wordHighlightLoading) {
+              this.syncWordHighlightFromAudio(verse)
+            }
           }
         }
       }
@@ -3309,7 +3517,7 @@ export default {
           this.isPlaying = true
           const verse = this.activeVerseRef
           if (verse && this.showWordByWord && this.wordByWordAudioEnabled) this.startWordHighlighting(verse)
-        }).catch(() => {})
+        }).catch(() => { })
       } else {
         this.audioElement.pause()
         this.isPlaying = false
@@ -3323,12 +3531,12 @@ export default {
     next() {
       if (this.advanceLocked) return
       this.advanceLocked = true
-	      if (this.canNext) {
-	        this.sessionCompleted = false
-	        this.queueIndex++
-	        moveMutqinSession(this.mutqinState, this.queueIndex + 1)
+      if (this.canNext) {
+        this.sessionCompleted = false
+        this.queueIndex++
+        moveMutqinSession(this.mutqinState, this.queueIndex + 1)
         this.recomputeAnalytics()
-	        const entry = this.queue[this.queueIndex]
+        const entry = this.queue[this.queueIndex]
         const verseKey = entry?.verse?.key || entry?.key
         if (verseKey) {
           this.setActiveVerse(verseKey)
@@ -3353,11 +3561,11 @@ export default {
       if (!this.canPrev) return
       if (this.advanceLocked) return
       this.advanceLocked = true
-	      this.sessionCompleted = false
-	      this.queueIndex--
-	      moveMutqinSession(this.mutqinState, this.queueIndex + 1)
+      this.sessionCompleted = false
+      this.queueIndex--
+      moveMutqinSession(this.mutqinState, this.queueIndex + 1)
       this.recomputeAnalytics()
-	      const entry = this.queue[this.queueIndex]
+      const entry = this.queue[this.queueIndex]
       const verseKey = entry?.verse?.key || entry?.key
       if (verseKey) {
         this.setActiveVerse(verseKey, { scroll: false })
@@ -3411,13 +3619,13 @@ export default {
           } else {
             this.advanced.verses = cached.verses
             this.advanced.loadedConfig = cached.loadedConfig
-	          }
-	          this.buildQueue(mode)
-	          this.syncActiveVerseState(mode)
-	          this.syncMutqinAyahs(cached.verses)
-	          this.isDataReady = true
-	          return
-	        }
+          }
+          this.buildQueue(mode)
+          this.syncActiveVerseState(mode)
+          this.syncMutqinAyahs(cached.verses)
+          this.isDataReady = true
+          return
+        }
 
         const [audioRes, translationRes, translitRes, arabicRes, tajweedRes] = await Promise.all([
           getSurahEdition(chapterId, reciterId),
@@ -3483,20 +3691,20 @@ export default {
             showWordByWord: this.showWordByWord,
             tajweedEnabled: this.tajweedEnabled
           }
-	        } else {
-	          this.advanced.verses = mappedVerses
-	          this.advanced.loadedConfig = {
+        } else {
+          this.advanced.verses = mappedVerses
+          this.advanced.loadedConfig = {
             chapterId,
             rangeStart: start,
             rangeEnd: end,
             reciterId,
             showWordByWord: this.showWordByWord,
-	            tajweedEnabled: this.tajweedEnabled
-	          }
-	        }
-	        this.syncMutqinAyahs(mappedVerses)
+            tajweedEnabled: this.tajweedEnabled
+          }
+        }
+        this.syncMutqinAyahs(mappedVerses)
 
-	        this.setCachedVerses(mode, targetConfig, {
+        this.setCachedVerses(mode, targetConfig, {
           verses: mappedVerses,
           loadedConfig: mode === 'beginner' ? this.beginner.loadedConfig : this.advanced.loadedConfig
         })
@@ -3525,7 +3733,7 @@ export default {
       return cleaned
     },
 
-	    buildQueue(mode = this.currentMode) {
+    buildQueue(mode = this.currentMode) {
       const config = mode === 'beginner' ? this.beginner : this.advanced
       const verses = config.verses
       const previousActiveKey = config.activeKey
@@ -3652,11 +3860,11 @@ export default {
       const config = this.sessionConfig
       const mode = config.mode || this.currentMode
 
-	      if (!config.chapterId || config.chapterId === 0) {
-	        this.showTools = true
-	        this.showBanner('Please select a surah first', 'info', 3600, { key: 'open-setup', label: 'Open setup' })
-	        return
-	      }
+      if (!config.chapterId || config.chapterId === 0) {
+        this.showTools = true
+        this.showBanner('Please select a surah first', 'info', 3600, { key: 'open-setup', label: 'Open setup' })
+        return
+      }
 
       if (!this.validateSettings()) {
         return
@@ -3698,28 +3906,28 @@ export default {
         ? this.beginner.queue
         : this.advanced.queue
 
-	      if (!builtQueue || builtQueue.length === 0) {
-	        this.showBanner('Nothing to play. Check the selected range.', 'error')
-	        return
-	      }
-	      this.syncMutqinAyahs(updatedVerses)
-		      const sessionState = this.syncMutqinSession(builtQueue, mode)
-		      const canonicalIndex = Math.max(0, Number(sessionState?.current_index || 0))
-		      const canonicalItem = sessionState?.queue?.[canonicalIndex]
-		      let playbackIndex = canonicalIndex > 0
-		        ? Math.min(canonicalIndex - 1, builtQueue.length - 1)
-		        : 0
-		      const canonicalKey = canonicalItem?.ayahId || canonicalItem?.verse?.key
-		      if (canonicalKey && (builtQueue[playbackIndex]?.verse?.key || builtQueue[playbackIndex]?.key) !== canonicalKey) {
-		        const exactIndex = builtQueue.findIndex(entry => (entry?.verse?.key || entry?.key) === canonicalKey)
-		        if (exactIndex >= 0) playbackIndex = exactIndex
-		      }
+      if (!builtQueue || builtQueue.length === 0) {
+        this.showBanner('Nothing to play. Check the selected range.', 'error')
+        return
+      }
+      this.syncMutqinAyahs(updatedVerses)
+      const sessionState = this.syncMutqinSession(builtQueue, mode)
+      const canonicalIndex = Math.max(0, Number(sessionState?.current_index || 0))
+      const canonicalItem = sessionState?.queue?.[canonicalIndex]
+      let playbackIndex = canonicalIndex > 0
+        ? Math.min(canonicalIndex - 1, builtQueue.length - 1)
+        : 0
+      const canonicalKey = canonicalItem?.ayahId || canonicalItem?.verse?.key
+      if (canonicalKey && (builtQueue[playbackIndex]?.verse?.key || builtQueue[playbackIndex]?.key) !== canonicalKey) {
+        const exactIndex = builtQueue.findIndex(entry => (entry?.verse?.key || entry?.key) === canonicalKey)
+        if (exactIndex >= 0) playbackIndex = exactIndex
+      }
 
-		      this.queueIndex = playbackIndex
-		      this.getModeStore(mode).queueIndex = playbackIndex
-		      const nextCanonicalIndex = canonicalIndex > 0 ? canonicalIndex : 1
-		      moveMutqinSession(this.mutqinState, nextCanonicalIndex)
-		      const first = builtQueue[playbackIndex]
+      this.queueIndex = playbackIndex
+      this.getModeStore(mode).queueIndex = playbackIndex
+      const nextCanonicalIndex = canonicalIndex > 0 ? canonicalIndex : 1
+      moveMutqinSession(this.mutqinState, nextCanonicalIndex)
+      const first = builtQueue[playbackIndex]
 
       if (first && first.verse) {
         this.syncActiveVerseState(mode, first.verse.key)
@@ -3737,8 +3945,8 @@ export default {
       this.showTools = false
 
       // Show confirmation banner
-	      this.flowStep = 'learn'
-	      this.showBanner(`Session started with ${builtQueue.length} guided repetitions`, 'success', 2000)
+      this.flowStep = 'learn'
+      this.showBanner(`Session started with ${builtQueue.length} guided repetitions`, 'success', 2000)
     },
 
     // Utility methods
@@ -3747,133 +3955,133 @@ export default {
       return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`
     },
 
-	    normalizeAudioUrl(url) {
-	      if (!url) return ''
-	      if (url.startsWith('http://') || url.startsWith('https://')) return url
-	      if (url.startsWith('//')) return `https:${url}`
-	      if (url.startsWith('/')) return `https://verses.quran.com${url}`
-	      if (url.includes('mp3')) return `https://verses.quran.com/${url}`
-	      return url
-	    },
+    normalizeAudioUrl(url) {
+      if (!url) return ''
+      if (url.startsWith('http://') || url.startsWith('https://')) return url
+      if (url.startsWith('//')) return `https:${url}`
+      if (url.startsWith('/')) return `https://verses.quran.com${url}`
+      if (url.includes('mp3')) return `https://verses.quran.com/${url}`
+      return url
+    },
 
-	    getQueueItemAudioSeconds(item = {}, allowCurrentProgress = false) {
-	      const verse = item.verse || item
-	      const speedFactor = Math.max(0.25, Number(this.speed || 1))
-	      if (allowCurrentProgress && this.duration > 0) {
-	        return Math.max(0, Number(this.duration || 0) - Number(this.currentTime || 0)) / speedFactor
-	      }
-	      const explicitDuration = Number(verse.duration || verse.audioDuration || 0)
-	      if (Number.isFinite(explicitDuration) && explicitDuration > 0) return explicitDuration / speedFactor
-	      const arabicLength = String(verse.arabic || verse.text || '').replace(/[^ء-ي]/g, '').length || 80
-	      return Math.max(5, Math.min(45, arabicLength * 0.12)) / speedFactor
-	    },
+    getQueueItemAudioSeconds(item = {}, allowCurrentProgress = false) {
+      const verse = item.verse || item
+      const speedFactor = Math.max(0.25, Number(this.speed || 1))
+      if (allowCurrentProgress && this.duration > 0) {
+        return Math.max(0, Number(this.duration || 0) - Number(this.currentTime || 0)) / speedFactor
+      }
+      const explicitDuration = Number(verse.duration || verse.audioDuration || 0)
+      if (Number.isFinite(explicitDuration) && explicitDuration > 0) return explicitDuration / speedFactor
+      const arabicLength = String(verse.arabic || verse.text || '').replace(/[^ء-ي]/g, '').length || 80
+      return Math.max(5, Math.min(45, arabicLength * 0.12)) / speedFactor
+    },
 
-		    showBanner(message, kind = 'info', ttlMs = 3500, action = null) {
-	      if (this.bannerTimer) clearTimeout(this.bannerTimer)
-	      this.banner = { message, kind, at: Date.now(), actionKey: action?.key || '', actionLabel: action?.label || '' }
-	      this.bannerTimer = setTimeout(() => {
-	        if (this.banner && Date.now() - this.banner.at >= ttlMs) this.banner = null
-	      }, ttlMs + 50)
-	    },
+    showBanner(message, kind = 'info', ttlMs = 3500, action = null) {
+      if (this.bannerTimer) clearTimeout(this.bannerTimer)
+      this.banner = { message, kind, at: Date.now(), actionKey: action?.key || '', actionLabel: action?.label || '' }
+      this.bannerTimer = setTimeout(() => {
+        if (this.banner && Date.now() - this.banner.at >= ttlMs) this.banner = null
+      }, ttlMs + 50)
+    },
 
-	    runBannerAction() {
-	      const actionKey = this.banner?.actionKey
-	      this.banner = null
-	      if (actionKey === 'restart-session') {
-	        this.startSession()
-	        return
-	      }
-	      if (actionKey === 'open-setup') {
-	        this.openModeSettings()
-	      }
-	    },
+    runBannerAction() {
+      const actionKey = this.banner?.actionKey
+      this.banner = null
+      if (actionKey === 'restart-session') {
+        this.startSession()
+        return
+      }
+      if (actionKey === 'open-setup') {
+        this.openModeSettings()
+      }
+    },
 
-	    syncMutqinAyahs(verses = this.verses) {
-	      if (!Array.isArray(verses) || !verses.length) return
-	      seedAyahs(this.mutqinState, verses)
-	    },
+    syncMutqinAyahs(verses = this.verses) {
+      if (!Array.isArray(verses) || !verses.length) return
+      seedAyahs(this.mutqinState, verses)
+    },
 
-	    syncMutqinSession(queue = this.queue, mode = this.currentMode) {
-	      const playbackQueue = (queue || []).map(item => {
-	        const verse = item?.verse || item
-	        return {
-	          phase: item?.phase || 'Takrar',
-	          ayahId: verse?.key || item?.ayahId || null,
-	          verse,
-	          repeatCount: item?.repeatCount || 1,
-	          totalRepeats: item?.totalRepeats || 1
-	        }
-	      }).filter(item => item.ayahId)
-	      const uniqueVerses = []
-	      const seen = new Set()
-	      playbackQueue.forEach(item => {
-	        if (seen.has(item.ayahId)) return
-	        seen.add(item.ayahId)
-	        if (item.verse) uniqueVerses.push(item.verse)
-	      })
-	      const planner = createDailyPlan(this.mutqinState, uniqueVerses, {
-	        repetitions: 1,
-	        audioDurations: uniqueVerses.reduce((map, verse) => {
-	          map[verse.key] = Number(verse.duration || this.duration || 0)
-	          return map
-	        }, {}),
-	        reviewSeconds: 18
-	      })
-	      const plannerQueue = uniqueVerses.slice(0, 1).map(verse => ({
-	        phase: 'Planner',
-	        ayahId: verse.key,
-	        verse,
-	        prompt: `${this.currentChapter?.name_simple || 'Session'} ayahs ${this.rangeStart}-${this.rangeEnd}`
-	      }))
-	      const recallQueue = uniqueVerses.map(verse => ({
-	        phase: 'Recall',
-	        ayahId: verse.key,
-	        verse,
-	        prompt: `Recite ayah ${verse.number}`
-	      }))
-		      const reviewQueue = planner.reviews.map(ayah => ({ phase: 'Retention', ayahId: ayah.id }))
-	      const fullQueue = buildSessionQueue({
-	        planner: plannerQueue,
-	        takrar: playbackQueue,
-	        recall: recallQueue,
-	        review: reviewQueue
-	      })
-		      return startMutqinSession(this.mutqinState, {
-		        mode,
-		        queue: fullQueue,
-		        config: this.buildSessionConfig(mode),
-	        planner: {
-	          new: planner.new.map(verse => verse.key),
-	          chains: [],
-	          reviews: planner.reviews.map(ayah => ayah.id),
-	          ETA: planner.ETA
-	        }
-	      })
-	    },
+    syncMutqinSession(queue = this.queue, mode = this.currentMode) {
+      const playbackQueue = (queue || []).map(item => {
+        const verse = item?.verse || item
+        return {
+          phase: item?.phase || 'Takrar',
+          ayahId: verse?.key || item?.ayahId || null,
+          verse,
+          repeatCount: item?.repeatCount || 1,
+          totalRepeats: item?.totalRepeats || 1
+        }
+      }).filter(item => item.ayahId)
+      const uniqueVerses = []
+      const seen = new Set()
+      playbackQueue.forEach(item => {
+        if (seen.has(item.ayahId)) return
+        seen.add(item.ayahId)
+        if (item.verse) uniqueVerses.push(item.verse)
+      })
+      const planner = createDailyPlan(this.mutqinState, uniqueVerses, {
+        repetitions: 1,
+        audioDurations: uniqueVerses.reduce((map, verse) => {
+          map[verse.key] = Number(verse.duration || this.duration || 0)
+          return map
+        }, {}),
+        reviewSeconds: 18
+      })
+      const plannerQueue = uniqueVerses.slice(0, 1).map(verse => ({
+        phase: 'Planner',
+        ayahId: verse.key,
+        verse,
+        prompt: `${this.currentChapter?.name_simple || 'Session'} ayahs ${this.rangeStart}-${this.rangeEnd}`
+      }))
+      const recallQueue = uniqueVerses.map(verse => ({
+        phase: 'Recall',
+        ayahId: verse.key,
+        verse,
+        prompt: `Recite ayah ${verse.number}`
+      }))
+      const reviewQueue = planner.reviews.map(ayah => ({ phase: 'Retention', ayahId: ayah.id }))
+      const fullQueue = buildSessionQueue({
+        planner: plannerQueue,
+        takrar: playbackQueue,
+        recall: recallQueue,
+        review: reviewQueue
+      })
+      return startMutqinSession(this.mutqinState, {
+        mode,
+        queue: fullQueue,
+        config: this.buildSessionConfig(mode),
+        planner: {
+          new: planner.new.map(verse => verse.key),
+          chains: [],
+          reviews: planner.reviews.map(ayah => ayah.id),
+          ETA: planner.ETA
+        }
+      })
+    },
 
-	    getMutqinAyah(id) {
-	      return this.mutqinState.ayahs?.[id] || null
-	    },
+    getMutqinAyah(id) {
+      return this.mutqinState.ayahs?.[id] || null
+    },
 
-	    takrarLabel(id) {
-	      const ayah = this.getMutqinAyah(id)
-	      if (!ayah) return 'Session progress: ready'
-	      const step = getTakrarStep(ayah)
-	      const target = typeof step === 'number' ? `${ayah.repetition_count}/${step}` : step
-	      return `Session progress: ${target}`
-	    },
+    takrarLabel(id) {
+      const ayah = this.getMutqinAyah(id)
+      if (!ayah) return 'Session progress: ready'
+      const step = getTakrarStep(ayah)
+      const target = typeof step === 'number' ? `${ayah.repetition_count}/${step}` : step
+      return `Session progress: ${target}`
+    },
 
-	    retentionLabel(id) {
-	      const ayah = this.getMutqinAyah(id)
-	      if (!ayah) return 'Review: due soon'
-	      return `Review: ${ayah.next_review || 'today'}`
-	    },
+    retentionLabel(id) {
+      const ayah = this.getMutqinAyah(id)
+      if (!ayah) return 'Review: due soon'
+      return `Review: ${ayah.next_review || 'today'}`
+    },
 
-	    markTakrarRepeat(verse) {
+    markTakrarRepeat(verse) {
       if (this.repeatActionLocked || !verse) return
       this.repeatActionLocked = true
-	      this.syncMutqinAyahs([verse])
-	      repeatAyah(this.mutqinState, verse.key)
+      this.syncMutqinAyahs([verse])
+      repeatAyah(this.mutqinState, verse.key)
       const index = Math.max(0, Number(this.queueIndex || 0))
       const currentEntry = this.queue?.[index]
       if (currentEntry) {
@@ -3897,23 +4105,23 @@ export default {
       window.setTimeout(() => {
         this.repeatActionLocked = false
       }, 450)
-	    },
+    },
 
-	    markTakrarHide(verse) {
-	      this.syncMutqinAyahs([verse])
-	      hideAyah(this.mutqinState, verse.key)
-	    },
+    markTakrarHide(verse) {
+      this.syncMutqinAyahs([verse])
+      hideAyah(this.mutqinState, verse.key)
+    },
 
-	    markTakrarDone(verse, score) {
-	      this.syncMutqinAyahs([verse])
-	      completeTakrarStep(this.mutqinState, verse.key, score)
-	      scoreRetention(this.mutqinState, verse.key, score)
-        if (score === 'Forgot') this.sessionErrorCount += 1
-	      const previous = this.queue?.[Math.max(0, this.queueIndex - 1)]
-	      const fromId = previous?.verse?.key || previous?.key
-	      this.recomputeAnalytics()
-	      this.showBanner(score === 'Forgot' ? 'Marked for review' : 'Progress saved', score === 'Forgot' ? 'info' : 'success', 1400)
-	    },
+    markTakrarDone(verse, score) {
+      this.syncMutqinAyahs([verse])
+      completeTakrarStep(this.mutqinState, verse.key, score)
+      scoreRetention(this.mutqinState, verse.key, score)
+      if (score === 'Forgot') this.sessionErrorCount += 1
+      const previous = this.queue?.[Math.max(0, this.queueIndex - 1)]
+      const fromId = previous?.verse?.key || previous?.key
+      this.recomputeAnalytics()
+      this.showBanner(score === 'Forgot' ? 'Marked for review' : 'Progress saved', score === 'Forgot' ? 'info' : 'success', 1400)
+    },
 
     handleOnline() {
       this.networkOnline = true
@@ -3939,14 +4147,14 @@ export default {
       }
     },
 
-	    handleSessionComplete() {
-	      if (!this.verses.length) return
-	      this.sessionCompleted = true
-	      completeMutqinSession(this.mutqinState)
-	      this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
-	      this.recomputeAnalytics()
-	      this.showBanner('Session complete', 'success', 6500, { key: 'restart-session', label: 'Review again' })
-	    },
+    handleSessionComplete() {
+      if (!this.verses.length) return
+      this.sessionCompleted = true
+      completeMutqinSession(this.mutqinState)
+      this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
+      this.recomputeAnalytics()
+      this.showBanner('Session complete', 'success', 6500, { key: 'restart-session', label: 'Review again' })
+    },
 
     handlePrimaryAction() {
       if (this.isPlaying) {
@@ -3954,17 +4162,17 @@ export default {
         this.isPlaying = false
         return
       }
-	      if (!this.canStartSession) {
-	        this.showTools = true
-	        this.showBanner('Choose a valid surah and ayah range before starting.', 'info', 3600, { key: 'open-setup', label: 'Open setup' })
-	        return
-	      }
+      if (!this.canStartSession) {
+        this.showTools = true
+        this.showBanner('Choose a valid surah and ayah range before starting.', 'info', 3600, { key: 'open-setup', label: 'Open setup' })
+        return
+      }
       this.startSession()
     },
 
-	    validateSettings() {
-	      const config = this.sessionConfig
-	      const errors = []
+    validateSettings() {
+      const config = this.sessionConfig
+      const errors = []
 
       if (!config.chapterId || config.chapterId === 0) {
         errors.push('No surah selected')
@@ -4038,7 +4246,7 @@ export default {
       this.showWordByWord = !!next.showWordByWord
       this.wordByWordAudioEnabled = !!next.wordByWordAudioEnabled
       this.defaultFontSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, Number(next.defaultFontSize || 100)))
-      try { localStorage.setItem('telawa.defaultFontSize', JSON.stringify(this.defaultFontSize)) } catch {}
+      try { localStorage.setItem('telawa.defaultFontSize', JSON.stringify(this.defaultFontSize)) } catch { }
       this.persistUiState()
       this.scheduleLoadVerses(this.currentMode)
       this.showBanner('Settings saved', 'success', 1400)
@@ -4176,10 +4384,10 @@ export default {
       this.persistAudioState()
       this.persistContinueSession()
       this.persistPlanner()
-	      this.persistTodayPlan()
-	      this.persistSm2()
-	      saveMutqinState(this.mutqinState)
-	    },
+      this.persistTodayPlan()
+      this.persistSm2()
+      saveMutqinState(this.mutqinState)
+    },
 
     // Data loading methods
     async loadChapters() {
@@ -4294,12 +4502,12 @@ export default {
         if (saved && typeof saved === 'object') {
           this.analytics = { ...this.analytics, ...saved }
         }
-      } catch {}
+      } catch { }
       this.recomputeAnalytics()
     },
 
     persistAnalytics() {
-      try { localStorage.setItem('telawa.analytics', JSON.stringify(this.analytics)) } catch {}
+      try { localStorage.setItem('telawa.analytics', JSON.stringify(this.analytics)) } catch { }
     },
 
     getActivityDayKey(ts = Date.now()) {
@@ -4315,7 +4523,7 @@ export default {
         // cap to keep it lightweight
         while (list.length > 5000) list.shift()
         localStorage.setItem('telawa.activity', JSON.stringify(list))
-      } catch {}
+      } catch { }
     },
 
     readActivityEvents() {
@@ -4383,15 +4591,15 @@ export default {
       this.analytics.totalTimeSpent = Math.round(totalSeconds / 60)
       this.analytics.currentStreak = todayKey && streak ? streak : 0
       this.analytics.weeklyVerses = weeklyVerses
-	      this.analytics.weeklyMinutes = weeklyMinutes.map(m => Math.round(m))
-	      const mutqinStats = this.mutqinState?.stats || {}
-	      this.analytics.versesMastered = Number(mutqinStats.ayahs_memorised || this.analytics.versesMastered || 0)
-	      this.analytics.totalRepetitions = Math.max(this.analytics.totalRepetitions, Number(mutqinStats.repetitions || 0))
-	      this.analytics.sessionsCompleted = Math.max(this.analytics.sessionsCompleted, Number(mutqinStats.sessions_completed || 0))
-	      // Chaining-related stat removed (weak_transitions). Keep field stable.
-	      this.simpleStats.weak = 0
-	      this.weakVersesList = Object.values(this.mutqinState?.ayahs || {}).filter(ayah => Number(ayah.weak_count || 0) > 0)
-	      this.persistAnalytics()
+      this.analytics.weeklyMinutes = weeklyMinutes.map(m => Math.round(m))
+      const mutqinStats = this.mutqinState?.stats || {}
+      this.analytics.versesMastered = Number(mutqinStats.ayahs_memorised || this.analytics.versesMastered || 0)
+      this.analytics.totalRepetitions = Math.max(this.analytics.totalRepetitions, Number(mutqinStats.repetitions || 0))
+      this.analytics.sessionsCompleted = Math.max(this.analytics.sessionsCompleted, Number(mutqinStats.sessions_completed || 0))
+      // Chaining-related stat removed (weak_transitions). Keep field stable.
+      this.simpleStats.weak = 0
+      this.weakVersesList = Object.values(this.mutqinState?.ayahs || {}).filter(ayah => Number(ayah.weak_count || 0) > 0)
+      this.persistAnalytics()
       this.updateMasteredWeekly()
     },
 
@@ -4446,7 +4654,7 @@ export default {
     },
 
     performResetControls() {
-	      this.rangeStart = 1
+      this.rangeStart = 1
       this.rangeEnd = 7
       this.speed = 1
       this.delay = 2
@@ -4595,6 +4803,27 @@ export default {
   box-sizing: border-box;
 }
 
+/* Replace the existing blur mode CSS with this */
+.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic,
+.main.blur-mode-active .verse-card.blur-upcoming .verse-aid {
+  filter: blur(var(--recall-blur, 10px));
+  opacity: 0.7;
+  transition: filter 0.3s ease, opacity 0.3s ease;
+}
+
+.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .tajweed-mark,
+.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic word,
+.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .wbw-word {
+  filter: blur(var(--recall-blur, 10px));
+}
+
+/* Keep active verse clear */
+.main.blur-mode-active .verse-card.active .verse-arabic,
+.main.blur-mode-active .verse-card.active .verse-aid {
+  filter: none;
+  opacity: 1;
+}
+
 /* Player Speed Controls */
 .player-speed-controls {
   display: flex;
@@ -4602,6 +4831,88 @@ export default {
   background: var(--accent-light);
   padding: 4px 8px;
   border-radius: 40px;
+}
+
+/* Word highlighting with Tajweed */
+.verse-arabic.tajweed-enabled .wbw-word {
+  display: inline-block;
+  transition: all 0.15s ease;
+  border-radius: 4px;
+  padding: 0 2px;
+  cursor: pointer;
+  position: relative;
+}
+
+.verse-arabic.tajweed-enabled .wbw-word.highlighted {
+  background: var(--accent);
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
+}
+
+/* Preserve Tajweed colors inside highlighted words */
+.verse-arabic.tajweed-enabled .wbw-word.highlighted,
+.verse-arabic.tajweed-enabled .wbw-word.highlighted * {
+  color: inherit !important;
+}
+
+/* Make Tajweed marks more visible on highlight */
+.verse-arabic.tajweed-enabled .wbw-word.highlighted .tajweed-mark {
+  filter: brightness(1.2);
+}
+
+.verse-arabic.tajweed-enabled .wbw-word:hover {
+  background: var(--accent-light);
+  cursor: pointer;
+}
+
+.verse-arabic.tajweed-enabled .wbw-word.highlighted {
+  animation: wordHighlightPulse 0.2s ease-out;
+}
+
+@keyframes wordHighlightPulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.03);
+  }
+
+  100% {
+    transform: scale(1.02);
+  }
+}
+
+/* Combined Tajweed + Word Highlighting */
+.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word {
+  display: inline-block;
+  transition: all 0.15s ease;
+  border-radius: 4px;
+  padding: 0 2px;
+  cursor: pointer;
+}
+
+.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
+  background: var(--accent);
+  color: white;
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
+}
+
+.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {
+  background: var(--accent-light);
+  cursor: pointer;
+}
+
+/* Preserve tajweed colors inside highlighted words but make them visible */
+.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {
+  color: inherit !important;
+  background: transparent !important;
+}
+
+.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*="tajweed-"] {
+  color: white !important;
+  background: transparent !important;
 }
 
 .speed-btn-mini {
@@ -4684,20 +4995,20 @@ export default {
   color: var(--accent);
 }
 
-    .rail-btn-ghost:hover {
-      background: var(--accent);
-      color: white;
-    }
+.rail-btn-ghost:hover {
+  background: var(--accent);
+  color: white;
+}
 
-    .rail-btn:disabled,
-    .rail-btn-ghost:disabled,
-    .rail-btn-primary:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-      pointer-events: none;
-      transform: none;
-      box-shadow: none;
-    }
+.rail-btn:disabled,
+.rail-btn-ghost:disabled,
+.rail-btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none;
+  box-shadow: none;
+}
 
 .rail-btn-resume {
   background: rgba(255, 255, 255, 0.92);
@@ -5030,8 +5341,13 @@ html {
 }
 
 @keyframes pop {
-  from { transform: scale(1.01); }
-  to { transform: scale(1.05); }
+  from {
+    transform: scale(1.01);
+  }
+
+  to {
+    transform: scale(1.05);
+  }
 }
 
 /* Word highlighting styles */
@@ -5368,7 +5684,7 @@ html {
 .verse-arabic.tajweed-enabled .tajweed-idgh_mus,
 .verse-arabic.tajweed-enabled .tajweed-idghm_shfw,
 .verse-arabic.tajweed-enabled .tajweed-idgh_shfw,
-.verse-arabic.tajweed-enabled .tajweed-ghn + .tajweed-mark {
+.verse-arabic.tajweed-enabled .tajweed-ghn+.tajweed-mark {
   color: #2b7bbb;
   background: rgba(43, 123, 187, 0.10);
 }
@@ -5633,19 +5949,7 @@ html {
   opacity: 0.38;
 }
 
-.main.blur-mode-active .verse-card.active .verse-arabic {
-  color: transparent;
-  text-shadow: 0 0 var(--recall-blur, 10px) rgba(22, 18, 14, 0.72);
-}
 
-.main.blur-mode-active .verse-card.active .verse-arabic .tajweed-mark,
-.main.blur-mode-active .verse-card.active .verse-arabic word,
-.main.blur-mode-active .verse-card.active .verse-arabic .wbw-word {
-  color: transparent !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  text-shadow: 0 0 var(--recall-blur, 10px) rgba(22, 18, 14, 0.72);
-}
 
 /* Removed: "For serious huffadh training" badge */
 
@@ -6737,8 +7041,15 @@ html {
 }
 
 @keyframes cardSoftIn {
-  from { transform: translateY(6px); opacity: 0.9; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(6px);
+    opacity: 0.9;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .workspace-fab-meta {
@@ -8099,8 +8410,15 @@ html {
 }
 
 @keyframes modalIn {
-  from { transform: translateY(10px); opacity: 0.6; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(10px);
+    opacity: 0.6;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes modalFadeIn {
@@ -9306,9 +9624,7 @@ html {
   text-shadow: 0 0 22px rgba(232, 237, 247, 0.55);
 }
 
-.main.blur-mode-active.flow-recall .verse-card.active .verse-arabic {
-  text-shadow: 0 0 var(--recall-blur, 10px) rgba(22, 18, 14, 0.72);
-}
+
 
 .main.flow-practice .verse-card.active .verse-arabic {
   opacity: 0.45;
@@ -9321,5 +9637,4 @@ html {
   background: transparent !important;
   box-shadow: none !important;
 }
-
 </style>
