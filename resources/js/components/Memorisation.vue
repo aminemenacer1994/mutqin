@@ -58,11 +58,11 @@
             </div>
             <p class="workspace-fab-copy">{{ activeCardBody }}</p>
             <div class="workspace-fab-live">
-              <span class="workspace-fab-live-pill">
+              <span class="workspace-fab-live-pill workspace-fab-live-pill-primary">
                 <i class="bi bi-link-45deg"></i>
                 {{ chainingMethodLabel }}
               </span>
-              <span class="workspace-fab-live-pill">
+              <span class="workspace-fab-live-pill workspace-fab-live-pill-mode">
                 <i class="bi bi-lightning-charge"></i>
                 {{ playMode === 'auto' ? 'Auto advance' : 'Manual advance' }}
               </span>
@@ -367,19 +367,19 @@
                       aria-label="Chaining method">
                       <button type="button" :class="{ active: chainingMethod === 'linking' }"
                         @click="setChainingMethod('linking')">
-                        Linking Method
+                        Linking
                       </button>
                       <button type="button" :class="{ active: chainingMethod === 'cumulative' }"
                         @click="setChainingMethod('cumulative')">
-                        Cumulative Method
+                        Cumulative
                       </button>
                     </div>
                     <div v-if="chainingEnabled" class="technique-control">
-                      <span>Repetition</span>
+                      <span>Repeats per step</span>
                       <input type="range" min="1" max="5" step="1" :value="chainingRepetitions"
                         @input="setChainingRepetitions(Number($event.target.value))"
                         class="input technique-range">
-                      <span class="inline-setting-pill">{{ chainingRepetitions }}x</span>
+                      <span class="inline-setting-pill">{{ chainingRepetitions }} repeats</span>
                     </div>
                     <div class="technique-preview">
                       <span>{{ chainingMethodPreview }}</span>
@@ -390,20 +390,11 @@
             </section>
           </div>
 
-          <div v-else-if="tab === 'settings'" class="sheet">
+          <div v-else-if="tab === 'settings'" class="sheet" >
             <div class="sheet-section settings-section">
-              <div class="settings-heading">
-                <div class="settings-heading-copy">
-                  <h3>Reading & Display</h3>
-                  <p>Adjust what you see while studying.</p>
-                </div>
-                <span class="settings-status">
-                  <span class="settings-status-dot"></span>
-                  Live
-                </span>
-              </div>
+              
 
-              <div class="settings-panels">
+              <div class="settings-panels" style="padding: 20px">
                 <section class="settings-group">
                   <span class="settings-group-title">Display</span>
                   <div class="settings-card-grid settings-display-grid">
@@ -434,7 +425,6 @@
                 </section>
 
                 <section class="settings-group">
-                  <span class="settings-group-title">Reading Aids</span>
                   <div class="settings-card-grid">
                     <div class="settings-card settings-card-toggle">
                       <div class="settings-row-copy">
@@ -482,13 +472,13 @@
                   </div>
                 </section>
 
-                <section class="settings-apply-section">
+                <!-- <section class="settings-apply-section">
                   <button class="settings-apply-primary" @click="closeToolsPanel">
                     <i class="bi bi-check2-circle"></i>
                     <span>Apply changes</span>
                   </button>
                   <small>Saved settings persist after refresh.</small>
-                </section>
+                </section> -->
               </div>
             </div>
           </div>
@@ -1111,9 +1101,9 @@ export default {
   computed: {
 
     getChainingMethodLabel() {
-      if (!this.chainingEnabled) return `Chaining off · ${this.chainingRepetitions}x`
-      const label = this.chainingMethod === 'cumulative' ? 'Cumulative chain' : 'Linking chain'
-      return `${label} · ${this.chainingRepetitions}x`
+      if (!this.chainingEnabled) return `Chaining off · ${this.chainingRepetitions} repeats`
+      const label = this.chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking'
+      return `${label} · ${this.chainingRepetitions} repeats`
     },
 
     getChainingMethodDescription() {
@@ -1128,11 +1118,11 @@ export default {
 
     getChainingMethodPreview() {
       if (!this.chainingEnabled) {
-        return `Flow: selected ayahs in order, ${this.chainingRepetitions}x each.`
+        return `Flow: selected ayahs in order, each ayah repeated ${this.chainingRepetitions} time${this.chainingRepetitions === 1 ? '' : 's'}.`
       }
       return this.chainingMethod === 'cumulative'
-        ? `Flow: 1, then 1-2, then 1-2-3 · ${this.chainingRepetitions}x.`
-        : `Flow: current ayah, next ayah, then both together · ${this.chainingRepetitions}x.`
+        ? `Cumulative flow: repeat 1, then 1-2, then 1-2-3. Each block repeats ${this.chainingRepetitions} time${this.chainingRepetitions === 1 ? '' : 's'}.`
+        : `Linking flow: repeat the current ayah, the next ayah, then both together. Each step repeats ${this.chainingRepetitions} time${this.chainingRepetitions === 1 ? '' : 's'}.`
     },
     liveSessionStats() {
       const currentIndex = Math.max(0, Number(this.queueIndex || 0))
@@ -1185,22 +1175,22 @@ export default {
         return 'Play the selected ayahs in order without chaining.'
       }
       if (this.chainingMethod === 'cumulative') {
-        return 'Build recall progressively across memorised ayahs.'
+        return 'Build longer connected runs from the first ayah outward.'
       }
-      return 'Connect ayahs sequentially during memorisation.'
+      return 'Train the transition between neighbouring ayahs.'
     },
     chainingMethodLabel() {
-      if (!this.chainingEnabled) return `Chaining off · ${this.chainingRepetitions}x`
-      const label = this.chainingMethod === 'cumulative' ? 'Cumulative chain' : 'Linking chain'
-      return `${label} · ${this.chainingRepetitions}x`
+      if (!this.chainingEnabled) return `Chaining off · ${this.chainingRepetitions} repeats`
+      const label = this.chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking'
+      return `${label} · ${this.chainingRepetitions} repeats`
     },
     chainingMethodPreview() {
       if (!this.chainingEnabled) {
-        return `Flow: selected ayahs in order, ${this.chainingRepetitions}x each.`
+        return `Flow: selected ayahs in order, each ayah repeated ${this.chainingRepetitions} time${this.chainingRepetitions === 1 ? '' : 's'}.`
       }
       return this.chainingMethod === 'cumulative'
-        ? `Flow: 1, then 1-2, then 1-2-3 · ${this.chainingRepetitions}x.`
-        : `Flow: current ayah, next ayah, then both together · ${this.chainingRepetitions}x.`
+        ? `Cumulative flow: repeat 1, then 1-2, then 1-2-3. Each block repeats ${this.chainingRepetitions} time${this.chainingRepetitions === 1 ? '' : 's'}.`
+        : `Linking flow: repeat the current ayah, the next ayah, then both together. Each step repeats ${this.chainingRepetitions} time${this.chainingRepetitions === 1 ? '' : 's'}.`
     },
     currentConfig() {
       return this.currentMode === 'beginner' ? this.beginner : this.advanced
@@ -1250,9 +1240,14 @@ export default {
       const entry = this.activeQueueEntry
       const current = Number(entry?.repeatCount || 1)
       const total = Number(entry?.totalRepeats || 1)
-      const repeatLabel = total > 1 ? ` · ${current}/${total}` : ''
-      if (entry?.phase === 'Linking') return `Linking ayahs${repeatLabel}`
-      if (entry?.phase === 'Cumulative') return `Cumulative ${entry.sequencePosition || 1}/${entry.sequenceTotal || 1}${repeatLabel}`
+      const repeatLabel = total > 1 ? ` · repeat ${current}/${total}` : ''
+      if (entry?.phase === 'Linking') {
+        const stepLabel = Number(entry.sequenceTotal || 1) > 1
+          ? `pair ${entry.sequencePosition || 1}/${entry.sequenceTotal || 1}`
+          : 'single ayah'
+        return `Linking ${stepLabel}${repeatLabel}`
+      }
+      if (entry?.phase === 'Cumulative') return `Cumulative block ${entry.sequencePosition || 1}/${entry.sequenceTotal || 1}${repeatLabel}`
       return total > 1 ? `Repeat ${current} of ${total}` : 'Single focused pass'
     },
 
@@ -7191,7 +7186,7 @@ html {
 .techniques-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .technique-row {
@@ -7199,10 +7194,11 @@ html {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 13px;
+  border: 1px solid rgba(154, 103, 56, 0.12);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 10px 24px rgba(63, 39, 18, 0.055);
 }
 
 .technique-row-stacked {
@@ -7228,26 +7224,34 @@ html {
 .technique-copy label {
   margin: 0;
   color: var(--text);
-  font-size: 0.8rem;
-  font-weight: 650;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 560;
   white-space: nowrap;
 }
 
 .technique-copy small,
 .technique-control span {
   color: var(--text-muted);
-  font-size: 0.7rem;
-  line-height: 1.35;
+  font-family: inherit;
+  font-size: 0.73rem;
+  font-weight: 400;
+  line-height: 1.45;
 }
 
 .technique-toggle {
-  flex: 0 0 68px;
-  min-height: 36px;
+  flex: 0 0 86px;
+  min-height: 40px;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 560;
+  border-width: 1px;
 }
 
 .technique-control {
-  padding-top: 10px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  padding-top: 12px;
+  border-top: 1px solid rgba(154, 103, 56, 0.10);
 }
 
 .technique-range {
@@ -7262,38 +7266,46 @@ html {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
   padding: 5px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.035);
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  border-radius: 14px;
+  background: rgba(98, 73, 49, 0.045);
 }
 
 .segmented-control button {
   min-width: 0;
-  min-height: 36px;
-  padding: 7px 8px;
-  border: 0;
-  border-radius: 9px;
+  min-height: 42px;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
   background: transparent;
   color: var(--text-muted);
-  font-size: 0.74rem;
-  font-weight: 650;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 560;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .segmented-control button.active {
-  background: rgba(255, 255, 255, 0.9);
+  background: #fffaf4;
   color: var(--accent-strong);
-  box-shadow: var(--shadow-sm);
+  border-color: rgba(154, 103, 56, 0.20);
+  box-shadow: 0 8px 18px rgba(63, 39, 18, 0.09);
 }
 
 .technique-preview {
-  padding: 9px 10px;
-  border-radius: 11px;
+  padding: 10px 12px;
+  border-radius: 12px;
   background: rgba(154, 103, 56, 0.07);
-  border: 1px solid rgba(154, 103, 56, 0.10);
-  color: var(--accent-strong);
-  font-size: 0.72rem;
-  line-height: 1.35;
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  color: rgba(98, 73, 49, 0.92);
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 430;
+  line-height: 1.45;
 }
 
 /* Start button */
@@ -7652,31 +7664,54 @@ html {
   display: inline-flex;
   align-items: center;
   max-width: 100%;
-  padding: 4px 7px;
+  padding: 6px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(154, 103, 56, 0.10);
-  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(154, 103, 56, 0.18);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 8px 18px rgba(63, 39, 18, 0.06);
+  color: rgba(48, 42, 35, 0.82);
+  font-weight: 600;
 }
 
 .workspace-fab-live {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 2px;
+  gap: 8px;
+  margin-top: 5px;
 }
 
 .workspace-fab-live-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   max-width: 100%;
-  padding: 5px 8px;
+  min-height: 38px;
+  padding: 8px 12px;
   border-radius: 999px;
-  background: rgba(154, 103, 56, 0.08);
-  border: 1px solid rgba(154, 103, 56, 0.12);
+  background: rgba(154, 103, 56, 0.11);
+  border: 1px solid rgba(154, 103, 56, 0.20);
   color: var(--accent-strong);
-  font-size: 0.74rem;
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 750;
+  box-shadow: 0 10px 20px rgba(63, 39, 18, 0.08);
+}
+
+.workspace-fab-live-pill i {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(154, 103, 56, 0.14);
+}
+
+.workspace-fab-live-pill-primary {
+  background: linear-gradient(180deg, rgba(154, 103, 56, 0.16), rgba(154, 103, 56, 0.09));
+  border-color: rgba(154, 103, 56, 0.28);
+}
+
+.workspace-fab-live-pill-mode {
+  background: rgba(255, 255, 255, 0.86);
 }
 
 .workspace-fab-copy {
@@ -7792,7 +7827,8 @@ html {
   border: 1px solid rgba(154, 103, 56, 0.12);
   color: var(--accent-strong);
   font-size: 0.72rem;
-  font-weight: 500;
+  font-family: inherit;
+  font-weight: 460;
 }
 
 .settings-section {
@@ -9676,7 +9712,8 @@ html {
   border-radius: 12px;
   background: var(--surface);
   color: var(--text);
-  font-weight: 700;
+  font-family: inherit;
+  font-weight: 540;
 }
 
 .toggle-chip.active {
