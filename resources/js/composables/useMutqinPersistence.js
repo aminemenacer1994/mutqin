@@ -46,9 +46,19 @@ function normaliseSessionQueueRecords(queue = []) {
     })
 }
 
+function normaliseChainRecord(chain = {}) {
+  return {
+    ...chain,
+    chain_strength: Math.max(0, Math.min(100, Number(chain.chain_strength || 0))),
+    chain_errors: Math.max(0, Number(chain.chain_errors || 0)),
+    attempts: Math.max(0, Number(chain.attempts || 0))
+  }
+}
+
 const defaultState = () => ({
   version: 1,
   ayahs: {},
+  chains: {},
   sessionState: {
     active: false,
     mode: 'beginner',
@@ -90,6 +100,10 @@ function mergeState(saved) {
   Object.entries(saved?.ayahs || {}).forEach(([id, ayah]) => {
     mergedAyahs[id] = normaliseAyahRecord({ id, ...(ayah || {}) })
   })
+  const mergedChains = { ...base.chains }
+  Object.entries(saved?.chains || {}).forEach(([id, chain]) => {
+    mergedChains[id] = normaliseChainRecord(chain || {})
+  })
   const sessionState = {
     ...base.sessionState,
     ...(saved?.sessionState || {})
@@ -103,6 +117,7 @@ function mergeState(saved) {
     ...(saved || {}),
     version: 1,
     ayahs: mergedAyahs,
+    chains: mergedChains,
     sessionState,
     stats: {
       ...base.stats,

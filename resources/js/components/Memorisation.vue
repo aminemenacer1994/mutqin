@@ -18,7 +18,7 @@
       'flow-recall': guidedUiStep === 'recall'
     }">
       <div class="content">
-        <section v-if="!hasVerses" class="home-dashboard home-dashboard-minimal">
+        <section v-if="!hasVerses && !currentConfig.chapterId" class="home-dashboard home-dashboard-minimal">
           <div v-if="hasContinueSession" class="continue-session-card">
             <div class="continue-session-copy">
               <span class="continue-session-kicker">Continue where you left off</span>
@@ -35,7 +35,8 @@
             </div>
           </div>
           <div class="offcanvas-launcher-card">
-            <button class="cta cta-primary setup-primary" @click="openToolsPanel()" title="Open controls">
+            <button class="cta cta-primary setup-primary" type="button" aria-controls="memorisationToolsPanel"
+              :aria-expanded="showTools ? 'true' : 'false'" @click="openToolsPanel()" title="Open controls">
               <i class="bi bi-sliders"></i> Open Session Controls
             </button>
             <p class="offcanvas-launcher-copy">
@@ -72,7 +73,8 @@
               :disabled="!activeVerseRef || repeatActionLocked" title="Repeat current ayah">
               <i class="bi bi-arrow-repeat"></i><span>Repeat</span>
             </button>
-            <button class="fab-btn fab-btn-ghost" @click="openAdvancedControls" title="Open session controls">
+            <button class="fab-btn fab-btn-ghost" type="button" aria-controls="memorisationToolsPanel"
+              :aria-expanded="showTools ? 'true' : 'false'" @click="openAdvancedControls" title="Open session controls">
               <i class="bi bi-sliders"></i><span>Controls</span>
             </button>
             <button class="fab-btn fab-btn-primary" @click="handlePrimaryAction"
@@ -140,13 +142,15 @@
           <span>Loading...</span>
         </div>
         <div v-else-if="hasVerses" class="workspace">
-          <main class="workspace-main" aria-label="Memorisation workspace">
+          <main id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
+            aria-label="Memorisation workspace">
             <div class="verses-grid">
               <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" class="verse-card" :class="{
                 active: effectiveActiveVerseKey === verse.key,
                 'serious-training': false,
                 'blur-upcoming': blurModeEnabled && isVerseBlurred(verse.key)
-              }" @click="onVerseCardClick(verse)" role="button" tabindex="0" @keydown.enter.prevent="onVerseCardClick(verse)">
+              }" @click="onVerseCardClick(verse)" role="button" tabindex="0"
+                @keydown.enter.prevent="onVerseCardClick(verse)">
                 <div class="verse-header">
                   <div class="verse-badges">
                     <span class="verse-number">Ayah {{ verse.number }}</span>
@@ -183,8 +187,9 @@
                 </div>
                 <div v-if="showWordByWord && verse.words && verse.words.length" class="verse-words verse-aid"
                   @scroll="onVerseWordsScroll(verse.key, $event)">
-                  <div v-for="(word, wi) in verse.words" :key="wi" class="word-item" :title="wordTooltip(word)"
-                    :data-tooltip="wordTooltip(word)" tabindex="0">
+                  <div v-for="(word, wi) in verse.words" :key="wi" class="word-item"
+                    :class="{ highlighted: currentHighlightedVerseKey === verse.key && currentWordIndex === wi, 'phrase-highlighted': currentHighlightedVerseKey === verse.key && currentPhraseIndex === wi }"
+                    :title="wordTooltip(word)" :data-tooltip="wordTooltip(word)" tabindex="0">
                     <span class="word-arabic" dir="rtl">{{ word.ar }}</span>
                     <span class="word-meaning">{{ word.en }}</span>
                     <button v-if="word.audio && wordByWordAudioEnabled" class="word-audio-btn"
@@ -201,24 +206,22 @@
 
       <!-- Advanced Controls Drawer -->
       <div v-if="showTools" class="tools-backdrop" @click="closeToolsPanel" aria-hidden="true"></div>
-      <aside class="tools" :class="{ open: showTools }">
+      <aside id="memorisationToolsPanel" ref="toolsPanel" class="tools offcanvas-section"
+        :class="{ open: showTools }" role="dialog" aria-modal="true" aria-labelledby="memorisationToolsTitle"
+        :aria-hidden="showTools ? 'false' : 'true'" tabindex="-1">
         <div class="tools-top">
           <div class="tools-topbar">
-            <div class="tools-title">Controls</div>
+            <div id="memorisationToolsTitle" class="tools-title">Controls</div>
             <button class="tools-x" @click="closeToolsPanel" aria-label="Close panel"><i
                 class="bi bi-x-lg"></i></button>
           </div>
           <div class="tools-context">{{ contextLabel }}</div>
-          <div class="tools-tabs" role="tablist" aria-label="Controls tabs">
-            <button :class="{ active: tab === 'tools', 'active-tab': tab === 'tools' }" @click="tab = 'tools'"
+          <div class="tools-tabs row g-2" role="tablist" aria-label="Controls tabs">
+            <button class="col-12 col-md-6" :class="{ active: tab === 'tools', 'active-tab': tab === 'tools' }" @click="setActiveTab('tools')"
               title="Session tools">
               <i class="bi bi-sliders"></i> Tools
             </button>
-            <button :class="{ active: tab === 'stats', 'active-tab': tab === 'stats' }" @click="tab = 'stats'"
-              title="Session stats">
-              <i class="bi bi-grid-1x2"></i> Stats
-            </button>
-            <button :class="{ active: tab === 'settings', 'active-tab': tab === 'settings' }" @click="tab = 'settings'"
+            <button class="col-12 col-md-6" :class="{ active: tab === 'settings', 'active-tab': tab === 'settings' }" @click="setActiveTab('settings')"
               title="Reading and display settings">
               <i class="bi bi-gear"></i> Settings
             </button>
@@ -259,6 +262,11 @@
                     <small class="field-hint">Keep ranges small for focused memorisation.</small>
                   </div>
                   <div class="field">
+                    <label>Number of Repetition Times</label>
+                    <input type="number" class="input" :value="centralSession.repetitionTimes" readonly>
+                    <small class="field-hint">Automatically increases when a session is completed.</small>
+                  </div>
+                  <div class="field">
                     <label>Reciter</label>
                     <select v-model="reciterId" @change="refreshVerses" class="select">
                       <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
@@ -286,10 +294,10 @@
                   <div class="field">
                     <label>Speed</label>
                     <div class="radio-group radio-group-tight">
-                      <label class="radio"><input type="radio" value="0.75" v-model="speed"> 0.75x</label>
-                      <label class="radio"><input type="radio" value="1" v-model="speed"> 1x</label>
-                      <label class="radio"><input type="radio" value="1.25" v-model="speed"> 1.25x</label>
-                      <label class="radio"><input type="radio" value="1.5" v-model="speed"> 1.5x</label>
+                      <label class="radio" v-for="option in speedOptions" :key="`tool-speed-${option}`">
+                        <input type="radio" :value="option" :checked="Number(speed) === Number(option)"
+                          @change="setPlaybackSpeed(option)"> {{ option }}x
+                      </label>
                     </div>
                     <small class="field-hint">Use slower speed for early memorisation.</small>
                   </div>
@@ -386,103 +394,104 @@
             </section>
           </div>
 
-          <div v-else-if="tab === 'stats'" class="sheet">
-            <div class="sheet-section" style="padding: 20px;">
-              <h3 style="margin-top:0; font-size: 1.1rem; color: var(--accent);">Your Memorisation Stats</h3>
-              <p class="analytics-help">These are device-local summaries. They do not change your memorisation flow.</p>
-              <div class="analytics-grid">
-                <div class="stat-card">
-                  <i class="bi bi-book"></i>
-                  <div class="stat-value">{{ analytics.totalVersesRead }}</div>
-                  <div class="stat-label">Verses Read</div>
-                  <div class="stat-help">Counts verses you played or reviewed in sessions.</div>
-                  <div class="mini-trend" v-html="renderMiniTrend(analytics.weeklyVerses)"></div>
-                </div>
-                <div class="stat-card">
-                  <i class="bi bi-clock-history"></i>
-                  <div class="stat-value">{{ analytics.totalTimeSpent }}m</div>
-                  <div class="stat-label">Time Spent</div>
-                  <div class="stat-help">Approximate minutes with audio active.</div>
-                  <div class="mini-trend" v-html="renderMiniTrend(analytics.weeklyMinutes)"></div>
-                </div>
-                <div class="stat-card">
-                  <i class="bi bi-repeat"></i>
-                  <div class="stat-value">{{ analytics.totalRepetitions }}</div>
-                  <div class="stat-label">Repetitions</div>
-                  <div class="stat-help">Total repeats across all sessions.</div>
-                </div>
-                <div class="stat-card">
-                  <i class="bi bi-calendar-check"></i>
-                  <div class="stat-value">{{ analytics.sessionsCompleted }}</div>
-                  <div class="stat-label">Sessions</div>
-                  <div class="stat-help">How many sessions you finished.</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div v-else-if="tab === 'settings'" class="sheet">
             <div class="sheet-section settings-section">
               <div class="settings-heading">
                 <h3>Reading & Display</h3>
-                <button class="tools-btn tools-btn-primary settings-apply" @click="applySettingsChanges">
-                  <i class="bi bi-check2"></i><span>Apply</span>
+                <button class="tools-btn tools-btn-primary settings-apply" @click="closeToolsPanel">
+                  <i class="bi bi-check2"></i><span>Done</span>
                 </button>
               </div>
 
-              <div class="settings-list">
-                <div class="settings-row">
-                  <div class="settings-row-copy">
-                    <label>Translation</label>
-                    <small>English meaning</small>
-                  </div>
-                  <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTranslation }"
-                    @click="settingsDraft.showTranslation = !settingsDraft.showTranslation">
-                    {{ settingsDraft.showTranslation ? 'Enabled' : 'Disabled' }}
-                  </button>
-                </div>
+              <div class="settings-intro">
+                <span class="settings-intro-title">Live preview</span>
+                <span class="settings-intro-copy">Changes apply directly to the workspace.</span>
+              </div>
 
-                <div class="settings-row">
-                  <div class="settings-row-copy">
-                    <label>Transliteration</label>
-                    <small>Latin reading aid</small>
+              <div class="settings-panels">
+                <section class="settings-panel">
+                  <div class="settings-panel-head">
+                    <span class="settings-panel-kicker">Rendering</span>
+                    <p>Visual presentation of the Arabic text in the workspace.</p>
                   </div>
-                  <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTransliteration }"
-                    @click="settingsDraft.showTransliteration = !settingsDraft.showTransliteration">
-                    {{ settingsDraft.showTransliteration ? 'Enabled' : 'Disabled' }}
-                  </button>
-                </div>
+                  <div class="settings-list">
+                    <div class="settings-row">
+                      <div class="settings-row-copy">
+                        <label><i class="bi bi-palette2"></i> Tajweed</label>
+                        <small>Show or hide recitation color rules.</small>
+                      </div>
+                      <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.tajweedEnabled }"
+                        @click="toggleSettingsOption('tajweedEnabled')">
+                        {{ settingsDraft.tajweedEnabled ? 'Enabled' : 'Disabled' }}
+                      </button>
+                    </div>
 
-                <div class="settings-row">
-                  <div class="settings-row-copy">
-                    <label>Word for word</label>
-                    <small>Word chips</small>
+                    <div class="settings-row settings-row-range">
+                      <div class="settings-row-copy">
+                        <label><i class="bi bi-arrows-angle-expand"></i> Font size</label>
+                        <small>Adjust verse scale without changing the rest of the layout.</small>
+                      </div>
+                      <div class="settings-range-wrap">
+                        <input type="range" min="80" max="140" step="5" :value="settingsDraft.defaultFontSize"
+                          @input="updateSettingsValue('defaultFontSize', Number($event.target.value))"
+                          class="input settings-range" aria-label="Font size">
+                        <span class="inline-setting-pill">{{ settingsDraft.defaultFontSize }}%</span>
+                      </div>
+                    </div>
                   </div>
-                  <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showWordByWord }"
-                    @click="settingsDraft.showWordByWord = !settingsDraft.showWordByWord">
-                    {{ settingsDraft.showWordByWord ? 'Enabled' : 'Disabled' }}
-                  </button>
-                </div>
+                </section>
 
-                <div class="settings-row">
-                  <div class="settings-row-copy">
-                    <label>Word audio</label>
-                    <small>Sync highlighting</small>
+                <section class="settings-panel">
+                  <div class="settings-panel-head">
+                    <span class="settings-panel-kicker">Reading aids</span>
+                    <p>Helpers that support comprehension, word tracking, and review.</p>
                   </div>
-                  <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.wordByWordAudioEnabled }"
-                    @click="settingsDraft.wordByWordAudioEnabled = !settingsDraft.wordByWordAudioEnabled">
-                    {{ settingsDraft.wordByWordAudioEnabled ? 'Enabled' : 'Disabled' }}
-                  </button>
-                </div>
+                  <div class="settings-list">
+                    <div class="settings-row">
+                      <div class="settings-row-copy">
+                        <label><i class="bi bi-translate"></i> Translation</label>
+                        <small>Inline English meaning for each ayah.</small>
+                      </div>
+                      <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTranslation }"
+                        @click="toggleSettingsOption('showTranslation')">
+                        {{ settingsDraft.showTranslation ? 'Enabled' : 'Disabled' }}
+                      </button>
+                    </div>
 
-                <div class="settings-row settings-row-range">
-                  <div class="settings-row-copy">
-                    <label>Font size</label>
-                    <span class="inline-setting-pill">{{ settingsDraft.defaultFontSize }}%</span>
+                    <div class="settings-row">
+                      <div class="settings-row-copy">
+                        <label><i class="bi bi-type"></i> Transliteration</label>
+                        <small>Latin-character reading support.</small>
+                      </div>
+                      <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTransliteration }"
+                        @click="toggleSettingsOption('showTransliteration')">
+                        {{ settingsDraft.showTransliteration ? 'Enabled' : 'Disabled' }}
+                      </button>
+                    </div>
+
+                    <div class="settings-row">
+                      <div class="settings-row-copy">
+                        <label><i class="bi bi-grid-3x2-gap"></i> Word for word</label>
+                        <small>Show per-word chips under the ayah.</small>
+                      </div>
+                      <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showWordByWord }"
+                        @click="toggleSettingsOption('showWordByWord')">
+                        {{ settingsDraft.showWordByWord ? 'Enabled' : 'Disabled' }}
+                      </button>
+                    </div>
+
+                    <div class="settings-row">
+                      <div class="settings-row-copy">
+                        <label><i class="bi bi-volume-up"></i> Word audio</label>
+                        <small>Enable per-word timing and highlighting during playback.</small>
+                      </div>
+                      <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.wordByWordAudioEnabled }"
+                        @click="toggleSettingsOption('wordByWordAudioEnabled')">
+                        {{ settingsDraft.wordByWordAudioEnabled ? 'Enabled' : 'Disabled' }}
+                      </button>
+                    </div>
                   </div>
-                  <input type="range" min="80" max="140" step="5" v-model.number="settingsDraft.defaultFontSize"
-                    class="input settings-range">
-                </div>
+                </section>
               </div>
             </div>
           </div>
@@ -720,22 +729,6 @@
             <span class="player-time">{{ formatTime(duration) }}</span>
           </div>
 
-          <!-- ADD SPEED CONTROLS HERE -->
-          <div class="player-speed-controls">
-            <button class="speed-btn-mini" :class="{ active: speed === 0.75 }" @click="setPlaybackSpeed(0.75)">
-              0.75x
-            </button>
-            <button class="speed-btn-mini" :class="{ active: speed === 1 }" @click="setPlaybackSpeed(1)">
-              1x
-            </button>
-            <button class="speed-btn-mini" :class="{ active: speed === 1.25 }" @click="setPlaybackSpeed(1.25)">
-              1.25x
-            </button>
-            <button class="speed-btn-mini" :class="{ active: speed === 1.5 }" @click="setPlaybackSpeed(1.5)">
-              1.5x
-            </button>
-          </div>
-
           <button class="player-btn" @click="playerVisible = false" title="Close player">
             <i class="bi bi-x-lg"></i>
           </button>
@@ -770,6 +763,8 @@ const SESSION_STORAGE_KEYS = {
   advanced: 'telawa.sessionState.advanced'
 }
 
+const CENTRAL_SESSION_STORAGE_KEY = 'mutqin.sessionState'
+
 const DEFAULT_ALQURAN_RECITER = 'ar.alafasy'
 
 function tokenizeArabicText(text) {
@@ -801,6 +796,31 @@ function deepClone(value) {
   }
 
   return JSON.parse(JSON.stringify(rawValue))
+}
+
+function createCentralSessionState() {
+  return {
+    activeTab: 'tools',
+    repetitionTimes: 0,
+    tajweedEnabled: false,
+    focusModeEnabled: false,
+    blurModeEnabled: false,
+    blurIntensity: 10,
+    chaining: {
+      enabled: true,
+      method: 'linking',
+      repetitions: 1,
+      index: 0,
+      segmentIndex: 0,
+      consecutiveFailures: 0,
+      chain: [],
+      lastSuccessfulAyahKey: null
+    },
+    audio: {
+      speed: 1,
+      currentTime: 0
+    }
+  }
 }
 
 function createBeginnerState() {
@@ -861,6 +881,7 @@ export default {
       beginner: createBeginnerState(),
       advanced: createAdvancedState(),
       mutqinState: loadMutqinState(),
+      centralSession: createCentralSessionState(),
       unwatchMutqinState: null,
       // chaining removed
 
@@ -968,6 +989,7 @@ export default {
       delay: 1,
       order: 'seq',
       settingsDraft: {
+        tajweedEnabled: false,
         showTranslation: true,
         showTransliteration: false,
         showWordByWord: false,
@@ -1040,7 +1062,7 @@ export default {
       pins: [],
 
       // Options
-      speedOptions: [0.5, 0.75, 1, 1.25, 1.5],
+      speedOptions: [0.5, 1, 1.25, 1.5, 2],
       delayOptions: [0, 0.5, 1, 2, 3, 5, 7, 10],
       rangeLoopDelay: 1,
 
@@ -1087,19 +1109,30 @@ export default {
   },
 
   computed: {
-    isVerseBlurred() {
-      return (verseKey) => {
-        if (!this.blurModeEnabled) return false
-        const activeKey = this.effectiveActiveVerseKey
-        if (!activeKey) return false
 
-        // Get the current active verse number
-        const activeNumber = parseInt(activeKey.split(':')[1])
-        const verseNumber = parseInt(verseKey.split(':')[1])
+    getChainingMethodLabel() {
+      if (!this.chainingEnabled) return `Chaining off · ${this.chainingRepetitions}x`
+      const label = this.chainingMethod === 'cumulative' ? 'Cumulative chain' : 'Linking chain'
+      return `${label} · ${this.chainingRepetitions}x`
+    },
 
-        // Blur upcoming verses (higher number than active)
-        return verseNumber > activeNumber
+    getChainingMethodDescription() {
+      if (!this.chainingEnabled) {
+        return 'Play the selected ayahs in order without chaining.'
       }
+      if (this.chainingMethod === 'cumulative') {
+        return 'Build recall progressively across memorised ayahs.'
+      }
+      return 'Connect ayahs sequentially during memorisation.'
+    },
+
+    getChainingMethodPreview() {
+      if (!this.chainingEnabled) {
+        return `Flow: selected ayahs in order, ${this.chainingRepetitions}x each.`
+      }
+      return this.chainingMethod === 'cumulative'
+        ? `Flow: 1, then 1-2, then 1-2-3 · ${this.chainingRepetitions}x.`
+        : `Flow: current ayah, next ayah, then both together · ${this.chainingRepetitions}x.`
     },
     liveSessionStats() {
       const currentIndex = Math.max(0, Number(this.queueIndex || 0))
@@ -1234,7 +1267,8 @@ export default {
     },
 
     hasVerses() {
-      return this.currentConfig.verses?.length > 0
+      const config = this.currentConfig
+      return config.verses?.length > 0
     },
     continueSessionMeta() {
       const payload = this.continueSessionPayload
@@ -1334,8 +1368,9 @@ export default {
     speed: {
       get() { return this.currentConfig.speed },
       set(val) {
-        if (this.currentMode === 'beginner') this.beginner.speed = val
-        else this.advanced.speed = val
+        const safeSpeed = this.speedOptions?.includes(Number(val)) ? Number(val) : 1
+        if (this.currentMode === 'beginner') this.beginner.speed = safeSpeed
+        else this.advanced.speed = safeSpeed
       }
     },
 
@@ -1650,6 +1685,7 @@ export default {
     this.loadVerseFontSizes()
     this.migrateLocalStorage()
     this.loadUiState()
+    this.loadCentralSessionState()
     this.restoreSessionState()
     await this.loadChapters()
     await this.loadReciters()
@@ -1677,14 +1713,16 @@ export default {
     if (this.currentMode === 'advanced' && this.advanced.chapterId) {
       this.currentMode = 'advanced'
       this.tab = 'tools'
+      this.showTools = false
       await this.loadVerses()
     } else if (this.beginner.chapterId) {
       this.currentMode = 'beginner'
       this.tab = 'tools'
+      this.showTools = false
       await this.loadVerses()
     } else {
       this.tab = 'tools'
-      this.showTools = true
+      this.showTools = false
     }
 
     this.isBootstrapping = false
@@ -1720,7 +1758,11 @@ export default {
   watch: {
     theme: 'persistUiState',
     showTools: 'persistUiState',
-    tab: 'persistUiState',
+    tab(newVal) {
+      if (!['tools', 'settings'].includes(newVal)) this.tab = 'tools'
+      this.persistUiState()
+      this.persistCentralSessionState()
+    },
     chapterId(val) {
       this.persistUiState()
       const id = Number(val || 0)
@@ -1729,23 +1771,40 @@ export default {
     rangeStart: 'persistUiState',
     rangeEnd: 'persistUiState',
     reciterId: 'persistUiState',
-    speed: 'persistUiState',
+    speed() {
+      this.applySpeed()
+      this.persistUiState()
+      this.persistCentralSessionState()
+    },
     delay: 'persistUiState',
     playMode: 'persistUiState',
     order: 'persistUiState',
     chainingEnabled() {
       this.persistUiState()
-      this.rebuildQueue(this.currentMode)
+      this.persistCentralSessionState()
+      if (this.hasVerses) {
+        this.buildQueue(this.currentMode)
+      }
     },
+
     chainingMethod() {
       this.persistUiState()
-      this.rebuildQueue(this.currentMode)
+      this.persistCentralSessionState()
+      if (this.hasVerses) {
+        this.buildQueue(this.currentMode)
+      }
     },
+
     chainingRepetitions(newVal) {
       const safeValue = Math.max(1, Math.min(5, Number(newVal || 1)))
-      if (safeValue !== Number(this.chainingRepetitions)) this.chainingRepetitions = safeValue
+      if (safeValue !== Number(this.chainingRepetitions)) {
+        this.chainingRepetitions = safeValue
+      }
       this.persistUiState()
-      this.rebuildQueue(this.currentMode)
+      this.persistCentralSessionState()
+      if (this.hasVerses) {
+        this.buildQueue(this.currentMode)
+      }
     },
     showTranslation: 'persistUiState',
     showTransliteration: 'persistUiState',
@@ -1767,6 +1826,7 @@ export default {
 
     tajweedEnabled() {
       this.persistUiState()
+      this.persistCentralSessionState()
     },
 
     activeVerseKey(newVal) {
@@ -1774,13 +1834,62 @@ export default {
       if (this.showWordByWord) this.restoreWordScroll(newVal)
     },
 
-    tab(newVal) {
-      // Unified tools tab: keep mode stable unless explicitly switched by controls.
-      this.persistUiState()
-    }
+    focusModeEnabled: 'persistControlState',
+    blurModeEnabled: 'persistControlState',
+    blurIntensity: 'persistControlState',
+    defaultFontSize: 'persistUiState'
   },
 
   methods: {
+    syncSettingsDraft() {
+      this.settingsDraft = {
+        tajweedEnabled: !!this.tajweedEnabled,
+        showTranslation: !!this.showTranslation,
+        showTransliteration: !!this.showTransliteration,
+        showWordByWord: !!this.showWordByWord,
+        wordByWordAudioEnabled: !!this.wordByWordAudioEnabled,
+        defaultFontSize: Math.max(
+          this.minFontSize,
+          Math.min(this.maxFontSize, Number(this.defaultFontSize || 100))
+        )
+      }
+    },
+
+    persistControlState() {
+      this.persistUiState()
+      this.persistCentralSessionState()
+    },
+
+    toggleSettingsOption(key) {
+      this.updateSettingsValue(key, !this.settingsDraft[key])
+    },
+
+    updateSettingsValue(key, value) {
+      this.settingsDraft = {
+        ...this.settingsDraft,
+        [key]: value
+      }
+      this.applySettingsChanges({ silent: true })
+    },
+
+    parseVerseNumber(value) {
+      const rawKey = typeof value === 'string'
+        ? value
+        : (value && typeof value === 'object' ? (value.key || value.ayahId || value.id || '') : '')
+      if (!rawKey || typeof rawKey !== 'string' || !rawKey.includes(':')) return null
+      const versePart = rawKey.split(':')[1]
+      const number = Number.parseInt(String(versePart), 10)
+      return Number.isFinite(number) ? number : null
+    },
+
+    isVerseBlurred(verseKey) {
+      if (!this.blurModeEnabled) return false
+      const activeNumber = this.parseVerseNumber(this.effectiveActiveVerseKey)
+      const verseNumber = this.parseVerseNumber(verseKey)
+      if (activeNumber === null || verseNumber === null) return false
+      return verseNumber > activeNumber
+    },
+
     focusLinkedAyah(verseKey, options = {}) {
       if (!verseKey) return null
       return this.setActiveVerse(verseKey, options)
@@ -1790,12 +1899,16 @@ export default {
       const { verseKey = null, mode = this.currentMode, scroll = false } = options
       this.currentMode = mode
       this.tab = 'tools'
+      this.syncSettingsDraft()
       if (verseKey) this.focusLinkedAyah(verseKey, { mode, scroll })
       this.showPlannerModal = false
       this.showConfirmModal = false
       this.showResumeModal = false
-      this.showTools = true
+      this.showTools = true  // Ensure this is true
       this.persistUiState()
+      this.$nextTick(() => {
+        if (this.$refs.toolsPanel) this.$refs.toolsPanel.focus({ preventScroll: true })
+      })
     },
 
     closeToolsPanel() {
@@ -2049,29 +2162,40 @@ export default {
       try {
         const raw = localStorage.getItem(MODE_STORAGE_KEYS[mode])
         if (!raw) return this.cloneModeState(defaults)
+
         const merged = { ...defaults, ...this.cloneModeState(JSON.parse(raw)) }
+
         if (typeof merged.reciterId !== 'string' || !merged.reciterId) {
           merged.reciterId = DEFAULT_ALQURAN_RECITER
         }
+
         if (mode === 'advanced') {
           if (merged.order === 'rand') merged.order = 'seq'
           if (merged.order === 'cum') merged.order = 'seq'
           if (merged.order === 'spaced') merged.order = 'seq'
         }
+
         return merged
       } catch (e) {
-        console.error(e)
+        console.error(`Failed to load ${mode} mode state:`, e)
         return this.cloneModeState(defaults)
       }
     },
 
-    persistModeState(mode) {
-      const source = mode === 'beginner' ? this.beginner : this.advanced
+    persistSessionState() {
+      if (this.isBootstrapping) return
+      const mode = this.currentMode
       try {
-        localStorage.setItem(MODE_STORAGE_KEYS[mode], JSON.stringify(this.cloneModeState(source)))
-      } catch (e) { console.error(e) }
+        localStorage.setItem(SESSION_STORAGE_KEYS[mode], JSON.stringify({
+          activeKey: this.activeKey,
+          activeVerseKey: this.activeVerseKey,
+          queueIndex: this.queueIndex,
+          timestamp: Date.now()
+        }))
+      } catch (e) {
+        console.error('Failed to persist session state:', e)
+      }
     },
-
     isEditableElement(target) {
       if (!target) return false
       const tag = target.tagName?.toLowerCase()
@@ -2427,12 +2551,91 @@ export default {
     },
 
     setPlaybackSpeed(newSpeed) {
-      this.speed = newSpeed
+      const safeSpeed = this.speedOptions.includes(Number(newSpeed)) ? Number(newSpeed) : 1
+      const currentTime = Number(this.audioElement?.currentTime || this.currentTime || 0)
+      this.speed = safeSpeed
       if (this.audioElement) {
-        this.audioElement.playbackRate = newSpeed
+        this.audioElement.playbackRate = safeSpeed
+        if (Number.isFinite(currentTime)) this.audioElement.currentTime = currentTime
       }
+      this.currentTime = currentTime
+      this.centralSession.audio.speed = safeSpeed
+      this.centralSession.audio.currentTime = currentTime
       this.persistUiState()
-      this.showBanner(`Speed changed to ${newSpeed}x`, 'info', 1000)
+      this.persistCentralSessionState()
+      this.showBanner(`Speed changed to ${safeSpeed}x`, 'info', 1000)
+    },
+
+    setActiveTab(tabName) {
+      this.tab = tabName === 'settings' ? 'settings' : 'tools'
+      if (this.tab === 'settings') this.syncSettingsDraft()
+      this.centralSession.activeTab = this.tab
+      this.persistCentralSessionState()
+      this.$nextTick(() => this.scrollToWorkspaceMain())
+    },
+
+    scrollToWorkspaceMain() {
+      const target = this.$refs.workspaceMain || document.getElementById('memorisationWorkspaceMain')
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    },
+
+    loadCentralSessionState() {
+      try {
+        const raw = localStorage.getItem(CENTRAL_SESSION_STORAGE_KEY)
+        if (!raw) return
+        const saved = JSON.parse(raw)
+        this.centralSession = {
+          ...createCentralSessionState(),
+          ...saved,
+          chaining: {
+            ...createCentralSessionState().chaining,
+            ...(saved.chaining || {})
+          },
+          audio: {
+            ...createCentralSessionState().audio,
+            ...(saved.audio || {})
+          }
+        }
+        this.tab = ['tools', 'settings'].includes(this.centralSession.activeTab) ? this.centralSession.activeTab : 'tools'
+        this.tajweedEnabled = !!this.centralSession.tajweedEnabled
+        this.focusModeEnabled = !!this.centralSession.focusModeEnabled
+        this.blurModeEnabled = !!this.centralSession.blurModeEnabled
+        this.blurIntensity = Math.max(4, Math.min(18, Number(this.centralSession.blurIntensity || 10)))
+        this.chainingEnabled = !!this.centralSession.chaining.enabled
+        this.chainingMethod = ['linking', 'cumulative'].includes(this.centralSession.chaining.method) ? this.centralSession.chaining.method : 'linking'
+        this.chainingRepetitions = Math.max(1, Math.min(5, Number(this.centralSession.chaining.repetitions || 1)))
+        this.speed = this.speedOptions.includes(Number(this.centralSession.audio.speed)) ? Number(this.centralSession.audio.speed) : this.speed
+      } catch (e) {
+        console.error('Failed to load central session state:', e)
+      }
+    },
+
+    persistCentralSessionState() {
+      if (this.isBootstrapping) return
+      try {
+        this.centralSession = {
+          ...this.centralSession,
+          activeTab: ['tools', 'settings'].includes(this.tab) ? this.tab : 'tools',
+          tajweedEnabled: !!this.tajweedEnabled,
+          focusModeEnabled: !!this.focusModeEnabled,
+          blurModeEnabled: !!this.blurModeEnabled,
+          blurIntensity: Number(this.blurIntensity || 10),
+          chaining: {
+            ...this.centralSession.chaining,
+            enabled: !!this.chainingEnabled,
+            method: this.chainingMethod,
+            repetitions: Math.max(1, Math.min(5, Number(this.chainingRepetitions || 1))),
+            index: Math.max(0, Number(this.queueIndex || 0))
+          },
+          audio: {
+            speed: Number(this.speed || 1),
+            currentTime: Number(this.audioElement?.currentTime || this.currentTime || 0)
+          }
+        }
+        localStorage.setItem(CENTRAL_SESSION_STORAGE_KEY, JSON.stringify(this.centralSession))
+      } catch (e) {
+        console.error('Failed to persist central session state:', e)
+      }
     },
     // Open mode settings in offcanvas
     openModeSettings() {
@@ -2488,7 +2691,6 @@ export default {
       if (!remainingItems.length) return null
 
       const reviewTimePerAyah = 5
-
       let totalAudioSeconds = 0
       let totalReviewSeconds = 0
 
@@ -2510,6 +2712,7 @@ export default {
         repetitionCount: remainingItems.length
       }
     },
+
     getEtaTooltip() {
       const details = this.getRemainingTimeDetails()
       if (!details) return ''
@@ -2527,6 +2730,7 @@ export default {
       const font = this.quranFontOptions.find(f => f.value === this.quranFont)
       return font ? font.label : 'Font'
     },
+
     getFontIcon(fontValue) {
       const font = this.quranFontOptions.find(f => f.value === fontValue)
       return font ? font.icon : 'bi-text-paragraph'
@@ -2539,10 +2743,8 @@ export default {
     },
     toggleTajweed() {
       this.tajweedEnabled = !this.tajweedEnabled
-      // Force re-render of verses to apply tajweed colors
-      this.$forceUpdate()
-      // Save to localStorage immediately
       this.persistUiState()
+      this.persistCentralSessionState()
       this.showBanner(
         this.tajweedEnabled ? 'Tajweed colors enabled' : 'Tajweed colors disabled',
         'info',
@@ -2828,29 +3030,21 @@ export default {
       if (!verse || !verse.arabic) return ''
 
       if (!this.isDataReady) {
-        return verse.arabic
+        return this.stripTajweedMarkup(verse.arabic || verse.arabic_tajweed || '')
       }
 
-      // When word highlighting is enabled (with or without Tajweed)
       if (this.showWordByWord && this.wordByWordAudioEnabled) {
-        if (this.tajweedEnabled && verse.arabic_tajweed) {
-          // For Tajweed, we need to preserve Tajweed spans while wrapping words
-          return this.wrapTajweedWithWordHighlighting(verse)
-        } else {
-          // Regular word highlighting without Tajweed
-          return this.splitArabicIntoWords(verse)
-        }
+        return this.splitArabicIntoWords(verse)
       }
 
-      // Tajweed only (no word highlighting)
       if (this.tajweedEnabled) {
         if (verse.arabic_tajweed) {
           return this.normalizeTajweedMarkup(verse.arabic_tajweed)
         }
-        return verse.arabic
+        return this.stripTajweedMarkup(verse.arabic || verse.arabic_tajweed || '')
       }
 
-      return verse.arabic
+      return this.stripTajweedMarkup(verse.arabic || verse.arabic_tajweed || '')
     },
 
     wrapTajweedWithWordHighlighting(verse) {
@@ -3032,6 +3226,17 @@ export default {
       return normalized
     },
 
+    stripTajweedMarkup(text) {
+      if (!text) return ''
+      return String(text)
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/<\s*\/?\s*tajweed[^>]*>/gi, '')
+        .replace(/<[^>]*>/g, '')
+        .replace(/\[(?:[a-z]|\/)[^\]]*\]/gi, '')
+        .trim()
+    },
+
     // Arabic text word splitting and highlighting
     getHighlightedArabic(verse) {
       if (!verse || !verse.arabic) return ''
@@ -3052,12 +3257,14 @@ export default {
         words = tokenizeArabicText(verse.arabic)
       }
 
-      if (!words.length) return verse.arabic
+      if (!words.length) return this.stripTajweedMarkup(verse.arabic || verse.arabic_tajweed || '')
 
       let html = ''
       words.forEach((word, idx) => {
         const escapedWord = escapeHtml(word)
-        html += `<word class="wbw-word" data-word-index="${idx}" data-verse-key="${verse.key}" title="Word ${idx + 1}">${escapedWord}</word> `
+        const isActive = this.currentHighlightedVerseKey === verse.key && this.currentWordIndex === idx
+        const activeClass = isActive ? ' highlighted phrase-highlighted' : ''
+        html += `<word class="wbw-word${activeClass}" data-word-index="${idx}" data-verse-key="${verse.key}" title="Word ${idx + 1}">${escapedWord}</word> `
       })
 
       return html
@@ -3208,48 +3415,9 @@ export default {
     },
 
     updateWordHighlight(verseKey, activeIndex) {
-      if (activeIndex === -1) return
-
-      this.$nextTick(() => {
-        const verseCard = document.querySelector(`.verse-card[data-verse-key="${verseKey}"]`)
-        if (!verseCard) return
-
-        const wordsWrap = verseCard.querySelector('.verse-words')
-
-        // Find all word elements (both regular and Tajweed-wrapped)
-        const allWordElements = verseCard.querySelectorAll('.verse-arabic .wbw-word, .verse-arabic word[data-word-index]')
-
-        allWordElements.forEach(word => {
-          const wordIndex = parseInt(word.getAttribute('data-word-index'))
-          if (wordIndex === activeIndex) {
-            word.classList.add('highlighted')
-            word.classList.add('phrase-highlighted')
-
-            // Auto-scroll for better visibility
-            if (this.wordByWordAudioEnabled && wordsWrap) {
-              const rect = word.getBoundingClientRect()
-              const parentRect = wordsWrap.getBoundingClientRect()
-              const isOutOfView = rect.right > parentRect.right || rect.left < parentRect.left
-
-              if (isOutOfView) {
-                word.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
-              }
-            }
-          } else {
-            word.classList.remove('highlighted')
-            word.classList.remove('phrase-highlighted')
-          }
-        })
-
-        // Also update phrase words if they exist
-        const phraseWords = verseCard.querySelectorAll('.verse-words .word-item')
-        phraseWords.forEach((word, idx) => {
-          word.classList.toggle('highlighted', idx === activeIndex)
-          word.classList.toggle('phrase-highlighted', idx === activeIndex)
-        })
-
-        this.currentPhraseIndex = activeIndex
-      })
+      this.currentHighlightedVerseKey = verseKey || null
+      this.currentWordIndex = Number.isFinite(Number(activeIndex)) ? Number(activeIndex) : -1
+      this.currentPhraseIndex = this.currentWordIndex
     },
 
     syncWordHighlightFromAudio(verse = this.activeVerseRef) {
@@ -3259,11 +3427,7 @@ export default {
       const active = this.wordHighlightTimestamps.find(item => currentTime >= item.start && currentTime <= item.end)
       const activeIndex = active ? active.index : -1
 
-      // Only update if the index actually changed
-      if (this.currentWordIndex !== activeIndex) {
-        this.currentWordIndex = activeIndex
-        this.updateWordHighlight(verse.key, activeIndex)
-      }
+      this.updateWordHighlight(verse.key, activeIndex)
     },
 
     restoreWordScroll(verseKey) {
@@ -3288,34 +3452,7 @@ export default {
     },
 
     updateWordHighlightInDOM(verseKey, activeWordIndex) {
-      if (activeWordIndex === -1) return
-
-      this.$nextTick(() => {
-        // Find the verse card
-        const verseCard = document.querySelector(`.verse-card[data-verse-key="${verseKey}"]`)
-        if (!verseCard) return
-
-        // Remove highlight from all words in this verse
-        const allWords = verseCard.querySelectorAll(`.verse-arabic word[data-verse="${verseKey}"]`)
-        allWords.forEach(word => {
-          word.classList.remove('highlighted')
-        })
-
-        // Add highlight to the active word
-        const activeWord = verseCard.querySelector(`.verse-arabic word[data-verse="${verseKey}"][data-word-index="${activeWordIndex}"]`)
-        if (activeWord) {
-          activeWord.classList.add('highlighted')
-
-          // Scroll into view if needed
-          if (this.wordByWordAudioEnabled && this.isPlaying) {
-            activeWord.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center',
-              inline: 'center'
-            })
-          }
-        }
-      })
+      this.updateWordHighlight(verseKey, activeWordIndex)
     },
 
     stopWordHighlighting() {
@@ -3327,11 +3464,6 @@ export default {
       this.currentPhraseIndex = -1
       this.currentHighlightedVerseKey = null
       this.wordHighlightTimestamps = []
-
-      document.querySelectorAll('.verse-arabic word.highlighted, .verse-arabic .wbw-word.highlighted, .verse-arabic .wbw-word.phrase-highlighted, .verse-words .word-item.phrase-highlighted').forEach(word => {
-        word.classList.remove('highlighted')
-        word.classList.remove('phrase-highlighted')
-      })
     },
 
     // Audio methods
@@ -3349,6 +3481,8 @@ export default {
       this.audioTimeUpdate = () => {
         this.currentTime = this.audioElement.currentTime
         this.duration = this.audioElement.duration
+        this.centralSession.audio.currentTime = Number(this.currentTime || 0)
+        this.centralSession.audio.speed = Number(this.speed || 1)
         if (this.showWordByWord && this.wordByWordAudioEnabled) {
           const verse = this.activeVerseRef
           if (verse && verse.key) {
@@ -3420,6 +3554,7 @@ export default {
     async playVerse(verse, options = {}) {
       if (this.playRequestLocked && !options.force) return
       this.playRequestLocked = true
+
       if (!verse) {
         console.error('No verse provided')
         this.playRequestLocked = false
@@ -3435,7 +3570,7 @@ export default {
       const audioUrl = this.normalizeAudioUrl(verse.audio)
       const currentSrc = this.audioElement?.currentSrc ? this.normalizeAudioUrl(this.audioElement.currentSrc) : ''
 
-      // Only toggle if both the verse key and actual audio source already match.
+      // Toggle if same verse is playing
       if (!options.force && this.activeKey === verse.key && currentSrc && currentSrc === audioUrl) {
         this.togglePlay()
         this.playRequestLocked = false
@@ -3445,7 +3580,11 @@ export default {
       // Stop current playback and highlighting
       this.stopWordHighlighting()
       if (this.audioElement) {
-        try { this.audioElement.pause() } catch (e) { }
+        try {
+          this.audioElement.pause()
+        } catch (e) {
+          console.warn('Error pausing audio:', e)
+        }
       }
 
       this.setActiveVerse(verse.key, { scroll: false })
@@ -3465,7 +3604,9 @@ export default {
       this.playerVisible = true
 
       return new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error('Timeout')), 10000)
+        const timeout = setTimeout(() => {
+          reject(new Error('Audio load timeout'))
+        }, 10000)
 
         const canPlayHandler = async () => {
           clearTimeout(timeout)
@@ -3478,7 +3619,6 @@ export default {
             this.addActivityEvent({ ts: Date.now(), type: 'play', verseKey: verse.key })
             this.recomputeAnalytics()
 
-            // Start word highlighting AFTER audio starts playing
             if (this.showWordByWord && this.wordByWordAudioEnabled) {
               this.startWordHighlighting(verse)
             }
@@ -3512,12 +3652,20 @@ export default {
 
     togglePlay() {
       if (!this.audioElement?.src) return
+
       if (this.audioElement.paused) {
-        this.audioElement.play().then(() => {
-          this.isPlaying = true
-          const verse = this.activeVerseRef
-          if (verse && this.showWordByWord && this.wordByWordAudioEnabled) this.startWordHighlighting(verse)
-        }).catch(() => { })
+        this.audioElement.play()
+          .then(() => {
+            this.isPlaying = true
+            const verse = this.activeVerseRef
+            if (verse && this.showWordByWord && this.wordByWordAudioEnabled) {
+              this.startWordHighlighting(verse)
+            }
+          })
+          .catch(err => {
+            console.error('Failed to play:', err)
+            this.showBanner('Playback failed', 'error', 2000)
+          })
       } else {
         this.audioElement.pause()
         this.isPlaying = false
@@ -3531,28 +3679,36 @@ export default {
     next() {
       if (this.advanceLocked) return
       this.advanceLocked = true
+
       if (this.canNext) {
         this.sessionCompleted = false
         this.queueIndex++
         moveMutqinSession(this.mutqinState, this.queueIndex + 1)
+        this.centralSession.chaining.index = this.queueIndex
+        this.persistCentralSessionState()
         this.recomputeAnalytics()
+
         const entry = this.queue[this.queueIndex]
         const verseKey = entry?.verse?.key || entry?.key
+
         if (verseKey) {
           this.setActiveVerse(verseKey)
           this.$nextTick(() => this.$forceUpdate())
         }
+
         const v = this.queue[this.queueIndex]
         if (v) {
           const verse = v.verse || v
-          this.playVerse(verse, { force: true }).finally(() => {
-            this.advanceLocked = false
-          })
+          this.playVerse(verse, { force: true })
+            .finally(() => {
+              this.advanceLocked = false
+            })
         } else {
           this.advanceLocked = false
         }
         return
       }
+
       this.advanceLocked = false
       this.handleSessionComplete()
     },
@@ -3560,23 +3716,30 @@ export default {
     prev() {
       if (!this.canPrev) return
       if (this.advanceLocked) return
+
       this.advanceLocked = true
       this.sessionCompleted = false
       this.queueIndex--
       moveMutqinSession(this.mutqinState, this.queueIndex + 1)
+      this.centralSession.chaining.index = this.queueIndex
+      this.persistCentralSessionState()
       this.recomputeAnalytics()
+
       const entry = this.queue[this.queueIndex]
       const verseKey = entry?.verse?.key || entry?.key
+
       if (verseKey) {
         this.setActiveVerse(verseKey, { scroll: false })
         this.$nextTick(() => this.$forceUpdate())
       }
+
       const v = this.queue[this.queueIndex]
       if (v) {
         const verse = v.verse || v
-        this.playVerse(verse, { force: true }).finally(() => {
-          this.advanceLocked = false
-        })
+        this.playVerse(verse, { force: true })
+          .finally(() => {
+            this.advanceLocked = false
+          })
       } else {
         this.advanceLocked = false
       }
@@ -3758,62 +3921,80 @@ export default {
       const q = []
       const safePreviousQueueIndex = Math.max(0, Number(config.queueIndex || 0))
 
+      // Get chaining settings from component state
       const repetitions = Math.max(1, Math.min(5, Number(this.chainingRepetitions || 1)))
-      const pushQueueEntry = entry => {
+      const chainingEnabled = this.chainingEnabled
+      const chainingMethod = this.chainingMethod
+
+      console.log('[buildQueue] Settings:', {
+        chainingEnabled,
+        chainingMethod,
+        repetitions,
+        versesCount: verses.length,
+        mode
+      })
+
+      const pushQueueEntry = (entry) => {
         for (let repeatIndex = 1; repeatIndex <= repetitions; repeatIndex++) {
           q.push({
             ...entry,
             repeatCount: repeatIndex,
-            totalRepeats: repetitions
+            totalRepeats: repetitions,
+            phase: entry.phase,
+            chainKey: entry.chainKey,
+            sequencePosition: entry.sequencePosition,
+            sequenceTotal: entry.sequenceTotal
           })
         }
       }
 
-      if (!this.chainingEnabled) {
+      if (!chainingEnabled) {
+        // Simple sequential order without chaining
         verses.forEach(verse => {
           pushQueueEntry({
             verse,
-            phase: 'Memorise'
+            phase: 'Memorise',
+            chainKey: null,
+            sequencePosition: 1,
+            sequenceTotal: 1
           })
         })
-      } else if (this.chainingMethod === 'cumulative') {
-        verses.forEach((_, endIndex) => {
+      } else if (chainingMethod === 'cumulative') {
+        // Cumulative method: 1, then 1-2, then 1-2-3, etc.
+        for (let endIndex = 0; endIndex < verses.length; endIndex++) {
           const chain = verses.slice(0, endIndex + 1)
-          chain.forEach((verse, chainIndex) => {
+          for (let chainIndex = 0; chainIndex < chain.length; chainIndex++) {
             pushQueueEntry({
-              verse,
+              verse: chain[chainIndex],
               phase: 'Cumulative',
               chainKey: `cumulative:${endIndex + 1}`,
               sequencePosition: chainIndex + 1,
               sequenceTotal: chain.length
             })
-          })
-        })
+          }
+        }
       } else {
-        verses.forEach((verse, index) => {
-          pushQueueEntry({
-            verse,
-            phase: 'Memorise'
-          })
-          if (index > 0) {
-            pushQueueEntry({
-              verse: verses[index - 1],
-              phase: 'Linking',
-              chainKey: `link:${verses[index - 1].key}:${verse.key}`,
-              sequencePosition: 1,
-              sequenceTotal: 2
-            })
+        // Linking method: split each ayah into compact recitation segments.
+        for (let index = 0; index < verses.length; index++) {
+          const verse = verses[index]
+          const segments = this.createAyahSegments(verse)
+
+          segments.forEach(segment => {
             pushQueueEntry({
               verse,
+              segment,
               phase: 'Linking',
-              chainKey: `link:${verses[index - 1].key}:${verse.key}`,
-              sequencePosition: 2,
-              sequenceTotal: 2
+              chainKey: `linking:${verse.key}`,
+              sequencePosition: segment.index + 1,
+              sequenceTotal: segments.length
             })
-          }
-        })
+          })
+        }
       }
 
+      console.log(`[buildQueue] Built ${q.length} queue entries`)
+
+      // Restore previous position if possible
       let previousQueueIndex = Math.min(safePreviousQueueIndex, Math.max(q.length - 1, 0))
       if (previousEntryKey) {
         const exactIndex = q.findIndex(item =>
@@ -3823,19 +4004,20 @@ export default {
           Number(item.sequencePosition || 1) === Number(previousEntry?.sequencePosition || 1) &&
           Number(item.repeatCount || 1) === Number(previousEntry?.repeatCount || 1)
         )
-        if (exactIndex >= 0) previousQueueIndex = exactIndex
-        else {
+        if (exactIndex >= 0) {
+          previousQueueIndex = exactIndex
+        } else {
           const firstIndex = q.findIndex(item => (item?.verse?.key || item?.key) === previousEntryKey)
           if (firstIndex >= 0) previousQueueIndex = firstIndex
         }
       }
 
+      // Update queue in appropriate store
       if (mode === this.currentMode) {
         this.queue = q
         this.queueIndex = previousQueueIndex
       }
 
-      // Save to current mode
       if (mode === 'beginner') {
         this.beginner.queue = q
         this.beginner.queueIndex = previousQueueIndex
@@ -3847,6 +4029,26 @@ export default {
       this.syncActiveVerseState(mode, previousActiveKey)
     },
 
+    createAyahSegments(verse) {
+      const words = verse?.words?.length
+        ? verse.words.map(word => String(word?.ar || '').trim()).filter(Boolean)
+        : tokenizeArabicText(verse?.arabic || '')
+      if (!words.length) return [{ index: 0, text: verse?.arabic || '', startWord: 0, endWord: 0 }]
+
+      const segmentSize = Math.max(2, Math.ceil(words.length / 4))
+      const segments = []
+      for (let start = 0; start < words.length; start += segmentSize) {
+        const slice = words.slice(start, start + segmentSize)
+        segments.push({
+          index: segments.length,
+          text: slice.join(' '),
+          startWord: start,
+          endWord: start + slice.length - 1
+        })
+      }
+      return segments
+    },
+
     estimateQueueDuration(queue) {
       const avgVerseDuration = 45
       return Math.ceil(queue.length * avgVerseDuration / 60)
@@ -3856,13 +4058,22 @@ export default {
       this.buildQueue(mode)
     },
 
+    persistModeState(mode) {
+      const source = mode === 'beginner' ? this.beginner : this.advanced
+      try {
+        localStorage.setItem(MODE_STORAGE_KEYS[mode], JSON.stringify(this.cloneModeState(source)))
+      } catch (e) {
+        console.error(`Failed to persist ${mode} mode state:`, e)
+      }
+    },
+
     async startSession() {
       const config = this.sessionConfig
       const mode = config.mode || this.currentMode
 
       if (!config.chapterId || config.chapterId === 0) {
         this.showTools = true
-        this.showBanner('Please select a surah first', 'info', 3600, { key: 'open-setup', label: 'Open setup' })
+        this.showBanner('Please select a surah first', 'info', 3600)
         return
       }
 
@@ -3873,6 +4084,7 @@ export default {
       this.applySessionConfig(config)
       this.persistModeState(mode)
       this.persistUiState()
+
       this.sessionCompleted = false
       this.sessionStartedAt = Date.now()
       this.sessionErrorCount = 0
@@ -3894,12 +4106,17 @@ export default {
         return
       }
 
-      // Initialize audio
       if (!this.audioElement) {
         this.initAudio()
       }
 
-      // Build queue with current settings
+      // Rebuild queue with current chaining settings
+      console.log('[startSession] Building queue with settings:', {
+        enabled: this.chainingEnabled,
+        method: this.chainingMethod,
+        repetitions: this.chainingRepetitions
+      })
+
       this.buildQueue(mode)
 
       const builtQueue = mode === 'beginner'
@@ -3910,30 +4127,26 @@ export default {
         this.showBanner('Nothing to play. Check the selected range.', 'error')
         return
       }
+
       this.syncMutqinAyahs(updatedVerses)
       const sessionState = this.syncMutqinSession(builtQueue, mode)
       const canonicalIndex = Math.max(0, Number(sessionState?.current_index || 0))
-      const canonicalItem = sessionState?.queue?.[canonicalIndex]
       let playbackIndex = canonicalIndex > 0
         ? Math.min(canonicalIndex - 1, builtQueue.length - 1)
         : 0
-      const canonicalKey = canonicalItem?.ayahId || canonicalItem?.verse?.key
-      if (canonicalKey && (builtQueue[playbackIndex]?.verse?.key || builtQueue[playbackIndex]?.key) !== canonicalKey) {
-        const exactIndex = builtQueue.findIndex(entry => (entry?.verse?.key || entry?.key) === canonicalKey)
-        if (exactIndex >= 0) playbackIndex = exactIndex
-      }
 
       this.queueIndex = playbackIndex
       this.getModeStore(mode).queueIndex = playbackIndex
+
       const nextCanonicalIndex = canonicalIndex > 0 ? canonicalIndex : 1
       moveMutqinSession(this.mutqinState, nextCanonicalIndex)
+
       const first = builtQueue[playbackIndex]
 
       if (first && first.verse) {
         this.syncActiveVerseState(mode, first.verse.key)
         await this.$nextTick()
 
-        // Apply speed before playing
         if (this.audioElement) {
           this.audioElement.playbackRate = this.speed
         }
@@ -3941,12 +4154,18 @@ export default {
         await this.playVerse(first.verse, { force: true })
       }
 
-      // Close the offcanvas panel
       this.showTools = false
-
-      // Show confirmation banner
       this.flowStep = 'learn'
-      this.showBanner(`Session started with ${builtQueue.length} guided repetitions`, 'success', 2000)
+
+      const chainingStatus = this.chainingEnabled
+        ? `${this.chainingMethod} chaining (${this.chainingRepetitions}x)`
+        : 'no chaining'
+
+      this.showBanner(
+        `Session started with ${builtQueue.length} guided repetitions using ${chainingStatus}`,
+        'success',
+        3000
+      )
     },
 
     // Utility methods
@@ -3967,18 +4186,29 @@ export default {
     getQueueItemAudioSeconds(item = {}, allowCurrentProgress = false) {
       const verse = item.verse || item
       const speedFactor = Math.max(0.25, Number(this.speed || 1))
+
       if (allowCurrentProgress && this.duration > 0) {
         return Math.max(0, Number(this.duration || 0) - Number(this.currentTime || 0)) / speedFactor
       }
+
       const explicitDuration = Number(verse.duration || verse.audioDuration || 0)
-      if (Number.isFinite(explicitDuration) && explicitDuration > 0) return explicitDuration / speedFactor
+      if (Number.isFinite(explicitDuration) && explicitDuration > 0) {
+        return explicitDuration / speedFactor
+      }
+
       const arabicLength = String(verse.arabic || verse.text || '').replace(/[^ء-ي]/g, '').length || 80
       return Math.max(5, Math.min(45, arabicLength * 0.12)) / speedFactor
     },
 
     showBanner(message, kind = 'info', ttlMs = 3500, action = null) {
       if (this.bannerTimer) clearTimeout(this.bannerTimer)
-      this.banner = { message, kind, at: Date.now(), actionKey: action?.key || '', actionLabel: action?.label || '' }
+      this.banner = {
+        message,
+        kind,
+        at: Date.now(),
+        actionKey: action?.key || '',
+        actionLabel: action?.label || ''
+      }
       this.bannerTimer = setTimeout(() => {
         if (this.banner && Date.now() - this.banner.at >= ttlMs) this.banner = null
       }, ttlMs + 50)
@@ -4008,6 +4238,10 @@ export default {
           phase: item?.phase || 'Takrar',
           ayahId: verse?.key || item?.ayahId || null,
           verse,
+          segment: item?.segment || null,
+          chainKey: item?.chainKey || null,
+          sequencePosition: item?.sequencePosition || 1,
+          sequenceTotal: item?.sequenceTotal || 1,
           repeatCount: item?.repeatCount || 1,
           totalRepeats: item?.totalRepeats || 1
         }
@@ -4119,8 +4353,86 @@ export default {
       if (score === 'Forgot') this.sessionErrorCount += 1
       const previous = this.queue?.[Math.max(0, this.queueIndex - 1)]
       const fromId = previous?.verse?.key || previous?.key
+      this.applyChainingResult(verse, score)
       this.recomputeAnalytics()
       this.showBanner(score === 'Forgot' ? 'Marked for review' : 'Progress saved', score === 'Forgot' ? 'info' : 'success', 1400)
+    },
+
+    applyChainingResult(verse, score) {
+      if (!this.chainingEnabled || !verse?.key) {
+        this.persistCentralSessionState()
+        return
+      }
+
+      const isFailure = score === 'Forgot' || score === false
+      if (this.chainingMethod === 'cumulative') {
+        this.applyCumulativeResult(verse, isFailure)
+      } else {
+        this.applyLinkingResult(verse, isFailure)
+      }
+      this.persistCentralSessionState()
+    },
+
+    applyLinkingResult(verse, isFailure) {
+      const chaining = this.centralSession.chaining
+      const currentEntry = this.queue?.[Math.max(0, Number(this.queueIndex || 0))]
+      const segmentIndex = Math.max(0, Number(currentEntry?.segment?.index || currentEntry?.sequencePosition - 1 || 0))
+
+      if (!isFailure) {
+        chaining.consecutiveFailures = 0
+        chaining.segmentIndex = segmentIndex + 1
+        chaining.index = Math.max(0, Number(this.queueIndex || 0) + 1)
+        return
+      }
+
+      chaining.consecutiveFailures = Number(chaining.consecutiveFailures || 0) + 1
+      if (chaining.consecutiveFailures >= 3) {
+        const firstAyahSegment = this.queue.findIndex(item => (item?.verse?.key || item?.key) === verse.key)
+        this.queueIndex = Math.max(0, firstAyahSegment)
+        this.getModeStore(this.currentMode).queueIndex = this.queueIndex
+        moveMutqinSession(this.mutqinState, this.queueIndex + 1)
+        chaining.segmentIndex = 0
+        chaining.index = this.queueIndex
+        chaining.consecutiveFailures = 0
+        return
+      }
+
+      const rollbackIndex = Math.max(0, Number(this.queueIndex || 0) - 1)
+      this.queueIndex = rollbackIndex
+      this.getModeStore(this.currentMode).queueIndex = this.queueIndex
+      moveMutqinSession(this.mutqinState, this.queueIndex + 1)
+      chaining.segmentIndex = Math.max(0, segmentIndex - 1)
+      chaining.index = rollbackIndex
+    },
+
+    applyCumulativeResult(verse, isFailure) {
+      const chaining = this.centralSession.chaining
+      const currentIndex = Math.max(0, Number(this.queueIndex || 0))
+
+      if (!Array.isArray(chaining.chain)) chaining.chain = []
+
+      if (isFailure) {
+        const lastSuccessfulKey = chaining.lastSuccessfulAyahKey
+        if (lastSuccessfulKey) {
+          const rollbackIndex = chaining.chain.findIndex(item => item.key === lastSuccessfulKey)
+          chaining.chain = rollbackIndex >= 0 ? chaining.chain.slice(0, rollbackIndex + 1) : []
+          const targetQueueIndex = this.queue.findIndex(item => (item?.verse?.key || item?.key) === lastSuccessfulKey)
+          if (targetQueueIndex >= 0) this.queueIndex = targetQueueIndex
+        } else {
+          chaining.chain = []
+          this.queueIndex = 0
+        }
+        this.getModeStore(this.currentMode).queueIndex = this.queueIndex
+        moveMutqinSession(this.mutqinState, this.queueIndex + 1)
+        chaining.index = Math.max(0, Number(this.queueIndex || 0))
+        return
+      }
+
+      if (!chaining.chain.some(item => item.key === verse.key)) {
+        chaining.chain.push({ key: verse.key, number: verse.number, masteredAt: Date.now() })
+      }
+      chaining.lastSuccessfulAyahKey = verse.key
+      chaining.index = currentIndex + 1
     },
 
     handleOnline() {
@@ -4147,13 +4459,56 @@ export default {
       }
     },
 
+    getChainingDescription() {
+      if (!this.chainingEnabled) {
+        return 'Play ayahs in order without special chaining patterns.'
+      }
+
+      if (this.chainingMethod === 'cumulative') {
+        return `Cumulative method: Start with first ayah, then add one more each time. Each ayah is repeated ${this.chainingRepetitions} time(s) per cycle.`
+      }
+
+      return `Linking method: Practice ayahs individually, then in pairs. Each ayah is repeated ${this.chainingRepetitions} time(s) per cycle.`
+    },
+
+    getQueuePreview() {
+      if (!this.queue || this.queue.length === 0) return 'No queue built yet'
+
+      const preview = this.queue.slice(0, 10).map(item => {
+        const verseNum = item.verse?.number || '?'
+        const phase = item.phase === 'Cumulative' ? `C[${item.sequencePosition}/${item.sequenceTotal}]` :
+          item.phase === 'Linking' ? `L[${item.sequencePosition}/${item.sequenceTotal}]` :
+            'S'
+        const repeat = item.repeatCount > 1 ? `✕${item.repeatCount}` : ''
+        return `${verseNum}${phase}${repeat}`
+      }).join(' → ')
+
+      if (this.queue.length > 10) {
+        return preview + ` … +${this.queue.length - 10} more`
+      }
+      return preview
+    },
+
     handleSessionComplete() {
       if (!this.verses.length) return
+
       this.sessionCompleted = true
+      this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
       completeMutqinSession(this.mutqinState)
       this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
       this.recomputeAnalytics()
-      this.showBanner('Session complete', 'success', 6500, { key: 'restart-session', label: 'Review again' })
+      this.persistCentralSessionState()
+
+      const chainingStatus = this.chainingEnabled
+        ? `${this.chainingMethod} chaining completed`
+        : 'session completed'
+
+      this.showBanner(
+        `${chainingStatus}! Great work! 🎉`,
+        'success',
+        6500,
+        { key: 'restart-session', label: 'Start new session' }
+      )
     },
 
     handlePrimaryAction() {
@@ -4239,8 +4594,10 @@ export default {
       this.sectionOpen[key] = nextValue
     },
 
-    applySettingsChanges() {
+    applySettingsChanges(options = {}) {
+      const { silent = false } = options
       const next = this.settingsDraft || {}
+      this.tajweedEnabled = !!next.tajweedEnabled
       this.showTranslation = !!next.showTranslation
       this.showTransliteration = !!next.showTransliteration
       this.showWordByWord = !!next.showWordByWord
@@ -4248,8 +4605,9 @@ export default {
       this.defaultFontSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, Number(next.defaultFontSize || 100)))
       try { localStorage.setItem('telawa.defaultFontSize', JSON.stringify(this.defaultFontSize)) } catch { }
       this.persistUiState()
-      this.scheduleLoadVerses(this.currentMode)
-      this.showBanner('Settings saved', 'success', 1400)
+      this.persistCentralSessionState()
+      this.syncSettingsDraft()
+      if (!silent) this.showBanner('Settings saved', 'success', 1400)
     },
 
     // Persistence methods
@@ -4259,7 +4617,7 @@ export default {
         if (raw) {
           const state = JSON.parse(raw)
           this.theme = state.theme || this.theme
-          this.tab = ['beginner', 'advanced'].includes(state.tab) ? 'tools' : (state.tab || this.tab)
+          this.tab = ['tools', 'settings'].includes(state.tab) ? state.tab : 'tools'
           this.currentMode = state.currentMode || 'beginner'
           this.flowStep = ['learn', 'practice', 'recall'].includes(state.flowStep)
             ? state.flowStep
@@ -4276,6 +4634,7 @@ export default {
           this.chainingRepetitions = Math.max(1, Math.min(5, Number(state.chainingRepetitions || this.chainingRepetitions || 1)))
           this.defaultFontSize = Number(state.defaultFontSize ?? this.defaultFontSize ?? 100)
           this.settingsDraft = {
+            tajweedEnabled: state.tajweedEnabled ?? this.tajweedEnabled ?? false,
             showTranslation: state.showTranslation ?? this.showTranslation,
             showTransliteration: state.showTransliteration ?? this.showTransliteration,
             showWordByWord: state.showWordByWord ?? this.showWordByWord,
@@ -4323,7 +4682,10 @@ export default {
           sectionOpen: this.sectionOpen,
           tajweedEnabled: this.tajweedEnabled
         }))
-      } catch (e) { console.error(e) }
+      } catch (e) {
+        console.error('Failed to persist UI state:', e)
+      }
+      this.persistCentralSessionState()
       this.persistModeState('beginner')
       this.persistModeState('advanced')
     },
@@ -4374,13 +4736,16 @@ export default {
           speed: this.speed,
           isPlaying: this.isPlaying
         }))
-      } catch (e) { console.error(e) }
+      } catch (e) {
+        console.error('Failed to persist audio state:', e)
+      }
       this.persistContinueSession()
     },
 
     persistAllState() {
       this.persistUiState()
       this.persistSessionState()
+      this.persistCentralSessionState()
       this.persistAudioState()
       this.persistContinueSession()
       this.persistPlanner()
@@ -4389,13 +4754,15 @@ export default {
       saveMutqinState(this.mutqinState)
     },
 
-    // Data loading methods
     async loadChapters() {
       try {
         const res = await axios.get('https://api.quran.com/api/v4/chapters', { params: { language: 'en' } })
         this.chapters = res.data?.chapters || []
         if (this.chapterId) await this.loadChapter()
-      } catch (e) { console.error(e) }
+      } catch (e) {
+        console.error('Failed to load chapters:', e)
+        this.showBanner('Failed to load surah list', 'error', 3000)
+      }
     },
 
     async loadChapter(mode = this.currentMode) {
@@ -4803,6 +5170,27 @@ export default {
   box-sizing: border-box;
 }
 
+/* Add to your style section */
+.main.tools-open {
+  overflow: hidden;
+}
+
+.tools {
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+}
+
+.tools.open {
+  transform: translateX(0);
+}
+
+.tools-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 59;
+}
+
 /* Replace the existing blur mode CSS with this */
 .main.blur-mode-active .verse-card.blur-upcoming .verse-arabic,
 .main.blur-mode-active .verse-card.blur-upcoming .verse-aid {
@@ -4822,15 +5210,6 @@ export default {
 .main.blur-mode-active .verse-card.active .verse-aid {
   filter: none;
   opacity: 1;
-}
-
-/* Player Speed Controls */
-.player-speed-controls {
-  display: flex;
-  gap: 4px;
-  background: var(--accent-light);
-  padding: 4px 8px;
-  border-radius: 40px;
 }
 
 /* Word highlighting with Tajweed */
@@ -4913,34 +5292,6 @@ export default {
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*="tajweed-"] {
   color: white !important;
   background: transparent !important;
-}
-
-.speed-btn-mini {
-  padding: 4px 8px;
-  border-radius: 20px;
-  border: none;
-  background: transparent;
-  font-size: 0.7rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--text-muted);
-}
-
-.speed-btn-mini:hover {
-  background: rgba(255, 255, 255, 0.5);
-}
-
-.speed-btn-mini.active {
-  background: var(--accent);
-  color: white;
-}
-
-@media (max-width: 768px) {
-  .player-speed-controls {
-    display: none;
-    /* Hide on mobile, too crowded */
-  }
 }
 
 /* Mode Button Styling */
@@ -7227,105 +7578,180 @@ html {
 .inline-setting-pill {
   display: inline-flex;
   align-items: center;
-  min-height: 38px;
-  padding: 0 12px;
+  justify-content: center;
+  min-height: 30px;
+  min-width: 58px;
+  padding: 0 10px;
   border-radius: 999px;
   background: rgba(154, 103, 56, 0.08);
   border: 1px solid rgba(154, 103, 56, 0.12);
   color: var(--accent-strong);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 600;
 }
 
 .settings-section {
-  padding: 14px;
-  background: var(--surface-strong);
-  box-shadow: var(--shadow-sm);
-}
-
-.settings-heading,
-.settings-row,
-.settings-row-copy {
-  display: flex;
-  align-items: center;
+  padding: 22px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(251, 246, 239, 0.94));
+  box-shadow: 0 22px 48px rgba(63, 39, 18, 0.10);
+  border: 1px solid rgba(154, 103, 56, 0.10);
+  border-radius: 22px;
 }
 
 .settings-heading {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 16px;
+  margin-bottom: 14px;
 }
 
 .settings-heading h3 {
   margin: 0;
-  color: var(--accent);
-  font-size: 0.98rem;
+  color: var(--text);
+  font-size: clamp(0.98rem, 1.1vw, 1.1rem);
+  font-weight: 700;
   line-height: 1.2;
-  white-space: nowrap;
 }
 
 .settings-apply {
   flex: 0 0 auto;
-  min-height: 34px;
-  padding: 7px 12px;
-  border-radius: 11px;
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.settings-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(247, 239, 228, 0.70));
+  border: 1px solid rgba(154, 103, 56, 0.12);
+}
+
+.settings-intro-title {
+  color: var(--accent-strong);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.settings-intro-copy {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  text-align: right;
+}
+
+.settings-panels {
+  display: grid;
+  gap: 14px;
+}
+
+.settings-panel {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(154, 103, 56, 0.10);
+  background: rgba(255, 255, 255, 0.60);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.settings-panel-head {
+  display: grid;
+  gap: 5px;
+}
+
+.settings-panel-head p {
+  margin: 0;
+  color: var(--text-muted);
   font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.settings-panel-kicker {
+  color: var(--accent-strong);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .settings-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  gap: 12px;
 }
 
 .settings-row {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  min-height: 48px;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.52);
+  gap: 16px;
+  min-height: 68px;
+  padding: 16px;
+  border: 1px solid rgba(154, 103, 56, 0.10);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 8px 22px rgba(63, 39, 18, 0.04);
 }
 
 .settings-row-copy {
+  flex: 1 1 auto;
   min-width: 0;
-  gap: 8px;
+  display: grid;
+  gap: 7px;
 }
 
 .settings-row-copy label {
   color: var(--text);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 650;
-  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
 .settings-row-copy small {
   color: var(--text-muted);
-  font-size: 0.68rem;
-  white-space: nowrap;
+  font-size: 0.73rem;
+  line-height: 1.45;
 }
 
 .settings-toggle {
-  flex: 0 0 86px;
-  min-height: 32px;
-  padding: 5px 10px;
-  border-radius: 10px;
+  flex: 0 0 auto;
+  min-width: 102px;
+  min-height: 38px;
+  padding: 6px 14px;
+  border-radius: 12px;
   font-size: 0.72rem;
+  font-weight: 600;
   box-shadow: none;
 }
 
 .settings-row-range {
-  align-items: center;
+  align-items: stretch;
 }
 
-.settings-row-range .settings-row-copy {
-  flex: 0 0 116px;
-  justify-content: space-between;
+.settings-range-wrap {
+  flex: 0 0 min(260px, 42%);
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
 .settings-range {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-width: 0;
   padding: 0;
   box-shadow: none;
@@ -7432,14 +7858,14 @@ html {
   bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100vw - 24px);
-  max-width: 980px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  width: min(calc(100vw - 32px), 960px);
+  max-width: 960px;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(154, 103, 56, 0.12);
   border-radius: 24px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 20px 40px rgba(63, 39, 18, 0.12);
   z-index: 1000;
-  padding: 12px 24px;
+  padding: 12px 20px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -7455,10 +7881,11 @@ html {
 }
 
 .player-main {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(150px, 1.1fr) auto minmax(180px, 1fr) auto auto;
   align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
+  gap: clamp(10px, 1.6vw, 20px);
+  min-width: 0;
 }
 
 .player-info {
@@ -7476,6 +7903,9 @@ html {
 .player-verse {
   font-size: 0.75rem;
   opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .player-eta {
@@ -7516,10 +7946,11 @@ html {
   justify-content: center;
   font-size: 1.2rem;
   transition: all 0.2s ease;
+  flex: 0 0 auto;
 }
 
 .player-btn:hover {
-  background: var(--bg-elevated);
+  background: rgba(154, 103, 56, 0.08);
 }
 
 .player-play {
@@ -7538,11 +7969,10 @@ html {
 }
 
 .player-progress-wrap {
-  flex: 1;
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 220px;
+  min-width: 0;
 }
 
 .player-time {
@@ -8297,6 +8727,7 @@ html {
 [data-theme="dark"] .verse-transliteration,
 [data-theme="dark"] .workspace-fab-copy,
 [data-theme="dark"] .workspace-fab-sub,
+[data-theme="dark"] .settings-intro-copy,
 [data-theme="dark"] .settings-row-copy small,
 [data-theme="dark"] .field-hint {
   color: var(--text-muted);
@@ -8305,6 +8736,8 @@ html {
 [data-theme="dark"] .workspace-fab,
 [data-theme="dark"] .workspace-fab-sub span,
 [data-theme="dark"] .workspace-fab-live-pill,
+[data-theme="dark"] .settings-intro,
+[data-theme="dark"] .settings-panel,
 [data-theme="dark"] .word-item:hover::after,
 [data-theme="dark"] .word-item:focus::after {
   background: var(--surface-strong);
@@ -9248,27 +9681,41 @@ html {
     gap: 8px;
   }
 
+  .settings-intro {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .settings-intro-copy {
+    text-align: left;
+  }
+
+  .settings-panel {
+    padding: 12px;
+  }
+
+  .settings-row {
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+  }
+
   .settings-row-copy {
+    display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
   }
 
   .settings-toggle {
-    flex-basis: 78px;
+    width: 100%;
+    min-width: 0;
     min-height: 40px;
   }
 
-  .settings-row-range {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .settings-row-range .settings-row-copy {
-    flex: initial;
-    flex-direction: row;
-    align-items: center;
+  .settings-range-wrap {
     width: 100%;
+    min-width: 0;
   }
 
   .setup-start-card {
@@ -9320,6 +9767,10 @@ html {
     min-height: 44px;
   }
 
+  .settings-toggle {
+    min-height: 34px;
+  }
+
   .inline-setting-row {
     align-items: stretch;
   }
@@ -9354,9 +9805,9 @@ html {
   }
 
   .player-main {
-    flex-wrap: nowrap;
+    grid-template-columns: minmax(92px, 0.8fr) auto minmax(72px, 1fr) auto;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
   }
 
   .player-info {
@@ -9381,19 +9832,18 @@ html {
   }
 
   .player-controls {
-    flex: 0 0 auto;
     justify-content: center;
-    gap: 8px;
+    gap: 4px;
   }
 
   .player-progress-wrap {
     order: 0;
-    flex: 1 1 auto;
     min-width: 0;
+    gap: 6px;
   }
 
   .player-speed-controls {
-    flex: 0 0 auto;
+    display: none;
   }
 
   .analytics-grid {
@@ -9527,7 +9977,7 @@ html {
   .tools-tabs {
     overflow-x: hidden;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
   }
 
@@ -9579,13 +10029,12 @@ html {
   }
 
   .player-main {
-    gap: 14px;
+    grid-template-columns: minmax(132px, 0.9fr) auto minmax(150px, 1fr) auto auto;
+    gap: 12px;
   }
 
   .player-progress-wrap {
     min-width: 0;
-    width: 100%;
-    order: 4;
   }
 }
 

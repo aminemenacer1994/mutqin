@@ -34,7 +34,10 @@ export function getDueReviews(state, today = localDateKey()) {
   const todayKey = localDateKey(today)
   const seen = new Set()
   return Object.values(state.ayahs || {})
-    .filter(ayah => ayah.next_review && localDateKey(ayah.next_review) <= todayKey)
+    .filter(ayah => {
+      if (['new', 'learning'].includes(ayah.status)) return true
+      return ayah.next_review && localDateKey(ayah.next_review) <= todayKey
+    })
     .filter(ayah => {
       if (seen.has(ayah.id)) return false
       seen.add(ayah.id)

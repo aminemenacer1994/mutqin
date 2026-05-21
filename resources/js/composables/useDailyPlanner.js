@@ -47,8 +47,20 @@ export function createDailyPlan(state, verses = [], options = {}) {
     .slice(0, newLimit)
   const newIds = new Set(newAyahs.map(verse => verse.key))
   const dueReviews = getDueReviews(state).filter(ayah => !newIds.has(ayah.id))
+  const chains = []
+  for (let index = 1; index < newAyahs.length; index += 1) {
+    chains.push({
+      phase: 'Chaining',
+      verse: newAyahs[index],
+      ayahId: newAyahs[index].key,
+      previousVerse: newAyahs[index - 1],
+      fromAyahId: newAyahs[index - 1].key,
+      chainStage: index
+    })
+  }
   const queue = [
     ...newAyahs.map(verse => ({ phase: 'Takrar', verse })),
+    ...chains,
     ...newAyahs.map(verse => ({ phase: 'Recall', verse })),
     ...dueReviews.map(ayah => ({ phase: 'Retention', ayahId: ayah.id }))
   ]
@@ -60,8 +72,13 @@ export function createDailyPlan(state, verses = [], options = {}) {
     const duration = Number(verse.duration || verse.audioDuration || audioDurations[verse.key] || fallbackAudioSeconds)
     return sum + (Number.isFinite(duration) && duration > 0 ? duration : fallbackAudioSeconds) * repeats
   }, 0)
+  const chainSeconds = chains.reduce((sum, item) => {
+    return sum +
+      getAudioSeconds(item.previousVerse || {}, audioDurations, fallbackAudioSeconds) +
+      getAudioSeconds(item, audioDurations, fallbackAudioSeconds)
+  }, 0)
   const dueReviewSeconds = dueReviews.length * reviewSeconds
-  const generatedEtaSeconds = audioSeconds + dueReviewSeconds
+  const generatedEtaSeconds = audioSeconds + chainSeconds + dueReviewSeconds
   const sessionQueue = Array.isArray(state.sessionState?.queue) ? state.sessionState.queue : []
   const activeIndex = Math.max(0, Math.min(Number(state.sessionState?.current_index || 0), Math.max(sessionQueue.length - 1, 0)))
   const activeEtaSeconds = state.sessionState?.active && sessionQueue.length
@@ -72,7 +89,7 @@ export function createDailyPlan(state, verses = [], options = {}) {
   return {
     new: newAyahs,
     new_ayahs: newAyahs,
-    chains: [],
+    chains,
     reviews: dueReviews,
     due_reviews: dueReviews,
     ETA: etaMinutes,
