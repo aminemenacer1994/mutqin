@@ -204,9 +204,13 @@
               @click="tab = 'tools'" title="Session tools">
               <i class="bi bi-sliders"></i> Tools
             </button>
-            <button v-if="isLoggedIn" :class="{ active: tab === 'analytics', 'active-tab': tab === 'analytics' }"
-              @click="tab = 'analytics'" title="Device-local stats">
+            <button :class="{ active: tab === 'stats', 'active-tab': tab === 'stats' }"
+              @click="tab = 'stats'" title="Session stats">
               <i class="bi bi-grid-1x2"></i> Stats
+            </button>
+            <button :class="{ active: tab === 'settings', 'active-tab': tab === 'settings' }"
+              @click="tab = 'settings'" title="Reading and display settings">
+              <i class="bi bi-gear"></i> Settings
             </button>
           </div>
         </div>
@@ -230,7 +234,7 @@
                       <label>Surah</label>
                       <select :value="chapterId" @change="onChapterChange" class="select">
                         <option :value="0">Choose a surah...</option>
-                        <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.id }}. {{ c.name_simple }}</option>
+                        <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.name_simple }}</option>
                       </select>
                       <small class="field-hint">Pick the surah you want to work on.</small>
                     </div>
@@ -242,6 +246,13 @@
                         <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
                       </div>
                       <small class="field-hint">Keep ranges small for focused memorisation.</small>
+                    </div>
+                    <div class="field">
+                      <label>Reciter</label>
+                      <select v-model="reciterId" @change="refreshVerses" class="select">
+                        <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
+                      </select>
+                      <small class="field-hint">Changes the audio voice for the session.</small>
                     </div>
                   </div>
                 </div>
@@ -261,13 +272,6 @@
                 <div class="sheet-content" v-show="sectionOpen.advanced_playback">
                   <div class="field-stack">
                     <div class="field">
-                      <label>Reciter</label>
-                      <select v-model="reciterId" @change="refreshVerses" class="select">
-                        <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
-                      </select>
-                      <small class="field-hint">Changes the audio voice for the session.</small>
-                    </div>
-                    <div class="field">
                       <label>Speed</label>
                       <div class="radio-group radio-group-tight">
                         <label class="radio"><input type="radio" value="0.75" v-model="speed"> 0.75x</label>
@@ -278,11 +282,14 @@
                       <small class="field-hint">Use slower speed for early memorisation.</small>
                     </div>
                     <div class="field">
-                      <label>Repetitions</label>
-                      <select v-model.number="repetitionCount" class="select">
-                        <option v-for="n in repeatOptions" :key="'unified_rep_' + n" :value="n">{{ n }}x</option>
-                      </select>
-                      <small class="field-hint">Applies to the current session queue immediately.</small>
+                      <label>Repeat count</label>
+                      <input type="number" class="input" v-model.number="repeat_count" min="1" step="1">
+                      <small class="field-hint">Repetitions for each ayah before moving on.</small>
+                    </div>
+                    <div class="field">
+                      <label>Repeat delay</label>
+                      <input type="number" class="input" v-model.number="repeat_delay" min="0" step="0.5">
+                      <small class="field-hint">Delay between repeats (seconds).</small>
                     </div>
                     <div class="field">
                       <label>Auto-advance</label>
@@ -292,19 +299,12 @@
                       </div>
                       <small class="field-hint">Auto moves to the next queue item when audio ends.</small>
                     </div>
-                    <div class="field">
-                      <label>Delay between ayahs</label>
-                      <select v-model="delay" class="select">
-                        <option v-for="d in delayOptions" :key="'adv_delay_' + d" :value="d">{{ d }}s</option>
-                      </select>
-                      <small class="field-hint">Adds breathing space between repetitions.</small>
-                    </div>
                   </div>
                 </div>
               </section>
             </div>
 
-            <div v-else-if="tab === 'analytics'" class="sheet">
+            <div v-else-if="tab === 'stats'" class="sheet">
               <div class="sheet-section" style="padding: 20px;">
                 <h3 style="margin-top:0; font-size: 1.1rem; color: var(--accent);">Your Memorisation Stats</h3>
                 <p class="analytics-help">These are device-local summaries. They do not change your memorisation flow.</p>
@@ -324,18 +324,6 @@
                     <div class="mini-trend" v-html="renderMiniTrend(analytics.weeklyMinutes)"></div>
                   </div>
                   <div class="stat-card">
-                    <i class="bi bi-fire"></i>
-                    <div class="stat-value">{{ analytics.currentStreak }}</div>
-                    <div class="stat-label">Day Streak</div>
-                    <div class="stat-help">Days with at least one session.</div>
-                  </div>
-                  <div class="stat-card">
-                    <i class="bi bi-check-circle"></i>
-                    <div class="stat-value">{{ analytics.versesMastered }}</div>
-                    <div class="stat-label">Mastered</div>
-                    <div class="stat-help">Verses marked consistent over time.</div>
-                  </div>
-                  <div class="stat-card">
                     <i class="bi bi-repeat"></i>
                     <div class="stat-value">{{ analytics.totalRepetitions }}</div>
                     <div class="stat-label">Repetitions</div>
@@ -346,6 +334,60 @@
                     <div class="stat-value">{{ analytics.sessionsCompleted }}</div>
                     <div class="stat-label">Sessions</div>
                     <div class="stat-help">How many sessions you finished.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div v-else-if="tab === 'settings'" class="sheet">
+              <div class="sheet-section" style="padding: 20px;">
+                <h3 style="margin-top:0; font-size: 1.1rem; color: var(--accent);">Reading & Display</h3>
+                <p class="analytics-help">Adjust what you see while studying. Click Apply to save and keep these settings.</p>
+
+                <div class="field-stack">
+                  <div class="field">
+                    <label>Translation</label>
+                    <button class="toggle-chip" :class="{ active: settingsDraft.showTranslation }" @click="settingsDraft.showTranslation = !settingsDraft.showTranslation">
+                      {{ settingsDraft.showTranslation ? 'Enabled' : 'Disabled' }}
+                    </button>
+                    <small class="field-hint">Show or hide the English translation.</small>
+                  </div>
+
+                  <div class="field">
+                    <label>Transliteration</label>
+                    <button class="toggle-chip" :class="{ active: settingsDraft.showTransliteration }" @click="settingsDraft.showTransliteration = !settingsDraft.showTransliteration">
+                      {{ settingsDraft.showTransliteration ? 'Enabled' : 'Disabled' }}
+                    </button>
+                    <small class="field-hint">Show or hide transliteration.</small>
+                  </div>
+
+                  <div class="field">
+                    <label>Word for word</label>
+                    <button class="toggle-chip" :class="{ active: settingsDraft.showWordByWord }" @click="settingsDraft.showWordByWord = !settingsDraft.showWordByWord">
+                      {{ settingsDraft.showWordByWord ? 'Enabled' : 'Disabled' }}
+                    </button>
+                    <small class="field-hint">Show word chips and enable word-level syncing.</small>
+                  </div>
+
+                  <div class="field">
+                    <label>Word audio highlighting</label>
+                    <button class="toggle-chip" :class="{ active: settingsDraft.wordByWordAudioEnabled }" @click="settingsDraft.wordByWordAudioEnabled = !settingsDraft.wordByWordAudioEnabled">
+                      {{ settingsDraft.wordByWordAudioEnabled ? 'Enabled' : 'Disabled' }}
+                    </button>
+                    <small class="field-hint">Highlight words in sync with audio playback.</small>
+                  </div>
+
+                  <div class="field">
+                    <label>Font size</label>
+                    <input type="range" min="80" max="140" step="5" v-model.number="settingsDraft.defaultFontSize" class="input">
+                    <small class="field-hint">Adjust Arabic text size for comfort.</small>
+                  </div>
+
+                  <div class="field">
+                    <button class="tools-btn tools-btn-primary w-100" @click="applySettingsChanges">
+                      <i class="bi bi-check2-circle"></i><span>Apply changes</span>
+                    </button>
+                    <small class="field-hint">Saved settings persist after refresh.</small>
                   </div>
                 </div>
               </div>
@@ -393,7 +435,7 @@
             <label><i class="bi bi-book"></i> Target Surah</label>
             <select v-model="plannerConfig.surahId" class="planner-select" @change="updatePlannerSurah">
               <option v-for="ch in chapters" :key="ch.id" :value="ch.id">
-                {{ ch.id }}. {{ ch.name_simple }} ({{ ch.verses_count }} verses)
+                {{ ch.name_simple }} ({{ ch.verses_count }} verses)
               </option>
             </select>
             <small class="field-hint">Choose the surah you want to memorize</small>
@@ -505,6 +547,7 @@
           <button class="btn-icon" @click="showResumeModal = false"><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="modal-body">
+          <p class="confirm-copy resume-copy">Pick up gently from where you paused. Everything is ready for a calm restart.</p>
           <p class="confirm-copy">{{ continueSessionMeta }}</p>
           <div class="resume-grid">
             <div class="pill">
@@ -717,6 +760,11 @@ export default {
       wordTimestampsMap: new Map(),
       wordHighlightHandler: null,
       currentVerseWords: [],
+      wordHighlightFrame: null,
+      currentPhraseIndex: -1,
+      statsTick: Date.now(),
+      sessionStartedAt: 0,
+      sessionErrorCount: 0,
 
       // UI State
       currentMode: 'beginner',
@@ -799,6 +847,17 @@ export default {
       delay: 1,
       repeats: 1,
       order: 'seq',
+      repeatCountEnabled: true,
+      repeatDelayEnabled: true,
+      repeat_count: 3,
+      repeat_delay: 1,
+      settingsDraft: {
+        showTranslation: true,
+        showTransliteration: false,
+        showWordByWord: false,
+        wordByWordAudioEnabled: true,
+        defaultFontSize: 100
+      },
 
       // Quiz state
       quizActive: false,
@@ -879,6 +938,9 @@ export default {
         advanced_playback: true,
         advanced_practice: false,
         advanced_saved: false,
+        repeat_settings: true,
+        session_tools: false,
+        live_stats: false,
         analytics_overview: true,
         analytics_planner: true,
         analytics_weak: false
@@ -912,14 +974,35 @@ export default {
   computed: {
     repetitionCount: {
       get() {
-        return this.currentMode === 'beginner'
-          ? Number(this.beginnerRepeats || 1)
-          : Number(this.advancedRepeats || 1)
+        return Math.max(1, Number(this.repeat_count || 1))
       },
       set(val) {
         const next = Math.max(1, Number(val || 1))
+        this.repeat_count = next
         if (this.currentMode === 'beginner') this.beginnerRepeats = next
         else this.advancedRepeats = next
+      }
+    },
+    liveSessionStats() {
+      const currentIndex = Math.max(0, Number(this.queueIndex || 0))
+      const completedEntries = (this.queue || []).slice(0, currentIndex)
+      const completedAyahs = new Set(
+        completedEntries.map(item => item?.verse?.key || item?.key).filter(Boolean)
+      ).size
+      const elapsedMs = this.sessionStartedAt
+        ? Math.max(0, Number(this.statsTick || Date.now()) - Number(this.sessionStartedAt))
+        : 0
+      const totalAttempts = completedAyahs + Number(this.sessionErrorCount || 0)
+      const successRate = totalAttempts > 0
+        ? Math.round((completedAyahs / totalAttempts) * 100)
+        : 100
+
+      return {
+        ayahs_completed: completedAyahs,
+        current_ayah_index: this.currentPosition,
+        error_count: Number(this.sessionErrorCount || 0),
+        session_time: this.formatTime(elapsedMs / 1000),
+        success_rate: `${successRate}%`
       }
     },
     dueCount() {
@@ -1021,7 +1104,8 @@ export default {
     resumeModalTitle() {
       if (!this.continueSessionPayload?.config?.chapterId) return 'Resume last session'
       const c = this.continueSessionPayload.config
-      return `Resume Surah ${c.chapterId} · Ayahs ${c.rangeStart}-${c.rangeEnd}`
+      const chapter = this.chapters.find(item => Number(item.id) === Number(c.chapterId))
+      return `${chapter?.name_simple || 'Saved session'} · Ayahs ${c.rangeStart}-${c.rangeEnd}`
     },
 
     resumeWhatNext() {
@@ -1053,7 +1137,7 @@ export default {
 	    },
 
 	    activeChapterName() {
-	      return this.activeChapter?.name_simple || (this.chapterId ? `Surah ${this.chapterId}` : 'Choose surah')
+	      return this.activeChapter?.name_simple || 'Choose surah'
 	    },
 
 	    versesMasteredDeltaThisWeek() {
@@ -1397,13 +1481,14 @@ export default {
     },
 
     toolsHeaderTitle() {
-      if (this.tab === 'analytics') return 'Retention and plan'
+      if (this.tab === 'stats') return 'Stats'
+      if (this.tab === 'settings') return 'Settings'
       if (this.tab === 'advanced') return 'Advanced session'
       return 'Guided session setup'
     },
 
     contextLabel() {
-      const surah = this.currentChapter?.name_simple || (this.chapterId ? `Surah ${this.chapterId}` : 'No surah')
+      const surah = this.currentChapter?.name_simple || 'No surah selected'
       const range = this.chapterId ? `${this.rangeStart}-${this.rangeEnd}` : ''
       return `${surah}${range ? ` • ${range}` : ''} • ${this.sessionTypeInfo.label}`
     },
@@ -1482,6 +1567,9 @@ export default {
     window.addEventListener('keydown', this.handleGlobalKeydown)
     window.addEventListener('scroll', this.handleWindowScroll, { passive: true })
     document.addEventListener('click', this.handleClickOutside)
+    this.statsInterval = window.setInterval(() => {
+      this.statsTick = Date.now()
+    }, 250)
   },
 
   beforeUnmount() {
@@ -1497,6 +1585,7 @@ export default {
 	    saveMutqinState(this.mutqinState)
 	    if (this.unwatchMutqinState) this.unwatchMutqinState()
 	    document.removeEventListener('click', this.handleClickOutside)
+      if (this.statsInterval) window.clearInterval(this.statsInterval)
 	  },
 
   watch: {
@@ -1515,6 +1604,20 @@ export default {
     delay: 'persistUiState',
     playMode: 'persistUiState',
     order: 'persistUiState',
+    repeat_count(newVal) {
+      const safeValue = Math.max(1, Number(newVal || 1))
+      if (safeValue !== Number(this.repeat_count)) this.repeat_count = safeValue
+      this.repetitionCount = safeValue
+      this.persistUiState()
+      this.rebuildQueue()
+    },
+    repeat_delay(newVal) {
+      const safeValue = Math.max(0, Number(newVal || 0))
+      if (safeValue !== Number(this.repeat_delay)) this.repeat_delay = safeValue
+      this.delay = safeValue
+      this.persistUiState()
+    },
+    // repeatCountEnabled/repeatDelayEnabled are forced on (no UI toggles).
     showTranslation: 'persistUiState',
     showTransliteration: 'persistUiState',
     showWordByWord(newVal) {
@@ -1786,6 +1889,10 @@ export default {
         showTransliteration: this.showTransliteration,
         showWordByWord: this.showWordByWord,
         wordByWordAudioEnabled: this.wordByWordAudioEnabled,
+          repeatCountEnabled: true,
+          repeatDelayEnabled: true,
+          repeat_count: this.repeat_count,
+          repeat_delay: this.repeat_delay,
         theme: this.theme
       })
     },
@@ -1815,13 +1922,18 @@ export default {
       this.showTransliteration = config.showTransliteration ?? this.showTransliteration
       this.showWordByWord = config.showWordByWord ?? this.showWordByWord
       this.wordByWordAudioEnabled = config.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
+      this.repeatCountEnabled = true
+      this.repeatDelayEnabled = true
+      this.repeat_count = Math.max(1, Number(config.repeat_count || config.advancedRepeats || config.repeats || this.repeat_count || 1))
+      this.repeat_delay = Math.max(0, Number(config.repeat_delay ?? config.delay ?? this.repeat_delay ?? 0))
       this.theme = config.theme || this.theme
       document.documentElement.setAttribute('data-theme', this.theme)
       if (mode === 'advanced') {
-        this.advancedRepeats = Number(config.advancedRepeats || 1)
+        this.advancedRepeats = this.repeat_count
       } else {
-        this.beginnerRepeats = Number(config.repeats || 1)
+        this.beginnerRepeats = this.repeat_count
       }
+      this.delay = this.repeat_delay
     },
 
     loadModeState(mode) {
@@ -2018,7 +2130,8 @@ export default {
 	            config: mutqinSession.config
 	          }
 	          this.hasContinueSession = true
-	          this.continueSessionLabel = `Surah ${mutqinSession.config.chapterId} · Ayahs ${mutqinSession.config.rangeStart}-${mutqinSession.config.rangeEnd}`
+	          const chapterName = this.chapters.find(c => Number(c.id) === Number(mutqinSession.config.chapterId))?.name_simple || 'Saved session'
+	          this.continueSessionLabel = `${chapterName} · Ayahs ${mutqinSession.config.rangeStart}-${mutqinSession.config.rangeEnd}`
 	          return
 	        }
 	        if (!raw) return
@@ -2026,7 +2139,8 @@ export default {
 	        if (!payload?.config?.chapterId) return
         this.continueSessionPayload = payload
         this.hasContinueSession = true
-        this.continueSessionLabel = `Surah ${payload.config.chapterId} · Ayahs ${payload.config.rangeStart}-${payload.config.rangeEnd}`
+        const chapterName = this.chapters.find(c => Number(c.id) === Number(payload.config.chapterId))?.name_simple || 'Saved session'
+        this.continueSessionLabel = `${chapterName} · Ayahs ${payload.config.rangeStart}-${payload.config.rangeEnd}`
       } catch (e) { console.error(e) }
     },
 
@@ -2469,7 +2583,7 @@ export default {
         if (!surahId && this.verses[0]?.key) {
           surahId = parseInt(this.verses[0].key.split(':')[0])
           const found = this.chapters.find(c => c.id === surahId)
-          surahName = found?.name_simple || `Surah ${surahId}`
+          surahName = found?.name_simple || 'Selected surah'
         }
 
         if (!surahId) {
@@ -2811,6 +2925,7 @@ export default {
 
       this.currentHighlightedVerseKey = verse.key
       this.currentWordIndex = -1
+      this.currentPhraseIndex = -1
 
       // Prefer word timings derived from the verse content and actual audio duration.
       const duration = Number(this.audioElement?.duration) || null
@@ -2818,13 +2933,13 @@ export default {
       if (!timestamps || !timestamps.length) return
 
       const updateHighlight = () => {
-        if (!this.audioElement || !this.audioElement.currentTime || !this.isPlaying) return
+        if (!this.audioElement || !this.isPlaying) return
 
         const currentTime = this.audioElement.currentTime
         let activeIndex = -1
 
         for (let i = 0; i < timestamps.length; i++) {
-          if (currentTime >= timestamps[i].start && currentTime <= timestamps[i].end) {
+          if (currentTime >= timestamps[i].start && currentTime < timestamps[i].end) {
             activeIndex = i
             break
           }
@@ -2834,10 +2949,12 @@ export default {
           this.currentWordIndex = activeIndex
           this.updateWordHighlight(verse.key, activeIndex)
         }
+
+        this.wordHighlightFrame = window.requestAnimationFrame(updateHighlight)
       }
 
       this.wordHighlightHandler = updateHighlight
-      this.audioElement.addEventListener('timeupdate', this.wordHighlightHandler)
+      this.wordHighlightFrame = window.requestAnimationFrame(updateHighlight)
     },
 
     updateWordHighlight(verseKey, activeIndex) {
@@ -2845,11 +2962,14 @@ export default {
         const verseCard = document.querySelector(`.verse-card[data-verse-key="${verseKey}"]`)
         if (!verseCard) return
         const wordsWrap = verseCard.querySelector('.verse-words')
-        const words = verseCard.querySelectorAll('.wbw-word')
+        const arabicWords = verseCard.querySelectorAll('.verse-arabic .wbw-word')
+        const phraseWords = verseCard.querySelectorAll('.verse-words .word-item')
+        const phraseIndex = activeIndex < 0 ? -1 : Math.floor(activeIndex / 3)
 
-        words.forEach((word, idx) => {
+        arabicWords.forEach((word, idx) => {
           if (idx === activeIndex) {
             word.classList.add('highlighted')
+            word.classList.add('phrase-highlighted')
             if (wordsWrap) {
               this.verseScrollMemory[verseKey] = {
                 top: wordsWrap.scrollTop,
@@ -2868,8 +2988,14 @@ export default {
             }
           } else {
             word.classList.remove('highlighted')
+            word.classList.remove('phrase-highlighted')
           }
         })
+
+        phraseWords.forEach((word, idx) => {
+          word.classList.toggle('phrase-highlighted', idx === phraseIndex)
+        })
+        this.currentPhraseIndex = phraseIndex
       })
     },
 
@@ -2926,15 +3052,16 @@ export default {
     },
 
     stopWordHighlighting() {
-      if (this.audioElement && this.wordHighlightHandler) {
-        this.audioElement.removeEventListener('timeupdate', this.wordHighlightHandler)
-        this.wordHighlightHandler = null
-      }
+      if (this.wordHighlightFrame) window.cancelAnimationFrame(this.wordHighlightFrame)
+      this.wordHighlightFrame = null
+      this.wordHighlightHandler = null
       this.currentWordIndex = -1
+      this.currentPhraseIndex = -1
       this.currentHighlightedVerseKey = null
 
-      document.querySelectorAll('.verse-arabic word.highlighted, .verse-arabic .wbw-word.highlighted').forEach(word => {
+      document.querySelectorAll('.verse-arabic word.highlighted, .verse-arabic .wbw-word.highlighted, .verse-arabic .wbw-word.phrase-highlighted, .verse-words .word-item.phrase-highlighted').forEach(word => {
         word.classList.remove('highlighted')
+        word.classList.remove('phrase-highlighted')
       })
     },
 
@@ -2963,7 +3090,8 @@ export default {
           this.persistUiState()
         }
         if (this.playMode === 'auto') {
-          setTimeout(() => this.next(), (this.delay || 1) * 1000)
+          const transitionDelay = Math.max(0, Number(this.repeat_delay || 0))
+          setTimeout(() => this.next(), transitionDelay * 1000)
         }
       }
 
@@ -2988,6 +3116,7 @@ export default {
       this.audioError = (e) => {
         console.error('Audio error:', e)
         this.isPlaying = false
+        this.sessionErrorCount += 1
         this.stopWordHighlighting()
         this.showBanner('Audio playback error', 'error', 3000)
       }
@@ -3000,7 +3129,7 @@ export default {
       this.audioElement.addEventListener('pause', this.audioPaused)
     },
 
-    async playVerse(verse) {
+    async playVerse(verse, options = {}) {
       if (!verse) {
         console.error('No verse provided')
         return
@@ -3015,7 +3144,7 @@ export default {
       const currentSrc = this.audioElement?.currentSrc ? this.normalizeAudioUrl(this.audioElement.currentSrc) : ''
 
       // Only toggle if both the verse key and actual audio source already match.
-      if (this.activeKey === verse.key && currentSrc && currentSrc === audioUrl) {
+      if (!options.force && this.activeKey === verse.key && currentSrc && currentSrc === audioUrl) {
         this.togglePlay()
         return
       }
@@ -3118,7 +3247,7 @@ export default {
         const v = this.queue[this.queueIndex]
         if (v) {
           const verse = v.verse || v
-          this.playVerse(verse)
+          this.playVerse(verse, { force: true })
         }
         return
       }
@@ -3139,7 +3268,7 @@ export default {
       const v = this.queue[this.queueIndex]
       if (v) {
         const verse = v.verse || v
-        this.playVerse(verse)
+        this.playVerse(verse, { force: true })
       }
     },
 
@@ -3296,6 +3425,9 @@ export default {
       const config = mode === 'beginner' ? this.beginner : this.advanced
       const verses = config.verses
       const previousActiveKey = config.activeKey
+      const previousEntry = Array.isArray(config.queue) ? config.queue[Math.max(0, Number(config.queueIndex || 0))] : null
+      const previousEntryKey = previousEntry?.verse?.key || previousEntry?.key || null
+      const previousEntryRepeat = Number(previousEntry?.repeatCount || 1)
 
       if (!verses || verses.length === 0) {
         if (mode === this.currentMode) {
@@ -3319,17 +3451,26 @@ export default {
       const rep = mode === 'beginner'
         ? Math.max(1, Number(this.beginner.repeats || 1))
         : Math.max(1, Number(this.advanced.advancedRepeats || 1))
-      for (let r = 0; r < rep; r++) {
-        verses.forEach(verse => {
+      verses.forEach(verse => {
+        for (let r = 0; r < rep; r++) {
           q.push({
             verse,
             repeatCount: r + 1,
             totalRepeats: rep
           })
-        })
-      }
+        }
+      })
 
-      const previousQueueIndex = Math.min(safePreviousQueueIndex, Math.max(q.length - 1, 0))
+      let previousQueueIndex = Math.min(safePreviousQueueIndex, Math.max(q.length - 1, 0))
+      if (previousEntryKey) {
+        const targetRepeat = Math.max(1, Math.min(rep, previousEntryRepeat || 1))
+        const exactIndex = q.findIndex(item => (item?.verse?.key || item?.key) === previousEntryKey && Number(item.repeatCount || 1) === targetRepeat)
+        if (exactIndex >= 0) previousQueueIndex = exactIndex
+        else {
+          const firstIndex = q.findIndex(item => (item?.verse?.key || item?.key) === previousEntryKey)
+          if (firstIndex >= 0) previousQueueIndex = firstIndex
+        }
+      }
 
       if (mode === this.currentMode) {
         this.queue = q
@@ -3374,6 +3515,10 @@ export default {
       this.applySessionConfig(config)
       this.persistModeState(mode)
       this.persistUiState()
+      this.sessionCompleted = false
+      this.sessionStartedAt = Date.now()
+      this.sessionErrorCount = 0
+      this.statsTick = Date.now()
 
       const currentVerses = mode === 'beginner' ? this.beginner.verses : this.advanced.verses
       const modeNeedsReload = !currentVerses || !currentVerses.length || !this.modeDataMatchesConfig(mode, config)
@@ -3435,7 +3580,7 @@ export default {
           this.audioElement.playbackRate = this.speed
         }
 
-        await this.playVerse(first.verse)
+        await this.playVerse(first.verse, { force: true })
       }
 
       // Close the offcanvas panel
@@ -3607,6 +3752,7 @@ export default {
 	      this.syncMutqinAyahs([verse])
 	      completeTakrarStep(this.mutqinState, verse.key, score)
 	      scoreRetention(this.mutqinState, verse.key, score)
+        if (score === 'Forgot') this.sessionErrorCount += 1
 	      const previous = this.queue?.[Math.max(0, this.queueIndex - 1)]
 	      const fromId = previous?.verse?.key || previous?.key
 	      this.recomputeAnalytics()
@@ -3677,11 +3823,15 @@ export default {
       }
 
 	      const repeatsRaw = this.currentMode === 'beginner'
-	        ? Number(config.repeats || 1)
-	        : Number(config.advancedRepeats || 1)
+	        ? Number(this.repeat_count || 1)
+	        : Number(this.repeat_count || 1)
 	      if (!Number.isFinite(repeatsRaw) || repeatsRaw < 1) {
 	        errors.push('Repetition count must be at least 1')
 	      }
+      const repeatDelayRaw = Number(this.repeat_delay || 0)
+      if (!Number.isFinite(repeatDelayRaw) || repeatDelayRaw < 0) {
+        errors.push('Repeat delay must be 0 seconds or more')
+      }
 
       if (errors.length > 0) {
         this.showBanner(`Settings issue: ${errors.join(', ')}`, 'warning', 3000)
@@ -3727,7 +3877,26 @@ export default {
     },
 
     toggleSection(key) {
-      this.sectionOpen[key] = !this.sectionOpen[key]
+      const nextValue = !this.sectionOpen[key]
+      Object.keys(this.sectionOpen).forEach(sectionKey => {
+        if (['repeat_settings', 'session_tools', 'live_stats'].includes(sectionKey)) {
+          this.sectionOpen[sectionKey] = false
+        }
+      })
+      this.sectionOpen[key] = nextValue
+    },
+
+    applySettingsChanges() {
+      const next = this.settingsDraft || {}
+      this.showTranslation = !!next.showTranslation
+      this.showTransliteration = !!next.showTransliteration
+      this.showWordByWord = !!next.showWordByWord
+      this.wordByWordAudioEnabled = !!next.wordByWordAudioEnabled
+      this.defaultFontSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, Number(next.defaultFontSize || 100)))
+      try { localStorage.setItem('telawa.defaultFontSize', JSON.stringify(this.defaultFontSize)) } catch {}
+      this.persistUiState()
+      this.scheduleLoadVerses(this.currentMode)
+      this.showBanner('Settings saved', 'success', 1400)
     },
 
     // Persistence methods
@@ -3747,6 +3916,19 @@ export default {
           this.showTransliteration = state.showTransliteration ?? this.showTransliteration
           this.showWordByWord = state.showWordByWord ?? this.showWordByWord
           this.wordByWordAudioEnabled = state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
+          // Always enabled; keep stored values only for backwards compatibility.
+          this.repeatCountEnabled = true
+          this.repeatDelayEnabled = true
+          this.repeat_count = Math.max(1, Number(state.repeat_count || this.repeat_count || 1))
+          this.repeat_delay = Math.max(0, Number(state.repeat_delay ?? this.repeat_delay ?? 0))
+          this.defaultFontSize = Number(state.defaultFontSize ?? this.defaultFontSize ?? 100)
+          this.settingsDraft = {
+            showTranslation: state.showTranslation ?? this.showTranslation,
+            showTransliteration: state.showTransliteration ?? this.showTransliteration,
+            showWordByWord: state.showWordByWord ?? this.showWordByWord,
+            wordByWordAudioEnabled: state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled,
+            defaultFontSize: Number(state.defaultFontSize ?? this.defaultFontSize ?? 100)
+          }
           this.fontScale = state.fontScale ?? this.fontScale
           this.uiScale = Number(state.uiScale ?? this.uiScale)
           this.enScale = Number(state.enScale ?? this.enScale)
@@ -3776,6 +3958,11 @@ export default {
           showTransliteration: this.showTransliteration,
           showWordByWord: this.showWordByWord,
           wordByWordAudioEnabled: this.wordByWordAudioEnabled,
+          defaultFontSize: this.defaultFontSize,
+          repeatCountEnabled: true,
+          repeatDelayEnabled: true,
+          repeat_count: this.repeat_count,
+          repeat_delay: this.repeat_delay,
           fontScale: this.fontScale,
           uiScale: this.uiScale,
           enScale: this.enScale,
@@ -5727,7 +5914,7 @@ html {
 .sheet {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
 }
 
 .sheet-section {
@@ -5815,16 +6002,16 @@ html {
 }
 
 .sheet-content {
-  padding: 16px 16px 18px;
+  padding: 12px 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .field-stack {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .field {
@@ -5844,8 +6031,8 @@ html {
 .field-hint {
   font-size: 0.7rem;
   color: var(--text-muted);
-  margin-top: 4px;
-  line-height: 1.4;
+  margin-top: 3px;
+  line-height: 1.35;
   display: block;
 }
 
@@ -6261,13 +6448,13 @@ html {
   background: rgba(154, 103, 56, 0.10);
   color: var(--accent-strong);
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .workspace-fab-title {
-  font-weight: 850;
+  font-weight: 650;
   color: var(--text);
   letter-spacing: -0.2px;
   font-size: 0.92rem;
@@ -6310,7 +6497,7 @@ html {
   border: 1px solid rgba(46, 125, 50, 0.18);
   background: rgba(46, 125, 50, 0.10);
   color: rgba(46, 125, 50, 0.95);
-  font-weight: 800;
+  font-weight: 650;
   font-size: 0.72rem;
 }
 
@@ -6328,7 +6515,7 @@ html {
   border: 1px solid rgba(0, 0, 0, 0.10);
   background: rgba(255, 255, 255, 0.76);
   box-shadow: var(--shadow-sm);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.84rem;
   display: inline-flex;
   align-items: center;
@@ -6688,6 +6875,103 @@ html {
   cursor: pointer;
   color: var(--accent);
   padding: 0 4px;
+}
+
+.field-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.reading-aid-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.tools,
+.tools-body,
+.sheet-content {
+  overflow-x: hidden;
+}
+
+.live-stats-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.live-stat-card {
+  min-height: 72px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255, 252, 247, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.live-stat-label {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.live-stat-card strong {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.resume-copy {
+  margin-bottom: 8px;
+}
+
+.modal-content {
+  background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(251, 245, 238, 0.96));
+  border-radius: 18px;
+  box-shadow: 0 24px 72px rgba(31, 24, 17, 0.22);
+}
+
+.modal-header h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.resume-modal {
+  background: linear-gradient(180deg, rgba(255, 251, 245, 0.99), rgba(248, 241, 233, 0.97));
+}
+
+.resume-modal .modal-header,
+.resume-modal .modal-body,
+.resume-modal .modal-footer {
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
+.resume-grid .pill,
+.resume-modal .pill {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(184, 130, 78, 0.16);
+}
+
+.wbw-word.highlighted,
+.verse-arabic word.highlighted {
+  background: var(--accent);
+  color: white;
+  transform: scale(1.03);
+  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.24);
+}
+
+.wbw-word.phrase-highlighted {
+  box-shadow: 0 0 0 2px rgba(184, 130, 78, 0.18);
+}
+
+.word-item.phrase-highlighted {
+  background: rgba(184, 130, 78, 0.2);
 }
 
 /* Quiz overlay */
@@ -8049,7 +8333,7 @@ html {
   .tools-btn,
   .player-btn,
   .toolbar-chip,
-  .tools-tabs button {
+  .toggle-chip {
     min-height: 44px;
   }
 
@@ -8177,23 +8461,6 @@ html {
     justify-content: space-between;
   }
 
-  .tools-tabs {
-    gap: 6px;
-  }
-
-  .tools-tabs button {
-    font-size: 0;
-    padding: 10px 10px;
-    gap: 0;
-    min-width: 44px;
-    justify-content: center;
-  }
-
-  .tools-tabs button i {
-    font-size: 0.95rem;
-    margin: 0;
-  }
-
   .verse-card {
     padding: 16px;
     border-radius: 18px;
@@ -8245,18 +8512,34 @@ html {
   }
 
   .tools-top,
-  .tools-body {
+  .tools-body,
+  .tools-footer {
     padding-left: 14px;
     padding-right: 14px;
   }
 
   .tools-tabs {
-    flex-wrap: wrap;
+    overflow-x: hidden;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .tools-tabs button {
-    flex: 1 1 calc(50% - 4px);
+    width: 100%;
     min-width: 0;
+  }
+
+  .reading-aid-grid,
+  .session-tools-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .verse-card,
+  .tools,
+  .sheet,
+  .sheet-content {
+    overflow-x: hidden;
   }
 }
 
