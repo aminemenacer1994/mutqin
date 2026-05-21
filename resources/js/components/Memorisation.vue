@@ -169,7 +169,7 @@
                 <div class="verse-arabic verse-arabic-primary" dir="rtl" v-if="verse.arabic && isDataReady"
                   v-html="getDisplayArabic(verse)" :class="{
                     'tajweed-enabled': tajweedEnabled,
-                    'word-highlight-enabled': showWordByWord && wordByWordAudioEnabled && !tajweedEnabled
+                    'word-highlight-enabled': wordByWordAudioEnabled && !tajweedEnabled
                   }" :style="{
                     '--verse-font-percent': getVerseFontSize(verse.key),
                     fontFamily: quranFontFamily
@@ -396,29 +396,16 @@
 
           <div v-else-if="tab === 'settings'" class="sheet">
             <div class="sheet-section settings-section">
-              <div class="settings-heading">
-                <h3>Reading & Display</h3>
-                <button class="tools-btn tools-btn-primary settings-apply" @click="closeToolsPanel">
-                  <i class="bi bi-check2"></i><span>Done</span>
-                </button>
-              </div>
-
-              <div class="settings-intro">
-                <span class="settings-intro-title">Live preview</span>
-                <span class="settings-intro-copy">Changes apply directly to the workspace.</span>
-              </div>
+              
 
               <div class="settings-panels">
-                <section class="settings-panel">
-                  <div class="settings-panel-head">
-                    <span class="settings-panel-kicker">Rendering</span>
-                    <p>Visual presentation of the Arabic text in the workspace.</p>
-                  </div>
-                  <div class="settings-list">
+                <section class="settings-group">
+                  <span class="settings-group-title">Display</span>
+                  <div class="settings-list settings-list-flat">
                     <div class="settings-row">
                       <div class="settings-row-copy">
-                        <label><i class="bi bi-palette2"></i> Tajweed</label>
-                        <small>Show or hide recitation color rules.</small>
+                        <label><span class="settings-icon"><i class="bi bi-palette2"></i></span><span>Tajweed</span></label>
+                        <small>Recitation colors</small>
                       </div>
                       <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.tajweedEnabled }"
                         @click="toggleSettingsOption('tajweedEnabled')">
@@ -428,8 +415,8 @@
 
                     <div class="settings-row settings-row-range">
                       <div class="settings-row-copy">
-                        <label><i class="bi bi-arrows-angle-expand"></i> Font size</label>
-                        <small>Adjust verse scale without changing the rest of the layout.</small>
+                        <label><span class="settings-icon"><i class="bi bi-arrows-angle-expand"></i></span><span>Font size</span></label>
+                        <small>Verse scale</small>
                       </div>
                       <div class="settings-range-wrap">
                         <input type="range" min="80" max="140" step="5" :value="settingsDraft.defaultFontSize"
@@ -441,16 +428,13 @@
                   </div>
                 </section>
 
-                <section class="settings-panel">
-                  <div class="settings-panel-head">
-                    <span class="settings-panel-kicker">Reading aids</span>
-                    <p>Helpers that support comprehension, word tracking, and review.</p>
-                  </div>
-                  <div class="settings-list">
+                <section class="settings-group">
+                  <span class="settings-group-title">Reading Aids</span>
+                  <div class="settings-list settings-list-compact">
                     <div class="settings-row">
                       <div class="settings-row-copy">
-                        <label><i class="bi bi-translate"></i> Translation</label>
-                        <small>Inline English meaning for each ayah.</small>
+                        <label><span class="settings-icon"><i class="bi bi-translate"></i></span><span>Translation</span></label>
+                        <small>English meaning</small>
                       </div>
                       <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTranslation }"
                         @click="toggleSettingsOption('showTranslation')">
@@ -460,8 +444,8 @@
 
                     <div class="settings-row">
                       <div class="settings-row-copy">
-                        <label><i class="bi bi-type"></i> Transliteration</label>
-                        <small>Latin-character reading support.</small>
+                        <label><span class="settings-icon"><i class="bi bi-type"></i></span><span>Transliteration</span></label>
+                        <small>Latin reading aid</small>
                       </div>
                       <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTransliteration }"
                         @click="toggleSettingsOption('showTransliteration')">
@@ -471,8 +455,8 @@
 
                     <div class="settings-row">
                       <div class="settings-row-copy">
-                        <label><i class="bi bi-grid-3x2-gap"></i> Word for word</label>
-                        <small>Show per-word chips under the ayah.</small>
+                        <label><span class="settings-icon"><i class="bi bi-grid-3x2-gap"></i></span><span>Word for word</span></label>
+                        <small>Word chips</small>
                       </div>
                       <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showWordByWord }"
                         @click="toggleSettingsOption('showWordByWord')">
@@ -482,8 +466,8 @@
 
                     <div class="settings-row">
                       <div class="settings-row-copy">
-                        <label><i class="bi bi-volume-up"></i> Word audio</label>
-                        <small>Enable per-word timing and highlighting during playback.</small>
+                        <label><span class="settings-icon"><i class="bi bi-volume-up"></i></span><span>Word audio</span></label>
+                        <small>Timing and highlight</small>
                       </div>
                       <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.wordByWordAudioEnabled }"
                         @click="toggleSettingsOption('wordByWordAudioEnabled')">
@@ -2561,6 +2545,9 @@ export default {
       this.currentTime = currentTime
       this.centralSession.audio.speed = safeSpeed
       this.centralSession.audio.currentTime = currentTime
+      if (this.isPlaying && this.wordByWordAudioEnabled && this.activeVerseRef) {
+        this.startWordHighlighting(this.activeVerseRef)
+      }
       this.persistUiState()
       this.persistCentralSessionState()
       this.showBanner(`Speed changed to ${safeSpeed}x`, 'info', 1000)
@@ -3033,7 +3020,7 @@ export default {
         return this.stripTajweedMarkup(verse.arabic || verse.arabic_tajweed || '')
       }
 
-      if (this.showWordByWord && this.wordByWordAudioEnabled) {
+      if (this.wordByWordAudioEnabled) {
         return this.splitArabicIntoWords(verse)
       }
 
@@ -3301,40 +3288,37 @@ export default {
         safeDuration = this.estimateVerseDuration(verse)
       }
 
-      // Adjust for playback speed
-      safeDuration = safeDuration / (this.speed || 1)
-
-      const cacheKey = `${verse.key}_${this.reciterId}_${Math.round(safeDuration * 10)}_${this.speed}`
+      // Keep timestamps in media-time because audioElement.currentTime is also media-time.
+      const cacheKey = `${verse.key}_${this.reciterId}_${Math.round(safeDuration * 10)}`
 
       if (this.wordTimestampsMap.has(cacheKey)) {
         return this.wordTimestampsMap.get(cacheKey)
       }
 
-      // Create timestamps based on character count (more accurate than equal distribution)
-      const timestamps = []
-      const charCounts = sourceWords.map(word => {
-        // Count Arabic characters (excluding diacritics and HTML)
-        const cleanWord = word.replace(/<[^>]+>/g, '').replace(/[^\u0621-\u064A]/g, '')
-        return Math.max(1, cleanWord.length)
+      // Build a normalized timing track so highlight end time always matches audio end time.
+      const cleanedWords = sourceWords.map(word => word.replace(/<[^>]+>/g, '').replace(/[^\u0621-\u064A]/g, ''))
+      const weightedUnits = cleanedWords.map((cleanWord, index) => {
+        const charCount = Math.max(1, cleanWord.length)
+        const leadInBoost = index === 0 ? 1.14 : 1
+        const shortWordLift = charCount <= 2 ? 1.18 : 1
+        return (charCount + 0.75) * leadInBoost * shortWordLift
       })
-
-      const totalChars = charCounts.reduce((sum, count) => sum + count, 0)
+      const totalUnits = weightedUnits.reduce((sum, unit) => sum + unit, 0) || 1
+      const timestamps = []
       let currentTime = 0
 
-      for (let i = 0; i < sourceWords.length; i++) {
-        // Words at the beginning get slightly more time for better pacing
-        const weight = i === 0 ? 1.2 : 1.0
-        const wordDuration = i === sourceWords.length - 1
-          ? Math.max(0.3, safeDuration - currentTime)
-          : Math.max(0.3, (charCounts[i] / totalChars) * safeDuration * weight)
+      weightedUnits.forEach((unit, index) => {
+        const wordDuration = index === weightedUnits.length - 1
+          ? Math.max(0, safeDuration - currentTime)
+          : safeDuration * (unit / totalUnits)
 
         timestamps.push({
-          index: i,
+          index,
           start: currentTime,
           end: currentTime + wordDuration
         })
         currentTime += wordDuration
-      }
+      })
 
       this.wordTimestampsMap.set(cacheKey, timestamps)
       return timestamps
@@ -3371,7 +3355,7 @@ export default {
       // Estimate based on verse length
       const arabicLength = verse.arabic?.length || 100
       const baseDuration = Math.min(45, Math.max(5, arabicLength / 10))
-      return baseDuration / (this.speed || 1)
+      return baseDuration
     },
 
     async startWordHighlighting(verse) {
@@ -3379,7 +3363,7 @@ export default {
       if (!verse || !verse.key) return
 
       // Allow highlighting even when tajweed is enabled
-      if (!this.showWordByWord || !this.wordByWordAudioEnabled) {
+      if (!this.wordByWordAudioEnabled) {
         return
       }
 
@@ -3483,7 +3467,7 @@ export default {
         this.duration = this.audioElement.duration
         this.centralSession.audio.currentTime = Number(this.currentTime || 0)
         this.centralSession.audio.speed = Number(this.speed || 1)
-        if (this.showWordByWord && this.wordByWordAudioEnabled) {
+        if (this.wordByWordAudioEnabled) {
           const verse = this.activeVerseRef
           if (verse && verse.key) {
             if (this.currentHighlightedVerseKey !== verse.key && !this.wordHighlightLoading) {
@@ -3523,7 +3507,7 @@ export default {
       this.audioSeeked = () => {
         const verse = this.activeVerseRef
         if (!verse) return
-        if (this.showWordByWord && this.wordByWordAudioEnabled && !this.audioElement?.paused) {
+        if (this.wordByWordAudioEnabled && !this.audioElement?.paused) {
           this.startWordHighlighting(verse)
         }
       }
@@ -3619,7 +3603,7 @@ export default {
             this.addActivityEvent({ ts: Date.now(), type: 'play', verseKey: verse.key })
             this.recomputeAnalytics()
 
-            if (this.showWordByWord && this.wordByWordAudioEnabled) {
+            if (this.wordByWordAudioEnabled) {
               this.startWordHighlighting(verse)
             }
             this.playRequestLocked = false
@@ -3658,7 +3642,7 @@ export default {
           .then(() => {
             this.isPlaying = true
             const verse = this.activeVerseRef
-            if (verse && this.showWordByWord && this.wordByWordAudioEnabled) {
+            if (verse && this.wordByWordAudioEnabled) {
               this.startWordHighlighting(verse)
             }
           })
@@ -7587,7 +7571,7 @@ html {
   border: 1px solid rgba(154, 103, 56, 0.12);
   color: var(--accent-strong);
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .settings-section {
@@ -7602,17 +7586,55 @@ html {
 .settings-heading {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 14px;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
-.settings-heading h3 {
+.settings-heading-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.settings-heading-copy h3 {
   margin: 0;
   color: var(--text);
-  font-size: clamp(0.98rem, 1.1vw, 1.1rem);
-  font-weight: 700;
+  font-size: clamp(1rem, 1.08vw, 1.12rem);
+  font-weight: 640;
   line-height: 1.2;
+}
+
+.settings-heading-copy p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.settings-status {
+  flex: 0 0 auto;
+  min-height: 28px;
+  padding: 0 11px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(154, 103, 56, 0.10);
+  color: var(--accent-strong);
+  font-size: 0.64rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.settings-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #2e9d62;
+  box-shadow: 0 0 0 4px rgba(46, 157, 98, 0.12);
 }
 
 .settings-apply {
@@ -7620,70 +7642,26 @@ html {
   min-height: 40px;
   padding: 8px 16px;
   border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 600;
-}
-
-.settings-intro {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 18px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(247, 239, 228, 0.70));
-  border: 1px solid rgba(154, 103, 56, 0.12);
-}
-
-.settings-intro-title {
-  color: var(--accent-strong);
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.settings-intro-copy {
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  line-height: 1.4;
-  text-align: right;
+  font-size: 0.72rem;
+  font-weight: 500;
 }
 
 .settings-panels {
   display: grid;
-  gap: 14px;
+  gap: 20px;
 }
 
-.settings-panel {
+.settings-group {
   display: grid;
-  gap: 14px;
-  padding: 16px;
-  border-radius: 18px;
-  border: 1px solid rgba(154, 103, 56, 0.10);
-  background: rgba(255, 255, 255, 0.60);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  gap: 12px;
 }
 
-.settings-panel-head {
-  display: grid;
-  gap: 5px;
-}
-
-.settings-panel-head p {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.76rem;
-  line-height: 1.4;
-}
-
-.settings-panel-kicker {
-  color: var(--accent-strong);
-  font-size: 0.68rem;
-  font-weight: 700;
+.settings-group-title {
+  color: #7d6044;
+  font-size: 0.62rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
 }
 
 .settings-list {
@@ -7691,51 +7669,77 @@ html {
   gap: 12px;
 }
 
+.settings-list-flat,
+.settings-list-compact {
+  gap: 0;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(154, 103, 56, 0.08);
+  box-shadow: 0 12px 28px rgba(63, 39, 18, 0.04);
+  overflow: hidden;
+}
+
 .settings-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  min-height: 68px;
-  padding: 16px;
-  border: 1px solid rgba(154, 103, 56, 0.10);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.78);
-  box-shadow: 0 8px 22px rgba(63, 39, 18, 0.04);
+  gap: 18px;
+  min-height: 70px;
+  padding: 18px 20px;
+  background: transparent;
+  border-bottom: 1px solid rgba(154, 103, 56, 0.08);
+}
+
+.settings-list .settings-row:last-child {
+  border-bottom: none;
 }
 
 .settings-row-copy {
   flex: 1 1 auto;
   min-width: 0;
   display: grid;
-  gap: 7px;
+  gap: 6px;
 }
 
 .settings-row-copy label {
   color: var(--text);
-  font-size: 0.82rem;
-  font-weight: 650;
+  font-size: 0.79rem;
+  font-weight: 560;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
 }
 
 .settings-row-copy small {
   color: var(--text-muted);
-  font-size: 0.73rem;
-  line-height: 1.45;
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.settings-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(154, 103, 56, 0.08);
+  border: 1px solid rgba(154, 103, 56, 0.10);
+  color: var(--accent-strong);
+  flex: 0 0 auto;
 }
 
 .settings-toggle {
   flex: 0 0 auto;
-  min-width: 102px;
-  min-height: 38px;
+  min-width: 96px;
+  min-height: 36px;
   padding: 6px 14px;
-  border-radius: 12px;
-  font-size: 0.72rem;
-  font-weight: 600;
+  border-radius: 999px;
+  font-size: 0.67rem;
+  font-weight: 500;
   box-shadow: none;
+  border-width: 1px;
 }
 
 .settings-row-range {
@@ -7743,11 +7747,11 @@ html {
 }
 
 .settings-range-wrap {
-  flex: 0 0 min(260px, 42%);
-  min-width: 180px;
+  flex: 0 0 min(240px, 40%);
+  min-width: 170px;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 .settings-range {
@@ -8654,6 +8658,7 @@ html {
 [data-theme="dark"] .tools-title,
 [data-theme="dark"] .st-title,
 [data-theme="dark"] .technique-copy label,
+[data-theme="dark"] .settings-heading-copy h3,
 [data-theme="dark"] .settings-row-copy label {
   color: var(--text);
 }
@@ -8662,6 +8667,7 @@ html {
 [data-theme="dark"] .st-sub,
 [data-theme="dark"] .technique-copy small,
 [data-theme="dark"] .technique-control span,
+[data-theme="dark"] .settings-heading-copy p,
 [data-theme="dark"] .settings-row-copy small {
   color: var(--text-muted);
 }
@@ -8727,7 +8733,6 @@ html {
 [data-theme="dark"] .verse-transliteration,
 [data-theme="dark"] .workspace-fab-copy,
 [data-theme="dark"] .workspace-fab-sub,
-[data-theme="dark"] .settings-intro-copy,
 [data-theme="dark"] .settings-row-copy small,
 [data-theme="dark"] .field-hint {
   color: var(--text-muted);
@@ -8736,8 +8741,8 @@ html {
 [data-theme="dark"] .workspace-fab,
 [data-theme="dark"] .workspace-fab-sub span,
 [data-theme="dark"] .workspace-fab-live-pill,
-[data-theme="dark"] .settings-intro,
-[data-theme="dark"] .settings-panel,
+[data-theme="dark"] .settings-list-flat,
+[data-theme="dark"] .settings-list-compact,
 [data-theme="dark"] .word-item:hover::after,
 [data-theme="dark"] .word-item:focus::after {
   background: var(--surface-strong);
@@ -8758,9 +8763,21 @@ html {
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
-[data-theme="dark"] .settings-row {
-  background: rgba(255, 255, 255, 0.045);
+[data-theme="dark"] .settings-status {
+  background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 236, 216, 0.12);
+  color: var(--accent-strong);
+}
+
+[data-theme="dark"] .settings-icon {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 236, 216, 0.12);
+  color: var(--accent-strong);
+}
+
+[data-theme="dark"] .settings-row {
+  background: transparent;
+  border-color: rgba(255, 236, 216, 0.10);
 }
 
 [data-theme="dark"] .settings-toggle {
@@ -9681,23 +9698,11 @@ html {
     gap: 8px;
   }
 
-  .settings-intro {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .settings-intro-copy {
-    text-align: left;
-  }
-
-  .settings-panel {
-    padding: 12px;
-  }
-
   .settings-row {
     flex-direction: column;
     align-items: stretch;
     min-height: 0;
+    padding: 14px;
   }
 
   .settings-row-copy {
