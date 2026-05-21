@@ -199,6 +199,23 @@ startMutqinSession(state, { mode: 'beginner', queue: [] })
 assert.equal(state.sessionState.active, false)
 assert.equal(state.sessionState.queue.length, 0)
 
+startMutqinSession(state, {
+  mode: 'advanced',
+  queue: [
+    { phase: 'Linking', ayahId: '110:1', verse: verses[0], chainKey: 'linking:110:1', sequencePosition: 1, sequenceTotal: 2, repeatCount: 1 },
+    { phase: 'Linking', ayahId: '110:1', verse: verses[0], chainKey: 'linking:110:1', sequencePosition: 2, sequenceTotal: 2, repeatCount: 1 },
+    { phase: 'Cumulative', ayahId: '110:1', verse: verses[0], chainKey: 'cumulative:1', sequencePosition: 1, sequenceTotal: 1, repeatCount: 1 },
+    { phase: 'Cumulative', ayahId: '110:1', verse: verses[0], chainKey: 'cumulative:2', sequencePosition: 1, sequenceTotal: 2, repeatCount: 1 }
+  ],
+  config: { chapterId: 110, rangeStart: 1, rangeEnd: 2, chainingMethod: 'linking' }
+})
+assert.equal(state.sessionState.queue.filter(item => item.phase === 'Linking').length, 2)
+assert.equal(state.sessionState.queue.filter(item => item.phase === 'Cumulative').length, 2)
+assert.deepEqual(
+  state.sessionState.queue.filter(item => item.phase === 'Linking').map(item => item.sequencePosition),
+  [1, 2]
+)
+
 saveMutqinState(state)
 assert.equal(saveMutqinState(state), false)
 const restored = loadMutqinState()
@@ -281,7 +298,12 @@ assert.equal(dayTwo.stats.overdue_reviews >= 1, true)
 
 assert.match(memorisationSource, /async playVerse\(verse, options = \{\}\)/, 'playVerse must accept force option')
 assert.match(memorisationSource, /!options\.force && this\.activeKey === verse\.key/, 'same-ayah manual play may toggle only when not forced')
-assert.equal((memorisationSource.match(/playVerse\(verse, \{ force: true \}\)/g) || []).length >= 2, true, 'queue navigation must force same-ayah replay for repetitions')
-assert.match(memorisationSource, /playVerse\(first\.verse, \{ force: true \}\)/, 'session start must force first playback')
+assert.equal((memorisationSource.match(/playQueueEntry\(v, \{ force: true, queueIndex: this\.queueIndex \}\)/g) || []).length >= 2, true, 'queue navigation must force same-ayah replay for repetitions')
+assert.match(memorisationSource, /playQueueEntry\(first, \{ force: true, queueIndex: playbackIndex \}\)/, 'session start must force first playback through queue entry metadata')
+assert.match(memorisationSource, /setActiveVerse\(verseKey, \{ queueIndex: this\.queueIndex \}\)/, 'next navigation must preserve duplicate queue entry index')
+assert.match(memorisationSource, /queueIndex: Number\.isFinite\(options\.queueIndex\)/, 'playback must not reset repeated ayah entries to first queue match')
+assert.doesNotMatch(memorisationSource, /createAyahSegments/, 'linking must be ayah-level, not word-segment based')
+assert.match(memorisationSource, /linking:single:\$\{verse\.key\}/, 'linking must include individual ayah practice')
+assert.match(memorisationSource, /linking:\$\{verse\.key\}->\$\{nextVerse\.key\}/, 'linking must include adjacent ayah pairs')
 
 console.log('mutqin-flow composable integration passed')

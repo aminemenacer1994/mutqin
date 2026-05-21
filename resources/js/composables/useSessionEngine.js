@@ -1,7 +1,14 @@
 import { mutateMutqinState } from './useMutqinPersistence'
 
 function queueKey(item = {}) {
-  return `${item.phase}:${item.ayahId || item.verse?.key || ''}:${item.repeatCount || ''}`
+  return [
+    item.phase,
+    item.ayahId || item.verse?.key || '',
+    item.chainKey || '',
+    item.sequencePosition || '',
+    item.sequenceTotal || '',
+    item.repeatCount || ''
+  ].join(':')
 }
 
 function sessionSignature({ mode = 'beginner', queue = [], config = null } = {}) {
@@ -19,6 +26,10 @@ function normaliseQueueItem(item = {}) {
     phase,
     ayahId: item.ayahId || verse?.key || null,
     verse,
+    segment: item.segment || null,
+    chainKey: item.chainKey || null,
+    sequencePosition: Math.max(1, Number(item.sequencePosition || 1)),
+    sequenceTotal: Math.max(1, Number(item.sequenceTotal || 1)),
     repeatCount: Math.max(1, Number(item.repeatCount || 1)),
     totalRepeats: Math.max(1, Number(item.totalRepeats || 1)),
     prompt: item.prompt || ''

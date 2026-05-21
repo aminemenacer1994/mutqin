@@ -262,11 +262,6 @@
                     <small class="field-hint">Keep ranges small for focused memorisation.</small>
                   </div>
                   <div class="field">
-                    <label>Number of Repetition Times</label>
-                    <input type="number" class="input" :value="centralSession.repetitionTimes" readonly>
-                    <small class="field-hint">Automatically increases when a session is completed.</small>
-                  </div>
-                  <div class="field">
                     <label>Reciter</label>
                     <select v-model="reciterId" @change="refreshVerses" class="select">
                       <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
@@ -364,24 +359,25 @@
                         <small>{{ chainingMethodDescription }}</small>
                       </div>
                       <button class="toggle-chip technique-toggle" :class="{ active: chainingEnabled }"
-                        @click="chainingEnabled = !chainingEnabled" type="button">
+                        @click="setChainingEnabled(!chainingEnabled)" type="button">
                         {{ chainingEnabled ? 'On' : 'Off' }}
                       </button>
                     </div>
                     <div v-if="chainingEnabled" class="segmented-control segmented-control-compact" role="group"
                       aria-label="Chaining method">
                       <button type="button" :class="{ active: chainingMethod === 'linking' }"
-                        @click="chainingMethod = 'linking'">
+                        @click="setChainingMethod('linking')">
                         Linking Method
                       </button>
                       <button type="button" :class="{ active: chainingMethod === 'cumulative' }"
-                        @click="chainingMethod = 'cumulative'">
+                        @click="setChainingMethod('cumulative')">
                         Cumulative Method
                       </button>
                     </div>
                     <div v-if="chainingEnabled" class="technique-control">
                       <span>Repetition</span>
-                      <input type="range" min="1" max="5" step="1" v-model.number="chainingRepetitions"
+                      <input type="range" min="1" max="5" step="1" :value="chainingRepetitions"
+                        @input="setChainingRepetitions(Number($event.target.value))"
                         class="input technique-range">
                       <span class="inline-setting-pill">{{ chainingRepetitions }}x</span>
                     </div>
@@ -396,13 +392,22 @@
 
           <div v-else-if="tab === 'settings'" class="sheet">
             <div class="sheet-section settings-section">
-              
+              <div class="settings-heading">
+                <div class="settings-heading-copy">
+                  <h3>Reading & Display</h3>
+                  <p>Adjust what you see while studying.</p>
+                </div>
+                <span class="settings-status">
+                  <span class="settings-status-dot"></span>
+                  Live
+                </span>
+              </div>
 
               <div class="settings-panels">
                 <section class="settings-group">
                   <span class="settings-group-title">Display</span>
-                  <div class="settings-list settings-list-flat">
-                    <div class="settings-row">
+                  <div class="settings-card-grid settings-display-grid">
+                    <div class="settings-card settings-card-toggle">
                       <div class="settings-row-copy">
                         <label><span class="settings-icon"><i class="bi bi-palette2"></i></span><span>Tajweed</span></label>
                         <small>Recitation colors</small>
@@ -413,7 +418,7 @@
                       </button>
                     </div>
 
-                    <div class="settings-row settings-row-range">
+                    <div class="settings-card settings-card-range">
                       <div class="settings-row-copy">
                         <label><span class="settings-icon"><i class="bi bi-arrows-angle-expand"></i></span><span>Font size</span></label>
                         <small>Verse scale</small>
@@ -430,8 +435,8 @@
 
                 <section class="settings-group">
                   <span class="settings-group-title">Reading Aids</span>
-                  <div class="settings-list settings-list-compact">
-                    <div class="settings-row">
+                  <div class="settings-card-grid">
+                    <div class="settings-card settings-card-toggle">
                       <div class="settings-row-copy">
                         <label><span class="settings-icon"><i class="bi bi-translate"></i></span><span>Translation</span></label>
                         <small>English meaning</small>
@@ -442,7 +447,7 @@
                       </button>
                     </div>
 
-                    <div class="settings-row">
+                    <div class="settings-card settings-card-toggle">
                       <div class="settings-row-copy">
                         <label><span class="settings-icon"><i class="bi bi-type"></i></span><span>Transliteration</span></label>
                         <small>Latin reading aid</small>
@@ -453,7 +458,7 @@
                       </button>
                     </div>
 
-                    <div class="settings-row">
+                    <div class="settings-card settings-card-toggle">
                       <div class="settings-row-copy">
                         <label><span class="settings-icon"><i class="bi bi-grid-3x2-gap"></i></span><span>Word for word</span></label>
                         <small>Word chips</small>
@@ -464,7 +469,7 @@
                       </button>
                     </div>
 
-                    <div class="settings-row">
+                    <div class="settings-card settings-card-toggle">
                       <div class="settings-row-copy">
                         <label><span class="settings-icon"><i class="bi bi-volume-up"></i></span><span>Word audio</span></label>
                         <small>Timing and highlight</small>
@@ -476,12 +481,20 @@
                     </div>
                   </div>
                 </section>
+
+                <section class="settings-apply-section">
+                  <button class="settings-apply-primary" @click="closeToolsPanel">
+                    <i class="bi bi-check2-circle"></i>
+                    <span>Apply changes</span>
+                  </button>
+                  <small>Saved settings persist after refresh.</small>
+                </section>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="tools-footer">
+        <div class="tools-footer" :class="{ 'settings-footer': tab === 'settings' }">
           <button class="tools-btn tools-btn-primary tools-btn-start" @click="startSession"
             :disabled="!canStartSession">
             <i class="bi bi-play-fill"></i><span>Start memorising</span>
@@ -1033,6 +1046,9 @@ export default {
       networkOnline: true,
       restoredAudioState: null,
       loadVersesTimer: null,
+      workspaceSyncTimer: null,
+      segmentPlaybackTimer: null,
+      segmentEndTime: 0,
 
       // Word sequence
       wordSequence: null,
@@ -1730,6 +1746,9 @@ export default {
     window.removeEventListener('keydown', this.handleGlobalKeydown)
     window.removeEventListener('scroll', this.handleWindowScroll)
     if (this.bannerTimer) clearTimeout(this.bannerTimer)
+    if (this.loadVersesTimer) clearTimeout(this.loadVersesTimer)
+    if (this.workspaceSyncTimer) clearTimeout(this.workspaceSyncTimer)
+    if (this.segmentPlaybackTimer) clearTimeout(this.segmentPlaybackTimer)
     this.flushPlaybackTime()
     this.stopWordHighlighting()
     this.persistAllState()
@@ -1752,9 +1771,15 @@ export default {
       const id = Number(val || 0)
       this.currentChapter = id ? (this.chapters.find(c => Number(c.id) === id) || null) : null
     },
-    rangeStart: 'persistUiState',
-    rangeEnd: 'persistUiState',
-    reciterId: 'persistUiState',
+    rangeStart() {
+      this.persistUiState()
+    },
+    rangeEnd() {
+      this.persistUiState()
+    },
+    reciterId() {
+      this.persistUiState()
+    },
     speed() {
       this.applySpeed()
       this.persistUiState()
@@ -1766,17 +1791,13 @@ export default {
     chainingEnabled() {
       this.persistUiState()
       this.persistCentralSessionState()
-      if (this.hasVerses) {
-        this.buildQueue(this.currentMode)
-      }
+      this.applyChainingQueueChange(this.currentMode)
     },
 
     chainingMethod() {
       this.persistUiState()
       this.persistCentralSessionState()
-      if (this.hasVerses) {
-        this.buildQueue(this.currentMode)
-      }
+      this.applyChainingQueueChange(this.currentMode)
     },
 
     chainingRepetitions(newVal) {
@@ -1786,9 +1807,7 @@ export default {
       }
       this.persistUiState()
       this.persistCentralSessionState()
-      if (this.hasVerses) {
-        this.buildQueue(this.currentMode)
-      }
+      this.applyChainingQueueChange(this.currentMode)
     },
     showTranslation: 'persistUiState',
     showTransliteration: 'persistUiState',
@@ -2021,6 +2040,75 @@ export default {
       this.loadVersesTimer = setTimeout(() => {
         this.loadVerses(mode)
       }, 200)
+    },
+
+    syncWorkspaceFromControls(options = {}) {
+      if (this.isBootstrapping) return
+      const mode = options.mode || this.currentMode
+      const store = this.getModeStore(mode)
+      const chapterId = Number(store?.chapterId || 0)
+
+      if (this.workspaceSyncTimer) clearTimeout(this.workspaceSyncTimer)
+      this.persistUiState()
+
+      if (!chapterId) {
+        this.currentChapter = null
+        this.clearWorkspaceForConfigChange(mode)
+        this.isDataReady = true
+        return
+      }
+
+      const matchedChapter = this.chapters.find(chapter => Number(chapter.id) === chapterId) || null
+      this.currentChapter = matchedChapter || (this.chapters.length ? null : this.currentChapter)
+      this.clampControlRange(mode)
+      this.clearWorkspaceForConfigChange(mode)
+
+      if (options.immediate) {
+        this.loadVerses(mode)
+        return
+      }
+
+      this.workspaceSyncTimer = setTimeout(() => {
+        this.loadVerses(mode)
+      }, 160)
+    },
+
+    async applyWorkspaceControls(options = {}) {
+      if (this.isBootstrapping) return
+      const mode = options.mode || this.currentMode
+      if (this.workspaceSyncTimer) clearTimeout(this.workspaceSyncTimer)
+      this.persistUiState()
+      this.syncWorkspaceFromControls({ ...options, mode, immediate: true })
+      await this.$nextTick()
+    },
+
+    clampControlRange(mode = this.currentMode) {
+      const store = this.getModeStore(mode)
+      const max = this.currentChapter?.verses_count || 286
+      store.rangeStart = Math.max(1, Math.min(Number(store.rangeStart || 1), max))
+      store.rangeEnd = Math.max(store.rangeStart, Math.min(Number(store.rangeEnd || store.rangeStart || 1), max))
+    },
+
+    clearWorkspaceForConfigChange(mode = this.currentMode) {
+      const store = this.getModeStore(mode)
+      if (!store) return
+      this.stopWordHighlighting()
+      if (this.audioElement) {
+        try { this.audioElement.pause() } catch { }
+      }
+      this.isPlaying = false
+      this.currentTime = 0
+      store.verses = []
+      store.queue = []
+      store.queueIndex = 0
+      store.activeKey = null
+      store.loadedConfig = null
+      if (mode === this.currentMode) {
+        this.activeVerseKey = null
+        this.activeKey = null
+        this.queueIndex = 0
+        this.isDataReady = false
+      }
     },
 
     setActiveVerse(verseKey, options = {}) {
@@ -2393,7 +2481,12 @@ export default {
         }
       }
       store.queueIndex = restoredQueueIndex
-      this.syncActiveVerseState(this.currentMode, targetKey)
+      const restoredKey = store.queue?.[restoredQueueIndex]?.verse?.key || store.queue?.[restoredQueueIndex]?.key || targetKey
+      if (restoredKey) {
+        this.setActiveVerse(restoredKey, { mode: this.currentMode, queueIndex: restoredQueueIndex, scroll: false })
+      } else {
+        this.syncActiveVerseState(this.currentMode, targetKey)
+      }
       this.playerVisible = !!payload.playerVisible
       this.restoredAudioState = {
         src: payload.audioSrc || '',
@@ -2571,12 +2664,24 @@ export default {
         const raw = localStorage.getItem(CENTRAL_SESSION_STORAGE_KEY)
         if (!raw) return
         const saved = JSON.parse(raw)
+        let uiChaining = null
+        try {
+          const uiState = JSON.parse(localStorage.getItem('telawa.uiState') || 'null')
+          if (uiState && ['linking', 'cumulative'].includes(uiState.chainingMethod)) {
+            uiChaining = {
+              enabled: uiState.chainingEnabled ?? this.chainingEnabled,
+              method: uiState.chainingMethod,
+              repetitions: Math.max(1, Math.min(5, Number(uiState.chainingRepetitions || this.chainingRepetitions || 1)))
+            }
+          }
+        } catch { }
         this.centralSession = {
           ...createCentralSessionState(),
           ...saved,
           chaining: {
             ...createCentralSessionState().chaining,
-            ...(saved.chaining || {})
+            ...(saved.chaining || {}),
+            ...(uiChaining || {})
           },
           audio: {
             ...createCentralSessionState().audio,
@@ -2588,9 +2693,11 @@ export default {
         this.focusModeEnabled = !!this.centralSession.focusModeEnabled
         this.blurModeEnabled = !!this.centralSession.blurModeEnabled
         this.blurIntensity = Math.max(4, Math.min(18, Number(this.centralSession.blurIntensity || 10)))
-        this.chainingEnabled = !!this.centralSession.chaining.enabled
-        this.chainingMethod = ['linking', 'cumulative'].includes(this.centralSession.chaining.method) ? this.centralSession.chaining.method : 'linking'
-        this.chainingRepetitions = Math.max(1, Math.min(5, Number(this.centralSession.chaining.repetitions || 1)))
+        if (!uiChaining) {
+          this.chainingEnabled = !!this.centralSession.chaining.enabled
+          this.chainingMethod = ['linking', 'cumulative'].includes(this.centralSession.chaining.method) ? this.centralSession.chaining.method : 'linking'
+          this.chainingRepetitions = Math.max(1, Math.min(5, Number(this.centralSession.chaining.repetitions || 1)))
+        }
         this.speed = this.speedOptions.includes(Number(this.centralSession.audio.speed)) ? Number(this.centralSession.audio.speed) : this.speed
       } catch (e) {
         console.error('Failed to load central session state:', e)
@@ -3467,6 +3574,10 @@ export default {
         this.duration = this.audioElement.duration
         this.centralSession.audio.currentTime = Number(this.currentTime || 0)
         this.centralSession.audio.speed = Number(this.speed || 1)
+        if (this.segmentEndTime > 0 && Number(this.currentTime || 0) >= this.segmentEndTime - 0.04) {
+          this.handleSegmentBoundary()
+          return
+        }
         if (this.wordByWordAudioEnabled) {
           const verse = this.activeVerseRef
           if (verse && verse.key) {
@@ -3538,6 +3649,11 @@ export default {
     async playVerse(verse, options = {}) {
       if (this.playRequestLocked && !options.force) return
       this.playRequestLocked = true
+      if (this.segmentPlaybackTimer) {
+        clearTimeout(this.segmentPlaybackTimer)
+        this.segmentPlaybackTimer = null
+      }
+      this.segmentEndTime = 0
 
       if (!verse) {
         console.error('No verse provided')
@@ -3553,9 +3669,10 @@ export default {
 
       const audioUrl = this.normalizeAudioUrl(verse.audio)
       const currentSrc = this.audioElement?.currentSrc ? this.normalizeAudioUrl(this.audioElement.currentSrc) : ''
+      const isSameSource = !!currentSrc && currentSrc === audioUrl
 
       // Toggle if same verse is playing
-      if (!options.force && this.activeKey === verse.key && currentSrc && currentSrc === audioUrl) {
+      if (!options.force && this.activeKey === verse.key && isSameSource) {
         this.togglePlay()
         this.playRequestLocked = false
         return
@@ -3571,7 +3688,10 @@ export default {
         }
       }
 
-      this.setActiveVerse(verse.key, { scroll: false })
+      this.setActiveVerse(verse.key, {
+        scroll: false,
+        queueIndex: Number.isFinite(options.queueIndex) ? Number(options.queueIndex) : undefined
+      })
 
       if (!this.audioElement) {
         this.audioElement = this.$refs.audio
@@ -3583,8 +3703,10 @@ export default {
         this.initAudio()
       }
 
-      this.audioElement.src = audioUrl
-      this.audioElement.load()
+      if (!isSameSource) {
+        this.audioElement.src = audioUrl
+        this.audioElement.load()
+      }
       this.playerVisible = true
 
       return new Promise((resolve, reject) => {
@@ -3592,9 +3714,21 @@ export default {
           reject(new Error('Audio load timeout'))
         }, 10000)
 
-        const canPlayHandler = async () => {
+        const startPlayback = async () => {
           clearTimeout(timeout)
           this.audioElement.playbackRate = this.speed
+          const segment = options.segment || null
+          const segmentTotal = Math.max(1, Number(segment?.sequenceTotal || segment?.total || 1))
+          const segmentIndex = Math.max(0, Math.min(segmentTotal - 1, Number(segment?.index || 0)))
+          let segmentEnd = 0
+
+          if (segment && Number.isFinite(this.audioElement.duration) && this.audioElement.duration > 0 && segmentTotal > 1) {
+            const duration = Number(this.audioElement.duration || 0)
+            const segmentStart = Math.max(0, duration * (segmentIndex / segmentTotal))
+            segmentEnd = Math.min(duration, duration * ((segmentIndex + 1) / segmentTotal))
+            this.segmentEndTime = segmentEnd
+            this.audioElement.currentTime = segmentStart
+          }
 
           try {
             await this.audioElement.play()
@@ -3613,6 +3747,10 @@ export default {
             this.playRequestLocked = false
             reject(err)
           }
+        }
+
+        const canPlayHandler = async () => {
+          await startPlayback()
           this.audioElement.removeEventListener('canplay', canPlayHandler)
         }
 
@@ -3624,14 +3762,38 @@ export default {
           this.audioElement.removeEventListener('error', errorHandler)
         }
 
-        this.audioElement.addEventListener('canplay', canPlayHandler)
         this.audioElement.addEventListener('error', errorHandler, { once: true })
+        if (isSameSource && this.audioElement.readyState >= 2) {
+          startPlayback()
+        } else {
+          this.audioElement.addEventListener('canplay', canPlayHandler)
+        }
       }).catch(err => {
         console.error('playVerse failed:', err)
         this.isPlaying = false
         this.playRequestLocked = false
         this.showBanner('Failed to play audio', 'error', 3000)
       })
+    },
+
+    playQueueEntry(entry, options = {}) {
+      if (!entry) return Promise.resolve()
+      const verse = entry.verse || entry
+      return this.playVerse(verse, { ...options, segment: null })
+    },
+
+    handleSegmentBoundary() {
+      if (!this.segmentEndTime || this.advanceLocked) return
+      this.segmentEndTime = 0
+      this.stopWordHighlighting()
+      if (this.playMode === 'auto') {
+        this.next()
+        return
+      }
+      if (this.audioElement) {
+        try { this.audioElement.pause() } catch { }
+      }
+      this.isPlaying = false
     },
 
     togglePlay() {
@@ -3676,14 +3838,13 @@ export default {
         const verseKey = entry?.verse?.key || entry?.key
 
         if (verseKey) {
-          this.setActiveVerse(verseKey)
+          this.setActiveVerse(verseKey, { queueIndex: this.queueIndex })
           this.$nextTick(() => this.$forceUpdate())
         }
 
         const v = this.queue[this.queueIndex]
         if (v) {
-          const verse = v.verse || v
-          this.playVerse(verse, { force: true })
+          this.playQueueEntry(v, { force: true, queueIndex: this.queueIndex })
             .finally(() => {
               this.advanceLocked = false
             })
@@ -3713,14 +3874,13 @@ export default {
       const verseKey = entry?.verse?.key || entry?.key
 
       if (verseKey) {
-        this.setActiveVerse(verseKey, { scroll: false })
+        this.setActiveVerse(verseKey, { scroll: false, queueIndex: this.queueIndex })
         this.$nextTick(() => this.$forceUpdate())
       }
 
       const v = this.queue[this.queueIndex]
       if (v) {
-        const verse = v.verse || v
-        this.playVerse(verse, { force: true })
+        this.playQueueEntry(v, { force: true, queueIndex: this.queueIndex })
           .finally(() => {
             this.advanceLocked = false
           })
@@ -3732,6 +3892,11 @@ export default {
     closePlayer() {
       this.flushPlaybackTime()
       this.stopWordHighlighting()
+      if (this.segmentPlaybackTimer) {
+        clearTimeout(this.segmentPlaybackTimer)
+        this.segmentPlaybackTimer = null
+      }
+      this.segmentEndTime = 0
       this.advanceLocked = false
       this.playRequestLocked = false
       if (this.audioElement) {
@@ -3918,17 +4083,25 @@ export default {
         mode
       })
 
+      const decorateQueueEntry = (entry, repeatIndex) => ({
+        ...entry,
+        repeatCount: repeatIndex,
+        totalRepeats: repetitions,
+        phase: entry.phase,
+        chainKey: entry.chainKey,
+        sequencePosition: entry.sequencePosition,
+        sequenceTotal: entry.sequenceTotal
+      })
+
       const pushQueueEntry = (entry) => {
         for (let repeatIndex = 1; repeatIndex <= repetitions; repeatIndex++) {
-          q.push({
-            ...entry,
-            repeatCount: repeatIndex,
-            totalRepeats: repetitions,
-            phase: entry.phase,
-            chainKey: entry.chainKey,
-            sequencePosition: entry.sequencePosition,
-            sequenceTotal: entry.sequenceTotal
-          })
+          q.push(decorateQueueEntry(entry, repeatIndex))
+        }
+      }
+
+      const pushQueueGroup = (entries) => {
+        for (let repeatIndex = 1; repeatIndex <= repetitions; repeatIndex++) {
+          entries.forEach(entry => q.push(decorateQueueEntry(entry, repeatIndex)))
         }
       }
 
@@ -3947,32 +4120,45 @@ export default {
         // Cumulative method: 1, then 1-2, then 1-2-3, etc.
         for (let endIndex = 0; endIndex < verses.length; endIndex++) {
           const chain = verses.slice(0, endIndex + 1)
-          for (let chainIndex = 0; chainIndex < chain.length; chainIndex++) {
-            pushQueueEntry({
+          pushQueueGroup(chain.map((verse, chainIndex) => ({
               verse: chain[chainIndex],
               phase: 'Cumulative',
               chainKey: `cumulative:${endIndex + 1}`,
               sequencePosition: chainIndex + 1,
               sequenceTotal: chain.length
-            })
-          }
+          })))
         }
       } else {
-        // Linking method: split each ayah into compact recitation segments.
+        // Linking method: practice ayahs individually, then adjacent ayah pairs.
         for (let index = 0; index < verses.length; index++) {
           const verse = verses[index]
-          const segments = this.createAyahSegments(verse)
-
-          segments.forEach(segment => {
-            pushQueueEntry({
-              verse,
-              segment,
-              phase: 'Linking',
-              chainKey: `linking:${verse.key}`,
-              sequencePosition: segment.index + 1,
-              sequenceTotal: segments.length
-            })
+          pushQueueEntry({
+            verse,
+            phase: 'Linking',
+            chainKey: `linking:single:${verse.key}`,
+            sequencePosition: 1,
+            sequenceTotal: 1
           })
+
+          const nextVerse = verses[index + 1]
+          if (nextVerse) {
+            pushQueueGroup([
+              {
+                verse,
+                phase: 'Linking',
+                chainKey: `linking:${verse.key}->${nextVerse.key}`,
+                sequencePosition: 1,
+                sequenceTotal: 2
+              },
+              {
+                verse: nextVerse,
+                phase: 'Linking',
+                chainKey: `linking:${verse.key}->${nextVerse.key}`,
+                sequencePosition: 2,
+                sequenceTotal: 2
+              }
+            ])
+          }
         }
       }
 
@@ -4013,26 +4199,6 @@ export default {
       this.syncActiveVerseState(mode, previousActiveKey)
     },
 
-    createAyahSegments(verse) {
-      const words = verse?.words?.length
-        ? verse.words.map(word => String(word?.ar || '').trim()).filter(Boolean)
-        : tokenizeArabicText(verse?.arabic || '')
-      if (!words.length) return [{ index: 0, text: verse?.arabic || '', startWord: 0, endWord: 0 }]
-
-      const segmentSize = Math.max(2, Math.ceil(words.length / 4))
-      const segments = []
-      for (let start = 0; start < words.length; start += segmentSize) {
-        const slice = words.slice(start, start + segmentSize)
-        segments.push({
-          index: segments.length,
-          text: slice.join(' '),
-          startWord: start,
-          endWord: start + slice.length - 1
-        })
-      }
-      return segments
-    },
-
     estimateQueueDuration(queue) {
       const avgVerseDuration = 45
       return Math.ceil(queue.length * avgVerseDuration / 60)
@@ -4040,6 +4206,54 @@ export default {
 
     rebuildQueue(mode = this.currentMode) {
       this.buildQueue(mode)
+    },
+
+    setChainingEnabled(enabled) {
+      this.chainingEnabled = !!enabled
+      this.applyChainingQueueChange(this.currentMode, { restart: true })
+    },
+
+    setChainingMethod(method) {
+      const nextMethod = method === 'cumulative' ? 'cumulative' : 'linking'
+      this.chainingEnabled = true
+      this.chainingMethod = nextMethod
+      this.applyChainingQueueChange(this.currentMode, { restart: true })
+    },
+
+    setChainingRepetitions(value) {
+      this.chainingRepetitions = Math.max(1, Math.min(5, Number(value || 1)))
+      this.applyChainingQueueChange(this.currentMode, { restart: true })
+    },
+
+    applyChainingQueueChange(mode = this.currentMode, options = {}) {
+      if (!this.hasVerses) {
+        this.persistUiState()
+        this.persistCentralSessionState()
+        return
+      }
+      if (this.audioElement && options.restart) {
+        try { this.audioElement.pause() } catch { }
+      }
+      if (options.restart) {
+        this.isPlaying = false
+        this.currentTime = 0
+        this.stopWordHighlighting()
+        this.getModeStore(mode).queueIndex = 0
+      }
+      this.buildQueue(mode)
+      const store = this.getModeStore(mode)
+      if (mode === this.currentMode && Array.isArray(store.queue) && store.queue.length) {
+        if (options.restart) store.queueIndex = 0
+        this.syncMutqinSession(store.queue, mode)
+        const nextEntry = store.queue[Math.max(0, Number(store.queueIndex || 0))]
+        const nextKey = nextEntry?.verse?.key || nextEntry?.key || store.activeKey
+        if (nextKey) {
+          this.setActiveVerse(nextKey, { mode, queueIndex: Math.max(0, Number(store.queueIndex || 0)), scroll: false })
+        }
+        if (options.restart) moveMutqinSession(this.mutqinState, 0)
+      }
+      this.persistSessionState()
+      this.persistCentralSessionState()
     },
 
     persistModeState(mode) {
@@ -4128,14 +4342,14 @@ export default {
       const first = builtQueue[playbackIndex]
 
       if (first && first.verse) {
-        this.syncActiveVerseState(mode, first.verse.key)
+        this.setActiveVerse(first.verse.key, { mode, queueIndex: playbackIndex, scroll: false })
         await this.$nextTick()
 
         if (this.audioElement) {
           this.audioElement.playbackRate = this.speed
         }
 
-        await this.playVerse(first.verse, { force: true })
+        await this.playQueueEntry(first, { force: true, queueIndex: playbackIndex })
       }
 
       this.showTools = false
@@ -5020,18 +5234,25 @@ export default {
     },
 
     adjustRange() {
-      const max = this.currentChapter?.verses_count || 286
-      this.rangeStart = Math.max(1, Math.min(this.rangeStart, max))
-      this.rangeEnd = Math.max(this.rangeStart, Math.min(this.rangeEnd, max))
-      this.scheduleLoadVerses(this.currentMode)
+      this.clampControlRange(this.currentMode)
+      this.applyWorkspaceControls({ reason: 'range' })
     },
 
     onChapterChange(event) {
-      this.chapterId = parseInt(event.target.value)
-      this.loadChapter(this.currentMode)
+      const nextChapterId = Number.parseInt(event.target.value, 10) || 0
+      this.chapterId = nextChapterId
+      const selectedChapter = this.chapters.find(chapter => Number(chapter.id) === nextChapterId) || null
+      this.currentChapter = selectedChapter
+      if (selectedChapter) {
+        this.rangeStart = 1
+        this.rangeEnd = Math.min(7, Number(selectedChapter.verses_count || 7))
+      }
+      this.applyWorkspaceControls({ reason: 'chapter' })
     },
 
-    refreshVerses() { this.scheduleLoadVerses(this.currentMode) },
+    refreshVerses() {
+      this.applyWorkspaceControls({ reason: 'reciter' })
+    },
 
     // Quiz methods
     startQuiz() {
@@ -7575,54 +7796,54 @@ html {
 }
 
 .settings-section {
-  padding: 22px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(251, 246, 239, 0.94));
-  box-shadow: 0 22px 48px rgba(63, 39, 18, 0.10);
-  border: 1px solid rgba(154, 103, 56, 0.10);
-  border-radius: 22px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(28, 24, 20, 0.08);
+  background: #fffdf9;
+  box-shadow: 0 18px 42px rgba(40, 28, 16, 0.08);
 }
 
 .settings-heading {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 16px;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(28, 24, 20, 0.07);
 }
 
 .settings-heading-copy {
-  flex: 1 1 auto;
   min-width: 0;
   display: grid;
-  gap: 4px;
+  gap: 6px;
 }
 
 .settings-heading-copy h3 {
   margin: 0;
-  color: var(--text);
-  font-size: clamp(1rem, 1.08vw, 1.12rem);
-  font-weight: 640;
-  line-height: 1.2;
+  color: #1f1d1a;
+  font-size: 1.12rem;
+  font-weight: 560;
+  line-height: 1.15;
 }
 
 .settings-heading-copy p {
   margin: 0;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  line-height: 1.35;
+  color: #6d655d;
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 
 .settings-status {
-  flex: 0 0 auto;
-  min-height: 28px;
+  min-height: 30px;
   padding: 0 11px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(154, 103, 56, 0.10);
-  color: var(--accent-strong);
+  background: #f7f2eb;
+  border: 1px solid rgba(28, 24, 20, 0.08);
+  color: #614326;
   font-size: 0.64rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
+  font-weight: 520;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   display: inline-flex;
   align-items: center;
@@ -7633,132 +7854,169 @@ html {
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  background: #2e9d62;
-  box-shadow: 0 0 0 4px rgba(46, 157, 98, 0.12);
-}
-
-.settings-apply {
-  flex: 0 0 auto;
-  min-height: 40px;
-  padding: 8px 16px;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 500;
+  background: #2f9f68;
+  box-shadow: 0 0 0 4px rgba(47, 159, 104, 0.12);
 }
 
 .settings-panels {
   display: grid;
-  gap: 20px;
+  gap: 16px;
 }
 
 .settings-group {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .settings-group-title {
-  color: #7d6044;
-  font-size: 0.62rem;
-  font-weight: 600;
+  color: #725233;
+  font-size: 0.64rem;
+  font-weight: 560;
   text-transform: uppercase;
   letter-spacing: 0.12em;
 }
 
-.settings-list {
+.settings-card-grid {
   display: grid;
-  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
-.settings-list-flat,
-.settings-list-compact {
-  gap: 0;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.84);
-  border: 1px solid rgba(154, 103, 56, 0.08);
-  box-shadow: 0 12px 28px rgba(63, 39, 18, 0.04);
-  overflow: hidden;
+.settings-display-grid {
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
 }
 
-.settings-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  min-height: 70px;
-  padding: 18px 20px;
-  background: transparent;
-  border-bottom: 1px solid rgba(154, 103, 56, 0.08);
+.settings-card {
+  min-width: 0;
+  border-radius: 14px;
+  border: 1px solid rgba(28, 24, 20, 0.08);
+  background: linear-gradient(180deg, #ffffff, #fbf8f3);
+  box-shadow: 0 8px 18px rgba(40, 28, 16, 0.045);
 }
 
-.settings-list .settings-row:last-child {
-  border-bottom: none;
+.settings-card-toggle {
+  min-height: 126px;
+  padding: 14px;
+  display: grid;
+  align-content: space-between;
+  gap: 14px;
+}
+
+.settings-card-range {
+  min-height: 126px;
+  padding: 14px;
+  display: grid;
+  gap: 14px;
 }
 
 .settings-row-copy {
-  flex: 1 1 auto;
   min-width: 0;
   display: grid;
   gap: 6px;
 }
 
 .settings-row-copy label {
-  color: var(--text);
-  font-size: 0.79rem;
-  font-weight: 560;
+  color: #211f1c;
+  font-size: 0.86rem;
+  font-weight: 540;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   min-width: 0;
 }
 
 .settings-row-copy small {
-  color: var(--text-muted);
+  color: #6f675f;
   font-size: 0.7rem;
   line-height: 1.4;
 }
 
 .settings-icon {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(154, 103, 56, 0.08);
-  border: 1px solid rgba(154, 103, 56, 0.10);
-  color: var(--accent-strong);
+  background: #f7f1ea;
+  border: 1px solid rgba(154, 103, 56, 0.13);
+  color: #8c5b2e;
   flex: 0 0 auto;
 }
 
 .settings-toggle {
-  flex: 0 0 auto;
-  min-width: 96px;
-  min-height: 36px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 0.67rem;
-  font-weight: 500;
+  width: 100%;
+  min-height: 40px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 540;
   box-shadow: none;
   border-width: 1px;
 }
 
-.settings-row-range {
-  align-items: stretch;
-}
-
 .settings-range-wrap {
-  flex: 0 0 min(240px, 40%);
-  min-width: 170px;
-  display: flex;
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
 }
 
 .settings-range {
-  flex: 1 1 0;
   min-width: 0;
+  width: 100%;
   padding: 0;
   box-shadow: none;
+}
+
+.settings-apply-section {
+  padding: 12px;
+  border-radius: 14px;
+  background: #f8f2ea;
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  display: grid;
+  gap: 8px;
+}
+
+.settings-apply-primary {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #8d5a2c;
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 560;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+}
+
+.settings-apply-primary:hover {
+  transform: translateY(-1px);
+  background: #7b4b22;
+  box-shadow: 0 10px 20px rgba(123, 75, 34, 0.24);
+}
+
+.settings-apply-section small {
+  color: #6f675f;
+  font-size: 0.7rem;
+}
+
+.tools-footer.settings-footer {
+  background: transparent;
+  border-top: none;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+.tools-footer.settings-footer .tools-btn {
+  visibility: hidden;
 }
 
 
@@ -8741,8 +8999,7 @@ html {
 [data-theme="dark"] .workspace-fab,
 [data-theme="dark"] .workspace-fab-sub span,
 [data-theme="dark"] .workspace-fab-live-pill,
-[data-theme="dark"] .settings-list-flat,
-[data-theme="dark"] .settings-list-compact,
+[data-theme="dark"] .settings-card,
 [data-theme="dark"] .word-item:hover::after,
 [data-theme="dark"] .word-item:focus::after {
   background: var(--surface-strong);
@@ -8775,9 +9032,10 @@ html {
   color: var(--accent-strong);
 }
 
-[data-theme="dark"] .settings-row {
-  background: transparent;
+[data-theme="dark"] .settings-card {
+  background: var(--surface-strong);
   border-color: rgba(255, 236, 216, 0.10);
+  box-shadow: none;
 }
 
 [data-theme="dark"] .settings-toggle {
@@ -9694,33 +9952,45 @@ html {
     min-height: 44px;
   }
 
-  .settings-row {
-    gap: 8px;
+  .settings-heading {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
   }
 
-  .settings-row {
-    flex-direction: column;
-    align-items: stretch;
+  .settings-status {
+    justify-self: start;
+  }
+
+  .settings-card-grid,
+  .settings-display-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .settings-card-toggle,
+  .settings-card-range {
     min-height: 0;
-    padding: 14px;
-  }
-
-  .settings-row-copy {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
+    padding: 13px;
+    gap: 12px;
   }
 
   .settings-toggle {
-    width: 100%;
-    min-width: 0;
-    min-height: 40px;
+    min-height: 38px;
   }
 
   .settings-range-wrap {
-    width: 100%;
-    min-width: 0;
+    gap: 10px;
+  }
+
+  .settings-apply-section {
+    padding: 12px;
+  }
+
+  .settings-apply-primary {
+    min-height: 46px;
+    border-radius: 12px;
+    font-size: 0.88rem;
   }
 
   .setup-start-card {

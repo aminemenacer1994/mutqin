@@ -32,9 +32,10 @@ includesAll('technique controls', [
   /focusModeEnabled = !focusModeEnabled/,
   /blurModeEnabled = !blurModeEnabled/,
   /v-model\.number="blurIntensity"/,
-  /chainingEnabled = !chainingEnabled/,
-  /chainingMethod = 'linking'/,
-  /chainingMethod = 'cumulative'/,
+  /@click="setChainingEnabled\(!chainingEnabled\)"/,
+  /@click="setChainingMethod\('linking'\)"/,
+  /@click="setChainingMethod\('cumulative'\)"/,
+  /@input="setChainingRepetitions\(Number\(\$event\.target\.value\)\)"/,
   /phase: 'Linking'/,
   /phase: 'Cumulative'/
 ])
@@ -61,6 +62,30 @@ includesAll('workspace application', [
   /'focus-mode-active': focusModeEnabled/,
   /'blur-mode-active': blurModeEnabled/,
   /'blur-upcoming': blurModeEnabled && isVerseBlurred\(verse\.key\)/
+])
+
+includesAll('offcanvas workspace sync', [
+  /syncWorkspaceFromControls\(options = \{\}\)/,
+  /applyWorkspaceControls\(options = \{\}\)/,
+  /clearWorkspaceForConfigChange\(mode = this\.currentMode\)/,
+  /onChapterChange\(event\)/,
+  /refreshVerses\(\)/
+])
+
+includesAll('chaining runtime application', [
+  /setChainingEnabled\(enabled\)/,
+  /setChainingMethod\(method\)/,
+  /setChainingRepetitions\(value\)/,
+  /applyChainingQueueChange\(mode = this\.currentMode, options = \{\}\)/,
+  /playQueueEntry\(entry, options = \{\}\)/,
+  /segment: null/,
+  /pushQueueGroup\(chain\.map/,
+  /pushQueueGroup\(\[/,
+  /linking:single:\$\{verse\.key\}/,
+  /linking:\$\{verse\.key\}->\$\{nextVerse\.key\}/,
+  /uiChaining/,
+  /\.\.\.\(uiChaining \|\| \{\}\)/,
+  /if \(!uiChaining\)/
 ])
 
 const modeDataMatchesCount = (source.match(/modeDataMatchesConfig\(mode = this\.currentMode/g) || []).length
