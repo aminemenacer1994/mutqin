@@ -100,17 +100,23 @@
           <span>Loading...</span>
         </div>
         <div v-else-if="hasVerses" class="workspace">
-          <section class="workspace-shell" aria-label="Session overview">
+          <section class="workspace-shell" :class="{ collapsed: mainCardCollapsed }" aria-label="Session overview">
             <div class="workspace-shell-head">
               <div class="workspace-shell-copy">
-                <span class="workspace-shell-kicker">{{ activeCardKicker }}</span>
+                <span class="workspace-shell-kicker" :class="{ 'workspace-shell-kicker-review': guidedUiStep === 'review' }">
+                  {{ guidedUiStep === 'review' ? reviewPriorityLabel : activeCardKicker }}
+                </span>
                 <div class="workspace-shell-title-row">
                   <h1>{{ currentChapter ? currentChapter.name_simple : activeChapterName }}</h1>
-                  <span class="workspace-shell-phase">{{ guidedPhaseLabel }}</span>
                 </div>
-                <p>{{ setupReadinessHint }}</p>
+                <p>{{ currentActionLabel }}</p>
               </div>
               <div class="workspace-shell-actions">
+                <!-- <button class="fab-btn fab-btn-ghost" type="button" @click="mainCardCollapsed = !mainCardCollapsed"
+                  :title="mainCardCollapsed ? 'Expand summary' : 'Collapse summary'">
+                  <i class="bi" :class="mainCardCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'" @click="mainCardCollapsed = !mainCardCollapsed"
+                  :title="mainCardCollapsed ? 'Expand summary' : 'Collapse summary'"></i><span>{{ mainCardCollapsed ? 'Expand' : 'Collapse' }}</span>
+                </button> -->
                 <button class="fab-btn fab-btn-ghost" type="button" aria-controls="memorisationToolsPanel"
                   :aria-expanded="showTools ? 'true' : 'false'" @click="openAdvancedControls" title="Open session controls">
                   <i class="bi bi-sliders"></i><span>Controls</span>
@@ -121,18 +127,21 @@
                 </button>
               </div>
             </div>
-            <div class="workspace-shell-meta">
-              <span>Ayah {{ currentPosition }}/{{ totalVerses }}</span>
-              <span>{{ setupReadinessHint }}</span>
-              <span>{{ progressPercent }}% progress</span>
-              <span v-if="etaLabel">{{ etaLabel }}</span>
+            <div v-show="!mainCardCollapsed" class="workspace-shell-meta">
+              <span>Current ayah {{ currentPosition }} of {{ totalVerses }}</span>
+              <span>Session {{ progressPercent }}% complete</span>
+              <span v-if="guidedUiStep === 'review'" class="workspace-shell-meta-review">{{ reviewPriorityLabel }}</span>
+              <span v-if="etaLabel">Time left: {{ etaLabel.replace('Audio time ≈ ', '') }}</span>
             </div>
-            <div v-if="chainingEnabled" class="workspace-shell-chaining" aria-label="Chaining status">
+            <div v-if="!mainCardCollapsed && chainingEnabled && hasSessionFeedback" class="workspace-shell-chaining" aria-label="Chaining status">
               <span class="workspace-shell-chain-pill">
-                <i class="bi bi-link-45deg"></i>{{ chainingMethodLabel }}
+                <i class="bi bi-link-45deg"></i>{{ chainingMethod === 'cumulative' ? 'Cumulative practice' : 'Linking practice' }} · {{ chainingRepetitions }}x
               </span>
               <span class="workspace-shell-chain-pill workspace-shell-chain-pill-soft">
-                <i class="bi bi-diagram-3"></i>{{ chainingProgressLabel }}
+                <i class="bi bi-signpost-split"></i>Up next: {{ chainingMethod === 'cumulative' ? 'add next ayah to block' : 'single, next, then pair' }}
+              </span>
+              <span class="workspace-shell-chain-pill workspace-shell-chain-pill-soft">
+                <i class="bi bi-diagram-3"></i>Current: {{ chainingProgressLabel }}
               </span>
             </div>
           </section>
@@ -145,10 +154,13 @@
                 'serious-training': false,
                 'blur-upcoming': blurModeEnabled && isVerseBlurred(verse.key)
               }" @click="onVerseCardClick(verse)" role="button" tabindex="0"
+                @touchstart.passive="onVerseTouchStart($event)"
+                @touchend.passive="onVerseTouchEnd($event)"
                 @keydown.enter.prevent="onVerseCardClick(verse)">
                 <div class="verse-header">
                   <div class="verse-badges">
                     <span class="verse-number">Ayah {{ verse.number }}</span>
+                    <span v-if="isReviewPriorityAyah(verse.key)" class="verse-status-badge verse-status-badge-review">Review Due</span>
                     <span v-if="effectiveActiveVerseKey === verse.key" class="verse-status-badge">Active Ayah</span>
                   </div>
 
@@ -186,7 +198,8 @@
                   @scroll="onVerseWordsScroll(verse.key, $event)">
                   <div v-for="(word, wi) in verse.words" :key="wi" class="word-item"
                     :class="{ highlighted: currentHighlightedVerseKey === verse.key && currentWordIndex === wi, 'phrase-highlighted': currentHighlightedVerseKey === verse.key && currentPhraseIndex === wi }"
-                    :title="wordTooltip(word)" :data-tooltip="wordTooltip(word)" tabindex="0">
+                    :title="wordTooltip(word)" :data-tooltip="wordTooltip(word)" tabindex="0"
+                    @click.stop="revealWordHint(word)">
                     <span class="word-arabic" dir="rtl">{{ word.ar }}</span>
                     <span class="word-meaning">{{ word.en }}</span>
                     <button v-if="word.audio && wordByWordAudioEnabled" class="word-audio-btn"
@@ -227,6 +240,52 @@
 
         <div class="tools-body compact">
           <div v-if="tab === 'tools'" class="sheet">
+            <section class="sheet-section quick-tools">
+              <div class="quick-tools-grid" role="group" aria-label="Quick tools">
+                <div class="quick-tool">
+                  <div class="quick-tool-top">
+                    <span class="quick-tool-label">Blur</span>
+                    <button class="toggle-chip toggle-chip-compact" :class="{ active: blurModeEnabled }"
+                      @click="blurModeEnabled = !blurModeEnabled" type="button">
+                      {{ blurModeEnabled ? 'On' : 'Off' }}
+                    </button>
+                  </div>
+                  <div class="quick-tool-body" :class="{ disabled: !blurModeEnabled }">
+                    <input type="range" min="4" max="18" step="1" v-model.number="blurIntensity"
+                      class="input quick-range" :disabled="!blurModeEnabled" aria-label="Blur intensity">
+                    <span class="inline-setting-pill">{{ blurIntensity }}px</span>
+                  </div>
+                </div>
+
+                <div class="quick-tool">
+                  <div class="quick-tool-top">
+                    <span class="quick-tool-label">Speed</span>
+                    <span class="quick-tool-value">{{ Number(speed || 1).toFixed(2).replace(/0+$/, '').replace(/\.$/, '') }}x</span>
+                  </div>
+                  <div class="quick-tool-body">
+                    <div class="segmented-control segmented-control-compact" role="group" aria-label="Playback speed">
+                      <button type="button" v-for="option in speedOptions" :key="`quick-speed-${option}`"
+                        :class="{ active: Number(speed) === Number(option) }" @click="setPlaybackSpeed(option)">
+                        {{ option }}x
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="quick-tool">
+                  <div class="quick-tool-top">
+                    <span class="quick-tool-label">Tajweed</span>
+                    <button class="toggle-chip toggle-chip-compact" :class="{ active: tajweedEnabled }"
+                      @click="toggleTajweed" type="button">
+                      {{ tajweedEnabled ? 'On' : 'Off' }}
+                    </button>
+                  </div>
+                  <div class="quick-tool-body quick-tool-body-muted">
+                    <span class="quick-tool-hint">Recitation colors</span>
+                  </div>
+                </div>
+              </div>
+            </section>
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
                 <span class="st-left">
@@ -392,35 +451,7 @@
               
 
               <div class="settings-panels" style="padding: 20px">
-                <section class="settings-group">
-                  <span class="settings-group-title">Display</span>
-                  <div class="settings-card-grid settings-display-grid">
-                    <div class="settings-card settings-card-toggle">
-                      <div class="settings-row-copy">
-                        <label><span class="settings-icon"><i class="bi bi-palette2"></i></span><span>Tajweed</span></label>
-                        <small>Recitation colors</small>
-                      </div>
-                      <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.tajweedEnabled }"
-                        @click="toggleSettingsOption('tajweedEnabled')">
-                        {{ settingsDraft.tajweedEnabled ? 'Enabled' : 'Disabled' }}
-                      </button>
-                    </div>
-
-                    <div class="settings-card settings-card-range">
-                      <div class="settings-row-copy">
-                        <label><span class="settings-icon"><i class="bi bi-arrows-angle-expand"></i></span><span>Font size</span></label>
-                        <small>Verse scale</small>
-                      </div>
-                      <div class="settings-range-wrap">
-                        <input type="range" min="80" max="140" step="5" :value="settingsDraft.defaultFontSize"
-                          @input="updateSettingsValue('defaultFontSize', Number($event.target.value))"
-                          class="input settings-range" aria-label="Font size">
-                        <span class="inline-setting-pill">{{ settingsDraft.defaultFontSize }}%</span>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-
+              
                 <section class="settings-group">
                   <div class="settings-card-grid">
                     <div class="settings-card settings-card-toggle">
@@ -430,7 +461,7 @@
                       </div>
                       <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTranslation }"
                         @click="toggleSettingsOption('showTranslation')">
-                        {{ settingsDraft.showTranslation ? 'Enabled' : 'Disabled' }}
+                        {{ settingsDraft.showTranslation ? 'On' : 'Off' }}
                       </button>
                     </div>
 
@@ -441,7 +472,7 @@
                       </div>
                       <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTransliteration }"
                         @click="toggleSettingsOption('showTransliteration')">
-                        {{ settingsDraft.showTransliteration ? 'Enabled' : 'Disabled' }}
+                        {{ settingsDraft.showTransliteration ? 'On' : 'Off' }}
                       </button>
                     </div>
 
@@ -452,7 +483,7 @@
                       </div>
                       <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showWordByWord }"
                         @click="toggleSettingsOption('showWordByWord')">
-                        {{ settingsDraft.showWordByWord ? 'Enabled' : 'Disabled' }}
+                        {{ settingsDraft.showWordByWord ? 'On' : 'Off' }}
                       </button>
                     </div>
 
@@ -463,7 +494,7 @@
                       </div>
                       <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.wordByWordAudioEnabled }"
                         @click="toggleSettingsOption('wordByWordAudioEnabled')">
-                        {{ settingsDraft.wordByWordAudioEnabled ? 'Enabled' : 'Disabled' }}
+                        {{ settingsDraft.wordByWordAudioEnabled ? 'On' : 'Off' }}
                       </button>
                     </div>
                   </div>
@@ -482,14 +513,10 @@
         </div>
 
         <div class="tools-footer" :class="{ 'settings-footer': tab === 'settings' }">
-          <button class="tools-btn tools-btn-primary tools-btn-start" @click="startSession"
-            :disabled="!canStartSession">
-            <i class="bi bi-play-fill"></i><span>Start memorising</span>
-          </button>
           <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="resetControls"><i
               class="bi bi-arrow-counterclockwise"></i><span>Reset</span></button>
-          <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="closeToolsPanel"><i
-              class="bi bi-x-circle"></i><span>Close</span></button>
+          <button class="tools-btn tools-btn-primary tools-btn-soft" @click="closeToolsPanel"><i
+              class="bi bi-check2-circle"></i><span>Done</span></button>
         </div>
       </aside>
     </div>
@@ -640,6 +667,14 @@
           <p class="confirm-copy resume-copy">Pick up gently from where you paused. Everything is ready for a calm
             restart.</p>
           <p class="confirm-copy">{{ continueSessionMeta }}</p>
+          <div class="resume-feedback-bars">
+            <div class="resume-feedback-row"><span>Cumulative chain</span><strong>{{ resumeFeedback.chainProgress }}%</strong></div>
+            <div class="progress-bar-track"><div class="progress-bar-fill" :style="{ width: resumeFeedback.chainProgress + '%' }"></div></div>
+            <div class="resume-feedback-row"><span>Repetition progress</span><strong>{{ resumeFeedback.repetitionProgress }}%</strong></div>
+            <div class="progress-bar-track"><div class="progress-bar-fill resume-progress-repetition" :style="{ width: resumeFeedback.repetitionProgress + '%' }"></div></div>
+            <div class="resume-feedback-row"><span>Retention queue</span><strong>{{ resumeFeedback.retentionProgress }}%</strong></div>
+            <div class="progress-bar-track"><div class="progress-bar-fill resume-progress-retention" :style="{ width: resumeFeedback.retentionProgress + '%' }"></div></div>
+          </div>
           <div class="resume-grid">
             <div class="pill">
               <i class="bi bi-book"></i>
@@ -658,16 +693,12 @@
                 String(continueSessionPayload.activeVerseKey).split(':')[1] : continueSessionPayload?.config?.rangeStart
               }}</span>
             </div>
+            <div class="pill pill-status-mastered"><i class="bi bi-check2-circle"></i><span>{{ feedbackCounts.mastered }} mastered</span></div>
+            <div class="pill pill-status-weak"><i class="bi bi-exclamation-circle"></i><span>{{ feedbackCounts.weak }} weak</span></div>
+            <div class="pill pill-status-repeat"><i class="bi bi-arrow-repeat"></i><span>{{ feedbackCounts.repeat }} need repetition</span></div>
           </div>
           <div class="pill" style="margin-top: 10px; padding: 12px 14px;">
             <strong>Next:</strong> {{ resumeWhatNext }}
-          </div>
-          <div class="pill" style="margin-top: 10px; padding: 12px 14px;">
-            <strong>Last results:</strong>
-            <span style="display:block; margin-top:6px;">
-              {{ analytics.sessionsCompleted }} sessions · {{ analytics.totalRepetitions }} repeats · {{
-                analytics.currentStreak }} day streak
-            </span>
           </div>
         </div>
         <div class="modal-footer">
@@ -885,6 +916,8 @@ export default {
       advanceLocked: false,
       repeatActionLocked: false,
       playRequestLocked: false,
+      mainCardCollapsed: false,
+      feedbackCollapsed: true,
 
       // UI State
       currentMode: 'beginner',
@@ -1036,6 +1069,8 @@ export default {
       workspaceSyncTimer: null,
       segmentPlaybackTimer: null,
       segmentEndTime: 0,
+      touchStartX: 0,
+      touchStartY: 0,
 
       // Word sequence
       wordSequence: null,
@@ -1251,6 +1286,68 @@ export default {
         return `block ${pos}/${all} · ${repeatSuffix}`
       }
       return repeatSuffix
+    },
+    chainingNextStepLabel() {
+      if (!this.chainingEnabled) return ''
+      if (this.chainingMethod === 'cumulative') {
+        return 'Next: add one ayah to the block'
+      }
+      return 'Next: single -> next -> pair'
+    },
+    currentActionLabel() {
+      if (!this.hasVerses) return 'Choose surah and range, then start.'
+      if (!this.effectiveActiveVerseKey) return 'Tap Start Session to build and start the queue.'
+      if (this.guidedUiStep === 'review') return 'Action now: review this ayah and continue.'
+      if (this.guidedUiStep === 'recall') return 'Action now: recite from memory, then reveal to confirm.'
+      if (this.isPlaying) return 'Action now: listen and follow the active ayah.'
+      return 'Action now: press Play, then recite and repeat as needed.'
+    },
+    reviewPriorityLabel() {
+      if (this.guidedUiStep !== 'review') return ''
+      if (this.dueCount > 0) return `${this.dueCount} review${this.dueCount === 1 ? '' : 's'} due now`
+      return 'Review due now'
+    },
+    feedbackCounts() {
+      const ayahs = Object.values(this.mutqinState?.ayahs || {})
+      let mastered = 0
+      let weak = 0
+      let repeat = 0
+      ayahs.forEach(ayah => {
+        if (Number(ayah?.mastery_level || 0) >= 5 || ayah?.status === 'mastered') mastered += 1
+        if (Number(ayah?.weak_count || 0) > 0 || ayah?.status === 'weak') weak += 1
+        if (Number(ayah?.repetition_count || 0) > 0 && Number(ayah?.mastery_level || 0) < 5) repeat += 1
+      })
+      return { mastered, weak, repeat }
+    },
+    sessionFeedback() {
+      const queue = this.queue || []
+      const total = Math.max(1, queue.length)
+      const done = Math.max(0, Number(this.queueIndex || 0))
+      const repetitionProgress = Math.max(0, Math.min(100, Math.round((done / total) * 100)))
+      const chainTotal = Math.max(1, queue.filter(item => ['Linking', 'Cumulative'].includes(item?.phase)).length || total)
+      const chainDone = Math.max(0, queue.slice(0, done).filter(item => ['Linking', 'Cumulative'].includes(item?.phase)).length)
+      const chainProgress = Math.max(0, Math.min(100, Math.round((chainDone / chainTotal) * 100)))
+      const retentionTotal = Math.max(1, queue.filter(item => item?.phase === 'Retention').length)
+      const retentionDone = Math.max(0, queue.slice(0, done).filter(item => item?.phase === 'Retention').length)
+      const retentionProgress = Math.max(0, Math.min(100, Math.round((retentionDone / retentionTotal) * 100)))
+      return { chainProgress, repetitionProgress, retentionProgress }
+    },
+    hasSessionFeedback() {
+      return Array.isArray(this.queue) && this.queue.length > 0
+    },
+    resumeFeedback() {
+      const payload = this.continueSessionPayload
+      const queue = payload?.queue || this.queue || []
+      const current = Math.max(0, Number(payload?.queueIndex || this.queueIndex || 0))
+      const total = Math.max(1, queue.length)
+      const repetitionProgress = Math.max(0, Math.min(100, Math.round((current / total) * 100)))
+      const chainTotal = Math.max(1, queue.filter(item => ['Linking', 'Cumulative'].includes(item?.phase)).length || total)
+      const chainDone = Math.max(0, queue.slice(0, current).filter(item => ['Linking', 'Cumulative'].includes(item?.phase)).length)
+      const chainProgress = Math.max(0, Math.min(100, Math.round((chainDone / chainTotal) * 100)))
+      const retentionTotal = Math.max(1, queue.filter(item => item?.phase === 'Retention').length || 1)
+      const retentionDone = Math.max(0, queue.slice(0, current).filter(item => item?.phase === 'Retention').length)
+      const retentionProgress = Math.max(0, Math.min(100, Math.round((retentionDone / retentionTotal) * 100)))
+      return { chainProgress, repetitionProgress, retentionProgress }
     },
 
     guidedUiStep() {
@@ -1919,6 +2016,37 @@ export default {
     openAdvancedControls() {
       // Keep power features accessible, but behind a tertiary surface.
       this.openToolsPanel()
+    },
+    isReviewPriorityAyah(verseKey) {
+      if (!verseKey) return false
+      const currentEntry = this.activeQueueEntry
+      if (currentEntry?.phase === 'Retention' && (currentEntry?.ayahId === verseKey || currentEntry?.verse?.key === verseKey || currentEntry?.key === verseKey)) {
+        return true
+      }
+      const retentionDue = (this.queue || []).some(item => item?.phase === 'Retention' && (item?.ayahId === verseKey || item?.verse?.key === verseKey || item?.key === verseKey))
+      if (retentionDue) return true
+      const ayah = this.mutqinState?.ayahs?.[verseKey]
+      return ayah?.status === 'weak'
+    },
+    onVerseTouchStart(event) {
+      const touch = event?.changedTouches?.[0]
+      if (!touch) return
+      this.touchStartX = Number(touch.clientX || 0)
+      this.touchStartY = Number(touch.clientY || 0)
+    },
+    onVerseTouchEnd(event) {
+      const touch = event?.changedTouches?.[0]
+      if (!touch) return
+      const dx = Number(touch.clientX || 0) - Number(this.touchStartX || 0)
+      const dy = Number(touch.clientY || 0) - Number(this.touchStartY || 0)
+      if (Math.abs(dx) < 42 || Math.abs(dx) < Math.abs(dy)) return
+      if (dx < 0) this.next()
+      else this.prev()
+    },
+    revealWordHint(word) {
+      if (!word) return
+      const hint = this.wordTooltip(word)
+      this.showBanner(hint, 'info', 1200)
     },
 
     onVerseCardClick(verse) {
@@ -4823,6 +4951,8 @@ export default {
           this.script = state.script || this.script
           this.sectionOpen = { ...this.sectionOpen, ...(state.sectionOpen || {}) }
           this.tajweedEnabled = state.tajweedEnabled ?? false
+          this.mainCardCollapsed = !!state.mainCardCollapsed
+          this.feedbackCollapsed = !!state.feedbackCollapsed
         }
       } catch (e) { console.error(e) }
       this.showTools = false
@@ -4855,7 +4985,9 @@ export default {
           quranFont: this.quranFont,
           script: this.script,
           sectionOpen: this.sectionOpen,
-          tajweedEnabled: this.tajweedEnabled
+          tajweedEnabled: this.tajweedEnabled,
+          mainCardCollapsed: this.mainCardCollapsed,
+          feedbackCollapsed: this.feedbackCollapsed
         }))
       } catch (e) {
         console.error('Failed to persist UI state:', e)
@@ -6374,6 +6506,75 @@ html {
   }
 }
 
+.quick-tools {
+  border: 1px solid rgba(154, 103, 56, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.quick-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.quick-tool {
+  border: 1px solid rgba(154, 103, 56, 0.10);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.82);
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.quick-tool-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.quick-tool-label {
+  font-size: 0.74rem;
+  font-weight: 750;
+  color: var(--text);
+}
+
+.quick-tool-value {
+  font-size: 0.74rem;
+  font-weight: 650;
+  color: var(--text-muted);
+}
+
+.quick-tool-body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.quick-tool-body.disabled {
+  opacity: 0.55;
+}
+
+.quick-tool-body-muted {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.quick-range {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.toggle-chip-compact {
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+}
+
 /* Toggle switch animation and visual feedback */
 .switch {
   transition: all 0.2s ease;
@@ -7579,14 +7780,20 @@ html {
 
 .workspace-shell {
   display: grid;
-  gap: 12px;
-  padding: 18px 20px;
+  gap: 6px;
+  padding: 10px 12px;
   border-radius: 20px;
   border: 1px solid rgba(154, 103, 56, 0.16);
   background:
     linear-gradient(160deg, rgba(255, 251, 245, 0.98), rgba(255, 255, 255, 0.9)),
     radial-gradient(circle at top right, rgba(184, 130, 78, 0.09), transparent 28%);
   box-shadow: 0 14px 28px rgba(63, 39, 18, 0.07);
+  position: relative;
+}
+
+.workspace-shell.collapsed {
+  gap: 8px;
+  padding: 12px 14px;
 }
 
 .workspace-shell-head {
@@ -7598,14 +7805,14 @@ html {
 
 .workspace-shell-copy {
   display: grid;
-  gap: 5px;
+  gap: 3px;
   min-width: 0;
 }
 
 .workspace-shell-kicker {
   display: inline-flex;
   width: fit-content;
-  padding: 4px 8px;
+  padding: 3px 7px;
   border-radius: 999px;
   background: rgba(154, 103, 56, 0.1);
   color: var(--accent-strong);
@@ -7615,17 +7822,22 @@ html {
   letter-spacing: 0.06em;
 }
 
+.workspace-shell-kicker-review {
+  background: rgba(183, 28, 28, 0.12);
+  color: #9f1f1f;
+}
+
 .workspace-shell-title-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .workspace-shell-copy h1 {
   margin: 0;
   color: var(--text);
-  font-size: clamp(1.15rem, 1.8vw, 1.5rem);
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
   line-height: 1.08;
   font-weight: 650;
 }
@@ -7643,6 +7855,12 @@ html {
   font-weight: 650;
 }
 
+.workspace-shell-phase-review {
+  border-color: rgba(183, 28, 28, 0.24);
+  color: #9f1f1f;
+  background: rgba(183, 28, 28, 0.09);
+}
+
 .workspace-shell-copy h2 {
   margin: 0;
   color: var(--text);
@@ -7655,8 +7873,8 @@ html {
   margin: 0;
   color: var(--text-muted);
   max-width: 58ch;
-  font-size: 0.88rem;
-  line-height: 1.45;
+  font-size: 0.8rem;
+  line-height: 1.35;
 }
 
 .workspace-shell-meta {
@@ -7668,14 +7886,88 @@ html {
 .workspace-shell-meta span {
   display: inline-flex;
   align-items: center;
-  min-height: 32px;
-  padding: 7px 10px;
+  min-height: 28px;
+  padding: 5px 8px;
   border-radius: 999px;
   border: 1px solid rgba(154, 103, 56, 0.15);
   background: rgba(255, 255, 255, 0.86);
   color: rgba(48, 42, 35, 0.86);
   font-size: 0.76rem;
   font-weight: 600;
+}
+
+.workspace-shell-meta-review {
+  border-color: rgba(183, 28, 28, 0.24) !important;
+  color: #9f1f1f !important;
+  background: rgba(183, 28, 28, 0.08) !important;
+}
+
+.resume-feedback-bars,
+.session-feedback-bars {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.session-feedback-panel {
+  margin-top: 8px;
+  border: 1px solid rgba(154, 103, 56, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 8px 10px;
+}
+
+.session-feedback-panel summary {
+  list-style: none;
+  cursor: pointer;
+  display: grid;
+  gap: 2px;
+  color: var(--text);
+  font-weight: 650;
+}
+
+.session-feedback-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.session-feedback-panel summary small {
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.74rem;
+}
+
+.resume-feedback-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.resume-progress-repetition {
+  background: linear-gradient(90deg, #f2c94c, #e3a008);
+}
+
+.resume-progress-retention {
+  background: linear-gradient(90deg, #e57373, #c62828);
+}
+
+.pill-status-mastered {
+  border-color: rgba(46, 125, 50, 0.22);
+  background: rgba(76, 175, 80, 0.08);
+  color: #2e7d32;
+}
+
+.pill-status-weak {
+  border-color: rgba(245, 158, 11, 0.22);
+  background: rgba(245, 158, 11, 0.1);
+  color: #8a5a00;
+}
+
+.pill-status-repeat {
+  border-color: rgba(198, 40, 40, 0.22);
+  background: rgba(229, 57, 53, 0.08);
+  color: #9f1f1f;
 }
 
 .workspace-shell-chaining {
@@ -7689,13 +7981,13 @@ html {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  min-height: 32px;
-  padding: 7px 10px;
+  min-height: 28px;
+  padding: 5px 8px;
   border-radius: 999px;
   border: 1px solid rgba(154, 103, 56, 0.16);
   background: rgba(255, 255, 255, 0.86);
   color: rgba(48, 42, 35, 0.86);
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   font-weight: 650;
 }
 
@@ -7956,16 +8248,17 @@ html {
 }
 
 .verse-aid {
-  opacity: 0.92;
-  filter: saturate(0.85);
-  margin-top: 0.55rem;
+  opacity: 0.82;
+  filter: saturate(0.78);
+  margin-top: 0.4rem;
+  font-size: 0.93em;
 }
 
 .verse-aid-title {
   margin-bottom: 4px;
   color: var(--accent-strong);
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.66rem;
+  font-weight: 650;
   font-style: normal;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -10093,6 +10386,12 @@ html {
 }
 
 @media (max-width: 768px) {
+  .quick-tools-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 12px;
+  }
+
   .workspace-shell {
     width: 100%;
     margin-bottom: 14px;
@@ -10127,6 +10426,14 @@ html {
 
   .workspace-shell-chaining {
     gap: 6px;
+  }
+
+  .resume-feedback-row {
+    font-size: 0.74rem;
+  }
+
+  .resume-grid {
+    grid-template-columns: 1fr;
   }
 
   .workspace-fab {
@@ -10581,12 +10888,30 @@ html {
   }
 
   .verse-number,
-  .verse-status-badge,
-  .verse-status-subtle {
+.verse-status-badge,
+.verse-status-subtle {
     width: 100%;
     justify-content: center;
     text-align: center;
   }
+}
+
+.verse-status-badge-review {
+  border-color: rgba(183, 28, 28, 0.24);
+  color: #9f1f1f;
+  background: rgba(183, 28, 28, 0.08);
+}
+
+.verse-card.feedback-mastered {
+  border-left: 4px solid #43a047;
+}
+
+.verse-card.feedback-weak {
+  border-left: 4px solid #e3a008;
+}
+
+.verse-card.feedback-repeat {
+  border-left: 4px solid #c62828;
 }
 
 .main.flow-recall .verse-card.active .verse-arabic {
