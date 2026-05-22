@@ -221,11 +221,10 @@
         :aria-hidden="showTools ? 'false' : 'true'" tabindex="-1">
         <div class="tools-top">
           <div class="tools-topbar">
-            <div id="memorisationToolsTitle" class="tools-title">Controls</div>
+            <div id="memorisationToolsTitle" class="tools-title"><h3 ><b>Controls</b></h3></div>
             <button class="tools-x" @click="closeToolsPanel" aria-label="Close panel"><i
                 class="bi bi-x-lg"></i></button>
           </div>
-          <div class="tools-context">{{ contextLabel }}</div>
           <div class="tools-tabs row g-2" role="tablist" aria-label="Controls tabs">
             <button class="col-12 col-md-6" :class="{ active: tab === 'tools', 'active-tab': tab === 'tools' }" @click="setActiveTab('tools')"
               title="Session tools">
