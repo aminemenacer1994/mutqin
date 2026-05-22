@@ -240,52 +240,6 @@
 
         <div class="tools-body compact">
           <div v-if="tab === 'tools'" class="sheet">
-            <section class="sheet-section quick-tools">
-              <div class="quick-tools-grid" role="group" aria-label="Quick tools">
-                <div class="quick-tool">
-                  <div class="quick-tool-top">
-                    <span class="quick-tool-label">Blur</span>
-                    <button class="toggle-chip toggle-chip-compact" :class="{ active: blurModeEnabled }"
-                      @click="blurModeEnabled = !blurModeEnabled" type="button">
-                      {{ blurModeEnabled ? 'On' : 'Off' }}
-                    </button>
-                  </div>
-                  <div class="quick-tool-body" :class="{ disabled: !blurModeEnabled }">
-                    <input type="range" min="4" max="18" step="1" v-model.number="blurIntensity"
-                      class="input quick-range" :disabled="!blurModeEnabled" aria-label="Blur intensity">
-                    <span class="inline-setting-pill">{{ blurIntensity }}px</span>
-                  </div>
-                </div>
-
-                <div class="quick-tool">
-                  <div class="quick-tool-top">
-                    <span class="quick-tool-label">Speed</span>
-                    <span class="quick-tool-value">{{ Number(speed || 1).toFixed(2).replace(/0+$/, '').replace(/\.$/, '') }}x</span>
-                  </div>
-                  <div class="quick-tool-body">
-                    <div class="segmented-control segmented-control-compact" role="group" aria-label="Playback speed">
-                      <button type="button" v-for="option in speedOptions" :key="`quick-speed-${option}`"
-                        :class="{ active: Number(speed) === Number(option) }" @click="setPlaybackSpeed(option)">
-                        {{ option }}x
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="quick-tool">
-                  <div class="quick-tool-top">
-                    <span class="quick-tool-label">Tajweed</span>
-                    <button class="toggle-chip toggle-chip-compact" :class="{ active: tajweedEnabled }"
-                      @click="toggleTajweed" type="button">
-                      {{ tajweedEnabled ? 'On' : 'Off' }}
-                    </button>
-                  </div>
-                  <div class="quick-tool-body quick-tool-body-muted">
-                    <span class="quick-tool-hint">Recitation colors</span>
-                  </div>
-                </div>
-              </div>
-            </section>
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
                 <span class="st-left">
