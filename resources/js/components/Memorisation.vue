@@ -45,48 +45,6 @@
           </div>
         </section>
 
-        <!-- Floating Actions (replaces the session rail bar) -->
-        <div v-if="currentChapter && hasVerses" class="workspace-fab" aria-label="Workspace actions">
-          <div class="workspace-fab-meta">
-            <div class="workspace-fab-kicker">{{ activeCardKicker }}</div>
-            <div class="workspace-fab-title">{{ currentChapter.name_simple }}</div>
-            <div class="workspace-fab-sub">
-              <span>Ayah {{ currentPosition }}/{{ totalVerses }}</span>
-              <span>{{ guidedPhaseLabel }}</span>
-              <span>{{ activeRepeatLabel }}</span>
-              <span v-if="etaLabel">{{ etaLabel }}</span>
-            </div>
-            <p class="workspace-fab-copy">{{ activeCardBody }}</p>
-            <div class="workspace-fab-live">
-              <span class="workspace-fab-live-pill workspace-fab-live-pill-primary">
-                <i class="bi bi-link-45deg"></i>
-                {{ chainingMethodLabel }}
-              </span>
-              <span class="workspace-fab-live-pill workspace-fab-live-pill-mode">
-                <i class="bi bi-lightning-charge"></i>
-                {{ playMode === 'auto' ? 'Auto advance' : 'Manual advance' }}
-              </span>
-            </div>
-          </div>
-          <div class="workspace-fab-actions">
-            <button class="fab-btn fab-btn-soft" @click="markTakrarRepeat(activeVerseRef)"
-              :disabled="!activeVerseRef || repeatActionLocked" title="Repeat current ayah">
-              <i class="bi bi-arrow-repeat"></i><span>Repeat</span>
-            </button>
-            <button class="fab-btn fab-btn-ghost" type="button" aria-controls="memorisationToolsPanel"
-              :aria-expanded="showTools ? 'true' : 'false'" @click="openAdvancedControls" title="Open session controls">
-              <i class="bi bi-sliders"></i><span>Controls</span>
-            </button>
-            <button class="fab-btn fab-btn-primary" @click="handlePrimaryAction"
-              :disabled="!isPlaying && !canStartSession">
-              <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-              <span>{{ isPlaying ? 'Pause' : (guidedUiStep === 'review' ? 'Review' : 'Play') }}</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- REMOVE the standalone beginner mode button if it exists elsewhere -->
-
         <div v-if="false" class="reading-toolbar">
           <div class="reading-toolbar-group">
             <button class="toolbar-chip" :class="{ active: showTranslation }"
@@ -142,6 +100,43 @@
           <span>Loading...</span>
         </div>
         <div v-else-if="hasVerses" class="workspace">
+          <section class="workspace-shell" aria-label="Session overview">
+            <div class="workspace-shell-head">
+              <div class="workspace-shell-copy">
+                <span class="workspace-shell-kicker">{{ activeCardKicker }}</span>
+                <div class="workspace-shell-title-row">
+                  <h1>{{ currentChapter ? currentChapter.name_simple : activeChapterName }}</h1>
+                  <span class="workspace-shell-phase">{{ guidedPhaseLabel }}</span>
+                </div>
+                <p>{{ setupReadinessHint }}</p>
+              </div>
+              <div class="workspace-shell-actions">
+                <button class="fab-btn fab-btn-ghost" type="button" aria-controls="memorisationToolsPanel"
+                  :aria-expanded="showTools ? 'true' : 'false'" @click="openAdvancedControls" title="Open session controls">
+                  <i class="bi bi-sliders"></i><span>Controls</span>
+                </button>
+                <button class="main-card-primary" type="button" @click="handlePrimaryAction" :disabled="!isPlaying && !canStartSession">
+                  <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                  <span>{{ isPlaying ? 'Pause' : 'Start Session' }}</span>
+                </button>
+              </div>
+            </div>
+            <div class="workspace-shell-meta">
+              <span>Ayah {{ currentPosition }}/{{ totalVerses }}</span>
+              <span>{{ setupReadinessHint }}</span>
+              <span>{{ progressPercent }}% progress</span>
+              <span v-if="etaLabel">{{ etaLabel }}</span>
+            </div>
+            <div v-if="chainingEnabled" class="workspace-shell-chaining" aria-label="Chaining status">
+              <span class="workspace-shell-chain-pill">
+                <i class="bi bi-link-45deg"></i>{{ chainingMethodLabel }}
+              </span>
+              <span class="workspace-shell-chain-pill workspace-shell-chain-pill-soft">
+                <i class="bi bi-diagram-3"></i>{{ chainingProgressLabel }}
+              </span>
+            </div>
+          </section>
+
           <main id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
             aria-label="Memorisation workspace">
             <div class="verses-grid">
@@ -169,7 +164,9 @@
                 <div class="verse-arabic verse-arabic-primary" dir="rtl" v-if="verse.arabic && isDataReady"
                   v-html="getDisplayArabic(verse)" :class="{
                     'tajweed-enabled': tajweedEnabled,
-                    'word-highlight-enabled': wordByWordAudioEnabled && !tajweedEnabled
+                    'word-highlight-enabled': true,
+                    'verse-weak': isWeakAyah(verse.key),
+                    'verse-mastered': isMasteredAyah(verse.key)
                   }" :style="{
                     '--verse-font-percent': getVerseFontSize(verse.key),
                     fontFamily: quranFontFamily
@@ -737,7 +734,7 @@ import { loadMutqinState, saveMutqinState, watchMutqinState } from '../composabl
 import { seedAyahs } from '../composables/useAyahState'
 import { buildSessionQueue, startMutqinSession, moveMutqinSession, completeMutqinSession } from '../composables/useSessionEngine'
 import { createDailyPlan } from '../composables/useDailyPlanner'
-import { repeatAyah, hideAyah, completeTakrarStep, getTakrarStep } from '../composables/useTakrarLadder'
+import { hideAyah, completeTakrarStep, getTakrarStep } from '../composables/useTakrarLadder'
 import { scoreRetention } from '../composables/useRetentionZones'
 
 const MODE_STORAGE_KEYS = {
@@ -1218,7 +1215,6 @@ export default {
     activeVerseRef() {
       return this.verses.find(v => v.key === this.effectiveActiveVerseKey) || null
     },
-
     activeMutqinAyah() {
       return this.effectiveActiveVerseKey ? this.mutqinState.ayahs?.[this.effectiveActiveVerseKey] || null : null
     },
@@ -1235,20 +1231,26 @@ export default {
     activeQueueEntry() {
       return this.queue?.[Math.max(0, Number(this.queueIndex || 0))] || null
     },
-
-    activeRepeatLabel() {
+    chainingProgressLabel() {
+      if (!this.chainingEnabled) return ''
       const entry = this.activeQueueEntry
-      const current = Number(entry?.repeatCount || 1)
-      const total = Number(entry?.totalRepeats || 1)
-      const repeatLabel = total > 1 ? ` · repeat ${current}/${total}` : ''
+      if (!entry) return 'Ready'
+      const total = Math.max(1, Number(entry?.totalRepeats || 1))
+      const current = Math.max(1, Number(entry?.repeatCount || 1))
+      const repeatSuffix = total > 1 ? `repeat ${current}/${total}` : 'single pass'
+
       if (entry?.phase === 'Linking') {
-        const stepLabel = Number(entry.sequenceTotal || 1) > 1
-          ? `pair ${entry.sequencePosition || 1}/${entry.sequenceTotal || 1}`
-          : 'single ayah'
-        return `Linking ${stepLabel}${repeatLabel}`
+        const pos = Math.max(1, Number(entry.sequencePosition || 1))
+        const all = Math.max(1, Number(entry.sequenceTotal || 1))
+        const label = all > 1 ? `pair ${pos}/${all}` : 'single ayah'
+        return `${label} · ${repeatSuffix}`
       }
-      if (entry?.phase === 'Cumulative') return `Cumulative block ${entry.sequencePosition || 1}/${entry.sequenceTotal || 1}${repeatLabel}`
-      return total > 1 ? `Repeat ${current} of ${total}` : 'Single focused pass'
+      if (entry?.phase === 'Cumulative') {
+        const pos = Math.max(1, Number(entry.sequencePosition || 1))
+        const all = Math.max(1, Number(entry.sequenceTotal || 1))
+        return `block ${pos}/${all} · ${repeatSuffix}`
+      }
+      return repeatSuffix
     },
 
     guidedUiStep() {
@@ -1541,14 +1543,14 @@ export default {
     guidedPrimaryCta() {
       if (this.guidedPhaseLabel === 'Learn') return 'Listen & Follow'
       if (this.guidedPhaseLabel === 'Practice') return 'Try Reciting'
-      if (this.guidedPhaseLabel === 'Recall') return 'Reveal'
+      if (this.guidedPhaseLabel === 'Recall') return 'Continue'
       if (this.guidedPhaseLabel === 'Review') return 'Continue'
       return 'Continue'
     },
     guidedInstruction() {
       if (this.guidedPhaseLabel === 'Learn') return 'Listen and follow the recitation.'
       if (this.guidedPhaseLabel === 'Practice') return 'Try reciting with the ayah still partially visible.'
-      if (this.guidedPhaseLabel === 'Recall') return 'Recall before you reveal the ayah.'
+      if (this.guidedPhaseLabel === 'Recall') return 'Recall the ayah before moving forward.'
       if (this.guidedPhaseLabel === 'Review') return 'Review the verses due now.'
       return 'Continue your session.'
     },
@@ -3353,7 +3355,9 @@ export default {
         const escapedWord = escapeHtml(word)
         const isActive = this.currentHighlightedVerseKey === verse.key && this.currentWordIndex === idx
         const activeClass = isActive ? ' highlighted phrase-highlighted' : ''
-        html += `<word class="wbw-word${activeClass}" data-word-index="${idx}" data-verse-key="${verse.key}" title="Word ${idx + 1}">${escapedWord}</word> `
+        const weakClass = this.isWeakAyah(verse.key) ? ' weak-word' : ''
+        const masteredClass = this.isMasteredAyah(verse.key) ? ' mastered-word' : ''
+        html += `<word class="wbw-word${activeClass}${weakClass}${masteredClass}" data-word-index="${idx}" data-verse-key="${verse.key}" title="Word ${idx + 1}">${escapedWord}</word> `
       })
 
       return html
@@ -4504,36 +4508,14 @@ export default {
       return `Review: ${ayah.next_review || 'today'}`
     },
 
-    markTakrarRepeat(verse) {
-      if (this.repeatActionLocked || !verse) return
-      this.repeatActionLocked = true
-      this.syncMutqinAyahs([verse])
-      repeatAyah(this.mutqinState, verse.key)
-      const index = Math.max(0, Number(this.queueIndex || 0))
-      const currentEntry = this.queue?.[index]
-      if (currentEntry) {
-        const inserted = {
-          ...currentEntry,
-          repeatCount: Number(currentEntry.repeatCount || 1) + 1,
-          totalRepeats: Math.max(
-            Number(currentEntry.totalRepeats || 1),
-            Number(currentEntry.repeatCount || 1) + 1
-          )
-        }
-        const nextQueue = [...this.queue]
-        nextQueue.splice(index + 1, 0, inserted)
-        this.queue = nextQueue
-        const modeStore = this.getModeStore(this.currentMode)
-        modeStore.queue = nextQueue
-      }
-      if (verse?.audio) this.playVerse(verse, { force: true })
-      this.recomputeAnalytics()
-      this.persistAllState()
-      window.setTimeout(() => {
-        this.repeatActionLocked = false
-      }, 450)
+    isWeakAyah(key) {
+      const ayah = this.mutqinState?.ayahs?.[key]
+      return Number(ayah?.weak_count || 0) > 0
     },
-
+    isMasteredAyah(key) {
+      const ayah = this.mutqinState?.ayahs?.[key]
+      return Number(ayah?.mastery_level || 0) >= 5 || ayah?.status === 'mastered'
+    },
     markTakrarHide(verse) {
       this.syncMutqinAyahs([verse])
       hideAyah(this.mutqinState, verse.key)
@@ -5889,6 +5871,14 @@ html {
   transform: scale(1.05);
   box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
   animation: pop 180ms ease-out;
+}
+.verse-arabic.verse-weak .wbw-word.weak-word {
+  background: #fff3bf;
+  color: #5f4b00;
+}
+.verse-arabic.verse-mastered .wbw-word.mastered-word {
+  background: #d3f9d8;
+  color: #1f6f31;
 }
 
 @keyframes pop {
@@ -7580,6 +7570,183 @@ html {
 
 .workspace-main {
   min-width: 0;
+}
+
+.workspace-shell {
+  width: min(1120px, 100%);
+  margin: 0 auto 18px;
+}
+
+.workspace-shell {
+  display: grid;
+  gap: 12px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  border: 1px solid rgba(154, 103, 56, 0.16);
+  background:
+    linear-gradient(160deg, rgba(255, 251, 245, 0.98), rgba(255, 255, 255, 0.9)),
+    radial-gradient(circle at top right, rgba(184, 130, 78, 0.09), transparent 28%);
+  box-shadow: 0 14px 28px rgba(63, 39, 18, 0.07);
+}
+
+.workspace-shell-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.workspace-shell-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.workspace-shell-kicker {
+  display: inline-flex;
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(154, 103, 56, 0.1);
+  color: var(--accent-strong);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.workspace-shell-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.workspace-shell-copy h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.15rem, 1.8vw, 1.5rem);
+  line-height: 1.08;
+  font-weight: 650;
+}
+
+.workspace-shell-phase {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(154, 103, 56, 0.14);
+  color: var(--accent-strong);
+  font-size: 0.73rem;
+  font-weight: 650;
+}
+
+.workspace-shell-copy h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.15;
+  font-weight: 600;
+}
+
+.workspace-shell-copy p {
+  margin: 0;
+  color: var(--text-muted);
+  max-width: 58ch;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.workspace-shell-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.workspace-shell-meta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(154, 103, 56, 0.15);
+  background: rgba(255, 255, 255, 0.86);
+  color: rgba(48, 42, 35, 0.86);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.workspace-shell-chaining {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.workspace-shell-chain-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(154, 103, 56, 0.16);
+  background: rgba(255, 255, 255, 0.86);
+  color: rgba(48, 42, 35, 0.86);
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.workspace-shell-chain-pill i {
+  color: var(--accent-strong);
+}
+
+.workspace-shell-chain-pill-soft {
+  background: rgba(154, 103, 56, 0.09);
+  border-color: rgba(154, 103, 56, 0.14);
+  color: var(--accent-strong);
+}
+
+.workspace-shell-actions {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 8px;
+  align-items: start;
+}
+
+.main-nav-btn,
+.main-card-primary {
+  min-height: 42px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 0.84rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+}
+
+.main-nav-btn {
+  border: 1px solid rgba(154, 103, 56, 0.16);
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--text);
+}
+
+.main-card-primary {
+  border: 0;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(154, 103, 56, 0.18);
+}
+
+.main-nav-btn:disabled,
+.main-card-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .workspace-fab {
@@ -9926,6 +10093,42 @@ html {
 }
 
 @media (max-width: 768px) {
+  .workspace-shell {
+    width: 100%;
+    margin-bottom: 14px;
+  }
+
+  .workspace-shell {
+    padding: 14px;
+  }
+
+  .workspace-shell-head {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .workspace-shell-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .workspace-shell-title-row {
+    align-items: flex-start;
+  }
+
+  .workspace-shell-phase {
+    min-height: 26px;
+  }
+
+  .workspace-shell-meta {
+    gap: 6px;
+  }
+
+  .workspace-shell-chaining {
+    gap: 6px;
+  }
+
   .workspace-fab {
     top: 8px;
     display: grid;
@@ -9975,7 +10178,7 @@ html {
 
   .workspace-fab-actions {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
     width: 100%;
   }
@@ -9986,6 +10189,12 @@ html {
     justify-content: center;
     padding: 8px 10px;
     font-size: 0.82rem;
+    min-height: 44px;
+  }
+
+  .main-nav-btn,
+  .main-card-primary {
+    width: 100%;
     min-height: 44px;
   }
 
