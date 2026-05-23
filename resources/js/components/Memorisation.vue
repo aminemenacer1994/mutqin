@@ -105,7 +105,7 @@
               <div class="workspace-shell-copy">
                 <span class="workspace-shell-kicker"
                   :class="{ 'workspace-shell-kicker-review': guidedUiStep === 'review' }">
-                  {{ guidedUiStep === 'review' ? reviewPriorityLabel : activeCardKicker }}
+                  {{ guidedUiStep === 'review' ? 'Review Session' : 'Memorisation Session' }}
                 </span>
                 <div class="workspace-shell-title-row">
                   <h1>{{ currentChapter ? currentChapter.name_simple : activeChapterName }}</h1>
@@ -128,7 +128,7 @@
                   <button class="action-btn action-btn-primary" type="button" @click="handlePrimaryAction"
                     :disabled="!isPlaying && !canStartSession">
                     <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-                    <span>{{ isPlaying ? 'Pause' : 'Start Session' }}</span>
+                    <span>{{ isPlaying ? 'Pause' : 'Start' }}</span>
                   </button>
                 </div>
               </div>
@@ -206,12 +206,11 @@
               </div>
             </div>
             <div v-show="!mainCardCollapsed" class="workspace-shell-meta">
-              <span>Current ayah {{ currentPosition }} of {{ totalVerses }}</span>
-              <span>Session {{ progressPercent }}% complete</span>
-              <span v-if="guidedUiStep === 'review'" class="workspace-shell-meta-review">{{ reviewPriorityLabel
-                }}</span>
-              <span v-if="etaLabel">Time left: {{ etaLabel.replace('Audio time ≈ ', '') }}</span>
+              <span>Ayah {{ currentPosition }} of {{ totalVerses }}</span>
+              <span>{{ progressPercent }}% complete</span>
+              <span v-if="etaLabel">{{ etaLabel }}</span>
             </div>
+
             <div v-if="!mainCardCollapsed && chainingEnabled && hasSessionFeedback" class="workspace-shell-chaining"
               aria-label="Chaining status">
               <span class="workspace-shell-chain-pill">
@@ -242,13 +241,14 @@
                       class="verse-status-badge verse-status-badge-review">Review Due</span>
                     <span v-if="effectiveActiveVerseKey === verse.key" class="verse-status-badge">Active Ayah</span>
                   </div>
-                  <div v-if="effectiveActiveVerseKey === verse.key" class="verse-actions">
-                    <!-- New download button -->
+                  <div class="verse-actions">
+                    <!-- Download button for every verse -->
                     <button class="verse-download-btn" @click.stop="downloadVerseAudio(verse)" :disabled="!verse.audio"
                       title="Download audio for offline listening">
                       <i class="bi bi-download"></i>
                     </button>
 
+                    <!-- Play button for every verse -->
                     <button class="verse-play-btn" @click.stop="playVerse(verse)"
                       :title="hasSessionFeedback ? (activeVerseKey === verse.key && isPlaying ? 'Pause' : 'Play current ayah') : 'Preview this ayah (does not start a session)'">
                       <i class="bi"
@@ -258,15 +258,20 @@
                   </div>
                 </div>
 
-                <div class="verse-arabic verse-arabic-primary" dir="rtl" v-if="verse.arabic && isDataReady"
-                  v-html="getDisplayArabic(verse)" :class="{
+                <div class="verse-arabic verse-arabic-primary" 
+                  dir="rtl" 
+                  v-if="verse.arabic && isDataReady"
+                  v-html="getDisplayArabic(verse)" 
+                  :class="{
                     'tajweed-enabled': tajweedEnabled,
                     'word-highlight-enabled': true,
                     'verse-weak': isWeakAyah(verse.key),
                     'verse-mastered': isMasteredAyah(verse.key)
-                  }" :style="{
+                  }" 
+                  :style="{
                     '--verse-font-percent': getVerseFontSize(verse.key),
-                    fontFamily: quranFontFamily
+                    'font-family': quranFontFamily,
+                    'font-size': (getVerseFontSize(verse.key) / 100) + 'rem'
                   }">
                 </div>
 
@@ -489,7 +494,7 @@
                       <span>Repeats per step</span>
                       <input type="range" min="1" max="5" step="1" :value="chainingRepetitions"
                         @input="setChainingRepetitions(Number($event.target.value))" class="input technique-range">
-                      <span class="inline-setting-pill">{{ chainingRepetitions }} repeats</span>
+                      <span class="inline-setting-pill">{{ chainingRepetitions }}</span>
                     </div>
                     <div class="technique-preview">
                       <span>{{ chainingMethodPreview }}</span>
@@ -553,8 +558,14 @@
           </div>
 
           <!-- SETTINGS TAB -->
+          <!-- SETTINGS TAB -->
           <div v-else-if="tab === 'settings'" class="sheet">
             <div class="settings-panels">
+              <div class="settings-notice">
+                <i class="bi bi-info-circle"></i>
+                <span>All changes are applied instantly</span>
+              </div>
+
               <section class="settings-group">
                 <span class="settings-group-title">Display</span>
                 <div class="settings-card-grid settings-display-grid">
@@ -564,9 +575,9 @@
                             class="bi bi-palette2"></i></span><span>Tajweed</span></label>
                       <small>Recitation colors</small>
                     </div>
-                    <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.tajweedEnabled }"
-                      @click="toggleSettingsOption('tajweedEnabled')">
-                      {{ settingsDraft.tajweedEnabled ? 'On' : 'Off' }}
+                    <button class="toggle-chip settings-toggle" :class="{ active: tajweedEnabled }"
+                      @click="toggleTajweed">
+                      {{ tajweedEnabled ? 'On' : 'Off' }}
                     </button>
                   </div>
 
@@ -574,13 +585,12 @@
                     <div class="settings-row-copy">
                       <label><span class="settings-icon"><i class="bi bi-arrows-angle-expand"></i></span><span>Font
                           size</span></label>
-                      <small>Verse scale</small>
+                      <small>Verse scale ({{ defaultFontSize }}%)</small>
                     </div>
                     <div class="settings-range-wrap">
-                      <input type="range" min="80" max="140" step="5" :value="settingsDraft.defaultFontSize"
-                        @input="updateSettingsValue('defaultFontSize', Number($event.target.value))"
-                        class="input settings-range" aria-label="Font size">
-                      <span class="inline-setting-pill">{{ settingsDraft.defaultFontSize }}%</span>
+                      <input type="range" min="80" max="160" step="5" v-model.number="defaultFontSize"
+                        @input="updateDefaultFontSize" class="input settings-range" aria-label="Font size">
+                      <span class="inline-setting-pill">{{ defaultFontSize }}%</span>
                     </div>
                   </div>
                 </div>
@@ -594,9 +604,9 @@
                             class="bi bi-translate"></i></span><span>Translation</span></label>
                       <small>English meaning</small>
                     </div>
-                    <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTranslation }"
-                      @click="toggleSettingsOption('showTranslation')">
-                      {{ settingsDraft.showTranslation ? 'On' : 'Off' }}
+                    <button class="toggle-chip settings-toggle" :class="{ active: showTranslation }"
+                      @click="toggleReadingOption('translation')">
+                      {{ showTranslation ? 'On' : 'Off' }}
                     </button>
                   </div>
 
@@ -606,21 +616,21 @@
                             class="bi bi-type"></i></span><span>Transliteration</span></label>
                       <small>Latin reading aid</small>
                     </div>
-                    <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTransliteration }"
-                      @click="toggleSettingsOption('showTransliteration')">
-                      {{ settingsDraft.showTransliteration ? 'On' : 'Off' }}
+                    <button class="toggle-chip settings-toggle" :class="{ active: showTransliteration }"
+                      @click="toggleReadingOption('transliteration')">
+                      {{ showTransliteration ? 'On' : 'Off' }}
                     </button>
                   </div>
 
                   <div class="settings-card settings-card-toggle">
                     <div class="settings-row-copy">
-                      <label><span class="settings-icon"><i class="bi bi-grid-3x2-gap"></i></span><span>Word for
+                      <label><span class="settings-icon"><i class="bi bi-grid-3x2-gap"></i></span><span>Word by
                           word</span></label>
                       <small>Word chips</small>
                     </div>
-                    <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showWordByWord }"
-                      @click="toggleSettingsOption('showWordByWord')">
-                      {{ settingsDraft.showWordByWord ? 'On' : 'Off' }}
+                    <button class="toggle-chip settings-toggle" :class="{ active: showWordByWord }"
+                      @click="toggleReadingOption('wbw')">
+                      {{ showWordByWord ? 'On' : 'Off' }}
                     </button>
                   </div>
 
@@ -630,10 +640,9 @@
                           audio</span></label>
                       <small>Timing and highlight</small>
                     </div>
-                    <button class="toggle-chip settings-toggle"
-                      :class="{ active: settingsDraft.wordByWordAudioEnabled }"
-                      @click="toggleSettingsOption('wordByWordAudioEnabled')">
-                      {{ settingsDraft.wordByWordAudioEnabled ? 'On' : 'Off' }}
+                    <button class="toggle-chip settings-toggle" :class="{ active: wordByWordAudioEnabled }"
+                      @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
+                      {{ wordByWordAudioEnabled ? 'On' : 'Off' }}
                     </button>
                   </div>
                 </div>
@@ -659,7 +668,7 @@
           <div class="login-icon">
             <i class="bi bi-book-half"></i>
           </div>
-          <h1>Welcome to Telawa</h1>
+          <h1>Welcome to Mutqin</h1>
           <p class="login-subtitle">Your personal Quran memorisation companion</p>
 
           <div class="login-features">
@@ -677,7 +686,7 @@
             </div>
           </div>
 
-          <a href="/login" class="login-btn">
+          <a href="/login" class="login-btn" style="text-decoration: none;">
             <i class="bi bi-box-arrow-in-right"></i>
             <span>Sign in to continue</span>
           </a>
@@ -2017,6 +2026,10 @@ export default {
       this.persistCentralSessionState()
       this.applyChainingQueueChange(this.currentMode)
     },
+    
+    showWordByWord: 'persistUiState',
+    defaultFontSize: 'persistUiState',
+    tajweedEnabled: 'persistUiState',
     showTranslation: 'persistUiState',
     showTransliteration: 'persistUiState',
     showWordByWord(newVal) {
@@ -2147,17 +2160,19 @@ export default {
     getDisplayArabic(verse) {
       if (!verse || !verse.arabic) return ''
 
-      // For debugging - check if tajweed data exists
+      // Debug logging - remove in production
       if (this.tajweedEnabled) {
-        console.log('Tajweed enabled, verse has arabic_tajweed:', !!verse.arabic_tajweed, verse.key)
+        console.log('Tajweed enabled for verse:', verse.key, 'Has tajweed data:', !!verse.arabic_tajweed)
       }
 
+      // Return tajweed HTML if enabled and available
       if (this.tajweedEnabled && verse.arabic_tajweed) {
-        const result = this.normalizeTajweedMarkup(verse.arabic_tajweed)
-        console.log('Tajweed HTML length:', result.length)
-        return result
+        const tajweedHtml = this.normalizeTajweedMarkup(verse.arabic_tajweed)
+        console.log('Tajweed HTML length:', tajweedHtml?.length || 0)
+        return tajweedHtml
       }
 
+      // Fallback to plain Arabic
       return this.stripTajweedMarkup(verse.arabic || '')
     },
 
@@ -3273,9 +3288,13 @@ export default {
       this.persistCentralSessionState()
 
       // Force re-render of verses to apply tajweed
-      if (this.verses && this.verses.length) {
+      this.$nextTick(() => {
         this.$forceUpdate()
-      }
+        // Also reload verses to ensure fresh data
+        if (this.verses && this.verses.length) {
+          this.loadVerses(this.currentMode)
+        }
+      })
 
       this.showBanner(
         this.tajweedEnabled ? 'Tajweed colors enabled' : 'Tajweed colors disabled',
@@ -3429,9 +3448,20 @@ export default {
       )
     },
 
-    // Font size management
     getVerseFontSize(verseKey) {
-      return this.verseFontSizes[verseKey] || this.defaultFontSize
+      const size = this.verseFontSizes[verseKey] || this.defaultFontSize
+      // Ensure size is within bounds
+      return Math.max(this.minFontSize, Math.min(this.maxFontSize, size))
+    },
+
+    updateFontSize(verseKey, newSize) {
+      const clampedSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, newSize))
+      this.verseFontSizes = {
+        ...this.verseFontSizes,
+        [verseKey]: clampedSize
+      }
+      this.persistVerseFontSizes()
+      this.$forceUpdate()
     },
 
     increaseVerseFont(verseKey, event) {
@@ -5263,16 +5293,37 @@ export default {
 
       return true
     },
+    updateDefaultFontSize() {
+      // Clamp the value
+      this.defaultFontSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, this.defaultFontSize))
+      // Save to localStorage
+      try {
+        localStorage.setItem('telawa.defaultFontSize', JSON.stringify(this.defaultFontSize))
+      } catch (e) {}
+      // Update all verses
+      this.$forceUpdate()
+      // Show feedback
+      this.showBanner(`Font size: ${this.defaultFontSize}%`, 'info', 600)
+    },
 
     // UI methods
     toggleReadingOption(kind) {
-      if (kind === 'translation') this.showTranslation = !this.showTranslation
-      if (kind === 'transliteration') this.showTransliteration = !this.showTransliteration
+      if (kind === 'translation') {
+        this.showTranslation = !this.showTranslation
+        this.persistUiState()
+      }
+      if (kind === 'transliteration') {
+        this.showTransliteration = !this.showTransliteration
+        this.persistUiState()
+      }
       if (kind === 'wbw') {
         this.showWordByWord = !this.showWordByWord
-        this.loadVerses()
+        this.persistUiState()
+        // Force re-render to apply word highlighting
+        this.$forceUpdate()
       }
-      this.$forceUpdate()
+      // Show feedback that change was applied
+      this.showBanner(`${kind} ${this[kind === 'translation' ? 'showTranslation' : kind === 'transliteration' ? 'showTransliteration' : 'showWordByWord'] ? 'enabled' : 'disabled'}`, 'info', 800)
     },
 
     setScriptMode(mode) {
@@ -5894,6 +5945,24 @@ export default {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* Settings notice */
+.settings-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--accent-light);
+  border-radius: 12px;
+  margin-bottom: 20px;
+  font-size: 0.75rem;
+  color: var(--accent);
+  border: 1px solid var(--accent-soft);
+}
+
+.settings-notice i {
+  font-size: 0.9rem;
 }
 
 /* Login Hero Section */
@@ -7342,25 +7411,18 @@ export default {
   opacity: 1;
 }
 
-/* Add this to your style section to ensure tajweed CSS works */
-/* Critical fix for tajweed display */
-.verse-arabic.tajweed-enabled {
-  line-height: 2.2;
-  font-family: var(--font-ar);
-}
-
-.verse-arabic.tajweed-enabled .tajweed-mark {
-  display: inline;
-  border-radius: 0.2em;
-  padding: 0 0.03em;
-}
-
-/* Force tajweed spans to render properly */
+/* Force tajweed spans to display properly */
 .verse-arabic.tajweed-enabled span[class*="tajweed-"] {
   display: inline !important;
 }
 
-/* Ensure tajweed colors appear */
+/* Ensure proper line height for tajweed text */
+.verse-arabic.tajweed-enabled {
+  line-height: 2.2 !important;
+  font-family: var(--font-ar);
+}
+
+/* Make tajweed colors visible */
 .verse-arabic.tajweed-enabled .tajweed-ham_wasl,
 .verse-arabic.tajweed-enabled .tajweed-slnt {
   color: #7e8a97;
@@ -7380,18 +7442,16 @@ export default {
   background: rgba(155, 89, 182, 0.10);
 }
 
-.verse-arabic.tajweed-enabled .tajweed-qlq,
-.verse-arabic.tajweed-enabled .tajweed-lqlq {
-  color: #d98824;
-  background: rgba(217, 136, 36, 0.12);
+/* Font size fix */
+.verse-arabic {
+  --verse-font-percent: 100;
+  font-size: calc(var(--verse-font-percent, 100) * 0.01 * 2rem);
 }
 
-.verse-arabic.tajweed-enabled .tajweed-madda_normal,
-.verse-arabic.tajweed-enabled .tajweed-madda_permissible,
-.verse-arabic.tajweed-enabled .tajweed-madda_necessary,
-.verse-arabic.tajweed-enabled .tajweed-madda_obligatory {
-  color: #d55245;
-  background: rgba(213, 82, 69, 0.10);
+/* Force re-render when font changes */
+.verse-arabic.tajweed-enabled,
+.verse-arabic:not(.tajweed-enabled) {
+  transition: font-size 0.1s ease;
 }
 
 @keyframes wordHighlightPulse {
@@ -8606,6 +8666,8 @@ html {
 .verse-actions {
   display: flex;
   gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 /* Font controls */
@@ -9634,7 +9696,7 @@ html {
 }
 
 .workspace-shell {
-  width: min(1120px, 100%);
+  width: 80%;
   margin: 0 auto 18px;
 }
 
@@ -12765,6 +12827,20 @@ body>.navbar+.app .main.container {
 }
 
 @media (max-width: 480px) {
+  .verse-header {
+    flex-wrap: wrap;
+  }
+
+  .verse-badges {
+    flex-wrap: wrap;
+  }
+
+  .verse-actions {
+    margin-top: 8px;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
   .session-pill {
     white-space: normal;
     text-align: center;

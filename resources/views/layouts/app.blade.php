@@ -98,7 +98,7 @@
         }
 
         .app-navbar-logo {
-            height: 36px;
+            height: 56px;
             width: auto;
         }
 
@@ -408,9 +408,9 @@
                     </div>
 
                     <div class="d-flex align-items-center gap-3 ms-auto app-navbar-actions">
-                        <button id="globalThemeToggle" class="btn app-theme-toggle" type="button" aria-label="Toggle theme">
+                        <!-- <button id="globalThemeToggle" class="btn app-theme-toggle" type="button" aria-label="Toggle theme">
                             <i class="bi bi-sun"></i>
-                        </button>
+                        </button> -->
 
                         @auth
                             <div class="dropdown" id="userDropdown">
@@ -420,7 +420,7 @@
                                     <i class="bi bi-chevron-down"></i>
                                 </button>
                                 <ul class="dropdown-menu" id="dropdownMenu">
-                                    <li>
+                                    <!-- <li>
                                         <a class="dropdown-item" href="/profile">
                                             <i class="bi bi-person"></i> Profile
                                         </a>
@@ -430,7 +430,7 @@
                                             <i class="bi bi-speedometer2"></i> Dashboard
                                         </a>
                                     </li>
-                                    <li><hr class="dropdown-divider"></li>
+                                    <li><hr class="dropdown-divider"></li> -->
                                     <li>
                                         <form method="POST" action="{{ route('logout') }}" id="logoutForm">
                                             @csrf
