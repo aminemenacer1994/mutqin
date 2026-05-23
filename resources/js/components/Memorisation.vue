@@ -103,7 +103,8 @@
           <section class="workspace-shell" :class="{ collapsed: mainCardCollapsed }" aria-label="Session overview">
             <div class="workspace-shell-head">
               <div class="workspace-shell-copy">
-                <span class="workspace-shell-kicker" :class="{ 'workspace-shell-kicker-review': guidedUiStep === 'review' }">
+                <span class="workspace-shell-kicker"
+                  :class="{ 'workspace-shell-kicker-review': guidedUiStep === 'review' }">
                   {{ guidedUiStep === 'review' ? reviewPriorityLabel : activeCardKicker }}
                 </span>
                 <div class="workspace-shell-title-row">
@@ -118,10 +119,12 @@
                   :title="mainCardCollapsed ? 'Expand summary' : 'Collapse summary'"></i><span>{{ mainCardCollapsed ? 'Expand' : 'Collapse' }}</span>
                 </button> -->
                 <button class="fab-btn fab-btn-ghost" type="button" aria-controls="memorisationToolsPanel"
-                  :aria-expanded="showTools ? 'true' : 'false'" @click="openAdvancedControls" title="Open session controls">
+                  :aria-expanded="showTools ? 'true' : 'false'" @click="openAdvancedControls"
+                  title="Open session controls">
                   <i class="bi bi-sliders"></i><span>Controls</span>
                 </button>
-                <button class="main-card-primary" type="button" @click="handlePrimaryAction" :disabled="!isPlaying && !canStartSession">
+                <button class="main-card-primary" type="button" @click="handlePrimaryAction"
+                  :disabled="!isPlaying && !canStartSession">
                   <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
                   <span>{{ isPlaying ? 'Pause' : 'Start Session' }}</span>
                 </button>
@@ -130,12 +133,15 @@
             <div v-show="!mainCardCollapsed" class="workspace-shell-meta">
               <span>Current ayah {{ currentPosition }} of {{ totalVerses }}</span>
               <span>Session {{ progressPercent }}% complete</span>
-              <span v-if="guidedUiStep === 'review'" class="workspace-shell-meta-review">{{ reviewPriorityLabel }}</span>
+              <span v-if="guidedUiStep === 'review'" class="workspace-shell-meta-review">{{ reviewPriorityLabel
+              }}</span>
               <span v-if="etaLabel">Time left: {{ etaLabel.replace('Audio time ≈ ', '') }}</span>
             </div>
-            <div v-if="!mainCardCollapsed && chainingEnabled && hasSessionFeedback" class="workspace-shell-chaining" aria-label="Chaining status">
+            <div v-if="!mainCardCollapsed && chainingEnabled && hasSessionFeedback" class="workspace-shell-chaining"
+              aria-label="Chaining status">
               <span class="workspace-shell-chain-pill">
-                <i class="bi bi-link-45deg"></i>{{ chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking' }} · {{ chainingRepetitions }}x
+                <i class="bi bi-link-45deg"></i>{{ chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking' }} · {{
+                  chainingRepetitions }}x
               </span>
               <span class="workspace-shell-chain-pill workspace-shell-chain-pill-soft">
                 <i class="bi bi-diagram-3"></i>{{ chainingProgressLabel }}
@@ -154,22 +160,22 @@
                 'serious-training': false,
                 'blur-upcoming': blurModeEnabled && isVerseBlurred(verse.key)
               }" @click="onVerseCardClick(verse)" role="button" tabindex="0"
-                @touchstart.passive="onVerseTouchStart($event)"
-                @touchend.passive="onVerseTouchEnd($event)"
+                @touchstart.passive="onVerseTouchStart($event)" @touchend.passive="onVerseTouchEnd($event)"
                 @keydown.enter.prevent="onVerseCardClick(verse)">
                 <div class="verse-header">
                   <div class="verse-badges">
                     <span class="verse-number">Ayah {{ verse.number }}</span>
-                    <span v-if="isReviewPriorityAyah(verse.key)" class="verse-status-badge verse-status-badge-review">Review Due</span>
+                    <span v-if="isReviewPriorityAyah(verse.key)"
+                      class="verse-status-badge verse-status-badge-review">Review Due</span>
                     <span v-if="effectiveActiveVerseKey === verse.key" class="verse-status-badge">Active Ayah</span>
                   </div>
                   <div v-if="effectiveActiveVerseKey === verse.key" class="verse-actions">
                     <!-- New download button -->
-                    <button class="verse-download-btn" @click.stop="downloadVerseAudio(verse)"
-                      :disabled="!verse.audio" title="Download audio for offline listening">
+                    <button class="verse-download-btn" @click.stop="downloadVerseAudio(verse)" :disabled="!verse.audio"
+                      title="Download audio for offline listening">
                       <i class="bi bi-download"></i>
                     </button>
-                    
+
                     <button class="verse-play-btn" @click.stop="playVerse(verse)"
                       :title="hasSessionFeedback ? (activeVerseKey === verse.key && isPlaying ? 'Pause' : 'Play current ayah') : 'Preview this ayah (does not start a session)'">
                       <i class="bi"
@@ -222,22 +228,24 @@
 
       <!-- Advanced Controls Drawer -->
       <div v-if="showTools" class="tools-backdrop" @click="closeToolsPanel" aria-hidden="true"></div>
-      <aside id="memorisationToolsPanel" ref="toolsPanel" class="tools offcanvas-section"
-        :class="{ open: showTools }" role="dialog" aria-modal="true" aria-labelledby="memorisationToolsTitle"
+      <aside id="memorisationToolsPanel" ref="toolsPanel" class="tools offcanvas-section" :class="{ open: showTools }"
+        role="dialog" aria-modal="true" aria-labelledby="memorisationToolsTitle"
         :aria-hidden="showTools ? 'false' : 'true'" tabindex="-1">
         <div class="tools-top">
           <div class="tools-topbar">
-            <div id="memorisationToolsTitle" class="tools-title"><h3 ><b>Controls</b></h3></div>
+            <div id="memorisationToolsTitle" class="tools-title">
+              <h3><b>Controls</b></h3>
+            </div>
             <button class="tools-x" @click="closeToolsPanel" aria-label="Close panel"><i
                 class="bi bi-x-lg"></i></button>
           </div>
           <div class="tools-tabs row g-2" role="tablist" aria-label="Controls tabs">
-            <button class="col-12 col-md-6" :class="{ active: tab === 'tools', 'active-tab': tab === 'tools' }" @click="setActiveTab('tools')"
-              title="Session tools">
+            <button class="col-12 col-md-6" :class="{ active: tab === 'tools', 'active-tab': tab === 'tools' }"
+              @click="setActiveTab('tools')" title="Session tools">
               <i class="bi bi-sliders"></i> Tools
             </button>
-            <button class="col-12 col-md-6" :class="{ active: tab === 'settings', 'active-tab': tab === 'settings' }" @click="setActiveTab('settings')"
-              title="Reading and display settings">
+            <button class="col-12 col-md-6" :class="{ active: tab === 'settings', 'active-tab': tab === 'settings' }"
+              @click="setActiveTab('settings')" title="Reading and display settings">
               <i class="bi bi-gear"></i> Settings
             </button>
           </div>
@@ -392,8 +400,7 @@
                     <div v-if="chainingEnabled" class="technique-control">
                       <span>Repeats per step</span>
                       <input type="range" min="1" max="5" step="1" :value="chainingRepetitions"
-                        @input="setChainingRepetitions(Number($event.target.value))"
-                        class="input technique-range">
+                        @input="setChainingRepetitions(Number($event.target.value))" class="input technique-range">
                       <span class="inline-setting-pill">{{ chainingRepetitions }} repeats</span>
                     </div>
                     <div class="technique-preview">
@@ -403,20 +410,92 @@
                 </div>
               </div>
             </section>
+
+            <!-- Add this after the memorisation_techniques section, before closing the tools tab div -->
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('saved_sessions')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-clock-history"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">Saved Sessions</span>
+                    <span class="st-sub">Load or delete previously saved sessions</span>
+                  </span>
+                </span>
+                <span class="st-chev" :class="{ open: sectionOpen.saved_sessions }"><i
+                    class="bi bi-chevron-down"></i></span>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.saved_sessions">
+                <div class="saved-sessions-list">
+                  <div v-if="savedSessions.length === 0" class="empty-mini">
+                    <i class="bi bi-inbox" style="font-size: 1.5rem; opacity: 0.5;"></i>
+                    <p>No saved sessions yet</p>
+                    <small>Current sessions are auto-saved for resume</small>
+                  </div>
+                  <div v-else v-for="session in savedSessions" :key="session.id" class="saved-session-item">
+                    <div class="session-info">
+                      <div class="session-name">{{ session.name }}</div>
+                      <div class="session-meta">
+                        <span><i class="bi bi-calendar"></i> {{ formatDate(session.savedAt) }}</span>
+                        <span><i class="bi bi-book"></i> {{ session.config?.chapterName || `Surah
+                          ${session.config?.chapterId}` }}</span>
+                        <span><i class="bi bi-text-paragraph"></i> {{ session.config?.rangeStart }}-{{
+                          session.config?.rangeEnd }}</span>
+                      </div>
+                    </div>
+                    <div class="session-actions">
+                      <button class="session-load-btn" @click="loadSavedSession(session.id)" title="Load this session">
+                        <i class="bi bi-play-fill"></i>
+                      </button>
+                      <button class="session-delete-btn" @click="deleteSavedSession(session.id)" title="Delete session">
+                        <i class="bi bi-trash3"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="hasVerses" class="save-current-session">
+                  <div class="save-session-row">
+                    <div class="save-session-info">
+                      <strong><i class="bi bi-save"></i> Save Current Session</strong>
+                      <small>{{ currentChapter?.name_simple || 'Current' }} · {{ rangeStart }}-{{ rangeEnd }}</small>
+                    </div>
+                    <button class="save-session-btn" @click="saveCurrentSession">
+                      <i class="bi bi-save"></i> Save
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- In the tools-tabs div, add a third button -->
+            <div class="tools-tabs row g-2" role="tablist" aria-label="Controls tabs">
+              <button class="col-12 col-md-4" :class="{ active: tab === 'tools', 'active-tab': tab === 'tools' }"
+                @click="setActiveTab('tools')" title="Session tools">
+                <i class="bi bi-sliders"></i> Tools
+              </button>
+              <button class="col-12 col-md-4" :class="{ active: tab === 'sessions', 'active-tab': tab === 'sessions' }"
+                @click="setActiveTab('sessions')" title="Saved sessions">
+                <i class="bi bi-clock-history"></i> Saved
+              </button>
+              <button class="col-12 col-md-4" :class="{ active: tab === 'settings', 'active-tab': tab === 'settings' }"
+                @click="setActiveTab('settings')" title="Reading and display settings">
+                <i class="bi bi-gear"></i> Settings
+              </button>
+            </div>
           </div>
 
-          <div v-else-if="tab === 'settings'" class="sheet" >
+          <div v-else-if="tab === 'settings'" class="sheet">
             <div class="sheet-section settings-section">
-              
+
 
               <div class="settings-panels" style="padding: 20px">
-              
+
                 <section class="settings-group">
                   <span class="settings-group-title">Display</span>
                   <div class="settings-card-grid settings-display-grid">
                     <div class="settings-card settings-card-toggle">
                       <div class="settings-row-copy">
-                        <label><span class="settings-icon"><i class="bi bi-palette2"></i></span><span>Tajweed</span></label>
+                        <label><span class="settings-icon"><i
+                              class="bi bi-palette2"></i></span><span>Tajweed</span></label>
                         <small>Recitation colors</small>
                       </div>
                       <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.tajweedEnabled }"
@@ -427,7 +506,8 @@
 
                     <div class="settings-card settings-card-range">
                       <div class="settings-row-copy">
-                        <label><span class="settings-icon"><i class="bi bi-arrows-angle-expand"></i></span><span>Font size</span></label>
+                        <label><span class="settings-icon"><i class="bi bi-arrows-angle-expand"></i></span><span>Font
+                            size</span></label>
                         <small>Verse scale</small>
                       </div>
                       <div class="settings-range-wrap">
@@ -444,7 +524,8 @@
                   <div class="settings-card-grid">
                     <div class="settings-card settings-card-toggle">
                       <div class="settings-row-copy">
-                        <label><span class="settings-icon"><i class="bi bi-translate"></i></span><span>Translation</span></label>
+                        <label><span class="settings-icon"><i
+                              class="bi bi-translate"></i></span><span>Translation</span></label>
                         <small>English meaning</small>
                       </div>
                       <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTranslation }"
@@ -455,7 +536,8 @@
 
                     <div class="settings-card settings-card-toggle">
                       <div class="settings-row-copy">
-                        <label><span class="settings-icon"><i class="bi bi-type"></i></span><span>Transliteration</span></label>
+                        <label><span class="settings-icon"><i
+                              class="bi bi-type"></i></span><span>Transliteration</span></label>
                         <small>Latin reading aid</small>
                       </div>
                       <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTransliteration }"
@@ -466,7 +548,8 @@
 
                     <div class="settings-card settings-card-toggle">
                       <div class="settings-row-copy">
-                        <label><span class="settings-icon"><i class="bi bi-grid-3x2-gap"></i></span><span>Word for word</span></label>
+                        <label><span class="settings-icon"><i class="bi bi-grid-3x2-gap"></i></span><span>Word for
+                            word</span></label>
                         <small>Word chips</small>
                       </div>
                       <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showWordByWord }"
@@ -477,10 +560,12 @@
 
                     <div class="settings-card settings-card-toggle">
                       <div class="settings-row-copy">
-                        <label><span class="settings-icon"><i class="bi bi-volume-up"></i></span><span>Word audio</span></label>
+                        <label><span class="settings-icon"><i class="bi bi-volume-up"></i></span><span>Word
+                            audio</span></label>
                         <small>Timing and highlight</small>
                       </div>
-                      <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.wordByWordAudioEnabled }"
+                      <button class="toggle-chip settings-toggle"
+                        :class="{ active: settingsDraft.wordByWordAudioEnabled }"
                         @click="toggleSettingsOption('wordByWordAudioEnabled')">
                         {{ settingsDraft.wordByWordAudioEnabled ? 'On' : 'Off' }}
                       </button>
@@ -655,7 +740,8 @@
           <p class="confirm-copy resume-copy">{{ continueSessionMeta }}</p>
           <div class="pill" style="margin-top: 10px; padding: 12px 14px;">
             <strong>Resume:</strong>
-            Ayah {{ continueSessionPayload?.activeVerseKey ? String(continueSessionPayload.activeVerseKey).split(':')[1] : continueSessionPayload?.config?.rangeStart }}
+            Ayah {{ continueSessionPayload?.activeVerseKey ? String(continueSessionPayload.activeVerseKey).split(':')[1]
+              : continueSessionPayload?.config?.rangeStart }}
             · Range {{ continueSessionPayload?.config?.rangeStart }}-{{ continueSessionPayload?.config?.rangeEnd }}
           </div>
           <div v-if="dueCount" class="pill" style="margin-top: 10px; padding: 12px 14px;">
@@ -664,18 +750,34 @@
           <details class="resume-details">
             <summary>Details</summary>
             <div class="resume-feedback-bars">
-              <div class="resume-feedback-row"><span>Chain</span><strong>{{ resumeFeedback.chainProgress }}%</strong></div>
-              <div class="progress-bar-track"><div class="progress-bar-fill" :style="{ width: resumeFeedback.chainProgress + '%' }"></div></div>
-              <div class="resume-feedback-row"><span>Repetition</span><strong>{{ resumeFeedback.repetitionProgress }}%</strong></div>
-              <div class="progress-bar-track"><div class="progress-bar-fill resume-progress-repetition" :style="{ width: resumeFeedback.repetitionProgress + '%' }"></div></div>
-              <div class="resume-feedback-row"><span>Retention</span><strong>{{ resumeFeedback.retentionProgress }}%</strong></div>
-              <div class="progress-bar-track"><div class="progress-bar-fill resume-progress-retention" :style="{ width: resumeFeedback.retentionProgress + '%' }"></div></div>
+              <div class="resume-feedback-row"><span>Chain</span><strong>{{ resumeFeedback.chainProgress }}%</strong>
+              </div>
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill" :style="{ width: resumeFeedback.chainProgress + '%' }"></div>
+              </div>
+              <div class="resume-feedback-row"><span>Repetition</span><strong>{{ resumeFeedback.repetitionProgress
+              }}%</strong></div>
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill resume-progress-repetition"
+                  :style="{ width: resumeFeedback.repetitionProgress + '%' }"></div>
+              </div>
+              <div class="resume-feedback-row"><span>Retention</span><strong>{{ resumeFeedback.retentionProgress
+              }}%</strong></div>
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill resume-progress-retention"
+                  :style="{ width: resumeFeedback.retentionProgress + '%' }"></div>
+              </div>
             </div>
             <div class="resume-grid">
-              <div class="pill"><i class="bi bi-link-45deg"></i><span>{{ continueSessionPayload?.config?.chainingEnabled === false ? 'Chaining off' : (continueSessionPayload?.config?.chainingMethod === 'cumulative' ? 'Cumulative chain' : 'Linking chain') }}</span></div>
-              <div class="pill pill-status-mastered"><i class="bi bi-check2-circle"></i><span>{{ feedbackCounts.mastered }} mastered</span></div>
-              <div class="pill pill-status-weak"><i class="bi bi-exclamation-circle"></i><span>{{ feedbackCounts.weak }} weak</span></div>
-              <div class="pill pill-status-repeat"><i class="bi bi-arrow-repeat"></i><span>{{ feedbackCounts.repeat }} need repetition</span></div>
+              <div class="pill"><i class="bi bi-link-45deg"></i><span>{{ continueSessionPayload?.config?.chainingEnabled
+                === false ? 'Chaining off' : (continueSessionPayload?.config?.chainingMethod === 'cumulative' ?
+                  'Cumulative chain' : 'Linking chain') }}</span></div>
+              <div class="pill pill-status-mastered"><i class="bi bi-check2-circle"></i><span>{{ feedbackCounts.mastered
+              }} mastered</span></div>
+              <div class="pill pill-status-weak"><i class="bi bi-exclamation-circle"></i><span>{{ feedbackCounts.weak }}
+                  weak</span></div>
+              <div class="pill pill-status-repeat"><i class="bi bi-arrow-repeat"></i><span>{{ feedbackCounts.repeat }}
+                  need repetition</span></div>
             </div>
             <div class="pill" style="margin-top: 10px; padding: 12px 14px;">
               <strong>Next:</strong> {{ resumeWhatNext }}
@@ -995,6 +1097,9 @@ export default {
         defaultFontSize: 100
       },
 
+      //saved session
+      savedSessions: [],
+
       // Quiz state
       quizActive: false,
       quizScore: 0,
@@ -1083,7 +1188,8 @@ export default {
         analytics_overview: true,
         analytics_planner: true,
         analytics_weak: false,
-        memorisation_techniques: false
+        memorisation_techniques: false,
+        saved_sessions: false  // Add this line
       },
 
       // Audio event handlers
@@ -1112,7 +1218,6 @@ export default {
   },
 
   computed: {
-
     getChainingMethodLabel() {
       if (!this.chainingEnabled) return `Chaining off · ${this.chainingRepetitions} repeats`
       const label = this.chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking'
@@ -1780,9 +1885,10 @@ export default {
     this.restoreAudioState()
     this.theme = document.documentElement.getAttribute('data-theme') || this.theme
     this.loadBookmarksPins(),
-      this.setupWordClickHandler()
+    this.setupWordClickHandler()
     this.loadContinueSessionPrompt()
     this.updateMasteredWeekly()
+    this.loadSavedSessions()
 
     if (this.isLoggedIn && this.hasContinueSession) {
       // One clear entry point for returning users.
@@ -1924,6 +2030,126 @@ export default {
   },
 
   methods: {
+    saveCurrentSession() {
+      if (!this.hasVerses) {
+        this.showBanner('No active session to save', 'warning', 2000)
+        return
+      }
+
+      const session = {
+        id: Date.now().toString(),
+        name: `${this.currentChapter?.name_simple || 'Session'} ${this.rangeStart}-${this.rangeEnd}`,
+        savedAt: new Date().toISOString(),
+        config: {
+          chapterId: this.chapterId,
+          chapterName: this.currentChapter?.name_simple,
+          rangeStart: this.rangeStart,
+          rangeEnd: this.rangeEnd,
+          reciterId: this.reciterId,
+          speed: this.speed,
+          playMode: this.playMode,
+          chainingEnabled: this.chainingEnabled,
+          chainingMethod: this.chainingMethod,
+          chainingRepetitions: this.chainingRepetitions,
+          tajweedEnabled: this.tajweedEnabled,
+          showTranslation: this.showTranslation,
+          showTransliteration: this.showTransliteration,
+          showWordByWord: this.showWordByWord
+        }
+      }
+
+      this.savedSessions.unshift(session)
+      if (this.savedSessions.length > 20) this.savedSessions = this.savedSessions.slice(0, 20)
+      this.persistSavedSessions()
+      this.showBanner('Session saved', 'success', 1500)
+    },
+
+    loadSavedSession(sessionId) {
+      const session = this.savedSessions.find(s => s.id === sessionId)
+      if (!session) return
+
+      this.chapterId = session.config.chapterId
+      this.rangeStart = session.config.rangeStart
+      this.rangeEnd = session.config.rangeEnd
+      this.reciterId = session.config.reciterId
+      this.speed = session.config.speed
+      this.playMode = session.config.playMode
+      this.chainingEnabled = session.config.chainingEnabled
+      this.chainingMethod = session.config.chainingMethod
+      this.chainingRepetitions = session.config.chainingRepetitions
+      this.tajweedEnabled = session.config.tajweedEnabled
+      this.showTranslation = session.config.showTranslation
+      this.showTransliteration = session.config.showTransliteration
+      this.showWordByWord = session.config.showWordByWord
+
+      this.applyWorkspaceControls({ reason: 'load-session' })
+      this.showTools = false
+      this.showBanner(`Loaded: ${session.name}`, 'success', 2000)
+    },
+
+    deleteSavedSession(sessionId) {
+      this.openConfirmModal({
+        title: 'Delete saved session?',
+        message: 'This action cannot be undone.',
+        confirmLabel: 'Delete',
+        tone: 'danger',
+        action: 'delete-saved-session',
+        data: { sessionId }
+      })
+    },
+
+    performDeleteSavedSession(sessionId) {
+      this.savedSessions = this.savedSessions.filter(s => s.id !== sessionId)
+      this.persistSavedSessions()
+      this.showBanner('Session deleted', 'info', 1500)
+    },
+
+    persistSavedSessions() {
+      try {
+        localStorage.setItem('telawa.savedSessions', JSON.stringify(this.savedSessions))
+      } catch (e) {
+        console.error('Failed to save sessions:', e)
+      }
+    },
+
+    loadSavedSessions() {
+      try {
+        const saved = localStorage.getItem('telawa.savedSessions')
+        if (saved) {
+          this.savedSessions = JSON.parse(saved)
+        }
+      } catch (e) {
+        console.error('Failed to load saved sessions:', e)
+        this.savedSessions = []
+      }
+    },
+
+    formatDate(dateString) {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      const now = new Date()
+      const diffMs = now - date
+      const diffMins = Math.floor(diffMs / 60000)
+
+      if (diffMins < 1) return 'Just now'
+      if (diffMins < 60) return `${diffMins}m ago`
+      if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`
+      return date.toLocaleDateString()
+    },
+
+    runConfirmAction() {
+      const action = this.confirmModal.action
+      this.closeConfirmModal()
+      if (action === 'reset-session') this.performResetControls()
+      if (action === 'switch-mode') this.performToggleMode()
+      if (action === 'delete-offline' && this.pendingDeleteId) this.performDeleteOffline()
+      if (action === 'discard-continue') this.clearContinueSession()
+      if (action === 'delete-saved-session' && this.confirmModal.data?.sessionId) 
+        this.performDeleteSavedSession(this.confirmModal.data.sessionId)
+    },
+
+
+
     async downloadVerseAudio(verse) {
       const audioUrl = this.normalizeAudioUrl(verse?.audio || '')
       if (!audioUrl) {
@@ -4256,11 +4482,11 @@ export default {
         for (let endIndex = 0; endIndex < verses.length; endIndex++) {
           const chain = verses.slice(0, endIndex + 1)
           pushQueueGroup(chain.map((verse, chainIndex) => ({
-              verse: chain[chainIndex],
-              phase: 'Cumulative',
-              chainKey: `cumulative:${endIndex + 1}`,
-              sequencePosition: chainIndex + 1,
-              sequenceTotal: chain.length
+            verse: chain[chainIndex],
+            phase: 'Cumulative',
+            chainKey: `cumulative:${endIndex + 1}`,
+            sequencePosition: chainIndex + 1,
+            sequenceTotal: chain.length
           })))
         }
       } else {
@@ -5492,6 +5718,148 @@ export default {
   box-sizing: border-box;
 }
 
+/* Saved Sessions Styles */
+.saved-sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.saved-session-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.saved-session-item:hover {
+  border-color: var(--accent);
+  background: var(--surface-strong);
+}
+
+.session-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.session-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.session-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.session-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.session-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.session-load-btn,
+.session-delete-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.session-load-btn {
+  background: var(--accent);
+  color: white;
+  border-color: transparent;
+}
+
+.session-load-btn:hover {
+  background: var(--accent-strong);
+  transform: scale(1.05);
+}
+
+.session-delete-btn {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.session-delete-btn:hover {
+  background: #dc3545;
+  color: white;
+}
+
+.save-current-session {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.save-session-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.save-session-info {
+  flex: 1;
+}
+
+.save-session-info strong {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.save-session-info small {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.save-session-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.save-session-btn:hover {
+  background: var(--accent-strong);
+  transform: translateY(-1px);
+}
+
 .verse-download-btn {
   width: 36px;
   height: 36px;
@@ -6038,10 +6406,12 @@ html {
   box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
   animation: pop 180ms ease-out;
 }
+
 .verse-arabic.verse-weak .wbw-word.weak-word {
   background: #fff3bf;
   color: #5f4b00;
 }
+
 .verse-arabic.verse-mastered .wbw-word.mastered-word {
   background: #d3f9d8;
   color: #1f6f31;
@@ -10949,8 +11319,8 @@ html {
   }
 
   .verse-number,
-.verse-status-badge,
-.verse-status-subtle {
+  .verse-status-badge,
+  .verse-status-subtle {
     width: 100%;
     justify-content: center;
     text-align: center;
