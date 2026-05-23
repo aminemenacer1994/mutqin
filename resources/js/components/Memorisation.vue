@@ -204,9 +204,8 @@
             <div v-show="!mainCardCollapsed" class="workspace-shell-meta">
               <span>Current ayah {{ currentPosition }} of {{ totalVerses }}</span>
               <span>Session {{ progressPercent }}% complete</span>
-              <span v-if="guidedUiStep === 'review'" class="workspace-shell-meta-review">{{ reviewPriorityLabel
-                }}</span>
-              <span v-if="etaLabel">Time left: {{ etaLabel.replace('Audio time ≈ ', '') }}</span>
+              <span v-if="guidedUiStep === 'review'" class="workspace-shell-meta-review">{{ reviewPriorityLabel }}</span>
+              <span v-if="etaLabel">Time left: {{ etaLabel }}</span>
             </div>
             <div v-if="!mainCardCollapsed && chainingEnabled && hasSessionFeedback" class="workspace-shell-chaining"
               aria-label="Chaining status">
@@ -217,7 +216,6 @@
               <span class="workspace-shell-chain-pill workspace-shell-chain-pill-soft">
                 <i class="bi bi-diagram-3"></i>{{ chainingProgressLabel }}
               </span>
-              
             </div>
           </section>
 
@@ -416,13 +414,14 @@
                 <div class="techniques-list">
                   <div class="technique-row">
                     <div class="technique-copy">
-                      <label>Focus Mode</label>
-                      <small>Reduces distractions around the active ayah.</small>
-                    </div>
-                    <button class="toggle-chip technique-toggle" :class="{ active: focusModeEnabled }"
-                      @click="focusModeEnabled = !focusModeEnabled" type="button">
-                      {{ focusModeEnabled ? 'On' : 'Off' }}
-                    </button>
+                    <label>Focus Mode</label>
+                    <small>Reduces distractions around the active ayah.</small>
+                  </div>
+                  <button class="toggle-chip technique-toggle" :class="{ active: focusModeEnabled }"
+                    @click="focusModeEnabled = !focusModeEnabled" type="button">
+                    <span class="toggle-indicator"></span>
+                    <span class="toggle-label">{{ focusModeEnabled ? 'On' : 'Off' }}</span>
+                  </button>
                   </div>
 
                   <div class="technique-row technique-row-stacked">
@@ -1869,17 +1868,18 @@ export default {
       const remainingItems = (this.queue || []).slice(this.queueIndex)
       if (!remainingItems.length) return '0 min'
 
-      const reviewTimePerAyah = 5
+      const speedFactor = Math.max(0.25, Number(this.speed || 1))
       let totalSeconds = 0
 
-      remainingItems.forEach((item, index) => {
-        totalSeconds += this.getQueueItemAudioSeconds(item, index === 0) + reviewTimePerAyah
+      remainingItems.forEach((item) => {
+        const verse = item.verse || item
+        const arabicLength = String(verse.arabic || '').replace(/[^ء-ي]/g, '').length || 80
+        const estimatedDuration = Math.max(5, Math.min(45, arabicLength * 0.12))
+        totalSeconds += estimatedDuration / speedFactor
       })
 
-      const delaySeconds = (this.delay || 1) * (remainingItems.length - 1)
-      totalSeconds += delaySeconds
       const minutes = Math.max(0, Math.ceil(totalSeconds / 60))
-      return `Audio time ≈ ${minutes} min`
+      return `${minutes} min`
     },
 
     etaLabelAudioOnly() {
@@ -6641,7 +6641,6 @@ html {
 
 .app {
   min-height: 100vh;
-  background: var(--bg);
   font-size: calc(16px * var(--ui-scale, 1));
   animation: appFade 260ms ease-out;
 }
