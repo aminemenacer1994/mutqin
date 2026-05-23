@@ -4,7 +4,7 @@
       <span>{{ banner.message }}</span>
       <div class="banner-actions">
         <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
-        }}</button>
+          }}</button>
         <button class="banner-x" @click="banner = null" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
@@ -113,12 +113,14 @@
                 <p>{{ currentActionLabel }}</p>
               </div>
               <div class="workspace-shell-actions">
-                <!-- Replace your action-buttons-group div with this -->
                 <div class="action-buttons-group">
-                  <i class="bi bi-arrows-fullscreen action-icon" @click="toggleFullScreen" title="Full screen mode"></i>
-                  <i class="bi bi-keyboard action-icon" @click="toggleKeyboardShortcuts" title="Keyboard shortcuts"></i>
-                  <button class="action-btn action-btn-secondary" type="button" aria-controls="memorisationToolsPanel"
-                    :aria-expanded="showTools ? 'true' : 'false'" @click="openAdvancedControls"
+                  <button class="action-icon-btn" @click="toggleFullScreen" title="Full screen mode">
+                    <i class="bi bi-arrows-fullscreen"></i>
+                  </button>
+                  <button class="action-icon-btn" @click="toggleKeyboardShortcuts" title="Keyboard shortcuts">
+                    <i class="bi bi-keyboard"></i>
+                  </button>
+                  <button class="action-btn action-btn-secondary" type="button" @click="openAdvancedControls"
                     title="Open session controls">
                     <i class="bi bi-sliders"></i>
                     <span>Controls</span>
@@ -207,7 +209,7 @@
               <span>Current ayah {{ currentPosition }} of {{ totalVerses }}</span>
               <span>Session {{ progressPercent }}% complete</span>
               <span v-if="guidedUiStep === 'review'" class="workspace-shell-meta-review">{{ reviewPriorityLabel
-              }}</span>
+                }}</span>
               <span v-if="etaLabel">Time left: {{ etaLabel.replace('Audio time ≈ ', '') }}</span>
             </div>
             <div v-if="!mainCardCollapsed && chainingEnabled && hasSessionFeedback" class="workspace-shell-chaining"
@@ -652,18 +654,39 @@
     </div>
 
     <div v-else-if="appReady && !isLoggedIn" class="main container">
-      <section class="home-dashboard">
-        <div class="setup-start-card">
-          <div class="setup-start-copy">
-            <span class="setup-kicker">Login Required</span>
-            <h2>Sign in to access your memorisation workspace</h2>
-            <p>Your sessions, progress, and resume history sync after login.</p>
+      <div class="login-hero">
+        <div class="login-card">
+          <div class="login-icon">
+            <i class="bi bi-book-half"></i>
           </div>
-          <a class="cta cta-primary setup-primary" href="/login">
-            <i class="bi bi-box-arrow-in-right"></i> Login
+          <h1>Welcome to Telawa</h1>
+          <p class="login-subtitle">Your personal Quran memorisation companion</p>
+
+          <div class="login-features">
+            <div class="feature">
+              <i class="bi bi-cloud-check"></i>
+              <span>Sync across devices</span>
+            </div>
+            <div class="feature">
+              <i class="bi bi-graph-up"></i>
+              <span>Track your progress</span>
+            </div>
+            <div class="feature">
+              <i class="bi bi-calendar-check"></i>
+              <span>Never lose your place</span>
+            </div>
+          </div>
+
+          <a href="/login" class="login-btn">
+            <i class="bi bi-box-arrow-in-right"></i>
+            <span>Sign in to continue</span>
           </a>
+
+          <p class="login-note">
+            Your sessions, progress, and resume history sync after login
+          </p>
         </div>
-      </section>
+      </div>
     </div>
 
     <!-- Save Session Name Modal - Add after your existing modals -->
@@ -5873,6 +5896,172 @@ export default {
   box-sizing: border-box;
 }
 
+/* Login Hero Section */
+.login-hero {
+  min-height: calc(100vh - 100px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.login-card {
+  max-width: 480px;
+  width: 100%;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 32px;
+  padding: 48px 40px;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  animation: loginFadeIn 0.5s ease-out;
+}
+
+.login-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  box-shadow: 0 8px 24px rgba(154, 103, 56, 0.25);
+}
+
+.login-icon i {
+  font-size: 2.5rem;
+  color: white;
+}
+
+.login-card h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.login-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-bottom: 32px;
+}
+
+.login-features {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+.feature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.feature i {
+  font-size: 1.5rem;
+  color: var(--accent);
+  background: var(--accent-light);
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 24px;
+  transition: all 0.2s ease;
+}
+
+.feature span {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.login-btn {
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: white;
+  border: none;
+  border-radius: 60px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(154, 103, 56, 0.4);
+}
+
+.login-btn:active {
+  transform: translateY(0);
+}
+
+.login-note {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+@keyframes loginFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 520px) {
+  .login-card {
+    padding: 32px 24px;
+  }
+
+  .login-icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .login-icon i {
+    font-size: 2rem;
+  }
+
+  .login-card h1 {
+    font-size: 1.5rem;
+  }
+
+  .login-features {
+    gap: 16px;
+  }
+
+  .feature i {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+
+  .feature span {
+    font-size: 0.7rem;
+  }
+}
+
 /* Save Name Modal Styles */
 .save-name-modal {
   max-width: 420px;
@@ -6459,38 +6648,39 @@ export default {
   opacity: 0.5;
 }
 
-/* Action Buttons Group - Equal widths on same row */
+/* Action Buttons Group - Perfect Alignment */
 .action-buttons-group {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
 }
 
-.action-icon {
-  display: inline-flex;
+.action-icon-btn {
+  display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 52px;
+  width: 42px;
   height: 42px;
-  border-radius: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.10);
+  border-radius: 12px;
+  border: 1px solid var(--border);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));
   box-shadow: var(--shadow-sm);
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: rgba(0, 0, 0, 0.78);
+  color: var(--text-muted);
+  flex-shrink: 0;
 }
 
-.action-icon:hover {
-  transform: translateY(-2px);
+.action-icon-btn:hover {
+  transform: translateY(-1px);
   background: var(--accent-light);
   border-color: var(--accent);
   color: var(--accent);
   box-shadow: var(--shadow-md);
 }
 
-.action-icon:active {
+.action-icon-btn:active {
   transform: translateY(0);
 }
 
@@ -6499,27 +6689,27 @@ export default {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-width: 120px;
   height: 42px;
-  padding: 0 16px;
-  border-radius: 14px;
+  padding: 0 18px;
+  border-radius: 12px;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .action-btn-secondary {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  color: rgba(0, 0, 0, 0.78);
+  border: 1px solid var(--border);
+  color: var(--text);
   box-shadow: var(--shadow-sm);
 }
 
 .action-btn-secondary:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   background: var(--accent-light);
   border-color: var(--accent);
   color: var(--accent);
@@ -6529,12 +6719,13 @@ export default {
 .action-btn-primary {
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: white;
-  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);
+  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.25);
+  border: none;
 }
 
 .action-btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(154, 103, 56, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.35);
 }
 
 .action-btn-primary:disabled {
@@ -6544,8 +6735,47 @@ export default {
 }
 
 .action-btn-secondary:active,
-.action-icon:active {
+.action-icon-btn:active {
   transform: translateY(0);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .action-buttons-group {
+    gap: 6px;
+  }
+
+  .action-icon-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+  }
+
+  .action-btn {
+    height: 38px;
+    padding: 0 14px;
+    font-size: 0.8rem;
+  }
+
+  .action-btn span {
+    display: inline-block;
+  }
+}
+
+@media (max-width: 480px) {
+  .action-btn span {
+    display: none;
+  }
+
+  .action-btn {
+    width: 42px;
+    padding: 0;
+  }
+
+  .action-btn i {
+    font-size: 1.1rem;
+    margin: 0;
+  }
 }
 
 /* Keyboard Shortcuts Modal - Larger & Cleaner */
