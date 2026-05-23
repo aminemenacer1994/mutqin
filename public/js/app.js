@@ -24210,6 +24210,11 @@ function createAdvancedState() {
       }
       return 'Next: single -> next -> pair';
     },
+    chainingWhyHint: function chainingWhyHint() {
+      if (!this.chainingEnabled) return '';
+      if (this.chainingMethod === 'cumulative') return 'Use when you want to build longer runs by adding one ayah at a time.';
+      return 'Use when you want to strengthen transitions between neighboring ayahs.';
+    },
     currentActionLabel: function currentActionLabel() {
       if (!this.hasVerses) return 'Choose surah and range, then start.';
       if (!this.effectiveActiveVerseKey) return 'Tap Start Session to build and start the queue.';
@@ -24875,6 +24880,41 @@ function createAdvancedState() {
     defaultFontSize: 'persistUiState'
   },
   methods: (_methods = {
+    downloadVerseAudio: function downloadVerseAudio(verse) {
+      var _this7 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
+        var audioUrl, filename, downloadUrl, anchor;
+        return _regenerator().w(function (_context2) {
+          while (1) switch (_context2.n) {
+            case 0:
+              audioUrl = _this7.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
+              if (audioUrl) {
+                _context2.n = 1;
+                break;
+              }
+              _this7.showBanner('Audio not available for this ayah', 'info', 2200);
+              return _context2.a(2);
+            case 1:
+              try {
+                filename = "surah-".concat(_this7.chapterId, "-ayah-").concat(verse.number, ".mp3");
+                downloadUrl = "/memorisation/audio-download?url=".concat(encodeURIComponent(audioUrl), "&filename=").concat(encodeURIComponent(filename));
+                anchor = document.createElement('a');
+                anchor.href = downloadUrl;
+                anchor.download = filename;
+                document.body.appendChild(anchor);
+                anchor.click();
+                anchor.remove();
+                _this7.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
+              } catch (error) {
+                console.error('Verse download failed:', error);
+                _this7.showBanner('Failed to download ayah audio', 'error', 2600);
+              }
+            case 2:
+              return _context2.a(2);
+          }
+        }, _callee2);
+      }))();
+    },
     syncSettingsDraft: function syncSettingsDraft() {
       this.settingsDraft = {
         tajweedEnabled: !!this.tajweedEnabled,
@@ -24918,7 +24958,7 @@ function createAdvancedState() {
       return this.setActiveVerse(verseKey, options);
     },
     openToolsPanel: function openToolsPanel() {
-      var _this7 = this;
+      var _this8 = this;
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var _options$verseKey = options.verseKey,
         verseKey = _options$verseKey === void 0 ? null : _options$verseKey,
@@ -24939,7 +24979,7 @@ function createAdvancedState() {
       this.showTools = true; // Ensure this is true
       this.persistUiState();
       this.$nextTick(function () {
-        if (_this7.$refs.toolsPanel) _this7.$refs.toolsPanel.focus({
+        if (_this8.$refs.toolsPanel) _this8.$refs.toolsPanel.focus({
           preventScroll: true
         });
       });
@@ -25107,15 +25147,15 @@ function createAdvancedState() {
       } catch (e) {}
     },
     scheduleLoadVerses: function scheduleLoadVerses() {
-      var _this8 = this;
+      var _this9 = this;
       var mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.currentMode;
       if (this.loadVersesTimer) clearTimeout(this.loadVersesTimer);
       this.loadVersesTimer = setTimeout(function () {
-        _this8.loadVerses(mode);
+        _this9.loadVerses(mode);
       }, 200);
     },
     syncWorkspaceFromControls: function syncWorkspaceFromControls() {
-      var _this9 = this;
+      var _this0 = this;
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       if (this.isBootstrapping) return;
       var mode = options.mode || this.currentMode;
@@ -25140,37 +25180,37 @@ function createAdvancedState() {
         return;
       }
       this.workspaceSyncTimer = setTimeout(function () {
-        _this9.loadVerses(mode);
+        _this0.loadVerses(mode);
       }, 160);
     },
     applyWorkspaceControls: function applyWorkspaceControls() {
       var _arguments = arguments,
-        _this0 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
+        _this1 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
         var options, mode;
-        return _regenerator().w(function (_context2) {
-          while (1) switch (_context2.n) {
+        return _regenerator().w(function (_context3) {
+          while (1) switch (_context3.n) {
             case 0:
               options = _arguments.length > 0 && _arguments[0] !== undefined ? _arguments[0] : {};
-              if (!_this0.isBootstrapping) {
-                _context2.n = 1;
+              if (!_this1.isBootstrapping) {
+                _context3.n = 1;
                 break;
               }
-              return _context2.a(2);
+              return _context3.a(2);
             case 1:
-              mode = options.mode || _this0.currentMode;
-              if (_this0.workspaceSyncTimer) clearTimeout(_this0.workspaceSyncTimer);
-              _this0.persistUiState();
-              _this0.syncWorkspaceFromControls(_objectSpread(_objectSpread({}, options), {}, {
+              mode = options.mode || _this1.currentMode;
+              if (_this1.workspaceSyncTimer) clearTimeout(_this1.workspaceSyncTimer);
+              _this1.persistUiState();
+              _this1.syncWorkspaceFromControls(_objectSpread(_objectSpread({}, options), {}, {
                 mode: mode,
                 immediate: true
               }));
-              _context2.n = 2;
-              return _this0.$nextTick();
+              _context3.n = 2;
+              return _this1.$nextTick();
             case 2:
-              return _context2.a(2);
+              return _context3.a(2);
           }
-        }, _callee2);
+        }, _callee3);
       }))();
     },
     clampControlRange: function clampControlRange() {
@@ -25533,42 +25573,42 @@ function createAdvancedState() {
       }
     },
     continueLastSession: function continueLastSession() {
-      var _this1 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
-        var _payload$config3, _this1$mutqinState$se, _store$queue4, _store$queue5, _payload$config4;
+      var _this10 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4() {
+        var _payload$config3, _this10$mutqinState$s, _store$queue4, _store$queue5, _payload$config4;
         var payload, target, store, canonicalIndex, canonicalItem, targetKey, restoredQueueIndex, _store$queue, _store$queue2, currentQueueKey, _store$queue3, exactIndex, restoredKey;
-        return _regenerator().w(function (_context3) {
-          while (1) switch (_context3.n) {
+        return _regenerator().w(function (_context4) {
+          while (1) switch (_context4.n) {
             case 0:
-              payload = _this1.continueSessionPayload;
+              payload = _this10.continueSessionPayload;
               if (payload) {
-                _context3.n = 1;
+                _context4.n = 1;
                 break;
               }
-              return _context3.a(2);
+              return _context4.a(2);
             case 1:
-              _this1.hasContinueSession = false;
+              _this10.hasContinueSession = false;
               if ((_payload$config3 = payload.config) !== null && _payload$config3 !== void 0 && _payload$config3.chapterId) {
-                _context3.n = 2;
+                _context4.n = 2;
                 break;
               }
-              _this1.clearContinueSession();
-              return _context3.a(2);
+              _this10.clearContinueSession();
+              return _context4.a(2);
             case 2:
-              _this1.currentMode = payload.mode || 'beginner';
-              _this1.tab = payload.tab || _this1.currentMode;
-              target = _this1.currentMode === 'beginner' ? 'beginner' : 'advanced';
-              _this1[target] = _objectSpread(_objectSpread({}, target === 'beginner' ? createBeginnerState() : createAdvancedState()), _this1.cloneModeState(payload.config || {}));
+              _this10.currentMode = payload.mode || 'beginner';
+              _this10.tab = payload.tab || _this10.currentMode;
+              target = _this10.currentMode === 'beginner' ? 'beginner' : 'advanced';
+              _this10[target] = _objectSpread(_objectSpread({}, target === 'beginner' ? createBeginnerState() : createAdvancedState()), _this10.cloneModeState(payload.config || {}));
               // Chaining removed.
-              _this1.applySessionConfig(_this1.buildSessionConfig(_this1.currentMode));
-              _context3.n = 3;
-              return _this1.loadChapter();
+              _this10.applySessionConfig(_this10.buildSessionConfig(_this10.currentMode));
+              _context4.n = 3;
+              return _this10.loadChapter();
             case 3:
-              _this1.buildQueue(_this1.currentMode);
-              store = _this1.getModeStore(_this1.currentMode);
+              _this10.buildQueue(_this10.currentMode);
+              store = _this10.getModeStore(_this10.currentMode);
               canonicalIndex = Number.isFinite(Number(payload.mutqinSessionIndex)) ? Number(payload.mutqinSessionIndex) : null;
-              if (canonicalIndex !== null) (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this1.mutqinState, canonicalIndex);
-              canonicalItem = canonicalIndex !== null ? (_this1$mutqinState$se = _this1.mutqinState.sessionState) === null || _this1$mutqinState$se === void 0 || (_this1$mutqinState$se = _this1$mutqinState$se.queue) === null || _this1$mutqinState$se === void 0 ? void 0 : _this1$mutqinState$se[canonicalIndex] : null;
+              if (canonicalIndex !== null) (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this10.mutqinState, canonicalIndex);
+              canonicalItem = canonicalIndex !== null ? (_this10$mutqinState$s = _this10.mutqinState.sessionState) === null || _this10$mutqinState$s === void 0 || (_this10$mutqinState$s = _this10$mutqinState$s.queue) === null || _this10$mutqinState$s === void 0 ? void 0 : _this10$mutqinState$s[canonicalIndex] : null;
               targetKey = payload.activeVerseKey || payload.activeKey || (canonicalItem === null || canonicalItem === void 0 ? void 0 : canonicalItem.ayahId) || null;
               restoredQueueIndex = Math.max(0, Number(payload.queueIndex || 0));
               if (targetKey) {
@@ -25584,29 +25624,29 @@ function createAdvancedState() {
               store.queueIndex = restoredQueueIndex;
               restoredKey = ((_store$queue4 = store.queue) === null || _store$queue4 === void 0 || (_store$queue4 = _store$queue4[restoredQueueIndex]) === null || _store$queue4 === void 0 || (_store$queue4 = _store$queue4.verse) === null || _store$queue4 === void 0 ? void 0 : _store$queue4.key) || ((_store$queue5 = store.queue) === null || _store$queue5 === void 0 || (_store$queue5 = _store$queue5[restoredQueueIndex]) === null || _store$queue5 === void 0 ? void 0 : _store$queue5.key) || targetKey;
               if (restoredKey) {
-                _this1.setActiveVerse(restoredKey, {
-                  mode: _this1.currentMode,
+                _this10.setActiveVerse(restoredKey, {
+                  mode: _this10.currentMode,
                   queueIndex: restoredQueueIndex,
                   scroll: false
                 });
               } else {
-                _this1.syncActiveVerseState(_this1.currentMode, targetKey);
+                _this10.syncActiveVerseState(_this10.currentMode, targetKey);
               }
-              _this1.playerVisible = !!payload.playerVisible;
-              _this1.restoredAudioState = {
+              _this10.playerVisible = !!payload.playerVisible;
+              _this10.restoredAudioState = {
                 src: payload.audioSrc || '',
                 currentTime: Number(payload.currentTime || 0),
                 playerVisible: !!payload.playerVisible,
-                speed: Number(((_payload$config4 = payload.config) === null || _payload$config4 === void 0 ? void 0 : _payload$config4.speed) || _this1.speed || 1),
+                speed: Number(((_payload$config4 = payload.config) === null || _payload$config4 === void 0 ? void 0 : _payload$config4.speed) || _this10.speed || 1),
                 isPlaying: !!payload.isPlaying
               };
-              _this1.applyRestoredAudioState();
+              _this10.applyRestoredAudioState();
               // Advanced auto-open used to be driven by chaining/loop settings. Removed.
-              _this1.persistAllState();
-              _this1.showBanner('Session restored', 'success', 2200);
-              _this1.$nextTick(function () {
-                if (_this1.effectiveActiveVerseKey) {
-                  var el = document.querySelector(".verse-card[data-verse-key=\"".concat(_this1.effectiveActiveVerseKey, "\"]"));
+              _this10.persistAllState();
+              _this10.showBanner('Session restored', 'success', 2200);
+              _this10.$nextTick(function () {
+                if (_this10.effectiveActiveVerseKey) {
+                  var el = document.querySelector(".verse-card[data-verse-key=\"".concat(_this10.effectiveActiveVerseKey, "\"]"));
                   if (el) el.scrollIntoView({
                     behavior: 'smooth',
                     block: 'center'
@@ -25614,9 +25654,9 @@ function createAdvancedState() {
                 }
               });
             case 4:
-              return _context3.a(2);
+              return _context4.a(2);
           }
-        }, _callee3);
+        }, _callee4);
       }))();
     },
     restoreAudioState: function restoreAudioState() {
@@ -25628,7 +25668,7 @@ function createAdvancedState() {
     },
     applyRestoredAudioState: function applyRestoredAudioState() {
       var _this$activeVerseRef,
-        _this10 = this;
+        _this11 = this;
       var state = this.restoredAudioState;
       if (!state || !this.audioElement || !state.src) return;
       var activeAudio = (_this$activeVerseRef = this.activeVerseRef) !== null && _this$activeVerseRef !== void 0 && _this$activeVerseRef.audio ? this.normalizeAudioUrl(this.activeVerseRef.audio) : '';
@@ -25641,15 +25681,15 @@ function createAdvancedState() {
       this.speed = Number(state.speed || this.speed || 1);
       var _seekOnLoad = function seekOnLoad() {
         try {
-          _this10.audioElement.currentTime = Number(state.currentTime || 0);
-          _this10.audioElement.playbackRate = Number(state.speed || _this10.speed || 1);
+          _this11.audioElement.currentTime = Number(state.currentTime || 0);
+          _this11.audioElement.playbackRate = Number(state.speed || _this11.speed || 1);
           if (state.isPlaying) {
-            _this10.audioElement.play().then(function () {
-              _this10.isPlaying = true;
+            _this11.audioElement.play().then(function () {
+              _this11.isPlaying = true;
             })["catch"](function () {});
           }
         } catch (e) {}
-        _this10.audioElement.removeEventListener('loadedmetadata', _seekOnLoad);
+        _this11.audioElement.removeEventListener('loadedmetadata', _seekOnLoad);
       };
       this.audioElement.addEventListener('loadedmetadata', _seekOnLoad);
     },
@@ -25767,13 +25807,13 @@ function createAdvancedState() {
       this.showBanner("Speed changed to ".concat(safeSpeed, "x"), 'info', 1000);
     },
     setActiveTab: function setActiveTab(tabName) {
-      var _this11 = this;
+      var _this12 = this;
       this.tab = tabName === 'settings' ? 'settings' : 'tools';
       if (this.tab === 'settings') this.syncSettingsDraft();
       this.centralSession.activeTab = this.tab;
       this.persistCentralSessionState();
       this.$nextTick(function () {
-        return _this11.scrollToWorkspaceMain();
+        return _this12.scrollToWorkspaceMain();
       });
     },
     scrollToWorkspaceMain: function scrollToWorkspaceMain() {
@@ -25873,36 +25913,36 @@ function createAdvancedState() {
       this.$forceUpdate();
     },
     setupWordClickHandler: function setupWordClickHandler() {
-      var _this12 = this;
+      var _this13 = this;
       document.addEventListener('click', function (e) {
         var wordElement = e.target.closest('.wbw-word');
-        if (wordElement && _this12.wordByWordAudioEnabled) {
+        if (wordElement && _this13.wordByWordAudioEnabled) {
           var verseKey = wordElement.dataset.verseKey;
           var wordIndex = parseInt(wordElement.dataset.wordIndex);
           var wordAudio = wordElement.dataset.wordAudio;
           if (wordAudio) {
-            _this12.playWordAudio(wordAudio);
+            _this13.playWordAudio(wordAudio);
           } else {
             // Find verse and play from this word position
-            var verse = _this12.verses.find(function (v) {
+            var verse = _this13.verses.find(function (v) {
               return v.key === verseKey;
             });
             if (verse && verse.audio) {
-              _this12.playVerse(verse);
+              _this13.playVerse(verse);
             }
           }
         }
       });
     },
     getRemainingTimeDetails: function getRemainingTimeDetails() {
-      var _this13 = this;
+      var _this14 = this;
       var remainingItems = (this.queue || []).slice(this.queueIndex);
       if (!remainingItems.length) return null;
       var reviewTimePerAyah = 5;
       var totalAudioSeconds = 0;
       var totalReviewSeconds = 0;
       remainingItems.forEach(function (item, index) {
-        totalAudioSeconds += _this13.getQueueItemAudioSeconds(item, index === 0);
+        totalAudioSeconds += _this14.getQueueItemAudioSeconds(item, index === 0);
         totalReviewSeconds += reviewTimePerAyah;
       });
       var totalSeconds = totalAudioSeconds + totalReviewSeconds;
@@ -25931,9 +25971,9 @@ function createAdvancedState() {
       this.persistUiState();
     },
     getCurrentFontLabel: function getCurrentFontLabel() {
-      var _this14 = this;
+      var _this15 = this;
       var font = this.quranFontOptions.find(function (f) {
-        return f.value === _this14.quranFont;
+        return f.value === _this15.quranFont;
       });
       return font ? font.label : 'Font';
     },
@@ -25956,9 +25996,9 @@ function createAdvancedState() {
       this.showBanner(this.tajweedEnabled ? 'Tajweed colors enabled' : 'Tajweed colors disabled', 'info', 1500);
     },
     updatePlannerSurah: function updatePlannerSurah() {
-      var _this15 = this;
+      var _this16 = this;
       var selectedSurah = this.chapters.find(function (c) {
-        return c.id === _this15.plannerConfig.surahId;
+        return c.id === _this16.plannerConfig.surahId;
       });
       if (selectedSurah) {
         this.plannerConfig.totalVersesInSurah = selectedSurah.verses_count;
@@ -26065,49 +26105,49 @@ function createAdvancedState() {
       return Math.abs(verseNumber - targetNumber) === 1;
     },
     downloadOfflineVerses: function downloadOfflineVerses() {
-      var _this16 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4() {
-        var _this16$currentChapte, _this16$verses$, surahId, surahName, found, storageKey, offlineData, catalogKey, catalog, entry, filtered, _t;
-        return _regenerator().w(function (_context4) {
-          while (1) switch (_context4.p = _context4.n) {
+      var _this17 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5() {
+        var _this17$currentChapte, _this17$verses$, surahId, surahName, found, storageKey, offlineData, catalogKey, catalog, entry, filtered, _t;
+        return _regenerator().w(function (_context5) {
+          while (1) switch (_context5.p = _context5.n) {
             case 0:
-              if (!(!_this16.verses || !_this16.verses.length)) {
-                _context4.n = 1;
+              if (!(!_this17.verses || !_this17.verses.length)) {
+                _context5.n = 1;
                 break;
               }
-              _this16.showBanner('Load a surah first before downloading', 'info', 3000);
-              _this16.showTools = true;
-              return _context4.a(2);
+              _this17.showBanner('Load a surah first before downloading', 'info', 3000);
+              _this17.showTools = true;
+              return _context5.a(2);
             case 1:
-              _context4.p = 1;
-              surahId = _this16.chapterId;
-              surahName = (_this16$currentChapte = _this16.currentChapter) === null || _this16$currentChapte === void 0 ? void 0 : _this16$currentChapte.name_simple;
-              if (!surahId && (_this16$verses$ = _this16.verses[0]) !== null && _this16$verses$ !== void 0 && _this16$verses$.key) {
-                surahId = parseInt(_this16.verses[0].key.split(':')[0]);
-                found = _this16.chapters.find(function (c) {
+              _context5.p = 1;
+              surahId = _this17.chapterId;
+              surahName = (_this17$currentChapte = _this17.currentChapter) === null || _this17$currentChapte === void 0 ? void 0 : _this17$currentChapte.name_simple;
+              if (!surahId && (_this17$verses$ = _this17.verses[0]) !== null && _this17$verses$ !== void 0 && _this17$verses$.key) {
+                surahId = parseInt(_this17.verses[0].key.split(':')[0]);
+                found = _this17.chapters.find(function (c) {
                   return c.id === surahId;
                 });
                 surahName = (found === null || found === void 0 ? void 0 : found.name_simple) || 'Selected surah';
               }
               if (surahId) {
-                _context4.n = 2;
+                _context5.n = 2;
                 break;
               }
-              _this16.showBanner('Could not identify surah', 'error', 3000);
-              return _context4.a(2);
+              _this17.showBanner('Could not identify surah', 'error', 3000);
+              return _context5.a(2);
             case 2:
-              storageKey = "offline_surah_".concat(surahId, "_").concat(_this16.rangeStart, "_").concat(_this16.rangeEnd);
+              storageKey = "offline_surah_".concat(surahId, "_").concat(_this17.rangeStart, "_").concat(_this17.rangeEnd);
               offlineData = {
                 metadata: {
                   surah: surahName,
                   surahId: surahId,
-                  rangeStart: _this16.rangeStart,
-                  rangeEnd: _this16.rangeEnd,
-                  reciterId: _this16.reciterId,
+                  rangeStart: _this17.rangeStart,
+                  rangeEnd: _this17.rangeEnd,
+                  reciterId: _this17.reciterId,
                   downloadedAt: new Date().toISOString(),
-                  totalVerses: _this16.verses.length
+                  totalVerses: _this17.verses.length
                 },
-                verses: _this16.verses
+                verses: _this17.verses
               };
               localStorage.setItem(storageKey, JSON.stringify(offlineData));
 
@@ -26123,8 +26163,8 @@ function createAdvancedState() {
                 id: storageKey,
                 surah: surahName,
                 surahId: surahId,
-                range: "".concat(_this16.rangeStart, "-").concat(_this16.rangeEnd),
-                count: _this16.verses.length,
+                range: "".concat(_this17.rangeStart, "-").concat(_this17.rangeEnd),
+                count: _this17.verses.length,
                 date: new Date().toLocaleDateString()
               };
               filtered = catalog.filter(function (c) {
@@ -26132,19 +26172,19 @@ function createAdvancedState() {
               });
               filtered.push(entry);
               localStorage.setItem(catalogKey, JSON.stringify(filtered));
-              _this16.offlineSurahs = filtered;
-              _this16.showBanner("Saved ".concat(_this16.verses.length, " verses from ").concat(surahName, " for offline reading."), 'success', 3000);
-              _context4.n = 4;
+              _this17.offlineSurahs = filtered;
+              _this17.showBanner("Saved ".concat(_this17.verses.length, " verses from ").concat(surahName, " for offline reading."), 'success', 3000);
+              _context5.n = 4;
               break;
             case 3:
-              _context4.p = 3;
-              _t = _context4.v;
+              _context5.p = 3;
+              _t = _context5.v;
               console.error('Download failed:', _t);
-              _this16.showBanner('Failed to download verses', 'error', 3000);
+              _this17.showBanner('Failed to download verses', 'error', 3000);
             case 4:
-              return _context4.a(2);
+              return _context5.a(2);
           }
-        }, _callee4, null, [[1, 3]]);
+        }, _callee5, null, [[1, 3]]);
       }))();
     },
     loadOfflineCatalog: function loadOfflineCatalog() {
@@ -26203,835 +26243,767 @@ function createAdvancedState() {
       this.offlineSurahs = catalog;
       this.pendingDeleteId = '';
       this.showBanner('Offline surah removed', 'info', 2000);
-    },
-    downloadVerseAudio: function downloadVerseAudio(verse) {
-      var _this17 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5() {
-        var audioUrl, filename, downloadUrl, anchor;
-        return _regenerator().w(function (_context5) {
-          while (1) switch (_context5.n) {
-            case 0:
-              audioUrl = _this17.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
-              if (audioUrl) {
-                _context5.n = 1;
-                break;
-              }
-              _this17.showBanner('Audio not available for this ayah', 'info', 2200);
-              return _context5.a(2);
-            case 1:
-              try {
-                filename = "surah-".concat(_this17.chapterId, "-ayah-").concat(verse.number, ".mp3");
-                downloadUrl = "/memorisation/audio-download?url=".concat(encodeURIComponent(audioUrl), "&filename=").concat(encodeURIComponent(filename));
-                anchor = document.createElement('a');
-                anchor.href = downloadUrl;
-                anchor.download = filename;
-                document.body.appendChild(anchor);
-                anchor.click();
-                anchor.remove();
-                _this17.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
-              } catch (error) {
-                console.error('Verse download failed:', error);
-                _this17.showBanner('Failed to download ayah audio', 'error', 2600);
-              }
-            case 2:
-              return _context5.a(2);
-          }
-        }, _callee5);
-      }))();
-    },
-    getDisplayArabic: function getDisplayArabic(verse) {
-      if (!verse || !verse.arabic) return '';
-      if (!this.isDataReady) {
-        return this.stripTajweedMarkup(verse.arabic || verse.arabic_tajweed || '');
-      }
-      if (this.wordByWordAudioEnabled) {
-        return this.splitArabicIntoWords(verse);
-      }
-      if (this.tajweedEnabled) {
-        if (verse.arabic_tajweed) {
-          return this.normalizeTajweedMarkup(verse.arabic_tajweed);
+    }
+  }, _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "downloadVerseAudio", function downloadVerseAudio(verse) {
+    var _this18 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6() {
+      var audioUrl, filename, downloadUrl, anchor;
+      return _regenerator().w(function (_context6) {
+        while (1) switch (_context6.n) {
+          case 0:
+            audioUrl = _this18.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
+            if (audioUrl) {
+              _context6.n = 1;
+              break;
+            }
+            _this18.showBanner('Audio not available for this ayah', 'info', 2200);
+            return _context6.a(2);
+          case 1:
+            try {
+              filename = "surah-".concat(_this18.chapterId, "-ayah-").concat(verse.number, ".mp3");
+              downloadUrl = "/memorisation/audio-download?url=".concat(encodeURIComponent(audioUrl), "&filename=").concat(encodeURIComponent(filename));
+              anchor = document.createElement('a');
+              anchor.href = downloadUrl;
+              anchor.download = filename;
+              document.body.appendChild(anchor);
+              anchor.click();
+              anchor.remove();
+              _this18.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
+            } catch (error) {
+              console.error('Verse download failed:', error);
+              _this18.showBanner('Failed to download ayah audio', 'error', 2600);
+            }
+          case 2:
+            return _context6.a(2);
         }
-        return this.stripTajweedMarkup(verse.arabic || verse.arabic_tajweed || '');
+      }, _callee6);
+    }))();
+  }), "getDisplayArabic", function getDisplayArabic(verse) {
+    if (!verse || !verse.arabic) return '';
+    if (!this.isDataReady) {
+      return this.stripTajweedMarkup(verse.arabic || verse.arabic_tajweed || '');
+    }
+    if (this.wordByWordAudioEnabled) {
+      return this.splitArabicIntoWords(verse);
+    }
+    if (this.tajweedEnabled) {
+      if (verse.arabic_tajweed) {
+        return this.normalizeTajweedMarkup(verse.arabic_tajweed);
       }
       return this.stripTajweedMarkup(verse.arabic || verse.arabic_tajweed || '');
-    },
-    wrapTajweedWithWordHighlighting: function wrapTajweedWithWordHighlighting(verse) {
-      if (!verse.arabic_tajweed) return verse.arabic || '';
+    }
+    return this.stripTajweedMarkup(verse.arabic || verse.arabic_tajweed || '');
+  }), "wrapTajweedWithWordHighlighting", function wrapTajweedWithWordHighlighting(verse) {
+    if (!verse.arabic_tajweed) return verse.arabic || '';
 
-      // First normalize the Tajweed markup
-      var tajweedHtml = this.normalizeTajweedMarkup(verse.arabic_tajweed);
+    // First normalize the Tajweed markup
+    var tajweedHtml = this.normalizeTajweedMarkup(verse.arabic_tajweed);
 
-      // Get the plain words for tokenization
-      var words = [];
-      if (verse.words && verse.words.length) {
-        words = verse.words.map(function (w) {
-          return w.ar || '';
-        }).filter(Boolean);
-      } else {
-        words = tokenizeArabicText(verse.arabic);
+    // Get the plain words for tokenization
+    var words = [];
+    if (verse.words && verse.words.length) {
+      words = verse.words.map(function (w) {
+        return w.ar || '';
+      }).filter(Boolean);
+    } else {
+      words = tokenizeArabicText(verse.arabic);
+    }
+    if (!words.length) return tajweedHtml;
+
+    // For each word, wrap it with word highlighting while preserving internal Tajweed spans
+    var result = tajweedHtml;
+    var processedWords = 0;
+
+    // Use a safer approach - match text nodes that contain the words
+    // Create a temporary div to parse and manipulate
+    var tempDiv = document.createElement('div');
+    tempDiv.innerHTML = tajweedHtml;
+    var walker = document.createTreeWalker(tempDiv, NodeFilter.SHOW_TEXT, {
+      acceptNode: function acceptNode(node) {
+        // Only accept text nodes that are not inside already wrapped words
+        if (node.parentElement && node.parentElement.classList && (node.parentElement.classList.contains('wbw-word') || node.parentElement.classList.contains('tajweed-mark'))) {
+          return NodeFilter.FILTER_SKIP;
+        }
+        return NodeFilter.FILTER_ACCEPT;
       }
-      if (!words.length) return tajweedHtml;
+    });
+    var textNodes = [];
+    while (walker.nextNode()) {
+      textNodes.push(walker.currentNode);
+    }
 
-      // For each word, wrap it with word highlighting while preserving internal Tajweed spans
-      var result = tajweedHtml;
-      var processedWords = 0;
-
-      // Use a safer approach - match text nodes that contain the words
-      // Create a temporary div to parse and manipulate
-      var tempDiv = document.createElement('div');
-      tempDiv.innerHTML = tajweedHtml;
-      var walker = document.createTreeWalker(tempDiv, NodeFilter.SHOW_TEXT, {
-        acceptNode: function acceptNode(node) {
-          // Only accept text nodes that are not inside already wrapped words
-          if (node.parentElement && node.parentElement.classList && (node.parentElement.classList.contains('wbw-word') || node.parentElement.classList.contains('tajweed-mark'))) {
-            return NodeFilter.FILTER_SKIP;
-          }
-          return NodeFilter.FILTER_ACCEPT;
-        }
-      });
-      var textNodes = [];
-      while (walker.nextNode()) {
-        textNodes.push(walker.currentNode);
-      }
-
-      // Process each text node to wrap words
-      textNodes.forEach(function (textNode) {
-        var text = textNode.textContent;
-        var newHtml = '';
-        var lastIndex = 0;
-        words.forEach(function (word, idx) {
-          var wordIndex = text.indexOf(word, lastIndex);
-          if (wordIndex !== -1) {
-            // Add text before the word
-            if (wordIndex > lastIndex) {
-              newHtml += text.substring(lastIndex, wordIndex);
-            }
-            // Wrap the word
-            newHtml += "<word class=\"wbw-word\" data-word-index=\"".concat(idx, "\" data-verse-key=\"").concat(verse.key, "\">").concat(word, "</word>");
-            lastIndex = wordIndex + word.length;
-            processedWords++;
-          }
-        });
-
-        // Add remaining text
-        if (lastIndex < text.length) {
-          newHtml += text.substring(lastIndex);
-        }
-        if (newHtml) {
-          var span = document.createElement('span');
-          span.innerHTML = newHtml;
-          textNode.parentNode.replaceChild(span, textNode);
-          // Move children to fragment
-          while (span.firstChild) {
-            textNode.parentNode.insertBefore(span.firstChild, span);
-          }
-          textNode.parentNode.removeChild(span);
-        }
-      });
-      return tempDiv.innerHTML;
-    },
-    getTajweedWithWordHighlighting: function getTajweedWithWordHighlighting(verse) {
-      if (!verse.arabic_tajweed && !verse.arabic) return '';
-      var tajweedText = verse.arabic_tajweed || verse.arabic;
-      if (!tajweedText) return '';
-
-      // First normalize the tajweed markup
-      var normalized = this.normalizeTajweedMarkup(tajweedText);
-
-      // Now wrap each word with word highlighting while preserving tajweed spans
-      var words = tokenizeArabicText(verse.arabic);
-      if (!words.length) return normalized;
-      var result = normalized;
-      var wordIndex = 0;
-
-      // For each word in the original Arabic, wrap the corresponding tajweed-marked text
+    // Process each text node to wrap words
+    textNodes.forEach(function (textNode) {
+      var text = textNode.textContent;
+      var newHtml = '';
+      var lastIndex = 0;
       words.forEach(function (word, idx) {
-        // Create a regex that matches this word (accounting for potential tajweed spans inside)
-        var wordPattern = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        var regex = new RegExp("(<span[^>]*class=\"[^\"]*tajweed[^\"]*\"[^>]*>)?(".concat(wordPattern, ")(</span>)?"), 'g');
-        result = result.replace(regex, function (match, openTag, wordText, closeTag) {
-          var preservedMarkup = (openTag || '') + wordText + (closeTag || '');
-          return "<word class=\"wbw-word\" data-word-index=\"".concat(idx, "\" data-verse-key=\"").concat(verse.key, "\" data-tajweed-word=\"true\">").concat(preservedMarkup, "</word> ");
-        });
+        var wordIndex = text.indexOf(word, lastIndex);
+        if (wordIndex !== -1) {
+          // Add text before the word
+          if (wordIndex > lastIndex) {
+            newHtml += text.substring(lastIndex, wordIndex);
+          }
+          // Wrap the word
+          newHtml += "<word class=\"wbw-word\" data-word-index=\"".concat(idx, "\" data-verse-key=\"").concat(verse.key, "\">").concat(word, "</word>");
+          lastIndex = wordIndex + word.length;
+          processedWords++;
+        }
       });
-      return result;
-    },
-    // Add sanitize method
-    sanitizeHtml: function sanitizeHtml(html) {
-      if (!html) return '';
-      var cleaned = String(html);
-      // Remove scripts entirely.
-      cleaned = cleaned.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-      // Drop inline handlers/styles.
-      cleaned = cleaned.replace(/\son\w+\s*=\s*(['"]).*?\1/gi, '');
-      cleaned = cleaned.replace(/\sstyle\s*=\s*(['"]).*?\1/gi, '');
-      // Allow only the tags we intentionally render.
-      cleaned = cleaned.replace(/<(?!\/?(?:span|word|br)\b)[^>]*>/gi, '');
-      return cleaned;
-    },
-    normalizeTajweedMarkup: function normalizeTajweedMarkup(text) {
-      if (!text) return '';
-      var markerMap = {
-        '[h': 'ham_wasl',
-        '[s': 'slnt',
-        '[l': 'slnt',
-        '[n': 'madda_normal',
-        '[p': 'madda_permissible',
-        '[m': 'madda_necessary',
-        '[q': 'qlq',
-        '[o': 'madda_obligatory',
-        '[c': 'ikhf_shfw',
-        '[f': 'ikhf',
-        '[w': 'idghm_shfw',
-        '[i': 'iqlb',
-        '[a': 'idgh_ghn',
-        '[u': 'idgh_w_ghn',
-        '[d': 'idgh_mus',
-        '[b': 'idgh_mus',
-        '[g': 'ghn'
-      };
-      var normalized = this.sanitizeHtml(String(text)).replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/<\s*tajweed\b([^>]*)class=['"]?([a-zA-Z0-9_-]+)['"]?([^>]*)>/gi, '<span class="tajweed-mark tajweed-$2"$1$3>').replace(/<\s*\/\s*tajweed\s*>/gi, '</span>');
-      Object.entries(markerMap).forEach(function (_ref2) {
-        var _ref3 = _slicedToArray(_ref2, 2),
-          marker = _ref3[0],
-          className = _ref3[1];
-        var escapedMarker = marker.replace('[', '\\[');
-        normalized = normalized.replace(new RegExp(escapedMarker, 'g'), "<span class=\"tajweed-mark tajweed-".concat(className, "\" data-tajweed=\""));
-      });
-      normalized = normalized.replace(/\[/g, '">').replace(/\]/g, '</span>').replace(/<\/?tajweed[^>]*>/gi, '').replace(/data-tajweed="([^"]*)">/g, function (fullMatch, meta) {
-        var cleanMeta = String(meta || '').replace(/"/g, '&quot;');
-        return "data-tajweed=\"".concat(cleanMeta, "\">");
-      }).replace(/<\/span><\/span>/g, '</span>').replace(/(?:class=|data-tajweed=)&quot;[^&]*&quot;/g, '');
-      return normalized;
-    },
-    stripTajweedMarkup: function stripTajweedMarkup(text) {
-      if (!text) return '';
-      return String(text).replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/<\s*\/?\s*tajweed[^>]*>/gi, '').replace(/<[^>]*>/g, '').replace(/\[(?:[a-z]|\/)[^\]]*\]/gi, '').trim();
-    },
-    // Arabic text word splitting and highlighting
-    getHighlightedArabic: function getHighlightedArabic(verse) {
-      if (!verse || !verse.arabic) return '';
-      if (!this.wordByWordAudioEnabled) return verse.arabic;
-      var highlightedHtml = this.splitArabicIntoWords(verse.arabic, verse.key);
-      return highlightedHtml;
-    },
-    splitArabicIntoWords: function splitArabicIntoWords(verse) {
-      var _this18 = this;
-      if (!verse || !verse.arabic) return '';
 
-      // Get words from the verse object or tokenize
-      var words = [];
-      if (verse.words && verse.words.length) {
-        words = verse.words.map(function (w) {
-          return w.ar || '';
-        }).filter(Boolean);
-      } else {
-        words = tokenizeArabicText(verse.arabic);
+      // Add remaining text
+      if (lastIndex < text.length) {
+        newHtml += text.substring(lastIndex);
       }
-      if (!words.length) return this.stripTajweedMarkup(verse.arabic || verse.arabic_tajweed || '');
-      var html = '';
-      words.forEach(function (word, idx) {
-        var escapedWord = escapeHtml(word);
-        var isActive = _this18.currentHighlightedVerseKey === verse.key && _this18.currentWordIndex === idx;
-        var activeClass = isActive ? ' highlighted phrase-highlighted' : '';
-        var weakClass = _this18.isWeakAyah(verse.key) ? ' weak-word' : '';
-        var masteredClass = _this18.isMasteredAyah(verse.key) ? ' mastered-word' : '';
-        html += "<word class=\"wbw-word".concat(activeClass).concat(weakClass).concat(masteredClass, "\" data-word-index=\"").concat(idx, "\" data-verse-key=\"").concat(verse.key, "\" title=\"Word ").concat(idx + 1, "\">").concat(escapedWord, "</word> ");
-      });
-      return html;
-    },
-    getWordTimings: function getWordTimings(verse) {
-      var _arguments2 = arguments,
-        _this19 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6() {
-        var actualDuration, sourceWords, arabicText, safeDuration, cacheKey, cleanedWords, weightedUnits, totalUnits, timestamps, currentTime;
-        return _regenerator().w(function (_context6) {
-          while (1) switch (_context6.n) {
-            case 0:
-              actualDuration = _arguments2.length > 1 && _arguments2[1] !== undefined ? _arguments2[1] : null;
-              if (!(!verse || !verse.key)) {
-                _context6.n = 1;
-                break;
-              }
-              console.warn('getWordTimings: no verse');
-              return _context6.a(2, []);
-            case 1:
-              // Get words from the verse object directly (not from HTML)
-              sourceWords = [];
-              if (verse.words && verse.words.length) {
-                sourceWords = verse.words.map(function (word) {
-                  return String((word === null || word === void 0 ? void 0 : word.ar) || '').trim();
-                }).filter(Boolean);
-              } else {
-                // If no pre-parsed words, tokenize the Arabic text
-                arabicText = verse.arabic || '';
-                sourceWords = tokenizeArabicText(arabicText);
-              }
-              if (sourceWords.length) {
-                _context6.n = 2;
-                break;
-              }
-              console.warn('getWordTimings: no words for verse', verse.key);
-              return _context6.a(2, []);
-            case 2:
-              // Get actual audio duration or estimate
-              safeDuration = 0;
-              if (Number.isFinite(Number(actualDuration)) && Number(actualDuration) > 0) {
-                safeDuration = Number(actualDuration);
-              } else if (verse.duration && Number(verse.duration) > 0) {
-                safeDuration = Number(verse.duration);
-              } else {
-                safeDuration = _this19.estimateVerseDuration(verse);
-              }
+      if (newHtml) {
+        var span = document.createElement('span');
+        span.innerHTML = newHtml;
+        textNode.parentNode.replaceChild(span, textNode);
+        // Move children to fragment
+        while (span.firstChild) {
+          textNode.parentNode.insertBefore(span.firstChild, span);
+        }
+        textNode.parentNode.removeChild(span);
+      }
+    });
+    return tempDiv.innerHTML;
+  }), "getTajweedWithWordHighlighting", function getTajweedWithWordHighlighting(verse) {
+    if (!verse.arabic_tajweed && !verse.arabic) return '';
+    var tajweedText = verse.arabic_tajweed || verse.arabic;
+    if (!tajweedText) return '';
 
-              // Keep timestamps in media-time because audioElement.currentTime is also media-time.
-              cacheKey = "".concat(verse.key, "_").concat(_this19.reciterId, "_").concat(Math.round(safeDuration * 10));
-              if (!_this19.wordTimestampsMap.has(cacheKey)) {
-                _context6.n = 3;
-                break;
-              }
-              return _context6.a(2, _this19.wordTimestampsMap.get(cacheKey));
-            case 3:
-              // Build a normalized timing track so highlight end time always matches audio end time.
-              cleanedWords = sourceWords.map(function (word) {
-                return word.replace(/<[^>]+>/g, '').replace(/[^\u0621-\u064A]/g, '');
-              });
-              weightedUnits = cleanedWords.map(function (cleanWord, index) {
-                var charCount = Math.max(1, cleanWord.length);
-                var leadInBoost = index === 0 ? 1.14 : 1;
-                var shortWordLift = charCount <= 2 ? 1.18 : 1;
-                return (charCount + 0.75) * leadInBoost * shortWordLift;
-              });
-              totalUnits = weightedUnits.reduce(function (sum, unit) {
-                return sum + unit;
-              }, 0) || 1;
-              timestamps = [];
-              currentTime = 0;
-              weightedUnits.forEach(function (unit, index) {
-                var wordDuration = index === weightedUnits.length - 1 ? Math.max(0, safeDuration - currentTime) : safeDuration * (unit / totalUnits);
-                timestamps.push({
-                  index: index,
-                  start: currentTime,
-                  end: currentTime + wordDuration
-                });
-                currentTime += wordDuration;
-              });
-              _this19.wordTimestampsMap.set(cacheKey, timestamps);
-              return _context6.a(2, timestamps);
-          }
-        }, _callee6);
-      }))();
-    },
-    calculateWordTimings: function calculateWordTimings(verse) {
-      var _this20 = this;
-      var audioDuration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-      return new Promise(function (resolve) {
-        if (!verse.words || verse.words.length === 0) {
-          resolve([]);
-          return;
-        }
-        var wordCount = verse.words.length;
-        var totalDuration = audioDuration || _this20.estimateVerseDuration(verse);
-        var durationPerWord = totalDuration / wordCount;
-        var timestamps = [];
-        var currentTime = 0;
-        for (var i = 0; i < wordCount; i++) {
-          timestamps.push({
-            index: i,
-            start: currentTime,
-            end: currentTime + durationPerWord
-          });
-          currentTime += durationPerWord;
-        }
-        resolve(timestamps);
-      });
-    },
-    estimateVerseDuration: function estimateVerseDuration(verse) {
-      var _verse$arabic;
-      // Estimate based on verse length
-      var arabicLength = ((_verse$arabic = verse.arabic) === null || _verse$arabic === void 0 ? void 0 : _verse$arabic.length) || 100;
-      var baseDuration = Math.min(45, Math.max(5, arabicLength / 10));
-      return baseDuration;
-    },
-    startWordHighlighting: function startWordHighlighting(verse) {
-      var _this21 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7() {
-        var _this21$audioElement;
-        var duration, timestamps, _updateHighlight;
-        return _regenerator().w(function (_context7) {
-          while (1) switch (_context7.n) {
-            case 0:
-              if (!_this21.wordHighlightLoading) {
-                _context7.n = 1;
-                break;
-              }
-              return _context7.a(2);
-            case 1:
-              if (!(!verse || !verse.key)) {
-                _context7.n = 2;
-                break;
-              }
-              return _context7.a(2);
-            case 2:
-              if (_this21.wordByWordAudioEnabled) {
-                _context7.n = 3;
-                break;
-              }
-              return _context7.a(2);
-            case 3:
-              _this21.stopWordHighlighting();
-              _this21.wordHighlightLoading = true;
-              _this21.currentHighlightedVerseKey = verse.key;
-              _this21.currentWordIndex = -1;
-              _this21.currentPhraseIndex = -1;
+    // First normalize the tajweed markup
+    var normalized = this.normalizeTajweedMarkup(tajweedText);
 
-              // Get word timings regardless of tajweed setting
-              duration = Number((_this21$audioElement = _this21.audioElement) === null || _this21$audioElement === void 0 ? void 0 : _this21$audioElement.duration) || null;
-              _context7.n = 4;
-              return _this21.getWordTimings(verse, duration);
-            case 4:
-              timestamps = _context7.v;
-              _this21.wordHighlightLoading = false;
-              if (!(!timestamps || !timestamps.length)) {
-                _context7.n = 5;
-                break;
-              }
-              return _context7.a(2);
-            case 5:
-              _this21.wordHighlightTimestamps = timestamps;
-              _updateHighlight = function updateHighlight() {
-                if (!_this21.audioElement || _this21.audioElement.paused || _this21.audioElement.ended) return;
-                _this21.syncWordHighlightFromAudio(verse);
-                _this21.wordHighlightFrame = window.requestAnimationFrame(_updateHighlight);
-              };
-              _this21.wordHighlightHandler = _updateHighlight;
-              _updateHighlight();
-            case 6:
-              return _context7.a(2);
-          }
-        }, _callee7);
-      }))();
-    },
-    wordTooltip: function wordTooltip(word) {
-      var ar = String((word === null || word === void 0 ? void 0 : word.ar) || '').trim();
-      var en = String((word === null || word === void 0 ? void 0 : word.en) || '').trim();
-      if (ar && en) return "".concat(ar, " - ").concat(en);
-      return ar || en || 'Word';
-    },
-    updateWordHighlight: function updateWordHighlight(verseKey, activeIndex) {
-      this.currentHighlightedVerseKey = verseKey || null;
-      this.currentWordIndex = Number.isFinite(Number(activeIndex)) ? Number(activeIndex) : -1;
-      this.currentPhraseIndex = this.currentWordIndex;
-    },
-    syncWordHighlightFromAudio: function syncWordHighlightFromAudio() {
-      var _this$wordHighlightTi;
-      var verse = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.activeVerseRef;
-      if (!verse || !verse.key || this.currentHighlightedVerseKey !== verse.key || !((_this$wordHighlightTi = this.wordHighlightTimestamps) !== null && _this$wordHighlightTi !== void 0 && _this$wordHighlightTi.length) || !this.audioElement) return;
-      var currentTime = Number(this.audioElement.currentTime || 0);
-      var active = this.wordHighlightTimestamps.find(function (item) {
-        return currentTime >= item.start && currentTime <= item.end;
+    // Now wrap each word with word highlighting while preserving tajweed spans
+    var words = tokenizeArabicText(verse.arabic);
+    if (!words.length) return normalized;
+    var result = normalized;
+    var wordIndex = 0;
+
+    // For each word in the original Arabic, wrap the corresponding tajweed-marked text
+    words.forEach(function (word, idx) {
+      // Create a regex that matches this word (accounting for potential tajweed spans inside)
+      var wordPattern = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      var regex = new RegExp("(<span[^>]*class=\"[^\"]*tajweed[^\"]*\"[^>]*>)?(".concat(wordPattern, ")(</span>)?"), 'g');
+      result = result.replace(regex, function (match, openTag, wordText, closeTag) {
+        var preservedMarkup = (openTag || '') + wordText + (closeTag || '');
+        return "<word class=\"wbw-word\" data-word-index=\"".concat(idx, "\" data-verse-key=\"").concat(verse.key, "\" data-tajweed-word=\"true\">").concat(preservedMarkup, "</word> ");
       });
-      var activeIndex = active ? active.index : -1;
-      this.updateWordHighlight(verse.key, activeIndex);
-    },
-    restoreWordScroll: function restoreWordScroll(verseKey) {
-      var _this22 = this;
-      this.$nextTick(function () {
-        if (!verseKey) return;
-        var verseCard = document.querySelector(".verse-card[data-verse-key=\"".concat(verseKey, "\"]"));
-        var wordsWrap = verseCard === null || verseCard === void 0 ? void 0 : verseCard.querySelector('.verse-words');
-        var remembered = _this22.verseScrollMemory[verseKey];
-        if (!wordsWrap || !remembered) return;
-        wordsWrap.scrollTop = Number(remembered.top || 0);
-        wordsWrap.scrollLeft = Number(remembered.left || 0);
-      });
-    },
-    onVerseWordsScroll: function onVerseWordsScroll(verseKey, event) {
-      var el = event === null || event === void 0 ? void 0 : event.target;
-      if (!verseKey || !el) return;
-      this.verseScrollMemory[verseKey] = {
-        top: el.scrollTop,
-        left: el.scrollLeft
-      };
-    },
-    updateWordHighlightInDOM: function updateWordHighlightInDOM(verseKey, activeWordIndex) {
-      this.updateWordHighlight(verseKey, activeWordIndex);
-    },
-    stopWordHighlighting: function stopWordHighlighting() {
-      if (this.wordHighlightFrame) window.cancelAnimationFrame(this.wordHighlightFrame);
-      this.wordHighlightFrame = null;
-      this.wordHighlightHandler = null;
-      this.wordHighlightLoading = false;
-      this.currentWordIndex = -1;
-      this.currentPhraseIndex = -1;
-      this.currentHighlightedVerseKey = null;
-      this.wordHighlightTimestamps = [];
-    },
-    // Audio methods
-    initAudio: function initAudio() {
-      var _this23 = this;
-      this.audioElement = this.$refs.audio;
-      if (!this.audioElement) return;
-      this.audioElement.removeEventListener('timeupdate', this.audioTimeUpdate);
-      this.audioElement.removeEventListener('ended', this.audioEnded);
-      this.audioElement.removeEventListener('error', this.audioError);
-      this.audioElement.removeEventListener('seeking', this.audioSeeking);
-      this.audioElement.removeEventListener('seeked', this.audioSeeked);
-      this.audioElement.removeEventListener('pause', this.audioPaused);
-      this.audioTimeUpdate = function () {
-        _this23.currentTime = _this23.audioElement.currentTime;
-        _this23.duration = _this23.audioElement.duration;
-        _this23.centralSession.audio.currentTime = Number(_this23.currentTime || 0);
-        _this23.centralSession.audio.speed = Number(_this23.speed || 1);
-        if (_this23.segmentEndTime > 0 && Number(_this23.currentTime || 0) >= _this23.segmentEndTime - 0.04) {
-          _this23.handleSegmentBoundary();
-          return;
-        }
-        if (_this23.wordByWordAudioEnabled) {
-          var verse = _this23.activeVerseRef;
-          if (verse && verse.key) {
-            if (_this23.currentHighlightedVerseKey !== verse.key && !_this23.wordHighlightLoading) {
-              _this23.startWordHighlighting(verse);
-            } else if (!_this23.wordHighlightLoading) {
-              _this23.syncWordHighlightFromAudio(verse);
+    });
+    return result;
+  }), "sanitizeHtml", function sanitizeHtml(html) {
+    if (!html) return '';
+    var cleaned = String(html);
+    // Remove scripts entirely.
+    cleaned = cleaned.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    // Drop inline handlers/styles.
+    cleaned = cleaned.replace(/\son\w+\s*=\s*(['"]).*?\1/gi, '');
+    cleaned = cleaned.replace(/\sstyle\s*=\s*(['"]).*?\1/gi, '');
+    // Allow only the tags we intentionally render.
+    cleaned = cleaned.replace(/<(?!\/?(?:span|word|br)\b)[^>]*>/gi, '');
+    return cleaned;
+  }), "normalizeTajweedMarkup", function normalizeTajweedMarkup(text) {
+    if (!text) return '';
+    var markerMap = {
+      '[h': 'ham_wasl',
+      '[s': 'slnt',
+      '[l': 'slnt',
+      '[n': 'madda_normal',
+      '[p': 'madda_permissible',
+      '[m': 'madda_necessary',
+      '[q': 'qlq',
+      '[o': 'madda_obligatory',
+      '[c': 'ikhf_shfw',
+      '[f': 'ikhf',
+      '[w': 'idghm_shfw',
+      '[i': 'iqlb',
+      '[a': 'idgh_ghn',
+      '[u': 'idgh_w_ghn',
+      '[d': 'idgh_mus',
+      '[b': 'idgh_mus',
+      '[g': 'ghn'
+    };
+    var normalized = this.sanitizeHtml(String(text)).replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/<\s*tajweed\b([^>]*)class=['"]?([a-zA-Z0-9_-]+)['"]?([^>]*)>/gi, '<span class="tajweed-mark tajweed-$2"$1$3>').replace(/<\s*\/\s*tajweed\s*>/gi, '</span>');
+    Object.entries(markerMap).forEach(function (_ref2) {
+      var _ref3 = _slicedToArray(_ref2, 2),
+        marker = _ref3[0],
+        className = _ref3[1];
+      var escapedMarker = marker.replace('[', '\\[');
+      normalized = normalized.replace(new RegExp(escapedMarker, 'g'), "<span class=\"tajweed-mark tajweed-".concat(className, "\" data-tajweed=\""));
+    });
+    normalized = normalized.replace(/\[/g, '">').replace(/\]/g, '</span>').replace(/<\/?tajweed[^>]*>/gi, '').replace(/data-tajweed="([^"]*)">/g, function (fullMatch, meta) {
+      var cleanMeta = String(meta || '').replace(/"/g, '&quot;');
+      return "data-tajweed=\"".concat(cleanMeta, "\">");
+    }).replace(/<\/span><\/span>/g, '</span>').replace(/(?:class=|data-tajweed=)&quot;[^&]*&quot;/g, '');
+    return normalized;
+  }), "stripTajweedMarkup", function stripTajweedMarkup(text) {
+    if (!text) return '';
+    return String(text).replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/<\s*\/?\s*tajweed[^>]*>/gi, '').replace(/<[^>]*>/g, '').replace(/\[(?:[a-z]|\/)[^\]]*\]/gi, '').trim();
+  }), "getHighlightedArabic", function getHighlightedArabic(verse) {
+    if (!verse || !verse.arabic) return '';
+    if (!this.wordByWordAudioEnabled) return verse.arabic;
+    var highlightedHtml = this.splitArabicIntoWords(verse.arabic, verse.key);
+    return highlightedHtml;
+  }), "splitArabicIntoWords", function splitArabicIntoWords(verse) {
+    var _this19 = this;
+    if (!verse || !verse.arabic) return '';
+
+    // Get words from the verse object or tokenize
+    var words = [];
+    if (verse.words && verse.words.length) {
+      words = verse.words.map(function (w) {
+        return w.ar || '';
+      }).filter(Boolean);
+    } else {
+      words = tokenizeArabicText(verse.arabic);
+    }
+    if (!words.length) return this.stripTajweedMarkup(verse.arabic || verse.arabic_tajweed || '');
+    var html = '';
+    words.forEach(function (word, idx) {
+      var escapedWord = escapeHtml(word);
+      var isActive = _this19.currentHighlightedVerseKey === verse.key && _this19.currentWordIndex === idx;
+      var activeClass = isActive ? ' highlighted phrase-highlighted' : '';
+      var weakClass = _this19.isWeakAyah(verse.key) ? ' weak-word' : '';
+      var masteredClass = _this19.isMasteredAyah(verse.key) ? ' mastered-word' : '';
+      html += "<word class=\"wbw-word".concat(activeClass).concat(weakClass).concat(masteredClass, "\" data-word-index=\"").concat(idx, "\" data-verse-key=\"").concat(verse.key, "\" title=\"Word ").concat(idx + 1, "\">").concat(escapedWord, "</word> ");
+    });
+    return html;
+  }), "getWordTimings", function getWordTimings(verse) {
+    var _arguments2 = arguments,
+      _this20 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7() {
+      var actualDuration, sourceWords, arabicText, safeDuration, cacheKey, cleanedWords, weightedUnits, totalUnits, timestamps, currentTime;
+      return _regenerator().w(function (_context7) {
+        while (1) switch (_context7.n) {
+          case 0:
+            actualDuration = _arguments2.length > 1 && _arguments2[1] !== undefined ? _arguments2[1] : null;
+            if (!(!verse || !verse.key)) {
+              _context7.n = 1;
+              break;
             }
+            console.warn('getWordTimings: no verse');
+            return _context7.a(2, []);
+          case 1:
+            // Get words from the verse object directly (not from HTML)
+            sourceWords = [];
+            if (verse.words && verse.words.length) {
+              sourceWords = verse.words.map(function (word) {
+                return String((word === null || word === void 0 ? void 0 : word.ar) || '').trim();
+              }).filter(Boolean);
+            } else {
+              // If no pre-parsed words, tokenize the Arabic text
+              arabicText = verse.arabic || '';
+              sourceWords = tokenizeArabicText(arabicText);
+            }
+            if (sourceWords.length) {
+              _context7.n = 2;
+              break;
+            }
+            console.warn('getWordTimings: no words for verse', verse.key);
+            return _context7.a(2, []);
+          case 2:
+            // Get actual audio duration or estimate
+            safeDuration = 0;
+            if (Number.isFinite(Number(actualDuration)) && Number(actualDuration) > 0) {
+              safeDuration = Number(actualDuration);
+            } else if (verse.duration && Number(verse.duration) > 0) {
+              safeDuration = Number(verse.duration);
+            } else {
+              safeDuration = _this20.estimateVerseDuration(verse);
+            }
+
+            // Keep timestamps in media-time because audioElement.currentTime is also media-time.
+            cacheKey = "".concat(verse.key, "_").concat(_this20.reciterId, "_").concat(Math.round(safeDuration * 10));
+            if (!_this20.wordTimestampsMap.has(cacheKey)) {
+              _context7.n = 3;
+              break;
+            }
+            return _context7.a(2, _this20.wordTimestampsMap.get(cacheKey));
+          case 3:
+            // Build a normalized timing track so highlight end time always matches audio end time.
+            cleanedWords = sourceWords.map(function (word) {
+              return word.replace(/<[^>]+>/g, '').replace(/[^\u0621-\u064A]/g, '');
+            });
+            weightedUnits = cleanedWords.map(function (cleanWord, index) {
+              var charCount = Math.max(1, cleanWord.length);
+              var leadInBoost = index === 0 ? 1.14 : 1;
+              var shortWordLift = charCount <= 2 ? 1.18 : 1;
+              return (charCount + 0.75) * leadInBoost * shortWordLift;
+            });
+            totalUnits = weightedUnits.reduce(function (sum, unit) {
+              return sum + unit;
+            }, 0) || 1;
+            timestamps = [];
+            currentTime = 0;
+            weightedUnits.forEach(function (unit, index) {
+              var wordDuration = index === weightedUnits.length - 1 ? Math.max(0, safeDuration - currentTime) : safeDuration * (unit / totalUnits);
+              timestamps.push({
+                index: index,
+                start: currentTime,
+                end: currentTime + wordDuration
+              });
+              currentTime += wordDuration;
+            });
+            _this20.wordTimestampsMap.set(cacheKey, timestamps);
+            return _context7.a(2, timestamps);
+        }
+      }, _callee7);
+    }))();
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "calculateWordTimings", function calculateWordTimings(verse) {
+    var _this21 = this;
+    var audioDuration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    return new Promise(function (resolve) {
+      if (!verse.words || verse.words.length === 0) {
+        resolve([]);
+        return;
+      }
+      var wordCount = verse.words.length;
+      var totalDuration = audioDuration || _this21.estimateVerseDuration(verse);
+      var durationPerWord = totalDuration / wordCount;
+      var timestamps = [];
+      var currentTime = 0;
+      for (var i = 0; i < wordCount; i++) {
+        timestamps.push({
+          index: i,
+          start: currentTime,
+          end: currentTime + durationPerWord
+        });
+        currentTime += durationPerWord;
+      }
+      resolve(timestamps);
+    });
+  }), "estimateVerseDuration", function estimateVerseDuration(verse) {
+    var _verse$arabic;
+    // Estimate based on verse length
+    var arabicLength = ((_verse$arabic = verse.arabic) === null || _verse$arabic === void 0 ? void 0 : _verse$arabic.length) || 100;
+    var baseDuration = Math.min(45, Math.max(5, arabicLength / 10));
+    return baseDuration;
+  }), "startWordHighlighting", function startWordHighlighting(verse) {
+    var _this22 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee8() {
+      var _this22$audioElement;
+      var duration, timestamps, _updateHighlight;
+      return _regenerator().w(function (_context8) {
+        while (1) switch (_context8.n) {
+          case 0:
+            if (!_this22.wordHighlightLoading) {
+              _context8.n = 1;
+              break;
+            }
+            return _context8.a(2);
+          case 1:
+            if (!(!verse || !verse.key)) {
+              _context8.n = 2;
+              break;
+            }
+            return _context8.a(2);
+          case 2:
+            if (_this22.wordByWordAudioEnabled) {
+              _context8.n = 3;
+              break;
+            }
+            return _context8.a(2);
+          case 3:
+            _this22.stopWordHighlighting();
+            _this22.wordHighlightLoading = true;
+            _this22.currentHighlightedVerseKey = verse.key;
+            _this22.currentWordIndex = -1;
+            _this22.currentPhraseIndex = -1;
+
+            // Get word timings regardless of tajweed setting
+            duration = Number((_this22$audioElement = _this22.audioElement) === null || _this22$audioElement === void 0 ? void 0 : _this22$audioElement.duration) || null;
+            _context8.n = 4;
+            return _this22.getWordTimings(verse, duration);
+          case 4:
+            timestamps = _context8.v;
+            _this22.wordHighlightLoading = false;
+            if (!(!timestamps || !timestamps.length)) {
+              _context8.n = 5;
+              break;
+            }
+            return _context8.a(2);
+          case 5:
+            _this22.wordHighlightTimestamps = timestamps;
+            _updateHighlight = function updateHighlight() {
+              if (!_this22.audioElement || _this22.audioElement.paused || _this22.audioElement.ended) return;
+              _this22.syncWordHighlightFromAudio(verse);
+              _this22.wordHighlightFrame = window.requestAnimationFrame(_updateHighlight);
+            };
+            _this22.wordHighlightHandler = _updateHighlight;
+            _updateHighlight();
+          case 6:
+            return _context8.a(2);
+        }
+      }, _callee8);
+    }))();
+  }), "wordTooltip", function wordTooltip(word) {
+    var ar = String((word === null || word === void 0 ? void 0 : word.ar) || '').trim();
+    var en = String((word === null || word === void 0 ? void 0 : word.en) || '').trim();
+    if (ar && en) return "".concat(ar, " - ").concat(en);
+    return ar || en || 'Word';
+  }), "updateWordHighlight", function updateWordHighlight(verseKey, activeIndex) {
+    this.currentHighlightedVerseKey = verseKey || null;
+    this.currentWordIndex = Number.isFinite(Number(activeIndex)) ? Number(activeIndex) : -1;
+    this.currentPhraseIndex = this.currentWordIndex;
+  }), "syncWordHighlightFromAudio", function syncWordHighlightFromAudio() {
+    var _this$wordHighlightTi;
+    var verse = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.activeVerseRef;
+    if (!verse || !verse.key || this.currentHighlightedVerseKey !== verse.key || !((_this$wordHighlightTi = this.wordHighlightTimestamps) !== null && _this$wordHighlightTi !== void 0 && _this$wordHighlightTi.length) || !this.audioElement) return;
+    var currentTime = Number(this.audioElement.currentTime || 0);
+    var active = this.wordHighlightTimestamps.find(function (item) {
+      return currentTime >= item.start && currentTime <= item.end;
+    });
+    var activeIndex = active ? active.index : -1;
+    this.updateWordHighlight(verse.key, activeIndex);
+  }), "restoreWordScroll", function restoreWordScroll(verseKey) {
+    var _this23 = this;
+    this.$nextTick(function () {
+      if (!verseKey) return;
+      var verseCard = document.querySelector(".verse-card[data-verse-key=\"".concat(verseKey, "\"]"));
+      var wordsWrap = verseCard === null || verseCard === void 0 ? void 0 : verseCard.querySelector('.verse-words');
+      var remembered = _this23.verseScrollMemory[verseKey];
+      if (!wordsWrap || !remembered) return;
+      wordsWrap.scrollTop = Number(remembered.top || 0);
+      wordsWrap.scrollLeft = Number(remembered.left || 0);
+    });
+  }), "onVerseWordsScroll", function onVerseWordsScroll(verseKey, event) {
+    var el = event === null || event === void 0 ? void 0 : event.target;
+    if (!verseKey || !el) return;
+    this.verseScrollMemory[verseKey] = {
+      top: el.scrollTop,
+      left: el.scrollLeft
+    };
+  }), "updateWordHighlightInDOM", function updateWordHighlightInDOM(verseKey, activeWordIndex) {
+    this.updateWordHighlight(verseKey, activeWordIndex);
+  }), "stopWordHighlighting", function stopWordHighlighting() {
+    if (this.wordHighlightFrame) window.cancelAnimationFrame(this.wordHighlightFrame);
+    this.wordHighlightFrame = null;
+    this.wordHighlightHandler = null;
+    this.wordHighlightLoading = false;
+    this.currentWordIndex = -1;
+    this.currentPhraseIndex = -1;
+    this.currentHighlightedVerseKey = null;
+    this.wordHighlightTimestamps = [];
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "initAudio", function initAudio() {
+    var _this24 = this;
+    this.audioElement = this.$refs.audio;
+    if (!this.audioElement) return;
+    this.audioElement.removeEventListener('timeupdate', this.audioTimeUpdate);
+    this.audioElement.removeEventListener('ended', this.audioEnded);
+    this.audioElement.removeEventListener('error', this.audioError);
+    this.audioElement.removeEventListener('seeking', this.audioSeeking);
+    this.audioElement.removeEventListener('seeked', this.audioSeeked);
+    this.audioElement.removeEventListener('pause', this.audioPaused);
+    this.audioTimeUpdate = function () {
+      _this24.currentTime = _this24.audioElement.currentTime;
+      _this24.duration = _this24.audioElement.duration;
+      _this24.centralSession.audio.currentTime = Number(_this24.currentTime || 0);
+      _this24.centralSession.audio.speed = Number(_this24.speed || 1);
+      if (_this24.segmentEndTime > 0 && Number(_this24.currentTime || 0) >= _this24.segmentEndTime - 0.04) {
+        _this24.handleSegmentBoundary();
+        return;
+      }
+      if (_this24.wordByWordAudioEnabled) {
+        var verse = _this24.activeVerseRef;
+        if (verse && verse.key) {
+          if (_this24.currentHighlightedVerseKey !== verse.key && !_this24.wordHighlightLoading) {
+            _this24.startWordHighlighting(verse);
+          } else if (!_this24.wordHighlightLoading) {
+            _this24.syncWordHighlightFromAudio(verse);
           }
         }
-      };
-      this.audioEnded = function () {
-        if (_this23.advanceLocked) return;
-        _this23.advanceLocked = true;
-        _this23.isPlaying = false;
-        _this23.stopWordHighlighting();
-        if (_this23.guidedUiStep === 'learn') {
-          _this23.flowListenPlays += 1;
-          _this23.persistUiState();
-        }
-        if (_this23.playMode === 'auto') {
-          window.setTimeout(function () {
-            _this23.advanceLocked = false;
-            _this23.next();
-          }, Math.max(0, Number(_this23.delay || 0)) * 1000);
-        } else {
-          _this23.advanceLocked = false;
-        }
-      };
-      this.audioSeeking = function () {
-        // Prevent stale highlight when the user scrubs.
-        _this23.currentWordIndex = -1;
-        _this23.updateWordHighlight(_this23.currentHighlightedVerseKey, -1);
-      };
-      this.audioSeeked = function () {
-        var _this23$audioElement;
-        var verse = _this23.activeVerseRef;
-        if (!verse) return;
-        if (_this23.wordByWordAudioEnabled && !((_this23$audioElement = _this23.audioElement) !== null && _this23$audioElement !== void 0 && _this23$audioElement.paused)) {
-          _this23.startWordHighlighting(verse);
-        }
-      };
-      this.audioPaused = function () {
-        // Ensure state is consistent even if pause is triggered outside our toggle handler.
-        _this23.isPlaying = false;
-        if (_this23.wordHighlightFrame) window.cancelAnimationFrame(_this23.wordHighlightFrame);
-        _this23.wordHighlightFrame = null;
-      };
-      this.audioError = function (e) {
-        console.error('Audio error:', e);
-        _this23.isPlaying = false;
-        _this23.sessionErrorCount += 1;
-        _this23.stopWordHighlighting();
-        _this23.showBanner('Audio playback error', 'error', 3000);
-      };
-      this.audioElement.addEventListener('timeupdate', this.audioTimeUpdate);
-      this.audioElement.addEventListener('ended', this.audioEnded);
-      this.audioElement.addEventListener('error', this.audioError);
-      this.audioElement.addEventListener('seeking', this.audioSeeking);
-      this.audioElement.addEventListener('seeked', this.audioSeeked);
-      this.audioElement.addEventListener('pause', this.audioPaused);
-    },
-    playVerse: function playVerse(verse) {
-      var _arguments3 = arguments,
-        _this24 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee0() {
-        var _this24$audioElement;
-        var options, audioUrl, currentSrc, isSameSource;
-        return _regenerator().w(function (_context0) {
-          while (1) switch (_context0.n) {
-            case 0:
-              options = _arguments3.length > 1 && _arguments3[1] !== undefined ? _arguments3[1] : {};
-              if (!(_this24.playRequestLocked && !options.force)) {
-                _context0.n = 1;
-                break;
+      }
+    };
+    this.audioEnded = function () {
+      if (_this24.advanceLocked) return;
+      _this24.advanceLocked = true;
+      _this24.isPlaying = false;
+      _this24.stopWordHighlighting();
+      if (_this24.guidedUiStep === 'learn') {
+        _this24.flowListenPlays += 1;
+        _this24.persistUiState();
+      }
+      if (_this24.playMode === 'auto') {
+        window.setTimeout(function () {
+          _this24.advanceLocked = false;
+          _this24.next();
+        }, Math.max(0, Number(_this24.delay || 0)) * 1000);
+      } else {
+        _this24.advanceLocked = false;
+      }
+    };
+    this.audioSeeking = function () {
+      // Prevent stale highlight when the user scrubs.
+      _this24.currentWordIndex = -1;
+      _this24.updateWordHighlight(_this24.currentHighlightedVerseKey, -1);
+    };
+    this.audioSeeked = function () {
+      var _this24$audioElement;
+      var verse = _this24.activeVerseRef;
+      if (!verse) return;
+      if (_this24.wordByWordAudioEnabled && !((_this24$audioElement = _this24.audioElement) !== null && _this24$audioElement !== void 0 && _this24$audioElement.paused)) {
+        _this24.startWordHighlighting(verse);
+      }
+    };
+    this.audioPaused = function () {
+      // Ensure state is consistent even if pause is triggered outside our toggle handler.
+      _this24.isPlaying = false;
+      if (_this24.wordHighlightFrame) window.cancelAnimationFrame(_this24.wordHighlightFrame);
+      _this24.wordHighlightFrame = null;
+    };
+    this.audioError = function (e) {
+      console.error('Audio error:', e);
+      _this24.isPlaying = false;
+      _this24.sessionErrorCount += 1;
+      _this24.stopWordHighlighting();
+      _this24.showBanner('Audio playback error', 'error', 3000);
+    };
+    this.audioElement.addEventListener('timeupdate', this.audioTimeUpdate);
+    this.audioElement.addEventListener('ended', this.audioEnded);
+    this.audioElement.addEventListener('error', this.audioError);
+    this.audioElement.addEventListener('seeking', this.audioSeeking);
+    this.audioElement.addEventListener('seeked', this.audioSeeked);
+    this.audioElement.addEventListener('pause', this.audioPaused);
+  }), "playVerse", function playVerse(verse) {
+    var _arguments3 = arguments,
+      _this25 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
+      var _this25$audioElement;
+      var options, audioUrl, currentSrc, isSameSource;
+      return _regenerator().w(function (_context1) {
+        while (1) switch (_context1.n) {
+          case 0:
+            options = _arguments3.length > 1 && _arguments3[1] !== undefined ? _arguments3[1] : {};
+            if (!(_this25.playRequestLocked && !options.force)) {
+              _context1.n = 1;
+              break;
+            }
+            return _context1.a(2);
+          case 1:
+            _this25.playRequestLocked = true;
+            if (_this25.segmentPlaybackTimer) {
+              clearTimeout(_this25.segmentPlaybackTimer);
+              _this25.segmentPlaybackTimer = null;
+            }
+            _this25.segmentEndTime = 0;
+            if (verse) {
+              _context1.n = 2;
+              break;
+            }
+            console.error('No verse provided');
+            _this25.playRequestLocked = false;
+            return _context1.a(2);
+          case 2:
+            if (verse.audio) {
+              _context1.n = 3;
+              break;
+            }
+            _this25.showBanner("Audio not available for verse ".concat(verse.number), 'info', 2000);
+            _this25.playRequestLocked = false;
+            return _context1.a(2);
+          case 3:
+            audioUrl = _this25.normalizeAudioUrl(verse.audio);
+            currentSrc = (_this25$audioElement = _this25.audioElement) !== null && _this25$audioElement !== void 0 && _this25$audioElement.currentSrc ? _this25.normalizeAudioUrl(_this25.audioElement.currentSrc) : '';
+            isSameSource = !!currentSrc && currentSrc === audioUrl; // Toggle if same verse is playing
+            if (!(!options.force && _this25.activeKey === verse.key && isSameSource)) {
+              _context1.n = 4;
+              break;
+            }
+            _this25.togglePlay();
+            _this25.playRequestLocked = false;
+            return _context1.a(2);
+          case 4:
+            // Stop current playback and highlighting
+            _this25.stopWordHighlighting();
+            if (_this25.audioElement) {
+              try {
+                _this25.audioElement.pause();
+              } catch (e) {
+                console.warn('Error pausing audio:', e);
               }
-              return _context0.a(2);
-            case 1:
-              _this24.playRequestLocked = true;
-              if (_this24.segmentPlaybackTimer) {
-                clearTimeout(_this24.segmentPlaybackTimer);
-                _this24.segmentPlaybackTimer = null;
-              }
-              _this24.segmentEndTime = 0;
-              if (verse) {
-                _context0.n = 2;
-                break;
-              }
-              console.error('No verse provided');
-              _this24.playRequestLocked = false;
-              return _context0.a(2);
-            case 2:
-              if (verse.audio) {
-                _context0.n = 3;
-                break;
-              }
-              _this24.showBanner("Audio not available for verse ".concat(verse.number), 'info', 2000);
-              _this24.playRequestLocked = false;
-              return _context0.a(2);
-            case 3:
-              audioUrl = _this24.normalizeAudioUrl(verse.audio);
-              currentSrc = (_this24$audioElement = _this24.audioElement) !== null && _this24$audioElement !== void 0 && _this24$audioElement.currentSrc ? _this24.normalizeAudioUrl(_this24.audioElement.currentSrc) : '';
-              isSameSource = !!currentSrc && currentSrc === audioUrl; // Toggle if same verse is playing
-              if (!(!options.force && _this24.activeKey === verse.key && isSameSource)) {
-                _context0.n = 4;
-                break;
-              }
-              _this24.togglePlay();
-              _this24.playRequestLocked = false;
-              return _context0.a(2);
-            case 4:
-              // Stop current playback and highlighting
-              _this24.stopWordHighlighting();
-              if (_this24.audioElement) {
-                try {
-                  _this24.audioElement.pause();
-                } catch (e) {
-                  console.warn('Error pausing audio:', e);
-                }
-              }
-              _this24.setActiveVerse(verse.key, {
-                scroll: false,
-                queueIndex: Number.isFinite(options.queueIndex) ? Number(options.queueIndex) : undefined
-              });
-              if (_this24.audioElement) {
-                _context0.n = 6;
-                break;
-              }
-              _this24.audioElement = _this24.$refs.audio;
-              if (_this24.audioElement) {
-                _context0.n = 5;
-                break;
-              }
-              _this24.showBanner('Audio system not ready', 'error', 3000);
-              _this24.playRequestLocked = false;
-              return _context0.a(2);
-            case 5:
-              _this24.initAudio();
-            case 6:
-              if (!isSameSource) {
-                _this24.audioElement.src = audioUrl;
-                _this24.audioElement.load();
-              }
-              _this24.playerVisible = true;
-              return _context0.a(2, new Promise(function (resolve, reject) {
-                var timeout = setTimeout(function () {
-                  reject(new Error('Audio load timeout'));
-                }, 10000);
-                var startPlayback = /*#__PURE__*/function () {
-                  var _ref4 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee8() {
-                    var segment, segmentTotal, segmentIndex, segmentEnd, duration, segmentStart, _t2;
-                    return _regenerator().w(function (_context8) {
-                      while (1) switch (_context8.p = _context8.n) {
-                        case 0:
-                          clearTimeout(timeout);
-                          _this24.audioElement.playbackRate = _this24.speed;
-                          segment = options.segment || null;
-                          segmentTotal = Math.max(1, Number((segment === null || segment === void 0 ? void 0 : segment.sequenceTotal) || (segment === null || segment === void 0 ? void 0 : segment.total) || 1));
-                          segmentIndex = Math.max(0, Math.min(segmentTotal - 1, Number((segment === null || segment === void 0 ? void 0 : segment.index) || 0)));
-                          segmentEnd = 0;
-                          if (segment && Number.isFinite(_this24.audioElement.duration) && _this24.audioElement.duration > 0 && segmentTotal > 1) {
-                            duration = Number(_this24.audioElement.duration || 0);
-                            segmentStart = Math.max(0, duration * (segmentIndex / segmentTotal));
-                            segmentEnd = Math.min(duration, duration * ((segmentIndex + 1) / segmentTotal));
-                            _this24.segmentEndTime = segmentEnd;
-                            _this24.audioElement.currentTime = segmentStart;
-                          }
-                          _context8.p = 1;
-                          _context8.n = 2;
-                          return _this24.audioElement.play();
-                        case 2:
-                          _this24.isPlaying = true;
-                          _this24.markPlaybackStart();
-                          _this24.addActivityEvent({
-                            ts: Date.now(),
-                            type: 'play',
-                            verseKey: verse.key
-                          });
-                          _this24.recomputeAnalytics();
-                          if (_this24.wordByWordAudioEnabled) {
-                            _this24.startWordHighlighting(verse);
-                          }
-                          _this24.playRequestLocked = false;
-                          resolve();
-                          _context8.n = 4;
-                          break;
-                        case 3:
-                          _context8.p = 3;
-                          _t2 = _context8.v;
-                          _this24.isPlaying = false;
-                          _this24.playRequestLocked = false;
-                          reject(_t2);
-                        case 4:
-                          return _context8.a(2);
-                      }
-                    }, _callee8, null, [[1, 3]]);
-                  }));
-                  return function startPlayback() {
-                    return _ref4.apply(this, arguments);
-                  };
-                }();
-                var _canPlayHandler = /*#__PURE__*/function () {
-                  var _ref5 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee9() {
-                    return _regenerator().w(function (_context9) {
-                      while (1) switch (_context9.n) {
-                        case 0:
-                          _context9.n = 1;
-                          return startPlayback();
-                        case 1:
-                          _this24.audioElement.removeEventListener('canplay', _canPlayHandler);
-                        case 2:
-                          return _context9.a(2);
-                      }
-                    }, _callee9);
-                  }));
-                  return function canPlayHandler() {
-                    return _ref5.apply(this, arguments);
-                  };
-                }();
-                var _errorHandler = function errorHandler(err) {
-                  clearTimeout(timeout);
-                  _this24.isPlaying = false;
-                  _this24.playRequestLocked = false;
-                  reject(err);
-                  _this24.audioElement.removeEventListener('error', _errorHandler);
+            }
+            _this25.setActiveVerse(verse.key, {
+              scroll: false,
+              queueIndex: Number.isFinite(options.queueIndex) ? Number(options.queueIndex) : undefined
+            });
+            if (_this25.audioElement) {
+              _context1.n = 6;
+              break;
+            }
+            _this25.audioElement = _this25.$refs.audio;
+            if (_this25.audioElement) {
+              _context1.n = 5;
+              break;
+            }
+            _this25.showBanner('Audio system not ready', 'error', 3000);
+            _this25.playRequestLocked = false;
+            return _context1.a(2);
+          case 5:
+            _this25.initAudio();
+          case 6:
+            if (!isSameSource) {
+              _this25.audioElement.src = audioUrl;
+              _this25.audioElement.load();
+            }
+            _this25.playerVisible = true;
+            return _context1.a(2, new Promise(function (resolve, reject) {
+              var timeout = setTimeout(function () {
+                reject(new Error('Audio load timeout'));
+              }, 10000);
+              var startPlayback = /*#__PURE__*/function () {
+                var _ref4 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee9() {
+                  var segment, segmentTotal, segmentIndex, segmentEnd, duration, segmentStart, _t2;
+                  return _regenerator().w(function (_context9) {
+                    while (1) switch (_context9.p = _context9.n) {
+                      case 0:
+                        clearTimeout(timeout);
+                        _this25.audioElement.playbackRate = _this25.speed;
+                        segment = options.segment || null;
+                        segmentTotal = Math.max(1, Number((segment === null || segment === void 0 ? void 0 : segment.sequenceTotal) || (segment === null || segment === void 0 ? void 0 : segment.total) || 1));
+                        segmentIndex = Math.max(0, Math.min(segmentTotal - 1, Number((segment === null || segment === void 0 ? void 0 : segment.index) || 0)));
+                        segmentEnd = 0;
+                        if (segment && Number.isFinite(_this25.audioElement.duration) && _this25.audioElement.duration > 0 && segmentTotal > 1) {
+                          duration = Number(_this25.audioElement.duration || 0);
+                          segmentStart = Math.max(0, duration * (segmentIndex / segmentTotal));
+                          segmentEnd = Math.min(duration, duration * ((segmentIndex + 1) / segmentTotal));
+                          _this25.segmentEndTime = segmentEnd;
+                          _this25.audioElement.currentTime = segmentStart;
+                        }
+                        _context9.p = 1;
+                        _context9.n = 2;
+                        return _this25.audioElement.play();
+                      case 2:
+                        _this25.isPlaying = true;
+                        _this25.markPlaybackStart();
+                        _this25.addActivityEvent({
+                          ts: Date.now(),
+                          type: 'play',
+                          verseKey: verse.key
+                        });
+                        _this25.recomputeAnalytics();
+                        if (_this25.wordByWordAudioEnabled) {
+                          _this25.startWordHighlighting(verse);
+                        }
+                        _this25.playRequestLocked = false;
+                        resolve();
+                        _context9.n = 4;
+                        break;
+                      case 3:
+                        _context9.p = 3;
+                        _t2 = _context9.v;
+                        _this25.isPlaying = false;
+                        _this25.playRequestLocked = false;
+                        reject(_t2);
+                      case 4:
+                        return _context9.a(2);
+                    }
+                  }, _callee9, null, [[1, 3]]);
+                }));
+                return function startPlayback() {
+                  return _ref4.apply(this, arguments);
                 };
-                _this24.audioElement.addEventListener('error', _errorHandler, {
-                  once: true
-                });
-                if (isSameSource && _this24.audioElement.readyState >= 2) {
-                  startPlayback();
-                } else {
-                  _this24.audioElement.addEventListener('canplay', _canPlayHandler);
-                }
-              })["catch"](function (err) {
-                console.error('playVerse failed:', err);
-                _this24.isPlaying = false;
-                _this24.playRequestLocked = false;
-                _this24.showBanner('Failed to play audio', 'error', 3000);
-              }));
-          }
-        }, _callee0);
-      }))();
-    },
-    playQueueEntry: function playQueueEntry(entry) {
-      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      if (!entry) return Promise.resolve();
-      var verse = entry.verse || entry;
-      return this.playVerse(verse, _objectSpread(_objectSpread({}, options), {}, {
-        segment: null
-      }));
-    },
-    handleSegmentBoundary: function handleSegmentBoundary() {
-      if (!this.segmentEndTime || this.advanceLocked) return;
-      this.segmentEndTime = 0;
-      this.stopWordHighlighting();
-      if (this.playMode === 'auto') {
-        this.next();
-        return;
-      }
-      if (this.audioElement) {
-        try {
-          this.audioElement.pause();
-        } catch (_unused7) {}
-      }
-      this.isPlaying = false;
-    },
-    togglePlay: function togglePlay() {
-      var _this$audioElement5,
-        _this25 = this;
-      if (!((_this$audioElement5 = this.audioElement) !== null && _this$audioElement5 !== void 0 && _this$audioElement5.src)) return;
-      if (this.audioElement.paused) {
-        this.audioElement.play().then(function () {
-          _this25.isPlaying = true;
-          var verse = _this25.activeVerseRef;
-          if (verse && _this25.wordByWordAudioEnabled) {
-            _this25.startWordHighlighting(verse);
-          }
-        })["catch"](function (err) {
-          console.error('Failed to play:', err);
-          _this25.showBanner('Playback failed', 'error', 2000);
-        });
-      } else {
+              }();
+              var _canPlayHandler = /*#__PURE__*/function () {
+                var _ref5 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee0() {
+                  return _regenerator().w(function (_context0) {
+                    while (1) switch (_context0.n) {
+                      case 0:
+                        _context0.n = 1;
+                        return startPlayback();
+                      case 1:
+                        _this25.audioElement.removeEventListener('canplay', _canPlayHandler);
+                      case 2:
+                        return _context0.a(2);
+                    }
+                  }, _callee0);
+                }));
+                return function canPlayHandler() {
+                  return _ref5.apply(this, arguments);
+                };
+              }();
+              var _errorHandler = function errorHandler(err) {
+                clearTimeout(timeout);
+                _this25.isPlaying = false;
+                _this25.playRequestLocked = false;
+                reject(err);
+                _this25.audioElement.removeEventListener('error', _errorHandler);
+              };
+              _this25.audioElement.addEventListener('error', _errorHandler, {
+                once: true
+              });
+              if (isSameSource && _this25.audioElement.readyState >= 2) {
+                startPlayback();
+              } else {
+                _this25.audioElement.addEventListener('canplay', _canPlayHandler);
+              }
+            })["catch"](function (err) {
+              console.error('playVerse failed:', err);
+              _this25.isPlaying = false;
+              _this25.playRequestLocked = false;
+              _this25.showBanner('Failed to play audio', 'error', 3000);
+            }));
+        }
+      }, _callee1);
+    }))();
+  }), "playQueueEntry", function playQueueEntry(entry) {
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    if (!entry) return Promise.resolve();
+    var verse = entry.verse || entry;
+    return this.playVerse(verse, _objectSpread(_objectSpread({}, options), {}, {
+      segment: null
+    }));
+  }), "handleSegmentBoundary", function handleSegmentBoundary() {
+    if (!this.segmentEndTime || this.advanceLocked) return;
+    this.segmentEndTime = 0;
+    this.stopWordHighlighting();
+    if (this.playMode === 'auto') {
+      this.next();
+      return;
+    }
+    if (this.audioElement) {
+      try {
         this.audioElement.pause();
-        this.isPlaying = false;
-      }
-    },
-    applySpeed: function applySpeed() {
-      if (this.audioElement) this.audioElement.playbackRate = this.speed;
-    },
-    next: function next() {
-      var _this26 = this;
-      if (this.advanceLocked) return;
-      this.advanceLocked = true;
-      if (this.canNext) {
-        var _entry$verse;
-        this.sessionCompleted = false;
-        this.queueIndex++;
-        (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(this.mutqinState, this.queueIndex + 1);
-        this.centralSession.chaining.index = this.queueIndex;
-        this.persistCentralSessionState();
-        this.recomputeAnalytics();
-        var entry = this.queue[this.queueIndex];
-        var verseKey = (entry === null || entry === void 0 || (_entry$verse = entry.verse) === null || _entry$verse === void 0 ? void 0 : _entry$verse.key) || (entry === null || entry === void 0 ? void 0 : entry.key);
-        if (verseKey) {
-          this.setActiveVerse(verseKey, {
-            queueIndex: this.queueIndex
-          });
-          this.$nextTick(function () {
-            return _this26.$forceUpdate();
-          });
+      } catch (_unused7) {}
+    }
+    this.isPlaying = false;
+  }), "togglePlay", function togglePlay() {
+    var _this$audioElement5,
+      _this26 = this;
+    if (!((_this$audioElement5 = this.audioElement) !== null && _this$audioElement5 !== void 0 && _this$audioElement5.src)) return;
+    if (this.audioElement.paused) {
+      this.audioElement.play().then(function () {
+        _this26.isPlaying = true;
+        var verse = _this26.activeVerseRef;
+        if (verse && _this26.wordByWordAudioEnabled) {
+          _this26.startWordHighlighting(verse);
         }
-        var v = this.queue[this.queueIndex];
-        if (v) {
-          this.playQueueEntry(v, {
-            force: true,
-            queueIndex: this.queueIndex
-          })["finally"](function () {
-            _this26.advanceLocked = false;
-          });
-        } else {
-          this.advanceLocked = false;
-        }
-        return;
-      }
-      this.advanceLocked = false;
-      this.handleSessionComplete();
-    },
-    prev: function prev() {
-      var _entry$verse2,
-        _this27 = this;
-      if (!this.canPrev) return;
-      if (this.advanceLocked) return;
-      this.advanceLocked = true;
+      })["catch"](function (err) {
+        console.error('Failed to play:', err);
+        _this26.showBanner('Playback failed', 'error', 2000);
+      });
+    } else {
+      this.audioElement.pause();
+      this.isPlaying = false;
+    }
+  }), "applySpeed", function applySpeed() {
+    if (this.audioElement) this.audioElement.playbackRate = this.speed;
+  }), "next", function next() {
+    var _this27 = this;
+    if (this.advanceLocked) return;
+    this.advanceLocked = true;
+    if (this.canNext) {
+      var _entry$verse;
       this.sessionCompleted = false;
-      this.queueIndex--;
+      this.queueIndex++;
       (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(this.mutqinState, this.queueIndex + 1);
       this.centralSession.chaining.index = this.queueIndex;
       this.persistCentralSessionState();
       this.recomputeAnalytics();
       var entry = this.queue[this.queueIndex];
-      var verseKey = (entry === null || entry === void 0 || (_entry$verse2 = entry.verse) === null || _entry$verse2 === void 0 ? void 0 : _entry$verse2.key) || (entry === null || entry === void 0 ? void 0 : entry.key);
+      var verseKey = (entry === null || entry === void 0 || (_entry$verse = entry.verse) === null || _entry$verse === void 0 ? void 0 : _entry$verse.key) || (entry === null || entry === void 0 ? void 0 : entry.key);
       if (verseKey) {
         this.setActiveVerse(verseKey, {
-          scroll: false,
           queueIndex: this.queueIndex
         });
         this.$nextTick(function () {
@@ -27049,1030 +27021,1017 @@ function createAdvancedState() {
       } else {
         this.advanceLocked = false;
       }
-    },
-    closePlayer: function closePlayer() {
-      this.flushPlaybackTime();
-      this.stopWordHighlighting();
-      if (this.segmentPlaybackTimer) {
-        clearTimeout(this.segmentPlaybackTimer);
-        this.segmentPlaybackTimer = null;
-      }
-      this.segmentEndTime = 0;
-      this.advanceLocked = false;
-      this.playRequestLocked = false;
-      if (this.audioElement) {
-        this.audioElement.pause();
-        this.audioElement.src = '';
-      }
-      this.playerVisible = false;
-      this.isPlaying = false;
-      this.playerMenuOpen = false;
-      this.persistAudioState();
-    },
-    loadVerses: function loadVerses() {
-      var _arguments4 = arguments,
-        _this28 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
-        var mode, target, chapterId, rangeStart, rangeEnd, reciterId, requestId, targetConfig, _cached$verses, _audioRes$data, _translationRes$data, _translitRes$data, _arabicRes$data, _tajweedRes$data, cached, _yield$Promise$all, _yield$Promise$all2, audioRes, translationRes, translitRes, arabicRes, tajweedRes, audioSurah, translationSurah, translitSurah, arabicSurah, tajweedEdition, audioAyahs, arabicByNumber, translationByNumber, translitByNumber, tajweedByNumber, start, end, mappedVerses, _t3;
-        return _regenerator().w(function (_context1) {
-          while (1) switch (_context1.p = _context1.n) {
-            case 0:
-              mode = _arguments4.length > 0 && _arguments4[0] !== undefined ? _arguments4[0] : _this28.currentMode;
-              target = mode === 'beginner' ? _this28.beginner : _this28.advanced;
-              chapterId = Number(target.chapterId || 0);
-              if (chapterId) {
-                _context1.n = 1;
-                break;
-              }
-              return _context1.a(2);
-            case 1:
-              rangeStart = Number(target.rangeStart || 1);
-              rangeEnd = Number(target.rangeEnd || rangeStart || 1);
-              reciterId = target.reciterId || DEFAULT_ALQURAN_RECITER;
-              requestId = ++_this28.verseRequestId;
-              targetConfig = _this28.buildSessionConfig(mode);
-              _this28.isDataReady = false;
-              _context1.p = 2;
-              cached = _this28.getCachedVerses(mode, targetConfig);
-              if (!(cached !== null && cached !== void 0 && (_cached$verses = cached.verses) !== null && _cached$verses !== void 0 && _cached$verses.length)) {
-                _context1.n = 3;
-                break;
-              }
-              if (mode === 'beginner') {
-                _this28.beginner.verses = cached.verses;
-                _this28.beginner.loadedConfig = cached.loadedConfig;
-              } else {
-                _this28.advanced.verses = cached.verses;
-                _this28.advanced.loadedConfig = cached.loadedConfig;
-              }
-              _this28.buildQueue(mode);
-              _this28.syncActiveVerseState(mode);
-              _this28.syncMutqinAyahs(cached.verses);
-              _this28.isDataReady = true;
-              return _context1.a(2);
-            case 3:
-              _context1.n = 4;
-              return Promise.all([(0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEdition)(chapterId, reciterId), (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEdition)(chapterId, 'en.asad'), (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEdition)(chapterId, 'en.transliteration'), (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEdition)(chapterId, 'quran-uthmani'), (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEditions)(chapterId, reciterId)]);
-            case 4:
-              _yield$Promise$all = _context1.v;
-              _yield$Promise$all2 = _slicedToArray(_yield$Promise$all, 5);
-              audioRes = _yield$Promise$all2[0];
-              translationRes = _yield$Promise$all2[1];
-              translitRes = _yield$Promise$all2[2];
-              arabicRes = _yield$Promise$all2[3];
-              tajweedRes = _yield$Promise$all2[4];
-              if (!(requestId !== _this28.verseRequestId)) {
-                _context1.n = 5;
-                break;
-              }
-              return _context1.a(2);
-            case 5:
-              audioSurah = (_audioRes$data = audioRes.data) === null || _audioRes$data === void 0 ? void 0 : _audioRes$data.data;
-              translationSurah = (_translationRes$data = translationRes.data) === null || _translationRes$data === void 0 ? void 0 : _translationRes$data.data;
-              translitSurah = (_translitRes$data = translitRes.data) === null || _translitRes$data === void 0 ? void 0 : _translitRes$data.data;
-              arabicSurah = (_arabicRes$data = arabicRes.data) === null || _arabicRes$data === void 0 ? void 0 : _arabicRes$data.data;
-              tajweedEdition = (((_tajweedRes$data = tajweedRes.data) === null || _tajweedRes$data === void 0 ? void 0 : _tajweedRes$data.data) || []).find(function (entry) {
-                var _entry$edition;
-                return (entry === null || entry === void 0 || (_entry$edition = entry.edition) === null || _entry$edition === void 0 ? void 0 : _entry$edition.identifier) === 'quran-tajweed';
-              });
-              audioAyahs = (audioSurah === null || audioSurah === void 0 ? void 0 : audioSurah.ayahs) || [];
-              arabicByNumber = new Map(((arabicSurah === null || arabicSurah === void 0 ? void 0 : arabicSurah.ayahs) || []).map(function (ayah) {
-                return [ayah.numberInSurah, ayah.text || ''];
-              }));
-              translationByNumber = new Map(((translationSurah === null || translationSurah === void 0 ? void 0 : translationSurah.ayahs) || []).map(function (ayah) {
-                return [ayah.numberInSurah, ayah.text || ''];
-              }));
-              translitByNumber = new Map(((translitSurah === null || translitSurah === void 0 ? void 0 : translitSurah.ayahs) || []).map(function (ayah) {
-                return [ayah.numberInSurah, ayah.text || ''];
-              }));
-              tajweedByNumber = new Map(((tajweedEdition === null || tajweedEdition === void 0 ? void 0 : tajweedEdition.ayahs) || []).map(function (ayah) {
-                return [ayah.numberInSurah, ayah.text || ''];
-              }));
-              start = rangeStart;
-              end = rangeEnd;
-              mappedVerses = audioAyahs.filter(function (ayah) {
-                return ayah.numberInSurah >= start && ayah.numberInSurah <= end;
-              }).map(function (ayah) {
-                var _ayah$audioSecondary;
-                var key = "".concat(chapterId, ":").concat(ayah.numberInSurah);
-                var arabic = arabicByNumber.get(ayah.numberInSurah) || ayah.text || '';
-                var transliteration = translitByNumber.get(ayah.numberInSurah) || '';
-                var translation = translationByNumber.get(ayah.numberInSurah) || '';
-                var arabicWords = tokenizeArabicText(arabic);
-                var translitWords = String(transliteration).split(/\s+/).filter(Boolean);
-                var translationWords = String(translation).split(/\s+/).filter(Boolean);
-                return {
-                  key: key,
-                  number: ayah.numberInSurah,
-                  chapterId: chapterId,
-                  arabic: arabic,
-                  arabic_tajweed: tajweedByNumber.get(ayah.numberInSurah) || '',
-                  translation: _this28.cleanTranslationText(translation),
-                  transliteration: transliteration,
-                  audio: _this28.normalizeAudioUrl(ayah.audio || ((_ayah$audioSecondary = ayah.audioSecondary) === null || _ayah$audioSecondary === void 0 ? void 0 : _ayah$audioSecondary[0]) || ''),
-                  words: arabicWords.map(function (word, index) {
-                    return {
-                      ar: word,
-                      en: translationWords[index] || '',
-                      transliteration: translitWords[index] || '',
-                      audio: null
-                    };
-                  })
-                };
-              });
-              if (mode === 'beginner') {
-                _this28.beginner.verses = mappedVerses;
-                _this28.beginner.loadedConfig = {
-                  chapterId: chapterId,
-                  rangeStart: start,
-                  rangeEnd: end,
-                  reciterId: reciterId,
-                  showWordByWord: _this28.showWordByWord,
-                  tajweedEnabled: _this28.tajweedEnabled
-                };
-              } else {
-                _this28.advanced.verses = mappedVerses;
-                _this28.advanced.loadedConfig = {
-                  chapterId: chapterId,
-                  rangeStart: start,
-                  rangeEnd: end,
-                  reciterId: reciterId,
-                  showWordByWord: _this28.showWordByWord,
-                  tajweedEnabled: _this28.tajweedEnabled
-                };
-              }
-              _this28.syncMutqinAyahs(mappedVerses);
-              _this28.setCachedVerses(mode, targetConfig, {
-                verses: mappedVerses,
-                loadedConfig: mode === 'beginner' ? _this28.beginner.loadedConfig : _this28.advanced.loadedConfig
-              });
-              _this28.buildQueue(mode);
-              _this28.syncActiveVerseState(mode);
-
-              // Set ready after data loads
-              _this28.isDataReady = true;
-              _context1.n = 7;
-              break;
-            case 6:
-              _context1.p = 6;
-              _t3 = _context1.v;
-              console.error('Error loading verses:', _t3);
-              _this28.showBanner('Failed to load verses', 'error', 3000);
-              _this28.isDataReady = true;
-            case 7:
-              return _context1.a(2);
-          }
-        }, _callee1, null, [[2, 6]]);
-      }))();
-    },
-    cleanTranslationText: function cleanTranslationText(text) {
-      if (!text) return '';
-      var cleaned = text;
-      cleaned = cleaned.replace(/<sup>foot_note=\d+><\/sup>/gi, '');
-      cleaned = cleaned.replace(/<sup>.*?<\/sup>/gi, '');
-      cleaned = cleaned.replace(/<[^>]*>/g, '');
-      cleaned = cleaned.replace(/\[\d+\]/g, '');
-      cleaned = cleaned.replace(/\s+/g, ' ').trim();
-      return cleaned;
-    },
-    buildQueue: function buildQueue() {
-      var _previousEntry$verse;
-      var mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.currentMode;
-      var config = mode === 'beginner' ? this.beginner : this.advanced;
-      var verses = config.verses;
-      var previousActiveKey = config.activeKey;
-      var previousEntry = Array.isArray(config.queue) ? config.queue[Math.max(0, Number(config.queueIndex || 0))] : null;
-      var previousEntryKey = (previousEntry === null || previousEntry === void 0 || (_previousEntry$verse = previousEntry.verse) === null || _previousEntry$verse === void 0 ? void 0 : _previousEntry$verse.key) || (previousEntry === null || previousEntry === void 0 ? void 0 : previousEntry.key) || null;
-      if (!verses || verses.length === 0) {
-        if (mode === this.currentMode) {
-          this.queue = [];
-          this.queueIndex = 0;
-        }
-        if (mode === 'beginner') {
-          this.beginner.queue = [];
-          this.beginner.queueIndex = 0;
-        } else {
-          this.advanced.queue = [];
-          this.advanced.queueIndex = 0;
-        }
-        return;
-      }
-      var q = [];
-      var safePreviousQueueIndex = Math.max(0, Number(config.queueIndex || 0));
-
-      // Get chaining settings from component state
-      var repetitions = Math.max(1, Math.min(5, Number(this.chainingRepetitions || 1)));
-      var chainingEnabled = this.chainingEnabled;
-      var chainingMethod = this.chainingMethod;
-      console.log('[buildQueue] Settings:', {
-        chainingEnabled: chainingEnabled,
-        chainingMethod: chainingMethod,
-        repetitions: repetitions,
-        versesCount: verses.length,
-        mode: mode
+      return;
+    }
+    this.advanceLocked = false;
+    this.handleSessionComplete();
+  }), "prev", function prev() {
+    var _entry$verse2,
+      _this28 = this;
+    if (!this.canPrev) return;
+    if (this.advanceLocked) return;
+    this.advanceLocked = true;
+    this.sessionCompleted = false;
+    this.queueIndex--;
+    (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(this.mutqinState, this.queueIndex + 1);
+    this.centralSession.chaining.index = this.queueIndex;
+    this.persistCentralSessionState();
+    this.recomputeAnalytics();
+    var entry = this.queue[this.queueIndex];
+    var verseKey = (entry === null || entry === void 0 || (_entry$verse2 = entry.verse) === null || _entry$verse2 === void 0 ? void 0 : _entry$verse2.key) || (entry === null || entry === void 0 ? void 0 : entry.key);
+    if (verseKey) {
+      this.setActiveVerse(verseKey, {
+        scroll: false,
+        queueIndex: this.queueIndex
       });
-      var decorateQueueEntry = function decorateQueueEntry(entry, repeatIndex) {
-        return _objectSpread(_objectSpread({}, entry), {}, {
-          repeatCount: repeatIndex,
-          totalRepeats: repetitions,
-          phase: entry.phase,
-          chainKey: entry.chainKey,
-          sequencePosition: entry.sequencePosition,
-          sequenceTotal: entry.sequenceTotal
-        });
-      };
-      var pushQueueEntry = function pushQueueEntry(entry) {
-        for (var repeatIndex = 1; repeatIndex <= repetitions; repeatIndex++) {
-          q.push(decorateQueueEntry(entry, repeatIndex));
-        }
-      };
-      var pushQueueGroup = function pushQueueGroup(entries) {
-        var _loop = function _loop(repeatIndex) {
-          entries.forEach(function (entry) {
-            return q.push(decorateQueueEntry(entry, repeatIndex));
-          });
-        };
-        for (var repeatIndex = 1; repeatIndex <= repetitions; repeatIndex++) {
-          _loop(repeatIndex);
-        }
-      };
-      if (!chainingEnabled) {
-        // Simple sequential order without chaining
-        verses.forEach(function (verse) {
-          pushQueueEntry({
-            verse: verse,
-            phase: 'Memorise',
-            chainKey: null,
-            sequencePosition: 1,
-            sequenceTotal: 1
-          });
-        });
-      } else if (chainingMethod === 'cumulative') {
-        var _loop2 = function _loop2(endIndex) {
-          var chain = verses.slice(0, endIndex + 1);
-          pushQueueGroup(chain.map(function (verse, chainIndex) {
-            return {
-              verse: chain[chainIndex],
-              phase: 'Cumulative',
-              chainKey: "cumulative:".concat(endIndex + 1),
-              sequencePosition: chainIndex + 1,
-              sequenceTotal: chain.length
-            };
-          }));
-        };
-        // Cumulative method: 1, then 1-2, then 1-2-3, etc.
-        for (var endIndex = 0; endIndex < verses.length; endIndex++) {
-          _loop2(endIndex);
-        }
-      } else {
-        // Linking method: practice ayahs individually, then adjacent ayah pairs.
-        for (var index = 0; index < verses.length; index++) {
-          var verse = verses[index];
-          pushQueueEntry({
-            verse: verse,
-            phase: 'Linking',
-            chainKey: "linking:single:".concat(verse.key),
-            sequencePosition: 1,
-            sequenceTotal: 1
-          });
-          var nextVerse = verses[index + 1];
-          if (nextVerse) {
-            pushQueueGroup([{
-              verse: verse,
-              phase: 'Linking',
-              chainKey: "linking:".concat(verse.key, "->").concat(nextVerse.key),
-              sequencePosition: 1,
-              sequenceTotal: 2
-            }, {
-              verse: nextVerse,
-              phase: 'Linking',
-              chainKey: "linking:".concat(verse.key, "->").concat(nextVerse.key),
-              sequencePosition: 2,
-              sequenceTotal: 2
-            }]);
-          }
-        }
-      }
-      console.log("[buildQueue] Built ".concat(q.length, " queue entries"));
+      this.$nextTick(function () {
+        return _this28.$forceUpdate();
+      });
+    }
+    var v = this.queue[this.queueIndex];
+    if (v) {
+      this.playQueueEntry(v, {
+        force: true,
+        queueIndex: this.queueIndex
+      })["finally"](function () {
+        _this28.advanceLocked = false;
+      });
+    } else {
+      this.advanceLocked = false;
+    }
+  }), "closePlayer", function closePlayer() {
+    this.flushPlaybackTime();
+    this.stopWordHighlighting();
+    if (this.segmentPlaybackTimer) {
+      clearTimeout(this.segmentPlaybackTimer);
+      this.segmentPlaybackTimer = null;
+    }
+    this.segmentEndTime = 0;
+    this.advanceLocked = false;
+    this.playRequestLocked = false;
+    if (this.audioElement) {
+      this.audioElement.pause();
+      this.audioElement.src = '';
+    }
+    this.playerVisible = false;
+    this.isPlaying = false;
+    this.playerMenuOpen = false;
+    this.persistAudioState();
+  }), "loadVerses", function loadVerses() {
+    var _arguments4 = arguments,
+      _this29 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee10() {
+      var mode, target, chapterId, rangeStart, rangeEnd, reciterId, requestId, targetConfig, _cached$verses, _audioRes$data, _translationRes$data, _translitRes$data, _arabicRes$data, _tajweedRes$data, cached, _yield$Promise$all, _yield$Promise$all2, audioRes, translationRes, translitRes, arabicRes, tajweedRes, audioSurah, translationSurah, translitSurah, arabicSurah, tajweedEdition, audioAyahs, arabicByNumber, translationByNumber, translitByNumber, tajweedByNumber, start, end, mappedVerses, _t3;
+      return _regenerator().w(function (_context10) {
+        while (1) switch (_context10.p = _context10.n) {
+          case 0:
+            mode = _arguments4.length > 0 && _arguments4[0] !== undefined ? _arguments4[0] : _this29.currentMode;
+            target = mode === 'beginner' ? _this29.beginner : _this29.advanced;
+            chapterId = Number(target.chapterId || 0);
+            if (chapterId) {
+              _context10.n = 1;
+              break;
+            }
+            return _context10.a(2);
+          case 1:
+            rangeStart = Number(target.rangeStart || 1);
+            rangeEnd = Number(target.rangeEnd || rangeStart || 1);
+            reciterId = target.reciterId || DEFAULT_ALQURAN_RECITER;
+            requestId = ++_this29.verseRequestId;
+            targetConfig = _this29.buildSessionConfig(mode);
+            _this29.isDataReady = false;
+            _context10.p = 2;
+            cached = _this29.getCachedVerses(mode, targetConfig);
+            if (!(cached !== null && cached !== void 0 && (_cached$verses = cached.verses) !== null && _cached$verses !== void 0 && _cached$verses.length)) {
+              _context10.n = 3;
+              break;
+            }
+            if (mode === 'beginner') {
+              _this29.beginner.verses = cached.verses;
+              _this29.beginner.loadedConfig = cached.loadedConfig;
+            } else {
+              _this29.advanced.verses = cached.verses;
+              _this29.advanced.loadedConfig = cached.loadedConfig;
+            }
+            _this29.buildQueue(mode);
+            _this29.syncActiveVerseState(mode);
+            _this29.syncMutqinAyahs(cached.verses);
+            _this29.isDataReady = true;
+            return _context10.a(2);
+          case 3:
+            _context10.n = 4;
+            return Promise.all([(0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEdition)(chapterId, reciterId), (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEdition)(chapterId, 'en.asad'), (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEdition)(chapterId, 'en.transliteration'), (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEdition)(chapterId, 'quran-uthmani'), (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEditions)(chapterId, reciterId)]);
+          case 4:
+            _yield$Promise$all = _context10.v;
+            _yield$Promise$all2 = _slicedToArray(_yield$Promise$all, 5);
+            audioRes = _yield$Promise$all2[0];
+            translationRes = _yield$Promise$all2[1];
+            translitRes = _yield$Promise$all2[2];
+            arabicRes = _yield$Promise$all2[3];
+            tajweedRes = _yield$Promise$all2[4];
+            if (!(requestId !== _this29.verseRequestId)) {
+              _context10.n = 5;
+              break;
+            }
+            return _context10.a(2);
+          case 5:
+            audioSurah = (_audioRes$data = audioRes.data) === null || _audioRes$data === void 0 ? void 0 : _audioRes$data.data;
+            translationSurah = (_translationRes$data = translationRes.data) === null || _translationRes$data === void 0 ? void 0 : _translationRes$data.data;
+            translitSurah = (_translitRes$data = translitRes.data) === null || _translitRes$data === void 0 ? void 0 : _translitRes$data.data;
+            arabicSurah = (_arabicRes$data = arabicRes.data) === null || _arabicRes$data === void 0 ? void 0 : _arabicRes$data.data;
+            tajweedEdition = (((_tajweedRes$data = tajweedRes.data) === null || _tajweedRes$data === void 0 ? void 0 : _tajweedRes$data.data) || []).find(function (entry) {
+              var _entry$edition;
+              return (entry === null || entry === void 0 || (_entry$edition = entry.edition) === null || _entry$edition === void 0 ? void 0 : _entry$edition.identifier) === 'quran-tajweed';
+            });
+            audioAyahs = (audioSurah === null || audioSurah === void 0 ? void 0 : audioSurah.ayahs) || [];
+            arabicByNumber = new Map(((arabicSurah === null || arabicSurah === void 0 ? void 0 : arabicSurah.ayahs) || []).map(function (ayah) {
+              return [ayah.numberInSurah, ayah.text || ''];
+            }));
+            translationByNumber = new Map(((translationSurah === null || translationSurah === void 0 ? void 0 : translationSurah.ayahs) || []).map(function (ayah) {
+              return [ayah.numberInSurah, ayah.text || ''];
+            }));
+            translitByNumber = new Map(((translitSurah === null || translitSurah === void 0 ? void 0 : translitSurah.ayahs) || []).map(function (ayah) {
+              return [ayah.numberInSurah, ayah.text || ''];
+            }));
+            tajweedByNumber = new Map(((tajweedEdition === null || tajweedEdition === void 0 ? void 0 : tajweedEdition.ayahs) || []).map(function (ayah) {
+              return [ayah.numberInSurah, ayah.text || ''];
+            }));
+            start = rangeStart;
+            end = rangeEnd;
+            mappedVerses = audioAyahs.filter(function (ayah) {
+              return ayah.numberInSurah >= start && ayah.numberInSurah <= end;
+            }).map(function (ayah) {
+              var _ayah$audioSecondary;
+              var key = "".concat(chapterId, ":").concat(ayah.numberInSurah);
+              var arabic = arabicByNumber.get(ayah.numberInSurah) || ayah.text || '';
+              var transliteration = translitByNumber.get(ayah.numberInSurah) || '';
+              var translation = translationByNumber.get(ayah.numberInSurah) || '';
+              var arabicWords = tokenizeArabicText(arabic);
+              var translitWords = String(transliteration).split(/\s+/).filter(Boolean);
+              var translationWords = String(translation).split(/\s+/).filter(Boolean);
+              return {
+                key: key,
+                number: ayah.numberInSurah,
+                chapterId: chapterId,
+                arabic: arabic,
+                arabic_tajweed: tajweedByNumber.get(ayah.numberInSurah) || '',
+                translation: _this29.cleanTranslationText(translation),
+                transliteration: transliteration,
+                audio: _this29.normalizeAudioUrl(ayah.audio || ((_ayah$audioSecondary = ayah.audioSecondary) === null || _ayah$audioSecondary === void 0 ? void 0 : _ayah$audioSecondary[0]) || ''),
+                words: arabicWords.map(function (word, index) {
+                  return {
+                    ar: word,
+                    en: translationWords[index] || '',
+                    transliteration: translitWords[index] || '',
+                    audio: null
+                  };
+                })
+              };
+            });
+            if (mode === 'beginner') {
+              _this29.beginner.verses = mappedVerses;
+              _this29.beginner.loadedConfig = {
+                chapterId: chapterId,
+                rangeStart: start,
+                rangeEnd: end,
+                reciterId: reciterId,
+                showWordByWord: _this29.showWordByWord,
+                tajweedEnabled: _this29.tajweedEnabled
+              };
+            } else {
+              _this29.advanced.verses = mappedVerses;
+              _this29.advanced.loadedConfig = {
+                chapterId: chapterId,
+                rangeStart: start,
+                rangeEnd: end,
+                reciterId: reciterId,
+                showWordByWord: _this29.showWordByWord,
+                tajweedEnabled: _this29.tajweedEnabled
+              };
+            }
+            _this29.syncMutqinAyahs(mappedVerses);
+            _this29.setCachedVerses(mode, targetConfig, {
+              verses: mappedVerses,
+              loadedConfig: mode === 'beginner' ? _this29.beginner.loadedConfig : _this29.advanced.loadedConfig
+            });
+            _this29.buildQueue(mode);
+            _this29.syncActiveVerseState(mode);
 
-      // Restore previous position if possible
-      var previousQueueIndex = Math.min(safePreviousQueueIndex, Math.max(q.length - 1, 0));
-      if (previousEntryKey) {
-        var exactIndex = q.findIndex(function (item) {
-          var _item$verse6;
-          return ((item === null || item === void 0 || (_item$verse6 = item.verse) === null || _item$verse6 === void 0 ? void 0 : _item$verse6.key) || (item === null || item === void 0 ? void 0 : item.key)) === previousEntryKey && item.phase === (previousEntry === null || previousEntry === void 0 ? void 0 : previousEntry.phase) && item.chainKey === (previousEntry === null || previousEntry === void 0 ? void 0 : previousEntry.chainKey) && Number(item.sequencePosition || 1) === Number((previousEntry === null || previousEntry === void 0 ? void 0 : previousEntry.sequencePosition) || 1) && Number(item.repeatCount || 1) === Number((previousEntry === null || previousEntry === void 0 ? void 0 : previousEntry.repeatCount) || 1);
-        });
-        if (exactIndex >= 0) {
-          previousQueueIndex = exactIndex;
-        } else {
-          var firstIndex = q.findIndex(function (item) {
-            var _item$verse7;
-            return ((item === null || item === void 0 || (_item$verse7 = item.verse) === null || _item$verse7 === void 0 ? void 0 : _item$verse7.key) || (item === null || item === void 0 ? void 0 : item.key)) === previousEntryKey;
-          });
-          if (firstIndex >= 0) previousQueueIndex = firstIndex;
+            // Set ready after data loads
+            _this29.isDataReady = true;
+            _context10.n = 7;
+            break;
+          case 6:
+            _context10.p = 6;
+            _t3 = _context10.v;
+            console.error('Error loading verses:', _t3);
+            _this29.showBanner('Failed to load verses', 'error', 3000);
+            _this29.isDataReady = true;
+          case 7:
+            return _context10.a(2);
         }
-      }
-
-      // Update queue in appropriate store
+      }, _callee10, null, [[2, 6]]);
+    }))();
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "cleanTranslationText", function cleanTranslationText(text) {
+    if (!text) return '';
+    var cleaned = text;
+    cleaned = cleaned.replace(/<sup>foot_note=\d+><\/sup>/gi, '');
+    cleaned = cleaned.replace(/<sup>.*?<\/sup>/gi, '');
+    cleaned = cleaned.replace(/<[^>]*>/g, '');
+    cleaned = cleaned.replace(/\[\d+\]/g, '');
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    return cleaned;
+  }), "buildQueue", function buildQueue() {
+    var _previousEntry$verse;
+    var mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.currentMode;
+    var config = mode === 'beginner' ? this.beginner : this.advanced;
+    var verses = config.verses;
+    var previousActiveKey = config.activeKey;
+    var previousEntry = Array.isArray(config.queue) ? config.queue[Math.max(0, Number(config.queueIndex || 0))] : null;
+    var previousEntryKey = (previousEntry === null || previousEntry === void 0 || (_previousEntry$verse = previousEntry.verse) === null || _previousEntry$verse === void 0 ? void 0 : _previousEntry$verse.key) || (previousEntry === null || previousEntry === void 0 ? void 0 : previousEntry.key) || null;
+    if (!verses || verses.length === 0) {
       if (mode === this.currentMode) {
-        this.queue = q;
-        this.queueIndex = previousQueueIndex;
+        this.queue = [];
+        this.queueIndex = 0;
       }
       if (mode === 'beginner') {
-        this.beginner.queue = q;
-        this.beginner.queueIndex = previousQueueIndex;
+        this.beginner.queue = [];
+        this.beginner.queueIndex = 0;
       } else {
-        this.advanced.queue = q;
-        this.advanced.queueIndex = previousQueueIndex;
+        this.advanced.queue = [];
+        this.advanced.queueIndex = 0;
       }
-      this.syncActiveVerseState(mode, previousActiveKey);
-    },
-    estimateQueueDuration: function estimateQueueDuration(queue) {
-      var avgVerseDuration = 45;
-      return Math.ceil(queue.length * avgVerseDuration / 60);
-    },
-    rebuildQueue: function rebuildQueue() {
-      var mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.currentMode;
-      this.buildQueue(mode);
-    },
-    setChainingEnabled: function setChainingEnabled(enabled) {
-      this.chainingEnabled = !!enabled;
-      this.applyChainingQueueChange(this.currentMode, {
-        restart: true
-      });
-    },
-    setChainingMethod: function setChainingMethod(method) {
-      var nextMethod = method === 'cumulative' ? 'cumulative' : 'linking';
-      this.chainingEnabled = true;
-      this.chainingMethod = nextMethod;
-      this.applyChainingQueueChange(this.currentMode, {
-        restart: true
-      });
-    },
-    setChainingRepetitions: function setChainingRepetitions(value) {
-      this.chainingRepetitions = Math.max(1, Math.min(5, Number(value || 1)));
-      this.applyChainingQueueChange(this.currentMode, {
-        restart: true
-      });
-    },
-    applyChainingQueueChange: function applyChainingQueueChange() {
-      var mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.currentMode;
-      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      if (!this.hasVerses) {
-        this.persistUiState();
-        this.persistCentralSessionState();
-        return;
-      }
-      if (this.audioElement && options.restart) {
-        try {
-          this.audioElement.pause();
-        } catch (_unused8) {}
-      }
-      if (options.restart) {
-        this.isPlaying = false;
-        this.currentTime = 0;
-        this.stopWordHighlighting();
-        this.getModeStore(mode).queueIndex = 0;
-      }
-      this.buildQueue(mode);
-      var store = this.getModeStore(mode);
-      if (mode === this.currentMode && Array.isArray(store.queue) && store.queue.length) {
-        var _nextEntry$verse;
-        if (options.restart) store.queueIndex = 0;
-        this.syncMutqinSession(store.queue, mode);
-        var nextEntry = store.queue[Math.max(0, Number(store.queueIndex || 0))];
-        var nextKey = (nextEntry === null || nextEntry === void 0 || (_nextEntry$verse = nextEntry.verse) === null || _nextEntry$verse === void 0 ? void 0 : _nextEntry$verse.key) || (nextEntry === null || nextEntry === void 0 ? void 0 : nextEntry.key) || store.activeKey;
-        if (nextKey) {
-          this.setActiveVerse(nextKey, {
-            mode: mode,
-            queueIndex: Math.max(0, Number(store.queueIndex || 0)),
-            scroll: false
-          });
-        }
-        if (options.restart) (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(this.mutqinState, 0);
-      }
-      this.persistSessionState();
-      this.persistCentralSessionState();
-    },
-    persistModeState: function persistModeState(mode) {
-      var source = mode === 'beginner' ? this.beginner : this.advanced;
-      try {
-        localStorage.setItem(MODE_STORAGE_KEYS[mode], JSON.stringify(this.cloneModeState(source)));
-      } catch (e) {
-        console.error("Failed to persist ".concat(mode, " mode state:"), e);
-      }
-    },
-    startSession: function startSession() {
-      var _this29 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee10() {
-        var config, mode, currentVerses, modeNeedsReload, updatedVerses, builtQueue, sessionState, canonicalIndex, playbackIndex, nextCanonicalIndex, first, chainingStatus;
-        return _regenerator().w(function (_context10) {
-          while (1) switch (_context10.n) {
-            case 0:
-              config = _this29.sessionConfig;
-              mode = config.mode || _this29.currentMode;
-              if (!(!config.chapterId || config.chapterId === 0)) {
-                _context10.n = 1;
-                break;
-              }
-              _this29.showTools = true;
-              _this29.showBanner('Please select a surah first', 'info', 3600);
-              return _context10.a(2);
-            case 1:
-              if (_this29.validateSettings()) {
-                _context10.n = 2;
-                break;
-              }
-              return _context10.a(2);
-            case 2:
-              _this29.applySessionConfig(config);
-              _this29.persistModeState(mode);
-              _this29.persistUiState();
-              _this29.sessionCompleted = false;
-              _this29.sessionStartedAt = Date.now();
-              _this29.sessionErrorCount = 0;
-              _this29.statsTick = Date.now();
-              currentVerses = mode === 'beginner' ? _this29.beginner.verses : _this29.advanced.verses;
-              modeNeedsReload = !currentVerses || !currentVerses.length || !_this29.modeDataMatchesConfig(mode, config);
-              if (!modeNeedsReload) {
-                _context10.n = 3;
-                break;
-              }
-              _context10.n = 3;
-              return _this29.loadVerses(mode);
-            case 3:
-              updatedVerses = mode === 'beginner' ? _this29.beginner.verses : _this29.advanced.verses;
-              if (!(!updatedVerses || updatedVerses.length === 0)) {
-                _context10.n = 4;
-                break;
-              }
-              _this29.showBanner('No verses loaded. Check your network connection.', 'error');
-              return _context10.a(2);
-            case 4:
-              if (!_this29.audioElement) {
-                _this29.initAudio();
-              }
+      return;
+    }
+    var q = [];
+    var safePreviousQueueIndex = Math.max(0, Number(config.queueIndex || 0));
 
-              // Rebuild queue with current chaining settings
-              console.log('[startSession] Building queue with settings:', {
-                enabled: _this29.chainingEnabled,
-                method: _this29.chainingMethod,
-                repetitions: _this29.chainingRepetitions
-              });
-              _this29.buildQueue(mode);
-              builtQueue = mode === 'beginner' ? _this29.beginner.queue : _this29.advanced.queue;
-              if (!(!builtQueue || builtQueue.length === 0)) {
-                _context10.n = 5;
-                break;
-              }
-              _this29.showBanner('Nothing to play. Check the selected range.', 'error');
-              return _context10.a(2);
-            case 5:
-              _this29.syncMutqinAyahs(updatedVerses);
-              sessionState = _this29.syncMutqinSession(builtQueue, mode);
-              canonicalIndex = Math.max(0, Number((sessionState === null || sessionState === void 0 ? void 0 : sessionState.current_index) || 0));
-              playbackIndex = canonicalIndex > 0 ? Math.min(canonicalIndex - 1, builtQueue.length - 1) : 0;
-              _this29.queueIndex = playbackIndex;
-              _this29.getModeStore(mode).queueIndex = playbackIndex;
-              nextCanonicalIndex = canonicalIndex > 0 ? canonicalIndex : 1;
-              (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this29.mutqinState, nextCanonicalIndex);
-              first = builtQueue[playbackIndex];
-              if (!(first && first.verse)) {
-                _context10.n = 7;
-                break;
-              }
-              _this29.setActiveVerse(first.verse.key, {
-                mode: mode,
-                queueIndex: playbackIndex,
-                scroll: false
-              });
-              _context10.n = 6;
-              return _this29.$nextTick();
-            case 6:
-              if (_this29.audioElement) {
-                _this29.audioElement.playbackRate = _this29.speed;
-              }
-              _context10.n = 7;
-              return _this29.playQueueEntry(first, {
-                force: true,
-                queueIndex: playbackIndex
-              });
-            case 7:
-              _this29.showTools = false;
-              _this29.flowStep = 'learn';
-              chainingStatus = _this29.chainingEnabled ? "".concat(_this29.chainingMethod, " chaining (").concat(_this29.chainingRepetitions, "x)") : 'no chaining';
-              _this29.showBanner("Session started with ".concat(builtQueue.length, " guided repetitions using ").concat(chainingStatus), 'success', 3000);
-            case 8:
-              return _context10.a(2);
-          }
-        }, _callee10);
-      }))();
-    },
-    // Utility methods
-    formatTime: function formatTime(sec) {
-      var t = Math.max(0, Math.floor(sec || 0));
-      return "".concat(String(Math.floor(t / 60)).padStart(2, '0'), ":").concat(String(t % 60).padStart(2, '0'));
-    },
-    normalizeAudioUrl: function normalizeAudioUrl(url) {
-      if (!url) return '';
-      if (url.startsWith('http://') || url.startsWith('https://')) return url;
-      if (url.startsWith('//')) return "https:".concat(url);
-      if (url.startsWith('/')) return "https://verses.quran.com".concat(url);
-      if (url.includes('mp3')) return "https://verses.quran.com/".concat(url);
-      return url;
-    },
-    getQueueItemAudioSeconds: function getQueueItemAudioSeconds() {
-      var item = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var allowCurrentProgress = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-      var verse = item.verse || item;
-      var speedFactor = Math.max(0.25, Number(this.speed || 1));
-      if (allowCurrentProgress && this.duration > 0) {
-        return Math.max(0, Number(this.duration || 0) - Number(this.currentTime || 0)) / speedFactor;
+    // Get chaining settings from component state
+    var repetitions = Math.max(1, Math.min(5, Number(this.chainingRepetitions || 1)));
+    var chainingEnabled = this.chainingEnabled;
+    var chainingMethod = this.chainingMethod;
+    console.log('[buildQueue] Settings:', {
+      chainingEnabled: chainingEnabled,
+      chainingMethod: chainingMethod,
+      repetitions: repetitions,
+      versesCount: verses.length,
+      mode: mode
+    });
+    var decorateQueueEntry = function decorateQueueEntry(entry, repeatIndex) {
+      return _objectSpread(_objectSpread({}, entry), {}, {
+        repeatCount: repeatIndex,
+        totalRepeats: repetitions,
+        phase: entry.phase,
+        chainKey: entry.chainKey,
+        sequencePosition: entry.sequencePosition,
+        sequenceTotal: entry.sequenceTotal
+      });
+    };
+    var pushQueueEntry = function pushQueueEntry(entry) {
+      for (var repeatIndex = 1; repeatIndex <= repetitions; repeatIndex++) {
+        q.push(decorateQueueEntry(entry, repeatIndex));
       }
-      var explicitDuration = Number(verse.duration || verse.audioDuration || 0);
-      if (Number.isFinite(explicitDuration) && explicitDuration > 0) {
-        return explicitDuration / speedFactor;
-      }
-      var arabicLength = String(verse.arabic || verse.text || '').replace(/[^ء-ي]/g, '').length || 80;
-      return Math.max(5, Math.min(45, arabicLength * 0.12)) / speedFactor;
-    },
-    showBanner: function showBanner(message) {
-      var _this30 = this;
-      var kind = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'info';
-      var ttlMs = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 3500;
-      var action = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
-      if (this.bannerTimer) clearTimeout(this.bannerTimer);
-      this.banner = {
-        message: message,
-        kind: kind,
-        at: Date.now(),
-        actionKey: (action === null || action === void 0 ? void 0 : action.key) || '',
-        actionLabel: (action === null || action === void 0 ? void 0 : action.label) || ''
-      };
-      this.bannerTimer = setTimeout(function () {
-        if (_this30.banner && Date.now() - _this30.banner.at >= ttlMs) _this30.banner = null;
-      }, ttlMs + 50);
-    },
-    runBannerAction: function runBannerAction() {
-      var _this$banner;
-      var actionKey = (_this$banner = this.banner) === null || _this$banner === void 0 ? void 0 : _this$banner.actionKey;
-      this.banner = null;
-      if (actionKey === 'restart-session') {
-        this.startSession();
-        return;
-      }
-      if (actionKey === 'open-setup') {
-        this.openModeSettings();
-      }
-    },
-    syncMutqinAyahs: function syncMutqinAyahs() {
-      var verses = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.verses;
-      if (!Array.isArray(verses) || !verses.length) return;
-      (0,_composables_useAyahState__WEBPACK_IMPORTED_MODULE_3__.seedAyahs)(this.mutqinState, verses);
-    },
-    syncMutqinSession: function syncMutqinSession() {
-      var _this31 = this;
-      var queue = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.queue;
-      var mode = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.currentMode;
-      var playbackQueue = (queue || []).map(function (item) {
-        var verse = (item === null || item === void 0 ? void 0 : item.verse) || item;
-        return {
-          phase: (item === null || item === void 0 ? void 0 : item.phase) || 'Takrar',
-          ayahId: (verse === null || verse === void 0 ? void 0 : verse.key) || (item === null || item === void 0 ? void 0 : item.ayahId) || null,
-          verse: verse,
-          segment: (item === null || item === void 0 ? void 0 : item.segment) || null,
-          chainKey: (item === null || item === void 0 ? void 0 : item.chainKey) || null,
-          sequencePosition: (item === null || item === void 0 ? void 0 : item.sequencePosition) || 1,
-          sequenceTotal: (item === null || item === void 0 ? void 0 : item.sequenceTotal) || 1,
-          repeatCount: (item === null || item === void 0 ? void 0 : item.repeatCount) || 1,
-          totalRepeats: (item === null || item === void 0 ? void 0 : item.totalRepeats) || 1
-        };
-      }).filter(function (item) {
-        return item.ayahId;
-      });
-      var uniqueVerses = [];
-      var seen = new Set();
-      playbackQueue.forEach(function (item) {
-        if (seen.has(item.ayahId)) return;
-        seen.add(item.ayahId);
-        if (item.verse) uniqueVerses.push(item.verse);
-      });
-      var planner = (0,_composables_useDailyPlanner__WEBPACK_IMPORTED_MODULE_5__.createDailyPlan)(this.mutqinState, uniqueVerses, {
-        repetitions: 1,
-        audioDurations: uniqueVerses.reduce(function (map, verse) {
-          map[verse.key] = Number(verse.duration || _this31.duration || 0);
-          return map;
-        }, {}),
-        reviewSeconds: 18
-      });
-      var plannerQueue = uniqueVerses.slice(0, 1).map(function (verse) {
-        var _this31$currentChapte;
-        return {
-          phase: 'Planner',
-          ayahId: verse.key,
-          verse: verse,
-          prompt: "".concat(((_this31$currentChapte = _this31.currentChapter) === null || _this31$currentChapte === void 0 ? void 0 : _this31$currentChapte.name_simple) || 'Session', " ayahs ").concat(_this31.rangeStart, "-").concat(_this31.rangeEnd)
-        };
-      });
-      var recallQueue = uniqueVerses.map(function (verse) {
-        return {
-          phase: 'Recall',
-          ayahId: verse.key,
-          verse: verse,
-          prompt: "Recite ayah ".concat(verse.number)
-        };
-      });
-      var reviewQueue = planner.reviews.map(function (ayah) {
-        return {
-          phase: 'Retention',
-          ayahId: ayah.id
-        };
-      });
-      var fullQueue = (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.buildSessionQueue)({
-        planner: plannerQueue,
-        takrar: playbackQueue,
-        recall: recallQueue,
-        review: reviewQueue
-      });
-      return (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.startMutqinSession)(this.mutqinState, {
-        mode: mode,
-        queue: fullQueue,
-        config: this.buildSessionConfig(mode),
-        planner: {
-          "new": planner["new"].map(function (verse) {
-            return verse.key;
-          }),
-          chains: [],
-          reviews: planner.reviews.map(function (ayah) {
-            return ayah.id;
-          }),
-          ETA: planner.ETA
-        }
-      });
-    },
-    getMutqinAyah: function getMutqinAyah(id) {
-      var _this$mutqinState$aya2;
-      return ((_this$mutqinState$aya2 = this.mutqinState.ayahs) === null || _this$mutqinState$aya2 === void 0 ? void 0 : _this$mutqinState$aya2[id]) || null;
-    },
-    takrarLabel: function takrarLabel(id) {
-      var ayah = this.getMutqinAyah(id);
-      if (!ayah) return 'Session progress: ready';
-      var step = (0,_composables_useTakrarLadder__WEBPACK_IMPORTED_MODULE_6__.getTakrarStep)(ayah);
-      var target = typeof step === 'number' ? "".concat(ayah.repetition_count, "/").concat(step) : step;
-      return "Session progress: ".concat(target);
-    },
-    retentionLabel: function retentionLabel(id) {
-      var ayah = this.getMutqinAyah(id);
-      if (!ayah) return 'Review: due soon';
-      return "Review: ".concat(ayah.next_review || 'today');
-    },
-    isWeakAyah: function isWeakAyah(key) {
-      var _this$mutqinState0;
-      var ayah = (_this$mutqinState0 = this.mutqinState) === null || _this$mutqinState0 === void 0 || (_this$mutqinState0 = _this$mutqinState0.ayahs) === null || _this$mutqinState0 === void 0 ? void 0 : _this$mutqinState0[key];
-      return Number((ayah === null || ayah === void 0 ? void 0 : ayah.weak_count) || 0) > 0;
-    },
-    isMasteredAyah: function isMasteredAyah(key) {
-      var _this$mutqinState1;
-      var ayah = (_this$mutqinState1 = this.mutqinState) === null || _this$mutqinState1 === void 0 || (_this$mutqinState1 = _this$mutqinState1.ayahs) === null || _this$mutqinState1 === void 0 ? void 0 : _this$mutqinState1[key];
-      return Number((ayah === null || ayah === void 0 ? void 0 : ayah.mastery_level) || 0) >= 5 || (ayah === null || ayah === void 0 ? void 0 : ayah.status) === 'mastered';
-    },
-    markTakrarHide: function markTakrarHide(verse) {
-      this.syncMutqinAyahs([verse]);
-      (0,_composables_useTakrarLadder__WEBPACK_IMPORTED_MODULE_6__.hideAyah)(this.mutqinState, verse.key);
-    },
-    markTakrarDone: function markTakrarDone(verse, score) {
-      var _this$queue3, _previous$verse;
-      this.syncMutqinAyahs([verse]);
-      (0,_composables_useTakrarLadder__WEBPACK_IMPORTED_MODULE_6__.completeTakrarStep)(this.mutqinState, verse.key, score);
-      (0,_composables_useRetentionZones__WEBPACK_IMPORTED_MODULE_7__.scoreRetention)(this.mutqinState, verse.key, score);
-      if (score === 'Forgot') this.sessionErrorCount += 1;
-      var previous = (_this$queue3 = this.queue) === null || _this$queue3 === void 0 ? void 0 : _this$queue3[Math.max(0, this.queueIndex - 1)];
-      var fromId = (previous === null || previous === void 0 || (_previous$verse = previous.verse) === null || _previous$verse === void 0 ? void 0 : _previous$verse.key) || (previous === null || previous === void 0 ? void 0 : previous.key);
-      this.applyChainingResult(verse, score);
-      this.recomputeAnalytics();
-      this.showBanner(score === 'Forgot' ? 'Marked for review' : 'Progress saved', score === 'Forgot' ? 'info' : 'success', 1400);
-    },
-    applyChainingResult: function applyChainingResult(verse, score) {
-      if (!this.chainingEnabled || !(verse !== null && verse !== void 0 && verse.key)) {
-        this.persistCentralSessionState();
-        return;
-      }
-      var isFailure = score === 'Forgot' || score === false;
-      if (this.chainingMethod === 'cumulative') {
-        this.applyCumulativeResult(verse, isFailure);
-      } else {
-        this.applyLinkingResult(verse, isFailure);
-      }
-      this.persistCentralSessionState();
-    },
-    applyLinkingResult: function applyLinkingResult(verse, isFailure) {
-      var _this$queue4, _currentEntry$segment;
-      var chaining = this.centralSession.chaining;
-      var currentEntry = (_this$queue4 = this.queue) === null || _this$queue4 === void 0 ? void 0 : _this$queue4[Math.max(0, Number(this.queueIndex || 0))];
-      var segmentIndex = Math.max(0, Number((currentEntry === null || currentEntry === void 0 || (_currentEntry$segment = currentEntry.segment) === null || _currentEntry$segment === void 0 ? void 0 : _currentEntry$segment.index) || (currentEntry === null || currentEntry === void 0 ? void 0 : currentEntry.sequencePosition) - 1 || 0));
-      if (!isFailure) {
-        chaining.consecutiveFailures = 0;
-        chaining.segmentIndex = segmentIndex + 1;
-        chaining.index = Math.max(0, Number(this.queueIndex || 0) + 1);
-        return;
-      }
-      chaining.consecutiveFailures = Number(chaining.consecutiveFailures || 0) + 1;
-      if (chaining.consecutiveFailures >= 3) {
-        var firstAyahSegment = this.queue.findIndex(function (item) {
-          var _item$verse8;
-          return ((item === null || item === void 0 || (_item$verse8 = item.verse) === null || _item$verse8 === void 0 ? void 0 : _item$verse8.key) || (item === null || item === void 0 ? void 0 : item.key)) === verse.key;
+    };
+    var pushQueueGroup = function pushQueueGroup(entries) {
+      var _loop = function _loop(repeatIndex) {
+        entries.forEach(function (entry) {
+          return q.push(decorateQueueEntry(entry, repeatIndex));
         });
-        this.queueIndex = Math.max(0, firstAyahSegment);
-        this.getModeStore(this.currentMode).queueIndex = this.queueIndex;
-        (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(this.mutqinState, this.queueIndex + 1);
-        chaining.segmentIndex = 0;
-        chaining.index = this.queueIndex;
-        chaining.consecutiveFailures = 0;
-        return;
+      };
+      for (var repeatIndex = 1; repeatIndex <= repetitions; repeatIndex++) {
+        _loop(repeatIndex);
       }
-      var rollbackIndex = Math.max(0, Number(this.queueIndex || 0) - 1);
-      this.queueIndex = rollbackIndex;
+    };
+    if (!chainingEnabled) {
+      // Simple sequential order without chaining
+      verses.forEach(function (verse) {
+        pushQueueEntry({
+          verse: verse,
+          phase: 'Memorise',
+          chainKey: null,
+          sequencePosition: 1,
+          sequenceTotal: 1
+        });
+      });
+    } else if (chainingMethod === 'cumulative') {
+      var _loop2 = function _loop2(endIndex) {
+        var chain = verses.slice(0, endIndex + 1);
+        pushQueueGroup(chain.map(function (verse, chainIndex) {
+          return {
+            verse: chain[chainIndex],
+            phase: 'Cumulative',
+            chainKey: "cumulative:".concat(endIndex + 1),
+            sequencePosition: chainIndex + 1,
+            sequenceTotal: chain.length
+          };
+        }));
+      };
+      // Cumulative method: 1, then 1-2, then 1-2-3, etc.
+      for (var endIndex = 0; endIndex < verses.length; endIndex++) {
+        _loop2(endIndex);
+      }
+    } else {
+      // Linking method: practice ayahs individually, then adjacent ayah pairs.
+      for (var index = 0; index < verses.length; index++) {
+        var verse = verses[index];
+        pushQueueEntry({
+          verse: verse,
+          phase: 'Linking',
+          chainKey: "linking:single:".concat(verse.key),
+          sequencePosition: 1,
+          sequenceTotal: 1
+        });
+        var nextVerse = verses[index + 1];
+        if (nextVerse) {
+          pushQueueGroup([{
+            verse: verse,
+            phase: 'Linking',
+            chainKey: "linking:".concat(verse.key, "->").concat(nextVerse.key),
+            sequencePosition: 1,
+            sequenceTotal: 2
+          }, {
+            verse: nextVerse,
+            phase: 'Linking',
+            chainKey: "linking:".concat(verse.key, "->").concat(nextVerse.key),
+            sequencePosition: 2,
+            sequenceTotal: 2
+          }]);
+        }
+      }
+    }
+    console.log("[buildQueue] Built ".concat(q.length, " queue entries"));
+
+    // Restore previous position if possible
+    var previousQueueIndex = Math.min(safePreviousQueueIndex, Math.max(q.length - 1, 0));
+    if (previousEntryKey) {
+      var exactIndex = q.findIndex(function (item) {
+        var _item$verse6;
+        return ((item === null || item === void 0 || (_item$verse6 = item.verse) === null || _item$verse6 === void 0 ? void 0 : _item$verse6.key) || (item === null || item === void 0 ? void 0 : item.key)) === previousEntryKey && item.phase === (previousEntry === null || previousEntry === void 0 ? void 0 : previousEntry.phase) && item.chainKey === (previousEntry === null || previousEntry === void 0 ? void 0 : previousEntry.chainKey) && Number(item.sequencePosition || 1) === Number((previousEntry === null || previousEntry === void 0 ? void 0 : previousEntry.sequencePosition) || 1) && Number(item.repeatCount || 1) === Number((previousEntry === null || previousEntry === void 0 ? void 0 : previousEntry.repeatCount) || 1);
+      });
+      if (exactIndex >= 0) {
+        previousQueueIndex = exactIndex;
+      } else {
+        var firstIndex = q.findIndex(function (item) {
+          var _item$verse7;
+          return ((item === null || item === void 0 || (_item$verse7 = item.verse) === null || _item$verse7 === void 0 ? void 0 : _item$verse7.key) || (item === null || item === void 0 ? void 0 : item.key)) === previousEntryKey;
+        });
+        if (firstIndex >= 0) previousQueueIndex = firstIndex;
+      }
+    }
+
+    // Update queue in appropriate store
+    if (mode === this.currentMode) {
+      this.queue = q;
+      this.queueIndex = previousQueueIndex;
+    }
+    if (mode === 'beginner') {
+      this.beginner.queue = q;
+      this.beginner.queueIndex = previousQueueIndex;
+    } else {
+      this.advanced.queue = q;
+      this.advanced.queueIndex = previousQueueIndex;
+    }
+    this.syncActiveVerseState(mode, previousActiveKey);
+  }), "estimateQueueDuration", function estimateQueueDuration(queue) {
+    var avgVerseDuration = 45;
+    return Math.ceil(queue.length * avgVerseDuration / 60);
+  }), "rebuildQueue", function rebuildQueue() {
+    var mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.currentMode;
+    this.buildQueue(mode);
+  }), "setChainingEnabled", function setChainingEnabled(enabled) {
+    this.chainingEnabled = !!enabled;
+    this.applyChainingQueueChange(this.currentMode, {
+      restart: true
+    });
+  }), "setChainingMethod", function setChainingMethod(method) {
+    var nextMethod = method === 'cumulative' ? 'cumulative' : 'linking';
+    this.chainingEnabled = true;
+    this.chainingMethod = nextMethod;
+    this.applyChainingQueueChange(this.currentMode, {
+      restart: true
+    });
+  }), "setChainingRepetitions", function setChainingRepetitions(value) {
+    this.chainingRepetitions = Math.max(1, Math.min(5, Number(value || 1)));
+    this.applyChainingQueueChange(this.currentMode, {
+      restart: true
+    });
+  }), "applyChainingQueueChange", function applyChainingQueueChange() {
+    var mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.currentMode;
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    if (!this.hasVerses) {
+      this.persistUiState();
+      this.persistCentralSessionState();
+      return;
+    }
+    if (this.audioElement && options.restart) {
+      try {
+        this.audioElement.pause();
+      } catch (_unused8) {}
+    }
+    if (options.restart) {
+      this.isPlaying = false;
+      this.currentTime = 0;
+      this.stopWordHighlighting();
+      this.getModeStore(mode).queueIndex = 0;
+    }
+    this.buildQueue(mode);
+    var store = this.getModeStore(mode);
+    if (mode === this.currentMode && Array.isArray(store.queue) && store.queue.length) {
+      var _nextEntry$verse;
+      if (options.restart) store.queueIndex = 0;
+      this.syncMutqinSession(store.queue, mode);
+      var nextEntry = store.queue[Math.max(0, Number(store.queueIndex || 0))];
+      var nextKey = (nextEntry === null || nextEntry === void 0 || (_nextEntry$verse = nextEntry.verse) === null || _nextEntry$verse === void 0 ? void 0 : _nextEntry$verse.key) || (nextEntry === null || nextEntry === void 0 ? void 0 : nextEntry.key) || store.activeKey;
+      if (nextKey) {
+        this.setActiveVerse(nextKey, {
+          mode: mode,
+          queueIndex: Math.max(0, Number(store.queueIndex || 0)),
+          scroll: false
+        });
+      }
+      if (options.restart) (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(this.mutqinState, 0);
+    }
+    this.persistSessionState();
+    this.persistCentralSessionState();
+  }), "persistModeState", function persistModeState(mode) {
+    var source = mode === 'beginner' ? this.beginner : this.advanced;
+    try {
+      localStorage.setItem(MODE_STORAGE_KEYS[mode], JSON.stringify(this.cloneModeState(source)));
+    } catch (e) {
+      console.error("Failed to persist ".concat(mode, " mode state:"), e);
+    }
+  }), "startSession", function startSession() {
+    var _this30 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee11() {
+      var config, mode, currentVerses, modeNeedsReload, updatedVerses, builtQueue, sessionState, canonicalIndex, playbackIndex, nextCanonicalIndex, first, chainingStatus;
+      return _regenerator().w(function (_context11) {
+        while (1) switch (_context11.n) {
+          case 0:
+            config = _this30.sessionConfig;
+            mode = config.mode || _this30.currentMode;
+            if (!(!config.chapterId || config.chapterId === 0)) {
+              _context11.n = 1;
+              break;
+            }
+            _this30.showTools = true;
+            _this30.showBanner('Please select a surah first', 'info', 3600);
+            return _context11.a(2);
+          case 1:
+            if (_this30.validateSettings()) {
+              _context11.n = 2;
+              break;
+            }
+            return _context11.a(2);
+          case 2:
+            _this30.applySessionConfig(config);
+            _this30.persistModeState(mode);
+            _this30.persistUiState();
+            _this30.sessionCompleted = false;
+            _this30.sessionStartedAt = Date.now();
+            _this30.sessionErrorCount = 0;
+            _this30.statsTick = Date.now();
+            currentVerses = mode === 'beginner' ? _this30.beginner.verses : _this30.advanced.verses;
+            modeNeedsReload = !currentVerses || !currentVerses.length || !_this30.modeDataMatchesConfig(mode, config);
+            if (!modeNeedsReload) {
+              _context11.n = 3;
+              break;
+            }
+            _context11.n = 3;
+            return _this30.loadVerses(mode);
+          case 3:
+            updatedVerses = mode === 'beginner' ? _this30.beginner.verses : _this30.advanced.verses;
+            if (!(!updatedVerses || updatedVerses.length === 0)) {
+              _context11.n = 4;
+              break;
+            }
+            _this30.showBanner('No verses loaded. Check your network connection.', 'error');
+            return _context11.a(2);
+          case 4:
+            if (!_this30.audioElement) {
+              _this30.initAudio();
+            }
+
+            // Rebuild queue with current chaining settings
+            console.log('[startSession] Building queue with settings:', {
+              enabled: _this30.chainingEnabled,
+              method: _this30.chainingMethod,
+              repetitions: _this30.chainingRepetitions
+            });
+            _this30.buildQueue(mode);
+            builtQueue = mode === 'beginner' ? _this30.beginner.queue : _this30.advanced.queue;
+            if (!(!builtQueue || builtQueue.length === 0)) {
+              _context11.n = 5;
+              break;
+            }
+            _this30.showBanner('Nothing to play. Check the selected range.', 'error');
+            return _context11.a(2);
+          case 5:
+            _this30.syncMutqinAyahs(updatedVerses);
+            sessionState = _this30.syncMutqinSession(builtQueue, mode);
+            canonicalIndex = Math.max(0, Number((sessionState === null || sessionState === void 0 ? void 0 : sessionState.current_index) || 0));
+            playbackIndex = canonicalIndex > 0 ? Math.min(canonicalIndex - 1, builtQueue.length - 1) : 0;
+            _this30.queueIndex = playbackIndex;
+            _this30.getModeStore(mode).queueIndex = playbackIndex;
+            nextCanonicalIndex = canonicalIndex > 0 ? canonicalIndex : 1;
+            (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this30.mutqinState, nextCanonicalIndex);
+            first = builtQueue[playbackIndex];
+            if (!(first && first.verse)) {
+              _context11.n = 7;
+              break;
+            }
+            _this30.setActiveVerse(first.verse.key, {
+              mode: mode,
+              queueIndex: playbackIndex,
+              scroll: false
+            });
+            _context11.n = 6;
+            return _this30.$nextTick();
+          case 6:
+            if (_this30.audioElement) {
+              _this30.audioElement.playbackRate = _this30.speed;
+            }
+            _context11.n = 7;
+            return _this30.playQueueEntry(first, {
+              force: true,
+              queueIndex: playbackIndex
+            });
+          case 7:
+            _this30.showTools = false;
+            _this30.flowStep = 'learn';
+            chainingStatus = _this30.chainingEnabled ? "".concat(_this30.chainingMethod, " chaining (").concat(_this30.chainingRepetitions, "x)") : 'no chaining';
+            _this30.showBanner("Session started with ".concat(builtQueue.length, " guided repetitions using ").concat(chainingStatus), 'success', 3000);
+          case 8:
+            return _context11.a(2);
+        }
+      }, _callee11);
+    }))();
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "formatTime", function formatTime(sec) {
+    var t = Math.max(0, Math.floor(sec || 0));
+    return "".concat(String(Math.floor(t / 60)).padStart(2, '0'), ":").concat(String(t % 60).padStart(2, '0'));
+  }), "normalizeAudioUrl", function normalizeAudioUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('//')) return "https:".concat(url);
+    if (url.startsWith('/')) return "https://verses.quran.com".concat(url);
+    if (url.includes('mp3')) return "https://verses.quran.com/".concat(url);
+    return url;
+  }), "getQueueItemAudioSeconds", function getQueueItemAudioSeconds() {
+    var item = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var allowCurrentProgress = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+    var verse = item.verse || item;
+    var speedFactor = Math.max(0.25, Number(this.speed || 1));
+    if (allowCurrentProgress && this.duration > 0) {
+      return Math.max(0, Number(this.duration || 0) - Number(this.currentTime || 0)) / speedFactor;
+    }
+    var explicitDuration = Number(verse.duration || verse.audioDuration || 0);
+    if (Number.isFinite(explicitDuration) && explicitDuration > 0) {
+      return explicitDuration / speedFactor;
+    }
+    var arabicLength = String(verse.arabic || verse.text || '').replace(/[^ء-ي]/g, '').length || 80;
+    return Math.max(5, Math.min(45, arabicLength * 0.12)) / speedFactor;
+  }), "showBanner", function showBanner(message) {
+    var _this31 = this;
+    var kind = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'info';
+    var ttlMs = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 3500;
+    var action = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
+    if (this.bannerTimer) clearTimeout(this.bannerTimer);
+    this.banner = {
+      message: message,
+      kind: kind,
+      at: Date.now(),
+      actionKey: (action === null || action === void 0 ? void 0 : action.key) || '',
+      actionLabel: (action === null || action === void 0 ? void 0 : action.label) || ''
+    };
+    this.bannerTimer = setTimeout(function () {
+      if (_this31.banner && Date.now() - _this31.banner.at >= ttlMs) _this31.banner = null;
+    }, ttlMs + 50);
+  }), "runBannerAction", function runBannerAction() {
+    var _this$banner;
+    var actionKey = (_this$banner = this.banner) === null || _this$banner === void 0 ? void 0 : _this$banner.actionKey;
+    this.banner = null;
+    if (actionKey === 'restart-session') {
+      this.startSession();
+      return;
+    }
+    if (actionKey === 'open-setup') {
+      this.openModeSettings();
+    }
+  }), "syncMutqinAyahs", function syncMutqinAyahs() {
+    var verses = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.verses;
+    if (!Array.isArray(verses) || !verses.length) return;
+    (0,_composables_useAyahState__WEBPACK_IMPORTED_MODULE_3__.seedAyahs)(this.mutqinState, verses);
+  }), "syncMutqinSession", function syncMutqinSession() {
+    var _this32 = this;
+    var queue = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.queue;
+    var mode = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.currentMode;
+    var playbackQueue = (queue || []).map(function (item) {
+      var verse = (item === null || item === void 0 ? void 0 : item.verse) || item;
+      return {
+        phase: (item === null || item === void 0 ? void 0 : item.phase) || 'Takrar',
+        ayahId: (verse === null || verse === void 0 ? void 0 : verse.key) || (item === null || item === void 0 ? void 0 : item.ayahId) || null,
+        verse: verse,
+        segment: (item === null || item === void 0 ? void 0 : item.segment) || null,
+        chainKey: (item === null || item === void 0 ? void 0 : item.chainKey) || null,
+        sequencePosition: (item === null || item === void 0 ? void 0 : item.sequencePosition) || 1,
+        sequenceTotal: (item === null || item === void 0 ? void 0 : item.sequenceTotal) || 1,
+        repeatCount: (item === null || item === void 0 ? void 0 : item.repeatCount) || 1,
+        totalRepeats: (item === null || item === void 0 ? void 0 : item.totalRepeats) || 1
+      };
+    }).filter(function (item) {
+      return item.ayahId;
+    });
+    var uniqueVerses = [];
+    var seen = new Set();
+    playbackQueue.forEach(function (item) {
+      if (seen.has(item.ayahId)) return;
+      seen.add(item.ayahId);
+      if (item.verse) uniqueVerses.push(item.verse);
+    });
+    var planner = (0,_composables_useDailyPlanner__WEBPACK_IMPORTED_MODULE_5__.createDailyPlan)(this.mutqinState, uniqueVerses, {
+      repetitions: 1,
+      audioDurations: uniqueVerses.reduce(function (map, verse) {
+        map[verse.key] = Number(verse.duration || _this32.duration || 0);
+        return map;
+      }, {}),
+      reviewSeconds: 18
+    });
+    var plannerQueue = uniqueVerses.slice(0, 1).map(function (verse) {
+      var _this32$currentChapte;
+      return {
+        phase: 'Planner',
+        ayahId: verse.key,
+        verse: verse,
+        prompt: "".concat(((_this32$currentChapte = _this32.currentChapter) === null || _this32$currentChapte === void 0 ? void 0 : _this32$currentChapte.name_simple) || 'Session', " ayahs ").concat(_this32.rangeStart, "-").concat(_this32.rangeEnd)
+      };
+    });
+    var recallQueue = uniqueVerses.map(function (verse) {
+      return {
+        phase: 'Recall',
+        ayahId: verse.key,
+        verse: verse,
+        prompt: "Recite ayah ".concat(verse.number)
+      };
+    });
+    var reviewQueue = planner.reviews.map(function (ayah) {
+      return {
+        phase: 'Retention',
+        ayahId: ayah.id
+      };
+    });
+    var fullQueue = (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.buildSessionQueue)({
+      planner: plannerQueue,
+      takrar: playbackQueue,
+      recall: recallQueue,
+      review: reviewQueue
+    });
+    return (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.startMutqinSession)(this.mutqinState, {
+      mode: mode,
+      queue: fullQueue,
+      config: this.buildSessionConfig(mode),
+      planner: {
+        "new": planner["new"].map(function (verse) {
+          return verse.key;
+        }),
+        chains: [],
+        reviews: planner.reviews.map(function (ayah) {
+          return ayah.id;
+        }),
+        ETA: planner.ETA
+      }
+    });
+  }), "getMutqinAyah", function getMutqinAyah(id) {
+    var _this$mutqinState$aya2;
+    return ((_this$mutqinState$aya2 = this.mutqinState.ayahs) === null || _this$mutqinState$aya2 === void 0 ? void 0 : _this$mutqinState$aya2[id]) || null;
+  }), "takrarLabel", function takrarLabel(id) {
+    var ayah = this.getMutqinAyah(id);
+    if (!ayah) return 'Session progress: ready';
+    var step = (0,_composables_useTakrarLadder__WEBPACK_IMPORTED_MODULE_6__.getTakrarStep)(ayah);
+    var target = typeof step === 'number' ? "".concat(ayah.repetition_count, "/").concat(step) : step;
+    return "Session progress: ".concat(target);
+  }), "retentionLabel", function retentionLabel(id) {
+    var ayah = this.getMutqinAyah(id);
+    if (!ayah) return 'Review: due soon';
+    return "Review: ".concat(ayah.next_review || 'today');
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "isWeakAyah", function isWeakAyah(key) {
+    var _this$mutqinState0;
+    var ayah = (_this$mutqinState0 = this.mutqinState) === null || _this$mutqinState0 === void 0 || (_this$mutqinState0 = _this$mutqinState0.ayahs) === null || _this$mutqinState0 === void 0 ? void 0 : _this$mutqinState0[key];
+    return Number((ayah === null || ayah === void 0 ? void 0 : ayah.weak_count) || 0) > 0;
+  }), "isMasteredAyah", function isMasteredAyah(key) {
+    var _this$mutqinState1;
+    var ayah = (_this$mutqinState1 = this.mutqinState) === null || _this$mutqinState1 === void 0 || (_this$mutqinState1 = _this$mutqinState1.ayahs) === null || _this$mutqinState1 === void 0 ? void 0 : _this$mutqinState1[key];
+    return Number((ayah === null || ayah === void 0 ? void 0 : ayah.mastery_level) || 0) >= 5 || (ayah === null || ayah === void 0 ? void 0 : ayah.status) === 'mastered';
+  }), "markTakrarHide", function markTakrarHide(verse) {
+    this.syncMutqinAyahs([verse]);
+    (0,_composables_useTakrarLadder__WEBPACK_IMPORTED_MODULE_6__.hideAyah)(this.mutqinState, verse.key);
+  }), "markTakrarDone", function markTakrarDone(verse, score) {
+    var _this$queue3, _previous$verse;
+    this.syncMutqinAyahs([verse]);
+    (0,_composables_useTakrarLadder__WEBPACK_IMPORTED_MODULE_6__.completeTakrarStep)(this.mutqinState, verse.key, score);
+    (0,_composables_useRetentionZones__WEBPACK_IMPORTED_MODULE_7__.scoreRetention)(this.mutqinState, verse.key, score);
+    if (score === 'Forgot') this.sessionErrorCount += 1;
+    var previous = (_this$queue3 = this.queue) === null || _this$queue3 === void 0 ? void 0 : _this$queue3[Math.max(0, this.queueIndex - 1)];
+    var fromId = (previous === null || previous === void 0 || (_previous$verse = previous.verse) === null || _previous$verse === void 0 ? void 0 : _previous$verse.key) || (previous === null || previous === void 0 ? void 0 : previous.key);
+    this.applyChainingResult(verse, score);
+    this.recomputeAnalytics();
+    this.showBanner(score === 'Forgot' ? 'Marked for review' : 'Progress saved', score === 'Forgot' ? 'info' : 'success', 1400);
+  }), "applyChainingResult", function applyChainingResult(verse, score) {
+    if (!this.chainingEnabled || !(verse !== null && verse !== void 0 && verse.key)) {
+      this.persistCentralSessionState();
+      return;
+    }
+    var isFailure = score === 'Forgot' || score === false;
+    if (this.chainingMethod === 'cumulative') {
+      this.applyCumulativeResult(verse, isFailure);
+    } else {
+      this.applyLinkingResult(verse, isFailure);
+    }
+    this.persistCentralSessionState();
+  }), "applyLinkingResult", function applyLinkingResult(verse, isFailure) {
+    var _this$queue4, _currentEntry$segment;
+    var chaining = this.centralSession.chaining;
+    var currentEntry = (_this$queue4 = this.queue) === null || _this$queue4 === void 0 ? void 0 : _this$queue4[Math.max(0, Number(this.queueIndex || 0))];
+    var segmentIndex = Math.max(0, Number((currentEntry === null || currentEntry === void 0 || (_currentEntry$segment = currentEntry.segment) === null || _currentEntry$segment === void 0 ? void 0 : _currentEntry$segment.index) || (currentEntry === null || currentEntry === void 0 ? void 0 : currentEntry.sequencePosition) - 1 || 0));
+    if (!isFailure) {
+      chaining.consecutiveFailures = 0;
+      chaining.segmentIndex = segmentIndex + 1;
+      chaining.index = Math.max(0, Number(this.queueIndex || 0) + 1);
+      return;
+    }
+    chaining.consecutiveFailures = Number(chaining.consecutiveFailures || 0) + 1;
+    if (chaining.consecutiveFailures >= 3) {
+      var firstAyahSegment = this.queue.findIndex(function (item) {
+        var _item$verse8;
+        return ((item === null || item === void 0 || (_item$verse8 = item.verse) === null || _item$verse8 === void 0 ? void 0 : _item$verse8.key) || (item === null || item === void 0 ? void 0 : item.key)) === verse.key;
+      });
+      this.queueIndex = Math.max(0, firstAyahSegment);
       this.getModeStore(this.currentMode).queueIndex = this.queueIndex;
       (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(this.mutqinState, this.queueIndex + 1);
-      chaining.segmentIndex = Math.max(0, segmentIndex - 1);
-      chaining.index = rollbackIndex;
-    },
-    applyCumulativeResult: function applyCumulativeResult(verse, isFailure) {
-      var chaining = this.centralSession.chaining;
-      var currentIndex = Math.max(0, Number(this.queueIndex || 0));
-      if (!Array.isArray(chaining.chain)) chaining.chain = [];
-      if (isFailure) {
-        var lastSuccessfulKey = chaining.lastSuccessfulAyahKey;
-        if (lastSuccessfulKey) {
-          var rollbackIndex = chaining.chain.findIndex(function (item) {
-            return item.key === lastSuccessfulKey;
-          });
-          chaining.chain = rollbackIndex >= 0 ? chaining.chain.slice(0, rollbackIndex + 1) : [];
-          var targetQueueIndex = this.queue.findIndex(function (item) {
-            var _item$verse9;
-            return ((item === null || item === void 0 || (_item$verse9 = item.verse) === null || _item$verse9 === void 0 ? void 0 : _item$verse9.key) || (item === null || item === void 0 ? void 0 : item.key)) === lastSuccessfulKey;
-          });
-          if (targetQueueIndex >= 0) this.queueIndex = targetQueueIndex;
-        } else {
-          chaining.chain = [];
-          this.queueIndex = 0;
-        }
-        this.getModeStore(this.currentMode).queueIndex = this.queueIndex;
-        (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(this.mutqinState, this.queueIndex + 1);
-        chaining.index = Math.max(0, Number(this.queueIndex || 0));
-        return;
-      }
-      if (!chaining.chain.some(function (item) {
-        return item.key === verse.key;
-      })) {
-        chaining.chain.push({
-          key: verse.key,
-          number: verse.number,
-          masteredAt: Date.now()
+      chaining.segmentIndex = 0;
+      chaining.index = this.queueIndex;
+      chaining.consecutiveFailures = 0;
+      return;
+    }
+    var rollbackIndex = Math.max(0, Number(this.queueIndex || 0) - 1);
+    this.queueIndex = rollbackIndex;
+    this.getModeStore(this.currentMode).queueIndex = this.queueIndex;
+    (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(this.mutqinState, this.queueIndex + 1);
+    chaining.segmentIndex = Math.max(0, segmentIndex - 1);
+    chaining.index = rollbackIndex;
+  }), "applyCumulativeResult", function applyCumulativeResult(verse, isFailure) {
+    var chaining = this.centralSession.chaining;
+    var currentIndex = Math.max(0, Number(this.queueIndex || 0));
+    if (!Array.isArray(chaining.chain)) chaining.chain = [];
+    if (isFailure) {
+      var lastSuccessfulKey = chaining.lastSuccessfulAyahKey;
+      if (lastSuccessfulKey) {
+        var rollbackIndex = chaining.chain.findIndex(function (item) {
+          return item.key === lastSuccessfulKey;
         });
-      }
-      chaining.lastSuccessfulAyahKey = verse.key;
-      chaining.index = currentIndex + 1;
-    },
-    handleOnline: function handleOnline() {
-      this.networkOnline = true;
-      this.showBanner('Back online. Live APIs are available again.', 'success', 2400);
-    },
-    handleOffline: function handleOffline() {
-      this.networkOnline = false;
-      this.showBanner('Offline mode active. Reading falls back to cached ranges.', 'info', 3200);
-    },
-    markPlaybackStart: function markPlaybackStart() {
-      this.playbackStartedAt = Date.now();
-    },
-    flushPlaybackTime: function flushPlaybackTime() {
-      if (!this.playbackStartedAt) return;
-      var seconds = Math.max(0, Math.round((Date.now() - this.playbackStartedAt) / 1000));
-      this.playbackStartedAt = 0;
-      if (seconds > 0) {
-        this.addActivityEvent({
-          ts: Date.now(),
-          type: 'time',
-          seconds: seconds
+        chaining.chain = rollbackIndex >= 0 ? chaining.chain.slice(0, rollbackIndex + 1) : [];
+        var targetQueueIndex = this.queue.findIndex(function (item) {
+          var _item$verse9;
+          return ((item === null || item === void 0 || (_item$verse9 = item.verse) === null || _item$verse9 === void 0 ? void 0 : _item$verse9.key) || (item === null || item === void 0 ? void 0 : item.key)) === lastSuccessfulKey;
         });
-        this.recomputeAnalytics();
+        if (targetQueueIndex >= 0) this.queueIndex = targetQueueIndex;
+      } else {
+        chaining.chain = [];
+        this.queueIndex = 0;
       }
-    },
-    getChainingDescription: function getChainingDescription() {
-      if (!this.chainingEnabled) {
-        return 'Play ayahs in order without special chaining patterns.';
-      }
-      if (this.chainingMethod === 'cumulative') {
-        return "Cumulative method: Start with first ayah, then add one more each time. Each ayah is repeated ".concat(this.chainingRepetitions, " time(s) per cycle.");
-      }
-      return "Linking method: Practice ayahs individually, then in pairs. Each ayah is repeated ".concat(this.chainingRepetitions, " time(s) per cycle.");
-    },
-    getQueuePreview: function getQueuePreview() {
-      if (!this.queue || this.queue.length === 0) return 'No queue built yet';
-      var preview = this.queue.slice(0, 10).map(function (item) {
-        var _item$verse0;
-        var verseNum = ((_item$verse0 = item.verse) === null || _item$verse0 === void 0 ? void 0 : _item$verse0.number) || '?';
-        var phase = item.phase === 'Cumulative' ? "C[".concat(item.sequencePosition, "/").concat(item.sequenceTotal, "]") : item.phase === 'Linking' ? "L[".concat(item.sequencePosition, "/").concat(item.sequenceTotal, "]") : 'S';
-        var repeat = item.repeatCount > 1 ? "\u2715".concat(item.repeatCount) : '';
-        return "".concat(verseNum).concat(phase).concat(repeat);
-      }).join(' → ');
-      if (this.queue.length > 10) {
-        return preview + " \u2026 +".concat(this.queue.length - 10, " more");
-      }
-      return preview;
-    },
-    handleSessionComplete: function handleSessionComplete() {
-      if (!this.verses.length) return;
-      this.sessionCompleted = true;
-      this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1;
-      (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.completeMutqinSession)(this.mutqinState);
+      this.getModeStore(this.currentMode).queueIndex = this.queueIndex;
+      (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(this.mutqinState, this.queueIndex + 1);
+      chaining.index = Math.max(0, Number(this.queueIndex || 0));
+      return;
+    }
+    if (!chaining.chain.some(function (item) {
+      return item.key === verse.key;
+    })) {
+      chaining.chain.push({
+        key: verse.key,
+        number: verse.number,
+        masteredAt: Date.now()
+      });
+    }
+    chaining.lastSuccessfulAyahKey = verse.key;
+    chaining.index = currentIndex + 1;
+  }), "handleOnline", function handleOnline() {
+    this.networkOnline = true;
+    this.showBanner('Back online. Live APIs are available again.', 'success', 2400);
+  }), "handleOffline", function handleOffline() {
+    this.networkOnline = false;
+    this.showBanner('Offline mode active. Reading falls back to cached ranges.', 'info', 3200);
+  }), "markPlaybackStart", function markPlaybackStart() {
+    this.playbackStartedAt = Date.now();
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "flushPlaybackTime", function flushPlaybackTime() {
+    if (!this.playbackStartedAt) return;
+    var seconds = Math.max(0, Math.round((Date.now() - this.playbackStartedAt) / 1000));
+    this.playbackStartedAt = 0;
+    if (seconds > 0) {
       this.addActivityEvent({
         ts: Date.now(),
-        type: 'session_complete'
+        type: 'time',
+        seconds: seconds
       });
       this.recomputeAnalytics();
-      this.persistCentralSessionState();
-      var chainingStatus = this.chainingEnabled ? "".concat(this.chainingMethod, " chaining completed") : 'session completed';
-      this.showBanner("".concat(chainingStatus, "! Great work! \uD83C\uDF89"), 'success', 6500, {
-        key: 'restart-session',
-        label: 'Start new session'
-      });
-    },
-    handlePrimaryAction: function handlePrimaryAction() {
-      if (this.isPlaying) {
-        if (this.audioElement) this.audioElement.pause();
-        this.isPlaying = false;
-        return;
-      }
-      if (!this.canStartSession) {
-        this.showTools = true;
-        this.showBanner('Choose a valid surah and ayah range before starting.', 'info', 3600, {
-          key: 'open-setup',
-          label: 'Open setup'
-        });
-        return;
-      }
-      this.startSession();
-    },
-    validateSettings: function validateSettings() {
-      var config = this.sessionConfig;
-      var errors = [];
-      if (!config.chapterId || config.chapterId === 0) {
-        errors.push('No surah selected');
-      }
-      if (!Number.isFinite(Number(config.rangeStart)) || !Number.isFinite(Number(config.rangeEnd))) {
-        errors.push('Verse range must be numeric');
-      }
-      if (config.rangeStart > config.rangeEnd) {
-        errors.push('Invalid verse range');
-      }
-      if (errors.length > 0) {
-        this.showBanner("Settings issue: ".concat(errors.join(', ')), 'warning', 3000);
-        return false;
-      }
-      return true;
-    },
-    // UI methods
-    toggleReadingOption: function toggleReadingOption(kind) {
-      if (kind === 'translation') this.showTranslation = !this.showTranslation;
-      if (kind === 'transliteration') this.showTransliteration = !this.showTransliteration;
-      if (kind === 'wbw') {
-        this.showWordByWord = !this.showWordByWord;
-        this.loadVerses();
-      }
-      this.$forceUpdate();
-    },
-    setScriptMode: function setScriptMode(mode) {
-      this.script = mode;
-      this.scheduleLoadVerses(this.currentMode);
-    },
-    setQuranFont: function setQuranFont(font) {
-      this.quranFont = font;
-      this.script = 'uthmani';
-      this.fontPickerOpen = false;
-      this.persistUiState();
-    },
-    toggleFontPicker: function toggleFontPicker() {
-      this.fontPickerOpen = !this.fontPickerOpen;
-    },
-    cycleTheme: function cycleTheme() {
-      var themes = ['light', 'sepia', 'dark'];
-      var idx = themes.indexOf(this.theme);
-      this.theme = themes[(idx + 1) % themes.length];
-      document.documentElement.setAttribute('data-theme', this.theme);
-      this.persistUiState();
-    },
-    toggleSection: function toggleSection(key) {
-      var _this32 = this;
-      var nextValue = !this.sectionOpen[key];
-      Object.keys(this.sectionOpen).forEach(function (sectionKey) {
-        if (['session_tools', 'live_stats'].includes(sectionKey)) {
-          _this32.sectionOpen[sectionKey] = false;
-        }
-      });
-      this.sectionOpen[key] = nextValue;
-    },
-    applySettingsChanges: function applySettingsChanges() {
-      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var _options$silent = options.silent,
-        silent = _options$silent === void 0 ? false : _options$silent;
-      var next = this.settingsDraft || {};
-      this.tajweedEnabled = !!next.tajweedEnabled;
-      this.showTranslation = !!next.showTranslation;
-      this.showTransliteration = !!next.showTransliteration;
-      this.showWordByWord = !!next.showWordByWord;
-      this.wordByWordAudioEnabled = !!next.wordByWordAudioEnabled;
-      this.defaultFontSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, Number(next.defaultFontSize || 100)));
-      try {
-        localStorage.setItem('telawa.defaultFontSize', JSON.stringify(this.defaultFontSize));
-      } catch (_unused9) {}
-      this.persistUiState();
-      this.persistCentralSessionState();
-      this.syncSettingsDraft();
-      if (!silent) this.showBanner('Settings saved', 'success', 1400);
-    },
-    // Persistence methods
-    loadUiState: function loadUiState() {
-      try {
-        var raw = localStorage.getItem('telawa.uiState');
-        if (raw) {
-          var _state$showTranslatio, _state$showTransliter, _state$showWordByWord, _state$wordByWordAudi, _state$chainingEnable, _ref6, _state$defaultFontSiz, _ref7, _state$tajweedEnabled, _state$showTranslatio2, _state$showTransliter2, _state$showWordByWord2, _state$wordByWordAudi2, _ref8, _state$defaultFontSiz2, _state$fontScale, _state$uiScale, _state$enScale, _state$tajweedEnabled2;
-          var state = JSON.parse(raw);
-          this.theme = state.theme || this.theme;
-          this.tab = ['tools', 'settings'].includes(state.tab) ? state.tab : 'tools';
-          this.currentMode = state.currentMode || 'beginner';
-          this.flowStep = ['learn', 'practice', 'recall'].includes(state.flowStep) ? state.flowStep : state.flowStep === 'read' ? 'learn' : state.flowStep === 'listen' ? 'practice' : 'learn';
-          this.flowListenPlays = Math.max(0, Number(state.flowListenPlays || 0));
-          this.showTranslation = (_state$showTranslatio = state.showTranslation) !== null && _state$showTranslatio !== void 0 ? _state$showTranslatio : this.showTranslation;
-          this.showTransliteration = (_state$showTransliter = state.showTransliteration) !== null && _state$showTransliter !== void 0 ? _state$showTransliter : this.showTransliteration;
-          this.showWordByWord = (_state$showWordByWord = state.showWordByWord) !== null && _state$showWordByWord !== void 0 ? _state$showWordByWord : this.showWordByWord;
-          this.wordByWordAudioEnabled = (_state$wordByWordAudi = state.wordByWordAudioEnabled) !== null && _state$wordByWordAudi !== void 0 ? _state$wordByWordAudi : this.wordByWordAudioEnabled;
-          this.chainingEnabled = (_state$chainingEnable = state.chainingEnabled) !== null && _state$chainingEnable !== void 0 ? _state$chainingEnable : this.chainingEnabled;
-          this.chainingMethod = ['linking', 'cumulative'].includes(state.chainingMethod) ? state.chainingMethod : this.chainingMethod;
-          this.chainingRepetitions = Math.max(1, Math.min(5, Number(state.chainingRepetitions || this.chainingRepetitions || 1)));
-          this.defaultFontSize = Number((_ref6 = (_state$defaultFontSiz = state.defaultFontSize) !== null && _state$defaultFontSiz !== void 0 ? _state$defaultFontSiz : this.defaultFontSize) !== null && _ref6 !== void 0 ? _ref6 : 100);
-          this.settingsDraft = {
-            tajweedEnabled: (_ref7 = (_state$tajweedEnabled = state.tajweedEnabled) !== null && _state$tajweedEnabled !== void 0 ? _state$tajweedEnabled : this.tajweedEnabled) !== null && _ref7 !== void 0 ? _ref7 : false,
-            showTranslation: (_state$showTranslatio2 = state.showTranslation) !== null && _state$showTranslatio2 !== void 0 ? _state$showTranslatio2 : this.showTranslation,
-            showTransliteration: (_state$showTransliter2 = state.showTransliteration) !== null && _state$showTransliter2 !== void 0 ? _state$showTransliter2 : this.showTransliteration,
-            showWordByWord: (_state$showWordByWord2 = state.showWordByWord) !== null && _state$showWordByWord2 !== void 0 ? _state$showWordByWord2 : this.showWordByWord,
-            wordByWordAudioEnabled: (_state$wordByWordAudi2 = state.wordByWordAudioEnabled) !== null && _state$wordByWordAudi2 !== void 0 ? _state$wordByWordAudi2 : this.wordByWordAudioEnabled,
-            defaultFontSize: Number((_ref8 = (_state$defaultFontSiz2 = state.defaultFontSize) !== null && _state$defaultFontSiz2 !== void 0 ? _state$defaultFontSiz2 : this.defaultFontSize) !== null && _ref8 !== void 0 ? _ref8 : 100)
-          };
-          this.fontScale = (_state$fontScale = state.fontScale) !== null && _state$fontScale !== void 0 ? _state$fontScale : this.fontScale;
-          this.uiScale = Number((_state$uiScale = state.uiScale) !== null && _state$uiScale !== void 0 ? _state$uiScale : this.uiScale);
-          this.enScale = Number((_state$enScale = state.enScale) !== null && _state$enScale !== void 0 ? _state$enScale : this.enScale);
-          this.quranFont = state.quranFont || this.quranFont;
-          this.script = state.script || this.script;
-          this.sectionOpen = _objectSpread(_objectSpread({}, this.sectionOpen), state.sectionOpen || {});
-          this.tajweedEnabled = (_state$tajweedEnabled2 = state.tajweedEnabled) !== null && _state$tajweedEnabled2 !== void 0 ? _state$tajweedEnabled2 : false;
-          this.mainCardCollapsed = !!state.mainCardCollapsed;
-          this.feedbackCollapsed = !!state.feedbackCollapsed;
-        }
-      } catch (e) {
-        console.error(e);
-      }
-      this.showTools = false;
-      this.beginner = this.loadModeState('beginner');
-      this.advanced = this.loadModeState('advanced');
-      document.documentElement.setAttribute('data-theme', this.theme);
-    },
-    persistUiState: function persistUiState() {
-      if (this.isBootstrapping) return;
-      try {
-        localStorage.setItem('telawa.uiState', JSON.stringify({
-          theme: this.theme,
-          showTools: this.showTools,
-          tab: this.tab,
-          currentMode: this.currentMode,
-          flowStep: this.flowStep,
-          flowListenPlays: this.flowListenPlays,
-          showTranslation: this.showTranslation,
-          showTransliteration: this.showTransliteration,
-          showWordByWord: this.showWordByWord,
-          wordByWordAudioEnabled: this.wordByWordAudioEnabled,
-          defaultFontSize: this.defaultFontSize,
-          chainingEnabled: this.chainingEnabled,
-          chainingMethod: this.chainingMethod,
-          chainingRepetitions: this.chainingRepetitions,
-          fontScale: this.fontScale,
-          uiScale: this.uiScale,
-          enScale: this.enScale,
-          quranFont: this.quranFont,
-          script: this.script,
-          sectionOpen: this.sectionOpen,
-          tajweedEnabled: this.tajweedEnabled,
-          mainCardCollapsed: this.mainCardCollapsed,
-          feedbackCollapsed: this.feedbackCollapsed
-        }));
-      } catch (e) {
-        console.error('Failed to persist UI state:', e);
-      }
-      this.persistCentralSessionState();
-      this.persistModeState('beginner');
-      this.persistModeState('advanced');
     }
-  }, _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "persistSessionState", function persistSessionState() {
+  }), "getChainingDescription", function getChainingDescription() {
+    if (!this.chainingEnabled) {
+      return 'Play ayahs in order without special chaining patterns.';
+    }
+    if (this.chainingMethod === 'cumulative') {
+      return "Cumulative method: Start with first ayah, then add one more each time. Each ayah is repeated ".concat(this.chainingRepetitions, " time(s) per cycle.");
+    }
+    return "Linking method: Practice ayahs individually, then in pairs. Each ayah is repeated ".concat(this.chainingRepetitions, " time(s) per cycle.");
+  }), "getQueuePreview", function getQueuePreview() {
+    if (!this.queue || this.queue.length === 0) return 'No queue built yet';
+    var preview = this.queue.slice(0, 10).map(function (item) {
+      var _item$verse0;
+      var verseNum = ((_item$verse0 = item.verse) === null || _item$verse0 === void 0 ? void 0 : _item$verse0.number) || '?';
+      var phase = item.phase === 'Cumulative' ? "C[".concat(item.sequencePosition, "/").concat(item.sequenceTotal, "]") : item.phase === 'Linking' ? "L[".concat(item.sequencePosition, "/").concat(item.sequenceTotal, "]") : 'S';
+      var repeat = item.repeatCount > 1 ? "\u2715".concat(item.repeatCount) : '';
+      return "".concat(verseNum).concat(phase).concat(repeat);
+    }).join(' → ');
+    if (this.queue.length > 10) {
+      return preview + " \u2026 +".concat(this.queue.length - 10, " more");
+    }
+    return preview;
+  }), "handleSessionComplete", function handleSessionComplete() {
+    if (!this.verses.length) return;
+    this.sessionCompleted = true;
+    this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1;
+    (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.completeMutqinSession)(this.mutqinState);
+    this.addActivityEvent({
+      ts: Date.now(),
+      type: 'session_complete'
+    });
+    this.recomputeAnalytics();
+    this.persistCentralSessionState();
+    var chainingStatus = this.chainingEnabled ? "".concat(this.chainingMethod, " chaining completed") : 'session completed';
+    this.showBanner("".concat(chainingStatus, "! Great work! \uD83C\uDF89"), 'success', 6500, {
+      key: 'restart-session',
+      label: 'Start new session'
+    });
+  }), "handlePrimaryAction", function handlePrimaryAction() {
+    if (this.isPlaying) {
+      if (this.audioElement) this.audioElement.pause();
+      this.isPlaying = false;
+      return;
+    }
+    if (!this.canStartSession) {
+      this.showTools = true;
+      this.showBanner('Choose a valid surah and ayah range before starting.', 'info', 3600, {
+        key: 'open-setup',
+        label: 'Open setup'
+      });
+      return;
+    }
+    this.startSession();
+  }), "validateSettings", function validateSettings() {
+    var config = this.sessionConfig;
+    var errors = [];
+    if (!config.chapterId || config.chapterId === 0) {
+      errors.push('No surah selected');
+    }
+    if (!Number.isFinite(Number(config.rangeStart)) || !Number.isFinite(Number(config.rangeEnd))) {
+      errors.push('Verse range must be numeric');
+    }
+    if (config.rangeStart > config.rangeEnd) {
+      errors.push('Invalid verse range');
+    }
+    if (errors.length > 0) {
+      this.showBanner("Settings issue: ".concat(errors.join(', ')), 'warning', 3000);
+      return false;
+    }
+    return true;
+  }), "toggleReadingOption", function toggleReadingOption(kind) {
+    if (kind === 'translation') this.showTranslation = !this.showTranslation;
+    if (kind === 'transliteration') this.showTransliteration = !this.showTransliteration;
+    if (kind === 'wbw') {
+      this.showWordByWord = !this.showWordByWord;
+      this.loadVerses();
+    }
+    this.$forceUpdate();
+  }), "setScriptMode", function setScriptMode(mode) {
+    this.script = mode;
+    this.scheduleLoadVerses(this.currentMode);
+  }), "setQuranFont", function setQuranFont(font) {
+    this.quranFont = font;
+    this.script = 'uthmani';
+    this.fontPickerOpen = false;
+    this.persistUiState();
+  }), "toggleFontPicker", function toggleFontPicker() {
+    this.fontPickerOpen = !this.fontPickerOpen;
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "cycleTheme", function cycleTheme() {
+    var themes = ['light', 'sepia', 'dark'];
+    var idx = themes.indexOf(this.theme);
+    this.theme = themes[(idx + 1) % themes.length];
+    document.documentElement.setAttribute('data-theme', this.theme);
+    this.persistUiState();
+  }), "toggleSection", function toggleSection(key) {
+    var _this33 = this;
+    var nextValue = !this.sectionOpen[key];
+    Object.keys(this.sectionOpen).forEach(function (sectionKey) {
+      if (['session_tools', 'live_stats'].includes(sectionKey)) {
+        _this33.sectionOpen[sectionKey] = false;
+      }
+    });
+    this.sectionOpen[key] = nextValue;
+  }), "applySettingsChanges", function applySettingsChanges() {
+    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var _options$silent = options.silent,
+      silent = _options$silent === void 0 ? false : _options$silent;
+    var next = this.settingsDraft || {};
+    this.tajweedEnabled = !!next.tajweedEnabled;
+    this.showTranslation = !!next.showTranslation;
+    this.showTransliteration = !!next.showTransliteration;
+    this.showWordByWord = !!next.showWordByWord;
+    this.wordByWordAudioEnabled = !!next.wordByWordAudioEnabled;
+    this.defaultFontSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, Number(next.defaultFontSize || 100)));
+    try {
+      localStorage.setItem('telawa.defaultFontSize', JSON.stringify(this.defaultFontSize));
+    } catch (_unused9) {}
+    this.persistUiState();
+    this.persistCentralSessionState();
+    this.syncSettingsDraft();
+    if (!silent) this.showBanner('Settings saved', 'success', 1400);
+  }), "loadUiState", function loadUiState() {
+    try {
+      var raw = localStorage.getItem('telawa.uiState');
+      if (raw) {
+        var _state$showTranslatio, _state$showTransliter, _state$showWordByWord, _state$wordByWordAudi, _state$chainingEnable, _ref6, _state$defaultFontSiz, _ref7, _state$tajweedEnabled, _state$showTranslatio2, _state$showTransliter2, _state$showWordByWord2, _state$wordByWordAudi2, _ref8, _state$defaultFontSiz2, _state$fontScale, _state$uiScale, _state$enScale, _state$tajweedEnabled2;
+        var state = JSON.parse(raw);
+        this.theme = state.theme || this.theme;
+        this.tab = ['tools', 'settings'].includes(state.tab) ? state.tab : 'tools';
+        this.currentMode = state.currentMode || 'beginner';
+        this.flowStep = ['learn', 'practice', 'recall'].includes(state.flowStep) ? state.flowStep : state.flowStep === 'read' ? 'learn' : state.flowStep === 'listen' ? 'practice' : 'learn';
+        this.flowListenPlays = Math.max(0, Number(state.flowListenPlays || 0));
+        this.showTranslation = (_state$showTranslatio = state.showTranslation) !== null && _state$showTranslatio !== void 0 ? _state$showTranslatio : this.showTranslation;
+        this.showTransliteration = (_state$showTransliter = state.showTransliteration) !== null && _state$showTransliter !== void 0 ? _state$showTransliter : this.showTransliteration;
+        this.showWordByWord = (_state$showWordByWord = state.showWordByWord) !== null && _state$showWordByWord !== void 0 ? _state$showWordByWord : this.showWordByWord;
+        this.wordByWordAudioEnabled = (_state$wordByWordAudi = state.wordByWordAudioEnabled) !== null && _state$wordByWordAudi !== void 0 ? _state$wordByWordAudi : this.wordByWordAudioEnabled;
+        this.chainingEnabled = (_state$chainingEnable = state.chainingEnabled) !== null && _state$chainingEnable !== void 0 ? _state$chainingEnable : this.chainingEnabled;
+        this.chainingMethod = ['linking', 'cumulative'].includes(state.chainingMethod) ? state.chainingMethod : this.chainingMethod;
+        this.chainingRepetitions = Math.max(1, Math.min(5, Number(state.chainingRepetitions || this.chainingRepetitions || 1)));
+        this.defaultFontSize = Number((_ref6 = (_state$defaultFontSiz = state.defaultFontSize) !== null && _state$defaultFontSiz !== void 0 ? _state$defaultFontSiz : this.defaultFontSize) !== null && _ref6 !== void 0 ? _ref6 : 100);
+        this.settingsDraft = {
+          tajweedEnabled: (_ref7 = (_state$tajweedEnabled = state.tajweedEnabled) !== null && _state$tajweedEnabled !== void 0 ? _state$tajweedEnabled : this.tajweedEnabled) !== null && _ref7 !== void 0 ? _ref7 : false,
+          showTranslation: (_state$showTranslatio2 = state.showTranslation) !== null && _state$showTranslatio2 !== void 0 ? _state$showTranslatio2 : this.showTranslation,
+          showTransliteration: (_state$showTransliter2 = state.showTransliteration) !== null && _state$showTransliter2 !== void 0 ? _state$showTransliter2 : this.showTransliteration,
+          showWordByWord: (_state$showWordByWord2 = state.showWordByWord) !== null && _state$showWordByWord2 !== void 0 ? _state$showWordByWord2 : this.showWordByWord,
+          wordByWordAudioEnabled: (_state$wordByWordAudi2 = state.wordByWordAudioEnabled) !== null && _state$wordByWordAudi2 !== void 0 ? _state$wordByWordAudi2 : this.wordByWordAudioEnabled,
+          defaultFontSize: Number((_ref8 = (_state$defaultFontSiz2 = state.defaultFontSize) !== null && _state$defaultFontSiz2 !== void 0 ? _state$defaultFontSiz2 : this.defaultFontSize) !== null && _ref8 !== void 0 ? _ref8 : 100)
+        };
+        this.fontScale = (_state$fontScale = state.fontScale) !== null && _state$fontScale !== void 0 ? _state$fontScale : this.fontScale;
+        this.uiScale = Number((_state$uiScale = state.uiScale) !== null && _state$uiScale !== void 0 ? _state$uiScale : this.uiScale);
+        this.enScale = Number((_state$enScale = state.enScale) !== null && _state$enScale !== void 0 ? _state$enScale : this.enScale);
+        this.quranFont = state.quranFont || this.quranFont;
+        this.script = state.script || this.script;
+        this.sectionOpen = _objectSpread(_objectSpread({}, this.sectionOpen), state.sectionOpen || {});
+        this.tajweedEnabled = (_state$tajweedEnabled2 = state.tajweedEnabled) !== null && _state$tajweedEnabled2 !== void 0 ? _state$tajweedEnabled2 : false;
+        this.mainCardCollapsed = !!state.mainCardCollapsed;
+        this.feedbackCollapsed = !!state.feedbackCollapsed;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    this.showTools = false;
+    this.beginner = this.loadModeState('beginner');
+    this.advanced = this.loadModeState('advanced');
+    document.documentElement.setAttribute('data-theme', this.theme);
+  }), "persistUiState", function persistUiState() {
+    if (this.isBootstrapping) return;
+    try {
+      localStorage.setItem('telawa.uiState', JSON.stringify({
+        theme: this.theme,
+        showTools: this.showTools,
+        tab: this.tab,
+        currentMode: this.currentMode,
+        flowStep: this.flowStep,
+        flowListenPlays: this.flowListenPlays,
+        showTranslation: this.showTranslation,
+        showTransliteration: this.showTransliteration,
+        showWordByWord: this.showWordByWord,
+        wordByWordAudioEnabled: this.wordByWordAudioEnabled,
+        defaultFontSize: this.defaultFontSize,
+        chainingEnabled: this.chainingEnabled,
+        chainingMethod: this.chainingMethod,
+        chainingRepetitions: this.chainingRepetitions,
+        fontScale: this.fontScale,
+        uiScale: this.uiScale,
+        enScale: this.enScale,
+        quranFont: this.quranFont,
+        script: this.script,
+        sectionOpen: this.sectionOpen,
+        tajweedEnabled: this.tajweedEnabled,
+        mainCardCollapsed: this.mainCardCollapsed,
+        feedbackCollapsed: this.feedbackCollapsed
+      }));
+    } catch (e) {
+      console.error('Failed to persist UI state:', e);
+    }
+    this.persistCentralSessionState();
+    this.persistModeState('beginner');
+    this.persistModeState('advanced');
+  }), "persistSessionState", function persistSessionState() {
     if (this.isBootstrapping) return;
     var mode = this.currentMode;
     try {
@@ -28086,7 +28045,7 @@ function createAdvancedState() {
       console.error(e);
     }
   }), "restoreSessionState", function restoreSessionState() {
-    var _this33 = this;
+    var _this34 = this;
     ;
     ['beginner', 'advanced'].forEach(function (mode) {
       var saved = localStorage.getItem(SESSION_STORAGE_KEYS[mode]);
@@ -28094,14 +28053,14 @@ function createAdvancedState() {
       try {
         var state = JSON.parse(saved);
         if (Date.now() - state.timestamp < 24 * 60 * 60 * 1000) {
-          var target = mode === 'beginner' ? _this33.beginner : _this33.advanced;
+          var target = mode === 'beginner' ? _this34.beginner : _this34.advanced;
           var restoredKey = state.activeVerseKey || state.activeKey || null;
           target.activeKey = restoredKey;
           target.queueIndex = Number(state.queueIndex || 0);
-          if (mode === _this33.currentMode) {
-            _this33.activeVerseKey = restoredKey;
-            _this33.activeKey = restoredKey;
-            _this33.queueIndex = target.queueIndex;
+          if (mode === _this34.currentMode) {
+            _this34.activeVerseKey = restoredKey;
+            _this34.activeKey = restoredKey;
+            _this34.queueIndex = target.queueIndex;
           }
         }
       } catch (e) {
@@ -28134,98 +28093,98 @@ function createAdvancedState() {
     this.persistSm2();
     (0,_composables_useMutqinPersistence__WEBPACK_IMPORTED_MODULE_2__.saveMutqinState)(this.mutqinState);
   }), "loadChapters", function loadChapters() {
-    var _this34 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee11() {
+    var _this35 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee12() {
       var _res$data, res, _t4;
-      return _regenerator().w(function (_context11) {
-        while (1) switch (_context11.p = _context11.n) {
+      return _regenerator().w(function (_context12) {
+        while (1) switch (_context12.p = _context12.n) {
           case 0:
-            _context11.p = 0;
-            _context11.n = 1;
+            _context12.p = 0;
+            _context12.n = 1;
             return axios__WEBPACK_IMPORTED_MODULE_8__["default"].get('https://api.quran.com/api/v4/chapters', {
               params: {
                 language: 'en'
               }
             });
           case 1:
-            res = _context11.v;
-            _this34.chapters = ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.chapters) || [];
-            if (!_this34.chapterId) {
-              _context11.n = 2;
+            res = _context12.v;
+            _this35.chapters = ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.chapters) || [];
+            if (!_this35.chapterId) {
+              _context12.n = 2;
               break;
-            }
-            _context11.n = 2;
-            return _this34.loadChapter();
-          case 2:
-            _context11.n = 4;
-            break;
-          case 3:
-            _context11.p = 3;
-            _t4 = _context11.v;
-            console.error('Failed to load chapters:', _t4);
-            _this34.showBanner('Failed to load surah list', 'error', 3000);
-          case 4:
-            return _context11.a(2);
-        }
-      }, _callee11, null, [[0, 3]]);
-    }))();
-  }), "loadChapter", function loadChapter() {
-    var _arguments5 = arguments,
-      _this35 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee12() {
-      var _this35$currentChapte;
-      var mode, target, chapterId, max;
-      return _regenerator().w(function (_context12) {
-        while (1) switch (_context12.n) {
-          case 0:
-            mode = _arguments5.length > 0 && _arguments5[0] !== undefined ? _arguments5[0] : _this35.currentMode;
-            target = mode === 'beginner' ? _this35.beginner : _this35.advanced;
-            chapterId = Number(target.chapterId || 0);
-            if (chapterId) {
-              _context12.n = 1;
-              break;
-            }
-            _this35.currentChapter = null;
-            return _context12.a(2);
-          case 1:
-            _this35.currentChapter = _this35.chapters.find(function (c) {
-              return c.id === chapterId;
-            });
-            max = ((_this35$currentChapte = _this35.currentChapter) === null || _this35$currentChapte === void 0 ? void 0 : _this35$currentChapte.verses_count) || 286;
-            if (mode === 'beginner') {
-              _this35.beginner.rangeEnd = Math.min(_this35.beginner.rangeEnd, max);
-              _this35.beginner.rangeStart = Math.max(1, _this35.beginner.rangeStart);
-            } else {
-              _this35.advanced.rangeEnd = Math.min(_this35.advanced.rangeEnd, max);
-              _this35.advanced.rangeStart = Math.max(1, _this35.advanced.rangeStart);
             }
             _context12.n = 2;
-            return _this35.loadVerses(mode);
+            return _this35.loadChapter();
           case 2:
+            _context12.n = 4;
+            break;
+          case 3:
+            _context12.p = 3;
+            _t4 = _context12.v;
+            console.error('Failed to load chapters:', _t4);
+            _this35.showBanner('Failed to load surah list', 'error', 3000);
+          case 4:
             return _context12.a(2);
         }
-      }, _callee12);
+      }, _callee12, null, [[0, 3]]);
+    }))();
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "loadChapter", function loadChapter() {
+    var _arguments5 = arguments,
+      _this36 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee13() {
+      var _this36$currentChapte;
+      var mode, target, chapterId, max;
+      return _regenerator().w(function (_context13) {
+        while (1) switch (_context13.n) {
+          case 0:
+            mode = _arguments5.length > 0 && _arguments5[0] !== undefined ? _arguments5[0] : _this36.currentMode;
+            target = mode === 'beginner' ? _this36.beginner : _this36.advanced;
+            chapterId = Number(target.chapterId || 0);
+            if (chapterId) {
+              _context13.n = 1;
+              break;
+            }
+            _this36.currentChapter = null;
+            return _context13.a(2);
+          case 1:
+            _this36.currentChapter = _this36.chapters.find(function (c) {
+              return c.id === chapterId;
+            });
+            max = ((_this36$currentChapte = _this36.currentChapter) === null || _this36$currentChapte === void 0 ? void 0 : _this36$currentChapte.verses_count) || 286;
+            if (mode === 'beginner') {
+              _this36.beginner.rangeEnd = Math.min(_this36.beginner.rangeEnd, max);
+              _this36.beginner.rangeStart = Math.max(1, _this36.beginner.rangeStart);
+            } else {
+              _this36.advanced.rangeEnd = Math.min(_this36.advanced.rangeEnd, max);
+              _this36.advanced.rangeStart = Math.max(1, _this36.advanced.rangeStart);
+            }
+            _context13.n = 2;
+            return _this36.loadVerses(mode);
+          case 2:
+            return _context13.a(2);
+        }
+      }, _callee13);
     }))();
   }), "loadReciters", function loadReciters() {
-    var _this36 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee13() {
-      var _res$data2, res, list, allow, available, filtered, _this36$reciters$, _t5;
-      return _regenerator().w(function (_context13) {
-        while (1) switch (_context13.p = _context13.n) {
+    var _this37 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee14() {
+      var _res$data2, res, list, allow, available, filtered, _this37$reciters$, _t5;
+      return _regenerator().w(function (_context14) {
+        while (1) switch (_context14.p = _context14.n) {
           case 0:
-            _context13.p = 0;
-            _context13.n = 1;
+            _context14.p = 0;
+            _context14.n = 1;
             return (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getEditions)({
               format: 'audio'
             });
           case 1:
-            res = _context13.v;
+            res = _context14.v;
             list = ((_res$data2 = res.data) === null || _res$data2 === void 0 ? void 0 : _res$data2.data) || [];
             if (list.length) {
-              _context13.n = 2;
+              _context14.n = 2;
               break;
             }
-            return _context13.a(2);
+            return _context14.a(2);
           case 2:
             allow = [{
               id: 'ar.alafasy',
@@ -28260,7 +28219,7 @@ function createAdvancedState() {
                 name: entry.label
               };
             });
-            _this36.reciters = filtered.length ? filtered : list.filter(function (edition) {
+            _this37.reciters = filtered.length ? filtered : list.filter(function (edition) {
               return edition.format === 'audio';
             }).map(function (edition) {
               return {
@@ -28268,21 +28227,21 @@ function createAdvancedState() {
                 name: edition.englishName || edition.name || edition.identifier
               };
             });
-            if (!_this36.reciters.some(function (reciter) {
-              return reciter.id === _this36.reciterId;
+            if (!_this37.reciters.some(function (reciter) {
+              return reciter.id === _this37.reciterId;
             })) {
-              _this36.reciterId = ((_this36$reciters$ = _this36.reciters[0]) === null || _this36$reciters$ === void 0 ? void 0 : _this36$reciters$.id) || DEFAULT_ALQURAN_RECITER;
+              _this37.reciterId = ((_this37$reciters$ = _this37.reciters[0]) === null || _this37$reciters$ === void 0 ? void 0 : _this37$reciters$.id) || DEFAULT_ALQURAN_RECITER;
             }
-            _context13.n = 4;
+            _context14.n = 4;
             break;
           case 3:
-            _context13.p = 3;
-            _t5 = _context13.v;
+            _context14.p = 3;
+            _t5 = _context14.v;
             console.error(_t5);
           case 4:
-            return _context13.a(2);
+            return _context14.a(2);
         }
-      }, _callee13, null, [[0, 3]]);
+      }, _callee14, null, [[0, 3]]);
     }))();
   }), "loadSavedSessions", function loadSavedSessions() {
     try {
@@ -28302,7 +28261,7 @@ function createAdvancedState() {
     } catch (e) {
       console.error(e);
     }
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "loadEvents", function loadEvents() {
+  }), "loadEvents", function loadEvents() {
     try {
       this.events = JSON.parse(localStorage.getItem('telawa.events') || '[]');
     } catch (_unused10) {
@@ -28342,7 +28301,7 @@ function createAdvancedState() {
     } catch (e) {
       console.error(e);
     }
-  }), "loadMetrics", function loadMetrics() {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "loadMetrics", function loadMetrics() {
     try {
       this.metrics = JSON.parse(localStorage.getItem('telawa.metrics') || 'null');
     } catch (_unused13) {
@@ -28378,7 +28337,7 @@ function createAdvancedState() {
       while (list.length > 5000) list.shift();
       localStorage.setItem('telawa.activity', JSON.stringify(list));
     } catch (_unused16) {}
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "readActivityEvents", function readActivityEvents() {
+  }), "readActivityEvents", function readActivityEvents() {
     try {
       var raw = localStorage.getItem('telawa.activity') || '[]';
       var list = JSON.parse(raw);
@@ -28492,7 +28451,7 @@ function createAdvancedState() {
     } catch (_unused19) {
       this.pins = [];
     }
-  }), "userStorageKey", function userStorageKey(suffix) {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "userStorageKey", function userStorageKey(suffix) {
     var _this$auth2;
     var uid = ((_this$auth2 = this.auth) === null || _this$auth2 === void 0 ? void 0 : _this$auth2.id) || 'guest';
     return "telawa.".concat(suffix, ".").concat(uid);
@@ -28536,7 +28495,7 @@ function createAdvancedState() {
     this.applyWorkspaceControls({
       reason: 'chapter'
     });
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "refreshVerses", function refreshVerses() {
+  }), "refreshVerses", function refreshVerses() {
     this.applyWorkspaceControls({
       reason: 'reciter'
     });
@@ -28573,23 +28532,23 @@ function createAdvancedState() {
     this.quizCard = null;
     this.quizQueue = [];
     this.quizComplete = false;
-  }), "restartQuiz", function restartQuiz() {
+  }), _defineProperty(_defineProperty(_methods, "restartQuiz", function restartQuiz() {
     this.quizScore = 0;
     this.quizMistakes = [];
     this.quizComplete = false;
     this.quizIndex = 0;
     this.nextQuizCard();
   }), "playWordAudio", function playWordAudio(url) {
-    var _this37 = this;
+    var _this38 = this;
     var key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
     if (!url) return;
     this.activeWordAudio = key;
     var a = new Audio(url);
     a.addEventListener('ended', function () {
-      if (_this37.activeWordAudio === key) _this37.activeWordAudio = '';
+      if (_this38.activeWordAudio === key) _this38.activeWordAudio = '';
     });
     a.play()["catch"](function () {
-      _this37.activeWordAudio = '';
+      _this38.activeWordAudio = '';
     });
   }))
 });
@@ -28917,9 +28876,7 @@ var _hoisted_29 = {
 var _hoisted_30 = {
   "class": "workspace-shell-chain-pill workspace-shell-chain-pill-soft"
 };
-var _hoisted_31 = {
-  "class": "workspace-shell-chain-pill workspace-shell-chain-pill-soft"
-};
+var _hoisted_31 = ["title"];
 var _hoisted_32 = {
   id: "memorisationWorkspaceMain",
   ref: "workspaceMain",
@@ -28951,237 +28908,234 @@ var _hoisted_40 = {
   key: 0,
   "class": "verse-actions"
 };
-var _hoisted_41 = ["onClick", "title"];
-var _hoisted_42 = ["innerHTML"];
+var _hoisted_41 = ["onClick", "disabled"];
+var _hoisted_42 = ["onClick", "title"];
 var _hoisted_43 = {
+  key: 0,
+  "class": "verse-preview-label"
+};
+var _hoisted_44 = ["innerHTML"];
+var _hoisted_45 = {
   key: 1,
   "class": "verse-transliteration verse-aid"
 };
-var _hoisted_44 = {
+var _hoisted_46 = {
   key: 2,
   "class": "verse-translation verse-aid"
 };
-var _hoisted_45 = ["onScroll"];
-var _hoisted_46 = ["title", "data-tooltip", "onClick"];
-var _hoisted_47 = {
+var _hoisted_47 = ["onScroll"];
+var _hoisted_48 = ["title", "data-tooltip", "onClick"];
+var _hoisted_49 = {
   "class": "word-arabic",
   dir: "rtl"
 };
-var _hoisted_48 = {
+var _hoisted_50 = {
   "class": "word-meaning"
 };
-var _hoisted_49 = ["onClick"];
-var _hoisted_50 = ["aria-hidden"];
-var _hoisted_51 = {
+var _hoisted_51 = ["onClick"];
+var _hoisted_52 = ["aria-hidden"];
+var _hoisted_53 = {
   "class": "tools-top"
 };
-var _hoisted_52 = {
+var _hoisted_54 = {
   "class": "tools-topbar"
 };
-var _hoisted_53 = {
+var _hoisted_55 = {
   "class": "tools-tabs row g-2",
   role: "tablist",
   "aria-label": "Controls tabs"
 };
-var _hoisted_54 = {
+var _hoisted_56 = {
   "class": "tools-body compact"
 };
-var _hoisted_55 = {
+var _hoisted_57 = {
   key: 0,
   "class": "sheet"
 };
-var _hoisted_56 = {
+var _hoisted_58 = {
   "class": "sheet-section"
 };
-var _hoisted_57 = {
+var _hoisted_59 = {
   "class": "sheet-content"
 };
-var _hoisted_58 = {
+var _hoisted_60 = {
   "class": "field-stack"
 };
-var _hoisted_59 = {
+var _hoisted_61 = {
   "class": "field"
 };
-var _hoisted_60 = ["value"];
-var _hoisted_61 = ["value"];
-var _hoisted_62 = {
-  "class": "field"
-};
-var _hoisted_63 = {
-  "class": "range range-single"
-};
+var _hoisted_62 = ["value"];
+var _hoisted_63 = ["value"];
 var _hoisted_64 = {
   "class": "field"
 };
-var _hoisted_65 = ["value"];
+var _hoisted_65 = {
+  "class": "range range-single"
+};
 var _hoisted_66 = {
+  "class": "field"
+};
+var _hoisted_67 = ["value"];
+var _hoisted_68 = {
   "class": "sheet-section"
 };
-var _hoisted_67 = {
-  "class": "sheet-content"
-};
-var _hoisted_68 = {
-  "class": "field-stack"
-};
 var _hoisted_69 = {
-  "class": "field"
+  "class": "sheet-content"
 };
 var _hoisted_70 = {
-  "class": "radio-group radio-group-tight"
+  "class": "field-stack"
 };
-var _hoisted_71 = ["value", "checked", "onChange"];
-var _hoisted_72 = {
+var _hoisted_71 = {
   "class": "field"
 };
-var _hoisted_73 = {
+var _hoisted_72 = {
   "class": "radio-group radio-group-tight"
 };
+var _hoisted_73 = ["value", "checked", "onChange"];
 var _hoisted_74 = {
-  "class": "radio"
+  "class": "field"
 };
 var _hoisted_75 = {
-  "class": "radio"
+  "class": "radio-group radio-group-tight"
 };
 var _hoisted_76 = {
-  "class": "sheet-section tools-techniques-section"
+  "class": "radio"
 };
 var _hoisted_77 = {
-  "class": "sheet-content"
+  "class": "radio"
 };
 var _hoisted_78 = {
-  "class": "techniques-list"
+  "class": "sheet-section tools-techniques-section"
 };
 var _hoisted_79 = {
-  "class": "technique-row"
+  "class": "sheet-content"
 };
 var _hoisted_80 = {
-  "class": "technique-row technique-row-stacked"
+  "class": "techniques-list"
 };
 var _hoisted_81 = {
-  "class": "technique-row-main"
+  "class": "technique-row"
 };
 var _hoisted_82 = {
+  "class": "technique-row technique-row-stacked"
+};
+var _hoisted_83 = {
+  "class": "technique-row-main"
+};
+var _hoisted_84 = {
   key: 0,
   "class": "technique-control"
 };
-var _hoisted_83 = {
+var _hoisted_85 = {
   "class": "inline-setting-pill"
 };
-var _hoisted_84 = {
+var _hoisted_86 = {
   "class": "technique-row technique-row-stacked"
 };
-var _hoisted_85 = {
+var _hoisted_87 = {
   "class": "technique-row-main"
 };
-var _hoisted_86 = {
+var _hoisted_88 = {
   "class": "technique-copy"
 };
-var _hoisted_87 = {
+var _hoisted_89 = {
   key: 0,
   "class": "segmented-control segmented-control-compact",
   role: "group",
   "aria-label": "Chaining method"
 };
-var _hoisted_88 = {
+var _hoisted_90 = {
   key: 1,
   "class": "technique-control"
 };
-var _hoisted_89 = ["value"];
-var _hoisted_90 = {
+var _hoisted_91 = ["value"];
+var _hoisted_92 = {
   "class": "inline-setting-pill"
 };
-var _hoisted_91 = {
+var _hoisted_93 = {
   "class": "technique-preview"
 };
-var _hoisted_92 = {
+var _hoisted_94 = {
   key: 1,
   "class": "sheet"
 };
-var _hoisted_93 = {
+var _hoisted_95 = {
   "class": "sheet-section settings-section"
 };
-var _hoisted_94 = {
+var _hoisted_96 = {
   "class": "settings-panels",
   style: {
     "padding": "20px"
   }
 };
-var _hoisted_95 = {
+var _hoisted_97 = {
   "class": "settings-group"
 };
-var _hoisted_96 = {
-  "class": "settings-card-grid"
-};
-var _hoisted_97 = {
-  "class": "settings-card settings-card-toggle"
-};
 var _hoisted_98 = {
-  "class": "settings-card settings-card-toggle"
+  "class": "settings-card-grid settings-display-grid"
 };
 var _hoisted_99 = {
   "class": "settings-card settings-card-toggle"
 };
 var _hoisted_100 = {
-  "class": "settings-card settings-card-toggle"
+  "class": "settings-card settings-card-range"
 };
 var _hoisted_101 = {
+  "class": "settings-range-wrap"
+};
+var _hoisted_102 = ["value"];
+var _hoisted_103 = {
+  "class": "inline-setting-pill"
+};
+var _hoisted_104 = {
+  "class": "settings-group"
+};
+var _hoisted_105 = {
+  "class": "settings-card-grid"
+};
+var _hoisted_106 = {
+  "class": "settings-card settings-card-toggle"
+};
+var _hoisted_107 = {
+  "class": "settings-card settings-card-toggle"
+};
+var _hoisted_108 = {
+  "class": "settings-card settings-card-toggle"
+};
+var _hoisted_109 = {
+  "class": "settings-card settings-card-toggle"
+};
+var _hoisted_110 = {
   key: 2,
   "class": "main container"
 };
-var _hoisted_102 = {
+var _hoisted_111 = {
   "class": "modal-content planner-modal"
 };
-var _hoisted_103 = {
+var _hoisted_112 = {
   "class": "modal-header"
 };
-var _hoisted_104 = {
+var _hoisted_113 = {
   "class": "modal-body"
 };
-var _hoisted_105 = {
-  "class": "planner-field"
-};
-var _hoisted_106 = ["value"];
-var _hoisted_107 = {
-  "class": "planner-field"
-};
-var _hoisted_108 = {
-  "class": "verses-per-day-control"
-};
-var _hoisted_109 = ["disabled"];
-var _hoisted_110 = ["max"];
-var _hoisted_111 = ["disabled"];
-var _hoisted_112 = {
-  "class": "planner-stats-grid"
-};
-var _hoisted_113 = {
-  "class": "planner-stat-card"
-};
 var _hoisted_114 = {
-  "class": "stat-content"
+  "class": "planner-field"
 };
-var _hoisted_115 = {
-  "class": "stat-value"
-};
+var _hoisted_115 = ["value"];
 var _hoisted_116 = {
-  "class": "planner-stat-card"
+  "class": "planner-field"
 };
 var _hoisted_117 = {
-  "class": "stat-content"
+  "class": "verses-per-day-control"
 };
-var _hoisted_118 = {
-  "class": "stat-value"
-};
-var _hoisted_119 = {
-  "class": "planner-stat-card"
-};
-var _hoisted_120 = {
-  "class": "stat-content"
-};
+var _hoisted_118 = ["disabled"];
+var _hoisted_119 = ["max"];
+var _hoisted_120 = ["disabled"];
 var _hoisted_121 = {
-  "class": "stat-value"
+  "class": "planner-stats-grid"
 };
 var _hoisted_122 = {
-  "class": "planner-stat-card highlight"
+  "class": "planner-stat-card"
 };
 var _hoisted_123 = {
   "class": "stat-content"
@@ -29190,131 +29144,170 @@ var _hoisted_124 = {
   "class": "stat-value"
 };
 var _hoisted_125 = {
+  "class": "planner-stat-card"
+};
+var _hoisted_126 = {
+  "class": "stat-content"
+};
+var _hoisted_127 = {
+  "class": "stat-value"
+};
+var _hoisted_128 = {
+  "class": "planner-stat-card"
+};
+var _hoisted_129 = {
+  "class": "stat-content"
+};
+var _hoisted_130 = {
+  "class": "stat-value"
+};
+var _hoisted_131 = {
+  "class": "planner-stat-card highlight"
+};
+var _hoisted_132 = {
+  "class": "stat-content"
+};
+var _hoisted_133 = {
+  "class": "stat-value"
+};
+var _hoisted_134 = {
   key: 0,
   "class": "planner-progress"
 };
-var _hoisted_126 = {
+var _hoisted_135 = {
   "class": "progress-info"
 };
-var _hoisted_127 = {
+var _hoisted_136 = {
   "class": "progress-bar-track"
 };
-var _hoisted_128 = {
+var _hoisted_137 = {
   "class": "modal-footer"
 };
-var _hoisted_129 = {
+var _hoisted_138 = {
   "class": "modal-content confirm-modal",
   role: "dialog",
   "aria-modal": "true"
 };
-var _hoisted_130 = {
+var _hoisted_139 = {
   "class": "modal-header"
 };
-var _hoisted_131 = {
+var _hoisted_140 = {
   "class": "modal-body"
 };
-var _hoisted_132 = {
+var _hoisted_141 = {
   "class": "confirm-copy"
 };
-var _hoisted_133 = {
+var _hoisted_142 = {
   "class": "modal-footer"
 };
-var _hoisted_134 = {
+var _hoisted_143 = {
   "class": "modal-content confirm-modal resume-modal",
   role: "dialog",
   "aria-modal": "true"
 };
-var _hoisted_135 = {
+var _hoisted_144 = {
   "class": "modal-header"
 };
-var _hoisted_136 = {
+var _hoisted_145 = {
   key: 0,
   "class": "resume-saved-at"
 };
-var _hoisted_137 = {
+var _hoisted_146 = {
   "class": "modal-body"
 };
-var _hoisted_138 = {
-  "class": "confirm-copy"
-};
-var _hoisted_139 = {
-  "class": "resume-feedback-bars"
-};
-var _hoisted_140 = {
-  "class": "resume-feedback-row"
-};
-var _hoisted_141 = {
-  "class": "progress-bar-track"
-};
-var _hoisted_142 = {
-  "class": "resume-feedback-row"
-};
-var _hoisted_143 = {
-  "class": "progress-bar-track"
-};
-var _hoisted_144 = {
-  "class": "resume-feedback-row"
-};
-var _hoisted_145 = {
-  "class": "progress-bar-track"
-};
-var _hoisted_146 = {
-  "class": "resume-grid"
-};
 var _hoisted_147 = {
-  "class": "pill"
+  "class": "confirm-copy resume-copy"
 };
 var _hoisted_148 = {
-  "class": "pill"
-};
-var _hoisted_149 = {
-  "class": "pill"
-};
-var _hoisted_150 = {
-  "class": "pill pill-status-mastered"
-};
-var _hoisted_151 = {
-  "class": "pill pill-status-weak"
-};
-var _hoisted_152 = {
-  "class": "pill pill-status-repeat"
-};
-var _hoisted_153 = {
   "class": "pill",
   style: {
     "margin-top": "10px",
     "padding": "12px 14px"
   }
 };
+var _hoisted_149 = {
+  key: 0,
+  "class": "pill",
+  style: {
+    "margin-top": "10px",
+    "padding": "12px 14px"
+  }
+};
+var _hoisted_150 = {
+  "class": "resume-details"
+};
+var _hoisted_151 = {
+  "class": "resume-feedback-bars"
+};
+var _hoisted_152 = {
+  "class": "resume-feedback-row"
+};
+var _hoisted_153 = {
+  "class": "progress-bar-track"
+};
 var _hoisted_154 = {
-  "class": "modal-footer"
+  "class": "resume-feedback-row"
 };
 var _hoisted_155 = {
-  "class": "player-main"
+  "class": "progress-bar-track"
 };
 var _hoisted_156 = {
-  "class": "player-info"
+  "class": "resume-feedback-row"
 };
 var _hoisted_157 = {
-  "class": "player-chapter"
+  "class": "progress-bar-track"
 };
 var _hoisted_158 = {
-  "class": "player-verse"
+  "class": "resume-grid"
 };
-var _hoisted_159 = ["title"];
+var _hoisted_159 = {
+  "class": "pill"
+};
 var _hoisted_160 = {
-  "class": "player-controls"
+  "class": "pill pill-status-mastered"
 };
 var _hoisted_161 = {
-  "class": "player-progress-wrap"
+  "class": "pill pill-status-weak"
 };
 var _hoisted_162 = {
-  "class": "player-time"
+  "class": "pill pill-status-repeat"
 };
 var _hoisted_163 = {
-  "class": "player-time"
+  "class": "pill",
+  style: {
+    "margin-top": "10px",
+    "padding": "12px 14px"
+  }
 };
 var _hoisted_164 = {
+  "class": "modal-footer"
+};
+var _hoisted_165 = {
+  "class": "player-main"
+};
+var _hoisted_166 = {
+  "class": "player-info"
+};
+var _hoisted_167 = {
+  "class": "player-chapter"
+};
+var _hoisted_168 = {
+  "class": "player-verse"
+};
+var _hoisted_169 = ["title"];
+var _hoisted_170 = {
+  "class": "player-controls"
+};
+var _hoisted_171 = {
+  "class": "player-progress-wrap"
+};
+var _hoisted_172 = {
+  "class": "player-time"
+};
+var _hoisted_173 = {
+  "class": "player-time"
+};
+var _hoisted_174 = {
   ref: "audio",
   style: {
     "display": "none"
@@ -29341,7 +29334,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $data.banner = null;
     }),
     "aria-label": "Dismiss"
-  }, _toConsumableArray(_cache[67] || (_cache[67] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[69] || (_cache[69] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */)])))])], 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Main Content "), $data.appReady && $options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 1,
@@ -29352,21 +29345,21 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       'flow-practice': $options.guidedUiStep === 'practice',
       'flow-recall': $options.guidedUiStep === 'recall'
     }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [!$options.hasVerses && !$options.currentConfig.chapterId ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [$data.hasContinueSession ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [_cache[68] || (_cache[68] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [!$options.hasVerses && !$options.currentConfig.chapterId ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [$data.hasContinueSession ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [_cache[70] || (_cache[70] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "continue-session-kicker"
   }, "Continue where you left off", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.continueSessionLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.continueSessionMeta), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-primary continue-session-btn",
     onClick: _cache[2] || (_cache[2] = function () {
       return $options.continueLastSession && $options.continueLastSession.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[69] || (_cache[69] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[71] || (_cache[71] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-fill"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Continue Session ", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-ghost continue-session-dismiss",
     onClick: _cache[3] || (_cache[3] = function () {
       return $options.confirmDiscardContinueSession && $options.confirmDiscardContinueSession.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[70] || (_cache[70] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[72] || (_cache[72] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */)])))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-primary setup-primary",
@@ -29377,11 +29370,11 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.openToolsPanel();
     }),
     title: "Open controls"
-  }, _toConsumableArray(_cache[71] || (_cache[71] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[73] || (_cache[73] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Open Session Controls ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_9), _cache[72] || (_cache[72] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Open Session Controls ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_9), _cache[74] || (_cache[74] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
     "class": "offcanvas-launcher-copy"
-  }, " Session setup lives in the offcanvas. ", -1 /* CACHED */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true),  false ? (0) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Grid "), !$data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_17, _toConsumableArray(_cache[79] || (_cache[79] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, " Session setup lives in the offcanvas. ", -1 /* CACHED */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true),  false ? (0) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Grid "), !$data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_17, _toConsumableArray(_cache[81] || (_cache[81] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-hourglass-split"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Loading...", -1 /* CACHED */)])))) : $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_18, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["workspace-shell", {
@@ -29401,7 +29394,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.openAdvancedControls && $options.openAdvancedControls.apply($options, arguments);
     }),
     title: "Open session controls"
-  }, _toConsumableArray(_cache[80] || (_cache[80] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[82] || (_cache[82] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Controls", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_23), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "main-card-primary",
@@ -29412,13 +29405,16 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     disabled: !$data.isPlaying && !$options.canStartSession
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
-  }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.isPlaying ? 'Pause' : 'Start Session'), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_24)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Current ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + " of " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Session " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "% complete", 1 /* TEXT */), $options.guidedUiStep === 'review' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_26, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.reviewPriorityLabel), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.etaLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_27, "Time left: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel.replace('Audio time ≈ ', '')), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.mainCardCollapsed]]), !$data.mainCardCollapsed && $data.chainingEnabled && $options.hasSessionFeedback ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_28, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_29, [_cache[81] || (_cache[81] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.isPlaying ? 'Pause' : 'Start Session'), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_24)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Current ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + " of " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Session " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "% complete", 1 /* TEXT */), $options.guidedUiStep === 'review' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_26, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.reviewPriorityLabel), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.etaLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_27, "Time left: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel.replace('Audio time ≈ ', '')), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.mainCardCollapsed]]), !$data.mainCardCollapsed && $data.chainingEnabled && $options.hasSessionFeedback ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_28, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_29, [_cache[83] || (_cache[83] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-link-45deg"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'cumulative' ? 'Cumulative practice' : 'Linking practice') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions) + "x ", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_30, [_cache[82] || (_cache[82] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-signpost-split"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Up next: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'cumulative' ? 'add next ayah to block' : 'single, next, then pair'), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_31, [_cache[83] || (_cache[83] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions) + "x ", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_30, [_cache[84] || (_cache[84] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-diagram-3"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Current: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingProgressLabel), 1 /* TEXT */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("main", _hoisted_32, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_33, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.verses, function (verse) {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingProgressLabel), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "workspace-shell-chain-pill workspace-shell-chain-pill-soft",
+    title: $options.chainingWhyHint
+  }, _toConsumableArray(_cache[85] || (_cache[85] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-info-circle"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Why ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_31)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("main", _hoisted_32, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_33, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.verses, function (verse) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: verse.key,
       "data-verse-key": verse.key,
@@ -29441,15 +29437,24 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       onKeydown: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)((0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
         return $options.onVerseCardClick(verse);
       }, ["prevent"]), ["enter"])
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_35, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_36, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_37, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.number), 1 /* TEXT */), $options.isReviewPriorityAyah(verse.key) ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_38, "Review Due")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.effectiveActiveVerseKey === verse.key ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_39, "Active Ayah")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), $options.effectiveActiveVerseKey === verse.key ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_40, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_35, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_36, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_37, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.number), 1 /* TEXT */), $options.isReviewPriorityAyah(verse.key) ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_38, "Review Due")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.effectiveActiveVerseKey === verse.key ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_39, "Active Ayah")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), $options.effectiveActiveVerseKey === verse.key ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_40, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" New download button "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      "class": "verse-download-btn",
+      onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
+        return $options.downloadVerseAudio(verse);
+      }, ["stop"]),
+      disabled: !verse.audio,
+      title: "Download audio for offline listening"
+    }, _toConsumableArray(_cache[86] || (_cache[86] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      "class": "bi bi-download"
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_41), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "verse-play-btn",
       onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
         return $options.playVerse(verse);
       }, ["stop"]),
-      title: $data.activeVerseKey === verse.key && $data.isPlaying ? 'Pause' : 'Play verse'
+      title: $options.hasSessionFeedback ? $data.activeVerseKey === verse.key && $data.isPlaying ? 'Pause' : 'Play current ayah' : 'Preview this ayah (does not start a session)'
     }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.activeVerseKey === verse.key && $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
-    }, null, 2 /* CLASS */)], 8 /* PROPS */, _hoisted_41)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), verse.arabic && $data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+    }, null, 2 /* CLASS */)], 8 /* PROPS */, _hoisted_42), !$options.hasSessionFeedback ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_43, "Preview")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), verse.arabic && $data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: 0,
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["verse-arabic verse-arabic-primary", {
         'tajweed-enabled': $data.tajweedEnabled,
@@ -29463,9 +29468,9 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         '--verse-font-percent': $options.getVerseFontSize(verse.key),
         fontFamily: $options.quranFontFamily
       })
-    }, null, 14 /* CLASS, STYLE, PROPS */, _hoisted_42)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Keep in-workspace aids available, but visually quieter "), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_43, [_cache[84] || (_cache[84] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    }, null, 14 /* CLASS, STYLE, PROPS */, _hoisted_44)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Keep in-workspace aids available, but visually quieter "), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_45, [_cache[87] || (_cache[87] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
       "class": "verse-aid-title"
-    }, "Transliteration", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_44, [_cache[85] || (_cache[85] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    }, "Transliteration", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_46, [_cache[88] || (_cache[88] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
       "class": "verse-aid-title"
     }, "Translation", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.translation), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showWordByWord && verse.words && verse.words.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: 3,
@@ -29486,16 +29491,16 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
           return $options.revealWordHint(word);
         }, ["stop"])
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_47, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.ar), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_48, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.en), 1 /* TEXT */), word.audio && $data.wordByWordAudioEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_49, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.ar), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_50, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.en), 1 /* TEXT */), word.audio && $data.wordByWordAudioEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
         key: 0,
         "class": "word-audio-btn",
         onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
           return $options.playWordAudio(word.audio);
         }, ["stop"])
-      }, _toConsumableArray(_cache[86] || (_cache[86] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[89] || (_cache[89] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-volume-up"
-      }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_49)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 10 /* CLASS, PROPS */, _hoisted_46);
-    }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_45)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 42 /* CLASS, PROPS, NEED_HYDRATION */, _hoisted_34);
+      }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_51)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 10 /* CLASS, PROPS */, _hoisted_48);
+    }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_47)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 42 /* CLASS, PROPS, NEED_HYDRATION */, _hoisted_34);
   }), 128 /* KEYED_FRAGMENT */))])], 512 /* NEED_PATCH */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Advanced Controls Drawer "), $data.showTools ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 0,
     "class": "tools-backdrop",
@@ -29514,7 +29519,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "aria-labelledby": "memorisationToolsTitle",
     "aria-hidden": $data.showTools ? 'false' : 'true',
     tabindex: "-1"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_51, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_52, [_cache[88] || (_cache[88] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_53, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_54, [_cache[91] || (_cache[91] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     id: "memorisationToolsTitle",
     "class": "tools-title"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("b", null, "Controls")])], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
@@ -29523,9 +29528,9 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.closeToolsPanel && $options.closeToolsPanel.apply($options, arguments);
     }),
     "aria-label": "Close panel"
-  }, _toConsumableArray(_cache[87] || (_cache[87] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[90] || (_cache[90] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_53, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_55, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["col-12 col-md-6", {
       active: $data.tab === 'tools',
       'active-tab': $data.tab === 'tools'
@@ -29534,7 +29539,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.setActiveTab('tools');
     }),
     title: "Session tools"
-  }, _toConsumableArray(_cache[89] || (_cache[89] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[92] || (_cache[92] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Tools ", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["col-12 col-md-6", {
@@ -29545,36 +29550,36 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.setActiveTab('settings');
     }),
     title: "Reading and display settings"
-  }, _toConsumableArray(_cache[90] || (_cache[90] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[93] || (_cache[93] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-gear"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Settings ", -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_54, [$data.tab === 'tools' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_55, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_56, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Settings ", -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_56, [$data.tab === 'tools' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_57, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_58, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
     onClick: _cache[19] || (_cache[19] = function ($event) {
       return $options.toggleSection('advanced_setup');
     }),
     type: "button"
-  }, [_cache[92] || (_cache[92] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Session</span><span class=\"st-sub\">Choose what you memorise</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[95] || (_cache[95] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Session</span><span class=\"st-sub\">Choose what you memorise</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_setup
     }])
-  }, _toConsumableArray(_cache[91] || (_cache[91] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[94] || (_cache[94] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_57, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_58, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_59, [_cache[94] || (_cache[94] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_59, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_60, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_61, [_cache[97] || (_cache[97] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     value: $options.chapterId,
     onChange: _cache[20] || (_cache[20] = function () {
       return $options.onChapterChange && $options.onChapterChange.apply($options, arguments);
     }),
     "class": "select"
-  }, [_cache[93] || (_cache[93] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+  }, [_cache[96] || (_cache[96] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: 0
   }, "Choose a surah...", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (c) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: c.id,
       value: c.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_61);
-  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_60), _cache[95] || (_cache[95] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_63);
+  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_62), _cache[98] || (_cache[98] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Pick the surah you want to work on.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_62, [_cache[97] || (_cache[97] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verse range", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_63, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Pick the surah you want to work on.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_64, [_cache[100] || (_cache[100] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verse range", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_65, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
     "onUpdate:modelValue": _cache[21] || (_cache[21] = function ($event) {
@@ -29586,7 +29591,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     min: "1"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeStart, void 0, {
     number: true
-  }]]), _cache[96] || (_cache[96] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }]]), _cache[99] || (_cache[99] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
     "onUpdate:modelValue": _cache[23] || (_cache[23] = function ($event) {
@@ -29598,9 +29603,9 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     min: "1"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeEnd, void 0, {
     number: true
-  }]])]), _cache[98] || (_cache[98] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }]])]), _cache[101] || (_cache[101] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Keep ranges small for focused memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_64, [_cache[99] || (_cache[99] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }, "Keep ranges small for focused memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_66, [_cache[102] || (_cache[102] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     "onUpdate:modelValue": _cache[25] || (_cache[25] = function ($event) {
       return $options.reciterId = $event;
     }),
@@ -29612,22 +29617,22 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: r.id,
       value: r.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_65);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]]), _cache[100] || (_cache[100] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_67);
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]]), _cache[103] || (_cache[103] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Changes the audio voice for the session.", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_66, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Changes the audio voice for the session.", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_68, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
     onClick: _cache[27] || (_cache[27] = function ($event) {
       return $options.toggleSection('advanced_playback');
     }),
     type: "button"
-  }, [_cache[102] || (_cache[102] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Audio</span><span class=\"st-sub\">Reciter and playback</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[105] || (_cache[105] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Audio</span><span class=\"st-sub\">Reciter and playback</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_playback
     }])
-  }, _toConsumableArray(_cache[101] || (_cache[101] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[104] || (_cache[104] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_67, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_68, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_69, [_cache[103] || (_cache[103] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_70, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.speedOptions, function (option) {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_69, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_70, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_71, [_cache[106] || (_cache[106] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_72, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.speedOptions, function (option) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("label", {
       "class": "radio",
       key: "tool-speed-".concat(option)
@@ -29638,36 +29643,36 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       onChange: function onChange($event) {
         return $options.setPlaybackSpeed(option);
       }
-    }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_71), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(option) + "x ", 1 /* TEXT */)]);
-  }), 128 /* KEYED_FRAGMENT */))]), _cache[104] || (_cache[104] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_73), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(option) + "x ", 1 /* TEXT */)]);
+  }), 128 /* KEYED_FRAGMENT */))]), _cache[107] || (_cache[107] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Use slower speed for early memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_72, [_cache[107] || (_cache[107] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_73, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_74, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Use slower speed for early memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_74, [_cache[110] || (_cache[110] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_75, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_76, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "auto",
     "onUpdate:modelValue": _cache[28] || (_cache[28] = function ($event) {
       return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[105] || (_cache[105] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_75, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[108] || (_cache[108] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_77, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "manual",
     "onUpdate:modelValue": _cache[29] || (_cache[29] = function ($event) {
       return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[106] || (_cache[106] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No", -1 /* CACHED */))])]), _cache[108] || (_cache[108] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[109] || (_cache[109] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No", -1 /* CACHED */))])]), _cache[111] || (_cache[111] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Auto moves to the next queue item when audio ends.", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_playback]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_76, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Auto moves to the next queue item when audio ends.", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_playback]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_78, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
     onClick: _cache[30] || (_cache[30] = function ($event) {
       return $options.toggleSection('memorisation_techniques');
     }),
     type: "button"
-  }, [_cache[110] || (_cache[110] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-stars\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Memorisation Techniques</span><span class=\"st-sub\">Optional focus, recall, and chaining aids</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[113] || (_cache[113] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-stars\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Memorisation Techniques</span><span class=\"st-sub\">Optional focus, recall, and chaining aids</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.memorisation_techniques
     }])
-  }, _toConsumableArray(_cache[109] || (_cache[109] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[112] || (_cache[112] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_77, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_78, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_79, [_cache[111] || (_cache[111] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_79, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_80, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_81, [_cache[114] || (_cache[114] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "technique-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Focus Mode"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, "Reduces distractions around the active ayah.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip technique-toggle", {
@@ -29677,7 +29682,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $data.focusModeEnabled = !$data.focusModeEnabled;
     }),
     type: "button"
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.focusModeEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_80, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_81, [_cache[112] || (_cache[112] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.focusModeEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_82, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_83, [_cache[115] || (_cache[115] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "technique-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Blur Mode"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, "Supports active recall through progressive concealment.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip technique-toggle", {
@@ -29687,7 +29692,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $data.blurModeEnabled = !$data.blurModeEnabled;
     }),
     type: "button"
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.blurModeEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), $data.blurModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_82, [_cache[113] || (_cache[113] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Intensity", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.blurModeEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), $data.blurModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_84, [_cache[116] || (_cache[116] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Intensity", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     min: "4",
     max: "18",
@@ -29698,7 +29703,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": "input technique-range"
   }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.blurIntensity, void 0, {
     number: true
-  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_83, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.blurIntensity) + "px", 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_84, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_85, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_86, [_cache[114] || (_cache[114] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Chaining", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodDescription), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_85, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.blurIntensity) + "px", 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_86, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_87, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_88, [_cache[117] || (_cache[117] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Chaining", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodDescription), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip technique-toggle", {
       active: $data.chainingEnabled
     }]),
@@ -29706,7 +29711,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.setChainingEnabled(!$data.chainingEnabled);
     }),
     type: "button"
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_87, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_89, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     type: "button",
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
       active: $data.chainingMethod === 'linking'
@@ -29722,7 +29727,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[36] || (_cache[36] = function ($event) {
       return $options.setChainingMethod('cumulative');
     })
-  }, " Cumulative ", 2 /* CLASS */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_88, [_cache[115] || (_cache[115] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Repeats per step", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, " Cumulative ", 2 /* CLASS */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_90, [_cache[118] || (_cache[118] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Repeats per step", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     min: "1",
     max: "5",
@@ -29732,7 +29737,39 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.setChainingRepetitions(Number($event.target.value));
     }),
     "class": "input technique-range"
-  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_89), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_90, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions) + " repeats", 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_91, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodPreview), 1 /* TEXT */)])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.memorisation_techniques]])])])) : $data.tab === 'settings' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_92, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_93, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_94, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_95, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_96, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_97, [_cache[116] || (_cache[116] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_91), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_92, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions) + " repeats", 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_93, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodPreview), 1 /* TEXT */)])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.memorisation_techniques]])])])) : $data.tab === 'settings' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_94, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_95, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_96, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_97, [_cache[121] || (_cache[121] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "settings-group-title"
+  }, "Display", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_98, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_99, [_cache[119] || (_cache[119] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "settings-row-copy"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "settings-icon"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-palette2"
+  })]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Tajweed")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, "Recitation colors")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip settings-toggle", {
+      active: $data.settingsDraft.tajweedEnabled
+    }]),
+    onClick: _cache[38] || (_cache[38] = function ($event) {
+      return $options.toggleSettingsOption('tajweedEnabled');
+    })
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.tajweedEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_100, [_cache[120] || (_cache[120] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "settings-row-copy"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "settings-icon"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-arrows-angle-expand"
+  })]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Font size")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, "Verse scale")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_101, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "range",
+    min: "80",
+    max: "140",
+    step: "5",
+    value: $data.settingsDraft.defaultFontSize,
+    onInput: _cache[39] || (_cache[39] = function ($event) {
+      return $options.updateSettingsValue('defaultFontSize', Number($event.target.value));
+    }),
+    "class": "input settings-range",
+    "aria-label": "Font size"
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_102), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_103, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.defaultFontSize) + "%", 1 /* TEXT */)])])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_104, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_105, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_106, [_cache[122] || (_cache[122] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "settings-row-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "settings-icon"
@@ -29742,10 +29779,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip settings-toggle", {
       active: $data.settingsDraft.showTranslation
     }]),
-    onClick: _cache[38] || (_cache[38] = function ($event) {
+    onClick: _cache[40] || (_cache[40] = function ($event) {
       return $options.toggleSettingsOption('showTranslation');
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.showTranslation ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_98, [_cache[117] || (_cache[117] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.showTranslation ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_107, [_cache[123] || (_cache[123] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "settings-row-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "settings-icon"
@@ -29755,10 +29792,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip settings-toggle", {
       active: $data.settingsDraft.showTransliteration
     }]),
-    onClick: _cache[39] || (_cache[39] = function ($event) {
+    onClick: _cache[41] || (_cache[41] = function ($event) {
       return $options.toggleSettingsOption('showTransliteration');
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.showTransliteration ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_99, [_cache[118] || (_cache[118] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.showTransliteration ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_108, [_cache[124] || (_cache[124] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "settings-row-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "settings-icon"
@@ -29768,10 +29805,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip settings-toggle", {
       active: $data.settingsDraft.showWordByWord
     }]),
-    onClick: _cache[40] || (_cache[40] = function ($event) {
+    onClick: _cache[42] || (_cache[42] = function ($event) {
       return $options.toggleSettingsOption('showWordByWord');
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.showWordByWord ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_100, [_cache[119] || (_cache[119] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.showWordByWord ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_109, [_cache[125] || (_cache[125] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "settings-row-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "settings-icon"
@@ -29781,7 +29818,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip settings-toggle", {
       active: $data.settingsDraft.wordByWordAudioEnabled
     }]),
-    onClick: _cache[41] || (_cache[41] = function ($event) {
+    onClick: _cache[43] || (_cache[43] = function ($event) {
       return $options.toggleSettingsOption('wordByWordAudioEnabled');
     })
   }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.wordByWordAudioEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <section class=\"settings-apply-section\">\n                  <button class=\"settings-apply-primary\" @click=\"closeToolsPanel\">\n                    <i class=\"bi bi-check2-circle\"></i>\n                    <span>Apply changes</span>\n                  </button>\n                  <small>Saved settings persist after refresh.</small>\n                </section> ")])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
@@ -29790,205 +29827,199 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     }])
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-btn tools-btn-ghost tools-btn-soft",
-    onClick: _cache[42] || (_cache[42] = function () {
+    onClick: _cache[44] || (_cache[44] = function () {
       return $options.resetControls && $options.resetControls.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[120] || (_cache[120] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[126] || (_cache[126] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-counterclockwise"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Reset", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-btn tools-btn-primary tools-btn-soft",
-    onClick: _cache[43] || (_cache[43] = function () {
+    onClick: _cache[45] || (_cache[45] = function () {
       return $options.closeToolsPanel && $options.closeToolsPanel.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[121] || (_cache[121] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[127] || (_cache[127] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-check2-circle"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Done", -1 /* CACHED */)])))], 2 /* CLASS */)], 10 /* CLASS, PROPS */, _hoisted_50)], 2 /* CLASS */)) : $data.appReady && !$options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_101, _toConsumableArray(_cache[122] || (_cache[122] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section class=\"home-dashboard\"><div class=\"setup-start-card\"><div class=\"setup-start-copy\"><span class=\"setup-kicker\">Login Required</span><h2>Sign in to access your memorisation workspace</h2><p>Your sessions, progress, and resume history sync after login.</p></div><a class=\"cta cta-primary setup-primary\" href=\"/login\"><i class=\"bi bi-box-arrow-in-right\"></i> Login </a></div></section>", 1)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Planner Modal "), $data.showPlannerModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Done", -1 /* CACHED */)])))], 2 /* CLASS */)], 10 /* CLASS, PROPS */, _hoisted_52)], 2 /* CLASS */)) : $data.appReady && !$options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_110, _toConsumableArray(_cache[128] || (_cache[128] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section class=\"home-dashboard\"><div class=\"setup-start-card\"><div class=\"setup-start-copy\"><span class=\"setup-kicker\">Login Required</span><h2>Sign in to access your memorisation workspace</h2><p>Your sessions, progress, and resume history sync after login.</p></div><a class=\"cta cta-primary setup-primary\" href=\"/login\"><i class=\"bi bi-box-arrow-in-right\"></i> Login </a></div></section>", 1)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Planner Modal "), $data.showPlannerModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 3,
     "class": "modal-overlay",
-    onClick: _cache[53] || (_cache[53] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
+    onClick: _cache[55] || (_cache[55] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
       return $data.showPlannerModal = false;
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_102, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_103, [_cache[124] || (_cache[124] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_111, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_112, [_cache[130] || (_cache[130] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-calendar-plus"
   }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Quick Planner")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-icon",
-    onClick: _cache[44] || (_cache[44] = function ($event) {
+    onClick: _cache[46] || (_cache[46] = function ($event) {
       return $data.showPlannerModal = false;
     })
-  }, _toConsumableArray(_cache[123] || (_cache[123] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[129] || (_cache[129] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_104, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Surah Selection "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_105, [_cache[125] || (_cache[125] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_113, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Surah Selection "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_114, [_cache[131] || (_cache[131] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-book"
   }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Target Surah")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[45] || (_cache[45] = function ($event) {
+    "onUpdate:modelValue": _cache[47] || (_cache[47] = function ($event) {
       return $data.plannerConfig.surahId = $event;
     }),
     "class": "planner-select",
-    onChange: _cache[46] || (_cache[46] = function () {
+    onChange: _cache[48] || (_cache[48] = function () {
       return $options.updatePlannerSurah && $options.updatePlannerSurah.apply($options, arguments);
     })
   }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (ch) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: ch.id,
       value: ch.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ch.name_simple) + " (" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ch.verses_count) + " verses) ", 9 /* TEXT, PROPS */, _hoisted_106);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.plannerConfig.surahId]]), _cache[126] || (_cache[126] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ch.name_simple) + " (" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ch.verses_count) + " verses) ", 9 /* TEXT, PROPS */, _hoisted_115);
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.plannerConfig.surahId]]), _cache[132] || (_cache[132] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Choose the surah you want to memorize", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Per Day "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_107, [_cache[129] || (_cache[129] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, "Choose the surah you want to memorize", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Per Day "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_116, [_cache[135] || (_cache[135] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sun"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Verses per day")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_108, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Verses per day")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_117, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "quantity-btn",
-    onClick: _cache[47] || (_cache[47] = function ($event) {
+    onClick: _cache[49] || (_cache[49] = function ($event) {
       return $options.adjustVersesPerDay(-1);
     }),
     disabled: $data.plannerConfig.versesPerDay <= 1
-  }, _toConsumableArray(_cache[127] || (_cache[127] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[133] || (_cache[133] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-dash"
-  }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_109), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_118), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
-    "onUpdate:modelValue": _cache[48] || (_cache[48] = function ($event) {
+    "onUpdate:modelValue": _cache[50] || (_cache[50] = function ($event) {
       return $data.plannerConfig.versesPerDay = $event;
     }),
     "class": "planner-input",
     min: "1",
     max: $data.plannerConfig.totalVersesInSurah,
-    onChange: _cache[49] || (_cache[49] = function () {
+    onChange: _cache[51] || (_cache[51] = function () {
       return $options.validateVersesPerDay && $options.validateVersesPerDay.apply($options, arguments);
     })
-  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_110), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.plannerConfig.versesPerDay, void 0, {
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_119), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.plannerConfig.versesPerDay, void 0, {
     number: true
   }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "quantity-btn",
-    onClick: _cache[50] || (_cache[50] = function ($event) {
+    onClick: _cache[52] || (_cache[52] = function ($event) {
       return $options.adjustVersesPerDay(1);
     }),
     disabled: $data.plannerConfig.versesPerDay >= $data.plannerConfig.totalVersesInSurah
-  }, _toConsumableArray(_cache[128] || (_cache[128] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[134] || (_cache[134] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-plus"
-  }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_111)]), _cache[130] || (_cache[130] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_120)]), _cache[136] || (_cache[136] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "How many new verses you want to memorize daily", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Stats Grid "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_112, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Days to Finish "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_113, [_cache[132] || (_cache[132] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "How many new verses you want to memorize daily", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Stats Grid "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_121, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Days to Finish "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_122, [_cache[138] || (_cache[138] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "stat-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-calendar-week"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_114, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_115, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerEstimatedDays), 1 /* TEXT */), _cache[131] || (_cache[131] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_123, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_124, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerEstimatedDays), 1 /* TEXT */), _cache[137] || (_cache[137] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "stat-label"
-  }, "Days to Finish", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Daily Time "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_116, [_cache[134] || (_cache[134] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Days to Finish", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Daily Time "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_125, [_cache[140] || (_cache[140] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "stat-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-clock"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_117, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_118, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerEstimatedTimePerDay) + "m", 1 /* TEXT */), _cache[133] || (_cache[133] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_126, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_127, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerEstimatedTimePerDay) + "m", 1 /* TEXT */), _cache[139] || (_cache[139] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "stat-label"
-  }, "Daily Time", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Total Verses "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_119, [_cache[136] || (_cache[136] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Daily Time", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Total Verses "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_128, [_cache[142] || (_cache[142] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "stat-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-text-paragraph"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_120, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_121, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerTotalVerses), 1 /* TEXT */), _cache[135] || (_cache[135] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_129, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_130, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerTotalVerses), 1 /* TEXT */), _cache[141] || (_cache[141] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "stat-label"
-  }, "Total Verses", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Completion Date "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_122, [_cache[139] || (_cache[139] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Total Verses", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Completion Date "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_131, [_cache[145] || (_cache[145] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "stat-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-calendar-check"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_123, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_124, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerCompletionDateFormatted), 1 /* TEXT */), _cache[137] || (_cache[137] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_132, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_133, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerCompletionDateFormatted), 1 /* TEXT */), _cache[143] || (_cache[143] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "stat-label"
-  }, "Est. completion date", -1 /* CACHED */)), _cache[138] || (_cache[138] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, "Est. completion date", -1 /* CACHED */)), _cache[144] || (_cache[144] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "stat-note"
-  }, "Based on verses/day and your past pace.", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Progress Bar "), $data.plannerConfig.totalVersesInSurah > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_125, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_126, [_cache[140] || (_cache[140] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Progress breakdown", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.plannerConfig.versesPerDay) + " / " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.plannerConfig.totalVersesInSurah) + " verses/day", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_127, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Based on verses/day and your past pace.", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Progress Bar "), $data.plannerConfig.totalVersesInSurah > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_134, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_135, [_cache[146] || (_cache[146] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Progress breakdown", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.plannerConfig.versesPerDay) + " / " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.plannerConfig.totalVersesInSurah) + " verses/day", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_136, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "progress-bar-fill",
     style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
       width: $data.plannerConfig.versesPerDay / $data.plannerConfig.totalVersesInSurah * 100 + '%'
     })
-  }, null, 4 /* STYLE */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_128, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, 4 /* STYLE */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_137, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary",
-    onClick: _cache[51] || (_cache[51] = function ($event) {
+    onClick: _cache[53] || (_cache[53] = function ($event) {
       return $data.showPlannerModal = false;
     })
   }, "Cancel"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-primary",
-    onClick: _cache[52] || (_cache[52] = function () {
+    onClick: _cache[54] || (_cache[54] = function () {
       return $options.submitPlanner && $options.submitPlanner.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[141] || (_cache[141] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[147] || (_cache[147] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-fill"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Create Plan ", -1 /* CACHED */)])))])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showConfirmModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 4,
     "class": "modal-overlay",
-    onClick: _cache[57] || (_cache[57] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onClick: _cache[59] || (_cache[59] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_129, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_130, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_138, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_139, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-icon",
-    onClick: _cache[54] || (_cache[54] = function () {
+    onClick: _cache[56] || (_cache[56] = function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[142] || (_cache[142] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[148] || (_cache[148] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_131, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_132, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.message), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_133, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_140, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_141, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.message), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_142, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary",
-    onClick: _cache[55] || (_cache[55] = function () {
+    onClick: _cache[57] || (_cache[57] = function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     })
   }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.cancelLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["btn-primary", {
       'btn-danger': $data.confirmModal.tone === 'danger'
     }]),
-    onClick: _cache[56] || (_cache[56] = function () {
+    onClick: _cache[58] || (_cache[58] = function () {
       return $options.runConfirmAction && $options.runConfirmAction.apply($options, arguments);
     })
   }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.confirmLabel), 3 /* TEXT, CLASS */)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Resume Modal (Logged In) "), $data.showResumeModal && $options.isLoggedIn && $data.hasContinueSession ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 5,
     "class": "modal-overlay",
-    onClick: _cache[61] || (_cache[61] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
+    onClick: _cache[63] || (_cache[63] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
       return $data.showResumeModal = false;
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_134, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_135, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeModalTitle), 1 /* TEXT */), $options.resumeSavedAtLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("small", _hoisted_136, "Last saved at " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeSavedAtLabel), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_143, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_144, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeModalTitle), 1 /* TEXT */), $options.resumeSavedAtLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("small", _hoisted_145, "Last saved at " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeSavedAtLabel), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-icon",
-    onClick: _cache[58] || (_cache[58] = function ($event) {
+    onClick: _cache[60] || (_cache[60] = function ($event) {
       return $data.showResumeModal = false;
     })
-  }, _toConsumableArray(_cache[143] || (_cache[143] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[149] || (_cache[149] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_137, [_cache[154] || (_cache[154] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
-    "class": "confirm-copy resume-copy"
-  }, "Pick up gently from where you paused. Everything is ready for a calm restart.", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_138, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.continueSessionMeta), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_139, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_140, [_cache[144] || (_cache[144] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Cumulative chain", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeFeedback.chainProgress) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_141, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_146, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_147, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.continueSessionMeta), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_148, [_cache[150] || (_cache[150] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Resume:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_$data$continueSessio = $data.continueSessionPayload) !== null && _$data$continueSessio !== void 0 && _$data$continueSessio.activeVerseKey ? String($data.continueSessionPayload.activeVerseKey).split(':')[1] : (_$data$continueSessio2 = $data.continueSessionPayload) === null || _$data$continueSessio2 === void 0 || (_$data$continueSessio2 = _$data$continueSessio2.config) === null || _$data$continueSessio2 === void 0 ? void 0 : _$data$continueSessio2.rangeStart) + " · Range " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_$data$continueSessio3 = $data.continueSessionPayload) === null || _$data$continueSessio3 === void 0 || (_$data$continueSessio3 = _$data$continueSessio3.config) === null || _$data$continueSessio3 === void 0 ? void 0 : _$data$continueSessio3.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_$data$continueSessio4 = $data.continueSessionPayload) === null || _$data$continueSessio4 === void 0 || (_$data$continueSessio4 = _$data$continueSessio4.config) === null || _$data$continueSessio4 === void 0 ? void 0 : _$data$continueSessio4.rangeEnd), 1 /* TEXT */)]), $options.dueCount ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_149, [_cache[151] || (_cache[151] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Reviews due:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.dueCount), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("details", _hoisted_150, [_cache[160] || (_cache[160] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("summary", null, "Details", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_151, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_152, [_cache[152] || (_cache[152] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Chain", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeFeedback.chainProgress) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_153, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "progress-bar-fill",
     style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
       width: $options.resumeFeedback.chainProgress + '%'
     })
-  }, null, 4 /* STYLE */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_142, [_cache[145] || (_cache[145] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Repetition progress", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeFeedback.repetitionProgress) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_143, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, 4 /* STYLE */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_154, [_cache[153] || (_cache[153] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Repetition", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeFeedback.repetitionProgress) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_155, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "progress-bar-fill resume-progress-repetition",
     style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
       width: $options.resumeFeedback.repetitionProgress + '%'
     })
-  }, null, 4 /* STYLE */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_144, [_cache[146] || (_cache[146] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Retention queue", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeFeedback.retentionProgress) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_145, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, 4 /* STYLE */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_156, [_cache[154] || (_cache[154] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Retention", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeFeedback.retentionProgress) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_157, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "progress-bar-fill resume-progress-retention",
     style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
       width: $options.resumeFeedback.retentionProgress + '%'
     })
-  }, null, 4 /* STYLE */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_146, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_147, [_cache[147] || (_cache[147] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-book"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Range: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_$data$continueSessio = $data.continueSessionPayload) === null || _$data$continueSessio === void 0 || (_$data$continueSessio = _$data$continueSessio.config) === null || _$data$continueSessio === void 0 ? void 0 : _$data$continueSessio.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_$data$continueSessio2 = $data.continueSessionPayload) === null || _$data$continueSessio2 === void 0 || (_$data$continueSessio2 = _$data$continueSessio2.config) === null || _$data$continueSessio2 === void 0 ? void 0 : _$data$continueSessio2.rangeEnd), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_148, [_cache[148] || (_cache[148] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, 4 /* STYLE */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_158, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_159, [_cache[155] || (_cache[155] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-link-45deg"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$continueSessio3 = $data.continueSessionPayload) === null || _$data$continueSessio3 === void 0 || (_$data$continueSessio3 = _$data$continueSessio3.config) === null || _$data$continueSessio3 === void 0 ? void 0 : _$data$continueSessio3.chainingEnabled) === false ? 'Chaining off' : ((_$data$continueSessio4 = $data.continueSessionPayload) === null || _$data$continueSessio4 === void 0 || (_$data$continueSessio4 = _$data$continueSessio4.config) === null || _$data$continueSessio4 === void 0 ? void 0 : _$data$continueSessio4.chainingMethod) === 'cumulative' ? 'Cumulative chain' : 'Linking chain'), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_149, [_cache[149] || (_cache[149] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-stopwatch"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Resume from ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_$data$continueSessio5 = $data.continueSessionPayload) !== null && _$data$continueSessio5 !== void 0 && _$data$continueSessio5.activeVerseKey ? String($data.continueSessionPayload.activeVerseKey).split(':')[1] : (_$data$continueSessio6 = $data.continueSessionPayload) === null || _$data$continueSessio6 === void 0 || (_$data$continueSessio6 = _$data$continueSessio6.config) === null || _$data$continueSessio6 === void 0 ? void 0 : _$data$continueSessio6.rangeStart), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_150, [_cache[150] || (_cache[150] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$continueSessio5 = $data.continueSessionPayload) === null || _$data$continueSessio5 === void 0 || (_$data$continueSessio5 = _$data$continueSessio5.config) === null || _$data$continueSessio5 === void 0 ? void 0 : _$data$continueSessio5.chainingEnabled) === false ? 'Chaining off' : ((_$data$continueSessio6 = $data.continueSessionPayload) === null || _$data$continueSessio6 === void 0 || (_$data$continueSessio6 = _$data$continueSessio6.config) === null || _$data$continueSessio6 === void 0 ? void 0 : _$data$continueSessio6.chainingMethod) === 'cumulative' ? 'Cumulative chain' : 'Linking chain'), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_160, [_cache[156] || (_cache[156] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-check2-circle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.feedbackCounts.mastered) + " mastered", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_151, [_cache[151] || (_cache[151] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.feedbackCounts.mastered) + " mastered", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_161, [_cache[157] || (_cache[157] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-exclamation-circle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.feedbackCounts.weak) + " weak", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_152, [_cache[152] || (_cache[152] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.feedbackCounts.weak) + " weak", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_162, [_cache[158] || (_cache[158] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-repeat"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.feedbackCounts.repeat) + " need repetition", 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_153, [_cache[153] || (_cache[153] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Next:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeWhatNext), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_154, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.feedbackCounts.repeat) + " need repetition", 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_163, [_cache[159] || (_cache[159] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Next:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeWhatNext), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_164, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary",
-    onClick: _cache[59] || (_cache[59] = function ($event) {
+    onClick: _cache[61] || (_cache[61] = function ($event) {
       return $data.showResumeModal = false;
     })
   }, "Not now"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-primary",
-    onClick: _cache[60] || (_cache[60] = function ($event) {
+    onClick: _cache[62] || (_cache[62] = function ($event) {
       $data.showResumeModal = false;
       $options.continueLastSession();
     })
-  }, _toConsumableArray(_cache[155] || (_cache[155] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[161] || (_cache[161] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-right-circle"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Go to session ", -1 /* CACHED */)])))])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Global Audio Player - Updated with Speed Controls "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(vue__WEBPACK_IMPORTED_MODULE_0__.Transition, {
     name: "slide-up"
@@ -30000,21 +30031,21 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["player-bar", {
           collapsed: $data.playerCollapsed
         }])
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_155, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_156, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_157, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter = $data.currentChapter) === null || _$data$currentChapter === void 0 ? void 0 : _$data$currentChapter.name_simple) || 'Quran'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_158, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activeAyahLabel) + " ", 1 /* TEXT */), $options.etaLabel && $data.isPlaying ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_165, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_166, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_167, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter = $data.currentChapter) === null || _$data$currentChapter === void 0 ? void 0 : _$data$currentChapter.name_simple) || 'Quran'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_168, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activeAyahLabel) + " ", 1 /* TEXT */), $options.etaLabel && $data.isPlaying ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
         key: 0,
         "class": "player-eta",
         title: $options.getEtaTooltip()
-      }, " • " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel) + " remaining ", 9 /* TEXT, PROPS */, _hoisted_159)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_160, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      }, " • " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel) + " remaining ", 9 /* TEXT, PROPS */, _hoisted_169)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_170, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[62] || (_cache[62] = function () {
+        onClick: _cache[64] || (_cache[64] = function () {
           return $options.prev && $options.prev.apply($options, arguments);
         }),
         title: "Previous"
-      }, _toConsumableArray(_cache[156] || (_cache[156] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[162] || (_cache[162] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-skip-start-fill"
       }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn player-play",
-        onClick: _cache[63] || (_cache[63] = function () {
+        onClick: _cache[65] || (_cache[65] = function () {
           return $options.togglePlay && $options.togglePlay.apply($options, arguments);
         }),
         title: "Play/Pause"
@@ -30022,15 +30053,15 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
       }, null, 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[64] || (_cache[64] = function () {
+        onClick: _cache[66] || (_cache[66] = function () {
           return $options.next && $options.next.apply($options, arguments);
         }),
         title: "Next"
-      }, _toConsumableArray(_cache[157] || (_cache[157] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[163] || (_cache[163] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-skip-end-fill"
-      }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_161, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_162, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_171, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_172, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
         "class": "player-progress-bg",
-        onClick: _cache[65] || (_cache[65] = function () {
+        onClick: _cache[67] || (_cache[67] = function () {
           return _ctx.seek && _ctx.seek.apply(_ctx, arguments);
         }),
         ref: "progress"
@@ -30039,18 +30070,18 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
           width: $data.currentTime / ($data.duration || 1) * 100 + '%'
         })
-      }, null, 4 /* STYLE */)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_163, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.duration)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      }, null, 4 /* STYLE */)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_173, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.duration)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[66] || (_cache[66] = function ($event) {
+        onClick: _cache[68] || (_cache[68] = function ($event) {
           return $data.playerVisible = false;
         }),
         title: "Close player"
-      }, _toConsumableArray(_cache[158] || (_cache[158] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[164] || (_cache[164] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-x-lg"
       }, null, -1 /* CACHED */)])))])], 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)];
     }),
     _: 1 /* STABLE */
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio System "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_164, null, 512 /* NEED_PATCH */)], 12 /* STYLE, PROPS */, _hoisted_1);
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio System "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_174, null, 512 /* NEED_PATCH */)], 12 /* STYLE, PROPS */, _hoisted_1);
 }
 
 /***/ }),
@@ -37514,7 +37545,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n:root {\n  --bg: #f3eee6;\n  --surface: rgba(255, 250, 243, 0.88);\n  --surface-strong: rgba(255, 255, 255, 0.92);\n  --border: rgba(78, 58, 38, 0.10);\n  --text: #1f1a17;\n  --text-muted: #6c6258;\n  --accent: #9a6738;\n  --accent-strong: #6e4726;\n  --accent-soft: #d8c1a8;\n  --accent-light: rgba(154, 103, 56, 0.10);\n  --accent-wash: rgba(228, 211, 194, 0.42);\n  --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);\n  --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);\n  --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);\n  --radius: 16px;\n  --navbar-offset: 56px;\n  --tools-width: 440px;\n  --tools-footer-h: 78px;\n  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;\n  --font-ui: \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n[data-theme=\"dark\"] {\n  --bg: #14110f;\n  --surface: rgba(31, 27, 24, 0.92);\n  --surface-strong: rgba(43, 37, 32, 0.96);\n  --border: rgba(255, 236, 216, 0.16);\n  --text: #f7ebdf;\n  --text-muted: #d1c2b3;\n  --accent: #d0a06b;\n  --accent-strong: #efc18d;\n  --accent-soft: #5f4530;\n  --accent-light: rgba(208, 160, 107, 0.14);\n  --accent-wash: rgba(208, 160, 107, 0.08);\n  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);\n  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);\n  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);\n}\n[data-theme=\"sepia\"] {\n  --bg: #efe2cb;\n  --surface: rgba(250, 241, 227, 0.88);\n  --surface-strong: rgba(255, 248, 237, 0.94);\n  --text: #352516;\n  --text-muted: #75624f;\n  --accent: #b8824e;\n  --accent-strong: #8f6033;\n  --accent-soft: #dcc3a6;\n  --accent-light: rgba(184, 130, 78, 0.12);\n  --accent-wash: rgba(221, 194, 162, 0.35);\n}\n[v-cloak] {\n  display: none !important;\n}\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\n\n/* Add to your style section */\n.main.tools-open {\n  overflow: hidden;\n}\n.tools {\n  transform: translateX(100%);\n  transition: transform 0.3s ease;\n}\n.tools.open {\n  transform: translateX(0);\n}\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.5);\n  z-index: 59;\n}\n\n/* Replace the existing blur mode CSS with this */\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-aid {\n  filter: blur(var(--recall-blur, 10px));\n  opacity: 0.7;\n  transition: filter 0.3s ease, opacity 0.3s ease;\n}\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .tajweed-mark,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic word,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .wbw-word {\n  filter: blur(var(--recall-blur, 10px));\n}\n\n/* Keep active verse clear */\n.main.blur-mode-active .verse-card.active .verse-arabic,\n.main.blur-mode-active .verse-card.active .verse-aid {\n  filter: none;\n  opacity: 1;\n}\n\n/* Word highlighting with Tajweed */\n.verse-arabic.tajweed-enabled .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n  position: relative;\n}\n.verse-arabic.tajweed-enabled .wbw-word.highlighted {\n  background: var(--accent);\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n\n/* Preserve Tajweed colors inside highlighted words */\n.verse-arabic.tajweed-enabled .wbw-word.highlighted,\n.verse-arabic.tajweed-enabled .wbw-word.highlighted * {\n  color: inherit !important;\n}\n\n/* Make Tajweed marks more visible on highlight */\n.verse-arabic.tajweed-enabled .wbw-word.highlighted .tajweed-mark {\n  filter: brightness(1.2);\n}\n.verse-arabic.tajweed-enabled .wbw-word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n.verse-arabic.tajweed-enabled .wbw-word.highlighted {\n  animation: wordHighlightPulse 0.2s ease-out;\n}\n@keyframes wordHighlightPulse {\n0% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.03);\n}\n100% {\n    transform: scale(1.02);\n}\n}\n\n/* Combined Tajweed + Word Highlighting */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n\n/* Preserve tajweed colors inside highlighted words but make them visible */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {\n  color: inherit !important;\n  background: transparent !important;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*=\"tajweed-\"] {\n  color: white !important;\n  background: transparent !important;\n}\n\n/* Mode Button Styling */\n.mode-btn {\n  background: var(--surface);\n  border: 1px solid var(--accent);\n  color: var(--accent);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mode-btn i:first-child {\n  font-size: 0.85rem;\n}\n.mode-btn .bi-chevron-down {\n  font-size: 0.7rem;\n  transition: transform 0.2s;\n}\n.mode-btn:hover .bi-chevron-down {\n  transform: translateY(2px);\n}\n.mode-btn:hover {\n  background: var(--accent-light);\n}\n\n/* Make all buttons consistent */\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn:disabled,\n.rail-btn-ghost:disabled,\n.rail-btn-primary:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n  pointer-events: none;\n  transform: none;\n  box-shadow: none;\n}\n.rail-btn-resume {\n  background: rgba(255, 255, 255, 0.92);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.rail-btn-resume:hover {\n  background: var(--accent-light);\n  transform: translateY(-1px);\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\nbody {\n  font-family: var(--font-ui);\n  background: var(--bg);\n  color: var(--text);\n}\nhtml {\n  background: var(--bg);\n}\n.app {\n  min-height: 100vh;\n  background: var(--bg);\n  font-size: calc(16px * var(--ui-scale, 1));\n  animation: appFade 260ms ease-out;\n}\n.verse-arabic {\n  min-height: 60px;\n}\n\n/* Session Rail */\n.session-rail {\n  background: var(--surface);\n  border-radius: 20px;\n  margin-bottom: 20px;\n  padding: 12px 16px 14px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.session-rail-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 10px;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.session-rail-copy {\n  flex: 1;\n  min-width: 0;\n}\n.session-rail-headline {\n  display: flex;\n  align-items: baseline;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.session-rail-pills {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  margin-top: 6px;\n}\n.session-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 4px;\n  padding: 5px 9px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n  font-size: 0.71rem;\n  white-space: nowrap;\n}\n.session-pill strong {\n  color: var(--text);\n  font-weight: 700;\n}\n.session-pill-focus {\n  max-width: min(280px, 100%);\n}\n.session-pill-focus strong {\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.session-rail-kicker {\n  font-size: 0.7rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.session-rail-meta {\n  font-size: 0.72rem;\n  color: var(--text-muted);\n  margin-top: 2px;\n}\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\n.session-rail-subnote {\n  margin-top: 10px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n}\n\n/* Mode Indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 10px;\n  padding: 6px 14px;\n  margin: 8px 0 12px 0;\n  background: var(--accent-light);\n  border-radius: 40px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n.mode-switch-btn {\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 4px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.mode-switch-btn:hover {\n  background: rgba(154, 103, 56, 0.2);\n  transform: rotate(180deg);\n}\n.progress-bar-wide {\n  margin-top: 10px;\n  height: 6px;\n  position: relative;\n  overflow: visible;\n}\n.progress-label {\n  position: absolute;\n  top: -24px;\n  right: 0;\n  font-size: 0.72rem;\n  font-weight: 700;\n  color: var(--accent);\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.session-rail-top {\n    flex-direction: column;\n    align-items: stretch;\n}\n.session-rail-actions {\n    justify-content: stretch;\n    width: 100%;\n    flex-wrap: wrap;\n}\n.rail-btn {\n    flex: 1;\n    justify-content: center;\n}\n}\n.verse-arabic-loading {\n  min-height: 60px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--text-muted);\n  animation: pulse 1s infinite;\n}\n@keyframes pulse {\n0%,\n  100% {\n    opacity: 0.3;\n}\n50% {\n    opacity: 0.6;\n}\n}\n\n/* Ensure HTML content is styled properly before Vue mounts */\n.verse-arabic word,\n.verse-arabic .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n}\n\n/* Prevent raw HTML showing */\n.verse-arabic:empty {\n  display: none;\n}\n\n/* Tajweed styles */\n.verse-arabic.tajweed-enabled [class*=\"tajweed\"] {\n  display: inline;\n}\n\n/* Color rules for tajweed - adjust based on what API returns */\n.verse-arabic [class*=\"ghunnah\"],\n.verse-arabic [class*=\"Ghunnah\"] {\n  color: #2ecc71;\n}\n.verse-arabic [class*=\"madd\"],\n.verse-arabic [class*=\"Madd\"] {\n  color: #e74c3c;\n}\n.verse-arabic [class*=\"qalqalah\"],\n.verse-arabic [class*=\"Qalqalah\"] {\n  color: #f39c12;\n}\n.verse-arabic [class*=\"ikhfa\"],\n.verse-arabic [class*=\"Ikhfa\"] {\n  color: #9b59b6;\n}\n.verse-arabic [class*=\"idgham\"],\n.verse-arabic [class*=\"Idgham\"] {\n  color: #3498db;\n}\n\n/* Word by Word styles */\n.wbw-word {\n  display: inline-block;\n  padding: 5px 8px;\n  margin: 2px 3px;\n  border-radius: 8px;\n  transition: all 0.2s ease;\n  cursor: pointer;\n  font-size: 1.05rem;\n  background: rgba(154, 103, 56, 0.05);\n}\n.wbw-word:hover {\n  background: var(--accent-light);\n  transform: scale(1.02);\n}\n.wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n  animation: pop 180ms ease-out;\n}\n.verse-arabic.verse-weak .wbw-word.weak-word {\n  background: #fff3bf;\n  color: #5f4b00;\n}\n.verse-arabic.verse-mastered .wbw-word.mastered-word {\n  background: #d3f9d8;\n  color: #1f6f31;\n}\n@keyframes pop {\nfrom {\n    transform: scale(1.01);\n}\nto {\n    transform: scale(1.05);\n}\n}\n\n/* Word highlighting styles */\n.verse-arabic word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n.rail-stat strong,\n.player-eta {\n  cursor: help;\n  border-bottom: 1px dotted var(--text-muted);\n}\n\n/* Optional: Show detailed breakdown on hover */\n.rail-stat:hover strong::after {\n  content: attr(title);\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: var(--surface-strong);\n  color: var(--text);\n  padding: 4px 8px;\n  border-radius: 8px;\n  font-size: 0.7rem;\n  white-space: nowrap;\n  z-index: 100;\n  box-shadow: var(--shadow-sm);\n  border: 1px solid var(--border);\n}\n\n/* Minimized Session Rail */\n.session-rail-mini {\n  position: sticky;\n  top: 12px;\n  z-index: 18;\n  padding: 10px;\n  padding-top: 8px;\n  margin-bottom: 20px;\n  background: var(--surface);\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-sm);\n  overflow: hidden;\n  transition: all 0.2s ease;\n}\n.session-rail-mini:hover {\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent-soft);\n}\n.rail-mini-content {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 8px 12px 8px 16px;\n}\n.rail-mini-info {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  flex: 1;\n}\n.rail-mini-icon {\n  width: 32px;\n  height: 32px;\n  background: var(--accent-light);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.rail-mini-icon i {\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.rail-mini-details {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-mini-surah {\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.rail-mini-progress {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.rail-mini-stats {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.mini-stat-item {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.mini-stat-item i {\n  font-size: 0.7rem;\n  color: var(--accent);\n}\n.rail-mini-actions {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mini-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n}\n.mini-btn:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n}\n.mini-btn:first-child {\n  background: var(--accent);\n  border-color: var(--accent);\n  color: white;\n}\n.mini-btn:first-child:hover {\n  transform: scale(1.05);\n  background: var(--accent-strong);\n}\n.rail-mini-progress {\n  height: 2px;\n  background: var(--border);\n}\n.progress-fill-mini {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.rail-mini-stats {\n    display: none;\n}\n.rail-mini-content {\n    padding: 6px 10px 6px 12px;\n}\n.rail-mini-surah {\n    font-size: 0.75rem;\n}\n}\n\n/* Font Dropdown */\n.font-dropdown {\n  position: relative;\n}\n.font-dropdown-trigger {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 999px;\n  font-size: 0.75rem;\n  cursor: pointer;\n  transition: all 0.2s;\n  color: var(--text);\n}\n.font-dropdown-trigger:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.font-dropdown-trigger .bi-chevron-down {\n  transition: transform 0.2s;\n  font-size: 0.7rem;\n}\n.font-dropdown-trigger .bi-chevron-down.rotated {\n  transform: rotate(180deg);\n}\n.font-dropdown-menu {\n  position: absolute;\n  top: calc(100% + 8px);\n  right: 0;\n  min-width: 200px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  box-shadow: var(--shadow-lg);\n  overflow: hidden;\n  z-index: 100;\n  backdrop-filter: blur(12px);\n}\n.font-option {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  width: 100%;\n  padding: 10px 14px;\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  font-size: 0.8rem;\n  text-align: left;\n  transition: all 0.15s;\n  color: var(--text);\n}\n.font-option:hover {\n  background: var(--accent-light);\n}\n.font-option.active {\n  background: var(--accent);\n  color: white;\n}\n.font-option .check-icon {\n  margin-left: auto;\n  font-size: 0.8rem;\n}\n\n/* Dropdown Animation */\n.dropdown-fade-enter-active,\n.dropdown-fade-leave-active {\n  transition: all 0.2s ease;\n}\n.dropdown-fade-enter-from,\n.dropdown-fade-leave-to {\n  opacity: 0;\n  transform: translateY(-8px);\n}\n\n/* Tajweed styles for AlQuran quran-tajweed edition */\n.verse-arabic.tajweed-enabled {\n  line-height: 2;\n  white-space: normal;\n  overflow-wrap: anywhere;\n}\n.verse-arabic.tajweed-enabled .tajweed-mark {\n  display: inline;\n  border-radius: 0.2em;\n  padding: 0 0.03em;\n}\n.verse-arabic.tajweed-enabled .tajweed-ham_wasl,\n.verse-arabic.tajweed-enabled .tajweed-slnt {\n  color: #7e8a97;\n}\n.verse-arabic.tajweed-enabled .tajweed-ghn,\n.verse-arabic.tajweed-enabled .tajweed-idgh_ghn,\n.verse-arabic.tajweed-enabled .tajweed-iqlb {\n  color: #2e9d62;\n  background: rgba(46, 157, 98, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,\n.verse-arabic.tajweed-enabled .tajweed-ikhf,\n.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw {\n  color: #9b59b6;\n  background: rgba(155, 89, 182, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-qlq,\n.verse-arabic.tajweed-enabled .tajweed-lqlq {\n  color: #d98824;\n  background: rgba(217, 136, 36, 0.12);\n}\n.verse-arabic.tajweed-enabled .tajweed-madda_normal,\n.verse-arabic.tajweed-enabled .tajweed-madda_permissible,\n.verse-arabic.tajweed-enabled .tajweed-madda_necessary,\n.verse-arabic.tajweed-enabled .tajweed-madda_obligatory,\n.verse-arabic.tajweed-enabled .tajweed-madda_pbligatory {\n  color: #d55245;\n  background: rgba(213, 82, 69, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_mus,\n.verse-arabic.tajweed-enabled .tajweed-idghm_shfw,\n.verse-arabic.tajweed-enabled .tajweed-idgh_shfw,\n.verse-arabic.tajweed-enabled .tajweed-ghn+.tajweed-mark {\n  color: #2b7bbb;\n  background: rgba(43, 123, 187, 0.10);\n}\n\n/* Toolbar chip active state for tajweed */\n.toolbar-chip.active {\n  background: var(--accent);\n  color: white;\n}\n.verse-play-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: white;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.verse-play-btn i {\n  font-size: 0.9rem;\n}\n.verse-play-btn:hover {\n  transform: scale(1.05);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--accent);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.verse-play-btn:active {\n  transform: scale(0.98);\n}\n.verse-download-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.82);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--accent);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.verse-download-btn:hover:not(:disabled) {\n  transform: scale(1.05);\n  border-color: var(--accent);\n  background: rgba(255, 255, 255, 0.96);\n}\n.verse-download-btn:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n.speed-label {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-right: 4px;\n}\n.speed-controls {\n  display: flex;\n  gap: 4px;\n}\n.speed-btn {\n  padding: 4px 8px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.speed-btn.active {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.streak-motivation {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border-radius: 40px;\n  font-size: 0.75rem;\n}\n.streak-badge {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-weight: 500;\n}\n.motivation-message {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--text-muted);\n  font-size: 0.7rem;\n}\n.pa-note {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n  margin-top: 4px;\n  display: block;\n}\n\n/* Active tab indicator with pulse effect */\n.tools-tabs button.active-tab {\n  position: relative;\n  animation: tabPulse 0.22s ease-out;\n}\n@keyframes tabPulse {\n0% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 var(--accent);\n}\n50% {\n    transform: scale(1.012);\n    box-shadow: 0 0 0 3px var(--accent-light);\n}\n100% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n.quick-tools {\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.78);\n}\n.quick-tools-grid {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n  padding: 12px 14px;\n}\n.quick-tool {\n  border: 1px solid rgba(154, 103, 56, 0.10);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.82);\n  padding: 10px;\n  display: grid;\n  gap: 8px;\n  min-width: 0;\n}\n.quick-tool-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 8px;\n}\n.quick-tool-label {\n  font-size: 0.74rem;\n  font-weight: 750;\n  color: var(--text);\n}\n.quick-tool-value {\n  font-size: 0.74rem;\n  font-weight: 650;\n  color: var(--text-muted);\n}\n.quick-tool-body {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.quick-tool-body.disabled {\n  opacity: 0.55;\n}\n.quick-tool-body-muted {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n}\n.quick-range {\n  flex: 1 1 auto;\n  min-width: 0;\n}\n.toggle-chip-compact {\n  min-height: 34px;\n  padding: 6px 10px;\n  font-size: 0.82rem;\n}\n\n/* Toggle switch animation and visual feedback */\n.switch {\n  transition: all 0.2s ease;\n}\n.switch:active {\n  transform: scale(0.98);\n}\n.switch-ui {\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n  animation: switchPulse 0.3s ease-out;\n}\n@keyframes switchPulse {\n0% {\n    box-shadow: 0 0 0 0 rgba(139, 94, 60, 0.4);\n}\n50% {\n    box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.2);\n}\n100% {\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Field hint styling */\n.field-hint {\n  font-size: calc(0.7rem * var(--en-scale, 1));\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.26;\n  display: block;\n}\n\n/* Verse Arabic styling */\n.verse-arabic {\n  --verse-font-percent: 100;\n  --verse-font-size: clamp(1.5rem, calc(var(--verse-font-percent, 150) * 0.0175rem), 3.25rem);\n  font-family: var(--font-ar);\n  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n.verse-arabic word {\n  display: inline-block;\n  font-size: 1em;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-card {\n  background: var(--surface);\n  border-radius: 20px;\n  padding: 26px;\n  transition: all 0.2s ease;\n  border: 1px solid var(--border);\n  position: relative;\n  direction: ltr;\n  overflow: hidden;\n  width: 100%;\n}\n.verse-card::before {\n  content: \"\";\n  position: absolute;\n  inset: 0;\n  pointer-events: none;\n  background:\n    linear-gradient(180deg, rgba(184, 130, 78, 0.03), transparent 22%),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.05), transparent 28%);\n}\n.verse-card.active {\n  border-color: var(--accent);\n  background: linear-gradient(145deg, rgba(184, 130, 78, 0.14), rgba(154, 103, 56, 0.04));\n  box-shadow: 0 0 0 1px var(--accent), 0 14px 32px rgba(154, 103, 56, 0.18);\n  transform: translateY(-1px);\n  transition: all 0.2s ease;\n}\n.main.focus-mode-active .verse-card:not(.active) {\n  opacity: 0.54;\n  filter: saturate(0.72);\n}\n.main.focus-mode-active .workspace-fab-live,\n.main.focus-mode-active .verse-card:not(.active) .verse-aid {\n  opacity: 0.38;\n}\n\n\n\n/* Removed: \"For serious huffadh training\" badge */\n.verse-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 16px;\n}\n.verse-badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-number {\n  font-size: 0.78rem;\n  padding: 6px 12px;\n  background: var(--accent);\n  border-radius: 999px;\n  color: #fff;\n  font-weight: 700;\n  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.24);\n}\n.verse-status-badge,\n.verse-status-subtle {\n  border-radius: 999px;\n  padding: 5px 10px;\n  font-size: 0.68rem;\n  font-weight: 600;\n}\n.verse-status-badge {\n  background: var(--accent-light);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.verse-status-subtle {\n  background: var(--bg-elevated);\n  color: var(--text-muted);\n}\n.verse-ref {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 8px;\n}\n\n/* Font controls */\n.verse-font-controls {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  padding: 2px 6px;\n  margin-right: 8px;\n}\n.verse-font-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 12px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 10px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.verse-font-btn:hover {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n}\n.verse-font-size-indicator {\n  font-size: 10px;\n  min-width: 35px;\n  text-align: center;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n\n/* Session rail */\n.session-rail {\n  position: sticky;\n  top: 14px;\n  z-index: 18;\n  margin-bottom: 18px;\n  padding: 12px 14px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-md);\n  animation: railIn 280ms ease-out;\n}\n.session-rail-top {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  gap: 12px;\n  align-items: center;\n}\n.session-rail-kicker {\n  font-size: 10px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  margin-top: 2px;\n  font-size: 14px;\n  font-weight: 450;\n}\n.session-rail-meta {\n  margin-top: 2px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.session-rail-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 8px;\n  margin-top: 10px;\n}\n.rail-stat {\n  padding: 8px 10px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-stat span {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n}\n.rail-stat strong {\n  font-size: 0.78rem;\n  font-weight: 500;\n}\n.rail-btn {\n  height: 34px;\n  padding: 0 12px;\n  border-radius: 13px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  color: var(--text);\n  font-size: 12px;\n  font-weight: 450;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.rail-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);\n}\n.progress-bar {\n  flex: 1;\n  height: 4px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-wide {\n  margin-top: 10px;\n}\n.progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s;\n}\n\n/* Mode indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  margin: 8px 0 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n\n/* Reading toolbar */\n.reading-toolbar {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  margin-bottom: 16px;\n  padding: 12px 14px;\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.reading-toolbar-group {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  align-items: flex-start;\n}\n.toolbar-chip {\n  border: 0;\n  border-radius: 999px;\n  padding: 8px 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  font-size: 0.75rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: var(--shadow-sm);\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.toolbar-chip i,\n.rail-btn i,\n.tools-tabs button i,\n.st-ico i {\n  font-size: 0.9rem;\n  line-height: 1;\n}\n.toolbar-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.toolbar-chip:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n\n/* Tools panel */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  width: min(var(--tools-width), 92vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n}\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(15, 12, 8, 0.35);\n  backdrop-filter: blur(1px);\n  z-index: 59;\n}\n.tools.open {\n  transform: translateX(0);\n}\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n}\n.tools-topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.tools-title {\n  font-size: 1rem;\n  font-weight: 700;\n  letter-spacing: -0.2px;\n  color: var(--text);\n}\n.tools-context {\n  margin-top: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 600;\n}\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n  color: rgba(0, 0, 0, 0.7);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n  overflow-x: auto;\n  -webkit-overflow-scrolling: touch;\n  width: 100%;\n}\n.tools-tabs button {\n  flex: 1 1 0;\n  padding: 7px 10px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.82rem;\n  cursor: pointer;\n  color: rgba(0, 0, 0, 0.55);\n  font-weight: 450;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: background 140ms ease, color 140ms ease, transform 140ms ease, box-shadow 160ms ease;\n  white-space: nowrap;\n}\n.tools-tabs button.active {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));\n  box-shadow: var(--shadow-sm);\n  color: rgba(0, 0, 0, 0.85);\n}\n.tools-body {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n}\n\n/* Compact mode (default) to reduce cognitive load */\n.tools-body.compact .st-sub,\n.tools-body.compact .field-hint,\n.tools-body.compact .analytics-help,\n.tools-body.compact .stat-help {\n  display: block !important;\n}\n.tools-body.compact .sheet {\n  gap: 12px;\n}\n.tools-body.compact .sheet-section {\n  padding: 0;\n  border-radius: 16px;\n}\n.tools-body.compact .sheet-toggle {\n  padding: 12px 14px;\n}\n.tools-body.compact .sheet-content {\n  padding: 12px 14px 14px;\n}\n.tools-body.compact .field-stack {\n  gap: 12px;\n}\n.tools-body.compact .field label {\n  margin-bottom: 6px;\n}\n.sheet {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.sheet-section {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border-radius: 18px;\n  padding: 0;\n  overflow: hidden;\n  box-shadow: var(--shadow-sm);\n  animation: riseSoft 260ms ease-out;\n}\n.sheet-toggle {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border: none;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease;\n}\n.st-left {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.st-ico {\n  width: 24px;\n  height: 24px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));\n  border: 1px solid rgba(139, 94, 60, 0.18);\n  flex: 0 0 auto;\n  font-size: 11px;\n  font-weight: 600;\n  color: var(--accent);\n}\n.st-txt {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 2px;\n  min-width: 0;\n}\n.st-title {\n  font-weight: 450;\n  letter-spacing: -0.2px;\n  color: var(--text);\n  font-size: 0.82rem;\n  white-space: nowrap;\n}\n.st-sub {\n  font-size: 0.66rem;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.st-chev {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  display: grid;\n  place-items: center;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  color: rgba(0, 0, 0, 0.65);\n  transition: transform 0.15s ease;\n  box-shadow: var(--shadow-sm);\n}\n.st-chev.open {\n  transform: rotate(180deg);\n}\n.sheet-content {\n  padding: 12px 12px 14px;\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field-stack {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  min-width: 0;\n}\n.field label {\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n}\n.field-hint {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.35;\n  display: block;\n}\n.select,\n.input {\n  width: 100%;\n  min-width: 0;\n  padding: 11px 12px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--text);\n  font-size: 0.8rem;\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n.range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.range-single {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n  align-items: center;\n}\n.range span {\n  color: rgba(0, 0, 0, 0.35);\n  font-weight: 450;\n  font-size: 11px;\n}\n.radio-group {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.radio {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 0.85rem;\n  color: var(--text);\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  transition: all 0.2s ease;\n}\n.radio:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-sm);\n}\n.radio input {\n  margin: 0;\n}\n.switch {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 11px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  cursor: pointer;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  transition: all 0.2s ease;\n}\n.switch input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.switch-ui {\n  width: 44px;\n  height: 26px;\n  border-radius: 999px;\n  background: rgba(0, 0, 0, 0.12);\n  position: relative;\n  flex: 0 0 auto;\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  content: \"\";\n  position: absolute;\n  top: 3px;\n  left: 3px;\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  background: white;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n}\n.switch input:checked+.switch-ui::after {\n  transform: translateX(18px);\n}\n.switch-text {\n  font-size: 0.74rem;\n  color: rgba(0, 0, 0, 0.72);\n  font-weight: 400;\n}\n.tools-techniques-section {\n  border-color: rgba(139, 94, 60, 0.16);\n  box-shadow: none;\n}\n.techniques-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.technique-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 13px;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.78);\n  box-shadow: 0 10px 24px rgba(63, 39, 18, 0.055);\n}\n.technique-row-stacked {\n  align-items: stretch;\n  flex-direction: column;\n}\n.technique-row-main,\n.technique-control {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.technique-copy {\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  gap: 3px;\n}\n.technique-copy label {\n  margin: 0;\n  color: var(--text);\n  font-family: inherit;\n  font-size: 0.86rem;\n  font-weight: 560;\n  white-space: nowrap;\n}\n.technique-copy small,\n.technique-control span {\n  color: var(--text-muted);\n  font-family: inherit;\n  font-size: 0.73rem;\n  font-weight: 400;\n  line-height: 1.45;\n}\n.technique-toggle {\n  flex: 0 0 86px;\n  min-height: 40px;\n  border-radius: 12px;\n  font-family: inherit;\n  font-size: 0.82rem;\n  font-weight: 560;\n  border-width: 1px;\n}\n.technique-control {\n  padding-top: 12px;\n  border-top: 1px solid rgba(154, 103, 56, 0.10);\n}\n.technique-range {\n  flex: 1 1 auto;\n  min-width: 96px;\n  padding: 0;\n  box-shadow: none;\n}\n.segmented-control {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 6px;\n  padding: 5px;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 14px;\n  background: rgba(98, 73, 49, 0.045);\n}\n.segmented-control button {\n  min-width: 0;\n  min-height: 42px;\n  padding: 9px 10px;\n  border: 1px solid transparent;\n  border-radius: 10px;\n  background: transparent;\n  color: var(--text-muted);\n  font-family: inherit;\n  font-size: 0.8rem;\n  font-weight: 560;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n}\n.segmented-control button.active {\n  background: #fffaf4;\n  color: var(--accent-strong);\n  border-color: rgba(154, 103, 56, 0.20);\n  box-shadow: 0 8px 18px rgba(63, 39, 18, 0.09);\n}\n.technique-preview {\n  padding: 10px 12px;\n  border-radius: 12px;\n  background: rgba(154, 103, 56, 0.07);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: rgba(98, 73, 49, 0.92);\n  font-family: inherit;\n  font-size: 0.74rem;\n  font-weight: 430;\n  line-height: 1.45;\n}\n\n/* Start button */\n.start-btn {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  border-radius: 12px;\n  color: white;\n  font-size: 1rem;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  margin-top: 20px;\n  transition: all 0.2s ease;\n}\n.start-btn:hover:not(:disabled) {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);\n}\n.start-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n\n/* Tools footer */\n.tools-footer {\n  position: absolute;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  height: var(--tools-footer-h);\n  padding: 12px 16px 14px;\n  border-top: 1px solid var(--border);\n  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));\n  display: flex;\n  gap: 10px;\n  justify-content: space-between;\n  align-items: center;\n}\n.tools-btn {\n  flex: 1;\n  min-height: 44px;\n  padding: 10px 10px;\n  border-radius: 15px;\n  font-weight: 500;\n  border: 1px solid rgba(0, 0, 0, 0.1);\n  cursor: pointer;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  line-height: 1;\n}\n.tools-btn-soft {\n  color: var(--text-muted);\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.42));\n  box-shadow: none;\n}\n.tools-btn-soft:hover {\n  color: var(--text);\n  border-color: var(--accent-soft);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.6));\n}\n.tools-btn-primary {\n  color: #fff;\n  border-color: rgba(0, 0, 0, 0.08);\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  box-shadow: var(--shadow-sm);\n}\n.tools-btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n.tools-btn:active:not(:disabled),\n.fab-btn:active:not(:disabled),\n.toggle-chip:active:not(:disabled),\n.sheet-toggle:active:not(:disabled) {\n  transform: translateY(0);\n}\n.tools-btn:hover:not(:disabled),\n.fab-btn:hover:not(:disabled),\n.toggle-chip:hover:not(:disabled),\n.sheet-toggle:hover:not(:disabled) {\n  filter: brightness(1.02);\n}\n.tools-btn-primary:disabled {\n  opacity: 0.55;\n  cursor: not-allowed;\n  box-shadow: none;\n}\n.tools-btn-start {\n  flex: 1.6;\n}\n\n/* Hero section */\n.hero-card {\n  margin-bottom: 16px;\n  padding: 18px 18px 16px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 236, 226, 0.92));\n  box-shadow: var(--shadow-md);\n  display: grid;\n  gap: 14px;\n  animation: riseSoft 260ms ease-out;\n}\n.hero-kicker {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  color: var(--accent);\n}\n.hero-title {\n  margin-top: 6px;\n  font-size: 1.24rem;\n  font-weight: 500;\n  letter-spacing: -0.03em;\n}\n.hero-sub {\n  margin-top: 8px;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  max-width: 56ch;\n}\n.hero-flow {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n}\n.hero-step {\n  padding: 10px 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.62);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.74rem;\n}\n.hero-step span {\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  display: grid;\n  place-items: center;\n  background: var(--accent-light);\n  color: var(--accent);\n  font-size: 11px;\n}\n.hero-step strong {\n  font-weight: 500;\n}\n.hero-points {\n  display: grid;\n  gap: 8px;\n}\n.hero-point {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.hero-point i {\n  color: var(--accent);\n}\n.hero-actions,\n.empty-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cta {\n  flex: 1;\n  padding: 10px 10px;\n  border-radius: 14px;\n  font-weight: 450;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 11px;\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.cta-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);\n}\n.cta-ghost {\n  background: rgba(255, 255, 255, 0.58);\n  box-shadow: var(--shadow-sm);\n}\n\n/* Empty state */\n.empty {\n  padding: 40px 0;\n}\n.empty-card {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: var(--radius);\n  padding: 32px;\n  text-align: center;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-md);\n}\n.empty-icon {\n  font-family: var(--font-ar);\n  font-size: 2.2rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.empty-card h3 {\n  font-weight: 450;\n  margin-bottom: 6px;\n  font-size: 1rem;\n}\n.empty-card p {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  margin-bottom: 16px;\n}\n\n/* Verses grid */\n.workspace {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr);\n  gap: 14px;\n  align-items: start;\n  margin-top: 14px;\n}\n.workspace-main {\n  min-width: 0;\n}\n.workspace-shell {\n  width: min(1120px, 100%);\n  margin: 0 auto 18px;\n}\n.workspace-shell {\n  display: grid;\n  gap: 6px;\n  padding: 10px 12px;\n  border-radius: 20px;\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background:\n    linear-gradient(160deg, rgba(255, 251, 245, 0.98), rgba(255, 255, 255, 0.9)),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.09), transparent 28%);\n  box-shadow: 0 14px 28px rgba(63, 39, 18, 0.07);\n  position: relative;\n}\n.workspace-shell.collapsed {\n  gap: 8px;\n  padding: 12px 14px;\n}\n.workspace-shell-head {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  gap: 16px;\n  align-items: flex-start;\n}\n.workspace-shell-copy {\n  display: grid;\n  gap: 3px;\n  min-width: 0;\n}\n.workspace-shell-kicker {\n  display: inline-flex;\n  width: -moz-fit-content;\n  width: fit-content;\n  padding: 3px 7px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.1);\n  color: var(--accent-strong);\n  font-size: 0.68rem;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 0.06em;\n}\n.workspace-shell-kicker-review {\n  background: rgba(183, 28, 28, 0.12);\n  color: #9f1f1f;\n}\n.workspace-shell-title-row {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  flex-wrap: wrap;\n}\n.workspace-shell-copy h1 {\n  margin: 0;\n  color: var(--text);\n  font-size: clamp(1rem, 1.5vw, 1.25rem);\n  line-height: 1.08;\n  font-weight: 650;\n}\n.workspace-shell-phase {\n  display: inline-flex;\n  align-items: center;\n  min-height: 28px;\n  padding: 5px 10px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.88);\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  color: var(--accent-strong);\n  font-size: 0.73rem;\n  font-weight: 650;\n}\n.workspace-shell-phase-review {\n  border-color: rgba(183, 28, 28, 0.24);\n  color: #9f1f1f;\n  background: rgba(183, 28, 28, 0.09);\n}\n.workspace-shell-copy h2 {\n  margin: 0;\n  color: var(--text);\n  font-size: 1rem;\n  line-height: 1.15;\n  font-weight: 600;\n}\n.workspace-shell-copy p {\n  margin: 0;\n  color: var(--text-muted);\n  max-width: 58ch;\n  font-size: 0.8rem;\n  line-height: 1.35;\n}\n.workspace-shell-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.workspace-shell-meta span {\n  display: inline-flex;\n  align-items: center;\n  min-height: 28px;\n  padding: 5px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.15);\n  background: rgba(255, 255, 255, 0.86);\n  color: rgba(48, 42, 35, 0.86);\n  font-size: 0.76rem;\n  font-weight: 600;\n}\n.workspace-shell-meta-review {\n  border-color: rgba(183, 28, 28, 0.24) !important;\n  color: #9f1f1f !important;\n  background: rgba(183, 28, 28, 0.08) !important;\n}\n.resume-feedback-bars,\n.session-feedback-bars {\n  display: grid;\n  gap: 6px;\n  margin-top: 8px;\n}\n.session-feedback-panel {\n  margin-top: 8px;\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.72);\n  padding: 8px 10px;\n}\n.session-feedback-panel summary {\n  list-style: none;\n  cursor: pointer;\n  display: grid;\n  gap: 2px;\n  color: var(--text);\n  font-weight: 650;\n}\n.session-feedback-panel summary::-webkit-details-marker {\n  display: none;\n}\n.session-feedback-panel summary small {\n  color: var(--text-muted);\n  font-weight: 500;\n  font-size: 0.74rem;\n}\n.resume-feedback-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.resume-progress-repetition {\n  background: linear-gradient(90deg, #f2c94c, #e3a008);\n}\n.resume-progress-retention {\n  background: linear-gradient(90deg, #e57373, #c62828);\n}\n.pill-status-mastered {\n  border-color: rgba(46, 125, 50, 0.22);\n  background: rgba(76, 175, 80, 0.08);\n  color: #2e7d32;\n}\n.pill-status-weak {\n  border-color: rgba(245, 158, 11, 0.22);\n  background: rgba(245, 158, 11, 0.1);\n  color: #8a5a00;\n}\n.pill-status-repeat {\n  border-color: rgba(198, 40, 40, 0.22);\n  background: rgba(229, 57, 53, 0.08);\n  color: #9f1f1f;\n}\n.workspace-shell-chaining {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  align-items: center;\n}\n.workspace-shell-chain-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  min-height: 28px;\n  padding: 5px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background: rgba(255, 255, 255, 0.86);\n  color: rgba(48, 42, 35, 0.86);\n  font-size: 0.72rem;\n  font-weight: 650;\n}\n.workspace-shell-chain-pill i {\n  color: var(--accent-strong);\n}\n.workspace-shell-chain-pill-soft {\n  background: rgba(154, 103, 56, 0.09);\n  border-color: rgba(154, 103, 56, 0.14);\n  color: var(--accent-strong);\n}\n.workspace-shell-actions {\n  display: grid;\n  grid-template-columns: repeat(2, auto);\n  gap: 8px;\n  align-items: start;\n}\n.main-nav-btn,\n.main-card-primary {\n  min-height: 42px;\n  border-radius: 14px;\n  font-weight: 600;\n  font-size: 0.84rem;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  padding: 8px 12px;\n}\n.main-nav-btn {\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background: rgba(255, 255, 255, 0.82);\n  color: var(--text);\n}\n.main-card-primary {\n  border: 0;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  box-shadow: 0 12px 24px rgba(154, 103, 56, 0.18);\n}\n.main-nav-btn:disabled,\n.main-card-primary:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n  box-shadow: none;\n}\n.workspace-fab {\n  position: sticky;\n  top: 14px;\n  z-index: 25;\n  display: flex;\n  min-width: 0;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 8px 10px;\n  margin: 8px 0 6px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.06);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.58));\n  box-shadow: 0 16px 38px rgba(63, 39, 18, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.38);\n  backdrop-filter: blur(10px);\n  animation: cardSoftIn 220ms cubic-bezier(0.16, 1, 0.3, 1);\n  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;\n}\n.workspace-fab:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 20px 44px rgba(63, 39, 18, 0.18), 0 0 0 1px rgba(154, 103, 56, 0.18);\n  border-color: rgba(154, 103, 56, 0.2);\n}\n@keyframes cardSoftIn {\nfrom {\n    transform: translateY(6px);\n    opacity: 0.9;\n}\nto {\n    transform: translateY(0);\n    opacity: 1;\n}\n}\n.workspace-fab-meta {\n  min-width: 0;\n  flex: 1 1 auto;\n  display: grid;\n  gap: 4px;\n}\n.workspace-fab-kicker {\n  display: inline-flex;\n  align-items: center;\n  width: -moz-fit-content;\n  width: fit-content;\n  padding: 4px 8px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.10);\n  color: var(--accent-strong);\n  font-size: 0.68rem;\n  font-weight: 650;\n  letter-spacing: 0.06em;\n  text-transform: uppercase;\n}\n.workspace-fab-title {\n  font-weight: 650;\n  color: var(--text);\n  letter-spacing: -0.2px;\n  font-size: 0.92rem;\n  line-height: 1.15;\n}\n.workspace-fab-sub {\n  margin-top: 3px;\n  font-size: 0.74rem;\n  color: var(--text-muted);\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  align-items: center;\n  line-height: 1.2;\n}\n.workspace-fab-sub span {\n  display: inline-flex;\n  align-items: center;\n  max-width: 100%;\n  padding: 6px 10px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.18);\n  background: rgba(255, 255, 255, 0.86);\n  box-shadow: 0 8px 18px rgba(63, 39, 18, 0.06);\n  color: rgba(48, 42, 35, 0.82);\n  font-weight: 600;\n}\n.workspace-fab-live {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 5px;\n}\n.workspace-fab-live-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  max-width: 100%;\n  min-height: 38px;\n  padding: 8px 12px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.11);\n  border: 1px solid rgba(154, 103, 56, 0.20);\n  color: var(--accent-strong);\n  font-size: 0.82rem;\n  font-weight: 750;\n  box-shadow: 0 10px 20px rgba(63, 39, 18, 0.08);\n}\n.workspace-fab-live-pill i {\n  display: inline-grid;\n  place-items: center;\n  width: 22px;\n  height: 22px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.14);\n}\n.workspace-fab-live-pill-primary {\n  background: linear-gradient(180deg, rgba(154, 103, 56, 0.16), rgba(154, 103, 56, 0.09));\n  border-color: rgba(154, 103, 56, 0.28);\n}\n.workspace-fab-live-pill-mode {\n  background: rgba(255, 255, 255, 0.86);\n}\n.workspace-fab-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n  line-height: 1.26;\n  max-width: 60ch;\n  overflow-wrap: anywhere;\n}\n.workspace-fab-chip {\n  display: inline-flex;\n  align-items: center;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(46, 125, 50, 0.18);\n  background: rgba(46, 125, 50, 0.10);\n  color: rgba(46, 125, 50, 0.95);\n  font-weight: 650;\n  font-size: 0.72rem;\n}\n.workspace-fab-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex: 0 0 auto;\n}\n.fab-btn {\n  min-height: 40px;\n  padding: 8px 11px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.76);\n  box-shadow: var(--shadow-sm);\n  font-weight: 600;\n  font-size: 0.84rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  white-space: nowrap;\n  cursor: pointer;\n  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 140ms ease;\n}\n.fab-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  border-color: transparent;\n  box-shadow: 0 14px 28px rgba(154, 103, 56, 0.22);\n}\n.fab-btn-soft {\n  color: rgba(0, 0, 0, 0.78);\n}\n.fab-btn-ghost {\n  color: rgba(0, 0, 0, 0.78);\n}\n.verses-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n  margin-top: 0;\n}\n.verse-arabic-primary {\n  /* Primary focus: Quran dominates; aids are quieter. */\n  font-size: clamp(2.1rem, 2.75vw, 3.05rem);\n  line-height: 2.25;\n  letter-spacing: 0.01em;\n}\n.verse-aid {\n  opacity: 0.82;\n  filter: saturate(0.78);\n  margin-top: 0.4rem;\n  font-size: 0.93em;\n}\n.verse-aid-title {\n  margin-bottom: 4px;\n  color: var(--accent-strong);\n  font-size: 0.66rem;\n  font-weight: 650;\n  font-style: normal;\n  text-transform: uppercase;\n  letter-spacing: 0.04em;\n}\n.inline-setting-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.input-compact {\n  flex: 0 0 140px;\n}\n.inline-setting-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-height: 30px;\n  min-width: 58px;\n  padding: 0 10px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.08);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: var(--accent-strong);\n  font-size: 0.72rem;\n  font-family: inherit;\n  font-weight: 460;\n}\n.settings-section {\n  padding: 18px;\n  border-radius: 18px;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  background: #fffdf9;\n  box-shadow: 0 18px 42px rgba(40, 28, 16, 0.08);\n}\n.settings-heading {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  align-items: start;\n  gap: 16px;\n  padding-bottom: 16px;\n  margin-bottom: 16px;\n  border-bottom: 1px solid rgba(28, 24, 20, 0.07);\n}\n.settings-heading-copy {\n  min-width: 0;\n  display: grid;\n  gap: 6px;\n}\n.settings-heading-copy h3 {\n  margin: 0;\n  color: #1f1d1a;\n  font-size: 1.12rem;\n  font-weight: 560;\n  line-height: 1.15;\n}\n.settings-heading-copy p {\n  margin: 0;\n  color: #6d655d;\n  font-size: 0.78rem;\n  line-height: 1.45;\n}\n.settings-status {\n  min-height: 30px;\n  padding: 0 11px;\n  border-radius: 999px;\n  background: #f7f2eb;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  color: #614326;\n  font-size: 0.64rem;\n  font-weight: 520;\n  letter-spacing: 0.04em;\n  text-transform: uppercase;\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n}\n.settings-status-dot {\n  width: 7px;\n  height: 7px;\n  border-radius: 999px;\n  background: #2f9f68;\n  box-shadow: 0 0 0 4px rgba(47, 159, 104, 0.12);\n}\n.settings-panels {\n  display: grid;\n  gap: 16px;\n}\n.settings-group {\n  display: grid;\n  gap: 10px;\n}\n.settings-group-title {\n  color: #725233;\n  font-size: 0.64rem;\n  font-weight: 560;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n}\n.settings-card-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 10px;\n}\n.settings-display-grid {\n  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);\n}\n.settings-card {\n  min-width: 0;\n  border-radius: 14px;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  background: linear-gradient(180deg, #ffffff, #fbf8f3);\n  box-shadow: 0 8px 18px rgba(40, 28, 16, 0.045);\n}\n.settings-card-toggle {\n  min-height: 126px;\n  padding: 14px;\n  display: grid;\n  align-content: space-between;\n  gap: 14px;\n}\n.settings-card-range {\n  min-height: 126px;\n  padding: 14px;\n  display: grid;\n  gap: 14px;\n}\n.settings-row-copy {\n  min-width: 0;\n  display: grid;\n  gap: 6px;\n}\n.settings-row-copy label {\n  color: #211f1c;\n  font-size: 0.86rem;\n  font-weight: 540;\n  display: inline-flex;\n  align-items: center;\n  gap: 9px;\n  min-width: 0;\n}\n.settings-row-copy small {\n  color: #6f675f;\n  font-size: 0.7rem;\n  line-height: 1.4;\n}\n.settings-icon {\n  width: 32px;\n  height: 32px;\n  border-radius: 10px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  background: #f7f1ea;\n  border: 1px solid rgba(154, 103, 56, 0.13);\n  color: #8c5b2e;\n  flex: 0 0 auto;\n}\n.settings-toggle {\n  width: 100%;\n  min-height: 40px;\n  padding: 7px 14px;\n  border-radius: 10px;\n  font-size: 0.78rem;\n  font-weight: 540;\n  box-shadow: none;\n  border-width: 1px;\n}\n.settings-range-wrap {\n  width: 100%;\n  min-width: 0;\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  align-items: center;\n  gap: 12px;\n}\n.settings-range {\n  min-width: 0;\n  width: 100%;\n  padding: 0;\n  box-shadow: none;\n}\n.settings-apply-section {\n  padding: 12px;\n  border-radius: 14px;\n  background: #f8f2ea;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  display: grid;\n  gap: 8px;\n}\n.settings-apply-primary {\n  width: 100%;\n  min-height: 48px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  background: #8d5a2c;\n  color: #fff;\n  font-size: 0.92rem;\n  font-weight: 560;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  cursor: pointer;\n  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;\n}\n.settings-apply-primary:hover {\n  transform: translateY(-1px);\n  background: #7b4b22;\n  box-shadow: 0 10px 20px rgba(123, 75, 34, 0.24);\n}\n.settings-apply-section small {\n  color: #6f675f;\n  font-size: 0.7rem;\n}\n.tools-footer.settings-footer {\n  background: transparent;\n  border-top: none;\n  box-shadow: none;\n  pointer-events: none;\n}\n.tools-footer.settings-footer .tools-btn {\n  visibility: hidden;\n}\n.offline-list {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n  margin-bottom: 16px;\n}\n.offline-item {\n  background: var(--bg-elevated);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  transition: all 0.2s ease;\n}\n.offline-item:hover {\n  border-color: var(--accent);\n  background: var(--surface);\n}\n.oi-info {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.oi-name {\n  font-weight: 600;\n  font-size: 1rem;\n}\n.oi-meta {\n  font-size: 0.8rem;\n  opacity: 0.7;\n}\n.oi-date {\n  font-size: 0.7rem;\n  opacity: 0.5;\n}\n.oi-actions {\n  display: flex;\n  gap: 8px;\n}\n.oi-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.oi-load:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.oi-delete:hover {\n  background: #ff4d4d;\n  color: white;\n  border-color: #ff4d4d;\n}\n.empty-mini {\n  text-align: center;\n  padding: 32px 16px;\n  background: var(--bg-elevated);\n  border-radius: 20px;\n  border: 1px dashed var(--border);\n}\n.offline-note {\n  margin-top: 24px;\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  display: flex;\n  gap: 10px;\n  font-size: 0.75rem;\n  line-height: 1.4;\n  color: var(--accent);\n}\n\n/* Floating Player */\n.player-bar {\n  position: fixed;\n  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);\n  left: 50%;\n  transform: translateX(-50%);\n  width: min(calc(100vw - 32px), 960px);\n  max-width: 960px;\n  background: rgba(255, 255, 255, 0.98);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 24px;\n  box-shadow: 0 20px 40px rgba(63, 39, 18, 0.12);\n  z-index: 1000;\n  padding: 12px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  /* Avoid iOS Safari compositing artifacts (black bands) from backdrop-filter on fixed elements. */\n  backdrop-filter: none;\n  -webkit-backdrop-filter: none;\n  transition: transform 0.22s ease, opacity 0.22s ease, padding 0.22s ease;\n}\n.player-bar.collapsed {\n  transform: translateX(-50%);\n  opacity: 0.98;\n}\n.player-main {\n  display: grid;\n  grid-template-columns: minmax(150px, 1.1fr) auto minmax(180px, 1fr) auto auto;\n  align-items: center;\n  gap: clamp(10px, 1.6vw, 20px);\n  min-width: 0;\n}\n.player-info {\n  min-width: 0;\n}\n.player-chapter {\n  font-weight: 700;\n  font-size: 0.9rem;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-verse {\n  font-size: 0.75rem;\n  opacity: 0.7;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-eta {\n  color: var(--accent);\n  font-weight: 500;\n  opacity: 1;\n}\n.player-controls {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n}\n.sheet-fade-enter-active,\n.sheet-fade-leave-active {\n  transition: opacity 0.2s ease, transform 0.2s ease;\n}\n.sheet-fade-enter-from,\n.sheet-fade-leave-to {\n  opacity: 0;\n  transform: translateY(8px);\n}\n.player-btn {\n  width: 44px;\n  height: 44px;\n  border-radius: 12px;\n  border: none;\n  background: none;\n  color: var(--text);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.2rem;\n  transition: all 0.2s ease;\n  flex: 0 0 auto;\n}\n.player-btn:hover {\n  background: rgba(154, 103, 56, 0.08);\n}\n.player-play {\n  background: var(--accent);\n  color: white;\n  width: 52px;\n  height: 52px;\n  border-radius: 16px;\n  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.3);\n}\n.player-play:hover {\n  background: rgba(255, 255, 255, 0.88);\n  color: var(--accent);\n  transform: scale(1.05);\n}\n.player-progress-wrap {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  min-width: 0;\n}\n.player-time {\n  font-size: 0.75rem;\n  font-variant-numeric: tabular-nums;\n  opacity: 0.7;\n  min-width: 40px;\n}\n.player-progress-bg {\n  flex: 1;\n  height: 6px;\n  background: var(--bg-elevated);\n  border-radius: 3px;\n  position: relative;\n  cursor: pointer;\n}\n.player-progress-fill {\n  position: absolute;\n  left: 0;\n  top: 0;\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.1s linear;\n}\n\n/* Animations */\n.slide-up-enter-active,\n.slide-up-leave-active {\n  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.slide-up-enter-from,\n.slide-up-leave-to {\n  transform: translate(-50%, 100px);\n  opacity: 0;\n}\n.verse-translation {\n  font-size: calc(0.94rem * var(--en-scale, 1));\n  color: var(--text);\n  line-height: 1.55;\n  padding-top: 10px;\n  margin-top: 8px;\n  border-top: 1px solid var(--border);\n  display: block;\n  opacity: 0.92;\n}\n.verse-transliteration {\n  font-size: calc(0.98rem * var(--en-scale, 1));\n  color: var(--text);\n  font-style: italic;\n  margin-top: 8px;\n  padding-top: 8px;\n  border-top: 1px solid var(--border);\n  line-height: 1.5;\n  opacity: 0.98;\n}\n.verse-words {\n  display: flex;\n  flex-wrap: nowrap;\n  gap: 8px;\n  direction: rtl;\n  margin-top: 12px;\n  padding-top: 10px;\n  border-top: 1px solid var(--border);\n  overflow-x: auto;\n  overflow-y: hidden;\n  -webkit-overflow-scrolling: touch;\n  scroll-snap-type: x proximity;\n  padding-bottom: 8px;\n}\n.word-item {\n  position: relative;\n  background: var(--accent-light);\n  padding: 6px 12px;\n  border-radius: 20px;\n  display: inline-flex;\n  flex-direction: row-reverse;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.75rem;\n  flex: 0 0 auto;\n  scroll-snap-align: center;\n  cursor: help;\n  min-height: 36px;\n}\n.word-item:hover::after,\n.word-item:focus::after {\n  content: attr(data-tooltip);\n  position: absolute;\n  left: 50%;\n  bottom: calc(100% + 8px);\n  transform: translateX(-50%);\n  z-index: 5;\n  width: -moz-max-content;\n  width: max-content;\n  max-width: 220px;\n  padding: 6px 8px;\n  border-radius: 9px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n  color: var(--text);\n  direction: ltr;\n  text-align: center;\n  font-size: 0.72rem;\n  line-height: 1.25;\n}\n.word-arabic {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n}\n.word-meaning {\n  color: var(--text-muted);\n  font-size: calc(0.82rem * var(--en-scale, 1));\n}\n.word-audio-btn {\n  background: none;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 0 4px;\n}\n.field-switch {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.reading-aid-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 8px;\n}\n.tools,\n.tools-body,\n.sheet-content {\n  overflow-x: hidden;\n}\n.live-stats-grid {\n  display: grid;\n  gap: 10px;\n}\n.live-stat-card {\n  min-height: 72px;\n  padding: 14px 16px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 252, 247, 0.9);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.live-stat-label {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  font-weight: 500;\n}\n.live-stat-card strong {\n  color: var(--text);\n  font-size: 1rem;\n  font-weight: 600;\n}\n.resume-copy {\n  margin-bottom: 8px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(251, 245, 238, 0.96));\n  border-radius: 18px;\n  box-shadow: 0 24px 72px rgba(31, 24, 17, 0.22);\n}\n.modal-header h2 {\n  font-size: 1.05rem;\n  font-weight: 600;\n}\n.resume-modal {\n  background: linear-gradient(180deg, rgba(255, 251, 245, 0.99), rgba(248, 241, 233, 0.97));\n}\n.resume-modal .modal-header,\n.resume-modal .modal-body,\n.resume-modal .modal-footer {\n  padding-top: 18px;\n  padding-bottom: 18px;\n}\n.resume-grid .pill,\n.resume-modal .pill {\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid rgba(184, 130, 78, 0.16);\n}\n.wbw-word.highlighted,\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.03);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.24);\n}\n.wbw-word.phrase-highlighted {\n  box-shadow: 0 0 0 2px rgba(184, 130, 78, 0.18);\n}\n.word-item.highlighted,\n.word-item.phrase-highlighted {\n  background: rgba(184, 130, 78, 0.2);\n}\n\n/* Quiz overlay */\n.quiz-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 80;\n  background: rgba(0, 0, 0, 0.35);\n  backdrop-filter: blur(6px);\n  display: grid;\n  place-items: center;\n  padding: 18px;\n}\n.quiz-card {\n  width: min(680px, 100%);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba, rgba(250, 245, 239, 0.95));\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 22px;\n  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);\n  overflow: hidden;\n}\n.quiz-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 18px 22px 14px;\n  border-bottom: 1px solid rgba(0, 0, 0, 0.08);\n}\n.quiz-title {\n  font-weight: 500;\n  font-size: 1.05rem;\n}\n.quiz-subtitle {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.quiz-close {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.7);\n  cursor: pointer;\n  font-size: 24px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.quiz-progress {\n  padding: 14px 22px 0;\n}\n.quiz-progress-bar {\n  height: 4px;\n  background: var(--border);\n  border-radius: 2px;\n  overflow: hidden;\n}\n.quiz-progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n.quiz-stats {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.quiz-body {\n  padding: 18px 22px 22px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.quiz-question {\n  font-weight: 600;\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.quiz-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.4rem;\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  padding: 16px;\n  background: var(--accent-light);\n  border-radius: 16px;\n}\n.quiz-reveal-btn {\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n}\n.quiz-answer {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.quiz-translation {\n  font-size: 0.9rem;\n  line-height: 1.6;\n  color: var(--text);\n  margin-bottom: 16px;\n}\n.quiz-grade-buttons {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.grade-btn {\n  flex: 1;\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.grade-btn.primary {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.quiz-options {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.quiz-option {\n  padding: 12px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  text-align: left;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.quiz-option:hover {\n  background: var(--accent-light);\n  transform: translateX(4px);\n}\n.quiz-summary {\n  padding: 22px;\n  text-align: center;\n}\n.quiz-summary-icon {\n  font-size: 3rem;\n  margin-bottom: 16px;\n}\n.quiz-summary-stats {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin: 20px 0;\n}\n.quiz-summary-stats .stat {\n  padding: 16px;\n  background: var(--surface);\n  border-radius: 16px;\n}\n.stat-label {\n  display: block;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.stat-value {\n  display: block;\n  font-size: 1.5rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.quiz-summary-mistakes {\n  margin: 20px 0;\n}\n.mistake-tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 8px;\n  justify-content: center;\n}\n.mistake-tag {\n  padding: 6px 12px;\n  background: rgba(190, 73, 73, 0.1);\n  border-radius: 20px;\n  font-size: 0.8rem;\n  color: #c0392b;\n}\n.quiz-actions {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n}\n.btn-outline {\n  padding: 10px 24px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n.btn-primary {\n  padding: 10px 24px;\n  border-radius: 12px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n\n/* Banner */\n.banner {\n  position: fixed;\n  top: 14px;\n  left: 50%;\n  transform: translateX(-50%);\n  z-index: 120;\n  min-width: min(560px, calc(100vw - 24px));\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px 14px;\n  border-radius: 16px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.92);\n  backdrop-filter: blur(10px);\n  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);\n  font-weight: 450;\n  animation: riseSoft 220ms ease-out;\n}\n.banner-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.banner-action {\n  border: 0;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  padding: 9px 12px;\n  font-size: 0.78rem;\n  font-weight: 500;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n}\n.banner-x {\n  width: 36px;\n  height: 36px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n}\n\n/* Animations */\n@keyframes appFade {\n0% {\n    opacity: 0;\n    transform: translateY(4px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes railIn {\n0% {\n    opacity: 0;\n    transform: translateY(-8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes riseSoft {\n0% {\n    opacity: 0;\n    transform: translateY(8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n\n/* Responsive */\n@media (max-width: 768px) {\n.main {\n    padding: 16px 16px 100px;\n}\n.main.tools-open {\n    padding-right: 16px;\n}\n.tools {\n    left: 0;\n    right: 0;\n    width: 100%;\n}\n.session-rail-stats {\n    grid-template-columns: 1fr 1fr;\n}\n.hero-flow {\n    grid-template-columns: 1fr 1fr;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 8px);\n    justify-content: center;\n}\n.verse-font-controls {\n    gap: 2px;\n    padding: 2px 4px;\n}\n.verse-font-btn {\n    width: 20px;\n    height: 20px;\n}\n.verse-font-size-indicator {\n    min-width: 30px;\n    font-size: 9px;\n}\n}\n@media (max-width: 640px) {\n.quiz-grade-buttons {\n    flex-direction: column;\n}\n.quiz-actions {\n    flex-direction: column;\n}\n.hero-actions,\n  .empty-actions {\n    flex-direction: column;\n}\n.cta {\n    width: 100%;\n}\n}\n\n/* Dark theme overrides */\n[data-theme=\"dark\"] .tools {\n  color: var(--text);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(12, 11, 10, 0.96));\n  border-left-color: var(--border);\n}\n[data-theme=\"dark\"] .sheet-section {\n  border-color: var(--border);\n  background: var(--surface);\n}\n[data-theme=\"dark\"] .tools-top,\n[data-theme=\"dark\"] .tools-footer {\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.92));\n}\n[data-theme=\"dark\"] .tools-footer {\n  background: linear-gradient(to top, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.86), rgba(18, 15, 13, 0));\n}\n[data-theme=\"dark\"] .tools-tabs {\n  background: rgba(255, 255, 255, 0.035);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .tools-tabs button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-tabs button.active {\n  color: var(--text);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .tools-title,\n[data-theme=\"dark\"] .st-title,\n[data-theme=\"dark\"] .technique-copy label,\n[data-theme=\"dark\"] .settings-heading-copy h3,\n[data-theme=\"dark\"] .settings-row-copy label {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .tools-context,\n[data-theme=\"dark\"] .st-sub,\n[data-theme=\"dark\"] .technique-copy small,\n[data-theme=\"dark\"] .technique-control span,\n[data-theme=\"dark\"] .settings-heading-copy p,\n[data-theme=\"dark\"] .settings-row-copy small {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-x,\n[data-theme=\"dark\"] .st-chev,\n[data-theme=\"dark\"] .sheet-toggle,\n[data-theme=\"dark\"] .technique-row,\n[data-theme=\"dark\"] .radio,\n[data-theme=\"dark\"] .toggle-chip,\n[data-theme=\"dark\"] .segmented-control,\n[data-theme=\"dark\"] .technique-preview {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .sheet-toggle {\n  background: rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .st-ico {\n  color: var(--accent-strong);\n  border-color: rgba(239, 193, 141, 0.22);\n  background: rgba(239, 193, 141, 0.10);\n}\n[data-theme=\"dark\"] .segmented-control button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .segmented-control button.active,\n[data-theme=\"dark\"] .toggle-chip.active {\n  color: var(--accent-strong);\n  border-color: rgba(239, 193, 141, 0.42);\n  background: rgba(239, 193, 141, 0.12);\n}\n[data-theme=\"dark\"] .tools-btn-soft {\n  color: var(--text-muted);\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .select,\n[data-theme=\"dark\"] .input {\n  color: var(--text);\n  border-color: var(--border);\n  background: rgba(255, 255, 255, 0.045);\n}\n[data-theme=\"dark\"] .switch {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n}\n[data-theme=\"dark\"] .verse-translation {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .verse-transliteration,\n[data-theme=\"dark\"] .workspace-fab-copy,\n[data-theme=\"dark\"] .workspace-fab-sub,\n[data-theme=\"dark\"] .settings-row-copy small,\n[data-theme=\"dark\"] .field-hint {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .workspace-fab,\n[data-theme=\"dark\"] .workspace-fab-sub span,\n[data-theme=\"dark\"] .workspace-fab-live-pill,\n[data-theme=\"dark\"] .settings-card,\n[data-theme=\"dark\"] .word-item:hover::after,\n[data-theme=\"dark\"] .word-item:focus::after {\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .workspace-fab {\n  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.46), 0 0 0 1px rgba(255, 236, 216, 0.12);\n}\n[data-theme=\"dark\"] .workspace-fab:hover {\n  box-shadow: 0 26px 64px rgba(0, 0, 0, 0.54), 0 0 0 1px rgba(239, 193, 141, 0.20);\n}\n[data-theme=\"dark\"] .settings-section {\n  background: rgba(24, 21, 19, 0.96);\n  border-color: var(--border);\n  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .settings-status {\n  background: rgba(255, 255, 255, 0.05);\n  border-color: rgba(255, 236, 216, 0.12);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .settings-icon {\n  background: rgba(255, 255, 255, 0.04);\n  border-color: rgba(255, 236, 216, 0.12);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .settings-card {\n  background: var(--surface-strong);\n  border-color: rgba(255, 236, 216, 0.10);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .settings-toggle {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 236, 216, 0.14);\n  color: var(--text);\n}\n[data-theme=\"dark\"] .settings-toggle.active {\n  background: rgba(239, 193, 141, 0.13);\n  border-color: rgba(239, 193, 141, 0.42);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .quiz-card {\n  background: rgba(18, 18, 18, 0.92);\n  border-color: rgba(255, 255, 255, 0.10);\n}\n\n/* Sepia theme overrides */\n[data-theme=\"sepia\"] .verse-translation {\n  color: #7a684a;\n}\n\n/* Planner & Analytics UI */\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(12, 10, 8, 0.62);\n  backdrop-filter: blur(8px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 9999;\n  padding: 20px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 250, 243, 0.92));\n  border-radius: 20px;\n  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42);\n  border: 1px solid rgba(255, 255, 255, 0.55);\n  display: flex;\n  flex-direction: column;\n  max-height: 90vh;\n  overflow: hidden;\n  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.resume-modal {\n  width: min(760px, 96vw);\n}\n.resume-modal .modal-header h2 {\n  font-size: clamp(1.25rem, 2.3vw, 1.75rem);\n}\n.resume-saved-at {\n  display: inline-block;\n  margin-top: 4px;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n}\n.resume-grid {\n  margin-top: 12px;\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 10px;\n}\n.resume-grid .pill {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 12px 14px;\n}\n@keyframes modalIn {\nfrom {\n    transform: translateY(10px);\n    opacity: 0.6;\n}\nto {\n    transform: translateY(0);\n    opacity: 1;\n}\n}\n@keyframes modalFadeIn {\nfrom {\n    opacity: 0;\n    transform: translateY(20px) scale(0.95);\n}\nto {\n    opacity: 1;\n    transform: translateY(0) scale(1);\n}\n}\n.modal-header {\n  padding: 20px 24px;\n  border-bottom: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 1.25rem;\n  font-weight: 700;\n}\n.modal-body {\n  padding: 24px;\n  overflow-y: auto;\n}\n.modal-footer {\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--bg-elevated);\n}\n.confirm-modal {\n  max-width: 460px;\n  width: 100%;\n}\n.confirm-copy {\n  color: var(--text-muted);\n  line-height: 1.65;\n}\n.btn-danger {\n  background: #b55041;\n}\n.tools-btn-danger {\n  opacity: 0.82;\n}\n.btn-icon {\n  background: none;\n  border: none;\n  font-size: 1.2rem;\n  color: var(--text-muted);\n  cursor: pointer;\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.btn-icon:hover {\n  background: var(--border);\n  color: var(--text);\n}\n.planner-modal {\n  max-width: 500px;\n  width: 100%;\n}\n.planner-field {\n  margin-bottom: 24px;\n}\n.planner-field label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.planner-select,\n.planner-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.planner-select:focus,\n.planner-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 2px var(--accent-light);\n}\n.verses-per-day-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.quantity-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.quantity-btn:hover:not(:disabled) {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.quantity-btn:disabled {\n  opacity: 0.4;\n  cursor: not-allowed;\n}\n.planner-stats-grid {\n  display: grid;\n  grid-template-columns: repeat(2, 1fr);\n  gap: 12px;\n  margin: 24px 0;\n}\n.planner-stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  transition: all 0.2s;\n}\n.progress-info {\n  display: flex;\n  justify-content: space-between;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.progress-bar-track {\n  height: 6px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-fill {\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.3s ease;\n}\n.modal-footer {\n  display: flex;\n  gap: 12px;\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.btn-secondary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.btn-secondary:hover {\n  background: var(--border);\n}\n.btn-primary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.9rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.btn-primary:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.field-hint {\n  display: block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 6px;\n}\n.pa-lbl {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.analytics-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin-top: 20px;\n}\n.analytics-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.78rem * var(--en-scale, 1));\n  line-height: 1.4;\n}\n.stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 20px;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  transition: transform 0.2s;\n}\n.stat-delta {\n  display: inline-flex;\n  align-items: center;\n  margin-left: 10px;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  font-size: 0.7rem;\n  color: var(--accent-strong);\n  font-weight: 700;\n  vertical-align: middle;\n}\n.stat-card:hover {\n  transform: translateY(-2px);\n  border-color: var(--accent);\n}\n.stat-card i {\n  font-size: 1.8rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.stat-value {\n  font-size: 1.5rem;\n  font-weight: 700;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.stat-label {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n}\n.stat-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.72rem * var(--en-scale, 1));\n  line-height: 1.35;\n}\n.mini-trend {\n  position: relative;\n  width: 80px;\n  height: 24px;\n  margin-top: 10px;\n}\n.mini-trend span {\n  position: absolute;\n  width: 8px;\n  border-radius: 999px;\n  background: linear-gradient(180deg, var(--accent), var(--accent-soft));\n  opacity: 0.9;\n}\n\n/* Home Dashboard UI */\n.home-dashboard {\n  max-width: 800px;\n  margin: 40px auto;\n  padding: 0 20px;\n  animation: modalFadeIn 0.4s ease-out;\n}\n.dashboard-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-end;\n  margin-bottom: 40px;\n  flex-wrap: wrap;\n  gap: 20px;\n}\n.welcome-text {\n  max-width: 500px;\n}\n.header-stats {\n  display: flex;\n  gap: 16px;\n  background: var(--surface);\n  padding: 12px 20px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.mini-stat {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.9rem;\n}\n.mini-stat strong {\n  color: var(--text);\n  font-size: 1rem;\n}\n.dashboard-actions {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));\n  gap: 20px;\n  margin-bottom: 40px;\n}\n.home-dashboard-minimal {\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  min-height: 160px;\n}\n.offcanvas-launcher-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.offcanvas-launcher-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-start-card {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto auto;\n  align-items: center;\n  gap: 18px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.setup-start-copy {\n  min-width: 0;\n}\n.setup-kicker {\n  display: inline-flex;\n  margin-bottom: 6px;\n  color: var(--accent);\n  font-size: 0.72rem;\n  font-weight: 800;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n}\n.setup-start-copy h2 {\n  margin: 0 0 6px;\n  color: var(--text);\n  font-size: clamp(1.2rem, 2vw, 1.65rem);\n  line-height: 1.1;\n}\n.setup-start-copy p {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-review-hint {\n  margin-top: 10px;\n  padding: 10px 12px;\n  border-radius: 12px;\n  background: rgba(184, 130, 78, 0.10);\n  border: 1px solid rgba(184, 130, 78, 0.18);\n  color: var(--accent);\n  font-weight: 700;\n}\n.setup-mode-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(112px, 1fr));\n  gap: 10px;\n}\n.setup-mode-card {\n  min-height: 86px;\n  padding: 12px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: var(--surface);\n  color: var(--text);\n  cursor: pointer;\n  display: grid;\n  justify-items: center;\n  align-content: center;\n  gap: 4px;\n  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;\n}\n.setup-mode-card:hover,\n.setup-mode-card.active {\n  border-color: var(--accent);\n  box-shadow: var(--shadow-sm);\n  transform: translateY(-1px);\n}\n.setup-mode-card i {\n  color: var(--accent);\n  font-size: 1.2rem;\n}\n.setup-mode-card span {\n  font-weight: 800;\n}\n.setup-mode-card small {\n  color: var(--text-muted);\n  font-size: 0.78rem;\n}\n.setup-primary {\n  min-height: 48px;\n  white-space: nowrap;\n}\n.setup-optional-panel,\n.session-tools-panel {\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.68);\n}\n.setup-optional-panel summary,\n.session-tools-panel summary {\n  cursor: pointer;\n  list-style: none;\n  padding: 12px 14px;\n  font-weight: 700;\n  color: var(--text);\n}\n.setup-optional-panel summary::-webkit-details-marker,\n.session-tools-panel summary::-webkit-details-marker {\n  display: none;\n}\n.setup-optional-grid,\n.session-tools-grid {\n  display: grid;\n  gap: 12px;\n  padding: 0 14px 14px;\n}\n.setup-optional-grid {\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.session-tools-grid {\n  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));\n}\n.field-inline-toggle {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.toggle-chip {\n  min-height: 42px;\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  background: var(--surface);\n  color: var(--text);\n  font-family: inherit;\n  font-weight: 540;\n}\n.toggle-chip.active {\n  border-color: var(--accent);\n  color: var(--accent);\n}\n.continue-session-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 16px 18px;\n  margin-bottom: 18px;\n  border: 1px solid var(--accent-soft);\n  border-radius: 18px;\n  background: linear-gradient(135deg, var(--surface), var(--accent-light));\n  box-shadow: var(--shadow-sm);\n  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;\n}\n.continue-session-card:hover {\n  transform: translateY(-2px);\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent);\n}\n.continue-session-copy {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.continue-session-actions {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.continue-session-kicker {\n  font-size: 0.72rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--accent);\n}\n.continue-session-copy small {\n  color: var(--text-muted);\n}\n.continue-session-btn {\n  min-height: 44px;\n  white-space: nowrap;\n}\n.continue-session-dismiss {\n  min-width: 44px;\n  padding-inline: 0;\n  justify-content: center;\n}\n.resume-action {\n  background: linear-gradient(145deg, rgba(154, 103, 56, 0.12), rgba(255, 255, 255, 0.94));\n  border-color: var(--accent-soft);\n}\n.resume-action .action-icon {\n  background: rgba(154, 103, 56, 0.15);\n  color: var(--accent);\n}\n.resume-action .action-arrow {\n  color: var(--accent);\n}\n.action-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n  display: flex;\n  flex-direction: column;\n  position: relative;\n  overflow: hidden;\n}\n.action-card:hover {\n  transform: translateY(-4px);\n  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);\n  border-color: var(--accent);\n}\n.action-card.primary-action {\n  background: linear-gradient(145deg, var(--accent), var(--accent-dark));\n  color: white;\n  border: none;\n}\n.action-card.primary-action .action-icon {\n  background: rgba(255, 255, 255, 0.2);\n  color: white;\n}\n.action-card.primary-action h3,\n.action-card.primary-action p,\n.action-card.primary-action .action-arrow {\n  color: white;\n}\n.action-icon {\n  width: 48px;\n  height: 48px;\n  background: var(--bg-body);\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.5rem;\n  color: var(--accent);\n  margin-bottom: 20px;\n}\n.action-content h3 {\n  font-size: 1.15rem;\n  margin: 0 0 8px 0;\n  color: var(--text);\n}\n.action-content p {\n  font-size: 0.9rem;\n  color: var(--text-muted);\n  margin: 0;\n  line-height: 1.4;\n}\n.action-arrow {\n  position: absolute;\n  bottom: 24px;\n  right: 24px;\n  font-size: 1.2rem;\n  color: var(--accent);\n  opacity: 0;\n  transform: translateX(-10px);\n  transition: all 0.2s ease;\n}\n.action-card:hover .action-arrow {\n  opacity: 1;\n  transform: translateX(0);\n}\n.dashboard-recent {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n}\n.recent-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.recent-header h3 {\n  margin: 0;\n  font-size: 1.1rem;\n}\n.btn-ghost {\n  background: none;\n  border: none;\n  color: var(--accent);\n  font-weight: 500;\n  cursor: pointer;\n  padding: 6px 12px;\n  border-radius: 8px;\n  transition: background 0.2s;\n}\n.btn-ghost:hover {\n  background: var(--accent-light);\n}\n.recent-stats {\n  display: flex;\n  gap: 32px;\n  flex-wrap: wrap;\n}\n.r-stat {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.r-stat span {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.r-stat strong {\n  font-size: 1.4rem;\n  color: var(--text);\n}\n@media (max-width: 768px) {\n.quick-tools-grid {\n    grid-template-columns: 1fr;\n    gap: 8px;\n    padding: 12px;\n}\n.workspace-shell {\n    width: 100%;\n    margin-bottom: 14px;\n}\n.workspace-shell {\n    padding: 14px;\n}\n.workspace-shell-head {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 12px;\n}\n.workspace-shell-actions {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n}\n.workspace-shell-title-row {\n    align-items: flex-start;\n}\n.workspace-shell-phase {\n    min-height: 26px;\n}\n.workspace-shell-meta {\n    gap: 6px;\n}\n.workspace-shell-chaining {\n    gap: 6px;\n}\n.resume-feedback-row {\n    font-size: 0.74rem;\n}\n.resume-grid {\n    grid-template-columns: 1fr;\n}\n.workspace-fab {\n    top: 8px;\n    display: grid;\n    grid-template-columns: minmax(0, 1fr);\n    gap: 8px;\n    padding: 9px;\n    margin: 8px 0 6px;\n    border-radius: 14px;\n}\n.workspace-fab-meta {\n    min-width: 0;\n}\n.workspace-fab-kicker {\n    font-size: 0.64rem;\n}\n.workspace-fab-title {\n    font-size: 0.9rem;\n}\n.workspace-fab-sub {\n    font-size: 0.72rem;\n    gap: 5px;\n}\n.workspace-fab-sub span {\n    flex: 1 1 auto;\n    justify-content: center;\n    min-width: min(128px, 100%);\n}\n.workspace-fab-copy {\n    font-size: 0.78rem;\n}\n.workspace-fab-live {\n    gap: 6px;\n}\n.workspace-fab-live-pill {\n    flex: 1 1 0;\n    min-width: 0;\n    justify-content: center;\n}\n.workspace-fab-actions {\n    display: grid;\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n    gap: 8px;\n    width: 100%;\n}\n.fab-btn {\n    width: 100%;\n    min-width: 0;\n    justify-content: center;\n    padding: 8px 10px;\n    font-size: 0.82rem;\n    min-height: 44px;\n}\n.main-nav-btn,\n  .main-card-primary {\n    width: 100%;\n    min-height: 44px;\n}\n.settings-heading {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 10px;\n    padding-bottom: 12px;\n    margin-bottom: 14px;\n}\n.settings-status {\n    justify-self: start;\n}\n.settings-card-grid,\n  .settings-display-grid {\n    grid-template-columns: minmax(0, 1fr);\n}\n.settings-card-toggle,\n  .settings-card-range {\n    min-height: 0;\n    padding: 13px;\n    gap: 12px;\n}\n.settings-toggle {\n    min-height: 38px;\n}\n.settings-range-wrap {\n    gap: 10px;\n}\n.settings-apply-section {\n    padding: 12px;\n}\n.settings-apply-primary {\n    min-height: 46px;\n    border-radius: 12px;\n    font-size: 0.88rem;\n}\n.setup-start-card {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n    padding: 16px;\n}\n.setup-mode-grid {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.setup-primary {\n    width: 100%;\n    justify-content: center;\n}\n.continue-session-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.dashboard-actions {\n    grid-template-columns: 1fr;\n    gap: 14px;\n    margin-bottom: 20px;\n}\n.offcanvas-launcher-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.action-card {\n    padding: 18px;\n}\n.action-icon {\n    margin-bottom: 14px;\n}\n.continue-session-btn,\n  .btn-primary,\n  .btn-secondary,\n  .tools-btn,\n  .player-btn,\n  .toolbar-chip,\n  .toggle-chip {\n    min-height: 44px;\n}\n.settings-toggle {\n    min-height: 34px;\n}\n.inline-setting-row {\n    align-items: stretch;\n}\n.input-compact,\n  .inline-setting-pill {\n    width: 100%;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.technique-row,\n  .technique-row-main,\n  .technique-control {\n    align-items: stretch;\n    flex-direction: column;\n}\n.technique-toggle,\n  .segmented-control {\n    width: 100%;\n}\n.player-bar {\n    width: calc(100% - 24px);\n    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);\n    padding: 12px 14px;\n}\n.player-bar.collapsed {\n    transform: translateX(-50%);\n}\n.player-main {\n    grid-template-columns: minmax(92px, 0.8fr) auto minmax(72px, 1fr) auto;\n    align-items: center;\n    gap: 8px;\n}\n.player-info {\n    flex: 0 1 120px;\n    min-width: 0;\n}\n.player-chapter {\n    font-size: 0.78rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-verse {\n    font-size: 0.72rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-controls {\n    justify-content: center;\n    gap: 4px;\n}\n.player-progress-wrap {\n    order: 0;\n    min-width: 0;\n    gap: 6px;\n}\n.player-speed-controls {\n    display: none;\n}\n.analytics-grid {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n}\n.session-rail-actions {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.rail-btn {\n    flex: initial;\n    width: 100%;\n    justify-content: center;\n}\n.rail-btn-primary {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.toolbar-chip {\n    flex: initial;\n    width: 100%;\n}\n.font-dropdown {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 4px);\n    justify-content: center;\n    min-width: 0;\n}\n.font-dropdown {\n    width: 100%;\n}\n.font-dropdown-trigger {\n    width: 100%;\n    justify-content: space-between;\n}\n.verse-card {\n    padding: 16px;\n    border-radius: 18px;\n}\n.verse-header {\n    flex-direction: column;\n    align-items: stretch;\n    gap: 12px;\n}\n.verse-badges,\n  .verse-actions {\n    flex-wrap: wrap;\n}\n.verse-actions {\n    justify-content: space-between;\n}\n.verse-font-controls {\n    margin-right: 0;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.modal-content,\n  .confirm-modal,\n  .planner-modal {\n    width: 100%;\n    max-width: 100%;\n    border-radius: 18px;\n}\n.modal-header,\n  .modal-body,\n  .modal-footer {\n    padding-left: 16px;\n    padding-right: 16px;\n}\n.planner-stats-grid {\n    grid-template-columns: 1fr;\n}\n.tools {\n    width: 100vw;\n    max-width: 100vw;\n}\n.tools-top,\n  .tools-body,\n  .tools-footer {\n    padding-left: 14px;\n    padding-right: 14px;\n}\n.tools-tabs {\n    overflow-x: hidden;\n    display: grid;\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n    gap: 8px;\n}\n.tools-tabs button {\n    width: 100%;\n    min-width: 0;\n}\n.reading-aid-grid,\n  .session-tools-grid {\n    grid-template-columns: 1fr;\n}\n.verse-card,\n  .tools,\n  .sheet,\n  .sheet-content {\n    overflow-x: hidden;\n}\n}\n@media (min-width: 769px) and (max-width: 1024px) {\n.dashboard-actions {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n}\n.session-rail-actions {\n    flex-wrap: wrap;\n}\n.reading-toolbar {\n    align-items: flex-start;\n}\n.reading-toolbar-group:first-child {\n    flex: 1 1 100%;\n}\n.toolbar-chip {\n    flex: 0 1 auto;\n}\n.player-bar {\n    width: calc(100vw - 40px);\n}\n.player-main {\n    grid-template-columns: minmax(132px, 0.9fr) auto minmax(150px, 1fr) auto auto;\n    gap: 12px;\n}\n.player-progress-wrap {\n    min-width: 0;\n}\n}\n@media (max-width: 480px) {\n.session-pill {\n    white-space: normal;\n    text-align: center;\n    justify-content: center;\n}\n.rail-btn,\n  .toolbar-chip {\n    flex: 1 1 100%;\n}\n.player-time {\n    min-width: auto;\n    font-size: 0.7rem;\n}\n.player-progress-wrap {\n    gap: 8px;\n}\n.verse-number,\n.verse-status-badge,\n.verse-status-subtle {\n    width: 100%;\n    justify-content: center;\n    text-align: center;\n}\n}\n.verse-status-badge-review {\n  border-color: rgba(183, 28, 28, 0.24);\n  color: #9f1f1f;\n  background: rgba(183, 28, 28, 0.08);\n}\n.verse-card.feedback-mastered {\n  border-left: 4px solid #43a047;\n}\n.verse-card.feedback-weak {\n  border-left: 4px solid #e3a008;\n}\n.verse-card.feedback-repeat {\n  border-left: 4px solid #c62828;\n}\n.main.flow-recall .verse-card.active .verse-arabic {\n  color: transparent;\n  text-shadow: 0 0 22px rgba(232, 237, 247, 0.55);\n}\n.main.flow-practice .verse-card.active .verse-arabic {\n  opacity: 0.45;\n}\n.main.flow-recall .verse-card.active .verse-arabic .tajweed-mark,\n.main.flow-recall .verse-card.active .verse-arabic word,\n.main.flow-recall .verse-card.active .verse-arabic .wbw-word {\n  color: transparent !important;\n  background: transparent !important;\n  box-shadow: none !important;\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n:root {\n  --bg: #f3eee6;\n  --surface: rgba(255, 250, 243, 0.88);\n  --surface-strong: rgba(255, 255, 255, 0.92);\n  --border: rgba(78, 58, 38, 0.10);\n  --text: #1f1a17;\n  --text-muted: #6c6258;\n  --accent: #9a6738;\n  --accent-strong: #6e4726;\n  --accent-soft: #d8c1a8;\n  --accent-light: rgba(154, 103, 56, 0.10);\n  --accent-wash: rgba(228, 211, 194, 0.42);\n  --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);\n  --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);\n  --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);\n  --radius: 16px;\n  --navbar-offset: 56px;\n  --tools-width: 440px;\n  --tools-footer-h: 78px;\n  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;\n  --font-ui: \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n[data-theme=\"dark\"] {\n  --bg: #14110f;\n  --surface: rgba(31, 27, 24, 0.92);\n  --surface-strong: rgba(43, 37, 32, 0.96);\n  --border: rgba(255, 236, 216, 0.16);\n  --text: #f7ebdf;\n  --text-muted: #d1c2b3;\n  --accent: #d0a06b;\n  --accent-strong: #efc18d;\n  --accent-soft: #5f4530;\n  --accent-light: rgba(208, 160, 107, 0.14);\n  --accent-wash: rgba(208, 160, 107, 0.08);\n  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);\n  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);\n  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);\n}\n[data-theme=\"sepia\"] {\n  --bg: #efe2cb;\n  --surface: rgba(250, 241, 227, 0.88);\n  --surface-strong: rgba(255, 248, 237, 0.94);\n  --text: #352516;\n  --text-muted: #75624f;\n  --accent: #b8824e;\n  --accent-strong: #8f6033;\n  --accent-soft: #dcc3a6;\n  --accent-light: rgba(184, 130, 78, 0.12);\n  --accent-wash: rgba(221, 194, 162, 0.35);\n}\n[v-cloak] {\n  display: none !important;\n}\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\n.verse-download-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.82);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--accent);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.verse-download-btn:hover:not(:disabled) {\n  transform: scale(1.05);\n  border-color: var(--accent);\n  background: rgba(255, 255, 255, 0.96);\n}\n.verse-download-btn:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n\n/* Add to your style section */\n.main.tools-open {\n  overflow: hidden;\n}\n.tools {\n  transform: translateX(100%);\n  transition: transform 0.3s ease;\n}\n.tools.open {\n  transform: translateX(0);\n}\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.5);\n  z-index: 59;\n}\n\n/* Replace the existing blur mode CSS with this */\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-aid {\n  filter: blur(var(--recall-blur, 10px));\n  opacity: 0.7;\n  transition: filter 0.3s ease, opacity 0.3s ease;\n}\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .tajweed-mark,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic word,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .wbw-word {\n  filter: blur(var(--recall-blur, 10px));\n}\n\n/* Keep active verse clear */\n.main.blur-mode-active .verse-card.active .verse-arabic,\n.main.blur-mode-active .verse-card.active .verse-aid {\n  filter: none;\n  opacity: 1;\n}\n\n/* Word highlighting with Tajweed */\n.verse-arabic.tajweed-enabled .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n  position: relative;\n}\n.verse-arabic.tajweed-enabled .wbw-word.highlighted {\n  background: var(--accent);\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n\n/* Preserve Tajweed colors inside highlighted words */\n.verse-arabic.tajweed-enabled .wbw-word.highlighted,\n.verse-arabic.tajweed-enabled .wbw-word.highlighted * {\n  color: inherit !important;\n}\n\n/* Make Tajweed marks more visible on highlight */\n.verse-arabic.tajweed-enabled .wbw-word.highlighted .tajweed-mark {\n  filter: brightness(1.2);\n}\n.verse-arabic.tajweed-enabled .wbw-word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n.verse-arabic.tajweed-enabled .wbw-word.highlighted {\n  animation: wordHighlightPulse 0.2s ease-out;\n}\n@keyframes wordHighlightPulse {\n0% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.03);\n}\n100% {\n    transform: scale(1.02);\n}\n}\n\n/* Combined Tajweed + Word Highlighting */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n\n/* Preserve tajweed colors inside highlighted words but make them visible */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {\n  color: inherit !important;\n  background: transparent !important;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*=\"tajweed-\"] {\n  color: white !important;\n  background: transparent !important;\n}\n\n/* Mode Button Styling */\n.mode-btn {\n  background: var(--surface);\n  border: 1px solid var(--accent);\n  color: var(--accent);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mode-btn i:first-child {\n  font-size: 0.85rem;\n}\n.mode-btn .bi-chevron-down {\n  font-size: 0.7rem;\n  transition: transform 0.2s;\n}\n.mode-btn:hover .bi-chevron-down {\n  transform: translateY(2px);\n}\n.mode-btn:hover {\n  background: var(--accent-light);\n}\n\n/* Make all buttons consistent */\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn:disabled,\n.rail-btn-ghost:disabled,\n.rail-btn-primary:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n  pointer-events: none;\n  transform: none;\n  box-shadow: none;\n}\n.rail-btn-resume {\n  background: rgba(255, 255, 255, 0.92);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.rail-btn-resume:hover {\n  background: var(--accent-light);\n  transform: translateY(-1px);\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\nbody {\n  font-family: var(--font-ui);\n  background: var(--bg);\n  color: var(--text);\n}\nhtml {\n  background: var(--bg);\n}\n.app {\n  min-height: 100vh;\n  background: var(--bg);\n  font-size: calc(16px * var(--ui-scale, 1));\n  animation: appFade 260ms ease-out;\n}\n.verse-arabic {\n  min-height: 60px;\n}\n\n/* Session Rail */\n.session-rail {\n  background: var(--surface);\n  border-radius: 20px;\n  margin-bottom: 20px;\n  padding: 12px 16px 14px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.session-rail-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 10px;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.session-rail-copy {\n  flex: 1;\n  min-width: 0;\n}\n.session-rail-headline {\n  display: flex;\n  align-items: baseline;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.session-rail-pills {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  margin-top: 6px;\n}\n.session-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 4px;\n  padding: 5px 9px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n  font-size: 0.71rem;\n  white-space: nowrap;\n}\n.session-pill strong {\n  color: var(--text);\n  font-weight: 700;\n}\n.session-pill-focus {\n  max-width: min(280px, 100%);\n}\n.session-pill-focus strong {\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.session-rail-kicker {\n  font-size: 0.7rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.session-rail-meta {\n  font-size: 0.72rem;\n  color: var(--text-muted);\n  margin-top: 2px;\n}\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\n.session-rail-subnote {\n  margin-top: 10px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n}\n\n/* Mode Indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 10px;\n  padding: 6px 14px;\n  margin: 8px 0 12px 0;\n  background: var(--accent-light);\n  border-radius: 40px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n.mode-switch-btn {\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 4px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.mode-switch-btn:hover {\n  background: rgba(154, 103, 56, 0.2);\n  transform: rotate(180deg);\n}\n.progress-bar-wide {\n  margin-top: 10px;\n  height: 6px;\n  position: relative;\n  overflow: visible;\n}\n.progress-label {\n  position: absolute;\n  top: -24px;\n  right: 0;\n  font-size: 0.72rem;\n  font-weight: 700;\n  color: var(--accent);\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.session-rail-top {\n    flex-direction: column;\n    align-items: stretch;\n}\n.session-rail-actions {\n    justify-content: stretch;\n    width: 100%;\n    flex-wrap: wrap;\n}\n.rail-btn {\n    flex: 1;\n    justify-content: center;\n}\n}\n.verse-arabic-loading {\n  min-height: 60px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--text-muted);\n  animation: pulse 1s infinite;\n}\n@keyframes pulse {\n0%,\n  100% {\n    opacity: 0.3;\n}\n50% {\n    opacity: 0.6;\n}\n}\n\n/* Ensure HTML content is styled properly before Vue mounts */\n.verse-arabic word,\n.verse-arabic .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n}\n\n/* Prevent raw HTML showing */\n.verse-arabic:empty {\n  display: none;\n}\n\n/* Tajweed styles */\n.verse-arabic.tajweed-enabled [class*=\"tajweed\"] {\n  display: inline;\n}\n\n/* Color rules for tajweed - adjust based on what API returns */\n.verse-arabic [class*=\"ghunnah\"],\n.verse-arabic [class*=\"Ghunnah\"] {\n  color: #2ecc71;\n}\n.verse-arabic [class*=\"madd\"],\n.verse-arabic [class*=\"Madd\"] {\n  color: #e74c3c;\n}\n.verse-arabic [class*=\"qalqalah\"],\n.verse-arabic [class*=\"Qalqalah\"] {\n  color: #f39c12;\n}\n.verse-arabic [class*=\"ikhfa\"],\n.verse-arabic [class*=\"Ikhfa\"] {\n  color: #9b59b6;\n}\n.verse-arabic [class*=\"idgham\"],\n.verse-arabic [class*=\"Idgham\"] {\n  color: #3498db;\n}\n\n/* Word by Word styles */\n.wbw-word {\n  display: inline-block;\n  padding: 5px 8px;\n  margin: 2px 3px;\n  border-radius: 8px;\n  transition: all 0.2s ease;\n  cursor: pointer;\n  font-size: 1.05rem;\n  background: rgba(154, 103, 56, 0.05);\n}\n.wbw-word:hover {\n  background: var(--accent-light);\n  transform: scale(1.02);\n}\n.wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n  animation: pop 180ms ease-out;\n}\n.verse-arabic.verse-weak .wbw-word.weak-word {\n  background: #fff3bf;\n  color: #5f4b00;\n}\n.verse-arabic.verse-mastered .wbw-word.mastered-word {\n  background: #d3f9d8;\n  color: #1f6f31;\n}\n@keyframes pop {\nfrom {\n    transform: scale(1.01);\n}\nto {\n    transform: scale(1.05);\n}\n}\n\n/* Word highlighting styles */\n.verse-arabic word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n.rail-stat strong,\n.player-eta {\n  cursor: help;\n  border-bottom: 1px dotted var(--text-muted);\n}\n\n/* Optional: Show detailed breakdown on hover */\n.rail-stat:hover strong::after {\n  content: attr(title);\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: var(--surface-strong);\n  color: var(--text);\n  padding: 4px 8px;\n  border-radius: 8px;\n  font-size: 0.7rem;\n  white-space: nowrap;\n  z-index: 100;\n  box-shadow: var(--shadow-sm);\n  border: 1px solid var(--border);\n}\n\n/* Minimized Session Rail */\n.session-rail-mini {\n  position: sticky;\n  top: 12px;\n  z-index: 18;\n  padding: 10px;\n  padding-top: 8px;\n  margin-bottom: 20px;\n  background: var(--surface);\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-sm);\n  overflow: hidden;\n  transition: all 0.2s ease;\n}\n.session-rail-mini:hover {\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent-soft);\n}\n.rail-mini-content {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 8px 12px 8px 16px;\n}\n.rail-mini-info {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  flex: 1;\n}\n.rail-mini-icon {\n  width: 32px;\n  height: 32px;\n  background: var(--accent-light);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.rail-mini-icon i {\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.rail-mini-details {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-mini-surah {\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.rail-mini-progress {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.rail-mini-stats {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.mini-stat-item {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.mini-stat-item i {\n  font-size: 0.7rem;\n  color: var(--accent);\n}\n.rail-mini-actions {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mini-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n}\n.mini-btn:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n}\n.mini-btn:first-child {\n  background: var(--accent);\n  border-color: var(--accent);\n  color: white;\n}\n.mini-btn:first-child:hover {\n  transform: scale(1.05);\n  background: var(--accent-strong);\n}\n.rail-mini-progress {\n  height: 2px;\n  background: var(--border);\n}\n.progress-fill-mini {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.rail-mini-stats {\n    display: none;\n}\n.rail-mini-content {\n    padding: 6px 10px 6px 12px;\n}\n.rail-mini-surah {\n    font-size: 0.75rem;\n}\n}\n\n/* Font Dropdown */\n.font-dropdown {\n  position: relative;\n}\n.font-dropdown-trigger {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 999px;\n  font-size: 0.75rem;\n  cursor: pointer;\n  transition: all 0.2s;\n  color: var(--text);\n}\n.font-dropdown-trigger:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.font-dropdown-trigger .bi-chevron-down {\n  transition: transform 0.2s;\n  font-size: 0.7rem;\n}\n.font-dropdown-trigger .bi-chevron-down.rotated {\n  transform: rotate(180deg);\n}\n.font-dropdown-menu {\n  position: absolute;\n  top: calc(100% + 8px);\n  right: 0;\n  min-width: 200px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  box-shadow: var(--shadow-lg);\n  overflow: hidden;\n  z-index: 100;\n  backdrop-filter: blur(12px);\n}\n.font-option {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  width: 100%;\n  padding: 10px 14px;\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  font-size: 0.8rem;\n  text-align: left;\n  transition: all 0.15s;\n  color: var(--text);\n}\n.font-option:hover {\n  background: var(--accent-light);\n}\n.font-option.active {\n  background: var(--accent);\n  color: white;\n}\n.font-option .check-icon {\n  margin-left: auto;\n  font-size: 0.8rem;\n}\n\n/* Dropdown Animation */\n.dropdown-fade-enter-active,\n.dropdown-fade-leave-active {\n  transition: all 0.2s ease;\n}\n.dropdown-fade-enter-from,\n.dropdown-fade-leave-to {\n  opacity: 0;\n  transform: translateY(-8px);\n}\n\n/* Tajweed styles for AlQuran quran-tajweed edition */\n.verse-arabic.tajweed-enabled {\n  line-height: 2;\n  white-space: normal;\n  overflow-wrap: anywhere;\n}\n.verse-arabic.tajweed-enabled .tajweed-mark {\n  display: inline;\n  border-radius: 0.2em;\n  padding: 0 0.03em;\n}\n.verse-arabic.tajweed-enabled .tajweed-ham_wasl,\n.verse-arabic.tajweed-enabled .tajweed-slnt {\n  color: #7e8a97;\n}\n.verse-arabic.tajweed-enabled .tajweed-ghn,\n.verse-arabic.tajweed-enabled .tajweed-idgh_ghn,\n.verse-arabic.tajweed-enabled .tajweed-iqlb {\n  color: #2e9d62;\n  background: rgba(46, 157, 98, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,\n.verse-arabic.tajweed-enabled .tajweed-ikhf,\n.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw {\n  color: #9b59b6;\n  background: rgba(155, 89, 182, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-qlq,\n.verse-arabic.tajweed-enabled .tajweed-lqlq {\n  color: #d98824;\n  background: rgba(217, 136, 36, 0.12);\n}\n.verse-arabic.tajweed-enabled .tajweed-madda_normal,\n.verse-arabic.tajweed-enabled .tajweed-madda_permissible,\n.verse-arabic.tajweed-enabled .tajweed-madda_necessary,\n.verse-arabic.tajweed-enabled .tajweed-madda_obligatory,\n.verse-arabic.tajweed-enabled .tajweed-madda_pbligatory {\n  color: #d55245;\n  background: rgba(213, 82, 69, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_mus,\n.verse-arabic.tajweed-enabled .tajweed-idghm_shfw,\n.verse-arabic.tajweed-enabled .tajweed-idgh_shfw,\n.verse-arabic.tajweed-enabled .tajweed-ghn+.tajweed-mark {\n  color: #2b7bbb;\n  background: rgba(43, 123, 187, 0.10);\n}\n\n/* Toolbar chip active state for tajweed */\n.toolbar-chip.active {\n  background: var(--accent);\n  color: white;\n}\n.verse-play-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: white;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.verse-play-btn i {\n  font-size: 0.9rem;\n}\n.verse-play-btn:hover {\n  transform: scale(1.05);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--accent);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.verse-play-btn:active {\n  transform: scale(0.98);\n}\n.verse-preview-label {\n  margin-left: 10px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n  font-weight: 650;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n}\n.resume-details {\n  margin-top: 10px;\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.72);\n  padding: 10px 12px;\n}\n.resume-details summary {\n  cursor: pointer;\n  list-style: none;\n  font-weight: 650;\n  color: var(--text);\n}\n.resume-details summary::-webkit-details-marker {\n  display: none;\n}\n.verse-download-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.82);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--accent);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.verse-download-btn:hover:not(:disabled) {\n  transform: scale(1.05);\n  border-color: var(--accent);\n  background: rgba(255, 255, 255, 0.96);\n}\n.verse-download-btn:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n.speed-label {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-right: 4px;\n}\n.speed-controls {\n  display: flex;\n  gap: 4px;\n}\n.speed-btn {\n  padding: 4px 8px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.speed-btn.active {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.streak-motivation {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border-radius: 40px;\n  font-size: 0.75rem;\n}\n.streak-badge {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-weight: 500;\n}\n.motivation-message {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--text-muted);\n  font-size: 0.7rem;\n}\n.pa-note {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n  margin-top: 4px;\n  display: block;\n}\n\n/* Active tab indicator with pulse effect */\n.tools-tabs button.active-tab {\n  position: relative;\n  animation: tabPulse 0.22s ease-out;\n}\n@keyframes tabPulse {\n0% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 var(--accent);\n}\n50% {\n    transform: scale(1.012);\n    box-shadow: 0 0 0 3px var(--accent-light);\n}\n100% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n.quick-tools {\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.78);\n}\n.quick-tools-grid {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n  padding: 12px 14px;\n}\n.quick-tool {\n  border: 1px solid rgba(154, 103, 56, 0.10);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.82);\n  padding: 10px;\n  display: grid;\n  gap: 8px;\n  min-width: 0;\n}\n.quick-tool-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 8px;\n}\n.quick-tool-label {\n  font-size: 0.74rem;\n  font-weight: 750;\n  color: var(--text);\n}\n.quick-tool-value {\n  font-size: 0.74rem;\n  font-weight: 650;\n  color: var(--text-muted);\n}\n.quick-tool-body {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.quick-tool-body.disabled {\n  opacity: 0.55;\n}\n.quick-tool-body-muted {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n}\n.quick-range {\n  flex: 1 1 auto;\n  min-width: 0;\n}\n.toggle-chip-compact {\n  min-height: 34px;\n  padding: 6px 10px;\n  font-size: 0.82rem;\n}\n\n/* Toggle switch animation and visual feedback */\n.switch {\n  transition: all 0.2s ease;\n}\n.switch:active {\n  transform: scale(0.98);\n}\n.switch-ui {\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n  animation: switchPulse 0.3s ease-out;\n}\n@keyframes switchPulse {\n0% {\n    box-shadow: 0 0 0 0 rgba(139, 94, 60, 0.4);\n}\n50% {\n    box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.2);\n}\n100% {\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Field hint styling */\n.field-hint {\n  font-size: calc(0.7rem * var(--en-scale, 1));\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.26;\n  display: block;\n}\n\n/* Verse Arabic styling */\n.verse-arabic {\n  --verse-font-percent: 100;\n  --verse-font-size: clamp(1.5rem, calc(var(--verse-font-percent, 150) * 0.0175rem), 3.25rem);\n  font-family: var(--font-ar);\n  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n.verse-arabic word {\n  display: inline-block;\n  font-size: 1em;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-card {\n  background: var(--surface);\n  border-radius: 20px;\n  padding: 26px;\n  transition: all 0.2s ease;\n  border: 1px solid var(--border);\n  position: relative;\n  direction: ltr;\n  overflow: hidden;\n  width: 100%;\n}\n.verse-card::before {\n  content: \"\";\n  position: absolute;\n  inset: 0;\n  pointer-events: none;\n  background:\n    linear-gradient(180deg, rgba(184, 130, 78, 0.03), transparent 22%),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.05), transparent 28%);\n}\n.verse-card.active {\n  border-color: var(--accent);\n  background: linear-gradient(145deg, rgba(184, 130, 78, 0.14), rgba(154, 103, 56, 0.04));\n  box-shadow: 0 0 0 1px var(--accent), 0 14px 32px rgba(154, 103, 56, 0.18);\n  transform: translateY(-1px);\n  transition: all 0.2s ease;\n}\n.main.focus-mode-active .verse-card:not(.active) {\n  opacity: 0.54;\n  filter: saturate(0.72);\n}\n.main.focus-mode-active .workspace-fab-live,\n.main.focus-mode-active .verse-card:not(.active) .verse-aid {\n  opacity: 0.38;\n}\n\n\n\n/* Removed: \"For serious huffadh training\" badge */\n.verse-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 16px;\n}\n.verse-badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-number {\n  font-size: 0.78rem;\n  padding: 6px 12px;\n  background: var(--accent);\n  border-radius: 999px;\n  color: #fff;\n  font-weight: 700;\n  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.24);\n}\n.verse-status-badge,\n.verse-status-subtle {\n  border-radius: 999px;\n  padding: 5px 10px;\n  font-size: 0.68rem;\n  font-weight: 600;\n}\n.verse-status-badge {\n  background: var(--accent-light);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.verse-status-subtle {\n  background: var(--bg-elevated);\n  color: var(--text-muted);\n}\n.verse-ref {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 8px;\n}\n\n/* Font controls */\n.verse-font-controls {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  padding: 2px 6px;\n  margin-right: 8px;\n}\n.verse-font-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 12px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 10px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.verse-font-btn:hover {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n}\n.verse-font-size-indicator {\n  font-size: 10px;\n  min-width: 35px;\n  text-align: center;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n\n/* Session rail */\n.session-rail {\n  position: sticky;\n  top: 14px;\n  z-index: 18;\n  margin-bottom: 18px;\n  padding: 12px 14px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-md);\n  animation: railIn 280ms ease-out;\n}\n.session-rail-top {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  gap: 12px;\n  align-items: center;\n}\n.session-rail-kicker {\n  font-size: 10px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  margin-top: 2px;\n  font-size: 14px;\n  font-weight: 450;\n}\n.session-rail-meta {\n  margin-top: 2px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.session-rail-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 8px;\n  margin-top: 10px;\n}\n.rail-stat {\n  padding: 8px 10px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-stat span {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n}\n.rail-stat strong {\n  font-size: 0.78rem;\n  font-weight: 500;\n}\n.rail-btn {\n  height: 34px;\n  padding: 0 12px;\n  border-radius: 13px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  color: var(--text);\n  font-size: 12px;\n  font-weight: 450;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.rail-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);\n}\n.progress-bar {\n  flex: 1;\n  height: 4px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-wide {\n  margin-top: 10px;\n}\n.progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s;\n}\n\n/* Mode indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  margin: 8px 0 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n\n/* Reading toolbar */\n.reading-toolbar {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  margin-bottom: 16px;\n  padding: 12px 14px;\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.reading-toolbar-group {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  align-items: flex-start;\n}\n.toolbar-chip {\n  border: 0;\n  border-radius: 999px;\n  padding: 8px 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  font-size: 0.75rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: var(--shadow-sm);\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.toolbar-chip i,\n.rail-btn i,\n.tools-tabs button i,\n.st-ico i {\n  font-size: 0.9rem;\n  line-height: 1;\n}\n.toolbar-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.toolbar-chip:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n\n/* Tools panel */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  width: min(var(--tools-width), 92vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n}\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(15, 12, 8, 0.35);\n  backdrop-filter: blur(1px);\n  z-index: 59;\n}\n.tools.open {\n  transform: translateX(0);\n}\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n}\n.tools-topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.tools-title {\n  font-size: 1rem;\n  font-weight: 700;\n  letter-spacing: -0.2px;\n  color: var(--text);\n}\n.tools-context {\n  margin-top: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 600;\n}\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n  color: rgba(0, 0, 0, 0.7);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n  overflow-x: auto;\n  -webkit-overflow-scrolling: touch;\n  width: 100%;\n}\n.tools-tabs button {\n  flex: 1 1 0;\n  padding: 7px 10px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.82rem;\n  cursor: pointer;\n  color: rgba(0, 0, 0, 0.55);\n  font-weight: 450;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: background 140ms ease, color 140ms ease, transform 140ms ease, box-shadow 160ms ease;\n  white-space: nowrap;\n}\n.tools-tabs button.active {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));\n  box-shadow: var(--shadow-sm);\n  color: rgba(0, 0, 0, 0.85);\n}\n.tools-body {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n}\n\n/* Compact mode (default) to reduce cognitive load */\n.tools-body.compact .st-sub,\n.tools-body.compact .field-hint,\n.tools-body.compact .analytics-help,\n.tools-body.compact .stat-help {\n  display: block !important;\n}\n.tools-body.compact .sheet {\n  gap: 12px;\n}\n.tools-body.compact .sheet-section {\n  padding: 0;\n  border-radius: 16px;\n}\n.tools-body.compact .sheet-toggle {\n  padding: 12px 14px;\n}\n.tools-body.compact .sheet-content {\n  padding: 12px 14px 14px;\n}\n.tools-body.compact .field-stack {\n  gap: 12px;\n}\n.tools-body.compact .field label {\n  margin-bottom: 6px;\n}\n.sheet {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.sheet-section {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border-radius: 18px;\n  padding: 0;\n  overflow: hidden;\n  box-shadow: var(--shadow-sm);\n  animation: riseSoft 260ms ease-out;\n}\n.sheet-toggle {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border: none;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease;\n}\n.st-left {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.st-ico {\n  width: 24px;\n  height: 24px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));\n  border: 1px solid rgba(139, 94, 60, 0.18);\n  flex: 0 0 auto;\n  font-size: 11px;\n  font-weight: 600;\n  color: var(--accent);\n}\n.st-txt {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 2px;\n  min-width: 0;\n}\n.st-title {\n  font-weight: 450;\n  letter-spacing: -0.2px;\n  color: var(--text);\n  font-size: 0.82rem;\n  white-space: nowrap;\n}\n.st-sub {\n  font-size: 0.66rem;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.st-chev {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  display: grid;\n  place-items: center;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  color: rgba(0, 0, 0, 0.65);\n  transition: transform 0.15s ease;\n  box-shadow: var(--shadow-sm);\n}\n.st-chev.open {\n  transform: rotate(180deg);\n}\n.sheet-content {\n  padding: 12px 12px 14px;\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field-stack {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  min-width: 0;\n}\n.field label {\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n}\n.field-hint {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.35;\n  display: block;\n}\n.select,\n.input {\n  width: 100%;\n  min-width: 0;\n  padding: 11px 12px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--text);\n  font-size: 0.8rem;\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n.range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.range-single {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n  align-items: center;\n}\n.range span {\n  color: rgba(0, 0, 0, 0.35);\n  font-weight: 450;\n  font-size: 11px;\n}\n.radio-group {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.radio {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 0.85rem;\n  color: var(--text);\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  transition: all 0.2s ease;\n}\n.radio:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-sm);\n}\n.radio input {\n  margin: 0;\n}\n.switch {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 11px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  cursor: pointer;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  transition: all 0.2s ease;\n}\n.switch input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.switch-ui {\n  width: 44px;\n  height: 26px;\n  border-radius: 999px;\n  background: rgba(0, 0, 0, 0.12);\n  position: relative;\n  flex: 0 0 auto;\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  content: \"\";\n  position: absolute;\n  top: 3px;\n  left: 3px;\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  background: white;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n}\n.switch input:checked+.switch-ui::after {\n  transform: translateX(18px);\n}\n.switch-text {\n  font-size: 0.74rem;\n  color: rgba(0, 0, 0, 0.72);\n  font-weight: 400;\n}\n.tools-techniques-section {\n  border-color: rgba(139, 94, 60, 0.16);\n  box-shadow: none;\n}\n.techniques-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.technique-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 13px;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.78);\n  box-shadow: 0 10px 24px rgba(63, 39, 18, 0.055);\n}\n.technique-row-stacked {\n  align-items: stretch;\n  flex-direction: column;\n}\n.technique-row-main,\n.technique-control {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.technique-copy {\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  gap: 3px;\n}\n.technique-copy label {\n  margin: 0;\n  color: var(--text);\n  font-family: inherit;\n  font-size: 0.86rem;\n  font-weight: 560;\n  white-space: nowrap;\n}\n.technique-copy small,\n.technique-control span {\n  color: var(--text-muted);\n  font-family: inherit;\n  font-size: 0.73rem;\n  font-weight: 400;\n  line-height: 1.45;\n}\n.technique-toggle {\n  flex: 0 0 86px;\n  min-height: 40px;\n  border-radius: 12px;\n  font-family: inherit;\n  font-size: 0.82rem;\n  font-weight: 560;\n  border-width: 1px;\n}\n.technique-control {\n  padding-top: 12px;\n  border-top: 1px solid rgba(154, 103, 56, 0.10);\n}\n.technique-range {\n  flex: 1 1 auto;\n  min-width: 96px;\n  padding: 0;\n  box-shadow: none;\n}\n.segmented-control {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 6px;\n  padding: 5px;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 14px;\n  background: rgba(98, 73, 49, 0.045);\n}\n.segmented-control button {\n  min-width: 0;\n  min-height: 42px;\n  padding: 9px 10px;\n  border: 1px solid transparent;\n  border-radius: 10px;\n  background: transparent;\n  color: var(--text-muted);\n  font-family: inherit;\n  font-size: 0.8rem;\n  font-weight: 560;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n}\n.segmented-control button.active {\n  background: #fffaf4;\n  color: var(--accent-strong);\n  border-color: rgba(154, 103, 56, 0.20);\n  box-shadow: 0 8px 18px rgba(63, 39, 18, 0.09);\n}\n.technique-preview {\n  padding: 10px 12px;\n  border-radius: 12px;\n  background: rgba(154, 103, 56, 0.07);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: rgba(98, 73, 49, 0.92);\n  font-family: inherit;\n  font-size: 0.74rem;\n  font-weight: 430;\n  line-height: 1.45;\n}\n\n/* Start button */\n.start-btn {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  border-radius: 12px;\n  color: white;\n  font-size: 1rem;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  margin-top: 20px;\n  transition: all 0.2s ease;\n}\n.start-btn:hover:not(:disabled) {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);\n}\n.start-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n\n/* Tools footer */\n.tools-footer {\n  position: absolute;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  height: var(--tools-footer-h);\n  padding: 12px 16px 14px;\n  border-top: 1px solid var(--border);\n  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));\n  display: flex;\n  gap: 10px;\n  justify-content: space-between;\n  align-items: center;\n}\n.tools-btn {\n  flex: 1;\n  min-height: 44px;\n  padding: 10px 10px;\n  border-radius: 15px;\n  font-weight: 500;\n  border: 1px solid rgba(0, 0, 0, 0.1);\n  cursor: pointer;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  line-height: 1;\n}\n.tools-btn-soft {\n  color: var(--text-muted);\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.42));\n  box-shadow: none;\n}\n.tools-btn-soft:hover {\n  color: var(--text);\n  border-color: var(--accent-soft);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.6));\n}\n.tools-btn-primary {\n  color: #fff;\n  border-color: rgba(0, 0, 0, 0.08);\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  box-shadow: var(--shadow-sm);\n}\n.tools-btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n.tools-btn:active:not(:disabled),\n.fab-btn:active:not(:disabled),\n.toggle-chip:active:not(:disabled),\n.sheet-toggle:active:not(:disabled) {\n  transform: translateY(0);\n}\n.tools-btn:hover:not(:disabled),\n.fab-btn:hover:not(:disabled),\n.toggle-chip:hover:not(:disabled),\n.sheet-toggle:hover:not(:disabled) {\n  filter: brightness(1.02);\n}\n.tools-btn-primary:disabled {\n  opacity: 0.55;\n  cursor: not-allowed;\n  box-shadow: none;\n}\n.tools-btn-start {\n  flex: 1.6;\n}\n\n/* Hero section */\n.hero-card {\n  margin-bottom: 16px;\n  padding: 18px 18px 16px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 236, 226, 0.92));\n  box-shadow: var(--shadow-md);\n  display: grid;\n  gap: 14px;\n  animation: riseSoft 260ms ease-out;\n}\n.hero-kicker {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  color: var(--accent);\n}\n.hero-title {\n  margin-top: 6px;\n  font-size: 1.24rem;\n  font-weight: 500;\n  letter-spacing: -0.03em;\n}\n.hero-sub {\n  margin-top: 8px;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  max-width: 56ch;\n}\n.hero-flow {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n}\n.hero-step {\n  padding: 10px 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.62);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.74rem;\n}\n.hero-step span {\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  display: grid;\n  place-items: center;\n  background: var(--accent-light);\n  color: var(--accent);\n  font-size: 11px;\n}\n.hero-step strong {\n  font-weight: 500;\n}\n.hero-points {\n  display: grid;\n  gap: 8px;\n}\n.hero-point {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.hero-point i {\n  color: var(--accent);\n}\n.hero-actions,\n.empty-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cta {\n  flex: 1;\n  padding: 10px 10px;\n  border-radius: 14px;\n  font-weight: 450;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 11px;\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.cta-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);\n}\n.cta-ghost {\n  background: rgba(255, 255, 255, 0.58);\n  box-shadow: var(--shadow-sm);\n}\n\n/* Empty state */\n.empty {\n  padding: 40px 0;\n}\n.empty-card {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: var(--radius);\n  padding: 32px;\n  text-align: center;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-md);\n}\n.empty-icon {\n  font-family: var(--font-ar);\n  font-size: 2.2rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.empty-card h3 {\n  font-weight: 450;\n  margin-bottom: 6px;\n  font-size: 1rem;\n}\n.empty-card p {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  margin-bottom: 16px;\n}\n\n/* Verses grid */\n.workspace {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr);\n  gap: 14px;\n  align-items: start;\n  margin-top: 14px;\n}\n.workspace-main {\n  min-width: 0;\n}\n.workspace-shell {\n  width: min(1120px, 100%);\n  margin: 0 auto 18px;\n}\n.workspace-shell {\n  display: grid;\n  gap: 6px;\n  padding: 10px 12px;\n  border-radius: 20px;\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background:\n    linear-gradient(160deg, rgba(255, 251, 245, 0.98), rgba(255, 255, 255, 0.9)),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.09), transparent 28%);\n  box-shadow: 0 14px 28px rgba(63, 39, 18, 0.07);\n  position: relative;\n}\n.workspace-shell.collapsed {\n  gap: 8px;\n  padding: 12px 14px;\n}\n.workspace-shell-head {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  gap: 16px;\n  align-items: flex-start;\n}\n.workspace-shell-copy {\n  display: grid;\n  gap: 3px;\n  min-width: 0;\n}\n.workspace-shell-kicker {\n  display: inline-flex;\n  width: -moz-fit-content;\n  width: fit-content;\n  padding: 3px 7px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.1);\n  color: var(--accent-strong);\n  font-size: 0.68rem;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 0.06em;\n}\n.workspace-shell-kicker-review {\n  background: rgba(183, 28, 28, 0.12);\n  color: #9f1f1f;\n}\n.workspace-shell-title-row {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  flex-wrap: wrap;\n}\n.workspace-shell-copy h1 {\n  margin: 0;\n  color: var(--text);\n  font-size: clamp(1rem, 1.5vw, 1.25rem);\n  line-height: 1.08;\n  font-weight: 650;\n}\n.workspace-shell-phase {\n  display: inline-flex;\n  align-items: center;\n  min-height: 28px;\n  padding: 5px 10px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.88);\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  color: var(--accent-strong);\n  font-size: 0.73rem;\n  font-weight: 650;\n}\n.workspace-shell-phase-review {\n  border-color: rgba(183, 28, 28, 0.24);\n  color: #9f1f1f;\n  background: rgba(183, 28, 28, 0.09);\n}\n.workspace-shell-copy h2 {\n  margin: 0;\n  color: var(--text);\n  font-size: 1rem;\n  line-height: 1.15;\n  font-weight: 600;\n}\n.workspace-shell-copy p {\n  margin: 0;\n  color: var(--text-muted);\n  max-width: 58ch;\n  font-size: 0.8rem;\n  line-height: 1.35;\n}\n.workspace-shell-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.workspace-shell-meta span {\n  display: inline-flex;\n  align-items: center;\n  min-height: 28px;\n  padding: 5px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.15);\n  background: rgba(255, 255, 255, 0.86);\n  color: rgba(48, 42, 35, 0.86);\n  font-size: 0.76rem;\n  font-weight: 600;\n}\n.workspace-shell-meta-review {\n  border-color: rgba(183, 28, 28, 0.24) !important;\n  color: #9f1f1f !important;\n  background: rgba(183, 28, 28, 0.08) !important;\n}\n.resume-feedback-bars,\n.session-feedback-bars {\n  display: grid;\n  gap: 6px;\n  margin-top: 8px;\n}\n.session-feedback-panel {\n  margin-top: 8px;\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.72);\n  padding: 8px 10px;\n}\n.session-feedback-panel summary {\n  list-style: none;\n  cursor: pointer;\n  display: grid;\n  gap: 2px;\n  color: var(--text);\n  font-weight: 650;\n}\n.session-feedback-panel summary::-webkit-details-marker {\n  display: none;\n}\n.session-feedback-panel summary small {\n  color: var(--text-muted);\n  font-weight: 500;\n  font-size: 0.74rem;\n}\n.resume-feedback-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.resume-progress-repetition {\n  background: linear-gradient(90deg, #f2c94c, #e3a008);\n}\n.resume-progress-retention {\n  background: linear-gradient(90deg, #e57373, #c62828);\n}\n.pill-status-mastered {\n  border-color: rgba(46, 125, 50, 0.22);\n  background: rgba(76, 175, 80, 0.08);\n  color: #2e7d32;\n}\n.pill-status-weak {\n  border-color: rgba(245, 158, 11, 0.22);\n  background: rgba(245, 158, 11, 0.1);\n  color: #8a5a00;\n}\n.pill-status-repeat {\n  border-color: rgba(198, 40, 40, 0.22);\n  background: rgba(229, 57, 53, 0.08);\n  color: #9f1f1f;\n}\n.workspace-shell-chaining {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  align-items: center;\n}\n.workspace-shell-chain-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  min-height: 28px;\n  padding: 5px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background: rgba(255, 255, 255, 0.86);\n  color: rgba(48, 42, 35, 0.86);\n  font-size: 0.72rem;\n  font-weight: 650;\n}\n.workspace-shell-chain-pill i {\n  color: var(--accent-strong);\n}\n.workspace-shell-chain-pill-soft {\n  background: rgba(154, 103, 56, 0.09);\n  border-color: rgba(154, 103, 56, 0.14);\n  color: var(--accent-strong);\n}\n.workspace-shell-actions {\n  display: grid;\n  grid-template-columns: repeat(2, auto);\n  gap: 8px;\n  align-items: start;\n}\n.main-nav-btn,\n.main-card-primary {\n  min-height: 42px;\n  border-radius: 14px;\n  font-weight: 600;\n  font-size: 0.84rem;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  padding: 8px 12px;\n}\n.main-nav-btn {\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background: rgba(255, 255, 255, 0.82);\n  color: var(--text);\n}\n.main-card-primary {\n  border: 0;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  box-shadow: 0 12px 24px rgba(154, 103, 56, 0.18);\n}\n.main-nav-btn:disabled,\n.main-card-primary:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n  box-shadow: none;\n}\n.workspace-fab {\n  position: sticky;\n  top: 14px;\n  z-index: 25;\n  display: flex;\n  min-width: 0;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 8px 10px;\n  margin: 8px 0 6px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.06);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.58));\n  box-shadow: 0 16px 38px rgba(63, 39, 18, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.38);\n  backdrop-filter: blur(10px);\n  animation: cardSoftIn 220ms cubic-bezier(0.16, 1, 0.3, 1);\n  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;\n}\n.workspace-fab:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 20px 44px rgba(63, 39, 18, 0.18), 0 0 0 1px rgba(154, 103, 56, 0.18);\n  border-color: rgba(154, 103, 56, 0.2);\n}\n@keyframes cardSoftIn {\nfrom {\n    transform: translateY(6px);\n    opacity: 0.9;\n}\nto {\n    transform: translateY(0);\n    opacity: 1;\n}\n}\n.workspace-fab-meta {\n  min-width: 0;\n  flex: 1 1 auto;\n  display: grid;\n  gap: 4px;\n}\n.workspace-fab-kicker {\n  display: inline-flex;\n  align-items: center;\n  width: -moz-fit-content;\n  width: fit-content;\n  padding: 4px 8px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.10);\n  color: var(--accent-strong);\n  font-size: 0.68rem;\n  font-weight: 650;\n  letter-spacing: 0.06em;\n  text-transform: uppercase;\n}\n.workspace-fab-title {\n  font-weight: 650;\n  color: var(--text);\n  letter-spacing: -0.2px;\n  font-size: 0.92rem;\n  line-height: 1.15;\n}\n.workspace-fab-sub {\n  margin-top: 3px;\n  font-size: 0.74rem;\n  color: var(--text-muted);\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  align-items: center;\n  line-height: 1.2;\n}\n.workspace-fab-sub span {\n  display: inline-flex;\n  align-items: center;\n  max-width: 100%;\n  padding: 6px 10px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.18);\n  background: rgba(255, 255, 255, 0.86);\n  box-shadow: 0 8px 18px rgba(63, 39, 18, 0.06);\n  color: rgba(48, 42, 35, 0.82);\n  font-weight: 600;\n}\n.workspace-fab-live {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 5px;\n}\n.workspace-fab-live-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  max-width: 100%;\n  min-height: 38px;\n  padding: 8px 12px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.11);\n  border: 1px solid rgba(154, 103, 56, 0.20);\n  color: var(--accent-strong);\n  font-size: 0.82rem;\n  font-weight: 750;\n  box-shadow: 0 10px 20px rgba(63, 39, 18, 0.08);\n}\n.workspace-fab-live-pill i {\n  display: inline-grid;\n  place-items: center;\n  width: 22px;\n  height: 22px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.14);\n}\n.workspace-fab-live-pill-primary {\n  background: linear-gradient(180deg, rgba(154, 103, 56, 0.16), rgba(154, 103, 56, 0.09));\n  border-color: rgba(154, 103, 56, 0.28);\n}\n.workspace-fab-live-pill-mode {\n  background: rgba(255, 255, 255, 0.86);\n}\n.workspace-fab-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n  line-height: 1.26;\n  max-width: 60ch;\n  overflow-wrap: anywhere;\n}\n.workspace-fab-chip {\n  display: inline-flex;\n  align-items: center;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(46, 125, 50, 0.18);\n  background: rgba(46, 125, 50, 0.10);\n  color: rgba(46, 125, 50, 0.95);\n  font-weight: 650;\n  font-size: 0.72rem;\n}\n.workspace-fab-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex: 0 0 auto;\n}\n.fab-btn {\n  min-height: 40px;\n  padding: 8px 11px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.76);\n  box-shadow: var(--shadow-sm);\n  font-weight: 600;\n  font-size: 0.84rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  white-space: nowrap;\n  cursor: pointer;\n  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 140ms ease;\n}\n.fab-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  border-color: transparent;\n  box-shadow: 0 14px 28px rgba(154, 103, 56, 0.22);\n}\n.fab-btn-soft {\n  color: rgba(0, 0, 0, 0.78);\n}\n.fab-btn-ghost {\n  color: rgba(0, 0, 0, 0.78);\n}\n.verses-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n  margin-top: 0;\n}\n.verse-arabic-primary {\n  /* Primary focus: Quran dominates; aids are quieter. */\n  font-size: clamp(2.1rem, 2.75vw, 3.05rem);\n  line-height: 2.25;\n  letter-spacing: 0.01em;\n}\n.verse-aid {\n  opacity: 0.82;\n  filter: saturate(0.78);\n  margin-top: 0.4rem;\n  font-size: 0.93em;\n}\n.verse-aid-title {\n  margin-bottom: 4px;\n  color: var(--accent-strong);\n  font-size: 0.66rem;\n  font-weight: 650;\n  font-style: normal;\n  text-transform: uppercase;\n  letter-spacing: 0.04em;\n}\n.inline-setting-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.input-compact {\n  flex: 0 0 140px;\n}\n.inline-setting-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-height: 30px;\n  min-width: 58px;\n  padding: 0 10px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.08);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: var(--accent-strong);\n  font-size: 0.72rem;\n  font-family: inherit;\n  font-weight: 460;\n}\n.settings-section {\n  padding: 18px;\n  border-radius: 18px;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  background: #fffdf9;\n  box-shadow: 0 18px 42px rgba(40, 28, 16, 0.08);\n}\n.settings-heading {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  align-items: start;\n  gap: 16px;\n  padding-bottom: 16px;\n  margin-bottom: 16px;\n  border-bottom: 1px solid rgba(28, 24, 20, 0.07);\n}\n.settings-heading-copy {\n  min-width: 0;\n  display: grid;\n  gap: 6px;\n}\n.settings-heading-copy h3 {\n  margin: 0;\n  color: #1f1d1a;\n  font-size: 1.12rem;\n  font-weight: 560;\n  line-height: 1.15;\n}\n.settings-heading-copy p {\n  margin: 0;\n  color: #6d655d;\n  font-size: 0.78rem;\n  line-height: 1.45;\n}\n.settings-status {\n  min-height: 30px;\n  padding: 0 11px;\n  border-radius: 999px;\n  background: #f7f2eb;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  color: #614326;\n  font-size: 0.64rem;\n  font-weight: 520;\n  letter-spacing: 0.04em;\n  text-transform: uppercase;\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n}\n.settings-status-dot {\n  width: 7px;\n  height: 7px;\n  border-radius: 999px;\n  background: #2f9f68;\n  box-shadow: 0 0 0 4px rgba(47, 159, 104, 0.12);\n}\n.settings-panels {\n  display: grid;\n  gap: 16px;\n}\n.settings-group {\n  display: grid;\n  gap: 10px;\n}\n.settings-group-title {\n  color: #725233;\n  font-size: 0.64rem;\n  font-weight: 560;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n}\n.settings-card-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 10px;\n}\n.settings-display-grid {\n  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);\n}\n.settings-card {\n  min-width: 0;\n  border-radius: 14px;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  background: linear-gradient(180deg, #ffffff, #fbf8f3);\n  box-shadow: 0 8px 18px rgba(40, 28, 16, 0.045);\n}\n.settings-card-toggle {\n  min-height: 126px;\n  padding: 14px;\n  display: grid;\n  align-content: space-between;\n  gap: 14px;\n}\n.settings-card-range {\n  min-height: 126px;\n  padding: 14px;\n  display: grid;\n  gap: 14px;\n}\n.settings-row-copy {\n  min-width: 0;\n  display: grid;\n  gap: 6px;\n}\n.settings-row-copy label {\n  color: #211f1c;\n  font-size: 0.86rem;\n  font-weight: 540;\n  display: inline-flex;\n  align-items: center;\n  gap: 9px;\n  min-width: 0;\n}\n.settings-row-copy small {\n  color: #6f675f;\n  font-size: 0.7rem;\n  line-height: 1.4;\n}\n.settings-icon {\n  width: 32px;\n  height: 32px;\n  border-radius: 10px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  background: #f7f1ea;\n  border: 1px solid rgba(154, 103, 56, 0.13);\n  color: #8c5b2e;\n  flex: 0 0 auto;\n}\n.settings-toggle {\n  width: 100%;\n  min-height: 40px;\n  padding: 7px 14px;\n  border-radius: 10px;\n  font-size: 0.78rem;\n  font-weight: 540;\n  box-shadow: none;\n  border-width: 1px;\n}\n.settings-range-wrap {\n  width: 100%;\n  min-width: 0;\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  align-items: center;\n  gap: 12px;\n}\n.settings-range {\n  min-width: 0;\n  width: 100%;\n  padding: 0;\n  box-shadow: none;\n}\n.settings-apply-section {\n  padding: 12px;\n  border-radius: 14px;\n  background: #f8f2ea;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  display: grid;\n  gap: 8px;\n}\n.settings-apply-primary {\n  width: 100%;\n  min-height: 48px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  background: #8d5a2c;\n  color: #fff;\n  font-size: 0.92rem;\n  font-weight: 560;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  cursor: pointer;\n  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;\n}\n.settings-apply-primary:hover {\n  transform: translateY(-1px);\n  background: #7b4b22;\n  box-shadow: 0 10px 20px rgba(123, 75, 34, 0.24);\n}\n.settings-apply-section small {\n  color: #6f675f;\n  font-size: 0.7rem;\n}\n.tools-footer.settings-footer {\n  background: transparent;\n  border-top: none;\n  box-shadow: none;\n  pointer-events: none;\n}\n.tools-footer.settings-footer .tools-btn {\n  visibility: hidden;\n}\n.offline-list {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n  margin-bottom: 16px;\n}\n.offline-item {\n  background: var(--bg-elevated);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  transition: all 0.2s ease;\n}\n.offline-item:hover {\n  border-color: var(--accent);\n  background: var(--surface);\n}\n.oi-info {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.oi-name {\n  font-weight: 600;\n  font-size: 1rem;\n}\n.oi-meta {\n  font-size: 0.8rem;\n  opacity: 0.7;\n}\n.oi-date {\n  font-size: 0.7rem;\n  opacity: 0.5;\n}\n.oi-actions {\n  display: flex;\n  gap: 8px;\n}\n.oi-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.oi-load:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.oi-delete:hover {\n  background: #ff4d4d;\n  color: white;\n  border-color: #ff4d4d;\n}\n.empty-mini {\n  text-align: center;\n  padding: 32px 16px;\n  background: var(--bg-elevated);\n  border-radius: 20px;\n  border: 1px dashed var(--border);\n}\n.offline-note {\n  margin-top: 24px;\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  display: flex;\n  gap: 10px;\n  font-size: 0.75rem;\n  line-height: 1.4;\n  color: var(--accent);\n}\n\n/* Floating Player */\n.player-bar {\n  position: fixed;\n  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);\n  left: 50%;\n  transform: translateX(-50%);\n  width: min(calc(100vw - 32px), 960px);\n  max-width: 960px;\n  background: rgba(255, 255, 255, 0.98);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 24px;\n  box-shadow: 0 20px 40px rgba(63, 39, 18, 0.12);\n  z-index: 1000;\n  padding: 12px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  /* Avoid iOS Safari compositing artifacts (black bands) from backdrop-filter on fixed elements. */\n  backdrop-filter: none;\n  -webkit-backdrop-filter: none;\n  transition: transform 0.22s ease, opacity 0.22s ease, padding 0.22s ease;\n}\n.player-bar.collapsed {\n  transform: translateX(-50%);\n  opacity: 0.98;\n}\n.player-main {\n  display: grid;\n  grid-template-columns: minmax(150px, 1.1fr) auto minmax(180px, 1fr) auto auto;\n  align-items: center;\n  gap: clamp(10px, 1.6vw, 20px);\n  min-width: 0;\n}\n.player-info {\n  min-width: 0;\n}\n.player-chapter {\n  font-weight: 700;\n  font-size: 0.9rem;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-verse {\n  font-size: 0.75rem;\n  opacity: 0.7;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-eta {\n  color: var(--accent);\n  font-weight: 500;\n  opacity: 1;\n}\n.player-controls {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n}\n.sheet-fade-enter-active,\n.sheet-fade-leave-active {\n  transition: opacity 0.2s ease, transform 0.2s ease;\n}\n.sheet-fade-enter-from,\n.sheet-fade-leave-to {\n  opacity: 0;\n  transform: translateY(8px);\n}\n.player-btn {\n  width: 44px;\n  height: 44px;\n  border-radius: 12px;\n  border: none;\n  background: none;\n  color: var(--text);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.2rem;\n  transition: all 0.2s ease;\n  flex: 0 0 auto;\n}\n.player-btn:hover {\n  background: rgba(154, 103, 56, 0.08);\n}\n.player-play {\n  background: var(--accent);\n  color: white;\n  width: 52px;\n  height: 52px;\n  border-radius: 16px;\n  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.3);\n}\n.player-play:hover {\n  background: rgba(255, 255, 255, 0.88);\n  color: var(--accent);\n  transform: scale(1.05);\n}\n.player-progress-wrap {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  min-width: 0;\n}\n.player-time {\n  font-size: 0.75rem;\n  font-variant-numeric: tabular-nums;\n  opacity: 0.7;\n  min-width: 40px;\n}\n.player-progress-bg {\n  flex: 1;\n  height: 6px;\n  background: var(--bg-elevated);\n  border-radius: 3px;\n  position: relative;\n  cursor: pointer;\n}\n.player-progress-fill {\n  position: absolute;\n  left: 0;\n  top: 0;\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.1s linear;\n}\n\n/* Animations */\n.slide-up-enter-active,\n.slide-up-leave-active {\n  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.slide-up-enter-from,\n.slide-up-leave-to {\n  transform: translate(-50%, 100px);\n  opacity: 0;\n}\n.verse-translation {\n  font-size: calc(0.94rem * var(--en-scale, 1));\n  color: var(--text);\n  line-height: 1.55;\n  padding-top: 10px;\n  margin-top: 8px;\n  border-top: 1px solid var(--border);\n  display: block;\n  opacity: 0.92;\n}\n.verse-transliteration {\n  font-size: calc(0.98rem * var(--en-scale, 1));\n  color: var(--text);\n  font-style: italic;\n  margin-top: 8px;\n  padding-top: 8px;\n  border-top: 1px solid var(--border);\n  line-height: 1.5;\n  opacity: 0.98;\n}\n.verse-words {\n  display: flex;\n  flex-wrap: nowrap;\n  gap: 8px;\n  direction: rtl;\n  margin-top: 12px;\n  padding-top: 10px;\n  border-top: 1px solid var(--border);\n  overflow-x: auto;\n  overflow-y: hidden;\n  -webkit-overflow-scrolling: touch;\n  scroll-snap-type: x proximity;\n  padding-bottom: 8px;\n}\n.word-item {\n  position: relative;\n  background: var(--accent-light);\n  padding: 6px 12px;\n  border-radius: 20px;\n  display: inline-flex;\n  flex-direction: row-reverse;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.75rem;\n  flex: 0 0 auto;\n  scroll-snap-align: center;\n  cursor: help;\n  min-height: 36px;\n}\n.word-item:hover::after,\n.word-item:focus::after {\n  content: attr(data-tooltip);\n  position: absolute;\n  left: 50%;\n  bottom: calc(100% + 8px);\n  transform: translateX(-50%);\n  z-index: 5;\n  width: -moz-max-content;\n  width: max-content;\n  max-width: 220px;\n  padding: 6px 8px;\n  border-radius: 9px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n  color: var(--text);\n  direction: ltr;\n  text-align: center;\n  font-size: 0.72rem;\n  line-height: 1.25;\n}\n.word-arabic {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n}\n.word-meaning {\n  color: var(--text-muted);\n  font-size: calc(0.82rem * var(--en-scale, 1));\n}\n.word-audio-btn {\n  background: none;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 0 4px;\n}\n.field-switch {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.reading-aid-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 8px;\n}\n.tools,\n.tools-body,\n.sheet-content {\n  overflow-x: hidden;\n}\n.live-stats-grid {\n  display: grid;\n  gap: 10px;\n}\n.live-stat-card {\n  min-height: 72px;\n  padding: 14px 16px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 252, 247, 0.9);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.live-stat-label {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  font-weight: 500;\n}\n.live-stat-card strong {\n  color: var(--text);\n  font-size: 1rem;\n  font-weight: 600;\n}\n.resume-copy {\n  margin-bottom: 8px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(251, 245, 238, 0.96));\n  border-radius: 18px;\n  box-shadow: 0 24px 72px rgba(31, 24, 17, 0.22);\n}\n.modal-header h2 {\n  font-size: 1.05rem;\n  font-weight: 600;\n}\n.resume-modal {\n  background: linear-gradient(180deg, rgba(255, 251, 245, 0.99), rgba(248, 241, 233, 0.97));\n}\n.resume-modal .modal-header,\n.resume-modal .modal-body,\n.resume-modal .modal-footer {\n  padding-top: 18px;\n  padding-bottom: 18px;\n}\n.resume-grid .pill,\n.resume-modal .pill {\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid rgba(184, 130, 78, 0.16);\n}\n.wbw-word.highlighted,\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.03);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.24);\n}\n.wbw-word.phrase-highlighted {\n  box-shadow: 0 0 0 2px rgba(184, 130, 78, 0.18);\n}\n.word-item.highlighted,\n.word-item.phrase-highlighted {\n  background: rgba(184, 130, 78, 0.2);\n}\n\n/* Quiz overlay */\n.quiz-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 80;\n  background: rgba(0, 0, 0, 0.35);\n  backdrop-filter: blur(6px);\n  display: grid;\n  place-items: center;\n  padding: 18px;\n}\n.quiz-card {\n  width: min(680px, 100%);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba, rgba(250, 245, 239, 0.95));\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 22px;\n  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);\n  overflow: hidden;\n}\n.quiz-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 18px 22px 14px;\n  border-bottom: 1px solid rgba(0, 0, 0, 0.08);\n}\n.quiz-title {\n  font-weight: 500;\n  font-size: 1.05rem;\n}\n.quiz-subtitle {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.quiz-close {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.7);\n  cursor: pointer;\n  font-size: 24px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.quiz-progress {\n  padding: 14px 22px 0;\n}\n.quiz-progress-bar {\n  height: 4px;\n  background: var(--border);\n  border-radius: 2px;\n  overflow: hidden;\n}\n.quiz-progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n.quiz-stats {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.quiz-body {\n  padding: 18px 22px 22px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.quiz-question {\n  font-weight: 600;\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.quiz-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.4rem;\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  padding: 16px;\n  background: var(--accent-light);\n  border-radius: 16px;\n}\n.quiz-reveal-btn {\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n}\n.quiz-answer {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.quiz-translation {\n  font-size: 0.9rem;\n  line-height: 1.6;\n  color: var(--text);\n  margin-bottom: 16px;\n}\n.quiz-grade-buttons {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.grade-btn {\n  flex: 1;\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.grade-btn.primary {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.quiz-options {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.quiz-option {\n  padding: 12px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  text-align: left;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.quiz-option:hover {\n  background: var(--accent-light);\n  transform: translateX(4px);\n}\n.quiz-summary {\n  padding: 22px;\n  text-align: center;\n}\n.quiz-summary-icon {\n  font-size: 3rem;\n  margin-bottom: 16px;\n}\n.quiz-summary-stats {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin: 20px 0;\n}\n.quiz-summary-stats .stat {\n  padding: 16px;\n  background: var(--surface);\n  border-radius: 16px;\n}\n.stat-label {\n  display: block;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.stat-value {\n  display: block;\n  font-size: 1.5rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.quiz-summary-mistakes {\n  margin: 20px 0;\n}\n.mistake-tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 8px;\n  justify-content: center;\n}\n.mistake-tag {\n  padding: 6px 12px;\n  background: rgba(190, 73, 73, 0.1);\n  border-radius: 20px;\n  font-size: 0.8rem;\n  color: #c0392b;\n}\n.quiz-actions {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n}\n.btn-outline {\n  padding: 10px 24px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n.btn-primary {\n  padding: 10px 24px;\n  border-radius: 12px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n\n/* Banner */\n.banner {\n  position: fixed;\n  top: 14px;\n  left: 50%;\n  transform: translateX(-50%);\n  z-index: 120;\n  min-width: min(560px, calc(100vw - 24px));\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px 14px;\n  border-radius: 16px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.92);\n  backdrop-filter: blur(10px);\n  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);\n  font-weight: 450;\n  animation: riseSoft 220ms ease-out;\n}\n.banner-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.banner-action {\n  border: 0;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  padding: 9px 12px;\n  font-size: 0.78rem;\n  font-weight: 500;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n}\n.banner-x {\n  width: 36px;\n  height: 36px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n}\n\n/* Animations */\n@keyframes appFade {\n0% {\n    opacity: 0;\n    transform: translateY(4px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes railIn {\n0% {\n    opacity: 0;\n    transform: translateY(-8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes riseSoft {\n0% {\n    opacity: 0;\n    transform: translateY(8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n\n/* Responsive */\n@media (max-width: 768px) {\n.main {\n    padding: 16px 16px 100px;\n}\n.main.tools-open {\n    padding-right: 16px;\n}\n.tools {\n    left: 0;\n    right: 0;\n    width: 100%;\n}\n.session-rail-stats {\n    grid-template-columns: 1fr 1fr;\n}\n.hero-flow {\n    grid-template-columns: 1fr 1fr;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 8px);\n    justify-content: center;\n}\n.verse-font-controls {\n    gap: 2px;\n    padding: 2px 4px;\n}\n.verse-font-btn {\n    width: 20px;\n    height: 20px;\n}\n.verse-font-size-indicator {\n    min-width: 30px;\n    font-size: 9px;\n}\n}\n@media (max-width: 640px) {\n.quiz-grade-buttons {\n    flex-direction: column;\n}\n.quiz-actions {\n    flex-direction: column;\n}\n.hero-actions,\n  .empty-actions {\n    flex-direction: column;\n}\n.cta {\n    width: 100%;\n}\n}\n\n/* Dark theme overrides */\n[data-theme=\"dark\"] .tools {\n  color: var(--text);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(12, 11, 10, 0.96));\n  border-left-color: var(--border);\n}\n[data-theme=\"dark\"] .sheet-section {\n  border-color: var(--border);\n  background: var(--surface);\n}\n[data-theme=\"dark\"] .tools-top,\n[data-theme=\"dark\"] .tools-footer {\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.92));\n}\n[data-theme=\"dark\"] .tools-footer {\n  background: linear-gradient(to top, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.86), rgba(18, 15, 13, 0));\n}\n[data-theme=\"dark\"] .tools-tabs {\n  background: rgba(255, 255, 255, 0.035);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .tools-tabs button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-tabs button.active {\n  color: var(--text);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .tools-title,\n[data-theme=\"dark\"] .st-title,\n[data-theme=\"dark\"] .technique-copy label,\n[data-theme=\"dark\"] .settings-heading-copy h3,\n[data-theme=\"dark\"] .settings-row-copy label {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .tools-context,\n[data-theme=\"dark\"] .st-sub,\n[data-theme=\"dark\"] .technique-copy small,\n[data-theme=\"dark\"] .technique-control span,\n[data-theme=\"dark\"] .settings-heading-copy p,\n[data-theme=\"dark\"] .settings-row-copy small {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-x,\n[data-theme=\"dark\"] .st-chev,\n[data-theme=\"dark\"] .sheet-toggle,\n[data-theme=\"dark\"] .technique-row,\n[data-theme=\"dark\"] .radio,\n[data-theme=\"dark\"] .toggle-chip,\n[data-theme=\"dark\"] .segmented-control,\n[data-theme=\"dark\"] .technique-preview {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .sheet-toggle {\n  background: rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .st-ico {\n  color: var(--accent-strong);\n  border-color: rgba(239, 193, 141, 0.22);\n  background: rgba(239, 193, 141, 0.10);\n}\n[data-theme=\"dark\"] .segmented-control button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .segmented-control button.active,\n[data-theme=\"dark\"] .toggle-chip.active {\n  color: var(--accent-strong);\n  border-color: rgba(239, 193, 141, 0.42);\n  background: rgba(239, 193, 141, 0.12);\n}\n[data-theme=\"dark\"] .tools-btn-soft {\n  color: var(--text-muted);\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .select,\n[data-theme=\"dark\"] .input {\n  color: var(--text);\n  border-color: var(--border);\n  background: rgba(255, 255, 255, 0.045);\n}\n[data-theme=\"dark\"] .switch {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n}\n[data-theme=\"dark\"] .verse-translation {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .verse-transliteration,\n[data-theme=\"dark\"] .workspace-fab-copy,\n[data-theme=\"dark\"] .workspace-fab-sub,\n[data-theme=\"dark\"] .settings-row-copy small,\n[data-theme=\"dark\"] .field-hint {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .workspace-fab,\n[data-theme=\"dark\"] .workspace-fab-sub span,\n[data-theme=\"dark\"] .workspace-fab-live-pill,\n[data-theme=\"dark\"] .settings-card,\n[data-theme=\"dark\"] .word-item:hover::after,\n[data-theme=\"dark\"] .word-item:focus::after {\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .workspace-fab {\n  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.46), 0 0 0 1px rgba(255, 236, 216, 0.12);\n}\n[data-theme=\"dark\"] .workspace-fab:hover {\n  box-shadow: 0 26px 64px rgba(0, 0, 0, 0.54), 0 0 0 1px rgba(239, 193, 141, 0.20);\n}\n[data-theme=\"dark\"] .settings-section {\n  background: rgba(24, 21, 19, 0.96);\n  border-color: var(--border);\n  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .settings-status {\n  background: rgba(255, 255, 255, 0.05);\n  border-color: rgba(255, 236, 216, 0.12);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .settings-icon {\n  background: rgba(255, 255, 255, 0.04);\n  border-color: rgba(255, 236, 216, 0.12);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .settings-card {\n  background: var(--surface-strong);\n  border-color: rgba(255, 236, 216, 0.10);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .settings-toggle {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 236, 216, 0.14);\n  color: var(--text);\n}\n[data-theme=\"dark\"] .settings-toggle.active {\n  background: rgba(239, 193, 141, 0.13);\n  border-color: rgba(239, 193, 141, 0.42);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .quiz-card {\n  background: rgba(18, 18, 18, 0.92);\n  border-color: rgba(255, 255, 255, 0.10);\n}\n\n/* Sepia theme overrides */\n[data-theme=\"sepia\"] .verse-translation {\n  color: #7a684a;\n}\n\n/* Planner & Analytics UI */\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(12, 10, 8, 0.62);\n  backdrop-filter: blur(8px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 9999;\n  padding: 20px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 250, 243, 0.92));\n  border-radius: 20px;\n  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42);\n  border: 1px solid rgba(255, 255, 255, 0.55);\n  display: flex;\n  flex-direction: column;\n  max-height: 90vh;\n  overflow: hidden;\n  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.resume-modal {\n  width: min(760px, 96vw);\n}\n.resume-modal .modal-header h2 {\n  font-size: clamp(1.25rem, 2.3vw, 1.75rem);\n}\n.resume-saved-at {\n  display: inline-block;\n  margin-top: 4px;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n}\n.resume-grid {\n  margin-top: 12px;\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 10px;\n}\n.resume-grid .pill {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 12px 14px;\n}\n@keyframes modalIn {\nfrom {\n    transform: translateY(10px);\n    opacity: 0.6;\n}\nto {\n    transform: translateY(0);\n    opacity: 1;\n}\n}\n@keyframes modalFadeIn {\nfrom {\n    opacity: 0;\n    transform: translateY(20px) scale(0.95);\n}\nto {\n    opacity: 1;\n    transform: translateY(0) scale(1);\n}\n}\n.modal-header {\n  padding: 20px 24px;\n  border-bottom: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 1.25rem;\n  font-weight: 700;\n}\n.modal-body {\n  padding: 24px;\n  overflow-y: auto;\n}\n.modal-footer {\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--bg-elevated);\n}\n.confirm-modal {\n  max-width: 460px;\n  width: 100%;\n}\n.confirm-copy {\n  color: var(--text-muted);\n  line-height: 1.65;\n}\n.btn-danger {\n  background: #b55041;\n}\n.tools-btn-danger {\n  opacity: 0.82;\n}\n.btn-icon {\n  background: none;\n  border: none;\n  font-size: 1.2rem;\n  color: var(--text-muted);\n  cursor: pointer;\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.btn-icon:hover {\n  background: var(--border);\n  color: var(--text);\n}\n.planner-modal {\n  max-width: 500px;\n  width: 100%;\n}\n.planner-field {\n  margin-bottom: 24px;\n}\n.planner-field label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.planner-select,\n.planner-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.planner-select:focus,\n.planner-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 2px var(--accent-light);\n}\n.verses-per-day-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.quantity-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.quantity-btn:hover:not(:disabled) {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.quantity-btn:disabled {\n  opacity: 0.4;\n  cursor: not-allowed;\n}\n.planner-stats-grid {\n  display: grid;\n  grid-template-columns: repeat(2, 1fr);\n  gap: 12px;\n  margin: 24px 0;\n}\n.planner-stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  transition: all 0.2s;\n}\n.progress-info {\n  display: flex;\n  justify-content: space-between;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.progress-bar-track {\n  height: 6px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-fill {\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.3s ease;\n}\n.modal-footer {\n  display: flex;\n  gap: 12px;\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.btn-secondary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.btn-secondary:hover {\n  background: var(--border);\n}\n.btn-primary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.9rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.btn-primary:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.field-hint {\n  display: block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 6px;\n}\n.pa-lbl {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.analytics-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin-top: 20px;\n}\n.analytics-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.78rem * var(--en-scale, 1));\n  line-height: 1.4;\n}\n.stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 20px;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  transition: transform 0.2s;\n}\n.stat-delta {\n  display: inline-flex;\n  align-items: center;\n  margin-left: 10px;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  font-size: 0.7rem;\n  color: var(--accent-strong);\n  font-weight: 700;\n  vertical-align: middle;\n}\n.stat-card:hover {\n  transform: translateY(-2px);\n  border-color: var(--accent);\n}\n.stat-card i {\n  font-size: 1.8rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.stat-value {\n  font-size: 1.5rem;\n  font-weight: 700;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.stat-label {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n}\n.stat-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.72rem * var(--en-scale, 1));\n  line-height: 1.35;\n}\n.mini-trend {\n  position: relative;\n  width: 80px;\n  height: 24px;\n  margin-top: 10px;\n}\n.mini-trend span {\n  position: absolute;\n  width: 8px;\n  border-radius: 999px;\n  background: linear-gradient(180deg, var(--accent), var(--accent-soft));\n  opacity: 0.9;\n}\n\n/* Home Dashboard UI */\n.home-dashboard {\n  max-width: 800px;\n  margin: 40px auto;\n  padding: 0 20px;\n  animation: modalFadeIn 0.4s ease-out;\n}\n.dashboard-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-end;\n  margin-bottom: 40px;\n  flex-wrap: wrap;\n  gap: 20px;\n}\n.welcome-text {\n  max-width: 500px;\n}\n.header-stats {\n  display: flex;\n  gap: 16px;\n  background: var(--surface);\n  padding: 12px 20px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.mini-stat {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.9rem;\n}\n.mini-stat strong {\n  color: var(--text);\n  font-size: 1rem;\n}\n.dashboard-actions {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));\n  gap: 20px;\n  margin-bottom: 40px;\n}\n.home-dashboard-minimal {\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  min-height: 160px;\n}\n.offcanvas-launcher-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.offcanvas-launcher-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-start-card {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto auto;\n  align-items: center;\n  gap: 18px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.setup-start-copy {\n  min-width: 0;\n}\n.setup-kicker {\n  display: inline-flex;\n  margin-bottom: 6px;\n  color: var(--accent);\n  font-size: 0.72rem;\n  font-weight: 800;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n}\n.setup-start-copy h2 {\n  margin: 0 0 6px;\n  color: var(--text);\n  font-size: clamp(1.2rem, 2vw, 1.65rem);\n  line-height: 1.1;\n}\n.setup-start-copy p {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-review-hint {\n  margin-top: 10px;\n  padding: 10px 12px;\n  border-radius: 12px;\n  background: rgba(184, 130, 78, 0.10);\n  border: 1px solid rgba(184, 130, 78, 0.18);\n  color: var(--accent);\n  font-weight: 700;\n}\n.setup-mode-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(112px, 1fr));\n  gap: 10px;\n}\n.setup-mode-card {\n  min-height: 86px;\n  padding: 12px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: var(--surface);\n  color: var(--text);\n  cursor: pointer;\n  display: grid;\n  justify-items: center;\n  align-content: center;\n  gap: 4px;\n  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;\n}\n.setup-mode-card:hover,\n.setup-mode-card.active {\n  border-color: var(--accent);\n  box-shadow: var(--shadow-sm);\n  transform: translateY(-1px);\n}\n.setup-mode-card i {\n  color: var(--accent);\n  font-size: 1.2rem;\n}\n.setup-mode-card span {\n  font-weight: 800;\n}\n.setup-mode-card small {\n  color: var(--text-muted);\n  font-size: 0.78rem;\n}\n.setup-primary {\n  min-height: 48px;\n  white-space: nowrap;\n}\n.setup-optional-panel,\n.session-tools-panel {\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.68);\n}\n.setup-optional-panel summary,\n.session-tools-panel summary {\n  cursor: pointer;\n  list-style: none;\n  padding: 12px 14px;\n  font-weight: 700;\n  color: var(--text);\n}\n.setup-optional-panel summary::-webkit-details-marker,\n.session-tools-panel summary::-webkit-details-marker {\n  display: none;\n}\n.setup-optional-grid,\n.session-tools-grid {\n  display: grid;\n  gap: 12px;\n  padding: 0 14px 14px;\n}\n.setup-optional-grid {\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.session-tools-grid {\n  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));\n}\n.field-inline-toggle {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.toggle-chip {\n  min-height: 42px;\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  background: var(--surface);\n  color: var(--text);\n  font-family: inherit;\n  font-weight: 540;\n}\n.toggle-chip.active {\n  border-color: var(--accent);\n  color: var(--accent);\n}\n.continue-session-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 16px 18px;\n  margin-bottom: 18px;\n  border: 1px solid var(--accent-soft);\n  border-radius: 18px;\n  background: linear-gradient(135deg, var(--surface), var(--accent-light));\n  box-shadow: var(--shadow-sm);\n  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;\n}\n.continue-session-card:hover {\n  transform: translateY(-2px);\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent);\n}\n.continue-session-copy {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.continue-session-actions {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.continue-session-kicker {\n  font-size: 0.72rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--accent);\n}\n.continue-session-copy small {\n  color: var(--text-muted);\n}\n.continue-session-btn {\n  min-height: 44px;\n  white-space: nowrap;\n}\n.continue-session-dismiss {\n  min-width: 44px;\n  padding-inline: 0;\n  justify-content: center;\n}\n.resume-action {\n  background: linear-gradient(145deg, rgba(154, 103, 56, 0.12), rgba(255, 255, 255, 0.94));\n  border-color: var(--accent-soft);\n}\n.resume-action .action-icon {\n  background: rgba(154, 103, 56, 0.15);\n  color: var(--accent);\n}\n.resume-action .action-arrow {\n  color: var(--accent);\n}\n.action-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n  display: flex;\n  flex-direction: column;\n  position: relative;\n  overflow: hidden;\n}\n.action-card:hover {\n  transform: translateY(-4px);\n  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);\n  border-color: var(--accent);\n}\n.action-card.primary-action {\n  background: linear-gradient(145deg, var(--accent), var(--accent-dark));\n  color: white;\n  border: none;\n}\n.action-card.primary-action .action-icon {\n  background: rgba(255, 255, 255, 0.2);\n  color: white;\n}\n.action-card.primary-action h3,\n.action-card.primary-action p,\n.action-card.primary-action .action-arrow {\n  color: white;\n}\n.action-icon {\n  width: 48px;\n  height: 48px;\n  background: var(--bg-body);\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.5rem;\n  color: var(--accent);\n  margin-bottom: 20px;\n}\n.action-content h3 {\n  font-size: 1.15rem;\n  margin: 0 0 8px 0;\n  color: var(--text);\n}\n.action-content p {\n  font-size: 0.9rem;\n  color: var(--text-muted);\n  margin: 0;\n  line-height: 1.4;\n}\n.action-arrow {\n  position: absolute;\n  bottom: 24px;\n  right: 24px;\n  font-size: 1.2rem;\n  color: var(--accent);\n  opacity: 0;\n  transform: translateX(-10px);\n  transition: all 0.2s ease;\n}\n.action-card:hover .action-arrow {\n  opacity: 1;\n  transform: translateX(0);\n}\n.dashboard-recent {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n}\n.recent-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.recent-header h3 {\n  margin: 0;\n  font-size: 1.1rem;\n}\n.btn-ghost {\n  background: none;\n  border: none;\n  color: var(--accent);\n  font-weight: 500;\n  cursor: pointer;\n  padding: 6px 12px;\n  border-radius: 8px;\n  transition: background 0.2s;\n}\n.btn-ghost:hover {\n  background: var(--accent-light);\n}\n.recent-stats {\n  display: flex;\n  gap: 32px;\n  flex-wrap: wrap;\n}\n.r-stat {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.r-stat span {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.r-stat strong {\n  font-size: 1.4rem;\n  color: var(--text);\n}\n@media (max-width: 768px) {\n.quick-tools-grid {\n    grid-template-columns: 1fr;\n    gap: 8px;\n    padding: 12px;\n}\n.workspace-shell {\n    width: 100%;\n    margin-bottom: 14px;\n}\n.workspace-shell {\n    padding: 14px;\n}\n.workspace-shell-head {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 12px;\n}\n.workspace-shell-actions {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n}\n.workspace-shell-title-row {\n    align-items: flex-start;\n}\n.workspace-shell-phase {\n    min-height: 26px;\n}\n.workspace-shell-meta {\n    gap: 6px;\n}\n.workspace-shell-chaining {\n    gap: 6px;\n}\n.resume-feedback-row {\n    font-size: 0.74rem;\n}\n.resume-grid {\n    grid-template-columns: 1fr;\n}\n.workspace-fab {\n    top: 8px;\n    display: grid;\n    grid-template-columns: minmax(0, 1fr);\n    gap: 8px;\n    padding: 9px;\n    margin: 8px 0 6px;\n    border-radius: 14px;\n}\n.workspace-fab-meta {\n    min-width: 0;\n}\n.workspace-fab-kicker {\n    font-size: 0.64rem;\n}\n.workspace-fab-title {\n    font-size: 0.9rem;\n}\n.workspace-fab-sub {\n    font-size: 0.72rem;\n    gap: 5px;\n}\n.workspace-fab-sub span {\n    flex: 1 1 auto;\n    justify-content: center;\n    min-width: min(128px, 100%);\n}\n.workspace-fab-copy {\n    font-size: 0.78rem;\n}\n.workspace-fab-live {\n    gap: 6px;\n}\n.workspace-fab-live-pill {\n    flex: 1 1 0;\n    min-width: 0;\n    justify-content: center;\n}\n.workspace-fab-actions {\n    display: grid;\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n    gap: 8px;\n    width: 100%;\n}\n.fab-btn {\n    width: 100%;\n    min-width: 0;\n    justify-content: center;\n    padding: 8px 10px;\n    font-size: 0.82rem;\n    min-height: 44px;\n}\n.main-nav-btn,\n  .main-card-primary {\n    width: 100%;\n    min-height: 44px;\n}\n.settings-heading {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 10px;\n    padding-bottom: 12px;\n    margin-bottom: 14px;\n}\n.settings-status {\n    justify-self: start;\n}\n.settings-card-grid,\n  .settings-display-grid {\n    grid-template-columns: minmax(0, 1fr);\n}\n.settings-card-toggle,\n  .settings-card-range {\n    min-height: 0;\n    padding: 13px;\n    gap: 12px;\n}\n.settings-toggle {\n    min-height: 38px;\n}\n.settings-range-wrap {\n    gap: 10px;\n}\n.settings-apply-section {\n    padding: 12px;\n}\n.settings-apply-primary {\n    min-height: 46px;\n    border-radius: 12px;\n    font-size: 0.88rem;\n}\n.setup-start-card {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n    padding: 16px;\n}\n.setup-mode-grid {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.setup-primary {\n    width: 100%;\n    justify-content: center;\n}\n.continue-session-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.dashboard-actions {\n    grid-template-columns: 1fr;\n    gap: 14px;\n    margin-bottom: 20px;\n}\n.offcanvas-launcher-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.action-card {\n    padding: 18px;\n}\n.action-icon {\n    margin-bottom: 14px;\n}\n.continue-session-btn,\n  .btn-primary,\n  .btn-secondary,\n  .tools-btn,\n  .player-btn,\n  .toolbar-chip,\n  .toggle-chip {\n    min-height: 44px;\n}\n.settings-toggle {\n    min-height: 34px;\n}\n.inline-setting-row {\n    align-items: stretch;\n}\n.input-compact,\n  .inline-setting-pill {\n    width: 100%;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.technique-row,\n  .technique-row-main,\n  .technique-control {\n    align-items: stretch;\n    flex-direction: column;\n}\n.technique-toggle,\n  .segmented-control {\n    width: 100%;\n}\n.player-bar {\n    width: calc(100% - 24px);\n    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);\n    padding: 12px 14px;\n}\n.player-bar.collapsed {\n    transform: translateX(-50%);\n}\n.player-main {\n    grid-template-columns: minmax(92px, 0.8fr) auto minmax(72px, 1fr) auto;\n    align-items: center;\n    gap: 8px;\n}\n.player-info {\n    flex: 0 1 120px;\n    min-width: 0;\n}\n.player-chapter {\n    font-size: 0.78rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-verse {\n    font-size: 0.72rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-controls {\n    justify-content: center;\n    gap: 4px;\n}\n.player-progress-wrap {\n    order: 0;\n    min-width: 0;\n    gap: 6px;\n}\n.player-speed-controls {\n    display: none;\n}\n.analytics-grid {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n}\n.session-rail-actions {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.rail-btn {\n    flex: initial;\n    width: 100%;\n    justify-content: center;\n}\n.rail-btn-primary {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.toolbar-chip {\n    flex: initial;\n    width: 100%;\n}\n.font-dropdown {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 4px);\n    justify-content: center;\n    min-width: 0;\n}\n.font-dropdown {\n    width: 100%;\n}\n.font-dropdown-trigger {\n    width: 100%;\n    justify-content: space-between;\n}\n.verse-card {\n    padding: 16px;\n    border-radius: 18px;\n}\n.verse-header {\n    flex-direction: column;\n    align-items: stretch;\n    gap: 12px;\n}\n.verse-badges,\n  .verse-actions {\n    flex-wrap: wrap;\n}\n.verse-actions {\n    justify-content: space-between;\n}\n.verse-font-controls {\n    margin-right: 0;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.modal-content,\n  .confirm-modal,\n  .planner-modal {\n    width: 100%;\n    max-width: 100%;\n    border-radius: 18px;\n}\n.modal-header,\n  .modal-body,\n  .modal-footer {\n    padding-left: 16px;\n    padding-right: 16px;\n}\n.planner-stats-grid {\n    grid-template-columns: 1fr;\n}\n.tools {\n    width: 100vw;\n    max-width: 100vw;\n}\n.tools-top,\n  .tools-body,\n  .tools-footer {\n    padding-left: 14px;\n    padding-right: 14px;\n}\n.tools-tabs {\n    overflow-x: hidden;\n    display: grid;\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n    gap: 8px;\n}\n.tools-tabs button {\n    width: 100%;\n    min-width: 0;\n}\n.reading-aid-grid,\n  .session-tools-grid {\n    grid-template-columns: 1fr;\n}\n.verse-card,\n  .tools,\n  .sheet,\n  .sheet-content {\n    overflow-x: hidden;\n}\n}\n@media (min-width: 769px) and (max-width: 1024px) {\n.dashboard-actions {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n}\n.session-rail-actions {\n    flex-wrap: wrap;\n}\n.reading-toolbar {\n    align-items: flex-start;\n}\n.reading-toolbar-group:first-child {\n    flex: 1 1 100%;\n}\n.toolbar-chip {\n    flex: 0 1 auto;\n}\n.player-bar {\n    width: calc(100vw - 40px);\n}\n.player-main {\n    grid-template-columns: minmax(132px, 0.9fr) auto minmax(150px, 1fr) auto auto;\n    gap: 12px;\n}\n.player-progress-wrap {\n    min-width: 0;\n}\n}\n@media (max-width: 480px) {\n.session-pill {\n    white-space: normal;\n    text-align: center;\n    justify-content: center;\n}\n.rail-btn,\n  .toolbar-chip {\n    flex: 1 1 100%;\n}\n.player-time {\n    min-width: auto;\n    font-size: 0.7rem;\n}\n.player-progress-wrap {\n    gap: 8px;\n}\n.verse-number,\n.verse-status-badge,\n.verse-status-subtle {\n    width: 100%;\n    justify-content: center;\n    text-align: center;\n}\n}\n.verse-status-badge-review {\n  border-color: rgba(183, 28, 28, 0.24);\n  color: #9f1f1f;\n  background: rgba(183, 28, 28, 0.08);\n}\n.verse-card.feedback-mastered {\n  border-left: 4px solid #43a047;\n}\n.verse-card.feedback-weak {\n  border-left: 4px solid #e3a008;\n}\n.verse-card.feedback-repeat {\n  border-left: 4px solid #c62828;\n}\n.main.flow-recall .verse-card.active .verse-arabic {\n  color: transparent;\n  text-shadow: 0 0 22px rgba(232, 237, 247, 0.55);\n}\n.main.flow-practice .verse-card.active .verse-arabic {\n  opacity: 0.45;\n}\n.main.flow-recall .verse-card.active .verse-arabic .tajweed-mark,\n.main.flow-recall .verse-card.active .verse-arabic word,\n.main.flow-recall .verse-card.active .verse-arabic .wbw-word {\n  color: transparent !important;\n  background: transparent !important;\n  box-shadow: none !important;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 

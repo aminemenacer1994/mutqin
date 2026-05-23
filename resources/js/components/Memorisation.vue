@@ -135,13 +135,13 @@
             </div>
             <div v-if="!mainCardCollapsed && chainingEnabled && hasSessionFeedback" class="workspace-shell-chaining" aria-label="Chaining status">
               <span class="workspace-shell-chain-pill">
-                <i class="bi bi-link-45deg"></i>{{ chainingMethod === 'cumulative' ? 'Cumulative practice' : 'Linking practice' }} · {{ chainingRepetitions }}x
+                <i class="bi bi-link-45deg"></i>{{ chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking' }} · {{ chainingRepetitions }}x
               </span>
               <span class="workspace-shell-chain-pill workspace-shell-chain-pill-soft">
-                <i class="bi bi-signpost-split"></i>Up next: {{ chainingMethod === 'cumulative' ? 'add next ayah to block' : 'single, next, then pair' }}
+                <i class="bi bi-diagram-3"></i>{{ chainingProgressLabel }}
               </span>
-              <span class="workspace-shell-chain-pill workspace-shell-chain-pill-soft">
-                <i class="bi bi-diagram-3"></i>Current: {{ chainingProgressLabel }}
+              <span class="workspace-shell-chain-pill workspace-shell-chain-pill-soft" :title="chainingWhyHint">
+                <i class="bi bi-info-circle"></i>Why
               </span>
             </div>
           </section>
@@ -163,13 +163,19 @@
                     <span v-if="isReviewPriorityAyah(verse.key)" class="verse-status-badge verse-status-badge-review">Review Due</span>
                     <span v-if="effectiveActiveVerseKey === verse.key" class="verse-status-badge">Active Ayah</span>
                   </div>
-
                   <div v-if="effectiveActiveVerseKey === verse.key" class="verse-actions">
+                    <!-- New download button -->
+                    <button class="verse-download-btn" @click.stop="downloadVerseAudio(verse)"
+                      :disabled="!verse.audio" title="Download audio for offline listening">
+                      <i class="bi bi-download"></i>
+                    </button>
+                    
                     <button class="verse-play-btn" @click.stop="playVerse(verse)"
-                      :title="activeVerseKey === verse.key && isPlaying ? 'Pause' : 'Play verse'">
+                      :title="hasSessionFeedback ? (activeVerseKey === verse.key && isPlaying ? 'Pause' : 'Play current ayah') : 'Preview this ayah (does not start a session)'">
                       <i class="bi"
                         :class="activeVerseKey === verse.key && isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
                     </button>
+                    <span v-if="!hasSessionFeedback" class="verse-preview-label">Preview</span>
                   </div>
                 </div>
 
@@ -406,6 +412,35 @@
               <div class="settings-panels" style="padding: 20px">
               
                 <section class="settings-group">
+                  <span class="settings-group-title">Display</span>
+                  <div class="settings-card-grid settings-display-grid">
+                    <div class="settings-card settings-card-toggle">
+                      <div class="settings-row-copy">
+                        <label><span class="settings-icon"><i class="bi bi-palette2"></i></span><span>Tajweed</span></label>
+                        <small>Recitation colors</small>
+                      </div>
+                      <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.tajweedEnabled }"
+                        @click="toggleSettingsOption('tajweedEnabled')">
+                        {{ settingsDraft.tajweedEnabled ? 'On' : 'Off' }}
+                      </button>
+                    </div>
+
+                    <div class="settings-card settings-card-range">
+                      <div class="settings-row-copy">
+                        <label><span class="settings-icon"><i class="bi bi-arrows-angle-expand"></i></span><span>Font size</span></label>
+                        <small>Verse scale</small>
+                      </div>
+                      <div class="settings-range-wrap">
+                        <input type="range" min="80" max="140" step="5" :value="settingsDraft.defaultFontSize"
+                          @input="updateSettingsValue('defaultFontSize', Number($event.target.value))"
+                          class="input settings-range" aria-label="Font size">
+                        <span class="inline-setting-pill">{{ settingsDraft.defaultFontSize }}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="settings-group">
                   <div class="settings-card-grid">
                     <div class="settings-card settings-card-toggle">
                       <div class="settings-row-copy">
@@ -617,42 +652,35 @@
           <button class="btn-icon" @click="showResumeModal = false"><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="modal-body">
-          <p class="confirm-copy resume-copy">Pick up gently from where you paused. Everything is ready for a calm
-            restart.</p>
-          <p class="confirm-copy">{{ continueSessionMeta }}</p>
-          <div class="resume-feedback-bars">
-            <div class="resume-feedback-row"><span>Cumulative chain</span><strong>{{ resumeFeedback.chainProgress }}%</strong></div>
-            <div class="progress-bar-track"><div class="progress-bar-fill" :style="{ width: resumeFeedback.chainProgress + '%' }"></div></div>
-            <div class="resume-feedback-row"><span>Repetition progress</span><strong>{{ resumeFeedback.repetitionProgress }}%</strong></div>
-            <div class="progress-bar-track"><div class="progress-bar-fill resume-progress-repetition" :style="{ width: resumeFeedback.repetitionProgress + '%' }"></div></div>
-            <div class="resume-feedback-row"><span>Retention queue</span><strong>{{ resumeFeedback.retentionProgress }}%</strong></div>
-            <div class="progress-bar-track"><div class="progress-bar-fill resume-progress-retention" :style="{ width: resumeFeedback.retentionProgress + '%' }"></div></div>
-          </div>
-          <div class="resume-grid">
-            <div class="pill">
-              <i class="bi bi-book"></i>
-              <span>Range: {{ continueSessionPayload?.config?.rangeStart }}-{{ continueSessionPayload?.config?.rangeEnd
-              }}</span>
-            </div>
-            <div class="pill">
-              <i class="bi bi-link-45deg"></i>
-              <span>{{ continueSessionPayload?.config?.chainingEnabled === false ? 'Chaining off' :
-                (continueSessionPayload?.config?.chainingMethod === 'cumulative' ? 'Cumulative chain' : 'Linking chain')
-              }}</span>
-            </div>
-            <div class="pill">
-              <i class="bi bi-stopwatch"></i>
-              <span>Resume from ayah {{ continueSessionPayload?.activeVerseKey ?
-                String(continueSessionPayload.activeVerseKey).split(':')[1] : continueSessionPayload?.config?.rangeStart
-              }}</span>
-            </div>
-            <div class="pill pill-status-mastered"><i class="bi bi-check2-circle"></i><span>{{ feedbackCounts.mastered }} mastered</span></div>
-            <div class="pill pill-status-weak"><i class="bi bi-exclamation-circle"></i><span>{{ feedbackCounts.weak }} weak</span></div>
-            <div class="pill pill-status-repeat"><i class="bi bi-arrow-repeat"></i><span>{{ feedbackCounts.repeat }} need repetition</span></div>
-          </div>
+          <p class="confirm-copy resume-copy">{{ continueSessionMeta }}</p>
           <div class="pill" style="margin-top: 10px; padding: 12px 14px;">
-            <strong>Next:</strong> {{ resumeWhatNext }}
+            <strong>Resume:</strong>
+            Ayah {{ continueSessionPayload?.activeVerseKey ? String(continueSessionPayload.activeVerseKey).split(':')[1] : continueSessionPayload?.config?.rangeStart }}
+            · Range {{ continueSessionPayload?.config?.rangeStart }}-{{ continueSessionPayload?.config?.rangeEnd }}
           </div>
+          <div v-if="dueCount" class="pill" style="margin-top: 10px; padding: 12px 14px;">
+            <strong>Reviews due:</strong> {{ dueCount }}
+          </div>
+          <details class="resume-details">
+            <summary>Details</summary>
+            <div class="resume-feedback-bars">
+              <div class="resume-feedback-row"><span>Chain</span><strong>{{ resumeFeedback.chainProgress }}%</strong></div>
+              <div class="progress-bar-track"><div class="progress-bar-fill" :style="{ width: resumeFeedback.chainProgress + '%' }"></div></div>
+              <div class="resume-feedback-row"><span>Repetition</span><strong>{{ resumeFeedback.repetitionProgress }}%</strong></div>
+              <div class="progress-bar-track"><div class="progress-bar-fill resume-progress-repetition" :style="{ width: resumeFeedback.repetitionProgress + '%' }"></div></div>
+              <div class="resume-feedback-row"><span>Retention</span><strong>{{ resumeFeedback.retentionProgress }}%</strong></div>
+              <div class="progress-bar-track"><div class="progress-bar-fill resume-progress-retention" :style="{ width: resumeFeedback.retentionProgress + '%' }"></div></div>
+            </div>
+            <div class="resume-grid">
+              <div class="pill"><i class="bi bi-link-45deg"></i><span>{{ continueSessionPayload?.config?.chainingEnabled === false ? 'Chaining off' : (continueSessionPayload?.config?.chainingMethod === 'cumulative' ? 'Cumulative chain' : 'Linking chain') }}</span></div>
+              <div class="pill pill-status-mastered"><i class="bi bi-check2-circle"></i><span>{{ feedbackCounts.mastered }} mastered</span></div>
+              <div class="pill pill-status-weak"><i class="bi bi-exclamation-circle"></i><span>{{ feedbackCounts.weak }} weak</span></div>
+              <div class="pill pill-status-repeat"><i class="bi bi-arrow-repeat"></i><span>{{ feedbackCounts.repeat }} need repetition</span></div>
+            </div>
+            <div class="pill" style="margin-top: 10px; padding: 12px 14px;">
+              <strong>Next:</strong> {{ resumeWhatNext }}
+            </div>
+          </details>
         </div>
         <div class="modal-footer">
           <button class="btn-secondary" @click="showResumeModal = false">Not now</button>
@@ -1246,6 +1274,11 @@ export default {
         return 'Next: add one ayah to the block'
       }
       return 'Next: single -> next -> pair'
+    },
+    chainingWhyHint() {
+      if (!this.chainingEnabled) return ''
+      if (this.chainingMethod === 'cumulative') return 'Use when you want to build longer runs by adding one ayah at a time.'
+      return 'Use when you want to strengthen transitions between neighboring ayahs.'
     },
     currentActionLabel() {
       if (!this.hasVerses) return 'Choose surah and range, then start.'
@@ -1891,6 +1924,28 @@ export default {
   },
 
   methods: {
+    async downloadVerseAudio(verse) {
+      const audioUrl = this.normalizeAudioUrl(verse?.audio || '')
+      if (!audioUrl) {
+        this.showBanner('Audio not available for this ayah', 'info', 2200)
+        return
+      }
+
+      try {
+        const filename = `surah-${this.chapterId}-ayah-${verse.number}.mp3`
+        const downloadUrl = `/memorisation/audio-download?url=${encodeURIComponent(audioUrl)}&filename=${encodeURIComponent(filename)}`
+        const anchor = document.createElement('a')
+        anchor.href = downloadUrl
+        anchor.download = filename
+        document.body.appendChild(anchor)
+        anchor.click()
+        anchor.remove()
+        this.showBanner(`Downloaded ayah ${verse.number} audio`, 'success', 1800)
+      } catch (error) {
+        console.error('Verse download failed:', error)
+        this.showBanner('Failed to download ayah audio', 'error', 2600)
+      }
+    },
     syncSettingsDraft() {
       this.settingsDraft = {
         tajweedEnabled: !!this.tajweedEnabled,
@@ -5437,6 +5492,32 @@ export default {
   box-sizing: border-box;
 }
 
+.verse-download-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: var(--accent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.verse-download-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.verse-download-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 /* Add to your style section */
 .main.tools-open {
   overflow: hidden;
@@ -6349,6 +6430,33 @@ html {
 
 .verse-play-btn:active {
   transform: scale(0.98);
+}
+
+.verse-preview-label {
+  margin-left: 10px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 650;
+  user-select: none;
+}
+
+.resume-details {
+  margin-top: 10px;
+  border: 1px solid rgba(154, 103, 56, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 10px 12px;
+}
+
+.resume-details summary {
+  cursor: pointer;
+  list-style: none;
+  font-weight: 650;
+  color: var(--text);
+}
+
+.resume-details summary::-webkit-details-marker {
+  display: none;
 }
 
 .verse-download-btn {
