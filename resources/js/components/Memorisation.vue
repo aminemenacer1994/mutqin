@@ -4,7 +4,7 @@
       <span>{{ banner.message }}</span>
       <div class="banner-actions">
         <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
-        }}</button>
+          }}</button>
         <button class="banner-x" @click="banner = null" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
@@ -113,28 +113,99 @@
                 <p>{{ currentActionLabel }}</p>
               </div>
               <div class="workspace-shell-actions">
-                <!-- <button class="fab-btn fab-btn-ghost" type="button" @click="mainCardCollapsed = !mainCardCollapsed"
-                  :title="mainCardCollapsed ? 'Expand summary' : 'Collapse summary'">
-                  <i class="bi" :class="mainCardCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'" @click="mainCardCollapsed = !mainCardCollapsed"
-                  :title="mainCardCollapsed ? 'Expand summary' : 'Collapse summary'"></i><span>{{ mainCardCollapsed ? 'Expand' : 'Collapse' }}</span>
-                </button> -->
-                <button class="fab-btn fab-btn-ghost" type="button" aria-controls="memorisationToolsPanel"
-                  :aria-expanded="showTools ? 'true' : 'false'" @click="openAdvancedControls"
-                  title="Open session controls">
-                  <i class="bi bi-sliders"></i><span>Controls</span>
-                </button>
-                <button class="main-card-primary" type="button" @click="handlePrimaryAction"
-                  :disabled="!isPlaying && !canStartSession">
-                  <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-                  <span>{{ isPlaying ? 'Pause' : 'Start Session' }}</span>
-                </button>
+                <div class="action-buttons-group">
+                  <i class="bi bi-keyboard action-icon" @click="toggleKeyboardShortcuts" title="Keyboard shortcuts"></i>
+                  <button class="action-btn action-btn-secondary" type="button" aria-controls="memorisationToolsPanel"
+                    :aria-expanded="showTools ? 'true' : 'false'" @click="openAdvancedControls"
+                    title="Open session controls">
+                    <i class="bi bi-sliders"></i>
+                    <span>Controls</span>
+                  </button>
+                  <button class="action-btn action-btn-primary" type="button" @click="handlePrimaryAction"
+                    :disabled="!isPlaying && !canStartSession">
+                    <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                    <span>{{ isPlaying ? 'Pause' : 'Start Session' }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <!-- Keyboard Shortcuts Modal -->
+            <div v-if="showKeyboardShortcuts" class="keyboard-shortcuts-modal"
+              @click.self="showKeyboardShortcuts = false">
+              <div class="shortcuts-modal">
+                <div class="shortcuts-modal-header">
+                  <h3>
+                    <i class="bi bi-keyboard"></i>
+                    <span>Keyboard Shortcuts</span>
+                  </h3>
+                  <button class="shortcuts-modal-close" @click="showKeyboardShortcuts = false">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </div>
+                <div class="shortcuts-modal-body">
+                  <div class="shortcuts-grid">
+                    <div class="shortcut-card">
+                      <div class="shortcut-card-title">Navigation</div>
+                      <div class="shortcut-row">
+                        <div class="shortcut-keys"><kbd>↑</kbd></div>
+                        <span>Previous verse</span>
+                      </div>
+                      <div class="shortcut-row">
+                        <div class="shortcut-keys"><kbd>↓</kbd></div>
+                        <span>Next verse</span>
+                      </div>
+                      <div class="shortcut-row">
+                        <div class="shortcut-keys"><kbd>←</kbd> / <kbd>J</kbd></div>
+                        <span>Previous in queue</span>
+                      </div>
+                      <div class="shortcut-row">
+                        <div class="shortcut-keys"><kbd>→</kbd> / <kbd>K</kbd></div>
+                        <span>Next in queue</span>
+                      </div>
+                      <div class="shortcut-row">
+                        <div class="shortcut-keys"><kbd>Home</kbd></div>
+                        <span>First verse</span>
+                      </div>
+                      <div class="shortcut-row">
+                        <div class="shortcut-keys"><kbd>End</kbd></div>
+                        <span>Last verse</span>
+                      </div>
+                    </div>
+                    <div class="shortcut-card">
+                      <div class="shortcut-card-title">Playback</div>
+                      <div class="shortcut-row">
+                        <div class="shortcut-keys"><kbd>Space</kbd></div>
+                        <span>Play / Pause</span>
+                      </div>
+                      <div class="shortcut-row">
+                        <div class="shortcut-keys"><kbd>Enter</kbd></div>
+                        <span>Play current verse</span>
+                      </div>
+                      <div class="shortcut-row">
+                        <div class="shortcut-keys"><kbd>P</kbd></div>
+                        <span>Play current verse</span>
+                      </div>
+                    </div>
+                    <div class="shortcut-card">
+                      <div class="shortcut-card-title">Session</div>
+                      <div class="shortcut-row">
+                        <div class="shortcut-keys"><kbd>Ctrl</kbd> + <kbd>S</kbd></div>
+                        <span>Save session</span>
+                      </div>
+                      <div class="shortcut-row">
+                        <div class="shortcut-keys"><kbd>Esc</kbd></div>
+                        <span>Close modals</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <div v-show="!mainCardCollapsed" class="workspace-shell-meta">
               <span>Current ayah {{ currentPosition }} of {{ totalVerses }}</span>
               <span>Session {{ progressPercent }}% complete</span>
               <span v-if="guidedUiStep === 'review'" class="workspace-shell-meta-review">{{ reviewPriorityLabel
-              }}</span>
+                }}</span>
               <span v-if="etaLabel">Time left: {{ etaLabel.replace('Audio time ≈ ', '') }}</span>
             </div>
             <div v-if="!mainCardCollapsed && chainingEnabled && hasSessionFeedback" class="workspace-shell-chaining"
@@ -146,9 +217,7 @@
               <span class="workspace-shell-chain-pill workspace-shell-chain-pill-soft">
                 <i class="bi bi-diagram-3"></i>{{ chainingProgressLabel }}
               </span>
-              <span class="workspace-shell-chain-pill workspace-shell-chain-pill-soft" :title="chainingWhyHint">
-                <i class="bi bi-info-circle"></i>Why
-              </span>
+              
             </div>
           </section>
 
@@ -756,13 +825,13 @@
                 <div class="progress-bar-fill" :style="{ width: resumeFeedback.chainProgress + '%' }"></div>
               </div>
               <div class="resume-feedback-row"><span>Repetition</span><strong>{{ resumeFeedback.repetitionProgress
-              }}%</strong></div>
+                  }}%</strong></div>
               <div class="progress-bar-track">
                 <div class="progress-bar-fill resume-progress-repetition"
                   :style="{ width: resumeFeedback.repetitionProgress + '%' }"></div>
               </div>
               <div class="resume-feedback-row"><span>Retention</span><strong>{{ resumeFeedback.retentionProgress
-              }}%</strong></div>
+                  }}%</strong></div>
               <div class="progress-bar-track">
                 <div class="progress-bar-fill resume-progress-retention"
                   :style="{ width: resumeFeedback.retentionProgress + '%' }"></div>
@@ -773,7 +842,7 @@
                 === false ? 'Chaining off' : (continueSessionPayload?.config?.chainingMethod === 'cumulative' ?
                   'Cumulative chain' : 'Linking chain') }}</span></div>
               <div class="pill pill-status-mastered"><i class="bi bi-check2-circle"></i><span>{{ feedbackCounts.mastered
-              }} mastered</span></div>
+                  }} mastered</span></div>
               <div class="pill pill-status-weak"><i class="bi bi-exclamation-circle"></i><span>{{ feedbackCounts.weak }}
                   weak</span></div>
               <div class="pill pill-status-repeat"><i class="bi bi-arrow-repeat"></i><span>{{ feedbackCounts.repeat }}
@@ -981,6 +1050,7 @@ export default {
       mutqinState: loadMutqinState(),
       centralSession: createCentralSessionState(),
       unwatchMutqinState: null,
+      showKeyboardShortcuts: false,
       // chaining removed
 
       // Arabic text word highlighting state
@@ -1885,7 +1955,7 @@ export default {
     this.restoreAudioState()
     this.theme = document.documentElement.getAttribute('data-theme') || this.theme
     this.loadBookmarksPins(),
-    this.setupWordClickHandler()
+      this.setupWordClickHandler()
     this.loadContinueSessionPrompt()
     this.updateMasteredWeekly()
     this.loadSavedSessions()
@@ -2030,6 +2100,13 @@ export default {
   },
 
   methods: {
+    toggleKeyboardShortcuts() {
+      this.showKeyboardShortcuts = !this.showKeyboardShortcuts
+    },
+    closeKeyboardShortcuts() {
+      this.showKeyboardShortcuts = false
+    },
+
     saveCurrentSession() {
       if (!this.hasVerses) {
         this.showBanner('No active session to save', 'warning', 2000)
@@ -2144,7 +2221,7 @@ export default {
       if (action === 'switch-mode') this.performToggleMode()
       if (action === 'delete-offline' && this.pendingDeleteId) this.performDeleteOffline()
       if (action === 'discard-continue') this.clearContinueSession()
-      if (action === 'delete-saved-session' && this.confirmModal.data?.sessionId) 
+      if (action === 'delete-saved-session' && this.confirmModal.data?.sessionId)
         this.performDeleteSavedSession(this.confirmModal.data.sessionId)
     },
 
@@ -2705,6 +2782,16 @@ export default {
       if (event.key === 'End') {
         event.preventDefault()
         this.jumpToVerseIndex(this.verses.length - 1)
+        return
+      }
+
+      // Add inside handleGlobalKeydown after the existing shortcuts
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+        event.preventDefault()
+        if (this.hasVerses) {
+          this.saveCurrentSession()
+          this.showBanner('Session saved with Ctrl+S', 'success', 1500)
+        }
         return
       }
     },
@@ -5716,6 +5803,449 @@ export default {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* Action Buttons Group - Equal widths on same row */
+.action-buttons-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  height: 42px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));
+  box-shadow: var(--shadow-sm);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: rgba(0, 0, 0, 0.78);
+}
+
+.action-icon:hover {
+  transform: translateY(-2px);
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: var(--shadow-md);
+}
+
+.action-icon:active {
+  transform: translateY(0);
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 120px;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  white-space: nowrap;
+}
+
+.action-btn-secondary {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  color: rgba(0, 0, 0, 0.78);
+  box-shadow: var(--shadow-sm);
+}
+
+.action-btn-secondary:hover {
+  transform: translateY(-2px);
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: var(--shadow-md);
+}
+
+.action-btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: white;
+  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);
+}
+
+.action-btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(154, 103, 56, 0.4);
+}
+
+.action-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.action-btn-secondary:active,
+.action-icon:active {
+  transform: translateY(0);
+}
+
+/* Keyboard Shortcuts Modal - Larger & Cleaner */
+.keyboard-shortcuts-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: modalFadeIn 0.2s ease;
+}
+
+.shortcuts-modal {
+  background: var(--surface-strong);
+  border-radius: 24px;
+  width: min(520px, 90vw);
+  max-width: 520px;
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.shortcuts-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, var(--surface), var(--surface-strong));
+  border-bottom: 1px solid var(--border);
+}
+
+.shortcuts-modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.shortcuts-modal-header h3 i {
+  font-size: 1.3rem;
+  color: var(--accent);
+}
+
+.shortcuts-modal-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  color: var(--text-muted);
+}
+
+.shortcuts-modal-close:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+  transform: rotate(90deg);
+}
+
+.shortcuts-modal-body {
+  padding: 24px;
+  max-height: none; 
+  overflow-y: visible;
+}
+
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+}
+
+.shortcut-card {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+
+.shortcut-card-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 2px solid var(--accent-light);
+}
+
+.shortcut-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.shortcut-row:last-child {
+  border-bottom: none;
+}
+
+.shortcut-keys {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.shortcut-keys kbd {
+  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  letter-spacing: 0.5px;
+}
+
+.shortcut-row span {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .action-buttons-group {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .action-icon {
+    min-width: 44px;
+    height: 40px;
+  }
+
+  .action-btn {
+    min-width: 0;
+    flex: 1;
+    padding: 0 12px;
+    height: 40px;
+    font-size: 0.8rem;
+  }
+
+  .action-btn span {
+    display: inline;
+  }
+
+  .shortcuts-modal {
+    width: 95vw;
+
+    margin: 16px;
+  }
+
+  .shortcuts-modal-header {
+    padding: 16px 20px;
+  }
+
+  .shortcuts-modal-header h3 {
+    font-size: 1rem;
+  }
+
+  .shortcuts-modal-body {
+    padding: 16px;
+  }
+
+  .shortcuts-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .shortcut-card {
+    padding: 12px;
+  }
+
+  .shortcut-row {
+    padding: 8px 0;
+  }
+
+  .shortcut-keys kbd {
+    padding: 3px 8px;
+    font-size: 0.65rem;
+  }
+
+  .shortcut-row span {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .action-btn span {
+    display: none;
+  }
+
+  .action-btn {
+    min-width: 44px;
+    padding: 0;
+  }
+
+  .action-btn i {
+    font-size: 1.1rem;
+    margin: 0;
+  }
+}
+
+/* Keyboard Shortcuts Dropdown - Compact */
+
+.shortcuts-panel.compact {
+  background: var(--surface-strong);
+  border-radius: 14px;
+  width: 280px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+  animation: slideUp 0.2s ease;
+  overflow: hidden;
+}
+
+.shortcuts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.shortcuts-header h3 {
+  margin: 0;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+}
+
+.shortcuts-header h3 i {
+  font-size: 0.9rem;
+}
+
+.shortcuts-close {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  color: var(--text-muted);
+}
+
+.shortcuts-close:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.shortcuts-list {
+  padding: 8px 6px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.shortcut-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
+
+.shortcut-item:hover {
+  background: var(--accent-light);
+}
+
+.shortcut-item kbd {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--accent);
+  box-shadow: 0 1px 0 var(--border);
+}
+
+.shortcut-item span {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Saved Sessions Styles */
