@@ -204,8 +204,9 @@
             <div v-show="!mainCardCollapsed" class="workspace-shell-meta">
               <span>Current ayah {{ currentPosition }} of {{ totalVerses }}</span>
               <span>Session {{ progressPercent }}% complete</span>
-              <span v-if="guidedUiStep === 'review'" class="workspace-shell-meta-review">{{ reviewPriorityLabel }}</span>
-              <span v-if="etaLabel">Time left: {{ etaLabel }}</span>
+              <span v-if="guidedUiStep === 'review'" class="workspace-shell-meta-review">{{ reviewPriorityLabel
+                }}</span>
+              <span v-if="etaLabel">Time left: {{ etaLabel.replace('Audio time ≈ ', '') }}</span>
             </div>
             <div v-if="!mainCardCollapsed && chainingEnabled && hasSessionFeedback" class="workspace-shell-chaining"
               aria-label="Chaining status">
@@ -216,6 +217,7 @@
               <span class="workspace-shell-chain-pill workspace-shell-chain-pill-soft">
                 <i class="bi bi-diagram-3"></i>{{ chainingProgressLabel }}
               </span>
+              
             </div>
           </section>
 
@@ -414,14 +416,13 @@
                 <div class="techniques-list">
                   <div class="technique-row">
                     <div class="technique-copy">
-                    <label>Focus Mode</label>
-                    <small>Reduces distractions around the active ayah.</small>
-                  </div>
-                  <button class="toggle-chip technique-toggle" :class="{ active: focusModeEnabled }"
-                    @click="focusModeEnabled = !focusModeEnabled" type="button">
-                    <span class="toggle-indicator"></span>
-                    <span class="toggle-label">{{ focusModeEnabled ? 'On' : 'Off' }}</span>
-                  </button>
+                      <label>Focus Mode</label>
+                      <small>Reduces distractions around the active ayah.</small>
+                    </div>
+                    <button class="toggle-chip technique-toggle" :class="{ active: focusModeEnabled }"
+                      @click="focusModeEnabled = !focusModeEnabled" type="button">
+                      {{ focusModeEnabled ? 'On' : 'Off' }}
+                    </button>
                   </div>
 
                   <div class="technique-row technique-row-stacked">
@@ -533,22 +534,6 @@
                 </div>
               </div>
             </section>
-
-            <!-- In the tools-tabs div, add a third button -->
-            <div class="tools-tabs row g-2" role="tablist" aria-label="Controls tabs">
-              <button class="col-12 col-md-4" :class="{ active: tab === 'tools', 'active-tab': tab === 'tools' }"
-                @click="setActiveTab('tools')" title="Session tools">
-                <i class="bi bi-sliders"></i> Tools
-              </button>
-              <button class="col-12 col-md-4" :class="{ active: tab === 'sessions', 'active-tab': tab === 'sessions' }"
-                @click="setActiveTab('sessions')" title="Saved sessions">
-                <i class="bi bi-clock-history"></i> Saved
-              </button>
-              <button class="col-12 col-md-4" :class="{ active: tab === 'settings', 'active-tab': tab === 'settings' }"
-                @click="setActiveTab('settings')" title="Reading and display settings">
-                <i class="bi bi-gear"></i> Settings
-              </button>
-            </div>
           </div>
 
           <div v-else-if="tab === 'settings'" class="sheet">
@@ -1868,18 +1853,17 @@ export default {
       const remainingItems = (this.queue || []).slice(this.queueIndex)
       if (!remainingItems.length) return '0 min'
 
-      const speedFactor = Math.max(0.25, Number(this.speed || 1))
+      const reviewTimePerAyah = 5
       let totalSeconds = 0
 
-      remainingItems.forEach((item) => {
-        const verse = item.verse || item
-        const arabicLength = String(verse.arabic || '').replace(/[^ء-ي]/g, '').length || 80
-        const estimatedDuration = Math.max(5, Math.min(45, arabicLength * 0.12))
-        totalSeconds += estimatedDuration / speedFactor
+      remainingItems.forEach((item, index) => {
+        totalSeconds += this.getQueueItemAudioSeconds(item, index === 0) + reviewTimePerAyah
       })
 
+      const delaySeconds = (this.delay || 1) * (remainingItems.length - 1)
+      totalSeconds += delaySeconds
       const minutes = Math.max(0, Math.ceil(totalSeconds / 60))
-      return `${minutes} min`
+      return `Audio time ≈ ${minutes} min`
     },
 
     etaLabelAudioOnly() {

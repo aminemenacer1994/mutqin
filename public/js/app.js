@@ -24580,26 +24580,26 @@ function createAdvancedState() {
       return "Review + repetition included";
     },
     etaLabel: function etaLabel() {
+      var _this3 = this;
       var remainingItems = (this.queue || []).slice(this.queueIndex);
       if (!remainingItems.length) return '0 min';
-      var speedFactor = Math.max(0.25, Number(this.speed || 1));
+      var reviewTimePerAyah = 5;
       var totalSeconds = 0;
-      remainingItems.forEach(function (item) {
-        var verse = item.verse || item;
-        var arabicLength = String(verse.arabic || '').replace(/[^ء-ي]/g, '').length || 80;
-        var estimatedDuration = Math.max(5, Math.min(45, arabicLength * 0.12));
-        totalSeconds += estimatedDuration / speedFactor;
+      remainingItems.forEach(function (item, index) {
+        totalSeconds += _this3.getQueueItemAudioSeconds(item, index === 0) + reviewTimePerAyah;
       });
+      var delaySeconds = (this.delay || 1) * (remainingItems.length - 1);
+      totalSeconds += delaySeconds;
       var minutes = Math.max(0, Math.ceil(totalSeconds / 60));
-      return "".concat(minutes, " min");
+      return "Audio time \u2248 ".concat(minutes, " min");
     },
     etaLabelAudioOnly: function etaLabelAudioOnly() {
-      var _this3 = this;
+      var _this4 = this;
       var remainingItems = (this.queue || []).slice(this.queueIndex);
       if (!remainingItems.length) return '0 min';
       var totalAudioSeconds = 0;
       remainingItems.forEach(function (item, index) {
-        totalAudioSeconds += _this3.getQueueItemAudioSeconds(item, index === 0);
+        totalAudioSeconds += _this4.getQueueItemAudioSeconds(item, index === 0);
       });
       var minutes = Math.max(0, Math.ceil(totalAudioSeconds / 60));
       return "Audio time \u2248 ".concat(minutes, " min");
@@ -24620,10 +24620,10 @@ function createAdvancedState() {
       return "".concat(surah).concat(range ? " \u2022 ".concat(range) : '', " \u2022 ").concat(this.sessionTypeInfo.label);
     },
     activeVerseIndex: function activeVerseIndex() {
-      var _this4 = this;
+      var _this5 = this;
       if (!this.activeVerseKey || !this.verses.length) return -1;
       return this.verses.findIndex(function (v) {
-        return v.key === _this4.activeVerseKey;
+        return v.key === _this5.activeVerseKey;
       });
     },
     canGoPrev: function canGoPrev() {
@@ -24641,82 +24641,82 @@ function createAdvancedState() {
     }
   },
   mounted: function mounted() {
-    var _this5 = this;
+    var _this6 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
       return _regenerator().w(function (_context) {
         while (1) switch (_context.n) {
           case 0:
-            _this5.unwatchMutqinState = (0,_composables_useMutqinPersistence__WEBPACK_IMPORTED_MODULE_2__.watchMutqinState)(_this5.mutqinState);
-            _this5.loadVerseFontSizes();
-            _this5.migrateLocalStorage();
-            _this5.loadUiState();
-            _this5.loadCentralSessionState();
-            _this5.restoreSessionState();
+            _this6.unwatchMutqinState = (0,_composables_useMutqinPersistence__WEBPACK_IMPORTED_MODULE_2__.watchMutqinState)(_this6.mutqinState);
+            _this6.loadVerseFontSizes();
+            _this6.migrateLocalStorage();
+            _this6.loadUiState();
+            _this6.loadCentralSessionState();
+            _this6.restoreSessionState();
             _context.n = 1;
-            return _this5.loadChapters();
+            return _this6.loadChapters();
           case 1:
             _context.n = 2;
-            return _this5.loadReciters();
+            return _this6.loadReciters();
           case 2:
-            _this5.loadSavedSessions();
-            _this5.loadOfflineCatalog();
-            _this5.loadSm2();
-            _this5.loadEvents();
-            _this5.loadPlanner();
-            _this5.loadMetrics();
-            _this5.loadAnalytics();
-            _this5.initAudio();
-            _this5.restoreAudioState();
-            _this5.theme = document.documentElement.getAttribute('data-theme') || _this5.theme;
-            _this5.loadBookmarksPins(), _this5.setupWordClickHandler();
-            _this5.loadContinueSessionPrompt();
-            _this5.updateMasteredWeekly();
-            _this5.loadSavedSessions();
-            if (_this5.isLoggedIn && _this5.hasContinueSession) {
+            _this6.loadSavedSessions();
+            _this6.loadOfflineCatalog();
+            _this6.loadSm2();
+            _this6.loadEvents();
+            _this6.loadPlanner();
+            _this6.loadMetrics();
+            _this6.loadAnalytics();
+            _this6.initAudio();
+            _this6.restoreAudioState();
+            _this6.theme = document.documentElement.getAttribute('data-theme') || _this6.theme;
+            _this6.loadBookmarksPins(), _this6.setupWordClickHandler();
+            _this6.loadContinueSessionPrompt();
+            _this6.updateMasteredWeekly();
+            _this6.loadSavedSessions();
+            if (_this6.isLoggedIn && _this6.hasContinueSession) {
               // One clear entry point for returning users.
-              _this5.showResumeModal = true;
+              _this6.showResumeModal = true;
             }
-            if (!(_this5.currentMode === 'advanced' && _this5.advanced.chapterId)) {
+            if (!(_this6.currentMode === 'advanced' && _this6.advanced.chapterId)) {
               _context.n = 4;
               break;
             }
-            _this5.currentMode = 'advanced';
-            _this5.tab = 'tools';
-            _this5.showTools = false;
+            _this6.currentMode = 'advanced';
+            _this6.tab = 'tools';
+            _this6.showTools = false;
             _context.n = 3;
-            return _this5.loadVerses();
+            return _this6.loadVerses();
           case 3:
             _context.n = 7;
             break;
           case 4:
-            if (!_this5.beginner.chapterId) {
+            if (!_this6.beginner.chapterId) {
               _context.n = 6;
               break;
             }
-            _this5.currentMode = 'beginner';
-            _this5.tab = 'tools';
-            _this5.showTools = false;
+            _this6.currentMode = 'beginner';
+            _this6.tab = 'tools';
+            _this6.showTools = false;
             _context.n = 5;
-            return _this5.loadVerses();
+            return _this6.loadVerses();
           case 5:
             _context.n = 7;
             break;
           case 6:
-            _this5.tab = 'tools';
-            _this5.showTools = false;
+            _this6.tab = 'tools';
+            _this6.showTools = false;
           case 7:
-            _this5.isBootstrapping = false;
-            _this5.appReady = true;
-            window.addEventListener('online', _this5.handleOnline);
-            window.addEventListener('offline', _this5.handleOffline);
-            window.addEventListener('beforeunload', _this5.persistAllState);
-            window.addEventListener('keydown', _this5.handleGlobalKeydown);
-            window.addEventListener('scroll', _this5.handleWindowScroll, {
+            _this6.isBootstrapping = false;
+            _this6.appReady = true;
+            window.addEventListener('online', _this6.handleOnline);
+            window.addEventListener('offline', _this6.handleOffline);
+            window.addEventListener('beforeunload', _this6.persistAllState);
+            window.addEventListener('keydown', _this6.handleGlobalKeydown);
+            window.addEventListener('scroll', _this6.handleWindowScroll, {
               passive: true
             });
-            document.addEventListener('click', _this5.handleClickOutside);
-            _this5.statsInterval = window.setInterval(function () {
-              _this5.statsTick = Date.now();
+            document.addEventListener('click', _this6.handleClickOutside);
+            _this6.statsInterval = window.setInterval(function () {
+              _this6.statsTick = Date.now();
             }, 250);
           case 8:
             return _context.a(2);
@@ -24948,22 +24948,22 @@ function createAdvancedState() {
       if (action === 'delete-saved-session' && (_this$confirmModal$da = this.confirmModal.data) !== null && _this$confirmModal$da !== void 0 && _this$confirmModal$da.sessionId) this.performDeleteSavedSession(this.confirmModal.data.sessionId);
     },
     downloadVerseAudio: function downloadVerseAudio(verse) {
-      var _this6 = this;
+      var _this7 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
         var audioUrl, filename, downloadUrl, anchor;
         return _regenerator().w(function (_context2) {
           while (1) switch (_context2.n) {
             case 0:
-              audioUrl = _this6.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
+              audioUrl = _this7.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
               if (audioUrl) {
                 _context2.n = 1;
                 break;
               }
-              _this6.showBanner('Audio not available for this ayah', 'info', 2200);
+              _this7.showBanner('Audio not available for this ayah', 'info', 2200);
               return _context2.a(2);
             case 1:
               try {
-                filename = "surah-".concat(_this6.chapterId, "-ayah-").concat(verse.number, ".mp3");
+                filename = "surah-".concat(_this7.chapterId, "-ayah-").concat(verse.number, ".mp3");
                 downloadUrl = "/memorisation/audio-download?url=".concat(encodeURIComponent(audioUrl), "&filename=").concat(encodeURIComponent(filename));
                 anchor = document.createElement('a');
                 anchor.href = downloadUrl;
@@ -24971,10 +24971,10 @@ function createAdvancedState() {
                 document.body.appendChild(anchor);
                 anchor.click();
                 anchor.remove();
-                _this6.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
+                _this7.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
               } catch (error) {
                 console.error('Verse download failed:', error);
-                _this6.showBanner('Failed to download ayah audio', 'error', 2600);
+                _this7.showBanner('Failed to download ayah audio', 'error', 2600);
               }
             case 2:
               return _context2.a(2);
@@ -25025,7 +25025,7 @@ function createAdvancedState() {
       return this.setActiveVerse(verseKey, options);
     },
     openToolsPanel: function openToolsPanel() {
-      var _this7 = this;
+      var _this8 = this;
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var _options$verseKey = options.verseKey,
         verseKey = _options$verseKey === void 0 ? null : _options$verseKey,
@@ -25046,7 +25046,7 @@ function createAdvancedState() {
       this.showTools = true; // Ensure this is true
       this.persistUiState();
       this.$nextTick(function () {
-        if (_this7.$refs.toolsPanel) _this7.$refs.toolsPanel.focus({
+        if (_this8.$refs.toolsPanel) _this8.$refs.toolsPanel.focus({
           preventScroll: true
         });
       });
@@ -25214,15 +25214,15 @@ function createAdvancedState() {
       } catch (e) {}
     },
     scheduleLoadVerses: function scheduleLoadVerses() {
-      var _this8 = this;
+      var _this9 = this;
       var mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.currentMode;
       if (this.loadVersesTimer) clearTimeout(this.loadVersesTimer);
       this.loadVersesTimer = setTimeout(function () {
-        _this8.loadVerses(mode);
+        _this9.loadVerses(mode);
       }, 200);
     },
     syncWorkspaceFromControls: function syncWorkspaceFromControls() {
-      var _this9 = this;
+      var _this0 = this;
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       if (this.isBootstrapping) return;
       var mode = options.mode || this.currentMode;
@@ -25247,33 +25247,33 @@ function createAdvancedState() {
         return;
       }
       this.workspaceSyncTimer = setTimeout(function () {
-        _this9.loadVerses(mode);
+        _this0.loadVerses(mode);
       }, 160);
     },
     applyWorkspaceControls: function applyWorkspaceControls() {
       var _arguments = arguments,
-        _this0 = this;
+        _this1 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
         var options, mode;
         return _regenerator().w(function (_context3) {
           while (1) switch (_context3.n) {
             case 0:
               options = _arguments.length > 0 && _arguments[0] !== undefined ? _arguments[0] : {};
-              if (!_this0.isBootstrapping) {
+              if (!_this1.isBootstrapping) {
                 _context3.n = 1;
                 break;
               }
               return _context3.a(2);
             case 1:
-              mode = options.mode || _this0.currentMode;
-              if (_this0.workspaceSyncTimer) clearTimeout(_this0.workspaceSyncTimer);
-              _this0.persistUiState();
-              _this0.syncWorkspaceFromControls(_objectSpread(_objectSpread({}, options), {}, {
+              mode = options.mode || _this1.currentMode;
+              if (_this1.workspaceSyncTimer) clearTimeout(_this1.workspaceSyncTimer);
+              _this1.persistUiState();
+              _this1.syncWorkspaceFromControls(_objectSpread(_objectSpread({}, options), {}, {
                 mode: mode,
                 immediate: true
               }));
               _context3.n = 2;
-              return _this0.$nextTick();
+              return _this1.$nextTick();
             case 2:
               return _context3.a(2);
           }
@@ -25650,42 +25650,42 @@ function createAdvancedState() {
       }
     },
     continueLastSession: function continueLastSession() {
-      var _this1 = this;
+      var _this10 = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4() {
-        var _payload$config3, _this1$mutqinState$se, _store$queue4, _store$queue5, _payload$config4;
+        var _payload$config3, _this10$mutqinState$s, _store$queue4, _store$queue5, _payload$config4;
         var payload, target, store, canonicalIndex, canonicalItem, targetKey, restoredQueueIndex, _store$queue, _store$queue2, currentQueueKey, _store$queue3, exactIndex, restoredKey;
         return _regenerator().w(function (_context4) {
           while (1) switch (_context4.n) {
             case 0:
-              payload = _this1.continueSessionPayload;
+              payload = _this10.continueSessionPayload;
               if (payload) {
                 _context4.n = 1;
                 break;
               }
               return _context4.a(2);
             case 1:
-              _this1.hasContinueSession = false;
+              _this10.hasContinueSession = false;
               if ((_payload$config3 = payload.config) !== null && _payload$config3 !== void 0 && _payload$config3.chapterId) {
                 _context4.n = 2;
                 break;
               }
-              _this1.clearContinueSession();
+              _this10.clearContinueSession();
               return _context4.a(2);
             case 2:
-              _this1.currentMode = payload.mode || 'beginner';
-              _this1.tab = payload.tab || _this1.currentMode;
-              target = _this1.currentMode === 'beginner' ? 'beginner' : 'advanced';
-              _this1[target] = _objectSpread(_objectSpread({}, target === 'beginner' ? createBeginnerState() : createAdvancedState()), _this1.cloneModeState(payload.config || {}));
+              _this10.currentMode = payload.mode || 'beginner';
+              _this10.tab = payload.tab || _this10.currentMode;
+              target = _this10.currentMode === 'beginner' ? 'beginner' : 'advanced';
+              _this10[target] = _objectSpread(_objectSpread({}, target === 'beginner' ? createBeginnerState() : createAdvancedState()), _this10.cloneModeState(payload.config || {}));
               // Chaining removed.
-              _this1.applySessionConfig(_this1.buildSessionConfig(_this1.currentMode));
+              _this10.applySessionConfig(_this10.buildSessionConfig(_this10.currentMode));
               _context4.n = 3;
-              return _this1.loadChapter();
+              return _this10.loadChapter();
             case 3:
-              _this1.buildQueue(_this1.currentMode);
-              store = _this1.getModeStore(_this1.currentMode);
+              _this10.buildQueue(_this10.currentMode);
+              store = _this10.getModeStore(_this10.currentMode);
               canonicalIndex = Number.isFinite(Number(payload.mutqinSessionIndex)) ? Number(payload.mutqinSessionIndex) : null;
-              if (canonicalIndex !== null) (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this1.mutqinState, canonicalIndex);
-              canonicalItem = canonicalIndex !== null ? (_this1$mutqinState$se = _this1.mutqinState.sessionState) === null || _this1$mutqinState$se === void 0 || (_this1$mutqinState$se = _this1$mutqinState$se.queue) === null || _this1$mutqinState$se === void 0 ? void 0 : _this1$mutqinState$se[canonicalIndex] : null;
+              if (canonicalIndex !== null) (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this10.mutqinState, canonicalIndex);
+              canonicalItem = canonicalIndex !== null ? (_this10$mutqinState$s = _this10.mutqinState.sessionState) === null || _this10$mutqinState$s === void 0 || (_this10$mutqinState$s = _this10$mutqinState$s.queue) === null || _this10$mutqinState$s === void 0 ? void 0 : _this10$mutqinState$s[canonicalIndex] : null;
               targetKey = payload.activeVerseKey || payload.activeKey || (canonicalItem === null || canonicalItem === void 0 ? void 0 : canonicalItem.ayahId) || null;
               restoredQueueIndex = Math.max(0, Number(payload.queueIndex || 0));
               if (targetKey) {
@@ -25701,29 +25701,29 @@ function createAdvancedState() {
               store.queueIndex = restoredQueueIndex;
               restoredKey = ((_store$queue4 = store.queue) === null || _store$queue4 === void 0 || (_store$queue4 = _store$queue4[restoredQueueIndex]) === null || _store$queue4 === void 0 || (_store$queue4 = _store$queue4.verse) === null || _store$queue4 === void 0 ? void 0 : _store$queue4.key) || ((_store$queue5 = store.queue) === null || _store$queue5 === void 0 || (_store$queue5 = _store$queue5[restoredQueueIndex]) === null || _store$queue5 === void 0 ? void 0 : _store$queue5.key) || targetKey;
               if (restoredKey) {
-                _this1.setActiveVerse(restoredKey, {
-                  mode: _this1.currentMode,
+                _this10.setActiveVerse(restoredKey, {
+                  mode: _this10.currentMode,
                   queueIndex: restoredQueueIndex,
                   scroll: false
                 });
               } else {
-                _this1.syncActiveVerseState(_this1.currentMode, targetKey);
+                _this10.syncActiveVerseState(_this10.currentMode, targetKey);
               }
-              _this1.playerVisible = !!payload.playerVisible;
-              _this1.restoredAudioState = {
+              _this10.playerVisible = !!payload.playerVisible;
+              _this10.restoredAudioState = {
                 src: payload.audioSrc || '',
                 currentTime: Number(payload.currentTime || 0),
                 playerVisible: !!payload.playerVisible,
-                speed: Number(((_payload$config4 = payload.config) === null || _payload$config4 === void 0 ? void 0 : _payload$config4.speed) || _this1.speed || 1),
+                speed: Number(((_payload$config4 = payload.config) === null || _payload$config4 === void 0 ? void 0 : _payload$config4.speed) || _this10.speed || 1),
                 isPlaying: !!payload.isPlaying
               };
-              _this1.applyRestoredAudioState();
+              _this10.applyRestoredAudioState();
               // Advanced auto-open used to be driven by chaining/loop settings. Removed.
-              _this1.persistAllState();
-              _this1.showBanner('Session restored', 'success', 2200);
-              _this1.$nextTick(function () {
-                if (_this1.effectiveActiveVerseKey) {
-                  var el = document.querySelector(".verse-card[data-verse-key=\"".concat(_this1.effectiveActiveVerseKey, "\"]"));
+              _this10.persistAllState();
+              _this10.showBanner('Session restored', 'success', 2200);
+              _this10.$nextTick(function () {
+                if (_this10.effectiveActiveVerseKey) {
+                  var el = document.querySelector(".verse-card[data-verse-key=\"".concat(_this10.effectiveActiveVerseKey, "\"]"));
                   if (el) el.scrollIntoView({
                     behavior: 'smooth',
                     block: 'center'
@@ -25745,7 +25745,7 @@ function createAdvancedState() {
     },
     applyRestoredAudioState: function applyRestoredAudioState() {
       var _this$activeVerseRef,
-        _this10 = this;
+        _this11 = this;
       var state = this.restoredAudioState;
       if (!state || !this.audioElement || !state.src) return;
       var activeAudio = (_this$activeVerseRef = this.activeVerseRef) !== null && _this$activeVerseRef !== void 0 && _this$activeVerseRef.audio ? this.normalizeAudioUrl(this.activeVerseRef.audio) : '';
@@ -25758,15 +25758,15 @@ function createAdvancedState() {
       this.speed = Number(state.speed || this.speed || 1);
       var _seekOnLoad = function seekOnLoad() {
         try {
-          _this10.audioElement.currentTime = Number(state.currentTime || 0);
-          _this10.audioElement.playbackRate = Number(state.speed || _this10.speed || 1);
+          _this11.audioElement.currentTime = Number(state.currentTime || 0);
+          _this11.audioElement.playbackRate = Number(state.speed || _this11.speed || 1);
           if (state.isPlaying) {
-            _this10.audioElement.play().then(function () {
-              _this10.isPlaying = true;
+            _this11.audioElement.play().then(function () {
+              _this11.isPlaying = true;
             })["catch"](function () {});
           }
         } catch (e) {}
-        _this10.audioElement.removeEventListener('loadedmetadata', _seekOnLoad);
+        _this11.audioElement.removeEventListener('loadedmetadata', _seekOnLoad);
       };
       this.audioElement.addEventListener('loadedmetadata', _seekOnLoad);
     },
@@ -25878,13 +25878,13 @@ function createAdvancedState() {
     this.persistCentralSessionState();
     this.showBanner("Speed changed to ".concat(safeSpeed, "x"), 'info', 1000);
   }), "setActiveTab", function setActiveTab(tabName) {
-    var _this11 = this;
+    var _this12 = this;
     this.tab = tabName === 'settings' ? 'settings' : 'tools';
     if (this.tab === 'settings') this.syncSettingsDraft();
     this.centralSession.activeTab = this.tab;
     this.persistCentralSessionState();
     this.$nextTick(function () {
-      return _this11.scrollToWorkspaceMain();
+      return _this12.scrollToWorkspaceMain();
     });
   }), "scrollToWorkspaceMain", function scrollToWorkspaceMain() {
     var target = this.$refs.workspaceMain || document.getElementById('memorisationWorkspaceMain');
@@ -25974,35 +25974,35 @@ function createAdvancedState() {
     this.persistUiState();
     this.$forceUpdate();
   }), "setupWordClickHandler", function setupWordClickHandler() {
-    var _this12 = this;
+    var _this13 = this;
     document.addEventListener('click', function (e) {
       var wordElement = e.target.closest('.wbw-word');
-      if (wordElement && _this12.wordByWordAudioEnabled) {
+      if (wordElement && _this13.wordByWordAudioEnabled) {
         var verseKey = wordElement.dataset.verseKey;
         var wordIndex = parseInt(wordElement.dataset.wordIndex);
         var wordAudio = wordElement.dataset.wordAudio;
         if (wordAudio) {
-          _this12.playWordAudio(wordAudio);
+          _this13.playWordAudio(wordAudio);
         } else {
           // Find verse and play from this word position
-          var verse = _this12.verses.find(function (v) {
+          var verse = _this13.verses.find(function (v) {
             return v.key === verseKey;
           });
           if (verse && verse.audio) {
-            _this12.playVerse(verse);
+            _this13.playVerse(verse);
           }
         }
       }
     });
   }), "getRemainingTimeDetails", function getRemainingTimeDetails() {
-    var _this13 = this;
+    var _this14 = this;
     var remainingItems = (this.queue || []).slice(this.queueIndex);
     if (!remainingItems.length) return null;
     var reviewTimePerAyah = 5;
     var totalAudioSeconds = 0;
     var totalReviewSeconds = 0;
     remainingItems.forEach(function (item, index) {
-      totalAudioSeconds += _this13.getQueueItemAudioSeconds(item, index === 0);
+      totalAudioSeconds += _this14.getQueueItemAudioSeconds(item, index === 0);
       totalReviewSeconds += reviewTimePerAyah;
     });
     var totalSeconds = totalAudioSeconds + totalReviewSeconds;
@@ -26027,9 +26027,9 @@ function createAdvancedState() {
     this.fontDropdownOpen = false;
     this.persistUiState();
   }), "getCurrentFontLabel", function getCurrentFontLabel() {
-    var _this14 = this;
+    var _this15 = this;
     var font = this.quranFontOptions.find(function (f) {
-      return f.value === _this14.quranFont;
+      return f.value === _this15.quranFont;
     });
     return font ? font.label : 'Font';
   }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "getFontIcon", function getFontIcon(fontValue) {
@@ -26047,9 +26047,9 @@ function createAdvancedState() {
     this.persistCentralSessionState();
     this.showBanner(this.tajweedEnabled ? 'Tajweed colors enabled' : 'Tajweed colors disabled', 'info', 1500);
   }), "updatePlannerSurah", function updatePlannerSurah() {
-    var _this15 = this;
+    var _this16 = this;
     var selectedSurah = this.chapters.find(function (c) {
-      return c.id === _this15.plannerConfig.surahId;
+      return c.id === _this16.plannerConfig.surahId;
     });
     if (selectedSurah) {
       this.plannerConfig.totalVersesInSurah = selectedSurah.verses_count;
@@ -26143,26 +26143,26 @@ function createAdvancedState() {
     var verseNumber = parseInt(verseParts[1]);
     return Math.abs(verseNumber - targetNumber) === 1;
   }), "downloadOfflineVerses", function downloadOfflineVerses() {
-    var _this16 = this;
+    var _this17 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5() {
-      var _this16$currentChapte, _this16$verses$, surahId, surahName, found, storageKey, offlineData, catalogKey, catalog, entry, filtered, _t;
+      var _this17$currentChapte, _this17$verses$, surahId, surahName, found, storageKey, offlineData, catalogKey, catalog, entry, filtered, _t;
       return _regenerator().w(function (_context5) {
         while (1) switch (_context5.p = _context5.n) {
           case 0:
-            if (!(!_this16.verses || !_this16.verses.length)) {
+            if (!(!_this17.verses || !_this17.verses.length)) {
               _context5.n = 1;
               break;
             }
-            _this16.showBanner('Load a surah first before downloading', 'info', 3000);
-            _this16.showTools = true;
+            _this17.showBanner('Load a surah first before downloading', 'info', 3000);
+            _this17.showTools = true;
             return _context5.a(2);
           case 1:
             _context5.p = 1;
-            surahId = _this16.chapterId;
-            surahName = (_this16$currentChapte = _this16.currentChapter) === null || _this16$currentChapte === void 0 ? void 0 : _this16$currentChapte.name_simple;
-            if (!surahId && (_this16$verses$ = _this16.verses[0]) !== null && _this16$verses$ !== void 0 && _this16$verses$.key) {
-              surahId = parseInt(_this16.verses[0].key.split(':')[0]);
-              found = _this16.chapters.find(function (c) {
+            surahId = _this17.chapterId;
+            surahName = (_this17$currentChapte = _this17.currentChapter) === null || _this17$currentChapte === void 0 ? void 0 : _this17$currentChapte.name_simple;
+            if (!surahId && (_this17$verses$ = _this17.verses[0]) !== null && _this17$verses$ !== void 0 && _this17$verses$.key) {
+              surahId = parseInt(_this17.verses[0].key.split(':')[0]);
+              found = _this17.chapters.find(function (c) {
                 return c.id === surahId;
               });
               surahName = (found === null || found === void 0 ? void 0 : found.name_simple) || 'Selected surah';
@@ -26171,21 +26171,21 @@ function createAdvancedState() {
               _context5.n = 2;
               break;
             }
-            _this16.showBanner('Could not identify surah', 'error', 3000);
+            _this17.showBanner('Could not identify surah', 'error', 3000);
             return _context5.a(2);
           case 2:
-            storageKey = "offline_surah_".concat(surahId, "_").concat(_this16.rangeStart, "_").concat(_this16.rangeEnd);
+            storageKey = "offline_surah_".concat(surahId, "_").concat(_this17.rangeStart, "_").concat(_this17.rangeEnd);
             offlineData = {
               metadata: {
                 surah: surahName,
                 surahId: surahId,
-                rangeStart: _this16.rangeStart,
-                rangeEnd: _this16.rangeEnd,
-                reciterId: _this16.reciterId,
+                rangeStart: _this17.rangeStart,
+                rangeEnd: _this17.rangeEnd,
+                reciterId: _this17.reciterId,
                 downloadedAt: new Date().toISOString(),
-                totalVerses: _this16.verses.length
+                totalVerses: _this17.verses.length
               },
-              verses: _this16.verses
+              verses: _this17.verses
             };
             localStorage.setItem(storageKey, JSON.stringify(offlineData));
 
@@ -26201,8 +26201,8 @@ function createAdvancedState() {
               id: storageKey,
               surah: surahName,
               surahId: surahId,
-              range: "".concat(_this16.rangeStart, "-").concat(_this16.rangeEnd),
-              count: _this16.verses.length,
+              range: "".concat(_this17.rangeStart, "-").concat(_this17.rangeEnd),
+              count: _this17.verses.length,
               date: new Date().toLocaleDateString()
             };
             filtered = catalog.filter(function (c) {
@@ -26210,15 +26210,15 @@ function createAdvancedState() {
             });
             filtered.push(entry);
             localStorage.setItem(catalogKey, JSON.stringify(filtered));
-            _this16.offlineSurahs = filtered;
-            _this16.showBanner("Saved ".concat(_this16.verses.length, " verses from ").concat(surahName, " for offline reading."), 'success', 3000);
+            _this17.offlineSurahs = filtered;
+            _this17.showBanner("Saved ".concat(_this17.verses.length, " verses from ").concat(surahName, " for offline reading."), 'success', 3000);
             _context5.n = 4;
             break;
           case 3:
             _context5.p = 3;
             _t = _context5.v;
             console.error('Download failed:', _t);
-            _this16.showBanner('Failed to download verses', 'error', 3000);
+            _this17.showBanner('Failed to download verses', 'error', 3000);
           case 4:
             return _context5.a(2);
         }
@@ -26278,22 +26278,22 @@ function createAdvancedState() {
     this.pendingDeleteId = '';
     this.showBanner('Offline surah removed', 'info', 2000);
   }), "downloadVerseAudio", function downloadVerseAudio(verse) {
-    var _this17 = this;
+    var _this18 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6() {
       var audioUrl, filename, downloadUrl, anchor;
       return _regenerator().w(function (_context6) {
         while (1) switch (_context6.n) {
           case 0:
-            audioUrl = _this17.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
+            audioUrl = _this18.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
             if (audioUrl) {
               _context6.n = 1;
               break;
             }
-            _this17.showBanner('Audio not available for this ayah', 'info', 2200);
+            _this18.showBanner('Audio not available for this ayah', 'info', 2200);
             return _context6.a(2);
           case 1:
             try {
-              filename = "surah-".concat(_this17.chapterId, "-ayah-").concat(verse.number, ".mp3");
+              filename = "surah-".concat(_this18.chapterId, "-ayah-").concat(verse.number, ".mp3");
               downloadUrl = "/memorisation/audio-download?url=".concat(encodeURIComponent(audioUrl), "&filename=").concat(encodeURIComponent(filename));
               anchor = document.createElement('a');
               anchor.href = downloadUrl;
@@ -26301,10 +26301,10 @@ function createAdvancedState() {
               document.body.appendChild(anchor);
               anchor.click();
               anchor.remove();
-              _this17.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
+              _this18.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
             } catch (error) {
               console.error('Verse download failed:', error);
-              _this17.showBanner('Failed to download ayah audio', 'error', 2600);
+              _this18.showBanner('Failed to download ayah audio', 'error', 2600);
             }
           case 2:
             return _context6.a(2);
@@ -26479,7 +26479,7 @@ function createAdvancedState() {
     var highlightedHtml = this.splitArabicIntoWords(verse.arabic, verse.key);
     return highlightedHtml;
   }), "splitArabicIntoWords", function splitArabicIntoWords(verse) {
-    var _this18 = this;
+    var _this19 = this;
     if (!verse || !verse.arabic) return '';
 
     // Get words from the verse object or tokenize
@@ -26495,16 +26495,16 @@ function createAdvancedState() {
     var html = '';
     words.forEach(function (word, idx) {
       var escapedWord = escapeHtml(word);
-      var isActive = _this18.currentHighlightedVerseKey === verse.key && _this18.currentWordIndex === idx;
+      var isActive = _this19.currentHighlightedVerseKey === verse.key && _this19.currentWordIndex === idx;
       var activeClass = isActive ? ' highlighted phrase-highlighted' : '';
-      var weakClass = _this18.isWeakAyah(verse.key) ? ' weak-word' : '';
-      var masteredClass = _this18.isMasteredAyah(verse.key) ? ' mastered-word' : '';
+      var weakClass = _this19.isWeakAyah(verse.key) ? ' weak-word' : '';
+      var masteredClass = _this19.isMasteredAyah(verse.key) ? ' mastered-word' : '';
       html += "<word class=\"wbw-word".concat(activeClass).concat(weakClass).concat(masteredClass, "\" data-word-index=\"").concat(idx, "\" data-verse-key=\"").concat(verse.key, "\" title=\"Word ").concat(idx + 1, "\">").concat(escapedWord, "</word> ");
     });
     return html;
   }), "getWordTimings", function getWordTimings(verse) {
     var _arguments2 = arguments,
-      _this19 = this;
+      _this20 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7() {
       var actualDuration, sourceWords, arabicText, safeDuration, cacheKey, cleanedWords, weightedUnits, totalUnits, timestamps, currentTime;
       return _regenerator().w(function (_context7) {
@@ -26543,16 +26543,16 @@ function createAdvancedState() {
             } else if (verse.duration && Number(verse.duration) > 0) {
               safeDuration = Number(verse.duration);
             } else {
-              safeDuration = _this19.estimateVerseDuration(verse);
+              safeDuration = _this20.estimateVerseDuration(verse);
             }
 
             // Keep timestamps in media-time because audioElement.currentTime is also media-time.
-            cacheKey = "".concat(verse.key, "_").concat(_this19.reciterId, "_").concat(Math.round(safeDuration * 10));
-            if (!_this19.wordTimestampsMap.has(cacheKey)) {
+            cacheKey = "".concat(verse.key, "_").concat(_this20.reciterId, "_").concat(Math.round(safeDuration * 10));
+            if (!_this20.wordTimestampsMap.has(cacheKey)) {
               _context7.n = 3;
               break;
             }
-            return _context7.a(2, _this19.wordTimestampsMap.get(cacheKey));
+            return _context7.a(2, _this20.wordTimestampsMap.get(cacheKey));
           case 3:
             // Build a normalized timing track so highlight end time always matches audio end time.
             cleanedWords = sourceWords.map(function (word) {
@@ -26578,13 +26578,13 @@ function createAdvancedState() {
               });
               currentTime += wordDuration;
             });
-            _this19.wordTimestampsMap.set(cacheKey, timestamps);
+            _this20.wordTimestampsMap.set(cacheKey, timestamps);
             return _context7.a(2, timestamps);
         }
       }, _callee7);
     }))();
   }), "calculateWordTimings", function calculateWordTimings(verse) {
-    var _this20 = this;
+    var _this21 = this;
     var audioDuration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     return new Promise(function (resolve) {
       if (!verse.words || verse.words.length === 0) {
@@ -26592,7 +26592,7 @@ function createAdvancedState() {
         return;
       }
       var wordCount = verse.words.length;
-      var totalDuration = audioDuration || _this20.estimateVerseDuration(verse);
+      var totalDuration = audioDuration || _this21.estimateVerseDuration(verse);
       var durationPerWord = totalDuration / wordCount;
       var timestamps = [];
       var currentTime = 0;
@@ -26613,14 +26613,14 @@ function createAdvancedState() {
     var baseDuration = Math.min(45, Math.max(5, arabicLength / 10));
     return baseDuration;
   }), "startWordHighlighting", function startWordHighlighting(verse) {
-    var _this21 = this;
+    var _this22 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee8() {
-      var _this21$audioElement;
+      var _this22$audioElement;
       var duration, timestamps, _updateHighlight;
       return _regenerator().w(function (_context8) {
         while (1) switch (_context8.n) {
           case 0:
-            if (!_this21.wordHighlightLoading) {
+            if (!_this22.wordHighlightLoading) {
               _context8.n = 1;
               break;
             }
@@ -26632,38 +26632,38 @@ function createAdvancedState() {
             }
             return _context8.a(2);
           case 2:
-            if (_this21.wordByWordAudioEnabled) {
+            if (_this22.wordByWordAudioEnabled) {
               _context8.n = 3;
               break;
             }
             return _context8.a(2);
           case 3:
-            _this21.stopWordHighlighting();
-            _this21.wordHighlightLoading = true;
-            _this21.currentHighlightedVerseKey = verse.key;
-            _this21.currentWordIndex = -1;
-            _this21.currentPhraseIndex = -1;
+            _this22.stopWordHighlighting();
+            _this22.wordHighlightLoading = true;
+            _this22.currentHighlightedVerseKey = verse.key;
+            _this22.currentWordIndex = -1;
+            _this22.currentPhraseIndex = -1;
 
             // Get word timings regardless of tajweed setting
-            duration = Number((_this21$audioElement = _this21.audioElement) === null || _this21$audioElement === void 0 ? void 0 : _this21$audioElement.duration) || null;
+            duration = Number((_this22$audioElement = _this22.audioElement) === null || _this22$audioElement === void 0 ? void 0 : _this22$audioElement.duration) || null;
             _context8.n = 4;
-            return _this21.getWordTimings(verse, duration);
+            return _this22.getWordTimings(verse, duration);
           case 4:
             timestamps = _context8.v;
-            _this21.wordHighlightLoading = false;
+            _this22.wordHighlightLoading = false;
             if (!(!timestamps || !timestamps.length)) {
               _context8.n = 5;
               break;
             }
             return _context8.a(2);
           case 5:
-            _this21.wordHighlightTimestamps = timestamps;
+            _this22.wordHighlightTimestamps = timestamps;
             _updateHighlight = function updateHighlight() {
-              if (!_this21.audioElement || _this21.audioElement.paused || _this21.audioElement.ended) return;
-              _this21.syncWordHighlightFromAudio(verse);
-              _this21.wordHighlightFrame = window.requestAnimationFrame(_updateHighlight);
+              if (!_this22.audioElement || _this22.audioElement.paused || _this22.audioElement.ended) return;
+              _this22.syncWordHighlightFromAudio(verse);
+              _this22.wordHighlightFrame = window.requestAnimationFrame(_updateHighlight);
             };
-            _this21.wordHighlightHandler = _updateHighlight;
+            _this22.wordHighlightHandler = _updateHighlight;
             _updateHighlight();
           case 6:
             return _context8.a(2);
@@ -26690,12 +26690,12 @@ function createAdvancedState() {
     var activeIndex = active ? active.index : -1;
     this.updateWordHighlight(verse.key, activeIndex);
   }), "restoreWordScroll", function restoreWordScroll(verseKey) {
-    var _this22 = this;
+    var _this23 = this;
     this.$nextTick(function () {
       if (!verseKey) return;
       var verseCard = document.querySelector(".verse-card[data-verse-key=\"".concat(verseKey, "\"]"));
       var wordsWrap = verseCard === null || verseCard === void 0 ? void 0 : verseCard.querySelector('.verse-words');
-      var remembered = _this22.verseScrollMemory[verseKey];
+      var remembered = _this23.verseScrollMemory[verseKey];
       if (!wordsWrap || !remembered) return;
       wordsWrap.scrollTop = Number(remembered.top || 0);
       wordsWrap.scrollLeft = Number(remembered.left || 0);
@@ -26719,7 +26719,7 @@ function createAdvancedState() {
     this.currentHighlightedVerseKey = null;
     this.wordHighlightTimestamps = [];
   }), "initAudio", function initAudio() {
-    var _this23 = this;
+    var _this24 = this;
     this.audioElement = this.$refs.audio;
     if (!this.audioElement) return;
     this.audioElement.removeEventListener('timeupdate', this.audioTimeUpdate);
@@ -26729,68 +26729,68 @@ function createAdvancedState() {
     this.audioElement.removeEventListener('seeked', this.audioSeeked);
     this.audioElement.removeEventListener('pause', this.audioPaused);
     this.audioTimeUpdate = function () {
-      _this23.currentTime = _this23.audioElement.currentTime;
-      _this23.duration = _this23.audioElement.duration;
-      _this23.centralSession.audio.currentTime = Number(_this23.currentTime || 0);
-      _this23.centralSession.audio.speed = Number(_this23.speed || 1);
-      if (_this23.segmentEndTime > 0 && Number(_this23.currentTime || 0) >= _this23.segmentEndTime - 0.04) {
-        _this23.handleSegmentBoundary();
+      _this24.currentTime = _this24.audioElement.currentTime;
+      _this24.duration = _this24.audioElement.duration;
+      _this24.centralSession.audio.currentTime = Number(_this24.currentTime || 0);
+      _this24.centralSession.audio.speed = Number(_this24.speed || 1);
+      if (_this24.segmentEndTime > 0 && Number(_this24.currentTime || 0) >= _this24.segmentEndTime - 0.04) {
+        _this24.handleSegmentBoundary();
         return;
       }
-      if (_this23.wordByWordAudioEnabled) {
-        var verse = _this23.activeVerseRef;
+      if (_this24.wordByWordAudioEnabled) {
+        var verse = _this24.activeVerseRef;
         if (verse && verse.key) {
-          if (_this23.currentHighlightedVerseKey !== verse.key && !_this23.wordHighlightLoading) {
-            _this23.startWordHighlighting(verse);
-          } else if (!_this23.wordHighlightLoading) {
-            _this23.syncWordHighlightFromAudio(verse);
+          if (_this24.currentHighlightedVerseKey !== verse.key && !_this24.wordHighlightLoading) {
+            _this24.startWordHighlighting(verse);
+          } else if (!_this24.wordHighlightLoading) {
+            _this24.syncWordHighlightFromAudio(verse);
           }
         }
       }
     };
     this.audioEnded = function () {
-      if (_this23.advanceLocked) return;
-      _this23.advanceLocked = true;
-      _this23.isPlaying = false;
-      _this23.stopWordHighlighting();
-      if (_this23.guidedUiStep === 'learn') {
-        _this23.flowListenPlays += 1;
-        _this23.persistUiState();
+      if (_this24.advanceLocked) return;
+      _this24.advanceLocked = true;
+      _this24.isPlaying = false;
+      _this24.stopWordHighlighting();
+      if (_this24.guidedUiStep === 'learn') {
+        _this24.flowListenPlays += 1;
+        _this24.persistUiState();
       }
-      if (_this23.playMode === 'auto') {
+      if (_this24.playMode === 'auto') {
         window.setTimeout(function () {
-          _this23.advanceLocked = false;
-          _this23.next();
-        }, Math.max(0, Number(_this23.delay || 0)) * 1000);
+          _this24.advanceLocked = false;
+          _this24.next();
+        }, Math.max(0, Number(_this24.delay || 0)) * 1000);
       } else {
-        _this23.advanceLocked = false;
+        _this24.advanceLocked = false;
       }
     };
     this.audioSeeking = function () {
       // Prevent stale highlight when the user scrubs.
-      _this23.currentWordIndex = -1;
-      _this23.updateWordHighlight(_this23.currentHighlightedVerseKey, -1);
+      _this24.currentWordIndex = -1;
+      _this24.updateWordHighlight(_this24.currentHighlightedVerseKey, -1);
     };
     this.audioSeeked = function () {
-      var _this23$audioElement;
-      var verse = _this23.activeVerseRef;
+      var _this24$audioElement;
+      var verse = _this24.activeVerseRef;
       if (!verse) return;
-      if (_this23.wordByWordAudioEnabled && !((_this23$audioElement = _this23.audioElement) !== null && _this23$audioElement !== void 0 && _this23$audioElement.paused)) {
-        _this23.startWordHighlighting(verse);
+      if (_this24.wordByWordAudioEnabled && !((_this24$audioElement = _this24.audioElement) !== null && _this24$audioElement !== void 0 && _this24$audioElement.paused)) {
+        _this24.startWordHighlighting(verse);
       }
     };
     this.audioPaused = function () {
       // Ensure state is consistent even if pause is triggered outside our toggle handler.
-      _this23.isPlaying = false;
-      if (_this23.wordHighlightFrame) window.cancelAnimationFrame(_this23.wordHighlightFrame);
-      _this23.wordHighlightFrame = null;
+      _this24.isPlaying = false;
+      if (_this24.wordHighlightFrame) window.cancelAnimationFrame(_this24.wordHighlightFrame);
+      _this24.wordHighlightFrame = null;
     };
     this.audioError = function (e) {
       console.error('Audio error:', e);
-      _this23.isPlaying = false;
-      _this23.sessionErrorCount += 1;
-      _this23.stopWordHighlighting();
-      _this23.showBanner('Audio playback error', 'error', 3000);
+      _this24.isPlaying = false;
+      _this24.sessionErrorCount += 1;
+      _this24.stopWordHighlighting();
+      _this24.showBanner('Audio playback error', 'error', 3000);
     };
     this.audioElement.addEventListener('timeupdate', this.audioTimeUpdate);
     this.audioElement.addEventListener('ended', this.audioEnded);
@@ -26800,86 +26800,86 @@ function createAdvancedState() {
     this.audioElement.addEventListener('pause', this.audioPaused);
   }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "playVerse", function playVerse(verse) {
     var _arguments3 = arguments,
-      _this24 = this;
+      _this25 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
-      var _this24$audioElement;
+      var _this25$audioElement;
       var options, audioUrl, currentSrc, isSameSource;
       return _regenerator().w(function (_context1) {
         while (1) switch (_context1.n) {
           case 0:
             options = _arguments3.length > 1 && _arguments3[1] !== undefined ? _arguments3[1] : {};
-            if (!(_this24.playRequestLocked && !options.force)) {
+            if (!(_this25.playRequestLocked && !options.force)) {
               _context1.n = 1;
               break;
             }
             return _context1.a(2);
           case 1:
-            _this24.playRequestLocked = true;
-            if (_this24.segmentPlaybackTimer) {
-              clearTimeout(_this24.segmentPlaybackTimer);
-              _this24.segmentPlaybackTimer = null;
+            _this25.playRequestLocked = true;
+            if (_this25.segmentPlaybackTimer) {
+              clearTimeout(_this25.segmentPlaybackTimer);
+              _this25.segmentPlaybackTimer = null;
             }
-            _this24.segmentEndTime = 0;
+            _this25.segmentEndTime = 0;
             if (verse) {
               _context1.n = 2;
               break;
             }
             console.error('No verse provided');
-            _this24.playRequestLocked = false;
+            _this25.playRequestLocked = false;
             return _context1.a(2);
           case 2:
             if (verse.audio) {
               _context1.n = 3;
               break;
             }
-            _this24.showBanner("Audio not available for verse ".concat(verse.number), 'info', 2000);
-            _this24.playRequestLocked = false;
+            _this25.showBanner("Audio not available for verse ".concat(verse.number), 'info', 2000);
+            _this25.playRequestLocked = false;
             return _context1.a(2);
           case 3:
-            audioUrl = _this24.normalizeAudioUrl(verse.audio);
-            currentSrc = (_this24$audioElement = _this24.audioElement) !== null && _this24$audioElement !== void 0 && _this24$audioElement.currentSrc ? _this24.normalizeAudioUrl(_this24.audioElement.currentSrc) : '';
+            audioUrl = _this25.normalizeAudioUrl(verse.audio);
+            currentSrc = (_this25$audioElement = _this25.audioElement) !== null && _this25$audioElement !== void 0 && _this25$audioElement.currentSrc ? _this25.normalizeAudioUrl(_this25.audioElement.currentSrc) : '';
             isSameSource = !!currentSrc && currentSrc === audioUrl; // Toggle if same verse is playing
-            if (!(!options.force && _this24.activeKey === verse.key && isSameSource)) {
+            if (!(!options.force && _this25.activeKey === verse.key && isSameSource)) {
               _context1.n = 4;
               break;
             }
-            _this24.togglePlay();
-            _this24.playRequestLocked = false;
+            _this25.togglePlay();
+            _this25.playRequestLocked = false;
             return _context1.a(2);
           case 4:
             // Stop current playback and highlighting
-            _this24.stopWordHighlighting();
-            if (_this24.audioElement) {
+            _this25.stopWordHighlighting();
+            if (_this25.audioElement) {
               try {
-                _this24.audioElement.pause();
+                _this25.audioElement.pause();
               } catch (e) {
                 console.warn('Error pausing audio:', e);
               }
             }
-            _this24.setActiveVerse(verse.key, {
+            _this25.setActiveVerse(verse.key, {
               scroll: false,
               queueIndex: Number.isFinite(options.queueIndex) ? Number(options.queueIndex) : undefined
             });
-            if (_this24.audioElement) {
+            if (_this25.audioElement) {
               _context1.n = 6;
               break;
             }
-            _this24.audioElement = _this24.$refs.audio;
-            if (_this24.audioElement) {
+            _this25.audioElement = _this25.$refs.audio;
+            if (_this25.audioElement) {
               _context1.n = 5;
               break;
             }
-            _this24.showBanner('Audio system not ready', 'error', 3000);
-            _this24.playRequestLocked = false;
+            _this25.showBanner('Audio system not ready', 'error', 3000);
+            _this25.playRequestLocked = false;
             return _context1.a(2);
           case 5:
-            _this24.initAudio();
+            _this25.initAudio();
           case 6:
             if (!isSameSource) {
-              _this24.audioElement.src = audioUrl;
-              _this24.audioElement.load();
+              _this25.audioElement.src = audioUrl;
+              _this25.audioElement.load();
             }
-            _this24.playerVisible = true;
+            _this25.playerVisible = true;
             return _context1.a(2, new Promise(function (resolve, reject) {
               var timeout = setTimeout(function () {
                 reject(new Error('Audio load timeout'));
@@ -26891,42 +26891,42 @@ function createAdvancedState() {
                     while (1) switch (_context9.p = _context9.n) {
                       case 0:
                         clearTimeout(timeout);
-                        _this24.audioElement.playbackRate = _this24.speed;
+                        _this25.audioElement.playbackRate = _this25.speed;
                         segment = options.segment || null;
                         segmentTotal = Math.max(1, Number((segment === null || segment === void 0 ? void 0 : segment.sequenceTotal) || (segment === null || segment === void 0 ? void 0 : segment.total) || 1));
                         segmentIndex = Math.max(0, Math.min(segmentTotal - 1, Number((segment === null || segment === void 0 ? void 0 : segment.index) || 0)));
                         segmentEnd = 0;
-                        if (segment && Number.isFinite(_this24.audioElement.duration) && _this24.audioElement.duration > 0 && segmentTotal > 1) {
-                          duration = Number(_this24.audioElement.duration || 0);
+                        if (segment && Number.isFinite(_this25.audioElement.duration) && _this25.audioElement.duration > 0 && segmentTotal > 1) {
+                          duration = Number(_this25.audioElement.duration || 0);
                           segmentStart = Math.max(0, duration * (segmentIndex / segmentTotal));
                           segmentEnd = Math.min(duration, duration * ((segmentIndex + 1) / segmentTotal));
-                          _this24.segmentEndTime = segmentEnd;
-                          _this24.audioElement.currentTime = segmentStart;
+                          _this25.segmentEndTime = segmentEnd;
+                          _this25.audioElement.currentTime = segmentStart;
                         }
                         _context9.p = 1;
                         _context9.n = 2;
-                        return _this24.audioElement.play();
+                        return _this25.audioElement.play();
                       case 2:
-                        _this24.isPlaying = true;
-                        _this24.markPlaybackStart();
-                        _this24.addActivityEvent({
+                        _this25.isPlaying = true;
+                        _this25.markPlaybackStart();
+                        _this25.addActivityEvent({
                           ts: Date.now(),
                           type: 'play',
                           verseKey: verse.key
                         });
-                        _this24.recomputeAnalytics();
-                        if (_this24.wordByWordAudioEnabled) {
-                          _this24.startWordHighlighting(verse);
+                        _this25.recomputeAnalytics();
+                        if (_this25.wordByWordAudioEnabled) {
+                          _this25.startWordHighlighting(verse);
                         }
-                        _this24.playRequestLocked = false;
+                        _this25.playRequestLocked = false;
                         resolve();
                         _context9.n = 4;
                         break;
                       case 3:
                         _context9.p = 3;
                         _t2 = _context9.v;
-                        _this24.isPlaying = false;
-                        _this24.playRequestLocked = false;
+                        _this25.isPlaying = false;
+                        _this25.playRequestLocked = false;
                         reject(_t2);
                       case 4:
                         return _context9.a(2);
@@ -26945,7 +26945,7 @@ function createAdvancedState() {
                         _context0.n = 1;
                         return startPlayback();
                       case 1:
-                        _this24.audioElement.removeEventListener('canplay', _canPlayHandler);
+                        _this25.audioElement.removeEventListener('canplay', _canPlayHandler);
                       case 2:
                         return _context0.a(2);
                     }
@@ -26957,24 +26957,24 @@ function createAdvancedState() {
               }();
               var _errorHandler = function errorHandler(err) {
                 clearTimeout(timeout);
-                _this24.isPlaying = false;
-                _this24.playRequestLocked = false;
+                _this25.isPlaying = false;
+                _this25.playRequestLocked = false;
                 reject(err);
-                _this24.audioElement.removeEventListener('error', _errorHandler);
+                _this25.audioElement.removeEventListener('error', _errorHandler);
               };
-              _this24.audioElement.addEventListener('error', _errorHandler, {
+              _this25.audioElement.addEventListener('error', _errorHandler, {
                 once: true
               });
-              if (isSameSource && _this24.audioElement.readyState >= 2) {
+              if (isSameSource && _this25.audioElement.readyState >= 2) {
                 startPlayback();
               } else {
-                _this24.audioElement.addEventListener('canplay', _canPlayHandler);
+                _this25.audioElement.addEventListener('canplay', _canPlayHandler);
               }
             })["catch"](function (err) {
               console.error('playVerse failed:', err);
-              _this24.isPlaying = false;
-              _this24.playRequestLocked = false;
-              _this24.showBanner('Failed to play audio', 'error', 3000);
+              _this25.isPlaying = false;
+              _this25.playRequestLocked = false;
+              _this25.showBanner('Failed to play audio', 'error', 3000);
             }));
         }
       }, _callee1);
@@ -27002,18 +27002,18 @@ function createAdvancedState() {
     this.isPlaying = false;
   }), "togglePlay", function togglePlay() {
     var _this$audioElement5,
-      _this25 = this;
+      _this26 = this;
     if (!((_this$audioElement5 = this.audioElement) !== null && _this$audioElement5 !== void 0 && _this$audioElement5.src)) return;
     if (this.audioElement.paused) {
       this.audioElement.play().then(function () {
-        _this25.isPlaying = true;
-        var verse = _this25.activeVerseRef;
-        if (verse && _this25.wordByWordAudioEnabled) {
-          _this25.startWordHighlighting(verse);
+        _this26.isPlaying = true;
+        var verse = _this26.activeVerseRef;
+        if (verse && _this26.wordByWordAudioEnabled) {
+          _this26.startWordHighlighting(verse);
         }
       })["catch"](function (err) {
         console.error('Failed to play:', err);
-        _this25.showBanner('Playback failed', 'error', 2000);
+        _this26.showBanner('Playback failed', 'error', 2000);
       });
     } else {
       this.audioElement.pause();
@@ -27022,7 +27022,7 @@ function createAdvancedState() {
   }), "applySpeed", function applySpeed() {
     if (this.audioElement) this.audioElement.playbackRate = this.speed;
   }), "next", function next() {
-    var _this26 = this;
+    var _this27 = this;
     if (this.advanceLocked) return;
     this.advanceLocked = true;
     if (this.canNext) {
@@ -27040,7 +27040,7 @@ function createAdvancedState() {
           queueIndex: this.queueIndex
         });
         this.$nextTick(function () {
-          return _this26.$forceUpdate();
+          return _this27.$forceUpdate();
         });
       }
       var v = this.queue[this.queueIndex];
@@ -27049,7 +27049,7 @@ function createAdvancedState() {
           force: true,
           queueIndex: this.queueIndex
         })["finally"](function () {
-          _this26.advanceLocked = false;
+          _this27.advanceLocked = false;
         });
       } else {
         this.advanceLocked = false;
@@ -27060,7 +27060,7 @@ function createAdvancedState() {
     this.handleSessionComplete();
   }), "prev", function prev() {
     var _entry$verse2,
-      _this27 = this;
+      _this28 = this;
     if (!this.canPrev) return;
     if (this.advanceLocked) return;
     this.advanceLocked = true;
@@ -27078,7 +27078,7 @@ function createAdvancedState() {
         queueIndex: this.queueIndex
       });
       this.$nextTick(function () {
-        return _this27.$forceUpdate();
+        return _this28.$forceUpdate();
       });
     }
     var v = this.queue[this.queueIndex];
@@ -27087,7 +27087,7 @@ function createAdvancedState() {
         force: true,
         queueIndex: this.queueIndex
       })["finally"](function () {
-        _this27.advanceLocked = false;
+        _this28.advanceLocked = false;
       });
     } else {
       this.advanceLocked = false;
@@ -27112,14 +27112,14 @@ function createAdvancedState() {
     this.persistAudioState();
   }), "loadVerses", function loadVerses() {
     var _arguments4 = arguments,
-      _this28 = this;
+      _this29 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee10() {
       var mode, target, chapterId, rangeStart, rangeEnd, reciterId, requestId, targetConfig, _cached$verses, _audioRes$data, _translationRes$data, _translitRes$data, _arabicRes$data, _tajweedRes$data, cached, _yield$Promise$all, _yield$Promise$all2, audioRes, translationRes, translitRes, arabicRes, tajweedRes, audioSurah, translationSurah, translitSurah, arabicSurah, tajweedEdition, audioAyahs, arabicByNumber, translationByNumber, translitByNumber, tajweedByNumber, start, end, mappedVerses, _t3;
       return _regenerator().w(function (_context10) {
         while (1) switch (_context10.p = _context10.n) {
           case 0:
-            mode = _arguments4.length > 0 && _arguments4[0] !== undefined ? _arguments4[0] : _this28.currentMode;
-            target = mode === 'beginner' ? _this28.beginner : _this28.advanced;
+            mode = _arguments4.length > 0 && _arguments4[0] !== undefined ? _arguments4[0] : _this29.currentMode;
+            target = mode === 'beginner' ? _this29.beginner : _this29.advanced;
             chapterId = Number(target.chapterId || 0);
             if (chapterId) {
               _context10.n = 1;
@@ -27130,26 +27130,26 @@ function createAdvancedState() {
             rangeStart = Number(target.rangeStart || 1);
             rangeEnd = Number(target.rangeEnd || rangeStart || 1);
             reciterId = target.reciterId || DEFAULT_ALQURAN_RECITER;
-            requestId = ++_this28.verseRequestId;
-            targetConfig = _this28.buildSessionConfig(mode);
-            _this28.isDataReady = false;
+            requestId = ++_this29.verseRequestId;
+            targetConfig = _this29.buildSessionConfig(mode);
+            _this29.isDataReady = false;
             _context10.p = 2;
-            cached = _this28.getCachedVerses(mode, targetConfig);
+            cached = _this29.getCachedVerses(mode, targetConfig);
             if (!(cached !== null && cached !== void 0 && (_cached$verses = cached.verses) !== null && _cached$verses !== void 0 && _cached$verses.length)) {
               _context10.n = 3;
               break;
             }
             if (mode === 'beginner') {
-              _this28.beginner.verses = cached.verses;
-              _this28.beginner.loadedConfig = cached.loadedConfig;
+              _this29.beginner.verses = cached.verses;
+              _this29.beginner.loadedConfig = cached.loadedConfig;
             } else {
-              _this28.advanced.verses = cached.verses;
-              _this28.advanced.loadedConfig = cached.loadedConfig;
+              _this29.advanced.verses = cached.verses;
+              _this29.advanced.loadedConfig = cached.loadedConfig;
             }
-            _this28.buildQueue(mode);
-            _this28.syncActiveVerseState(mode);
-            _this28.syncMutqinAyahs(cached.verses);
-            _this28.isDataReady = true;
+            _this29.buildQueue(mode);
+            _this29.syncActiveVerseState(mode);
+            _this29.syncMutqinAyahs(cached.verses);
+            _this29.isDataReady = true;
             return _context10.a(2);
           case 3:
             _context10.n = 4;
@@ -27162,7 +27162,7 @@ function createAdvancedState() {
             translitRes = _yield$Promise$all2[2];
             arabicRes = _yield$Promise$all2[3];
             tajweedRes = _yield$Promise$all2[4];
-            if (!(requestId !== _this28.verseRequestId)) {
+            if (!(requestId !== _this29.verseRequestId)) {
               _context10.n = 5;
               break;
             }
@@ -27208,9 +27208,9 @@ function createAdvancedState() {
                 chapterId: chapterId,
                 arabic: arabic,
                 arabic_tajweed: tajweedByNumber.get(ayah.numberInSurah) || '',
-                translation: _this28.cleanTranslationText(translation),
+                translation: _this29.cleanTranslationText(translation),
                 transliteration: transliteration,
-                audio: _this28.normalizeAudioUrl(ayah.audio || ((_ayah$audioSecondary = ayah.audioSecondary) === null || _ayah$audioSecondary === void 0 ? void 0 : _ayah$audioSecondary[0]) || ''),
+                audio: _this29.normalizeAudioUrl(ayah.audio || ((_ayah$audioSecondary = ayah.audioSecondary) === null || _ayah$audioSecondary === void 0 ? void 0 : _ayah$audioSecondary[0]) || ''),
                 words: arabicWords.map(function (word, index) {
                   return {
                     ar: word,
@@ -27222,44 +27222,44 @@ function createAdvancedState() {
               };
             });
             if (mode === 'beginner') {
-              _this28.beginner.verses = mappedVerses;
-              _this28.beginner.loadedConfig = {
+              _this29.beginner.verses = mappedVerses;
+              _this29.beginner.loadedConfig = {
                 chapterId: chapterId,
                 rangeStart: start,
                 rangeEnd: end,
                 reciterId: reciterId,
-                showWordByWord: _this28.showWordByWord,
-                tajweedEnabled: _this28.tajweedEnabled
+                showWordByWord: _this29.showWordByWord,
+                tajweedEnabled: _this29.tajweedEnabled
               };
             } else {
-              _this28.advanced.verses = mappedVerses;
-              _this28.advanced.loadedConfig = {
+              _this29.advanced.verses = mappedVerses;
+              _this29.advanced.loadedConfig = {
                 chapterId: chapterId,
                 rangeStart: start,
                 rangeEnd: end,
                 reciterId: reciterId,
-                showWordByWord: _this28.showWordByWord,
-                tajweedEnabled: _this28.tajweedEnabled
+                showWordByWord: _this29.showWordByWord,
+                tajweedEnabled: _this29.tajweedEnabled
               };
             }
-            _this28.syncMutqinAyahs(mappedVerses);
-            _this28.setCachedVerses(mode, targetConfig, {
+            _this29.syncMutqinAyahs(mappedVerses);
+            _this29.setCachedVerses(mode, targetConfig, {
               verses: mappedVerses,
-              loadedConfig: mode === 'beginner' ? _this28.beginner.loadedConfig : _this28.advanced.loadedConfig
+              loadedConfig: mode === 'beginner' ? _this29.beginner.loadedConfig : _this29.advanced.loadedConfig
             });
-            _this28.buildQueue(mode);
-            _this28.syncActiveVerseState(mode);
+            _this29.buildQueue(mode);
+            _this29.syncActiveVerseState(mode);
 
             // Set ready after data loads
-            _this28.isDataReady = true;
+            _this29.isDataReady = true;
             _context10.n = 7;
             break;
           case 6:
             _context10.p = 6;
             _t3 = _context10.v;
             console.error('Error loading verses:', _t3);
-            _this28.showBanner('Failed to load verses', 'error', 3000);
-            _this28.isDataReady = true;
+            _this29.showBanner('Failed to load verses', 'error', 3000);
+            _this29.isDataReady = true;
           case 7:
             return _context10.a(2);
         }
@@ -27494,105 +27494,105 @@ function createAdvancedState() {
       console.error("Failed to persist ".concat(mode, " mode state:"), e);
     }
   }), "startSession", function startSession() {
-    var _this29 = this;
+    var _this30 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee11() {
       var config, mode, currentVerses, modeNeedsReload, updatedVerses, builtQueue, sessionState, canonicalIndex, playbackIndex, nextCanonicalIndex, first, chainingStatus;
       return _regenerator().w(function (_context11) {
         while (1) switch (_context11.n) {
           case 0:
-            config = _this29.sessionConfig;
-            mode = config.mode || _this29.currentMode;
+            config = _this30.sessionConfig;
+            mode = config.mode || _this30.currentMode;
             if (!(!config.chapterId || config.chapterId === 0)) {
               _context11.n = 1;
               break;
             }
-            _this29.showTools = true;
-            _this29.showBanner('Please select a surah first', 'info', 3600);
+            _this30.showTools = true;
+            _this30.showBanner('Please select a surah first', 'info', 3600);
             return _context11.a(2);
           case 1:
-            if (_this29.validateSettings()) {
+            if (_this30.validateSettings()) {
               _context11.n = 2;
               break;
             }
             return _context11.a(2);
           case 2:
-            _this29.applySessionConfig(config);
-            _this29.persistModeState(mode);
-            _this29.persistUiState();
-            _this29.sessionCompleted = false;
-            _this29.sessionStartedAt = Date.now();
-            _this29.sessionErrorCount = 0;
-            _this29.statsTick = Date.now();
-            currentVerses = mode === 'beginner' ? _this29.beginner.verses : _this29.advanced.verses;
-            modeNeedsReload = !currentVerses || !currentVerses.length || !_this29.modeDataMatchesConfig(mode, config);
+            _this30.applySessionConfig(config);
+            _this30.persistModeState(mode);
+            _this30.persistUiState();
+            _this30.sessionCompleted = false;
+            _this30.sessionStartedAt = Date.now();
+            _this30.sessionErrorCount = 0;
+            _this30.statsTick = Date.now();
+            currentVerses = mode === 'beginner' ? _this30.beginner.verses : _this30.advanced.verses;
+            modeNeedsReload = !currentVerses || !currentVerses.length || !_this30.modeDataMatchesConfig(mode, config);
             if (!modeNeedsReload) {
               _context11.n = 3;
               break;
             }
             _context11.n = 3;
-            return _this29.loadVerses(mode);
+            return _this30.loadVerses(mode);
           case 3:
-            updatedVerses = mode === 'beginner' ? _this29.beginner.verses : _this29.advanced.verses;
+            updatedVerses = mode === 'beginner' ? _this30.beginner.verses : _this30.advanced.verses;
             if (!(!updatedVerses || updatedVerses.length === 0)) {
               _context11.n = 4;
               break;
             }
-            _this29.showBanner('No verses loaded. Check your network connection.', 'error');
+            _this30.showBanner('No verses loaded. Check your network connection.', 'error');
             return _context11.a(2);
           case 4:
-            if (!_this29.audioElement) {
-              _this29.initAudio();
+            if (!_this30.audioElement) {
+              _this30.initAudio();
             }
 
             // Rebuild queue with current chaining settings
             console.log('[startSession] Building queue with settings:', {
-              enabled: _this29.chainingEnabled,
-              method: _this29.chainingMethod,
-              repetitions: _this29.chainingRepetitions
+              enabled: _this30.chainingEnabled,
+              method: _this30.chainingMethod,
+              repetitions: _this30.chainingRepetitions
             });
-            _this29.buildQueue(mode);
-            builtQueue = mode === 'beginner' ? _this29.beginner.queue : _this29.advanced.queue;
+            _this30.buildQueue(mode);
+            builtQueue = mode === 'beginner' ? _this30.beginner.queue : _this30.advanced.queue;
             if (!(!builtQueue || builtQueue.length === 0)) {
               _context11.n = 5;
               break;
             }
-            _this29.showBanner('Nothing to play. Check the selected range.', 'error');
+            _this30.showBanner('Nothing to play. Check the selected range.', 'error');
             return _context11.a(2);
           case 5:
-            _this29.syncMutqinAyahs(updatedVerses);
-            sessionState = _this29.syncMutqinSession(builtQueue, mode);
+            _this30.syncMutqinAyahs(updatedVerses);
+            sessionState = _this30.syncMutqinSession(builtQueue, mode);
             canonicalIndex = Math.max(0, Number((sessionState === null || sessionState === void 0 ? void 0 : sessionState.current_index) || 0));
             playbackIndex = canonicalIndex > 0 ? Math.min(canonicalIndex - 1, builtQueue.length - 1) : 0;
-            _this29.queueIndex = playbackIndex;
-            _this29.getModeStore(mode).queueIndex = playbackIndex;
+            _this30.queueIndex = playbackIndex;
+            _this30.getModeStore(mode).queueIndex = playbackIndex;
             nextCanonicalIndex = canonicalIndex > 0 ? canonicalIndex : 1;
-            (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this29.mutqinState, nextCanonicalIndex);
+            (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this30.mutqinState, nextCanonicalIndex);
             first = builtQueue[playbackIndex];
             if (!(first && first.verse)) {
               _context11.n = 7;
               break;
             }
-            _this29.setActiveVerse(first.verse.key, {
+            _this30.setActiveVerse(first.verse.key, {
               mode: mode,
               queueIndex: playbackIndex,
               scroll: false
             });
             _context11.n = 6;
-            return _this29.$nextTick();
+            return _this30.$nextTick();
           case 6:
-            if (_this29.audioElement) {
-              _this29.audioElement.playbackRate = _this29.speed;
+            if (_this30.audioElement) {
+              _this30.audioElement.playbackRate = _this30.speed;
             }
             _context11.n = 7;
-            return _this29.playQueueEntry(first, {
+            return _this30.playQueueEntry(first, {
               force: true,
               queueIndex: playbackIndex
             });
           case 7:
-            _this29.showTools = false;
-            _this29.flowStep = 'learn';
-            chainingStatus = _this29.chainingEnabled ? "".concat(_this29.chainingMethod, " chaining (").concat(_this29.chainingRepetitions, "x)") : 'no chaining';
-            _this29.showBanner("Session started with ".concat(builtQueue.length, " guided repetitions using ").concat(chainingStatus), 'success', 3000);
+            _this30.showTools = false;
+            _this30.flowStep = 'learn';
+            chainingStatus = _this30.chainingEnabled ? "".concat(_this30.chainingMethod, " chaining (").concat(_this30.chainingRepetitions, "x)") : 'no chaining';
+            _this30.showBanner("Session started with ".concat(builtQueue.length, " guided repetitions using ").concat(chainingStatus), 'success', 3000);
           case 8:
             return _context11.a(2);
         }
@@ -27623,7 +27623,7 @@ function createAdvancedState() {
     var arabicLength = String(verse.arabic || verse.text || '').replace(/[^ء-ي]/g, '').length || 80;
     return Math.max(5, Math.min(45, arabicLength * 0.12)) / speedFactor;
   }), "showBanner", function showBanner(message) {
-    var _this30 = this;
+    var _this31 = this;
     var kind = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'info';
     var ttlMs = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 3500;
     var action = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
@@ -27636,7 +27636,7 @@ function createAdvancedState() {
       actionLabel: (action === null || action === void 0 ? void 0 : action.label) || ''
     };
     this.bannerTimer = setTimeout(function () {
-      if (_this30.banner && Date.now() - _this30.banner.at >= ttlMs) _this30.banner = null;
+      if (_this31.banner && Date.now() - _this31.banner.at >= ttlMs) _this31.banner = null;
     }, ttlMs + 50);
   }), "runBannerAction", function runBannerAction() {
     var _this$banner;
@@ -27654,7 +27654,7 @@ function createAdvancedState() {
     if (!Array.isArray(verses) || !verses.length) return;
     (0,_composables_useAyahState__WEBPACK_IMPORTED_MODULE_3__.seedAyahs)(this.mutqinState, verses);
   }), "syncMutqinSession", function syncMutqinSession() {
-    var _this31 = this;
+    var _this32 = this;
     var queue = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.queue;
     var mode = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.currentMode;
     var playbackQueue = (queue || []).map(function (item) {
@@ -27683,18 +27683,18 @@ function createAdvancedState() {
     var planner = (0,_composables_useDailyPlanner__WEBPACK_IMPORTED_MODULE_5__.createDailyPlan)(this.mutqinState, uniqueVerses, {
       repetitions: 1,
       audioDurations: uniqueVerses.reduce(function (map, verse) {
-        map[verse.key] = Number(verse.duration || _this31.duration || 0);
+        map[verse.key] = Number(verse.duration || _this32.duration || 0);
         return map;
       }, {}),
       reviewSeconds: 18
     });
     var plannerQueue = uniqueVerses.slice(0, 1).map(function (verse) {
-      var _this31$currentChapte;
+      var _this32$currentChapte;
       return {
         phase: 'Planner',
         ayahId: verse.key,
         verse: verse,
-        prompt: "".concat(((_this31$currentChapte = _this31.currentChapter) === null || _this31$currentChapte === void 0 ? void 0 : _this31$currentChapte.name_simple) || 'Session', " ayahs ").concat(_this31.rangeStart, "-").concat(_this31.rangeEnd)
+        prompt: "".concat(((_this32$currentChapte = _this32.currentChapter) === null || _this32$currentChapte === void 0 ? void 0 : _this32$currentChapte.name_simple) || 'Session', " ayahs ").concat(_this32.rangeStart, "-").concat(_this32.rangeEnd)
       };
     });
     var recallQueue = uniqueVerses.map(function (verse) {
@@ -27960,11 +27960,11 @@ function createAdvancedState() {
     document.documentElement.setAttribute('data-theme', this.theme);
     this.persistUiState();
   }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "toggleSection", function toggleSection(key) {
-    var _this32 = this;
+    var _this33 = this;
     var nextValue = !this.sectionOpen[key];
     Object.keys(this.sectionOpen).forEach(function (sectionKey) {
       if (['session_tools', 'live_stats'].includes(sectionKey)) {
-        _this32.sectionOpen[sectionKey] = false;
+        _this33.sectionOpen[sectionKey] = false;
       }
     });
     this.sectionOpen[key] = nextValue;
@@ -28078,7 +28078,7 @@ function createAdvancedState() {
       console.error(e);
     }
   }), "restoreSessionState", function restoreSessionState() {
-    var _this33 = this;
+    var _this34 = this;
     ;
     ['beginner', 'advanced'].forEach(function (mode) {
       var saved = localStorage.getItem(SESSION_STORAGE_KEYS[mode]);
@@ -28086,14 +28086,14 @@ function createAdvancedState() {
       try {
         var state = JSON.parse(saved);
         if (Date.now() - state.timestamp < 24 * 60 * 60 * 1000) {
-          var target = mode === 'beginner' ? _this33.beginner : _this33.advanced;
+          var target = mode === 'beginner' ? _this34.beginner : _this34.advanced;
           var restoredKey = state.activeVerseKey || state.activeKey || null;
           target.activeKey = restoredKey;
           target.queueIndex = Number(state.queueIndex || 0);
-          if (mode === _this33.currentMode) {
-            _this33.activeVerseKey = restoredKey;
-            _this33.activeKey = restoredKey;
-            _this33.queueIndex = target.queueIndex;
+          if (mode === _this34.currentMode) {
+            _this34.activeVerseKey = restoredKey;
+            _this34.activeKey = restoredKey;
+            _this34.queueIndex = target.queueIndex;
           }
         }
       } catch (e) {
@@ -28126,7 +28126,7 @@ function createAdvancedState() {
     this.persistSm2();
     (0,_composables_useMutqinPersistence__WEBPACK_IMPORTED_MODULE_2__.saveMutqinState)(this.mutqinState);
   }), "loadChapters", function loadChapters() {
-    var _this34 = this;
+    var _this35 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee12() {
       var _res$data, res, _t4;
       return _regenerator().w(function (_context12) {
@@ -28141,13 +28141,13 @@ function createAdvancedState() {
             });
           case 1:
             res = _context12.v;
-            _this34.chapters = ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.chapters) || [];
-            if (!_this34.chapterId) {
+            _this35.chapters = ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.chapters) || [];
+            if (!_this35.chapterId) {
               _context12.n = 2;
               break;
             }
             _context12.n = 2;
-            return _this34.loadChapter();
+            return _this35.loadChapter();
           case 2:
             _context12.n = 4;
             break;
@@ -28155,7 +28155,7 @@ function createAdvancedState() {
             _context12.p = 3;
             _t4 = _context12.v;
             console.error('Failed to load chapters:', _t4);
-            _this34.showBanner('Failed to load surah list', 'error', 3000);
+            _this35.showBanner('Failed to load surah list', 'error', 3000);
           case 4:
             return _context12.a(2);
         }
@@ -28163,45 +28163,45 @@ function createAdvancedState() {
     }))();
   }), "loadChapter", function loadChapter() {
     var _arguments5 = arguments,
-      _this35 = this;
+      _this36 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee13() {
-      var _this35$currentChapte;
+      var _this36$currentChapte;
       var mode, target, chapterId, max;
       return _regenerator().w(function (_context13) {
         while (1) switch (_context13.n) {
           case 0:
-            mode = _arguments5.length > 0 && _arguments5[0] !== undefined ? _arguments5[0] : _this35.currentMode;
-            target = mode === 'beginner' ? _this35.beginner : _this35.advanced;
+            mode = _arguments5.length > 0 && _arguments5[0] !== undefined ? _arguments5[0] : _this36.currentMode;
+            target = mode === 'beginner' ? _this36.beginner : _this36.advanced;
             chapterId = Number(target.chapterId || 0);
             if (chapterId) {
               _context13.n = 1;
               break;
             }
-            _this35.currentChapter = null;
+            _this36.currentChapter = null;
             return _context13.a(2);
           case 1:
-            _this35.currentChapter = _this35.chapters.find(function (c) {
+            _this36.currentChapter = _this36.chapters.find(function (c) {
               return c.id === chapterId;
             });
-            max = ((_this35$currentChapte = _this35.currentChapter) === null || _this35$currentChapte === void 0 ? void 0 : _this35$currentChapte.verses_count) || 286;
+            max = ((_this36$currentChapte = _this36.currentChapter) === null || _this36$currentChapte === void 0 ? void 0 : _this36$currentChapte.verses_count) || 286;
             if (mode === 'beginner') {
-              _this35.beginner.rangeEnd = Math.min(_this35.beginner.rangeEnd, max);
-              _this35.beginner.rangeStart = Math.max(1, _this35.beginner.rangeStart);
+              _this36.beginner.rangeEnd = Math.min(_this36.beginner.rangeEnd, max);
+              _this36.beginner.rangeStart = Math.max(1, _this36.beginner.rangeStart);
             } else {
-              _this35.advanced.rangeEnd = Math.min(_this35.advanced.rangeEnd, max);
-              _this35.advanced.rangeStart = Math.max(1, _this35.advanced.rangeStart);
+              _this36.advanced.rangeEnd = Math.min(_this36.advanced.rangeEnd, max);
+              _this36.advanced.rangeStart = Math.max(1, _this36.advanced.rangeStart);
             }
             _context13.n = 2;
-            return _this35.loadVerses(mode);
+            return _this36.loadVerses(mode);
           case 2:
             return _context13.a(2);
         }
       }, _callee13);
     }))();
   }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "loadReciters", function loadReciters() {
-    var _this36 = this;
+    var _this37 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee14() {
-      var _res$data2, res, list, allow, available, filtered, _this36$reciters$, _t5;
+      var _res$data2, res, list, allow, available, filtered, _this37$reciters$, _t5;
       return _regenerator().w(function (_context14) {
         while (1) switch (_context14.p = _context14.n) {
           case 0:
@@ -28252,7 +28252,7 @@ function createAdvancedState() {
                 name: entry.label
               };
             });
-            _this36.reciters = filtered.length ? filtered : list.filter(function (edition) {
+            _this37.reciters = filtered.length ? filtered : list.filter(function (edition) {
               return edition.format === 'audio';
             }).map(function (edition) {
               return {
@@ -28260,10 +28260,10 @@ function createAdvancedState() {
                 name: edition.englishName || edition.name || edition.identifier
               };
             });
-            if (!_this36.reciters.some(function (reciter) {
-              return reciter.id === _this36.reciterId;
+            if (!_this37.reciters.some(function (reciter) {
+              return reciter.id === _this37.reciterId;
             })) {
-              _this36.reciterId = ((_this36$reciters$ = _this36.reciters[0]) === null || _this36$reciters$ === void 0 ? void 0 : _this36$reciters$.id) || DEFAULT_ALQURAN_RECITER;
+              _this37.reciterId = ((_this37$reciters$ = _this37.reciters[0]) === null || _this37$reciters$ === void 0 ? void 0 : _this37$reciters$.id) || DEFAULT_ALQURAN_RECITER;
             }
             _context14.n = 4;
             break;
@@ -28572,16 +28572,16 @@ function createAdvancedState() {
     this.quizIndex = 0;
     this.nextQuizCard();
   }), _defineProperty(_methods, "playWordAudio", function playWordAudio(url) {
-    var _this37 = this;
+    var _this38 = this;
     var key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
     if (!url) return;
     this.activeWordAudio = key;
     var a = new Audio(url);
     a.addEventListener('ended', function () {
-      if (_this37.activeWordAudio === key) _this37.activeWordAudio = '';
+      if (_this38.activeWordAudio === key) _this38.activeWordAudio = '';
     });
     a.play()["catch"](function () {
-      _this37.activeWordAudio = '';
+      _this38.activeWordAudio = '';
     });
   }))
 });
@@ -29058,126 +29058,124 @@ var _hoisted_83 = {
   "class": "technique-row"
 };
 var _hoisted_84 = {
-  "class": "toggle-label"
-};
-var _hoisted_85 = {
   "class": "technique-row technique-row-stacked"
 };
-var _hoisted_86 = {
+var _hoisted_85 = {
   "class": "technique-row-main"
 };
-var _hoisted_87 = {
+var _hoisted_86 = {
   key: 0,
   "class": "technique-control"
 };
-var _hoisted_88 = {
+var _hoisted_87 = {
   "class": "inline-setting-pill"
 };
-var _hoisted_89 = {
+var _hoisted_88 = {
   "class": "technique-row technique-row-stacked"
 };
-var _hoisted_90 = {
+var _hoisted_89 = {
   "class": "technique-row-main"
 };
-var _hoisted_91 = {
+var _hoisted_90 = {
   "class": "technique-copy"
 };
-var _hoisted_92 = {
+var _hoisted_91 = {
   key: 0,
   "class": "segmented-control segmented-control-compact",
   role: "group",
   "aria-label": "Chaining method"
 };
-var _hoisted_93 = {
+var _hoisted_92 = {
   key: 1,
   "class": "technique-control"
 };
-var _hoisted_94 = ["value"];
-var _hoisted_95 = {
+var _hoisted_93 = ["value"];
+var _hoisted_94 = {
   "class": "inline-setting-pill"
 };
-var _hoisted_96 = {
+var _hoisted_95 = {
   "class": "technique-preview"
 };
-var _hoisted_97 = {
+var _hoisted_96 = {
   "class": "sheet-section"
 };
-var _hoisted_98 = {
+var _hoisted_97 = {
   "class": "sheet-content"
 };
-var _hoisted_99 = {
+var _hoisted_98 = {
   "class": "saved-sessions-list"
 };
-var _hoisted_100 = {
+var _hoisted_99 = {
   key: 0,
   "class": "empty-mini"
 };
-var _hoisted_101 = {
+var _hoisted_100 = {
   "class": "session-info"
 };
-var _hoisted_102 = {
+var _hoisted_101 = {
   "class": "session-name"
 };
-var _hoisted_103 = {
+var _hoisted_102 = {
   "class": "session-meta"
 };
-var _hoisted_104 = {
+var _hoisted_103 = {
   "class": "session-actions"
 };
+var _hoisted_104 = ["onClick"];
 var _hoisted_105 = ["onClick"];
-var _hoisted_106 = ["onClick"];
-var _hoisted_107 = {
+var _hoisted_106 = {
   key: 0,
   "class": "save-current-session"
 };
-var _hoisted_108 = {
+var _hoisted_107 = {
   "class": "save-session-row"
 };
-var _hoisted_109 = {
+var _hoisted_108 = {
   "class": "save-session-info"
 };
-var _hoisted_110 = {
-  "class": "tools-tabs row g-2",
-  role: "tablist",
-  "aria-label": "Controls tabs"
-};
-var _hoisted_111 = {
+var _hoisted_109 = {
   key: 1,
   "class": "sheet"
 };
-var _hoisted_112 = {
+var _hoisted_110 = {
   "class": "sheet-section settings-section"
 };
-var _hoisted_113 = {
+var _hoisted_111 = {
   "class": "settings-panels",
   style: {
     "padding": "20px"
   }
 };
-var _hoisted_114 = {
+var _hoisted_112 = {
   "class": "settings-group"
 };
-var _hoisted_115 = {
+var _hoisted_113 = {
   "class": "settings-card-grid settings-display-grid"
 };
-var _hoisted_116 = {
+var _hoisted_114 = {
   "class": "settings-card settings-card-toggle"
 };
-var _hoisted_117 = {
+var _hoisted_115 = {
   "class": "settings-card settings-card-range"
 };
-var _hoisted_118 = {
+var _hoisted_116 = {
   "class": "settings-range-wrap"
 };
-var _hoisted_119 = ["value"];
-var _hoisted_120 = {
+var _hoisted_117 = ["value"];
+var _hoisted_118 = {
   "class": "inline-setting-pill"
 };
-var _hoisted_121 = {
+var _hoisted_119 = {
   "class": "settings-group"
 };
-var _hoisted_122 = {
+var _hoisted_120 = {
   "class": "settings-card-grid"
+};
+var _hoisted_121 = {
+  "class": "settings-card settings-card-toggle"
+};
+var _hoisted_122 = {
+  "class": "settings-card settings-card-toggle"
 };
 var _hoisted_123 = {
   "class": "settings-card settings-card-toggle"
@@ -29186,132 +29184,126 @@ var _hoisted_124 = {
   "class": "settings-card settings-card-toggle"
 };
 var _hoisted_125 = {
-  "class": "settings-card settings-card-toggle"
-};
-var _hoisted_126 = {
-  "class": "settings-card settings-card-toggle"
-};
-var _hoisted_127 = {
   key: 2,
   "class": "main container"
 };
-var _hoisted_128 = {
+var _hoisted_126 = {
   "class": "modal-content planner-modal"
 };
-var _hoisted_129 = {
+var _hoisted_127 = {
   "class": "modal-header"
 };
-var _hoisted_130 = {
+var _hoisted_128 = {
   "class": "modal-body"
 };
+var _hoisted_129 = {
+  "class": "planner-field"
+};
+var _hoisted_130 = ["value"];
 var _hoisted_131 = {
   "class": "planner-field"
 };
-var _hoisted_132 = ["value"];
-var _hoisted_133 = {
-  "class": "planner-field"
-};
-var _hoisted_134 = {
+var _hoisted_132 = {
   "class": "verses-per-day-control"
 };
+var _hoisted_133 = ["disabled"];
+var _hoisted_134 = ["max"];
 var _hoisted_135 = ["disabled"];
-var _hoisted_136 = ["max"];
-var _hoisted_137 = ["disabled"];
-var _hoisted_138 = {
+var _hoisted_136 = {
   "class": "planner-stats-grid"
 };
-var _hoisted_139 = {
+var _hoisted_137 = {
   "class": "planner-stat-card"
+};
+var _hoisted_138 = {
+  "class": "stat-content"
+};
+var _hoisted_139 = {
+  "class": "stat-value"
 };
 var _hoisted_140 = {
-  "class": "stat-content"
+  "class": "planner-stat-card"
 };
 var _hoisted_141 = {
-  "class": "stat-value"
+  "class": "stat-content"
 };
 var _hoisted_142 = {
-  "class": "planner-stat-card"
+  "class": "stat-value"
 };
 var _hoisted_143 = {
-  "class": "stat-content"
-};
-var _hoisted_144 = {
-  "class": "stat-value"
-};
-var _hoisted_145 = {
   "class": "planner-stat-card"
 };
-var _hoisted_146 = {
+var _hoisted_144 = {
   "class": "stat-content"
 };
-var _hoisted_147 = {
+var _hoisted_145 = {
   "class": "stat-value"
 };
-var _hoisted_148 = {
+var _hoisted_146 = {
   "class": "planner-stat-card highlight"
 };
-var _hoisted_149 = {
+var _hoisted_147 = {
   "class": "stat-content"
 };
-var _hoisted_150 = {
+var _hoisted_148 = {
   "class": "stat-value"
 };
-var _hoisted_151 = {
+var _hoisted_149 = {
   key: 0,
   "class": "planner-progress"
 };
-var _hoisted_152 = {
+var _hoisted_150 = {
   "class": "progress-info"
 };
-var _hoisted_153 = {
+var _hoisted_151 = {
   "class": "progress-bar-track"
 };
-var _hoisted_154 = {
+var _hoisted_152 = {
   "class": "modal-footer"
 };
-var _hoisted_155 = {
+var _hoisted_153 = {
   "class": "modal-content confirm-modal",
   role: "dialog",
   "aria-modal": "true"
 };
-var _hoisted_156 = {
+var _hoisted_154 = {
   "class": "modal-header"
 };
-var _hoisted_157 = {
+var _hoisted_155 = {
   "class": "modal-body"
 };
-var _hoisted_158 = {
+var _hoisted_156 = {
   "class": "confirm-copy"
 };
-var _hoisted_159 = {
+var _hoisted_157 = {
   "class": "modal-footer"
 };
-var _hoisted_160 = {
+var _hoisted_158 = {
   "class": "modal-content confirm-modal resume-modal",
   role: "dialog",
   "aria-modal": "true"
 };
-var _hoisted_161 = {
+var _hoisted_159 = {
   "class": "modal-header"
 };
-var _hoisted_162 = {
+var _hoisted_160 = {
   key: 0,
   "class": "resume-saved-at"
 };
-var _hoisted_163 = {
+var _hoisted_161 = {
   "class": "modal-body"
 };
-var _hoisted_164 = {
+var _hoisted_162 = {
   "class": "confirm-copy resume-copy"
 };
-var _hoisted_165 = {
+var _hoisted_163 = {
   "class": "pill",
   style: {
     "margin-top": "10px",
     "padding": "12px 14px"
   }
 };
-var _hoisted_166 = {
+var _hoisted_164 = {
   key: 0,
   "class": "pill",
   style: {
@@ -29319,11 +29311,17 @@ var _hoisted_166 = {
     "padding": "12px 14px"
   }
 };
-var _hoisted_167 = {
+var _hoisted_165 = {
   "class": "resume-details"
 };
-var _hoisted_168 = {
+var _hoisted_166 = {
   "class": "resume-feedback-bars"
+};
+var _hoisted_167 = {
+  "class": "resume-feedback-row"
+};
+var _hoisted_168 = {
+  "class": "progress-bar-track"
 };
 var _hoisted_169 = {
   "class": "resume-feedback-row"
@@ -29338,62 +29336,56 @@ var _hoisted_172 = {
   "class": "progress-bar-track"
 };
 var _hoisted_173 = {
-  "class": "resume-feedback-row"
-};
-var _hoisted_174 = {
-  "class": "progress-bar-track"
-};
-var _hoisted_175 = {
   "class": "resume-grid"
 };
-var _hoisted_176 = {
+var _hoisted_174 = {
   "class": "pill"
 };
-var _hoisted_177 = {
+var _hoisted_175 = {
   "class": "pill pill-status-mastered"
 };
-var _hoisted_178 = {
+var _hoisted_176 = {
   "class": "pill pill-status-weak"
 };
-var _hoisted_179 = {
+var _hoisted_177 = {
   "class": "pill pill-status-repeat"
 };
-var _hoisted_180 = {
+var _hoisted_178 = {
   "class": "pill",
   style: {
     "margin-top": "10px",
     "padding": "12px 14px"
   }
 };
-var _hoisted_181 = {
+var _hoisted_179 = {
   "class": "modal-footer"
 };
-var _hoisted_182 = {
+var _hoisted_180 = {
   "class": "player-main"
 };
-var _hoisted_183 = {
+var _hoisted_181 = {
   "class": "player-info"
 };
-var _hoisted_184 = {
+var _hoisted_182 = {
   "class": "player-chapter"
 };
-var _hoisted_185 = {
+var _hoisted_183 = {
   "class": "player-verse"
 };
-var _hoisted_186 = ["title"];
-var _hoisted_187 = {
+var _hoisted_184 = ["title"];
+var _hoisted_185 = {
   "class": "player-controls"
 };
-var _hoisted_188 = {
+var _hoisted_186 = {
   "class": "player-progress-wrap"
 };
+var _hoisted_187 = {
+  "class": "player-time"
+};
+var _hoisted_188 = {
+  "class": "player-time"
+};
 var _hoisted_189 = {
-  "class": "player-time"
-};
-var _hoisted_190 = {
-  "class": "player-time"
-};
-var _hoisted_191 = {
   ref: "audio",
   style: {
     "display": "none"
@@ -29420,7 +29412,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $data.banner = null;
     }),
     "aria-label": "Dismiss"
-  }, _toConsumableArray(_cache[77] || (_cache[77] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[74] || (_cache[74] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */)])))])], 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Main Content "), $data.appReady && $options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 1,
@@ -29431,21 +29423,21 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       'flow-practice': $options.guidedUiStep === 'practice',
       'flow-recall': $options.guidedUiStep === 'recall'
     }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [!$options.hasVerses && !$options.currentConfig.chapterId ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [$data.hasContinueSession ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [_cache[78] || (_cache[78] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [!$options.hasVerses && !$options.currentConfig.chapterId ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [$data.hasContinueSession ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [_cache[75] || (_cache[75] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "continue-session-kicker"
   }, "Continue where you left off", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.continueSessionLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.continueSessionMeta), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-primary continue-session-btn",
     onClick: _cache[2] || (_cache[2] = function () {
       return $options.continueLastSession && $options.continueLastSession.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[79] || (_cache[79] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[76] || (_cache[76] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-fill"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Continue Session ", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-ghost continue-session-dismiss",
     onClick: _cache[3] || (_cache[3] = function () {
       return $options.confirmDiscardContinueSession && $options.confirmDiscardContinueSession.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[80] || (_cache[80] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[77] || (_cache[77] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */)])))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-primary setup-primary",
@@ -29456,11 +29448,11 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.openToolsPanel();
     }),
     title: "Open controls"
-  }, _toConsumableArray(_cache[81] || (_cache[81] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[78] || (_cache[78] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Open Session Controls ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_9), _cache[82] || (_cache[82] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Open Session Controls ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_9), _cache[79] || (_cache[79] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
     "class": "offcanvas-launcher-copy"
-  }, " Session setup lives in the offcanvas. ", -1 /* CACHED */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true),  false ? (0) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Grid "), !$data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_17, _toConsumableArray(_cache[89] || (_cache[89] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, " Session setup lives in the offcanvas. ", -1 /* CACHED */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true),  false ? (0) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Grid "), !$data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_17, _toConsumableArray(_cache[86] || (_cache[86] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-hourglass-split"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Loading...", -1 /* CACHED */)])))) : $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_18, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["workspace-shell", {
@@ -29486,7 +29478,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.openAdvancedControls && $options.openAdvancedControls.apply($options, arguments);
     }),
     title: "Open session controls"
-  }, _toConsumableArray(_cache[90] || (_cache[90] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[87] || (_cache[87] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Controls", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_24), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "action-btn action-btn-primary",
@@ -29503,18 +29495,18 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[15] || (_cache[15] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
       return $data.showKeyboardShortcuts = false;
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [_cache[92] || (_cache[92] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [_cache[89] || (_cache[89] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-keyboard"
   }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Keyboard Shortcuts")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "shortcuts-modal-close",
     onClick: _cache[14] || (_cache[14] = function ($event) {
       return $data.showKeyboardShortcuts = false;
     })
-  }, _toConsumableArray(_cache[91] || (_cache[91] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[88] || (_cache[88] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), _cache[93] || (_cache[93] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"shortcuts-modal-body\"><div class=\"shortcuts-grid\"><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Navigation</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↑</kbd></div><span>Previous verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↓</kbd></div><span>Next verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>←</kbd> / <kbd>J</kbd></div><span>Previous in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>→</kbd> / <kbd>K</kbd></div><span>Next in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Home</kbd></div><span>First verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>End</kbd></div><span>Last verse</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Playback</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Space</kbd></div><span>Play / Pause</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Enter</kbd></div><span>Play current verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>P</kbd></div><span>Play current verse</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Session</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Ctrl</kbd> + <kbd>S</kbd></div><span>Save session</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Esc</kbd></div><span>Close modals</span></div></div></div></div>", 1))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_28, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Current ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + " of " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Session " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "% complete", 1 /* TEXT */), $options.guidedUiStep === 'review' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_29, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.reviewPriorityLabel), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.etaLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_30, "Time left: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.mainCardCollapsed]]), !$data.mainCardCollapsed && $data.chainingEnabled && $options.hasSessionFeedback ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_31, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_32, [_cache[94] || (_cache[94] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)])))]), _cache[90] || (_cache[90] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"shortcuts-modal-body\"><div class=\"shortcuts-grid\"><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Navigation</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↑</kbd></div><span>Previous verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↓</kbd></div><span>Next verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>←</kbd> / <kbd>J</kbd></div><span>Previous in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>→</kbd> / <kbd>K</kbd></div><span>Next in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Home</kbd></div><span>First verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>End</kbd></div><span>Last verse</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Playback</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Space</kbd></div><span>Play / Pause</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Enter</kbd></div><span>Play current verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>P</kbd></div><span>Play current verse</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Session</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Ctrl</kbd> + <kbd>S</kbd></div><span>Save session</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Esc</kbd></div><span>Close modals</span></div></div></div></div>", 1))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_28, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Current ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + " of " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Session " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "% complete", 1 /* TEXT */), $options.guidedUiStep === 'review' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_29, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.reviewPriorityLabel), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.etaLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_30, "Time left: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel.replace('Audio time ≈ ', '')), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.mainCardCollapsed]]), !$data.mainCardCollapsed && $data.chainingEnabled && $options.hasSessionFeedback ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_31, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_32, [_cache[91] || (_cache[91] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-link-45deg"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions) + "x ", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_33, [_cache[95] || (_cache[95] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions) + "x ", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_33, [_cache[92] || (_cache[92] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-diagram-3"
   }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingProgressLabel), 1 /* TEXT */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("main", _hoisted_34, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_35, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.verses, function (verse) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
@@ -29546,7 +29538,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       }, ["stop"]),
       disabled: !verse.audio,
       title: "Download audio for offline listening"
-    }, _toConsumableArray(_cache[96] || (_cache[96] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[93] || (_cache[93] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-download"
     }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_43), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "verse-play-btn",
@@ -29570,9 +29562,9 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         '--verse-font-percent': $options.getVerseFontSize(verse.key),
         fontFamily: $options.quranFontFamily
       })
-    }, null, 14 /* CLASS, STYLE, PROPS */, _hoisted_46)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Keep in-workspace aids available, but visually quieter "), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_47, [_cache[97] || (_cache[97] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    }, null, 14 /* CLASS, STYLE, PROPS */, _hoisted_46)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Keep in-workspace aids available, but visually quieter "), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_47, [_cache[94] || (_cache[94] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
       "class": "verse-aid-title"
-    }, "Transliteration", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_48, [_cache[98] || (_cache[98] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    }, "Transliteration", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_48, [_cache[95] || (_cache[95] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
       "class": "verse-aid-title"
     }, "Translation", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.translation), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showWordByWord && verse.words && verse.words.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: 3,
@@ -29599,7 +29591,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
           return $options.playWordAudio(word.audio);
         }, ["stop"])
-      }, _toConsumableArray(_cache[99] || (_cache[99] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[96] || (_cache[96] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-volume-up"
       }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_53)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 10 /* CLASS, PROPS */, _hoisted_50);
     }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_49)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 42 /* CLASS, PROPS, NEED_HYDRATION */, _hoisted_36);
@@ -29621,7 +29613,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "aria-labelledby": "memorisationToolsTitle",
     "aria-hidden": $data.showTools ? 'false' : 'true',
     tabindex: "-1"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_55, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_56, [_cache[101] || (_cache[101] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_55, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_56, [_cache[98] || (_cache[98] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     id: "memorisationToolsTitle",
     "class": "tools-title"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("b", null, "Controls")])], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
@@ -29630,7 +29622,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.closeToolsPanel && $options.closeToolsPanel.apply($options, arguments);
     }),
     "aria-label": "Close panel"
-  }, _toConsumableArray(_cache[100] || (_cache[100] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[97] || (_cache[97] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_57, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["col-12 col-md-6", {
@@ -29641,7 +29633,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.setActiveTab('tools');
     }),
     title: "Session tools"
-  }, _toConsumableArray(_cache[102] || (_cache[102] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[99] || (_cache[99] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Tools ", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["col-12 col-md-6", {
@@ -29652,7 +29644,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.setActiveTab('settings');
     }),
     title: "Reading and display settings"
-  }, _toConsumableArray(_cache[103] || (_cache[103] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[100] || (_cache[100] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-gear"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Settings ", -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_58, [$data.tab === 'tools' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_59, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_60, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
@@ -29660,28 +29652,28 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.toggleSection('advanced_setup');
     }),
     type: "button"
-  }, [_cache[105] || (_cache[105] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Session</span><span class=\"st-sub\">Choose what you memorise</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[102] || (_cache[102] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Session</span><span class=\"st-sub\">Choose what you memorise</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_setup
     }])
-  }, _toConsumableArray(_cache[104] || (_cache[104] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[101] || (_cache[101] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_61, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_62, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_63, [_cache[107] || (_cache[107] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_61, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_62, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_63, [_cache[104] || (_cache[104] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     value: $options.chapterId,
     onChange: _cache[23] || (_cache[23] = function () {
       return $options.onChapterChange && $options.onChapterChange.apply($options, arguments);
     }),
     "class": "select"
-  }, [_cache[106] || (_cache[106] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+  }, [_cache[103] || (_cache[103] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: 0
   }, "Choose a surah...", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (c) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: c.id,
       value: c.id
     }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_65);
-  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_64), _cache[108] || (_cache[108] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_64), _cache[105] || (_cache[105] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Pick the surah you want to work on.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_66, [_cache[110] || (_cache[110] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verse range", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_67, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Pick the surah you want to work on.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_66, [_cache[107] || (_cache[107] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verse range", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_67, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
     "onUpdate:modelValue": _cache[24] || (_cache[24] = function ($event) {
@@ -29693,7 +29685,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     min: "1"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeStart, void 0, {
     number: true
-  }]]), _cache[109] || (_cache[109] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }]]), _cache[106] || (_cache[106] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
     "onUpdate:modelValue": _cache[26] || (_cache[26] = function ($event) {
@@ -29705,9 +29697,9 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     min: "1"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeEnd, void 0, {
     number: true
-  }]])]), _cache[111] || (_cache[111] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }]])]), _cache[108] || (_cache[108] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Keep ranges small for focused memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_68, [_cache[112] || (_cache[112] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }, "Keep ranges small for focused memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_68, [_cache[109] || (_cache[109] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     "onUpdate:modelValue": _cache[28] || (_cache[28] = function ($event) {
       return $options.reciterId = $event;
     }),
@@ -29720,7 +29712,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       key: r.id,
       value: r.id
     }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_69);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]]), _cache[113] || (_cache[113] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]]), _cache[110] || (_cache[110] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
   }, "Changes the audio voice for the session.", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_70, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
@@ -29728,13 +29720,13 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.toggleSection('advanced_playback');
     }),
     type: "button"
-  }, [_cache[115] || (_cache[115] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Audio</span><span class=\"st-sub\">Reciter and playback</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[112] || (_cache[112] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Audio</span><span class=\"st-sub\">Reciter and playback</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_playback
     }])
-  }, _toConsumableArray(_cache[114] || (_cache[114] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[111] || (_cache[111] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_71, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_72, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_73, [_cache[116] || (_cache[116] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_74, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.speedOptions, function (option) {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_71, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_72, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_73, [_cache[113] || (_cache[113] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_74, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.speedOptions, function (option) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("label", {
       "class": "radio",
       key: "tool-speed-".concat(option)
@@ -29746,21 +29738,21 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         return $options.setPlaybackSpeed(option);
       }
     }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_75), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(option) + "x ", 1 /* TEXT */)]);
-  }), 128 /* KEYED_FRAGMENT */))]), _cache[117] || (_cache[117] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }), 128 /* KEYED_FRAGMENT */))]), _cache[114] || (_cache[114] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Use slower speed for early memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_76, [_cache[120] || (_cache[120] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_77, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_78, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Use slower speed for early memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_76, [_cache[117] || (_cache[117] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_77, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_78, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "auto",
     "onUpdate:modelValue": _cache[31] || (_cache[31] = function ($event) {
       return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[118] || (_cache[118] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_79, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[115] || (_cache[115] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_79, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "manual",
     "onUpdate:modelValue": _cache[32] || (_cache[32] = function ($event) {
       return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[119] || (_cache[119] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No", -1 /* CACHED */))])]), _cache[121] || (_cache[121] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[116] || (_cache[116] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No", -1 /* CACHED */))])]), _cache[118] || (_cache[118] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
   }, "Auto moves to the next queue item when audio ends.", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_playback]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_80, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
@@ -29768,13 +29760,13 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.toggleSection('memorisation_techniques');
     }),
     type: "button"
-  }, [_cache[123] || (_cache[123] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-stars\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Memorisation Techniques</span><span class=\"st-sub\">Optional focus, recall, and chaining aids</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[120] || (_cache[120] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-stars\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Memorisation Techniques</span><span class=\"st-sub\">Optional focus, recall, and chaining aids</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.memorisation_techniques
     }])
-  }, _toConsumableArray(_cache[122] || (_cache[122] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[119] || (_cache[119] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_81, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_82, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_83, [_cache[125] || (_cache[125] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_81, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_82, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_83, [_cache[121] || (_cache[121] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "technique-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Focus Mode"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, "Reduces distractions around the active ayah.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip technique-toggle", {
@@ -29784,9 +29776,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $data.focusModeEnabled = !$data.focusModeEnabled;
     }),
     type: "button"
-  }, [_cache[124] || (_cache[124] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "toggle-indicator"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_84, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.focusModeEnabled ? 'On' : 'Off'), 1 /* TEXT */)], 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_85, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_86, [_cache[126] || (_cache[126] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.focusModeEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_84, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_85, [_cache[122] || (_cache[122] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "technique-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Blur Mode"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, "Supports active recall through progressive concealment.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip technique-toggle", {
@@ -29796,7 +29786,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $data.blurModeEnabled = !$data.blurModeEnabled;
     }),
     type: "button"
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.blurModeEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), $data.blurModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_87, [_cache[127] || (_cache[127] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Intensity", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.blurModeEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), $data.blurModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_86, [_cache[123] || (_cache[123] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Intensity", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     min: "4",
     max: "18",
@@ -29807,7 +29797,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": "input technique-range"
   }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.blurIntensity, void 0, {
     number: true
-  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_88, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.blurIntensity) + "px", 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_89, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_90, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_91, [_cache[128] || (_cache[128] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Chaining", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodDescription), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_87, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.blurIntensity) + "px", 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_88, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_89, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_90, [_cache[124] || (_cache[124] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Chaining", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodDescription), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip technique-toggle", {
       active: $data.chainingEnabled
     }]),
@@ -29815,7 +29805,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.setChainingEnabled(!$data.chainingEnabled);
     }),
     type: "button"
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_92, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_91, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     type: "button",
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
       active: $data.chainingMethod === 'linking'
@@ -29831,7 +29821,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[39] || (_cache[39] = function ($event) {
       return $options.setChainingMethod('cumulative');
     })
-  }, " Cumulative ", 2 /* CLASS */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_93, [_cache[129] || (_cache[129] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Repeats per step", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, " Cumulative ", 2 /* CLASS */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_92, [_cache[125] || (_cache[125] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Repeats per step", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     min: "1",
     max: "5",
@@ -29841,19 +29831,19 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.setChainingRepetitions(Number($event.target.value));
     }),
     "class": "input technique-range"
-  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_94), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_95, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions) + " repeats", 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_96, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodPreview), 1 /* TEXT */)])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.memorisation_techniques]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Add this after the memorisation_techniques section, before closing the tools tab div "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_97, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_93), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_94, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions) + " repeats", 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_95, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodPreview), 1 /* TEXT */)])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.memorisation_techniques]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Add this after the memorisation_techniques section, before closing the tools tab div "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_96, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
     onClick: _cache[41] || (_cache[41] = function ($event) {
       return $options.toggleSection('saved_sessions');
     }),
     type: "button"
-  }, [_cache[131] || (_cache[131] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-clock-history\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Saved Sessions</span><span class=\"st-sub\">Load or delete previously saved sessions</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[127] || (_cache[127] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-clock-history\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Saved Sessions</span><span class=\"st-sub\">Load or delete previously saved sessions</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.saved_sessions
     }])
-  }, _toConsumableArray(_cache[130] || (_cache[130] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[126] || (_cache[126] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_98, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_99, [$data.savedSessions.length === 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_100, _toConsumableArray(_cache[132] || (_cache[132] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_97, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_98, [$data.savedSessions.length === 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_99, _toConsumableArray(_cache[128] || (_cache[128] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-inbox",
     style: {
       "font-size": "1.5rem",
@@ -29866,74 +29856,41 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: session.id,
       "class": "saved-session-item"
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_101, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_102, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(session.name), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_103, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[133] || (_cache[133] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_100, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_101, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(session.name), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_102, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[129] || (_cache[129] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-calendar"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatDate(session.savedAt)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[134] || (_cache[134] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatDate(session.savedAt)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[130] || (_cache[130] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-book"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_session$config = session.config) === null || _session$config === void 0 ? void 0 : _session$config.chapterName) || "Surah\n                          ".concat((_session$config2 = session.config) === null || _session$config2 === void 0 ? void 0 : _session$config2.chapterId)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[135] || (_cache[135] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_session$config = session.config) === null || _session$config === void 0 ? void 0 : _session$config.chapterName) || "Surah\n                          ".concat((_session$config2 = session.config) === null || _session$config2 === void 0 ? void 0 : _session$config2.chapterId)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[131] || (_cache[131] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-text-paragraph"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_session$config3 = session.config) === null || _session$config3 === void 0 ? void 0 : _session$config3.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_session$config4 = session.config) === null || _session$config4 === void 0 ? void 0 : _session$config4.rangeEnd), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_104, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_session$config3 = session.config) === null || _session$config3 === void 0 ? void 0 : _session$config3.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_session$config4 = session.config) === null || _session$config4 === void 0 ? void 0 : _session$config4.rangeEnd), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_103, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "session-load-btn",
       onClick: function onClick($event) {
         return $options.loadSavedSession(session.id);
       },
       title: "Load this session"
-    }, _toConsumableArray(_cache[136] || (_cache[136] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[132] || (_cache[132] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-play-fill"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_105), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_104), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "session-delete-btn",
       onClick: function onClick($event) {
         return $options.deleteSavedSession(session.id);
       },
       title: "Delete session"
-    }, _toConsumableArray(_cache[137] || (_cache[137] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[133] || (_cache[133] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-trash3"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_106)])]);
-  }), 128 /* KEYED_FRAGMENT */))]), $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_107, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_108, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_109, [_cache[138] || (_cache[138] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_105)])]);
+  }), 128 /* KEYED_FRAGMENT */))]), $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_106, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_107, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_108, [_cache[134] || (_cache[134] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-save"
   }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Save Current Session")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter = $data.currentChapter) === null || _$data$currentChapter === void 0 ? void 0 : _$data$currentChapter.name_simple) || 'Current') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "save-session-btn",
     onClick: _cache[42] || (_cache[42] = function () {
       return $options.saveCurrentSession && $options.saveCurrentSession.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[139] || (_cache[139] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[135] || (_cache[135] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-save"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Save ", -1 /* CACHED */)])))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.saved_sessions]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" In the tools-tabs div, add a third button "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_110, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["col-12 col-md-4", {
-      active: $data.tab === 'tools',
-      'active-tab': $data.tab === 'tools'
-    }]),
-    onClick: _cache[43] || (_cache[43] = function ($event) {
-      return $options.setActiveTab('tools');
-    }),
-    title: "Session tools"
-  }, _toConsumableArray(_cache[140] || (_cache[140] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-sliders"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Tools ", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["col-12 col-md-4", {
-      active: $data.tab === 'sessions',
-      'active-tab': $data.tab === 'sessions'
-    }]),
-    onClick: _cache[44] || (_cache[44] = function ($event) {
-      return $options.setActiveTab('sessions');
-    }),
-    title: "Saved sessions"
-  }, _toConsumableArray(_cache[141] || (_cache[141] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-clock-history"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Saved ", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["col-12 col-md-4", {
-      active: $data.tab === 'settings',
-      'active-tab': $data.tab === 'settings'
-    }]),
-    onClick: _cache[45] || (_cache[45] = function ($event) {
-      return $options.setActiveTab('settings');
-    }),
-    title: "Reading and display settings"
-  }, _toConsumableArray(_cache[142] || (_cache[142] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-gear"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Settings ", -1 /* CACHED */)])), 2 /* CLASS */)])])) : $data.tab === 'settings' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_111, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_112, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_113, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_114, [_cache[145] || (_cache[145] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Save ", -1 /* CACHED */)])))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.saved_sessions]])])])) : $data.tab === 'settings' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_109, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_110, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_111, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_112, [_cache[138] || (_cache[138] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "settings-group-title"
-  }, "Display", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_115, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_116, [_cache[143] || (_cache[143] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Display", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_113, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_114, [_cache[136] || (_cache[136] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "settings-row-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "settings-icon"
@@ -29943,27 +29900,27 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip settings-toggle", {
       active: $data.settingsDraft.tajweedEnabled
     }]),
-    onClick: _cache[46] || (_cache[46] = function ($event) {
+    onClick: _cache[43] || (_cache[43] = function ($event) {
       return $options.toggleSettingsOption('tajweedEnabled');
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.tajweedEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_117, [_cache[144] || (_cache[144] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.tajweedEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_115, [_cache[137] || (_cache[137] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "settings-row-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "settings-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrows-angle-expand"
-  })]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Font size")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, "Verse scale")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_118, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  })]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Font size")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, "Verse scale")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_116, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     min: "80",
     max: "140",
     step: "5",
     value: $data.settingsDraft.defaultFontSize,
-    onInput: _cache[47] || (_cache[47] = function ($event) {
+    onInput: _cache[44] || (_cache[44] = function ($event) {
       return $options.updateSettingsValue('defaultFontSize', Number($event.target.value));
     }),
     "class": "input settings-range",
     "aria-label": "Font size"
-  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_119), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_120, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.defaultFontSize) + "%", 1 /* TEXT */)])])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_121, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_122, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_123, [_cache[146] || (_cache[146] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_117), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_118, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.defaultFontSize) + "%", 1 /* TEXT */)])])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_119, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_120, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_121, [_cache[139] || (_cache[139] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "settings-row-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "settings-icon"
@@ -29973,10 +29930,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip settings-toggle", {
       active: $data.settingsDraft.showTranslation
     }]),
-    onClick: _cache[48] || (_cache[48] = function ($event) {
+    onClick: _cache[45] || (_cache[45] = function ($event) {
       return $options.toggleSettingsOption('showTranslation');
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.showTranslation ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_124, [_cache[147] || (_cache[147] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.showTranslation ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_122, [_cache[140] || (_cache[140] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "settings-row-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "settings-icon"
@@ -29986,10 +29943,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip settings-toggle", {
       active: $data.settingsDraft.showTransliteration
     }]),
-    onClick: _cache[49] || (_cache[49] = function ($event) {
+    onClick: _cache[46] || (_cache[46] = function ($event) {
       return $options.toggleSettingsOption('showTransliteration');
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.showTransliteration ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_125, [_cache[148] || (_cache[148] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.showTransliteration ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_123, [_cache[141] || (_cache[141] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "settings-row-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "settings-icon"
@@ -29999,10 +29956,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip settings-toggle", {
       active: $data.settingsDraft.showWordByWord
     }]),
-    onClick: _cache[50] || (_cache[50] = function ($event) {
+    onClick: _cache[47] || (_cache[47] = function ($event) {
       return $options.toggleSettingsOption('showWordByWord');
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.showWordByWord ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_126, [_cache[149] || (_cache[149] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.showWordByWord ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_124, [_cache[142] || (_cache[142] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "settings-row-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "settings-icon"
@@ -30012,7 +29969,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip settings-toggle", {
       active: $data.settingsDraft.wordByWordAudioEnabled
     }]),
-    onClick: _cache[51] || (_cache[51] = function ($event) {
+    onClick: _cache[48] || (_cache[48] = function ($event) {
       return $options.toggleSettingsOption('wordByWordAudioEnabled');
     })
   }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.settingsDraft.wordByWordAudioEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <section class=\"settings-apply-section\">\n                  <button class=\"settings-apply-primary\" @click=\"closeToolsPanel\">\n                    <i class=\"bi bi-check2-circle\"></i>\n                    <span>Apply changes</span>\n                  </button>\n                  <small>Saved settings persist after refresh.</small>\n                </section> ")])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
@@ -30021,199 +29978,199 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     }])
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-btn tools-btn-ghost tools-btn-soft",
-    onClick: _cache[52] || (_cache[52] = function () {
+    onClick: _cache[49] || (_cache[49] = function () {
       return $options.resetControls && $options.resetControls.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[150] || (_cache[150] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[143] || (_cache[143] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-counterclockwise"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Reset", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-btn tools-btn-primary tools-btn-soft",
-    onClick: _cache[53] || (_cache[53] = function () {
+    onClick: _cache[50] || (_cache[50] = function () {
       return $options.closeToolsPanel && $options.closeToolsPanel.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[151] || (_cache[151] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[144] || (_cache[144] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-check2-circle"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Done", -1 /* CACHED */)])))], 2 /* CLASS */)], 10 /* CLASS, PROPS */, _hoisted_54)], 2 /* CLASS */)) : $data.appReady && !$options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_127, _toConsumableArray(_cache[152] || (_cache[152] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section class=\"home-dashboard\"><div class=\"setup-start-card\"><div class=\"setup-start-copy\"><span class=\"setup-kicker\">Login Required</span><h2>Sign in to access your memorisation workspace</h2><p>Your sessions, progress, and resume history sync after login.</p></div><a class=\"cta cta-primary setup-primary\" href=\"/login\"><i class=\"bi bi-box-arrow-in-right\"></i> Login </a></div></section>", 1)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Planner Modal "), $data.showPlannerModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Done", -1 /* CACHED */)])))], 2 /* CLASS */)], 10 /* CLASS, PROPS */, _hoisted_54)], 2 /* CLASS */)) : $data.appReady && !$options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_125, _toConsumableArray(_cache[145] || (_cache[145] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section class=\"home-dashboard\"><div class=\"setup-start-card\"><div class=\"setup-start-copy\"><span class=\"setup-kicker\">Login Required</span><h2>Sign in to access your memorisation workspace</h2><p>Your sessions, progress, and resume history sync after login.</p></div><a class=\"cta cta-primary setup-primary\" href=\"/login\"><i class=\"bi bi-box-arrow-in-right\"></i> Login </a></div></section>", 1)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Planner Modal "), $data.showPlannerModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 3,
     "class": "modal-overlay",
-    onClick: _cache[63] || (_cache[63] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
+    onClick: _cache[60] || (_cache[60] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
       return $data.showPlannerModal = false;
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_128, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_129, [_cache[154] || (_cache[154] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_126, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_127, [_cache[147] || (_cache[147] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-calendar-plus"
   }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Quick Planner")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-icon",
-    onClick: _cache[54] || (_cache[54] = function ($event) {
+    onClick: _cache[51] || (_cache[51] = function ($event) {
       return $data.showPlannerModal = false;
     })
-  }, _toConsumableArray(_cache[153] || (_cache[153] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[146] || (_cache[146] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_130, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Surah Selection "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_131, [_cache[155] || (_cache[155] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_128, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Surah Selection "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_129, [_cache[148] || (_cache[148] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-book"
   }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Target Surah")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[55] || (_cache[55] = function ($event) {
+    "onUpdate:modelValue": _cache[52] || (_cache[52] = function ($event) {
       return $data.plannerConfig.surahId = $event;
     }),
     "class": "planner-select",
-    onChange: _cache[56] || (_cache[56] = function () {
+    onChange: _cache[53] || (_cache[53] = function () {
       return $options.updatePlannerSurah && $options.updatePlannerSurah.apply($options, arguments);
     })
   }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (ch) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: ch.id,
       value: ch.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ch.name_simple) + " (" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ch.verses_count) + " verses) ", 9 /* TEXT, PROPS */, _hoisted_132);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.plannerConfig.surahId]]), _cache[156] || (_cache[156] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ch.name_simple) + " (" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ch.verses_count) + " verses) ", 9 /* TEXT, PROPS */, _hoisted_130);
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.plannerConfig.surahId]]), _cache[149] || (_cache[149] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Choose the surah you want to memorize", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Per Day "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_133, [_cache[159] || (_cache[159] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, "Choose the surah you want to memorize", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Per Day "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_131, [_cache[152] || (_cache[152] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sun"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Verses per day")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_134, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Verses per day")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_132, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "quantity-btn",
-    onClick: _cache[57] || (_cache[57] = function ($event) {
+    onClick: _cache[54] || (_cache[54] = function ($event) {
       return $options.adjustVersesPerDay(-1);
     }),
     disabled: $data.plannerConfig.versesPerDay <= 1
-  }, _toConsumableArray(_cache[157] || (_cache[157] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[150] || (_cache[150] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-dash"
-  }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_135), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_133), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
-    "onUpdate:modelValue": _cache[58] || (_cache[58] = function ($event) {
+    "onUpdate:modelValue": _cache[55] || (_cache[55] = function ($event) {
       return $data.plannerConfig.versesPerDay = $event;
     }),
     "class": "planner-input",
     min: "1",
     max: $data.plannerConfig.totalVersesInSurah,
-    onChange: _cache[59] || (_cache[59] = function () {
+    onChange: _cache[56] || (_cache[56] = function () {
       return $options.validateVersesPerDay && $options.validateVersesPerDay.apply($options, arguments);
     })
-  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_136), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.plannerConfig.versesPerDay, void 0, {
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_134), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.plannerConfig.versesPerDay, void 0, {
     number: true
   }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "quantity-btn",
-    onClick: _cache[60] || (_cache[60] = function ($event) {
+    onClick: _cache[57] || (_cache[57] = function ($event) {
       return $options.adjustVersesPerDay(1);
     }),
     disabled: $data.plannerConfig.versesPerDay >= $data.plannerConfig.totalVersesInSurah
-  }, _toConsumableArray(_cache[158] || (_cache[158] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[151] || (_cache[151] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-plus"
-  }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_137)]), _cache[160] || (_cache[160] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_135)]), _cache[153] || (_cache[153] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "How many new verses you want to memorize daily", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Stats Grid "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_138, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Days to Finish "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_139, [_cache[162] || (_cache[162] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "How many new verses you want to memorize daily", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Stats Grid "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_136, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Days to Finish "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_137, [_cache[155] || (_cache[155] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "stat-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-calendar-week"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_140, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_141, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerEstimatedDays), 1 /* TEXT */), _cache[161] || (_cache[161] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_138, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_139, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerEstimatedDays), 1 /* TEXT */), _cache[154] || (_cache[154] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "stat-label"
-  }, "Days to Finish", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Daily Time "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_142, [_cache[164] || (_cache[164] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Days to Finish", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Daily Time "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_140, [_cache[157] || (_cache[157] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "stat-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-clock"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_143, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_144, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerEstimatedTimePerDay) + "m", 1 /* TEXT */), _cache[163] || (_cache[163] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_141, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_142, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerEstimatedTimePerDay) + "m", 1 /* TEXT */), _cache[156] || (_cache[156] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "stat-label"
-  }, "Daily Time", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Total Verses "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_145, [_cache[166] || (_cache[166] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Daily Time", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Total Verses "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_143, [_cache[159] || (_cache[159] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "stat-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-text-paragraph"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_146, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_147, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerTotalVerses), 1 /* TEXT */), _cache[165] || (_cache[165] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_144, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_145, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerTotalVerses), 1 /* TEXT */), _cache[158] || (_cache[158] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "stat-label"
-  }, "Total Verses", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Completion Date "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_148, [_cache[169] || (_cache[169] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Total Verses", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Completion Date "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_146, [_cache[162] || (_cache[162] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "stat-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-calendar-check"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_149, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_150, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerCompletionDateFormatted), 1 /* TEXT */), _cache[167] || (_cache[167] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_147, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_148, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.plannerCompletionDateFormatted), 1 /* TEXT */), _cache[160] || (_cache[160] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "stat-label"
-  }, "Est. completion date", -1 /* CACHED */)), _cache[168] || (_cache[168] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, "Est. completion date", -1 /* CACHED */)), _cache[161] || (_cache[161] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "stat-note"
-  }, "Based on verses/day and your past pace.", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Progress Bar "), $data.plannerConfig.totalVersesInSurah > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_151, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_152, [_cache[170] || (_cache[170] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Progress breakdown", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.plannerConfig.versesPerDay) + " / " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.plannerConfig.totalVersesInSurah) + " verses/day", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_153, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Based on verses/day and your past pace.", -1 /* CACHED */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Progress Bar "), $data.plannerConfig.totalVersesInSurah > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_149, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_150, [_cache[163] || (_cache[163] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Progress breakdown", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.plannerConfig.versesPerDay) + " / " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.plannerConfig.totalVersesInSurah) + " verses/day", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_151, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "progress-bar-fill",
     style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
       width: $data.plannerConfig.versesPerDay / $data.plannerConfig.totalVersesInSurah * 100 + '%'
     })
-  }, null, 4 /* STYLE */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_154, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, 4 /* STYLE */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_152, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary",
-    onClick: _cache[61] || (_cache[61] = function ($event) {
+    onClick: _cache[58] || (_cache[58] = function ($event) {
       return $data.showPlannerModal = false;
     })
   }, "Cancel"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-primary",
-    onClick: _cache[62] || (_cache[62] = function () {
+    onClick: _cache[59] || (_cache[59] = function () {
       return $options.submitPlanner && $options.submitPlanner.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[171] || (_cache[171] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[164] || (_cache[164] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-fill"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Create Plan ", -1 /* CACHED */)])))])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showConfirmModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 4,
     "class": "modal-overlay",
-    onClick: _cache[67] || (_cache[67] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onClick: _cache[64] || (_cache[64] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_155, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_156, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_153, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_154, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-icon",
-    onClick: _cache[64] || (_cache[64] = function () {
+    onClick: _cache[61] || (_cache[61] = function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[172] || (_cache[172] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[165] || (_cache[165] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_157, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_158, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.message), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_159, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_155, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_156, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.message), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_157, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary",
-    onClick: _cache[65] || (_cache[65] = function () {
+    onClick: _cache[62] || (_cache[62] = function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     })
   }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.cancelLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["btn-primary", {
       'btn-danger': $data.confirmModal.tone === 'danger'
     }]),
-    onClick: _cache[66] || (_cache[66] = function () {
+    onClick: _cache[63] || (_cache[63] = function () {
       return $options.runConfirmAction && $options.runConfirmAction.apply($options, arguments);
     })
   }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.confirmLabel), 3 /* TEXT, CLASS */)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Resume Modal (Logged In) "), $data.showResumeModal && $options.isLoggedIn && $data.hasContinueSession ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 5,
     "class": "modal-overlay",
-    onClick: _cache[71] || (_cache[71] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
+    onClick: _cache[68] || (_cache[68] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
       return $data.showResumeModal = false;
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_160, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_161, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeModalTitle), 1 /* TEXT */), $options.resumeSavedAtLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("small", _hoisted_162, "Last saved at " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeSavedAtLabel), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_158, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_159, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeModalTitle), 1 /* TEXT */), $options.resumeSavedAtLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("small", _hoisted_160, "Last saved at " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeSavedAtLabel), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-icon",
-    onClick: _cache[68] || (_cache[68] = function ($event) {
+    onClick: _cache[65] || (_cache[65] = function ($event) {
       return $data.showResumeModal = false;
     })
-  }, _toConsumableArray(_cache[173] || (_cache[173] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[166] || (_cache[166] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_163, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_164, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.continueSessionMeta), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_165, [_cache[174] || (_cache[174] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Resume:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_$data$continueSessio = $data.continueSessionPayload) !== null && _$data$continueSessio !== void 0 && _$data$continueSessio.activeVerseKey ? String($data.continueSessionPayload.activeVerseKey).split(':')[1] : (_$data$continueSessio2 = $data.continueSessionPayload) === null || _$data$continueSessio2 === void 0 || (_$data$continueSessio2 = _$data$continueSessio2.config) === null || _$data$continueSessio2 === void 0 ? void 0 : _$data$continueSessio2.rangeStart) + " · Range " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_$data$continueSessio3 = $data.continueSessionPayload) === null || _$data$continueSessio3 === void 0 || (_$data$continueSessio3 = _$data$continueSessio3.config) === null || _$data$continueSessio3 === void 0 ? void 0 : _$data$continueSessio3.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_$data$continueSessio4 = $data.continueSessionPayload) === null || _$data$continueSessio4 === void 0 || (_$data$continueSessio4 = _$data$continueSessio4.config) === null || _$data$continueSessio4 === void 0 ? void 0 : _$data$continueSessio4.rangeEnd), 1 /* TEXT */)]), $options.dueCount ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_166, [_cache[175] || (_cache[175] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Reviews due:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.dueCount), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("details", _hoisted_167, [_cache[184] || (_cache[184] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("summary", null, "Details", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_168, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_169, [_cache[176] || (_cache[176] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Chain", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeFeedback.chainProgress) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_170, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_161, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_162, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.continueSessionMeta), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_163, [_cache[167] || (_cache[167] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Resume:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_$data$continueSessio = $data.continueSessionPayload) !== null && _$data$continueSessio !== void 0 && _$data$continueSessio.activeVerseKey ? String($data.continueSessionPayload.activeVerseKey).split(':')[1] : (_$data$continueSessio2 = $data.continueSessionPayload) === null || _$data$continueSessio2 === void 0 || (_$data$continueSessio2 = _$data$continueSessio2.config) === null || _$data$continueSessio2 === void 0 ? void 0 : _$data$continueSessio2.rangeStart) + " · Range " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_$data$continueSessio3 = $data.continueSessionPayload) === null || _$data$continueSessio3 === void 0 || (_$data$continueSessio3 = _$data$continueSessio3.config) === null || _$data$continueSessio3 === void 0 ? void 0 : _$data$continueSessio3.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_$data$continueSessio4 = $data.continueSessionPayload) === null || _$data$continueSessio4 === void 0 || (_$data$continueSessio4 = _$data$continueSessio4.config) === null || _$data$continueSessio4 === void 0 ? void 0 : _$data$continueSessio4.rangeEnd), 1 /* TEXT */)]), $options.dueCount ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_164, [_cache[168] || (_cache[168] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Reviews due:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.dueCount), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("details", _hoisted_165, [_cache[177] || (_cache[177] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("summary", null, "Details", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_166, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_167, [_cache[169] || (_cache[169] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Chain", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeFeedback.chainProgress) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_168, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "progress-bar-fill",
     style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
       width: $options.resumeFeedback.chainProgress + '%'
     })
-  }, null, 4 /* STYLE */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_171, [_cache[177] || (_cache[177] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Repetition", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeFeedback.repetitionProgress) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_172, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, 4 /* STYLE */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_169, [_cache[170] || (_cache[170] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Repetition", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeFeedback.repetitionProgress) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_170, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "progress-bar-fill resume-progress-repetition",
     style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
       width: $options.resumeFeedback.repetitionProgress + '%'
     })
-  }, null, 4 /* STYLE */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_173, [_cache[178] || (_cache[178] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Retention", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeFeedback.retentionProgress) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_174, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, 4 /* STYLE */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_171, [_cache[171] || (_cache[171] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Retention", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeFeedback.retentionProgress) + "%", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_172, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "progress-bar-fill resume-progress-retention",
     style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
       width: $options.resumeFeedback.retentionProgress + '%'
     })
-  }, null, 4 /* STYLE */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_175, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_176, [_cache[179] || (_cache[179] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, 4 /* STYLE */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_173, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_174, [_cache[172] || (_cache[172] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-link-45deg"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$continueSessio5 = $data.continueSessionPayload) === null || _$data$continueSessio5 === void 0 || (_$data$continueSessio5 = _$data$continueSessio5.config) === null || _$data$continueSessio5 === void 0 ? void 0 : _$data$continueSessio5.chainingEnabled) === false ? 'Chaining off' : ((_$data$continueSessio6 = $data.continueSessionPayload) === null || _$data$continueSessio6 === void 0 || (_$data$continueSessio6 = _$data$continueSessio6.config) === null || _$data$continueSessio6 === void 0 ? void 0 : _$data$continueSessio6.chainingMethod) === 'cumulative' ? 'Cumulative chain' : 'Linking chain'), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_177, [_cache[180] || (_cache[180] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$continueSessio5 = $data.continueSessionPayload) === null || _$data$continueSessio5 === void 0 || (_$data$continueSessio5 = _$data$continueSessio5.config) === null || _$data$continueSessio5 === void 0 ? void 0 : _$data$continueSessio5.chainingEnabled) === false ? 'Chaining off' : ((_$data$continueSessio6 = $data.continueSessionPayload) === null || _$data$continueSessio6 === void 0 || (_$data$continueSessio6 = _$data$continueSessio6.config) === null || _$data$continueSessio6 === void 0 ? void 0 : _$data$continueSessio6.chainingMethod) === 'cumulative' ? 'Cumulative chain' : 'Linking chain'), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_175, [_cache[173] || (_cache[173] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-check2-circle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.feedbackCounts.mastered) + " mastered", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_178, [_cache[181] || (_cache[181] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.feedbackCounts.mastered) + " mastered", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_176, [_cache[174] || (_cache[174] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-exclamation-circle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.feedbackCounts.weak) + " weak", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_179, [_cache[182] || (_cache[182] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.feedbackCounts.weak) + " weak", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_177, [_cache[175] || (_cache[175] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-repeat"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.feedbackCounts.repeat) + " need repetition", 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_180, [_cache[183] || (_cache[183] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Next:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeWhatNext), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_181, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.feedbackCounts.repeat) + " need repetition", 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_178, [_cache[176] || (_cache[176] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Next:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.resumeWhatNext), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_179, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary",
-    onClick: _cache[69] || (_cache[69] = function ($event) {
+    onClick: _cache[66] || (_cache[66] = function ($event) {
       return $data.showResumeModal = false;
     })
   }, "Not now"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-primary",
-    onClick: _cache[70] || (_cache[70] = function ($event) {
+    onClick: _cache[67] || (_cache[67] = function ($event) {
       $data.showResumeModal = false;
       $options.continueLastSession();
     })
-  }, _toConsumableArray(_cache[185] || (_cache[185] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[178] || (_cache[178] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-right-circle"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Go to session ", -1 /* CACHED */)])))])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Global Audio Player - Updated with Speed Controls "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(vue__WEBPACK_IMPORTED_MODULE_0__.Transition, {
     name: "slide-up"
@@ -30225,21 +30182,21 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["player-bar", {
           collapsed: $data.playerCollapsed
         }])
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_182, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_183, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_184, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter2 = $data.currentChapter) === null || _$data$currentChapter2 === void 0 ? void 0 : _$data$currentChapter2.name_simple) || 'Quran'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_185, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activeAyahLabel) + " ", 1 /* TEXT */), $options.etaLabel && $data.isPlaying ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_180, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_181, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_182, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter2 = $data.currentChapter) === null || _$data$currentChapter2 === void 0 ? void 0 : _$data$currentChapter2.name_simple) || 'Quran'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_183, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activeAyahLabel) + " ", 1 /* TEXT */), $options.etaLabel && $data.isPlaying ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
         key: 0,
         "class": "player-eta",
         title: $options.getEtaTooltip()
-      }, " • " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel) + " remaining ", 9 /* TEXT, PROPS */, _hoisted_186)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_187, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      }, " • " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel) + " remaining ", 9 /* TEXT, PROPS */, _hoisted_184)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_185, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[72] || (_cache[72] = function () {
+        onClick: _cache[69] || (_cache[69] = function () {
           return $options.prev && $options.prev.apply($options, arguments);
         }),
         title: "Previous"
-      }, _toConsumableArray(_cache[186] || (_cache[186] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[179] || (_cache[179] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-skip-start-fill"
       }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn player-play",
-        onClick: _cache[73] || (_cache[73] = function () {
+        onClick: _cache[70] || (_cache[70] = function () {
           return $options.togglePlay && $options.togglePlay.apply($options, arguments);
         }),
         title: "Play/Pause"
@@ -30247,15 +30204,15 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
       }, null, 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[74] || (_cache[74] = function () {
+        onClick: _cache[71] || (_cache[71] = function () {
           return $options.next && $options.next.apply($options, arguments);
         }),
         title: "Next"
-      }, _toConsumableArray(_cache[187] || (_cache[187] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[180] || (_cache[180] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-skip-end-fill"
-      }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_188, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_189, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_186, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_187, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
         "class": "player-progress-bg",
-        onClick: _cache[75] || (_cache[75] = function () {
+        onClick: _cache[72] || (_cache[72] = function () {
           return _ctx.seek && _ctx.seek.apply(_ctx, arguments);
         }),
         ref: "progress"
@@ -30264,18 +30221,18 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
           width: $data.currentTime / ($data.duration || 1) * 100 + '%'
         })
-      }, null, 4 /* STYLE */)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_190, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.duration)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      }, null, 4 /* STYLE */)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_188, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.duration)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[76] || (_cache[76] = function ($event) {
+        onClick: _cache[73] || (_cache[73] = function ($event) {
           return $data.playerVisible = false;
         }),
         title: "Close player"
-      }, _toConsumableArray(_cache[188] || (_cache[188] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[181] || (_cache[181] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-x-lg"
       }, null, -1 /* CACHED */)])))])], 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)];
     }),
     _: 1 /* STABLE */
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio System "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_191, null, 512 /* NEED_PATCH */)], 12 /* STYLE, PROPS */, _hoisted_1);
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio System "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_189, null, 512 /* NEED_PATCH */)], 12 /* STYLE, PROPS */, _hoisted_1);
 }
 
 /***/ }),
