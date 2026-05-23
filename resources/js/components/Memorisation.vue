@@ -4,7 +4,7 @@
       <span>{{ banner.message }}</span>
       <div class="banner-actions">
         <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
-          }}</button>
+        }}</button>
         <button class="banner-x" @click="banner = null" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
@@ -113,7 +113,9 @@
                 <p>{{ currentActionLabel }}</p>
               </div>
               <div class="workspace-shell-actions">
+                <!-- Replace your action-buttons-group div with this -->
                 <div class="action-buttons-group">
+                  <i class="bi bi-arrows-fullscreen action-icon" @click="toggleFullScreen" title="Full screen mode"></i>
                   <i class="bi bi-keyboard action-icon" @click="toggleKeyboardShortcuts" title="Keyboard shortcuts"></i>
                   <button class="action-btn action-btn-secondary" type="button" aria-controls="memorisationToolsPanel"
                     :aria-expanded="showTools ? 'true' : 'false'" @click="openAdvancedControls"
@@ -205,7 +207,7 @@
               <span>Current ayah {{ currentPosition }} of {{ totalVerses }}</span>
               <span>Session {{ progressPercent }}% complete</span>
               <span v-if="guidedUiStep === 'review'" class="workspace-shell-meta-review">{{ reviewPriorityLabel
-                }}</span>
+              }}</span>
               <span v-if="etaLabel">Time left: {{ etaLabel.replace('Audio time ≈ ', '') }}</span>
             </div>
             <div v-if="!mainCardCollapsed && chainingEnabled && hasSessionFeedback" class="workspace-shell-chaining"
@@ -217,7 +219,7 @@
               <span class="workspace-shell-chain-pill workspace-shell-chain-pill-soft">
                 <i class="bi bi-diagram-3"></i>{{ chainingProgressLabel }}
               </span>
-              
+
             </div>
           </section>
 
@@ -308,20 +310,28 @@
             <button class="tools-x" @click="closeToolsPanel" aria-label="Close panel"><i
                 class="bi bi-x-lg"></i></button>
           </div>
+          <!-- REPLACE your entire tools-tabs div with this -->
+          <!-- Replace your tools-tabs div with this -->
           <div class="tools-tabs row g-2" role="tablist" aria-label="Controls tabs">
-            <button class="col-12 col-md-6" :class="{ active: tab === 'tools', 'active-tab': tab === 'tools' }"
-              @click="setActiveTab('tools')" title="Session tools">
+            <button class="col-12 col-md-4" :class="{ active: tab === 'tools' }" @click="setActiveTab('tools')"
+              title="Session tools">
               <i class="bi bi-sliders"></i> Tools
             </button>
-            <button class="col-12 col-md-6" :class="{ active: tab === 'settings', 'active-tab': tab === 'settings' }"
-              @click="setActiveTab('settings')" title="Reading and display settings">
+            <button class="col-12 col-md-4" :class="{ active: tab === 'saved' }" @click="setActiveTab('saved')"
+              title="Saved sessions">
+              <i class="bi bi-clock-history"></i> Saved
+            </button>
+            <button class="col-12 col-md-4" :class="{ active: tab === 'settings' }" @click="setActiveTab('settings')"
+              title="Reading and display settings">
               <i class="bi bi-gear"></i> Settings
             </button>
           </div>
         </div>
 
         <div class="tools-body compact">
+          <!-- TOOLS TAB -->
           <div v-if="tab === 'tools'" class="sheet">
+            <!-- Session Section -->
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
                 <span class="st-left">
@@ -364,13 +374,14 @@
               </div>
             </section>
 
+            <!-- Audio Section -->
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('advanced_playback')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-mic"></i></span>
                   <span class="st-txt">
                     <span class="st-title">Audio</span>
-                    <span class="st-sub">Reciter and playback</span>
+                    <span class="st-sub">Playback settings</span>
                   </span>
                 </span>
                 <span class="st-chev" :class="{ open: sectionOpen.advanced_playback }"><i
@@ -400,6 +411,7 @@
               </div>
             </section>
 
+            <!-- Memorisation Techniques Section -->
             <section class="sheet-section tools-techniques-section">
               <button class="sheet-toggle" @click="toggleSection('memorisation_techniques')" type="button">
                 <span class="st-left">
@@ -442,6 +454,11 @@
                         class="input technique-range">
                       <span class="inline-setting-pill">{{ blurIntensity }}px</span>
                     </div>
+                    <div v-if="blurModeEnabled" class="technique-peek-hint">
+                      <i class="bi bi-info-circle"></i>
+                      <span><strong>Peek:</strong> Hold <kbd>Spacebar</kbd> or hover over blurred verses to temporarily
+                        see clearly</span>
+                    </div>
                   </div>
 
                   <div class="technique-row technique-row-stacked">
@@ -479,170 +496,157 @@
                 </div>
               </div>
             </section>
+          </div>
 
-            <!-- Add this after the memorisation_techniques section, before closing the tools tab div -->
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('saved_sessions')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-clock-history"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Saved Sessions</span>
-                    <span class="st-sub">Load or delete previously saved sessions</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.saved_sessions }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.saved_sessions">
-                <div class="saved-sessions-list">
-                  <div v-if="savedSessions.length === 0" class="empty-mini">
-                    <i class="bi bi-inbox" style="font-size: 1.5rem; opacity: 0.5;"></i>
-                    <p>No saved sessions yet</p>
-                    <small>Current sessions are auto-saved for resume</small>
-                  </div>
-                  <div v-else v-for="session in savedSessions" :key="session.id" class="saved-session-item">
-                    <div class="session-info">
-                      <div class="session-name">{{ session.name }}</div>
-                      <div class="session-meta">
-                        <span><i class="bi bi-calendar"></i> {{ formatDate(session.savedAt) }}</span>
-                        <span><i class="bi bi-book"></i> {{ session.config?.chapterName || `Surah
-                          ${session.config?.chapterId}` }}</span>
-                        <span><i class="bi bi-text-paragraph"></i> {{ session.config?.rangeStart }}-{{
-                          session.config?.rangeEnd }}</span>
-                      </div>
+          <!-- Replace your entire saved tab section with this -->
+          <div v-else-if="tab === 'saved'" class="sheet">
+            <div class="saved-sessions-container">
+              <div class="saved-header">
+                <h3><i class="bi bi-bookmark-check"></i> Saved Sessions</h3>
+                <p>Your memorisation sessions, ready to resume</p>
+              </div>
+
+              <!-- Saved Sessions List -->
+              <div v-if="savedSessions.length === 0" class="empty-state">
+                <i class="bi bi-journal-bookmark"></i>
+                <p>No saved sessions yet</p>
+                <span>Save your current session to get started</span>
+              </div>
+
+              <div v-else class="sessions-list">
+                <div v-for="session in savedSessions" :key="session.id" class="session-item">
+                  <div class="session-info" @click="loadSavedSession(session.id)">
+                    <div class="session-name">
+                      <i class="bi bi-bookmark-fill"></i>
+                      <span>{{ session.name }}</span>
                     </div>
-                    <div class="session-actions">
-                      <button class="session-load-btn" @click="loadSavedSession(session.id)" title="Load this session">
-                        <i class="bi bi-play-fill"></i>
-                      </button>
-                      <button class="session-delete-btn" @click="deleteSavedSession(session.id)" title="Delete session">
-                        <i class="bi bi-trash3"></i>
-                      </button>
+                    <div class="session-details">
+                      <span><i class="bi bi-book"></i> {{ session.config?.chapterName || `Surah
+                        ${session.config?.chapterId}` }}</span>
+                      <span><i class="bi bi-text-paragraph"></i> {{ session.config?.rangeStart }}-{{
+                        session.config?.rangeEnd }}</span>
+                      <span><i class="bi bi-clock"></i> {{ formatDate(session.savedAt) }}</span>
+                    </div>
+                  </div>
+                  <button class="delete-btn" @click.stop="deleteSavedSession(session.id)" title="Delete session">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Save Current Session -->
+              <div v-if="hasVerses" class="save-section">
+                <div class="current-info">
+                  <i class="bi bi-play-circle"></i>
+                  <div>
+                    <strong>Current Session</strong>
+                    <small>{{ currentChapter?.name_simple || 'No surah' }} · {{ rangeStart }}-{{ rangeEnd }}</small>
+                  </div>
+                </div>
+                <button class="save-btn" @click="saveCurrentSessionWithName()">
+                  <i class="bi bi-save"></i> Save
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SETTINGS TAB -->
+          <div v-else-if="tab === 'settings'" class="sheet">
+            <div class="settings-panels">
+              <section class="settings-group">
+                <span class="settings-group-title">Display</span>
+                <div class="settings-card-grid settings-display-grid">
+                  <div class="settings-card settings-card-toggle">
+                    <div class="settings-row-copy">
+                      <label><span class="settings-icon"><i
+                            class="bi bi-palette2"></i></span><span>Tajweed</span></label>
+                      <small>Recitation colors</small>
+                    </div>
+                    <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.tajweedEnabled }"
+                      @click="toggleSettingsOption('tajweedEnabled')">
+                      {{ settingsDraft.tajweedEnabled ? 'On' : 'Off' }}
+                    </button>
+                  </div>
+
+                  <div class="settings-card settings-card-range">
+                    <div class="settings-row-copy">
+                      <label><span class="settings-icon"><i class="bi bi-arrows-angle-expand"></i></span><span>Font
+                          size</span></label>
+                      <small>Verse scale</small>
+                    </div>
+                    <div class="settings-range-wrap">
+                      <input type="range" min="80" max="140" step="5" :value="settingsDraft.defaultFontSize"
+                        @input="updateSettingsValue('defaultFontSize', Number($event.target.value))"
+                        class="input settings-range" aria-label="Font size">
+                      <span class="inline-setting-pill">{{ settingsDraft.defaultFontSize }}%</span>
                     </div>
                   </div>
                 </div>
-                <div v-if="hasVerses" class="save-current-session">
-                  <div class="save-session-row">
-                    <div class="save-session-info">
-                      <strong><i class="bi bi-save"></i> Save Current Session</strong>
-                      <small>{{ currentChapter?.name_simple || 'Current' }} · {{ rangeStart }}-{{ rangeEnd }}</small>
+              </section>
+
+              <section class="settings-group">
+                <div class="settings-card-grid">
+                  <div class="settings-card settings-card-toggle">
+                    <div class="settings-row-copy">
+                      <label><span class="settings-icon"><i
+                            class="bi bi-translate"></i></span><span>Translation</span></label>
+                      <small>English meaning</small>
                     </div>
-                    <button class="save-session-btn" @click="saveCurrentSession">
-                      <i class="bi bi-save"></i> Save
+                    <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTranslation }"
+                      @click="toggleSettingsOption('showTranslation')">
+                      {{ settingsDraft.showTranslation ? 'On' : 'Off' }}
+                    </button>
+                  </div>
+
+                  <div class="settings-card settings-card-toggle">
+                    <div class="settings-row-copy">
+                      <label><span class="settings-icon"><i
+                            class="bi bi-type"></i></span><span>Transliteration</span></label>
+                      <small>Latin reading aid</small>
+                    </div>
+                    <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTransliteration }"
+                      @click="toggleSettingsOption('showTransliteration')">
+                      {{ settingsDraft.showTransliteration ? 'On' : 'Off' }}
+                    </button>
+                  </div>
+
+                  <div class="settings-card settings-card-toggle">
+                    <div class="settings-row-copy">
+                      <label><span class="settings-icon"><i class="bi bi-grid-3x2-gap"></i></span><span>Word for
+                          word</span></label>
+                      <small>Word chips</small>
+                    </div>
+                    <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showWordByWord }"
+                      @click="toggleSettingsOption('showWordByWord')">
+                      {{ settingsDraft.showWordByWord ? 'On' : 'Off' }}
+                    </button>
+                  </div>
+
+                  <div class="settings-card settings-card-toggle">
+                    <div class="settings-row-copy">
+                      <label><span class="settings-icon"><i class="bi bi-volume-up"></i></span><span>Word
+                          audio</span></label>
+                      <small>Timing and highlight</small>
+                    </div>
+                    <button class="toggle-chip settings-toggle"
+                      :class="{ active: settingsDraft.wordByWordAudioEnabled }"
+                      @click="toggleSettingsOption('wordByWordAudioEnabled')">
+                      {{ settingsDraft.wordByWordAudioEnabled ? 'On' : 'Off' }}
                     </button>
                   </div>
                 </div>
-              </div>
-            </section>
-          </div>
-
-          <div v-else-if="tab === 'settings'" class="sheet">
-            <div class="sheet-section settings-section">
-
-
-              <div class="settings-panels" style="padding: 20px">
-
-                <section class="settings-group">
-                  <span class="settings-group-title">Display</span>
-                  <div class="settings-card-grid settings-display-grid">
-                    <div class="settings-card settings-card-toggle">
-                      <div class="settings-row-copy">
-                        <label><span class="settings-icon"><i
-                              class="bi bi-palette2"></i></span><span>Tajweed</span></label>
-                        <small>Recitation colors</small>
-                      </div>
-                      <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.tajweedEnabled }"
-                        @click="toggleSettingsOption('tajweedEnabled')">
-                        {{ settingsDraft.tajweedEnabled ? 'On' : 'Off' }}
-                      </button>
-                    </div>
-
-                    <div class="settings-card settings-card-range">
-                      <div class="settings-row-copy">
-                        <label><span class="settings-icon"><i class="bi bi-arrows-angle-expand"></i></span><span>Font
-                            size</span></label>
-                        <small>Verse scale</small>
-                      </div>
-                      <div class="settings-range-wrap">
-                        <input type="range" min="80" max="140" step="5" :value="settingsDraft.defaultFontSize"
-                          @input="updateSettingsValue('defaultFontSize', Number($event.target.value))"
-                          class="input settings-range" aria-label="Font size">
-                        <span class="inline-setting-pill">{{ settingsDraft.defaultFontSize }}%</span>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-
-                <section class="settings-group">
-                  <div class="settings-card-grid">
-                    <div class="settings-card settings-card-toggle">
-                      <div class="settings-row-copy">
-                        <label><span class="settings-icon"><i
-                              class="bi bi-translate"></i></span><span>Translation</span></label>
-                        <small>English meaning</small>
-                      </div>
-                      <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTranslation }"
-                        @click="toggleSettingsOption('showTranslation')">
-                        {{ settingsDraft.showTranslation ? 'On' : 'Off' }}
-                      </button>
-                    </div>
-
-                    <div class="settings-card settings-card-toggle">
-                      <div class="settings-row-copy">
-                        <label><span class="settings-icon"><i
-                              class="bi bi-type"></i></span><span>Transliteration</span></label>
-                        <small>Latin reading aid</small>
-                      </div>
-                      <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showTransliteration }"
-                        @click="toggleSettingsOption('showTransliteration')">
-                        {{ settingsDraft.showTransliteration ? 'On' : 'Off' }}
-                      </button>
-                    </div>
-
-                    <div class="settings-card settings-card-toggle">
-                      <div class="settings-row-copy">
-                        <label><span class="settings-icon"><i class="bi bi-grid-3x2-gap"></i></span><span>Word for
-                            word</span></label>
-                        <small>Word chips</small>
-                      </div>
-                      <button class="toggle-chip settings-toggle" :class="{ active: settingsDraft.showWordByWord }"
-                        @click="toggleSettingsOption('showWordByWord')">
-                        {{ settingsDraft.showWordByWord ? 'On' : 'Off' }}
-                      </button>
-                    </div>
-
-                    <div class="settings-card settings-card-toggle">
-                      <div class="settings-row-copy">
-                        <label><span class="settings-icon"><i class="bi bi-volume-up"></i></span><span>Word
-                            audio</span></label>
-                        <small>Timing and highlight</small>
-                      </div>
-                      <button class="toggle-chip settings-toggle"
-                        :class="{ active: settingsDraft.wordByWordAudioEnabled }"
-                        @click="toggleSettingsOption('wordByWordAudioEnabled')">
-                        {{ settingsDraft.wordByWordAudioEnabled ? 'On' : 'Off' }}
-                      </button>
-                    </div>
-                  </div>
-                </section>
-
-                <!-- <section class="settings-apply-section">
-                  <button class="settings-apply-primary" @click="closeToolsPanel">
-                    <i class="bi bi-check2-circle"></i>
-                    <span>Apply changes</span>
-                  </button>
-                  <small>Saved settings persist after refresh.</small>
-                </section> -->
-              </div>
+              </section>
             </div>
           </div>
         </div>
 
         <div class="tools-footer" :class="{ 'settings-footer': tab === 'settings' }">
-          <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="resetControls"><i
-              class="bi bi-arrow-counterclockwise"></i><span>Reset</span></button>
-          <button class="tools-btn tools-btn-primary tools-btn-soft" @click="closeToolsPanel"><i
-              class="bi bi-check2-circle"></i><span>Done</span></button>
+          <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="resetControls">
+            <i class="bi bi-arrow-counterclockwise"></i><span>Reset</span>
+          </button>
+          <button class="tools-btn tools-btn-primary tools-btn-soft" @click="startSessionAndClose">
+            <i class="bi bi-play-fill"></i><span>Start Session</span>
+          </button>
         </div>
       </aside>
     </div>
@@ -662,100 +666,29 @@
       </section>
     </div>
 
-    <!-- Planner Modal -->
-    <div class="modal-overlay" v-if="showPlannerModal" @click.self="showPlannerModal = false">
-      <div class="modal-content planner-modal">
+    <!-- Save Session Name Modal - Add after your existing modals -->
+    <div class="modal-overlay" v-if="showSaveNameModal" @click.self="showSaveNameModal = false">
+      <div class="modal-content save-name-modal">
         <div class="modal-header">
-          <h2><i class="bi bi-calendar-plus"></i> Quick Planner</h2>
-          <button class="btn-icon" @click="showPlannerModal = false"><i class="bi bi-x-lg"></i></button>
+          <h2><i class="bi bi-save"></i> Save Session</h2>
+          <button class="btn-icon" @click="showSaveNameModal = false"><i class="bi bi-x-lg"></i></button>
         </div>
-
         <div class="modal-body">
-          <!-- Surah Selection -->
-          <div class="planner-field">
-            <label><i class="bi bi-book"></i> Target Surah</label>
-            <select v-model="plannerConfig.surahId" class="planner-select" @change="updatePlannerSurah">
-              <option v-for="ch in chapters" :key="ch.id" :value="ch.id">
-                {{ ch.name_simple }} ({{ ch.verses_count }} verses)
-              </option>
-            </select>
-            <small class="field-hint">Choose the surah you want to memorize</small>
+          <p class="save-modal-desc">Give your session a name to easily find it later</p>
+          <div class="save-name-input-group">
+            <label>Session Name</label>
+            <input type="text" v-model="saveSessionName" class="save-name-input" placeholder="e.g., Al-Fatihah Focus"
+              @keyup.enter="confirmSaveSession" autofocus />
           </div>
-
-          <!-- Verses Per Day -->
-          <div class="planner-field">
-            <label><i class="bi bi-sun"></i> Verses per day</label>
-            <div class="verses-per-day-control">
-              <button class="quantity-btn" @click="adjustVersesPerDay(-1)" :disabled="plannerConfig.versesPerDay <= 1">
-                <i class="bi bi-dash"></i>
-              </button>
-              <input type="number" v-model.number="plannerConfig.versesPerDay" class="planner-input" min="1"
-                :max="plannerConfig.totalVersesInSurah" @change="validateVersesPerDay">
-              <button class="quantity-btn" @click="adjustVersesPerDay(1)"
-                :disabled="plannerConfig.versesPerDay >= plannerConfig.totalVersesInSurah">
-                <i class="bi bi-plus"></i>
-              </button>
-            </div>
-            <small class="field-hint">How many new verses you want to memorize daily</small>
-          </div>
-
-          <!-- Stats Grid -->
-          <div class="planner-stats-grid">
-            <!-- Days to Finish -->
-            <div class="planner-stat-card">
-              <div class="stat-icon"><i class="bi bi-calendar-week"></i></div>
-              <div class="stat-content">
-                <span class="stat-value">{{ plannerEstimatedDays }}</span>
-                <span class="stat-label">Days to Finish</span>
-              </div>
-            </div>
-
-            <!-- Daily Time -->
-            <div class="planner-stat-card">
-              <div class="stat-icon"><i class="bi bi-clock"></i></div>
-              <div class="stat-content">
-                <span class="stat-value">{{ plannerEstimatedTimePerDay }}m</span>
-                <span class="stat-label">Daily Time</span>
-              </div>
-            </div>
-
-            <!-- Total Verses -->
-            <div class="planner-stat-card">
-              <div class="stat-icon"><i class="bi bi-text-paragraph"></i></div>
-              <div class="stat-content">
-                <span class="stat-value">{{ plannerTotalVerses }}</span>
-                <span class="stat-label">Total Verses</span>
-              </div>
-            </div>
-
-            <!-- Completion Date -->
-            <div class="planner-stat-card highlight">
-              <div class="stat-icon"><i class="bi bi-calendar-check"></i></div>
-              <div class="stat-content">
-                <span class="stat-value">{{ plannerCompletionDateFormatted }}</span>
-                <span class="stat-label">Est. completion date</span>
-                <small class="stat-note">Based on verses/day and your past pace.</small>
-              </div>
-            </div>
-          </div>
-
-          <!-- Progress Bar -->
-          <div class="planner-progress" v-if="plannerConfig.totalVersesInSurah > 0">
-            <div class="progress-info">
-              <span>Progress breakdown</span>
-              <span>{{ plannerConfig.versesPerDay }} / {{ plannerConfig.totalVersesInSurah }} verses/day</span>
-            </div>
-            <div class="progress-bar-track">
-              <div class="progress-bar-fill"
-                :style="{ width: (plannerConfig.versesPerDay / plannerConfig.totalVersesInSurah * 100) + '%' }"></div>
-            </div>
+          <div class="save-preview-info">
+            <i class="bi bi-info-circle"></i>
+            <span>{{ currentChapter?.name_simple || 'Surah' }} · {{ rangeStart }}-{{ rangeEnd }}</span>
           </div>
         </div>
-
         <div class="modal-footer">
-          <button class="btn-secondary" @click="showPlannerModal = false">Cancel</button>
-          <button class="btn-primary" @click="submitPlanner">
-            <i class="bi bi-play-fill"></i> Create Plan
+          <button class="btn-secondary" @click="showSaveNameModal = false">Cancel</button>
+          <button class="btn-primary" @click="confirmSaveSession">
+            <i class="bi bi-save"></i> Save Session
           </button>
         </div>
       </div>
@@ -779,7 +712,7 @@
     </div>
 
     <!-- Resume Modal (Logged In) -->
-    <div class="modal-overlay" v-if="showResumeModal && isLoggedIn && hasContinueSession"
+    <!-- <div class="modal-overlay" v-if="showResumeModal && isLoggedIn && hasContinueSession"
       @click.self="showResumeModal = false">
       <div class="modal-content confirm-modal resume-modal" role="dialog" aria-modal="true">
         <div class="modal-header">
@@ -844,7 +777,7 @@
           </button>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- Global Audio Player - Updated with Speed Controls -->
     <transition name="slide-up">
@@ -1019,6 +952,8 @@ export default {
   },
   data() {
     return {
+      showSaveNameModal: false,
+      saveSessionName: '',
       appReady: false,
       isBootstrapping: true,
       isDataReady: false,
@@ -1920,6 +1855,13 @@ export default {
   },
 
   async mounted() {
+    this.$nextTick(() => {
+      const navbar = document.querySelector('.navbar')
+      if (navbar) {
+        const navbarHeight = navbar.offsetHeight
+        document.documentElement.style.setProperty('--navbar-height', `${navbarHeight}px`)
+      }
+    })
     this.unwatchMutqinState = watchMutqinState(this.mutqinState)
     this.loadVerseFontSizes()
     this.migrateLocalStorage()
@@ -2002,7 +1944,10 @@ export default {
     theme: 'persistUiState',
     showTools: 'persistUiState',
     tab(newVal) {
-      if (!['tools', 'settings'].includes(newVal)) this.tab = 'tools'
+      console.log('Tab changed to:', newVal)
+      if (!['tools', 'saved', 'settings'].includes(newVal)) {
+        this.tab = 'tools'
+      }
       this.persistUiState()
       this.persistCentralSessionState()
     },
@@ -2084,6 +2029,116 @@ export default {
   },
 
   methods: {
+    // Replace saveCurrentSessionWithName method
+    saveCurrentSessionWithName() {
+      const defaultName = `${this.currentChapter?.name_simple || 'Session'} ${this.rangeStart}-${this.rangeEnd}`
+      this.saveSessionName = defaultName
+      this.showSaveNameModal = true
+      this.showTools = false // Close tools panel when modal opens
+    },
+
+    // Add this method to actually save
+    confirmSaveSession() {
+      if (!this.saveSessionName || this.saveSessionName.trim() === '') {
+        this.showBanner('Session name cannot be empty', 'warning', 1500)
+        return
+      }
+
+      const session = {
+        id: Date.now().toString(),
+        name: this.saveSessionName.trim(),
+        savedAt: new Date().toISOString(),
+        config: {
+          chapterId: this.chapterId,
+          chapterName: this.currentChapter?.name_simple,
+          rangeStart: this.rangeStart,
+          rangeEnd: this.rangeEnd,
+          reciterId: this.reciterId,
+          speed: this.speed,
+          playMode: this.playMode,
+          chainingEnabled: this.chainingEnabled,
+          chainingMethod: this.chainingMethod,
+          chainingRepetitions: this.chainingRepetitions,
+          tajweedEnabled: this.tajweedEnabled,
+          showTranslation: this.showTranslation,
+          showTransliteration: this.showTransliteration,
+          showWordByWord: this.showWordByWord
+        }
+      }
+
+      this.savedSessions.unshift(session)
+      if (this.savedSessions.length > 20) this.savedSessions = this.savedSessions.slice(0, 20)
+      this.persistSavedSessions()
+      this.showBanner(`Session "${session.name}" saved`, 'success', 1500)
+      this.showSaveNameModal = false
+      this.saveSessionName = ''
+    },
+    startSessionAndClose() {
+      this.startSession()
+      this.closeToolsPanel()
+    },
+    // Add this method if missing
+    toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.log(`Full-screen error: ${err.message}`)
+        })
+      } else {
+        document.exitFullscreen()
+      }
+    },
+    // Add this method for named saving
+    saveCurrentSessionWithName() {
+      const defaultName = `${this.currentChapter?.name_simple || 'Session'} ${this.rangeStart}-${this.rangeEnd}`
+      const name = prompt('Name this session:', defaultName)
+      if (!name || name.trim() === '') return
+
+      const session = {
+        id: Date.now().toString(),
+        name: name.trim(),
+        savedAt: new Date().toISOString(),
+        config: {
+          chapterId: this.chapterId,
+          chapterName: this.currentChapter?.name_simple,
+          rangeStart: this.rangeStart,
+          rangeEnd: this.rangeEnd,
+          reciterId: this.reciterId,
+          speed: this.speed,
+          playMode: this.playMode,
+          chainingEnabled: this.chainingEnabled,
+          chainingMethod: this.chainingMethod,
+          chainingRepetitions: this.chainingRepetitions,
+          tajweedEnabled: this.tajweedEnabled,
+          showTranslation: this.showTranslation,
+          showTransliteration: this.showTransliteration,
+          showWordByWord: this.showWordByWord
+        }
+      }
+
+      this.savedSessions.unshift(session)
+      if (this.savedSessions.length > 20) this.savedSessions = this.savedSessions.slice(0, 20)
+      this.persistSavedSessions()
+      this.showBanner(`Session "${session.name}" saved`, 'success', 1500)
+    },
+
+    getDisplayArabic(verse) {
+      if (!verse || !verse.arabic) return ''
+
+      // For debugging - check if tajweed data exists
+      if (this.tajweedEnabled) {
+        console.log('Tajweed enabled, verse has arabic_tajweed:', !!verse.arabic_tajweed, verse.key)
+      }
+
+      if (this.tajweedEnabled && verse.arabic_tajweed) {
+        const result = this.normalizeTajweedMarkup(verse.arabic_tajweed)
+        console.log('Tajweed HTML length:', result.length)
+        return result
+      }
+
+      return this.stripTajweedMarkup(verse.arabic || '')
+    },
+
+    // Fix banner positioning - update CSS
     toggleKeyboardShortcuts() {
       this.showKeyboardShortcuts = !this.showKeyboardShortcuts
     },
@@ -2125,10 +2180,12 @@ export default {
       this.showBanner('Session saved', 'success', 1500)
     },
 
+    // Update loadSavedSession method
     loadSavedSession(sessionId) {
       const session = this.savedSessions.find(s => s.id === sessionId)
       if (!session) return
 
+      // Apply session config
       this.chapterId = session.config.chapterId
       this.rangeStart = session.config.rangeStart
       this.rangeEnd = session.config.rangeEnd
@@ -2143,20 +2200,24 @@ export default {
       this.showTransliteration = session.config.showTransliteration
       this.showWordByWord = session.config.showWordByWord
 
+      // Load verses and start session
       this.applyWorkspaceControls({ reason: 'load-session' })
       this.showTools = false
       this.showBanner(`Loaded: ${session.name}`, 'success', 2000)
+
+      // Auto-start session
+      this.$nextTick(() => {
+        this.startSession()
+      })
     },
 
+    // Update deleteSavedSession method
     deleteSavedSession(sessionId) {
-      this.openConfirmModal({
-        title: 'Delete saved session?',
-        message: 'This action cannot be undone.',
-        confirmLabel: 'Delete',
-        tone: 'danger',
-        action: 'delete-saved-session',
-        data: { sessionId }
-      })
+      if (confirm('Delete this saved session? This action cannot be undone.')) {
+        this.savedSessions = this.savedSessions.filter(s => s.id !== sessionId)
+        this.persistSavedSessions()
+        this.showBanner('Session deleted', 'info', 1500)
+      }
     },
 
     performDeleteSavedSession(sessionId) {
@@ -2191,11 +2252,19 @@ export default {
       const now = new Date()
       const diffMs = now - date
       const diffMins = Math.floor(diffMs / 60000)
+      const diffHours = Math.floor(diffMs / 3600000)
+      const diffDays = Math.floor(diffMs / 86400000)
 
       if (diffMins < 1) return 'Just now'
-      if (diffMins < 60) return `${diffMins}m ago`
-      if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`
-      return date.toLocaleDateString()
+      if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`
+      if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`
+      if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`
+
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      })
     },
 
     runConfirmAction() {
@@ -3076,9 +3145,17 @@ export default {
       this.showBanner(`Speed changed to ${safeSpeed}x`, 'info', 1000)
     },
 
+    // Update setActiveTab method
+    // Replace your setActiveTab method with this
     setActiveTab(tabName) {
-      this.tab = tabName === 'settings' ? 'settings' : 'tools'
-      if (this.tab === 'settings') this.syncSettingsDraft()
+      console.log('Setting active tab to:', tabName) // Debug log
+      this.tab = tabName
+      if (this.tab === 'settings') {
+        this.syncSettingsDraft()
+      }
+      if (this.tab === 'saved') {
+        this.loadSavedSessions()
+      }
       this.centralSession.activeTab = this.tab
       this.persistCentralSessionState()
       this.$nextTick(() => this.scrollToWorkspaceMain())
@@ -3167,14 +3244,21 @@ export default {
     },
 
     // Alternative: Direct mode toggle with confirmation
-    toggleMode() {
-      const newMode = this.currentMode === 'beginner' ? 'advanced' : 'beginner'
-      this.openConfirmModal({
-        title: `Switch to ${newMode === 'beginner' ? 'Beginner' : 'Advanced'} mode?`,
-        message: 'Your current settings will be preserved.',
-        confirmLabel: 'Switch',
-        action: 'switch-mode'
-      })
+    toggleTajweed() {
+      this.tajweedEnabled = !this.tajweedEnabled
+      this.persistUiState()
+      this.persistCentralSessionState()
+
+      // Force re-render of verses to apply tajweed
+      if (this.verses && this.verses.length) {
+        this.$forceUpdate()
+      }
+
+      this.showBanner(
+        this.tajweedEnabled ? 'Tajweed colors enabled' : 'Tajweed colors disabled',
+        'info',
+        1500
+      )
     },
 
     performToggleMode() {
@@ -5789,6 +5873,592 @@ export default {
   box-sizing: border-box;
 }
 
+/* Save Name Modal Styles */
+.save-name-modal {
+  max-width: 420px;
+  width: 100%;
+}
+
+.save-modal-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+.save-name-input-group {
+  margin-bottom: 16px;
+}
+
+.save-name-input-group label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.save-name-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.9rem;
+  color: var(--text);
+  transition: all 0.2s;
+}
+
+.save-name-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.save-preview-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--accent-light);
+  border-radius: 10px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+.save-preview-info i {
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+
+/* Fix saved tab layout */
+.saved-sessions-container {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.saved-header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.saved-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.saved-header p {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.session-info {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.session-info:hover {
+  background: var(--accent-light);
+}
+
+.session-name {
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--text);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.session-name i {
+  color: var(--accent);
+  font-size: 0.7rem;
+}
+
+.session-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+.session-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.delete-btn {
+  width: 36px;
+  height: 36px;
+  margin-right: 8px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  color: #dc3545;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.delete-btn:hover {
+  background: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+
+.save-section {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.current-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  background: var(--accent-light);
+  border-radius: 10px;
+}
+
+.current-info i {
+  font-size: 1rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.current-info div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.current-info strong {
+  font-size: 0.75rem;
+  color: var(--text);
+}
+
+.current-info small {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+.save-btn {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.save-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
+}
+
+.save-btn:active {
+  transform: translateY(0);
+}
+
+/* Saved Tab Styles - Clean Version */
+.saved-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.saved-header h3 {
+  margin: 0 0 6px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.saved-header p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-muted);
+}
+
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+
+.empty-state p {
+  margin-bottom: 4px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.empty-state span {
+  font-size: 0.7rem;
+}
+
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.session-item:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  transform: translateX(2px);
+}
+
+.session-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.session-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.session-name i {
+  color: var(--accent);
+  font-size: 0.8rem;
+}
+
+.session-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.session-details span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.session-details i {
+  font-size: 0.6rem;
+}
+
+.delete-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  color: #dc3545;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.delete-btn:hover {
+  background: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+
+.save-section {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.current-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.current-info i {
+  font-size: 1.2rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.current-info div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.current-info strong {
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.current-info small {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.save-btn {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.save-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
+}
+
+.action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  height: 42px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));
+  box-shadow: var(--shadow-sm);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: rgba(0, 0, 0, 0.78);
+}
+
+.action-icon:hover {
+  transform: translateY(-2px);
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: var(--shadow-md);
+}
+
+/* Add to your style section */
+.tools-tabs button {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+}
+
+.saved-sessions-container {
+  padding: 16px;
+}
+
+.saved-session-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saved-session-card:hover {
+  border-color: var(--accent);
+  transform: translateX(4px);
+  box-shadow: var(--shadow-sm);
+}
+
+.saved-session-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.session-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--accent-light);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+}
+
+.session-details {
+  flex: 1;
+}
+
+.session-title {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.session-range {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.session-delete-btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  color: #dc3545;
+  transition: all 0.2s;
+}
+
+.session-delete-btn-icon:hover {
+  background: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+
+.session-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  padding-left: 48px;
+}
+
+.session-resume-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent);
+}
+
+.save-current-session-panel {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.save-session-btn-full {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.save-session-btn-full:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);
+}
+
+.empty-saved-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-muted);
+}
+
+.empty-saved-state i {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
 /* Action Buttons Group - Equal widths on same row */
 .action-buttons-group {
   display: flex;
@@ -5951,7 +6621,7 @@ export default {
 
 .shortcuts-modal-body {
   padding: 24px;
-  max-height: none; 
+  max-height: none;
   overflow-y: visible;
 }
 
@@ -6442,40 +7112,56 @@ export default {
   opacity: 1;
 }
 
-/* Word highlighting with Tajweed */
-.verse-arabic.tajweed-enabled .wbw-word {
-  display: inline-block;
-  transition: all 0.15s ease;
-  border-radius: 4px;
-  padding: 0 2px;
-  cursor: pointer;
-  position: relative;
+/* Add this to your style section to ensure tajweed CSS works */
+/* Critical fix for tajweed display */
+.verse-arabic.tajweed-enabled {
+  line-height: 2.2;
+  font-family: var(--font-ar);
 }
 
-.verse-arabic.tajweed-enabled .wbw-word.highlighted {
-  background: var(--accent);
-  transform: scale(1.02);
-  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
+.verse-arabic.tajweed-enabled .tajweed-mark {
+  display: inline;
+  border-radius: 0.2em;
+  padding: 0 0.03em;
 }
 
-/* Preserve Tajweed colors inside highlighted words */
-.verse-arabic.tajweed-enabled .wbw-word.highlighted,
-.verse-arabic.tajweed-enabled .wbw-word.highlighted * {
-  color: inherit !important;
+/* Force tajweed spans to render properly */
+.verse-arabic.tajweed-enabled span[class*="tajweed-"] {
+  display: inline !important;
 }
 
-/* Make Tajweed marks more visible on highlight */
-.verse-arabic.tajweed-enabled .wbw-word.highlighted .tajweed-mark {
-  filter: brightness(1.2);
+/* Ensure tajweed colors appear */
+.verse-arabic.tajweed-enabled .tajweed-ham_wasl,
+.verse-arabic.tajweed-enabled .tajweed-slnt {
+  color: #7e8a97;
 }
 
-.verse-arabic.tajweed-enabled .wbw-word:hover {
-  background: var(--accent-light);
-  cursor: pointer;
+.verse-arabic.tajweed-enabled .tajweed-ghn,
+.verse-arabic.tajweed-enabled .tajweed-idgh_ghn,
+.verse-arabic.tajweed-enabled .tajweed-iqlb {
+  color: #2e9d62;
+  background: rgba(46, 157, 98, 0.10);
 }
 
-.verse-arabic.tajweed-enabled .wbw-word.highlighted {
-  animation: wordHighlightPulse 0.2s ease-out;
+.verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,
+.verse-arabic.tajweed-enabled .tajweed-ikhf,
+.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw {
+  color: #9b59b6;
+  background: rgba(155, 89, 182, 0.10);
+}
+
+.verse-arabic.tajweed-enabled .tajweed-qlq,
+.verse-arabic.tajweed-enabled .tajweed-lqlq {
+  color: #d98824;
+  background: rgba(217, 136, 36, 0.12);
+}
+
+.verse-arabic.tajweed-enabled .tajweed-madda_normal,
+.verse-arabic.tajweed-enabled .tajweed-madda_permissible,
+.verse-arabic.tajweed-enabled .tajweed-madda_necessary,
+.verse-arabic.tajweed-enabled .tajweed-madda_obligatory {
+  color: #d55245;
+  background: rgba(213, 82, 69, 0.10);
 }
 
 @keyframes wordHighlightPulse {
@@ -10159,26 +10845,53 @@ html {
   font-size: 0.85rem;
 }
 
-/* Banner */
+/* Fix banner positioning */
 .banner {
   position: fixed;
-  top: 14px;
+  top: 80px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 120;
-  min-width: min(560px, calc(100vw - 24px));
+  z-index: 1000;
+  min-width: min(560px, calc(100vw - 32px));
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   padding: 12px 14px;
   border-radius: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--border);
+  background: var(--surface-strong);
+  box-shadow: var(--shadow-lg);
   font-weight: 450;
   animation: riseSoft 220ms ease-out;
+}
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--surface-strong);
+}
+
+/* Ensure main content doesn't go under navbar */
+.main.container {
+  padding-top: 80px;
+  /* Adjust to match navbar height + spacing */
+}
+
+/* Mobile adjustment */
+@media (max-width: 768px) {
+  .banner {
+    top: calc(env(safe-area-inset-top, 0px) + 60px);
+    width: calc(100% - 32px);
+    min-width: auto;
+  }
+
+  .main.container {
+    padding-top: 70px;
+  }
 }
 
 .banner-actions {
@@ -10208,6 +10921,17 @@ html {
   cursor: pointer;
   font-size: 18px;
   line-height: 1;
+}
+
+/* Add this to your <style> */
+.main.container {
+  padding-top: 20px;
+}
+
+/* If you have a navbar, add this */
+.app>.navbar+.main.container,
+body>.navbar+.app .main.container {
+  padding-top: 80px;
 }
 
 /* Animations */
