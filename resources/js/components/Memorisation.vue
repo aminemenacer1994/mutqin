@@ -311,18 +311,20 @@
             <button class="tools-x" @click="closeToolsPanel" aria-label="Close panel"><i
                 class="bi bi-x-lg"></i></button>
           </div>
-          <!-- REPLACE your entire tools-tabs div with this -->
-          <!-- Replace your tools-tabs div with this -->
-          <div class="tools-tabs row g-2" role="tablist" aria-label="Controls tabs">
-            <button class="col-12 col-md-4" :class="{ active: tab === 'tools' }" @click="setActiveTab('tools')"
-              title="Session tools">
+          <div class="tools-tabs" role="tablist" aria-label="Controls tabs">
+            <button :class="{ active: tab === 'tools' }" @click.prevent="setActiveTab('tools')" title="Session tools"
+              type="button">
               <i class="bi bi-sliders"></i> Session
             </button>
-            <button class="col-12 col-md-4" :class="{ active: tab === 'saved' }" @click="setActiveTab('saved')"
-              title="Saved sessions">
+            <button :class="{ active: tab === 'techniques' }" @click.prevent="setActiveTab('techniques')"
+              title="Memorisation techniques" type="button">
+              <i class="bi bi-stars"></i> Techniques
+            </button>
+            <button :class="{ active: tab === 'saved' }" @click.prevent="setActiveTab('saved')" title="Saved sessions"
+              type="button">
               <i class="bi bi-clock-history"></i> Saved
             </button>
-            <button class="col-12 col-md-4" :class="{ active: tab === 'settings' }" @click="setActiveTab('settings')">
+            <button :class="{ active: tab === 'settings' }" @click.prevent="setActiveTab('settings')" type="button">
               <i class="bi bi-gear"></i> Settings
             </button>
           </div>
@@ -331,7 +333,6 @@
         <div class="tools-body compact">
           <!-- TOOLS TAB -->
           <div v-if="tab === 'tools'" class="sheet">
-            <!-- Session Section -->
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
                 <span class="st-left">
@@ -374,7 +375,6 @@
               </div>
             </section>
 
-            <!-- Audio Section -->
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('advanced_playback')" type="button">
                 <span class="st-left">
@@ -410,147 +410,231 @@
                 </div>
               </div>
             </section>
-
-            <!-- Memorisation Techniques Section -->
-            <section class="sheet-section tools-techniques-section">
-              <button class="sheet-toggle" @click="toggleSection('memorisation_techniques')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-stars"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Memorisation Techniques</span>
-                    <span class="st-sub">Focus, recall, chaining, and anchor aids</span> </span>
-                </span>
-                <div class="st-right-group">
-                  <button class="st-hint-btn" @click.stop="showCompatibilityModal = true"
-                    title="View technique compatibility">
-                    <i class="bi bi-info-circle-fill"></i>
-                  </button>
-                  <span class="st-chev" :class="{ open: sectionOpen.memorisation_techniques }">
-                    <i class="bi bi-chevron-down"></i>
-                  </span>
-                </div>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.memorisation_techniques">
-
-                <div class="techniques-list">
-                  <!-- Focus Mode -->
-                  <div class="technique-row">
-                    <div class="technique-copy">
-                      <label><i class="bi bi-bullseye"></i> Focus Mode</label>
-                      <small>Reduces distractions around the active ayah.</small>
-                      
-                    </div>
-                    <button class="toggle-chip technique-toggle" :class="{ active: focusModeEnabled }"
-                      @click="focusModeEnabled = !focusModeEnabled" type="button">
-                      {{ focusModeEnabled ? 'On' : 'Off' }}
-                    </button>
-                  </div>
-
-                  <!-- Blur Mode -->
-                  <div class="technique-row technique-row-stacked">
-                    <div class="technique-row-main">
-                      <div class="technique-copy">
-                        <label><i class="bi bi-cloud-haze2"></i> Blur Mode</label>
-                        <small>Supports active recall through progressive concealment.</small>
-                      </div>
-                      <button class="toggle-chip technique-toggle" :class="{ active: blurModeEnabled }"
-                        @click="blurModeEnabled = !blurModeEnabled" type="button">
-                        {{ blurModeEnabled ? 'On' : 'Off' }}
-                      </button>
-                    </div>
-                    <div v-if="blurModeEnabled" class="technique-control">
-                      <span>Intensity</span>
-                      <input type="range" min="4" max="18" step="1" v-model.number="blurIntensity"
-                        class="input technique-range">
-                      <span class="inline-setting-pill">{{ blurIntensity }}px</span>
-                    </div>
-                    <div v-if="blurModeEnabled" class="technique-peek-hint">
-                      <i class="bi bi-info-circle"></i>
-                      <span><strong>Peek:</strong> Hold <kbd>Spacebar</kbd> or hover over blurred verses to temporarily
-                        see clearly</span>
-                    </div>
-                  </div>
-
-                  <!-- Chaining -->
-                  <div class="technique-row technique-row-stacked">
-                    <div class="technique-row-main">
-                      <div class="technique-copy">
-                        <label><i class="bi bi-link-45deg"></i> Chaining</label>
-                        <small>{{ chainingMethodDescription }}</small>
-                      </div>
-                      <button class="toggle-chip technique-toggle" :class="{ active: chainingEnabled }"
-                        @click="setChainingEnabled(!chainingEnabled)" type="button">
-                        {{ chainingEnabled ? 'On' : 'Off' }}
-                      </button>
-                    </div>
-                    <div v-if="chainingEnabled" class="segmented-control segmented-control-compact" role="group"
-                      aria-label="Chaining method">
-                      <button type="button" :class="{ active: chainingMethod === 'linking' }"
-                        @click="setChainingMethod('linking')">
-                        Linking
-                      </button>
-                      <button type="button" :class="{ active: chainingMethod === 'cumulative' }"
-                        @click="setChainingMethod('cumulative')">
-                        Cumulative
-                      </button>
-                    </div>
-                    <div v-if="chainingEnabled" class="technique-control">
-                      <span>Repeats per step</span>
-                      <input type="range" min="1" max="5" step="1" :value="chainingRepetitions"
-                        @input="setChainingRepetitions(Number($event.target.value))" class="input technique-range">
-                      <span class="inline-setting-pill">{{ chainingRepetitions }}</span>
-                    </div>
-                    <div class="technique-preview">
-                      <span>{{ chainingMethodPreview }}</span>
-                    </div>
-                  </div>
-
-                  <!-- ANCHOR MODE (with description) -->
-                  <div class="technique-row technique-row-stacked">
-                    <div class="technique-row-main">
-                      <div class="technique-copy">
-                        <label><i class="bi bi-pin-angle"></i> Anchor Mode</label>
-                        <small>Creates mental hooks using key words or phrases as anchors.</small>
-                      </div>
-                      <button class="toggle-chip technique-toggle" :class="{ active: anchorModeEnabled }"
-                        @click="toggleAnchorMode" type="button">
-                        {{ anchorModeEnabled ? 'On' : 'Off' }}
-                      </button>
-                    </div>
-                    <div v-if="anchorModeEnabled" class="technique-control">
-                      <span>Anchor points per ayah</span>
-                      <select v-model.number="anchorCount" @change="onAnchorCountChange" class="input technique-select">
-                        <option :value="1">1 anchor (center word) — Minimalist</option>
-                        <option :value="2">2 anchors (first + last) — Balanced</option>
-                      </select>
-                    </div>
-                    <div class="technique-preview">
-                      <span><i class="bi bi-pin-angle"></i> {{ anchorModeDescription }}</span>
-                    </div>
-                    
-                  </div>
-
-
-                </div>
-              </div>
-            </section>
           </div>
 
-          <!-- Replace your entire saved tab section with this -->
+          <!-- TECHNIQUES TAB -->
+<div v-else-if="tab === 'techniques'" class="sheet">
+  <section class="sheet-section">
+    <button class="sheet-toggle" @click="toggleSection('focus_mode')" type="button">
+      <span class="st-left">
+        <span class="st-ico"><i class="bi bi-bullseye"></i></span>
+        <span class="st-txt">
+          <span class="st-title">Focus Mode</span>
+          <span class="st-sub">Reduce distractions around the active ayah</span>
+        </span>
+      </span>
+      <div class="st-right-group">
+        <div class="toggle-switch" :class="{ active: focusModeEnabled }" @click="focusModeEnabled = !focusModeEnabled">
+          <div class="toggle-switch-knob"></div>
+        </div>
+        <span class="st-chev" :class="{ open: sectionOpen.focus_mode }">
+          <i class="bi bi-chevron-down"></i>
+        </span>
+      </div>
+    </button>
+    <div class="sheet-content" v-show="sectionOpen.focus_mode">
+      <div class="field-stack">
+        <div class="field">
+          <div class="technique-description">
+            <i class="bi bi-info-circle-fill"></i>
+            <span>Focus Mode dims all non-active verses, helping you concentrate on the current ayah without distractions.</span>
+          </div>
+          <div class="technique-best">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>Best for: Deep memorisation sessions</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sheet-section">
+    <button class="sheet-toggle" @click="toggleSection('blur_mode')" type="button">
+      <span class="st-left">
+        <span class="st-ico"><i class="bi bi-cloud-haze2"></i></span>
+        <span class="st-txt">
+          <span class="st-title">Blur Mode</span>
+          <span class="st-sub">Progressive concealment for active recall</span>
+        </span>
+      </span>
+      <div class="st-right-group">
+        <button class="toggle-chip" :class="{ active: blurModeEnabled }"
+          @click="blurModeEnabled = !blurModeEnabled" type="button">
+          {{ blurModeEnabled ? 'On' : 'Off' }}
+        </button>
+        <span class="st-chev" :class="{ open: sectionOpen.blur_mode }"><i class="bi bi-chevron-down"></i></span>
+      </div>
+    </button>
+    <div class="sheet-content" v-show="sectionOpen.blur_mode">
+      <div class="field-stack">
+        <div class="field">
+          <div class="technique-description">
+            <i class="bi bi-info-circle-fill"></i>
+            <span>Blurs upcoming verses, requiring you to recall them before revealing.</span>
+          </div>
+          <div class="technique-best">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>Best for: Active recall testing</span>
+          </div>
+        </div>
+        <div v-if="blurModeEnabled" class="field">
+          <label>Blur Intensity</label>
+          <div class="range-control">
+            <input type="range" min="4" max="18" step="1" v-model.number="blurIntensity" class="input">
+            <span class="inline-setting-pill">{{ blurIntensity }}px</span>
+          </div>
+          <small class="field-hint"><kbd>Spacebar</kbd> or hover to temporarily see clearly</small>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sheet-section">
+    <button class="sheet-toggle" @click="toggleSection('chaining')" type="button">
+      <span class="st-left">
+        <span class="st-ico"><i class="bi bi-link-45deg"></i></span>
+        <span class="st-txt">
+          <span class="st-title">Chaining</span>
+          <span class="st-sub">{{ chainingMethodDescription }}</span>
+        </span>
+      </span>
+      <div class="st-right-group">
+        <button class="toggle-chip" :class="{ active: chainingEnabled }"
+          @click="setChainingEnabled(!chainingEnabled)" type="button">
+          {{ chainingEnabled ? 'On' : 'Off' }}
+        </button>
+        <span class="st-chev" :class="{ open: sectionOpen.chaining }"><i class="bi bi-chevron-down"></i></span>
+      </div>
+    </button>
+    <div class="sheet-content" v-show="sectionOpen.chaining">
+      <div class="field-stack">
+        <div class="field">
+          <div class="technique-description">
+            <i class="bi bi-info-circle-fill"></i>
+            <span>{{ chainingMethod === 'cumulative' ? 'Build longer runs by adding one ayah at a time.' : 'Strengthen transitions between neighbouring ayahs.' }}</span>
+          </div>
+          <div class="technique-best">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>Best for: Building long passages</span>
+          </div>
+        </div>
+        <div v-if="chainingEnabled" class="field">
+          <label>Method</label>
+          <div class="radio-group">
+            <label class="radio">
+              <input type="radio" value="linking" v-model="chainingMethod" @change="setChainingMethod('linking')">
+              Linking
+            </label>
+            <label class="radio">
+              <input type="radio" value="cumulative" v-model="chainingMethod" @change="setChainingMethod('cumulative')">
+              Cumulative
+            </label>
+          </div>
+          <small class="field-hint">{{ chainingMethod === 'linking' ? 'Practice ayahs individually, then in pairs.' : 'Start with first ayah, then add one more each time.' }}</small>
+        </div>
+        <div v-if="chainingEnabled" class="field">
+          <label>Repeats per step</label>
+          <div class="range-control">
+            <input type="range" min="1" max="5" step="1" :value="chainingRepetitions"
+              @input="setChainingRepetitions(Number($event.target.value))" class="input">
+            <span class="inline-setting-pill">{{ chainingRepetitions }}</span>
+          </div>
+          <small class="field-hint">Number of times to repeat each chaining step</small>
+        </div>
+        <div v-if="chainingEnabled" class="technique-preview-block">
+          <i class="bi bi-eye"></i>
+          <span>{{ chainingMethodPreview }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sheet-section">
+    <button class="sheet-toggle" @click="toggleSection('anchor_mode')" type="button">
+      <span class="st-left">
+        <span class="st-ico"><i class="bi bi-pin-angle-fill"></i></span>
+        <span class="st-txt">
+          <span class="st-title">Anchor Mode</span>
+          <span class="st-sub">Mental hooks using key words</span>
+        </span>
+      </span>
+      <div class="st-right-group">
+        <button class="toggle-chip" :class="{ active: anchorModeEnabled }"
+          @click="toggleAnchorMode" type="button">
+          {{ anchorModeEnabled ? 'On' : 'Off' }}
+        </button>
+        <span class="st-chev" :class="{ open: sectionOpen.anchor_mode }"><i class="bi bi-chevron-down"></i></span>
+      </div>
+    </button>
+    <div class="sheet-content" v-show="sectionOpen.anchor_mode">
+      <div class="field-stack">
+        <div class="field">
+          <div class="technique-description">
+            <i class="bi bi-info-circle-fill"></i>
+            <span>Highlights key words as memory anchors to help recall the entire ayah.</span>
+          </div>
+          <div class="technique-best">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>Best for: Memorising key vocabulary</span>
+          </div>
+        </div>
+        <div v-if="anchorModeEnabled" class="field">
+          <label>Anchor points per ayah</label>
+          <select v-model.number="anchorCount" @change="onAnchorCountChange" class="select">
+            <option :value="1">1 anchor (center word)</option>
+            <option :value="2">2 anchors (first + last)</option>
+          </select>
+          <small class="field-hint">{{ anchorModeDescription }}</small>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Presets -->
+  <section class="sheet-section">
+    <button class="sheet-toggle" @click="toggleSection('presets')" type="button">
+      <span class="st-left">
+        <span class="st-ico"><i class="bi bi-magic"></i></span>
+        <span class="st-txt">
+          <span class="st-title">Quick Presets</span>
+          <span class="st-sub">One-click technique combinations</span>
+        </span>
+      </span>
+      <span class="st-chev" :class="{ open: sectionOpen.presets }"><i class="bi bi-chevron-down"></i></span>
+    </button>
+    <div class="sheet-content" v-show="sectionOpen.presets">
+      <div class="field-stack">
+        <div class="field">
+          <div class="presets-grid">
+            <button class="preset-btn" @click="applyPreset('chain')">
+              <i class="bi bi-link-45deg"></i> Chain + Anchors
+            </button>
+            <button class="preset-btn" @click="applyPreset('blur')">
+              <i class="bi bi-cloud-haze2"></i> Pure Recall
+            </button>
+            <button class="preset-btn" @click="applyPreset('focus')">
+              <i class="bi bi-bullseye"></i> Deep Focus
+            </button>
+          </div>
+          <small class="field-hint">Quickly apply recommended technique combinations based on your goal</small>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+          <!-- SAVED TAB -->
           <div v-else-if="tab === 'saved'" class="sheet">
             <div class="saved-sessions-container">
               <div class="saved-header">
                 <h3><i class="bi bi-bookmark-check"></i> Saved Sessions</h3>
                 <p>Your memorisation sessions, ready to resume</p>
               </div>
-
-              <!-- Saved Sessions List -->
               <div v-if="savedSessions.length === 0" class="empty-state">
                 <i class="bi bi-journal-bookmark"></i>
                 <p>No saved sessions yet</p>
                 <span>Save your current session to get started</span>
               </div>
-
               <div v-else class="sessions-list">
                 <div v-for="session in savedSessions" :key="session.id" class="session-item">
                   <div class="session-info" @click="loadSavedSession(session.id)">
@@ -571,8 +655,6 @@
                   </button>
                 </div>
               </div>
-
-              <!-- Save Current Session -->
               <div v-if="hasVerses" class="save-section">
                 <div class="current-info">
                   <i class="bi bi-play-circle"></i>
@@ -589,14 +671,12 @@
           </div>
 
           <!-- SETTINGS TAB -->
-          <!-- SETTINGS TAB -->
           <div v-else-if="tab === 'settings'" class="sheet">
             <div class="settings-panels">
               <div class="settings-notice">
                 <i class="bi bi-info-circle"></i>
                 <span>All changes are applied instantly</span>
               </div>
-
               <section class="settings-group">
                 <span class="settings-group-title">Display</span>
                 <div class="settings-card-grid settings-display-grid">
@@ -611,7 +691,6 @@
                       {{ tajweedEnabled ? 'On' : 'Off' }}
                     </button>
                   </div>
-
                   <div class="settings-card settings-card-range">
                     <div class="settings-row-copy">
                       <label><span class="settings-icon"><i class="bi bi-arrows-angle-expand"></i></span><span>Font
@@ -626,7 +705,6 @@
                   </div>
                 </div>
               </section>
-
               <section class="settings-group">
                 <div class="settings-card-grid">
                   <div class="settings-card settings-card-toggle">
@@ -640,7 +718,6 @@
                       {{ showTranslation ? 'On' : 'Off' }}
                     </button>
                   </div>
-
                   <div class="settings-card settings-card-toggle">
                     <div class="settings-row-copy">
                       <label><span class="settings-icon"><i
@@ -652,7 +729,6 @@
                       {{ showTransliteration ? 'On' : 'Off' }}
                     </button>
                   </div>
-
                   <div class="settings-card settings-card-toggle">
                     <div class="settings-row-copy">
                       <label><span class="settings-icon"><i class="bi bi-grid-3x2-gap"></i></span><span>Word by
@@ -664,7 +740,6 @@
                       {{ showWordByWord ? 'On' : 'Off' }}
                     </button>
                   </div>
-
                   <div class="settings-card settings-card-toggle">
                     <div class="settings-row-copy">
                       <label><span class="settings-icon"><i class="bi bi-volume-up"></i></span><span>Word
@@ -1315,7 +1390,12 @@ export default {
         analytics_planner: true,
         analytics_weak: false,
         memorisation_techniques: false,
-        saved_sessions: false  // Add this line
+        saved_sessions: false,
+        focus_mode: true,
+        blur_mode: false,
+        chaining: false,
+        anchor_mode: false,
+        presets: false,
       },
 
       // Audio event handlers
@@ -2105,9 +2185,20 @@ export default {
   watch: {
     theme: 'persistUiState',
     showTools: 'persistUiState',
+    tab(newVal, oldVal) {
+
+      if (!['tools', 'techniques', 'saved', 'settings'].includes(newVal)) {
+        this.tab = 'tools'
+      }
+      if (newVal === 'techniques') {
+        console.log('Techniques tab activated')
+      }
+      this.persistUiState()
+      this.persistCentralSessionState()
+    },
     tab(newVal) {
       console.log('Tab changed to:', newVal)
-      if (!['tools', 'saved', 'settings'].includes(newVal)) {
+      if (!['tools', 'techniques', 'saved', 'settings'].includes(newVal)) {
         this.tab = 'tools'
       }
       this.persistUiState()
@@ -2241,6 +2332,28 @@ export default {
   },
 
   methods: {
+    addToggleRipple(event) {
+      const button = event.currentTarget;
+      const ripple = document.createElement('span');
+      const rect = button.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const x = event.clientX - rect.left - size / 2;
+      const y = event.clientY - rect.top - size / 2;
+      
+      ripple.style.width = ripple.style.height = `${size}px`;
+      ripple.style.left = `${x}px`;
+      ripple.style.top = `${y}px`;
+      ripple.classList.add('toggle-chip-ripple');
+      
+      button.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 400);
+    },
+    
+    // Update your toggle methods to include ripple
+    toggleFocusMode(event) {
+      this.addToggleRipple(event);
+      this.focusModeEnabled = !this.focusModeEnabled;
+    },
     applyPreset(type) {
       // Reset all techniques first
       this.focusModeEnabled = false;
@@ -3732,17 +3845,26 @@ export default {
       this.showBanner(`Speed changed to ${safeSpeed}x`, 'info', 1000)
     },
 
-    // Update setActiveTab method
-    // Replace your setActiveTab method with this
     setActiveTab(tabName) {
-      console.log('Setting active tab to:', tabName) // Debug log
-      this.tab = tabName
+      console.log('Setting active tab to:', tabName)
+      // Explicitly allow 'techniques' as a valid tab
+      const validTabs = ['tools', 'techniques', 'saved', 'settings']
+      if (validTabs.includes(tabName)) {
+        this.tab = tabName
+      } else {
+        this.tab = 'tools'
+      }
+
       if (this.tab === 'settings') {
         this.syncSettingsDraft()
       }
       if (this.tab === 'saved') {
         this.loadSavedSessions()
       }
+
+      // Force Vue to re-render
+      this.$forceUpdate()
+
       this.centralSession.activeTab = this.tab
       this.persistCentralSessionState()
       this.$nextTick(() => this.scrollToWorkspaceMain())
@@ -3782,7 +3904,10 @@ export default {
             ...(saved.audio || {})
           }
         }
-        this.tab = ['tools', 'settings'].includes(this.centralSession.activeTab) ? this.centralSession.activeTab : 'tools'
+        // Update to include 'techniques' as valid tab
+        this.tab = ['tools', 'techniques', 'saved', 'settings'].includes(this.centralSession.activeTab)
+          ? this.centralSession.activeTab
+          : 'tools'
         this.tajweedEnabled = !!this.centralSession.tajweedEnabled
         this.focusModeEnabled = !!this.centralSession.focusModeEnabled
         this.blurModeEnabled = !!this.centralSession.blurModeEnabled
@@ -3803,7 +3928,8 @@ export default {
       try {
         this.centralSession = {
           ...this.centralSession,
-          activeTab: ['tools', 'settings'].includes(this.tab) ? this.tab : 'tools',
+          // Update to include 'techniques' as valid tab
+          activeTab: ['tools', 'techniques', 'saved', 'settings'].includes(this.tab) ? this.tab : 'tools',
           tajweedEnabled: !!this.tajweedEnabled,
           focusModeEnabled: !!this.focusModeEnabled,
           blurModeEnabled: !!this.blurModeEnabled,
@@ -5956,7 +6082,7 @@ export default {
           // Only apply if state exists
           if (state) {
             this.theme = state.theme || this.theme
-            this.tab = ['tools', 'settings'].includes(state.tab) ? state.tab : 'tools'
+            this.tab = ['tools', 'techniques', 'saved', 'settings'].includes(state.tab) ? state.tab : 'tools'
             this.currentMode = state.currentMode || 'beginner'
             this.flowStep = ['learn', 'practice', 'recall'].includes(state.flowStep)
               ? state.flowStep
@@ -6534,6 +6660,652 @@ export default {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* Technique description styling */
+.technique-description {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  background: var(--accent-light);
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.technique-description i {
+  color: var(--accent);
+  font-size: 1rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.technique-description span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.technique-best {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(46, 125, 50, 0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(46, 125, 50, 0.15);
+}
+
+.technique-best i {
+  color: #2e7d32;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.technique-best span {
+  font-size: 0.7rem;
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+.technique-preview-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-top: 8px;
+}
+
+.technique-preview-block i {
+  color: var(--accent);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.technique-preview-block span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .technique-description {
+  background: rgba(208, 160, 107, 0.1);
+}
+
+[data-theme="dark"] .technique-best {
+  background: rgba(76, 175, 80, 0.1);
+  border-color: rgba(76, 175, 80, 0.2);
+}
+
+[data-theme="dark"] .technique-best span {
+  color: #81c784;
+}
+
+[data-theme="dark"] .technique-preview-block {
+  background: var(--surface-strong);
+}
+
+.techniques-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.techniques-header h3 {
+  margin: 0 0 6px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.techniques-header p {
+  margin: 0 0 12px 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.compatibility-info-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--accent);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.technique-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
+}
+
+.technique-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.technique-icon {
+  width: 44px;
+  height: 44px;
+  background: var(--accent-light);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.technique-icon i {
+  font-size: 1.3rem;
+  color: var(--accent);
+}
+
+.technique-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.technique-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.technique-info p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.technique-toggle {
+  flex-shrink: 0;
+  min-width: 70px;
+  min-height: 36px;
+}
+
+.technique-controls {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.control-group {
+  margin-bottom: 14px;
+}
+
+.control-group label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.range-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.technique-range {
+  flex: 1;
+  padding: 0;
+}
+
+.value-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  padding: 4px 8px;
+  background: var(--accent-light);
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.technique-select {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.technique-preview {
+  padding: 12px;
+  background: var(--accent-light);
+  border-radius: 10px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.technique-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(154, 103, 56, 0.08);
+  border-radius: 10px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.technique-hint kbd {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.presets-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.presets-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.presets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.preset-btn {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  color: var(--text);
+}
+
+.preset-btn:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.tools-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tools-tabs button {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: transparent;
+  border: none;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tools-tabs button.active {
+  background: var(--surface-strong);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.tools-tabs button i {
+  font-size: 0.9rem;
+}
+
+/* Expanded offcanvas width */
+.tools {
+  --tools-width: 520px;
+  width: min(var(--tools-width), 92vw);
+}
+
+/* Techniques Tab Styles */
+.techniques-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.techniques-header h3 {
+  margin: 0 0 6px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.techniques-header p {
+  margin: 0 0 12px 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.compatibility-info-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--accent);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.compatibility-info-btn:hover {
+  background: var(--accent-light);
+  border-color: var(--accent);
+}
+
+.techniques-list-expanded {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.technique-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.technique-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.technique-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.technique-icon {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, var(--accent-light), var(--accent-wash));
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.technique-icon i {
+  font-size: 1.3rem;
+  color: var(--accent);
+}
+
+.technique-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.technique-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.technique-info p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.technique-toggle {
+  flex-shrink: 0;
+  min-width: 70px;
+  min-height: 36px;
+}
+
+.technique-controls {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.control-group {
+  margin-bottom: 14px;
+}
+
+.control-group label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.range-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.technique-range {
+  flex: 1;
+  padding: 0;
+}
+
+.value-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  padding: 4px 8px;
+  background: var(--accent-light);
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.technique-select {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.technique-preview {
+  padding: 12px;
+  background: var(--accent-light);
+  border-radius: 10px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.technique-preview i {
+  color: var(--accent);
+  font-size: 0.8rem;
+}
+
+.technique-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-top: 12px;
+  background: rgba(154, 103, 56, 0.08);
+  border-radius: 10px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.technique-hint kbd {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.technique-benefits {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.technique-benefits small {
+  font-size: 0.65rem;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.technique-benefits small i {
+  font-size: 0.6rem;
+}
+
+/* Presets Section */
+.presets-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.presets-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.presets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.preset-btn {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  color: var(--text);
+}
+
+.preset-btn:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.preset-btn i {
+  font-size: 0.8rem;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .tools {
+    --tools-width: 100vw;
+  }
+
+  .technique-card-header {
+    flex-wrap: wrap;
+  }
+
+  .technique-toggle {
+    width: 100%;
+  }
+
+  .presets-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .conflict-badge {
@@ -9760,10 +10532,170 @@ html {
   min-width: 0;
 }
 
-.toggle-chip-compact {
-  min-height: 34px;
-  padding: 6px 10px;
-  font-size: 0.82rem;
+.toggle-chip {
+  min-height: 32px;
+  min-width: 68px;
+  padding: 6px 14px;
+  border-radius: 40px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Improved Toggle Buttons - Consistent with modern UI */
+.toggle-chip {
+  min-height: 32px;
+  min-width: 68px;
+  padding: 6px 14px;
+  border-radius: 40px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.toggle-chip::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(154, 103, 56, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s, height 0.4s;
+}
+
+.toggle-chip:active::before {
+  width: 100px;
+  height: 100px;
+}
+
+.toggle-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.toggle-chip.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
+}
+
+.toggle-chip.active:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.4);
+  filter: brightness(1.05);
+}
+
+.toggle-chip:active {
+  transform: translateY(0);
+}
+
+/* Compact toggle for headers */
+.st-right-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.st-right-group .toggle-chip {
+  min-height: 32px;
+  min-width: 68px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+}
+
+/* Switch-style alternative (optional) */
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  min-width: 52px;
+  height: 30px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  transition: all 0.2s ease;
+}
+
+.toggle-switch.active {
+  background: var(--accent);
+  border-color: transparent;
+}
+
+.toggle-switch-knob {
+  position: absolute;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch.active .toggle-switch-knob {
+  transform: translateX(22px);
+}
+
+.toggle-switch-label {
+  margin-left: 60px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.toggle-switch.active + .toggle-switch-label {
+  color: var(--accent);
+}
+
+/* Technique toggle specific */
+.technique-toggle {
+  min-height: 32px;
+  min-width: 72px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Settings toggle */
+.settings-toggle {
+  min-height: 36px;
+  min-width: 72px;
+  font-weight: 600;
+}
+
+/* Ripple effect animation */
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.toggle-chip-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: scale(0);
+  animation: ripple 0.4s linear;
+  pointer-events: none;
 }
 
 /* Toggle switch animation and visual feedback */
@@ -12688,7 +13620,7 @@ body>.navbar+.app .main.container {
 
 [data-theme="dark"] .segmented-control button.active,
 [data-theme="dark"] .toggle-chip.active {
-  color: var(--accent-strong);
+  color: white;
   border-color: rgba(239, 193, 141, 0.42);
   background: rgba(239, 193, 141, 0.12);
 }
@@ -13425,7 +14357,7 @@ body>.navbar+.app .main.container {
 
 .toggle-chip.active {
   border-color: var(--accent);
-  color: var(--accent);
+  color: white;
 }
 
 .continue-session-card {
