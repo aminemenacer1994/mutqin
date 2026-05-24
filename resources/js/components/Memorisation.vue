@@ -4,7 +4,7 @@
       <span>{{ banner.message }}</span>
       <div class="banner-actions">
         <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
-        }}</button>
+          }}</button>
         <button class="banner-x" @click="banner = null" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
@@ -432,7 +432,7 @@
                   <!-- Focus Mode -->
                   <div class="technique-row">
                     <div class="technique-copy">
-                      <label>🎯 Focus Mode</label>
+                      <label><i class="bi bi-bullseye"></i> Focus Mode</label>
                       <small>Reduces distractions around the active ayah.</small>
                     </div>
                     <button class="toggle-chip technique-toggle" :class="{ active: focusModeEnabled }"
@@ -445,7 +445,7 @@
                   <div class="technique-row technique-row-stacked">
                     <div class="technique-row-main">
                       <div class="technique-copy">
-                        <label>🌫️ Blur Mode</label>
+                        <label><i class="bi bi-cloud-haze2"></i> Blur Mode</label>
                         <small>Supports active recall through progressive concealment.</small>
                       </div>
                       <button class="toggle-chip technique-toggle" :class="{ active: blurModeEnabled }"
@@ -470,7 +470,7 @@
                   <div class="technique-row technique-row-stacked">
                     <div class="technique-row-main">
                       <div class="technique-copy">
-                        <label>🔗 Chaining</label>
+                        <label><i class="bi bi-link-45deg"></i> Chaining</label>
                         <small>{{ chainingMethodDescription }}</small>
                       </div>
                       <button class="toggle-chip technique-toggle" :class="{ active: chainingEnabled }"
@@ -504,9 +504,9 @@
                   <div class="technique-row technique-row-stacked">
                     <div class="technique-row-main">
                       <div class="technique-copy">
-                        <label>📍 Anchor Mode</label>
+                        <label><i class="bi bi-pin-angle"></i> Anchor Mode</label>
                         <small>Creates mental hooks using key words or phrases as anchors.</small>
-                        <span class="technique-desc-hint">Remember 1-3 key words → recall the whole ayah</span>
+                        <!-- <span class="technique-desc-hint">Remember 1-3 key words → recall the whole ayah</span> -->
                       </div>
                       <button class="toggle-chip technique-toggle" :class="{ active: anchorModeEnabled }"
                         @click="toggleAnchorMode" type="button">
@@ -524,12 +524,24 @@
                     <div class="technique-preview">
                       <span><i class="bi bi-pin-angle"></i> {{ anchorModeDescription }}</span>
                     </div>
-                    <div v-if="anchorModeEnabled" class="technique-example-hint">
+                    <!-- <div v-if="anchorModeEnabled" class="technique-example-hint">
                       <i class="bi bi-lightbulb"></i>
                       <span><strong>How it works:</strong> Highlighted words become memory anchors.
                         Memorise the anchor words first, then the surrounding text attaches naturally.</span>
-                    </div>
+                    </div> -->
                   </div>
+
+                  <!-- <div class="technique-row technique-row-stacked">
+                    <div class="technique-copy">
+                      <label><i class="bi bi-star"></i> Session Presets</label>
+                      <small>Quick setup based on your goal</small>
+                    </div>
+                    <div class="segmented-control" style="grid-template-columns: repeat(3, 1fr);">
+                      <button @click="applyPreset('chain')">Chain + Anchor</button>
+                      <button @click="applyPreset('blur')">Blur Recall</button>
+                      <button @click="applyPreset('focus')">Focus + Anchor</button>
+                    </div>
+                  </div> -->
 
                 </div>
               </div>
@@ -774,73 +786,35 @@
       </div>
     </div>
 
-    <!-- Resume Modal (Logged In) -->
-    <!-- <div class="modal-overlay" v-if="showResumeModal && isLoggedIn && hasContinueSession"
-      @click.self="showResumeModal = false">
-      <div class="modal-content confirm-modal resume-modal" role="dialog" aria-modal="true">
+    <!-- Save Session Name Modal -->
+    <div class="modal-overlay" v-if="showSaveNameModal" @click.self="showSaveNameModal = false">
+      <div class="modal-content save-name-modal">
         <div class="modal-header">
-          <div>
-            <h2>{{ resumeModalTitle }}</h2>
-            <small class="resume-saved-at" v-if="resumeSavedAtLabel">Last saved at {{ resumeSavedAtLabel }}</small>
-          </div>
-          <button class="btn-icon" @click="showResumeModal = false"><i class="bi bi-x-lg"></i></button>
+          <h2><i class="bi bi-save"></i> Save Session</h2>
+          <button class="btn-icon" @click="showSaveNameModal = false"><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="modal-body">
-          <p class="confirm-copy resume-copy">{{ continueSessionMeta }}</p>
-          <div class="pill" style="margin-top: 10px; padding: 12px 14px;">
-            <strong>Resume:</strong>
-            Ayah {{ continueSessionPayload?.activeVerseKey ? String(continueSessionPayload.activeVerseKey).split(':')[1]
-              : continueSessionPayload?.config?.rangeStart }}
-            · Range {{ continueSessionPayload?.config?.rangeStart }}-{{ continueSessionPayload?.config?.rangeEnd }}
+          <p class="save-modal-desc">Give your session a name to easily find it later</p>
+          <div class="save-name-input-group">
+            <label>Session Name</label>
+            <input type="text" v-model="saveSessionName" class="save-name-input" placeholder="e.g., Al-Fatihah Focus"
+              @keyup.enter="confirmSaveSession" autofocus />
           </div>
-          <div v-if="dueCount" class="pill" style="margin-top: 10px; padding: 12px 14px;">
-            <strong>Reviews due:</strong> {{ dueCount }}
+          <div class="save-preview-info">
+            <i class="bi bi-info-circle"></i>
+            <span>{{ currentChapter?.name_simple || 'Surah' }} · {{ rangeStart }}-{{ rangeEnd }}</span>
           </div>
-          <details class="resume-details">
-            <summary>Details</summary>
-            <div class="resume-feedback-bars">
-              <div class="resume-feedback-row"><span>Chain</span><strong>{{ resumeFeedback.chainProgress }}%</strong>
-              </div>
-              <div class="progress-bar-track">
-                <div class="progress-bar-fill" :style="{ width: resumeFeedback.chainProgress + '%' }"></div>
-              </div>
-              <div class="resume-feedback-row"><span>Repetition</span><strong>{{ resumeFeedback.repetitionProgress
-                  }}%</strong></div>
-              <div class="progress-bar-track">
-                <div class="progress-bar-fill resume-progress-repetition"
-                  :style="{ width: resumeFeedback.repetitionProgress + '%' }"></div>
-              </div>
-              <div class="resume-feedback-row"><span>Retention</span><strong>{{ resumeFeedback.retentionProgress
-                  }}%</strong></div>
-              <div class="progress-bar-track">
-                <div class="progress-bar-fill resume-progress-retention"
-                  :style="{ width: resumeFeedback.retentionProgress + '%' }"></div>
-              </div>
-            </div>
-            <div class="resume-grid">
-              <div class="pill"><i class="bi bi-link-45deg"></i><span>{{ continueSessionPayload?.config?.chainingEnabled
-                === false ? 'Chaining off' : (continueSessionPayload?.config?.chainingMethod === 'cumulative' ?
-                  'Cumulative chain' : 'Linking chain') }}</span></div>
-              <div class="pill pill-status-mastered"><i class="bi bi-check2-circle"></i><span>{{ feedbackCounts.mastered
-                  }} mastered</span></div>
-              <div class="pill pill-status-weak"><i class="bi bi-exclamation-circle"></i><span>{{ feedbackCounts.weak }}
-                  weak</span></div>
-              <div class="pill pill-status-repeat"><i class="bi bi-arrow-repeat"></i><span>{{ feedbackCounts.repeat }}
-                  need repetition</span></div>
-            </div>
-            <div class="pill" style="margin-top: 10px; padding: 12px 14px;">
-              <strong>Next:</strong> {{ resumeWhatNext }}
-            </div>
-          </details>
         </div>
         <div class="modal-footer">
-          <button class="btn-secondary" @click="showResumeModal = false">Not now</button>
-          <button class="btn-primary" @click="showResumeModal = false; continueLastSession()">
-            <i class="bi bi-arrow-right-circle"></i> Go to session
+          <button class="btn-secondary" @click="showSaveNameModal = false">Cancel</button>
+          <button class="btn-primary" @click="confirmSaveSession">
+            <i class="bi bi-save"></i> Save Session
           </button>
         </div>
       </div>
-    </div> -->
+    </div>
+
+
 
     <div v-if="showCountdownOverlay" class="countdown-overlay">
       <div class="countdown-modal">
@@ -957,6 +931,8 @@ function deepClone(value) {
 
 function createCentralSessionState() {
   return {
+    showSaveNameModal: false,
+    saveSessionName: '',
     activeTab: 'tools',
     repetitionTimes: 0,
     tajweedEnabled: false,
@@ -1025,6 +1001,29 @@ export default {
   },
   data() {
     return {
+      // Add to your data() return object
+      fadingVerseEnabled: false,
+      fadingDifficulty: 'medium', // easy, medium, hard
+      fadingListenCount: 3,
+      showFadingModal: false,
+      fadingStep: 1,
+      fadingPlaysDone: 0,
+      isPlayingFadingAudio: false,
+      fadingVerseNumber: null,
+      fadingVerseText: '',
+      fadingSegments: [],
+      fadingAnswers: [],
+      fadingTotalBlanks: 0,
+      fadingScore: 0,
+      fadingWrongAnswers: [],
+      fadingAudioElement: null,
+      blankInputRefs: [],
+      fadingStats: {
+        totalAttempts: 0,
+        totalCorrect: 0,
+        versesMastered: 0,
+        versesPracticed: 0
+      },
       anchorModeEnabled: false,
       anchorCount: 2,
       anchorHighlightObserver: null,
@@ -2057,6 +2056,27 @@ export default {
       this.persistUiState()
       this.persistCentralSessionState()
     },
+    focusModeEnabled(newVal) {
+      if (newVal && this.blurModeEnabled) {
+        this.blurModeEnabled = false;
+        this.showBanner('Focus Mode enabled, Blur Mode disabled', 'info', 1500);
+      }
+    },
+    blurModeEnabled(newVal) {
+      if (newVal && this.focusModeEnabled) {
+        this.focusModeEnabled = false;
+        this.showBanner('Blur Mode enabled, Focus Mode disabled', 'info', 1500);
+      }
+      if (newVal && this.chainingEnabled) {
+        this.showBanner('⚠️ Blur + Chaining may reduce effectiveness', 'warning', 2000);
+      }
+    },
+    // Prevent Blur + Chaining combo
+    chainingEnabled(newVal) {
+      if (newVal && this.blurModeEnabled) {
+        this.showBanner('For best results, disable Blur Mode when using Chaining', 'info', 2500);
+      }
+    },
     chapterId(val) {
       this.persistUiState()
       const id = Number(val || 0)
@@ -2139,6 +2159,87 @@ export default {
   },
 
   methods: {
+    applyPreset(type) {
+      // Reset all techniques first
+      this.focusModeEnabled = false;
+      this.blurModeEnabled = false;
+      this.chainingEnabled = false;
+      this.anchorModeEnabled = false;
+
+      switch (type) {
+        case 'chain':
+          this.chainingEnabled = true;
+          this.anchorModeEnabled = true;
+          this.focusModeEnabled = true;
+          this.showBanner('Preset: Chaining + Anchor Mode (with Focus)', 'success', 2000);
+          break;
+        case 'blur':
+          this.blurModeEnabled = true;
+          this.chainingEnabled = false;
+          this.showBanner('Preset: Pure Recall with Blur Mode', 'success', 2000);
+          break;
+        case 'focus':
+          this.focusModeEnabled = true;
+          this.anchorModeEnabled = true;
+          this.showBanner('Preset: Focus Mode + Anchor Hooks', 'success', 2000);
+          break;
+      }
+
+      this.enforceMemorisationRules();
+      this.persistUiState();
+    },
+    enforceMemorisationRules() {
+      // Rule 1: Only one visual reduction mode
+      if (this.focusModeEnabled && this.blurModeEnabled) {
+        this.blurModeEnabled = false;
+      }
+
+      // Rule 2: Warn on Blur + Chaining
+      if (this.blurModeEnabled && this.chainingEnabled) {
+        this.showBanner('💡 Tip: Blur Mode works best alone. Disable Chaining for pure recall practice.', 'info', 3000);
+      }
+
+      // Rule 3: Prevent Fading + Word-by-Word (if fading exists)
+      if (this.fadingVerseEnabled && this.showWordByWord) {
+        this.showWordByWord = false;
+        this.showBanner('Fading Mode: Word-by-Word disabled to reduce clutter', 'info', 2000);
+      }
+    },
+    confirmSaveSession() {
+      if (!this.saveSessionName || this.saveSessionName.trim() === '') {
+        this.showBanner('Session name cannot be empty', 'warning', 1500)
+        return
+      }
+
+      const session = {
+        id: Date.now().toString(),
+        name: this.saveSessionName.trim(),
+        savedAt: new Date().toISOString(),
+        config: {
+          chapterId: this.chapterId,
+          chapterName: this.currentChapter?.name_simple,
+          rangeStart: this.rangeStart,
+          rangeEnd: this.rangeEnd,
+          reciterId: this.reciterId,
+          speed: this.speed,
+          playMode: this.playMode,
+          chainingEnabled: this.chainingEnabled,
+          chainingMethod: this.chainingMethod,
+          chainingRepetitions: this.chainingRepetitions,
+          tajweedEnabled: this.tajweedEnabled,
+          showTranslation: this.showTranslation,
+          showTransliteration: this.showTransliteration,
+          showWordByWord: this.showWordByWord
+        }
+      }
+
+      this.savedSessions.unshift(session)
+      if (this.savedSessions.length > 20) this.savedSessions = this.savedSessions.slice(0, 20)
+      this.persistSavedSessions()
+      this.showBanner(`Session "${session.name}" saved`, 'success', 1500)
+      this.showSaveNameModal = false
+      this.saveSessionName = ''
+    },
     removeBasmala(arabicText) {
       if (!arabicText) return ''
       const basmala = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ'
@@ -5735,13 +5836,18 @@ export default {
     },
 
     toggleSection(key) {
-      const nextValue = !this.sectionOpen[key]
+      const nextValue = !this.sectionOpen[key];
       Object.keys(this.sectionOpen).forEach(sectionKey => {
         if (['session_tools', 'live_stats'].includes(sectionKey)) {
-          this.sectionOpen[sectionKey] = false
+          this.sectionOpen[sectionKey] = false;
         }
-      })
-      this.sectionOpen[key] = nextValue
+      });
+      this.sectionOpen[key] = nextValue;
+
+      // Enforce rules when techniques section opens
+      if (key === 'memorisation_techniques') {
+        this.enforceMemorisationRules();
+      }
     },
 
     applySettingsChanges(options = {}) {
@@ -6348,6 +6454,69 @@ export default {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+.segmented-control-compact button {
+  font-size: 0.7rem;
+  padding: 6px 8px;
+}
+
+.save-name-modal {
+  max-width: 420px;
+  width: 100%;
+}
+
+.save-modal-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+.save-name-input-group {
+  margin-bottom: 16px;
+}
+
+.save-name-input-group label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.save-name-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.9rem;
+  color: var(--text);
+  transition: all 0.2s;
+}
+
+.save-name-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.save-preview-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--accent-light);
+  border-radius: 10px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+.save-preview-info i {
+  color: var(--accent);
+  font-size: 0.9rem;
 }
 
 .technique-desc-hint {
@@ -12760,6 +12929,21 @@ body>.navbar+.app .main.container {
   flex-direction: column;
   gap: 16px;
   min-height: 160px;
+}
+
+.offcanvas {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 380px;
+  height: 100%;
+  background: #fff;
+  z-index: 1000;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
 }
 
 .offcanvas-launcher-card {
