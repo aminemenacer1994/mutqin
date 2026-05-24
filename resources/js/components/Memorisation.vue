@@ -412,19 +412,23 @@
             </section>
 
             <!-- Memorisation Techniques Section -->
-            <!-- Memorisation Techniques Section -->
             <section class="sheet-section tools-techniques-section">
               <button class="sheet-toggle" @click="toggleSection('memorisation_techniques')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-stars"></i></span>
                   <span class="st-txt">
                     <span class="st-title">Memorisation Techniques</span>
-                    <span class="st-sub">Focus, recall, chaining, and anchor aids</span>
+                    <span class="st-sub">Focus, recall, chaining, and anchor aids</span> </span>
+                </span>
+                <div class="st-right-group">
+                  <button class="st-hint-btn" @click.stop="showCompatibilityModal = true"
+                    title="View technique compatibility">
+                    <i class="bi bi-info-circle-fill"></i>
+                  </button>
+                  <span class="st-chev" :class="{ open: sectionOpen.memorisation_techniques }">
+                    <i class="bi bi-chevron-down"></i>
                   </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.memorisation_techniques }">
-                  <i class="bi bi-chevron-down"></i>
-                </span>
+                </div>
               </button>
               <div class="sheet-content" v-show="sectionOpen.memorisation_techniques">
 
@@ -434,6 +438,7 @@
                     <div class="technique-copy">
                       <label><i class="bi bi-bullseye"></i> Focus Mode</label>
                       <small>Reduces distractions around the active ayah.</small>
+                      
                     </div>
                     <button class="toggle-chip technique-toggle" :class="{ active: focusModeEnabled }"
                       @click="focusModeEnabled = !focusModeEnabled" type="button">
@@ -506,7 +511,6 @@
                       <div class="technique-copy">
                         <label><i class="bi bi-pin-angle"></i> Anchor Mode</label>
                         <small>Creates mental hooks using key words or phrases as anchors.</small>
-                        <!-- <span class="technique-desc-hint">Remember 1-3 key words → recall the whole ayah</span> -->
                       </div>
                       <button class="toggle-chip technique-toggle" :class="{ active: anchorModeEnabled }"
                         @click="toggleAnchorMode" type="button">
@@ -518,30 +522,14 @@
                       <select v-model.number="anchorCount" @change="onAnchorCountChange" class="input technique-select">
                         <option :value="1">1 anchor (center word) — Minimalist</option>
                         <option :value="2">2 anchors (first + last) — Balanced</option>
-                        <!-- <option :value="3">3 anchors (strategic) — Full structure</option> -->
                       </select>
                     </div>
                     <div class="technique-preview">
                       <span><i class="bi bi-pin-angle"></i> {{ anchorModeDescription }}</span>
                     </div>
-                    <!-- <div v-if="anchorModeEnabled" class="technique-example-hint">
-                      <i class="bi bi-lightbulb"></i>
-                      <span><strong>How it works:</strong> Highlighted words become memory anchors.
-                        Memorise the anchor words first, then the surrounding text attaches naturally.</span>
-                    </div> -->
+                    
                   </div>
 
-                  <!-- <div class="technique-row technique-row-stacked">
-                    <div class="technique-copy">
-                      <label><i class="bi bi-star"></i> Session Presets</label>
-                      <small>Quick setup based on your goal</small>
-                    </div>
-                    <div class="segmented-control" style="grid-template-columns: repeat(3, 1fr);">
-                      <button @click="applyPreset('chain')">Chain + Anchor</button>
-                      <button @click="applyPreset('blur')">Blur Recall</button>
-                      <button @click="applyPreset('focus')">Focus + Anchor</button>
-                    </div>
-                  </div> -->
 
                 </div>
               </div>
@@ -786,6 +774,97 @@
       </div>
     </div>
 
+    <!-- Technique Compatibility Modal -->
+    <div class="modal-overlay" v-if="showCompatibilityModal" @click.self="showCompatibilityModal = false">
+      <div class="modal-content compatibility-modal">
+        <div class="modal-header">
+          <h2><i class="bi bi-info-circle-fill"></i> Technique Compatibility</h2>
+          <button class="btn-icon" @click="showCompatibilityModal = false"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+          <p class="compatibility-intro">These memorisation techniques work well together. Pick combinations based on
+            your goal.</p>
+
+          <div class="compatibility-grid">
+            <!-- Row 1 -->
+            <div class="compatibility-row">
+              <div class="combo-icons">
+                <i class="bi bi-link-45deg"></i>
+                <i class="bi bi-plus-lg"></i>
+                <i class="bi bi-pin-angle-fill"></i>
+              </div>
+              <div class="combo-text">
+                <strong>Chaining + Anchor Mode</strong>
+                <span>Anchors help recall chain links</span>
+              </div>
+              <div class="combo-badge success">✅ Yes</div>
+            </div>
+
+            <!-- Row 2 -->
+            <div class="compatibility-row">
+              <div class="combo-icons">
+                <i class="bi bi-bullseye"></i>
+                <i class="bi bi-plus-lg"></i>
+                <i class="bi bi-pin-angle-fill"></i>
+              </div>
+              <div class="combo-text">
+                <strong>Focus Mode + Anchor Mode</strong>
+                <span>Clean visual focus + mental hooks</span>
+              </div>
+              <div class="combo-badge success">✅ Yes</div>
+            </div>
+
+            <!-- Row 3 -->
+            <div class="compatibility-row">
+              <div class="combo-icons">
+                <i class="bi bi-cloud-haze2"></i>
+              </div>
+              <div class="combo-text">
+                <strong>Blur Mode</strong>
+                <span>Best used alone for pure recall practice</span>
+              </div>
+              <div class="combo-badge alone">⭐ Alone best</div>
+            </div>
+
+            <!-- Row 4 -->
+            <div class="compatibility-row">
+              <div class="combo-icons">
+                <i class="bi bi-link-45deg"></i>
+                <i class="bi bi-plus-lg"></i>
+                <i class="bi bi-bullseye"></i>
+              </div>
+              <div class="combo-text">
+                <strong>Chaining + Focus Mode</strong>
+                <span>Distraction-free progression</span>
+              </div>
+              <div class="combo-badge success">✅ Yes</div>
+            </div>
+
+            <!-- Row 5 -->
+            <div class="compatibility-row">
+              <div class="combo-icons">
+                <i class="bi bi-pin-angle-fill"></i>
+              </div>
+              <div class="combo-text">
+                <strong>Anchor Mode</strong>
+                <span>Can be used with Focus or Chaining</span>
+              </div>
+              <div class="combo-badge success">✅ Yes</div>
+            </div>
+          </div>
+
+          <div class="compatibility-note">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span><strong>Note:</strong> Focus Mode and Blur Mode cannot be used together. Blur Mode reduces Chaining
+              effectiveness.</span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-primary" @click="showCompatibilityModal = false">Got it</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Save Session Name Modal -->
     <div class="modal-overlay" v-if="showSaveNameModal" @click.self="showSaveNameModal = false">
       <div class="modal-content save-name-modal">
@@ -1001,29 +1080,7 @@ export default {
   },
   data() {
     return {
-      // Add to your data() return object
-      fadingVerseEnabled: false,
-      fadingDifficulty: 'medium', // easy, medium, hard
-      fadingListenCount: 3,
-      showFadingModal: false,
-      fadingStep: 1,
-      fadingPlaysDone: 0,
-      isPlayingFadingAudio: false,
-      fadingVerseNumber: null,
-      fadingVerseText: '',
-      fadingSegments: [],
-      fadingAnswers: [],
-      fadingTotalBlanks: 0,
-      fadingScore: 0,
-      fadingWrongAnswers: [],
-      fadingAudioElement: null,
-      blankInputRefs: [],
-      fadingStats: {
-        totalAttempts: 0,
-        totalCorrect: 0,
-        versesMastered: 0,
-        versesPracticed: 0
-      },
+      showCompatibilityModal: false,
       anchorModeEnabled: false,
       anchorCount: 2,
       anchorHighlightObserver: null,
@@ -2056,26 +2113,51 @@ export default {
       this.persistUiState()
       this.persistCentralSessionState()
     },
+    fadingVerseEnabled(newVal) {
+      if (newVal && this.showWordByWord) {
+        this.showWordByWord = false;
+        this.showBanner('Fading Mode: Word-by-Word disabled', 'info', 2000);
+      }
+    },
+    showWordByWord(newVal) {
+      if (newVal && this.fadingVerseEnabled) {
+        this.fadingVerseEnabled = false;
+        this.showBanner('Word-by-Word Mode: Fading disabled', 'info', 2000);
+      }
+    },
     focusModeEnabled(newVal) {
       if (newVal && this.blurModeEnabled) {
         this.blurModeEnabled = false;
-        this.showBanner('Focus Mode enabled, Blur Mode disabled', 'info', 1500);
+        this.showBanner('🎯 Focus Mode: On | 🌫️ Blur Mode: Off (cannot use together)', 'info', 2000);
       }
+      this.persistUiState();
     },
+
     blurModeEnabled(newVal) {
       if (newVal && this.focusModeEnabled) {
         this.focusModeEnabled = false;
-        this.showBanner('Blur Mode enabled, Focus Mode disabled', 'info', 1500);
+        this.showBanner('🌫️ Blur Mode: On | 🎯 Focus Mode: Off (cannot use together)', 'info', 2000);
       }
+      // 🔥 NEW: Auto-disable Chaining when Blur turns on
       if (newVal && this.chainingEnabled) {
-        this.showBanner('⚠️ Blur + Chaining may reduce effectiveness', 'warning', 2000);
+        this.chainingEnabled = false;
+        this.showBanner('🌫️ Blur Mode: On | 🔗 Chaining: Off — Blur hides upcoming verses needed for chaining', 'warning', 3000);
       }
+      this.persistUiState();
     },
-    // Prevent Blur + Chaining combo
+
+    // 🔥 NEW: Auto-disable Blur when Chaining turns on
     chainingEnabled(newVal) {
       if (newVal && this.blurModeEnabled) {
-        this.showBanner('For best results, disable Blur Mode when using Chaining', 'info', 2500);
+        this.blurModeEnabled = false;
+        this.showBanner('🔗 Chaining: On | 🌫️ Blur Mode: Off — You need to see upcoming verses for chaining to work', 'warning', 3000);
       }
+      if (newVal && !this.anchorModeEnabled) {
+        this.showBanner('💡 Tip: Enable Anchor Mode with Chaining for better recall', 'info', 2000);
+      }
+      this.persistUiState();
+      this.persistCentralSessionState();
+      this.applyChainingQueueChange(this.currentMode);
     },
     chapterId(val) {
       this.persistUiState()
@@ -2193,16 +2275,14 @@ export default {
       if (this.focusModeEnabled && this.blurModeEnabled) {
         this.blurModeEnabled = false;
       }
-
       // Rule 2: Warn on Blur + Chaining
       if (this.blurModeEnabled && this.chainingEnabled) {
-        this.showBanner('💡 Tip: Blur Mode works best alone. Disable Chaining for pure recall practice.', 'info', 3000);
+        this.showBanner('💡 Tip: Blur Mode works best alone. Disable Chaining', 'info', 3000);
       }
-
-      // Rule 3: Prevent Fading + Word-by-Word (if fading exists)
+      // Rule 3: Prevent Fading + Word-by-Word
       if (this.fadingVerseEnabled && this.showWordByWord) {
         this.showWordByWord = false;
-        this.showBanner('Fading Mode: Word-by-Word disabled to reduce clutter', 'info', 2000);
+        this.showBanner('Fading Mode: Word-by-Word disabled', 'info', 2000);
       }
     },
     confirmSaveSession() {
@@ -5844,10 +5924,10 @@ export default {
       });
       this.sectionOpen[key] = nextValue;
 
-      // Enforce rules when techniques section opens
       if (key === 'memorisation_techniques') {
         this.enforceMemorisationRules();
       }
+
     },
 
     applySettingsChanges(options = {}) {
@@ -6454,6 +6534,233 @@ export default {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+.conflict-badge {
+  margin-top: 6px;
+  padding: 2px 8px;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  display: inline-block;
+}
+
+[data-theme="dark"] .conflict-badge {
+  background: rgba(220, 38, 38, 0.15);
+  color: #f87171;
+}
+
+.technique-conflict-warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 4px 8px;
+  background: rgba(220, 53, 69, 0.1);
+  border-radius: 8px;
+  font-size: 0.65rem;
+  color: #c62828;
+  border: 1px solid rgba(220, 53, 69, 0.2);
+  animation: warningPulse 1s ease-in-out;
+}
+
+.technique-conflict-warning i {
+  font-size: 0.7rem;
+}
+
+@keyframes warningPulse {
+
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+
+  50% {
+    opacity: 1;
+    background: rgba(220, 53, 69, 0.2);
+  }
+}
+
+/* Dark mode */
+[data-theme="dark"] .technique-conflict-warning {
+  background: rgba(229, 57, 53, 0.15);
+  color: #ef9a9a;
+}
+
+/* Hint button in sheet toggle */
+.st-right-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.st-hint-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.78);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  transition: all 0.2s ease;
+}
+
+.st-hint-btn:hover {
+  background: var(--accent-light);
+  transform: scale(1.05);
+}
+
+.st-hint-btn i {
+  font-size: 0.9rem;
+}
+
+/* Compatibility Modal */
+.compatibility-modal {
+  max-width: 560px;
+  width: 100%;
+}
+
+.compatibility-intro {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+.compatibility-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.compatibility-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  transition: all 0.2s ease;
+}
+
+.compatibility-row:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.combo-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 70px;
+  font-size: 1.1rem;
+  color: var(--accent);
+}
+
+.combo-icons i {
+  font-size: 1rem;
+}
+
+.combo-icons .bi-plus-lg {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.combo-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.combo-text strong {
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.combo-text span {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.combo-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.combo-badge.success {
+  background: rgba(46, 125, 50, 0.12);
+  color: #2e7d32;
+  border: 1px solid rgba(46, 125, 50, 0.2);
+}
+
+.combo-badge.alone {
+  background: rgba(154, 103, 56, 0.12);
+  color: var(--accent);
+  border: 1px solid rgba(154, 103, 56, 0.2);
+}
+
+.compatibility-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(220, 53, 69, 0.08);
+  border-radius: 12px;
+  font-size: 0.75rem;
+  color: #c62828;
+  border: 1px solid rgba(220, 53, 69, 0.15);
+}
+
+.compatibility-note i {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .compatibility-row {
+  background: var(--surface-strong);
+}
+
+[data-theme="dark"] .compatibility-row:hover {
+  background: rgba(208, 160, 107, 0.1);
+}
+
+[data-theme="dark"] .combo-badge.success {
+  background: rgba(76, 175, 80, 0.15);
+  color: #81c784;
+}
+
+[data-theme="dark"] .compatibility-note {
+  background: rgba(229, 57, 53, 0.12);
+  color: #ef9a9a;
+}
+
+/* Responsive */
+@media (max-width: 560px) {
+  .compatibility-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .combo-badge {
+    margin-left: auto;
+  }
+
+  .combo-icons {
+    min-width: 55px;
+  }
 }
 
 .segmented-control-compact button {
