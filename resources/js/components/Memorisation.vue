@@ -4,7 +4,7 @@
       <span>{{ banner.message }}</span>
       <div class="banner-actions">
         <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
-          }}</button>
+        }}</button>
         <button class="banner-x" @click="banner = null" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
@@ -101,12 +101,8 @@
         </div>
         <div v-else-if="hasVerses" class="workspace">
           <section class="workspace-shell" :class="{ collapsed: mainCardCollapsed }" aria-label="Session overview">
-            <div class="workspace-shell-head">
+            <div class="workspace-shell-head" style="padding: 10px;">
               <div class="workspace-shell-copy">
-                <span class="workspace-shell-kicker"
-                  :class="{ 'workspace-shell-kicker-review': guidedUiStep === 'review' }">
-                  {{ guidedUiStep === 'review' ? 'Review Session' : 'Memorisation Session' }}
-                </span>
                 <div class="workspace-shell-title-row">
                   <h1>{{ currentChapter ? currentChapter.name_simple : activeChapterName }}</h1>
                 </div>
@@ -128,7 +124,7 @@
                   <button class="action-btn action-btn-primary" type="button" @click="handlePrimaryAction"
                     :disabled="!isPlaying && !canStartSession">
                     <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-                    <span>{{ isPlaying ? 'Pause' : 'Start' }}</span>
+                    <span>{{ isPlaying ? 'Pause' : 'Start Session' }}</span>
                   </button>
                 </div>
               </div>
@@ -209,19 +205,20 @@
               <span>Ayah {{ currentPosition }} of {{ totalVerses }}</span>
               <span>{{ progressPercent }}% complete</span>
               <span v-if="etaLabel">{{ etaLabel }}</span>
+
+              <div v-if="!mainCardCollapsed && chainingEnabled && hasSessionFeedback" class="workspace-shell-chaining"
+                aria-label="Chaining status">
+                <span class="workspace-shell-chain-pill shadow-md">
+                  <i class="bi bi-link-45deg"></i>{{ chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking' }} · {{
+                    chainingRepetitions }}x
+                </span>
+                <span class="workspace-shell-chain-pill workspace-shell-chain-pill-soft shadow-md">
+                  <i class="bi bi-diagram-3"></i>{{ chainingProgressLabel }}
+                </span>
+              </div>
             </div>
 
-            <div v-if="!mainCardCollapsed && chainingEnabled && hasSessionFeedback" class="workspace-shell-chaining"
-              aria-label="Chaining status">
-              <span class="workspace-shell-chain-pill">
-                <i class="bi bi-link-45deg"></i>{{ chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking' }} · {{
-                  chainingRepetitions }}x
-              </span>
-              <span class="workspace-shell-chain-pill workspace-shell-chain-pill-soft">
-                <i class="bi bi-diagram-3"></i>{{ chainingProgressLabel }}
-              </span>
 
-            </div>
           </section>
 
           <main id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
@@ -242,33 +239,27 @@
                     <span v-if="effectiveActiveVerseKey === verse.key" class="verse-status-badge">Active Ayah</span>
                   </div>
                   <div class="verse-actions">
+                    <!-- Small play button next to play pill -->
+                    <button class="verse-small-play-btn" @click.stop="playVerse(verse)" :title="hasSessionFeedback ? (activeVerseKey === verse.key && isPlaying ? 'Pause' : 'Play current ayah') : 'Preview this ayah (does not start a session)'">
+                      <i class="bi" :class="activeVerseKey === verse.key && isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                    </button>
+                    
                     <!-- Download button for every verse -->
-                    <button class="verse-download-btn" @click.stop="downloadVerseAudio(verse)" :disabled="!verse.audio"
-                      title="Download audio for offline listening">
+                    <button class="verse-download-btn" @click.stop="downloadVerseAudio(verse)" :disabled="!verse.audio" title="Download audio for offline listening">
                       <i class="bi bi-download"></i>
                     </button>
 
-                    <!-- Play button for every verse -->
-                    <button class="verse-play-btn" @click.stop="playVerse(verse)"
-                      :title="hasSessionFeedback ? (activeVerseKey === verse.key && isPlaying ? 'Pause' : 'Play current ayah') : 'Preview this ayah (does not start a session)'">
-                      <i class="bi"
-                        :class="activeVerseKey === verse.key && isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-                    </button>
                     <span v-if="!hasSessionFeedback" class="verse-preview-label">Preview</span>
                   </div>
                 </div>
 
-                <div class="verse-arabic verse-arabic-primary" 
-                  dir="rtl" 
-                  v-if="verse.arabic && isDataReady"
-                  v-html="getDisplayArabic(verse)" 
-                  :class="{
+                <div class="verse-arabic verse-arabic-primary" dir="rtl" v-if="verse.arabic && isDataReady"
+                  v-html="getDisplayArabic(verse)" :class="{
                     'tajweed-enabled': tajweedEnabled,
                     'word-highlight-enabled': true,
                     'verse-weak': isWeakAyah(verse.key),
                     'verse-mastered': isMasteredAyah(verse.key)
-                  }" 
-                  :style="{
+                  }" :style="{
                     '--verse-font-percent': getVerseFontSize(verse.key),
                     'font-family': quranFontFamily,
                     'font-size': (getVerseFontSize(verse.key) / 100) + 'rem'
@@ -322,14 +313,13 @@
           <div class="tools-tabs row g-2" role="tablist" aria-label="Controls tabs">
             <button class="col-12 col-md-4" :class="{ active: tab === 'tools' }" @click="setActiveTab('tools')"
               title="Session tools">
-              <i class="bi bi-sliders"></i> Tools
+              <i class="bi bi-sliders"></i> Session
             </button>
             <button class="col-12 col-md-4" :class="{ active: tab === 'saved' }" @click="setActiveTab('saved')"
               title="Saved sessions">
               <i class="bi bi-clock-history"></i> Saved
             </button>
-            <button class="col-12 col-md-4" :class="{ active: tab === 'settings' }" @click="setActiveTab('settings')"
-              title="Reading and display settings">
+            <button class="col-12 col-md-4" :class="{ active: tab === 'settings' }" @click="setActiveTab('settings')">
               <i class="bi bi-gear"></i> Settings
             </button>
           </div>
@@ -344,7 +334,7 @@
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-book"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">Session</span>
+                    <span class="st-title">Session Setup</span>
                     <span class="st-sub">Choose what you memorise</span>
                   </span>
                 </span>
@@ -811,6 +801,13 @@
       </div>
     </div> -->
 
+    <div v-if="showCountdownOverlay" class="countdown-overlay">
+      <div class="countdown-modal">
+        <div class="countdown-number">{{ countdownValue }}</div>
+        <div class="countdown-text">Prepare yourself</div>
+      </div>
+    </div>
+
     <!-- Global Audio Player - Updated with Speed Controls -->
     <transition name="slide-up">
       <div v-if="appReady && playerVisible" class="player-bar" :class="{ collapsed: playerCollapsed }">
@@ -844,6 +841,9 @@
             </div>
             <span class="player-time">{{ formatTime(duration) }}</span>
           </div>
+
+
+
 
           <button class="player-btn" @click="playerVisible = false" title="Close player">
             <i class="bi bi-x-lg"></i>
@@ -984,6 +984,10 @@ export default {
   },
   data() {
     return {
+      showCountdownOverlay: false,
+      countdownValue: 3,
+      countdownInterval: null,
+      activeWaveIndex: 0,
       showSaveNameModal: false,
       saveSessionName: '',
       appReady: false,
@@ -991,16 +995,17 @@ export default {
       isDataReady: false,
       fontDropdownOpen: false,
       verseFontSizes: {},
-      defaultFontSize: 100,
+      defaultFontSize: 120,
       fontSizeStep: 10,
-      minFontSize: 80,
-      maxFontSize: 250,
+      minFontSize: 100,
+      maxFontSize: 280,
       tajweedEnabled: false,
       beginner: createBeginnerState(),
       advanced: createAdvancedState(),
       mutqinState: loadMutqinState(),
       centralSession: createCentralSessionState(),
       unwatchMutqinState: null,
+      currentWaveVerseKey: null,
       showKeyboardShortcuts: false,
       // chaining removed
 
@@ -1239,6 +1244,9 @@ export default {
   },
 
   computed: {
+    activeVerseRef() {
+      return this.verses.find(v => v.key === this.effectiveActiveVerseKey) || null
+    },
     getChainingMethodLabel() {
       if (!this.chainingEnabled) return `Chaining off · ${this.chainingRepetitions} repeats`
       const label = this.chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking'
@@ -1765,9 +1773,9 @@ export default {
     },
 
     activeCardKicker() {
-      if (this.guidedUiStep === 'review') return 'Bismillah, time to refresh'
-      if (this.isPlaying) return 'MashaAllah, keep the rhythm steady'
-      return 'Bismillah, keep your heart with the ayah'
+      if (this.guidedUiStep === 'review') return '✨ Time to refresh';
+      if (this.isPlaying) return '🌙 Keeping the rhythm steady';
+      return '🌿 Begin with Bismillah, keep your heart with the ayah';
     },
 
     activeCardBody() {
@@ -2026,7 +2034,7 @@ export default {
       this.persistCentralSessionState()
       this.applyChainingQueueChange(this.currentMode)
     },
-    
+
     showWordByWord: 'persistUiState',
     defaultFontSize: 'persistUiState',
     tajweedEnabled: 'persistUiState',
@@ -2065,6 +2073,105 @@ export default {
   },
 
   methods: {
+    // Add these methods to your methods section (replace if existing):
+    showCountdown(callback) {
+      this.showCountdownOverlay = true
+      this.countdownValue = 3
+
+      if (this.countdownInterval) {
+        clearInterval(this.countdownInterval)
+      }
+
+      this.countdownInterval = setInterval(() => {
+        this.countdownValue--
+
+        if (this.countdownValue < 0) {
+          clearInterval(this.countdownInterval)
+          this.countdownInterval = null
+          this.showCountdownOverlay = false
+          if (callback) callback()
+        }
+      }, 1000)
+    },
+
+    startSessionWithCountdown() {
+      if (!this.canStartSession) {
+        this.showTools = true
+        this.showBanner('Choose a valid surah and ayah range before starting.', 'info', 3600)
+        return
+      }
+
+      const self = this
+      this.showCountdown(function () {
+        self.startSession()
+      })
+    },
+    startSessionAndClose() {
+      this.closeToolsPanel()
+      this.startSessionWithCountdown()
+    },
+    // Update handlePrimaryAction:
+    handlePrimaryAction() {
+      if (this.isPlaying) {
+        if (this.audioElement) this.audioElement.pause()
+        this.isPlaying = false
+        return
+      }
+      this.startSessionWithCountdown()
+    },
+    // Make sure these methods are in your methods section:
+    showCountdown(callback) {
+      console.log('Countdown started') // Debug log
+      this.showCountdownOverlay = true
+      this.countdownValue = 3
+
+      if (this.countdownInterval) {
+        clearInterval(this.countdownInterval)
+      }
+
+      this.countdownInterval = setInterval(() => {
+        console.log('Countdown:', this.countdownValue) // Debug log
+        this.countdownValue--
+
+        if (this.countdownValue < 0) {
+          clearInterval(this.countdownInterval)
+          this.countdownInterval = null
+          this.showCountdownOverlay = false
+          console.log('Countdown finished, starting session') // Debug log
+          if (callback && typeof callback === 'function') {
+            callback()
+          }
+        }
+      }, 1000)
+    },
+
+    startSessionWithCountdown() {
+      console.log('startSessionWithCountdown called') // Debug log
+      if (!this.canStartSession) {
+        this.showTools = true
+        this.showBanner('Choose a valid surah and ayah range before starting.', 'info', 3600)
+        return
+      }
+
+      this.showCountdown(() => {
+        this.startSession()
+      })
+    },
+
+    startSessionWithCountdown() {
+      if (!this.canStartSession) {
+        this.showTools = true
+        this.showBanner('Choose a valid surah and ayah range before starting.', 'info', 3600)
+        return
+      }
+
+      this.showCountdown(() => {
+        this.startSession()
+      })
+    },
+
+
+
     // Replace saveCurrentSessionWithName method
     saveCurrentSessionWithName() {
       const defaultName = `${this.currentChapter?.name_simple || 'Session'} ${this.rangeStart}-${this.rangeEnd}`
@@ -2109,9 +2216,10 @@ export default {
       this.showSaveNameModal = false
       this.saveSessionName = ''
     },
+    // Update startSessionAndClose:
     startSessionAndClose() {
-      this.startSession()
       this.closeToolsPanel()
+      this.startSessionWithCountdown()
     },
     // Add this method if missing
     toggleFullScreen() {
@@ -4141,12 +4249,15 @@ export default {
       this.audioTimeUpdate = () => {
         this.currentTime = this.audioElement.currentTime
         this.duration = this.audioElement.duration
+        this.updateActiveWaveIndex();  // Move this after currentTime/duration are set
         this.centralSession.audio.currentTime = Number(this.currentTime || 0)
         this.centralSession.audio.speed = Number(this.speed || 1)
+
         if (this.segmentEndTime > 0 && Number(this.currentTime || 0) >= this.segmentEndTime - 0.04) {
           this.handleSegmentBoundary()
           return
         }
+
         if (this.wordByWordAudioEnabled) {
           const verse = this.activeVerseRef
           if (verse && verse.key) {
@@ -4156,6 +4267,12 @@ export default {
               this.syncWordHighlightFromAudio(verse)
             }
           }
+        }
+
+        // Waveform - separate from word highlighting (works even if word-by-word is off)
+        const verse = this.activeVerseRef
+        if (verse && verse.key !== this.currentWaveVerseKey) {
+          this.currentWaveVerseKey = verse.key;
         }
       }
 
@@ -5299,7 +5416,7 @@ export default {
       // Save to localStorage
       try {
         localStorage.setItem('telawa.defaultFontSize', JSON.stringify(this.defaultFontSize))
-      } catch (e) {}
+      } catch (e) { }
       // Update all verses
       this.$forceUpdate()
       // Show feedback
@@ -5945,6 +6062,222 @@ export default {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+.verse-small-play-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.verse-small-play-btn i {
+  font-size: 0.8rem;
+}
+
+.verse-small-play-btn:hover {
+  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--accent);
+}
+
+/* Add to your style section */
+.countdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.countdown-modal {
+  text-align: center;
+}
+
+.countdown-number {
+  font-size: 8rem;
+  font-weight: 800;
+  color: var(--accent);
+  animation: pulse 1s ease infinite;
+}
+
+.countdown-text {
+  font-size: 1.5rem;
+  color: white;
+  margin-top: 20px;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+@media (max-width: 640px) {
+  .countdown-number {
+    font-size: 5rem;
+  }
+
+  .countdown-text {
+    font-size: 1.2rem;
+  }
+}
+
+/* Add these styles if missing */
+.technique-peek-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-top: 8px;
+  border-radius: 10px;
+  background: rgba(154, 103, 56, 0.08);
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.technique-peek-hint i {
+  color: var(--accent);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.technique-peek-hint kbd {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--accent);
+  display: inline-block;
+}
+
+/* Add to style section */
+.countdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.countdown-modal {
+  text-align: center;
+  animation: scaleIn 0.4s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.countdown-number {
+  font-size: 8rem;
+  font-weight: 800;
+  color: var(--accent);
+  text-shadow: 0 0 30px rgba(154, 103, 56, 0.5);
+  animation: pulse 1s ease infinite;
+  font-family: monospace;
+}
+
+.countdown-text {
+  font-size: 1.5rem;
+  color: white;
+  margin-top: 20px;
+  font-weight: 500;
+  letter-spacing: 2px;
+}
+
+.countdown-hint {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 12px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@media (max-width: 640px) {
+  .countdown-number {
+    font-size: 5rem;
+  }
+
+  .countdown-text {
+    font-size: 1.2rem;
+  }
+}
+
+
+/* Mobile */
+@media (max-width: 768px) {
+  .wavemark-bars {
+    height: 30px;
+    gap: 1.5px;
+  }
+
+  .wavemark-playhead::before {
+    width: 8px;
+    height: 8px;
+    top: -5px;
+    left: -3px;
+  }
+}
+
+.waveform-canvas {
+  width: 100%;
+  height: 60px;
+  display: block;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 /* Settings notice */
@@ -7442,10 +7775,19 @@ export default {
   background: rgba(155, 89, 182, 0.10);
 }
 
-/* Font size fix */
 .verse-arabic {
   --verse-font-percent: 100;
-  font-size: calc(var(--verse-font-percent, 100) * 0.01 * 2rem);
+  --verse-font-size: clamp(2rem, calc(var(--verse-font-percent, 120) * 0.02rem), 3.8rem);
+  font-family: var(--font-ar);
+  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));
+  line-height: 2;
+  text-align: right;
+  direction: rtl;
+  unicode-bidi: isolate;
+  background: var(--bg-elevated);
+  padding: 20px;
+  border-radius: 16px;
+  margin: 12px 0;
 }
 
 /* Force re-render when font changes */
