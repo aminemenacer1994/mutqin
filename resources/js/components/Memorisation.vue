@@ -4,7 +4,7 @@
       <span>{{ banner.message }}</span>
       <div class="banner-actions">
         <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
-          }}</button>
+        }}</button>
         <button class="banner-x" @click="banner = null" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
@@ -2139,6 +2139,23 @@ export default {
   },
 
   methods: {
+    removeBasmala(arabicText) {
+      if (!arabicText) return ''
+      const basmala = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ'
+      // Also handle common variations
+      const basmalaVariants = [
+        'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
+        'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+        'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'
+      ]
+
+      for (const variant of basmalaVariants) {
+        if (arabicText.startsWith(variant)) {
+          return arabicText.slice(variant.length).trim()
+        }
+      }
+      return arabicText
+    },
     toggleAnchorMode() {
       this.anchorModeEnabled = !this.anchorModeEnabled
 
@@ -4897,9 +4914,16 @@ export default {
           .filter(ayah => ayah.numberInSurah >= start && ayah.numberInSurah <= end)
           .map(ayah => {
             const key = `${chapterId}:${ayah.numberInSurah}`
-            const arabic = arabicByNumber.get(ayah.numberInSurah) || ayah.text || ''
+            let arabic = arabicByNumber.get(ayah.numberInSurah) || ayah.text || ''
+            let tajweed = tajweedByNumber.get(ayah.numberInSurah) || ''
+
+            // Remove Basmala from Arabic text
+            arabic = this.removeBasmala(arabic)
+            tajweed = this.removeBasmala(tajweed)
+
             const transliteration = translitByNumber.get(ayah.numberInSurah) || ''
             const translation = translationByNumber.get(ayah.numberInSurah) || ''
+
             const arabicWords = tokenizeArabicText(arabic)
             const translitWords = String(transliteration).split(/\s+/).filter(Boolean)
             const translationWords = String(translation).split(/\s+/).filter(Boolean)
@@ -4909,7 +4933,7 @@ export default {
               number: ayah.numberInSurah,
               chapterId,
               arabic,
-              arabic_tajweed: tajweedByNumber.get(ayah.numberInSurah) || '',
+              arabic_tajweed: tajweed,
               translation: this.cleanTranslationText(translation),
               transliteration,
               audio: this.normalizeAudioUrl(ayah.audio || ayah.audioSecondary?.[0] || ''),
@@ -8099,7 +8123,8 @@ export default {
 /* Fix tools panel positioning - ensure it goes from very top */
 .tools {
   position: fixed;
-  top: 0;           /* Changed from auto/padding */
+  top: 0;
+  /* Changed from auto/padding */
   right: 0;
   bottom: 0;
   width: min(var(--tools-width), 92vw);
@@ -8132,7 +8157,8 @@ export default {
 }
 
 body.has-navbar .tools {
-  top: 0; /* Still 0, but adjust internal spacing */
+  top: 0;
+  /* Still 0, but adjust internal spacing */
 }
 
 body.has-navbar .tools-top {
@@ -11932,7 +11958,8 @@ html {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 100; /* Higher than tools? Lower? Tools should be 60, navbar 100 */
+  z-index: 100;
+  /* Higher than tools? Lower? Tools should be 60, navbar 100 */
   background: var(--surface-strong);
 }
 
