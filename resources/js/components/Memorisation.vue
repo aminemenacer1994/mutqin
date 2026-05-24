@@ -4,7 +4,7 @@
       <span>{{ banner.message }}</span>
       <div class="banner-actions">
         <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
-        }}</button>
+          }}</button>
         <button class="banner-x" @click="banner = null" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
@@ -240,12 +240,15 @@
                   </div>
                   <div class="verse-actions">
                     <!-- Small play button next to play pill -->
-                    <button class="verse-small-play-btn" @click.stop="playVerse(verse)" :title="hasSessionFeedback ? (activeVerseKey === verse.key && isPlaying ? 'Pause' : 'Play current ayah') : 'Preview this ayah (does not start a session)'">
-                      <i class="bi" :class="activeVerseKey === verse.key && isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                    <button class="verse-small-play-btn" @click.stop="playVerse(verse)"
+                      :title="hasSessionFeedback ? (activeVerseKey === verse.key && isPlaying ? 'Pause' : 'Play current ayah') : 'Preview this ayah (does not start a session)'">
+                      <i class="bi"
+                        :class="activeVerseKey === verse.key && isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
                     </button>
-                    
+
                     <!-- Download button for every verse -->
-                    <button class="verse-download-btn" @click.stop="downloadVerseAudio(verse)" :disabled="!verse.audio" title="Download audio for offline listening">
+                    <button class="verse-download-btn" @click.stop="downloadVerseAudio(verse)" :disabled="!verse.audio"
+                      title="Download audio for offline listening">
                       <i class="bi bi-download"></i>
                     </button>
 
@@ -409,23 +412,27 @@
             </section>
 
             <!-- Memorisation Techniques Section -->
+            <!-- Memorisation Techniques Section -->
             <section class="sheet-section tools-techniques-section">
               <button class="sheet-toggle" @click="toggleSection('memorisation_techniques')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-stars"></i></span>
                   <span class="st-txt">
                     <span class="st-title">Memorisation Techniques</span>
-                    <span class="st-sub">Optional focus, recall, and chaining aids</span>
+                    <span class="st-sub">Focus, recall, chaining, and anchor aids</span>
                   </span>
                 </span>
-                <span class="st-chev" :class="{ open: sectionOpen.memorisation_techniques }"><i
-                    class="bi bi-chevron-down"></i></span>
+                <span class="st-chev" :class="{ open: sectionOpen.memorisation_techniques }">
+                  <i class="bi bi-chevron-down"></i>
+                </span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.memorisation_techniques">
+
                 <div class="techniques-list">
+                  <!-- Focus Mode -->
                   <div class="technique-row">
                     <div class="technique-copy">
-                      <label>Focus Mode</label>
+                      <label>🎯 Focus Mode</label>
                       <small>Reduces distractions around the active ayah.</small>
                     </div>
                     <button class="toggle-chip technique-toggle" :class="{ active: focusModeEnabled }"
@@ -434,10 +441,11 @@
                     </button>
                   </div>
 
+                  <!-- Blur Mode -->
                   <div class="technique-row technique-row-stacked">
                     <div class="technique-row-main">
                       <div class="technique-copy">
-                        <label>Blur Mode</label>
+                        <label>🌫️ Blur Mode</label>
                         <small>Supports active recall through progressive concealment.</small>
                       </div>
                       <button class="toggle-chip technique-toggle" :class="{ active: blurModeEnabled }"
@@ -458,10 +466,11 @@
                     </div>
                   </div>
 
+                  <!-- Chaining -->
                   <div class="technique-row technique-row-stacked">
                     <div class="technique-row-main">
                       <div class="technique-copy">
-                        <label>Chaining</label>
+                        <label>🔗 Chaining</label>
                         <small>{{ chainingMethodDescription }}</small>
                       </div>
                       <button class="toggle-chip technique-toggle" :class="{ active: chainingEnabled }"
@@ -490,6 +499,38 @@
                       <span>{{ chainingMethodPreview }}</span>
                     </div>
                   </div>
+
+                  <!-- ANCHOR MODE (with description) -->
+                  <div class="technique-row technique-row-stacked">
+                    <div class="technique-row-main">
+                      <div class="technique-copy">
+                        <label>📍 Anchor Mode</label>
+                        <small>Creates mental hooks using key words or phrases as anchors.</small>
+                        <span class="technique-desc-hint">Remember 1-3 key words → recall the whole ayah</span>
+                      </div>
+                      <button class="toggle-chip technique-toggle" :class="{ active: anchorModeEnabled }"
+                        @click="toggleAnchorMode" type="button">
+                        {{ anchorModeEnabled ? 'On' : 'Off' }}
+                      </button>
+                    </div>
+                    <div v-if="anchorModeEnabled" class="technique-control">
+                      <span>Anchor points per ayah</span>
+                      <select v-model.number="anchorCount" @change="onAnchorCountChange" class="input technique-select">
+                        <option :value="1">1 anchor (center word) — Minimalist</option>
+                        <option :value="2">2 anchors (first + last) — Balanced</option>
+                        <!-- <option :value="3">3 anchors (strategic) — Full structure</option> -->
+                      </select>
+                    </div>
+                    <div class="technique-preview">
+                      <span><i class="bi bi-pin-angle"></i> {{ anchorModeDescription }}</span>
+                    </div>
+                    <div v-if="anchorModeEnabled" class="technique-example-hint">
+                      <i class="bi bi-lightbulb"></i>
+                      <span><strong>How it works:</strong> Highlighted words become memory anchors.
+                        Memorise the anchor words first, then the surrounding text attaches naturally.</span>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </section>
@@ -984,6 +1025,9 @@ export default {
   },
   data() {
     return {
+      anchorModeEnabled: false,
+      anchorCount: 2,
+      anchorHighlightObserver: null,
       showCountdownOverlay: false,
       countdownValue: 3,
       countdownInterval: null,
@@ -1244,6 +1288,11 @@ export default {
   },
 
   computed: {
+    anchorModeDescription() {
+      if (!this.anchorModeEnabled) return 'Anchor mode off · use key words as memory hooks'
+      const anchors = { 1: 'first/last word', 2: 'key word pairs', 3: 'complete structure' }
+      return `Using ${anchors[this.anchorCount]} as mental anchors for each ayah`
+    },
     activeVerseRef() {
       return this.verses.find(v => v.key === this.effectiveActiveVerseKey) || null
     },
@@ -1895,11 +1944,25 @@ export default {
   },
 
   async mounted() {
+    this.watchActiveVerse()
     this.$nextTick(() => {
       const navbar = document.querySelector('.navbar')
       if (navbar) {
         const navbarHeight = navbar.offsetHeight
         document.documentElement.style.setProperty('--navbar-height', `${navbarHeight}px`)
+      }
+    })
+    // Re-apply highlights when word-by-word toggles
+    this.$watch('showWordByWord', () => {
+      if (this.anchorModeEnabled) {
+        setTimeout(() => this.applyAnchorHighlights(), 100)
+      }
+    })
+
+    // Re-apply when tajweed toggles
+    this.$watch('tajweedEnabled', () => {
+      if (this.anchorModeEnabled) {
+        setTimeout(() => this.applyAnchorHighlights(), 100)
       }
     })
     this.unwatchMutqinState = watchMutqinState(this.mutqinState)
@@ -1962,6 +2025,9 @@ export default {
   },
 
   beforeUnmount() {
+    if (this.anchorHighlightObserver) {
+      this.anchorHighlightObserver.disconnect()
+    }
     window.removeEventListener('online', this.handleOnline)
     window.removeEventListener('offline', this.handleOffline)
     window.removeEventListener('beforeunload', this.persistAllState)
@@ -2073,7 +2139,184 @@ export default {
   },
 
   methods: {
-    // Add these methods to your methods section (replace if existing):
+    toggleAnchorMode() {
+      this.anchorModeEnabled = !this.anchorModeEnabled
+
+      if (this.anchorModeEnabled) {
+        this.applyAnchorHighlights()
+        this.showBanner('Anchor Mode: Key words will be highlighted as memory hooks', 'info', 3000)
+        // Watch for verse changes
+        this.setupAnchorObserver()
+      } else {
+        this.clearAnchorHighlights()
+        if (this.anchorHighlightObserver) {
+          this.anchorHighlightObserver.disconnect()
+          this.anchorHighlightObserver = null
+        }
+        this.showBanner('Anchor Mode disabled', 'info', 1500)
+      }
+
+      this.persistUiState()
+    },
+
+    // Handle anchor count change dynamically
+    onAnchorCountChange() {
+      if (this.anchorModeEnabled) {
+        this.applyAnchorHighlights()
+        const anchorText = { 1: '1 anchor (center)', 2: '2 anchors (start+end)', 3: '3 anchors (strategic)' }
+        this.showBanner(`Anchor Mode: Using ${anchorText[this.anchorCount]}`, 'info', 2000)
+      }
+    },
+
+    // Main function to apply anchor highlights to all verses
+    applyAnchorHighlights() {
+      if (!this.anchorModeEnabled) return
+
+      this.$nextTick(() => {
+        const verseCards = document.querySelectorAll('.verse-card')
+        verseCards.forEach(card => {
+          this.highlightAnchorsForCard(card)
+        })
+      })
+    },
+
+    highlightAnchorsForCard(card) {
+      if (!this.anchorModeEnabled) return
+
+      // Get all word elements (supports both word-by-word modes)
+      const arabicDiv = card.querySelector('.verse-arabic')
+      if (!arabicDiv) return
+
+      // Get words - handles both tajweed and non-tajweed modes
+      let words = arabicDiv.querySelectorAll('.wbw-word, word')
+
+      // If no word elements, try to get from word-by-word section
+      if (!words.length) {
+        const wordItems = card.querySelectorAll('.word-item')
+        if (wordItems.length) {
+          words = wordItems
+        }
+      }
+
+      if (!words.length) return
+
+      // Calculate which indices to highlight
+      const totalWords = words.length
+      const anchorIndices = this.getAnchorIndices(totalWords)
+
+      // Remove existing highlights
+      words.forEach(word => {
+        word.classList.remove('anchor-highlight')
+        word.classList.remove('anchor-pulse')
+      })
+
+      // Apply new highlights with animation
+      anchorIndices.forEach((index, i) => {
+        if (words[index]) {
+          words[index].classList.add('anchor-highlight')
+          // Add sequential animation delay
+          setTimeout(() => {
+            if (words[index]) words[index].classList.add('anchor-pulse')
+          }, i * 100)
+        }
+      })
+    },
+
+    getAnchorIndices(totalWords) {
+      if (totalWords === 0) return []
+      if (totalWords === 1) return [0]
+      if (totalWords === 2) return [0, 1]
+
+      if (this.anchorCount === 1) {
+        // Center word
+        return [Math.floor(totalWords / 2)]
+      }
+      else if (this.anchorCount === 2) {
+        // First and last
+        return [0, totalWords - 1]
+      }
+      else {
+        // 3 anchors: strategic positions (20%, 50%, 80%)
+        const positions = [
+          Math.floor(totalWords * 0.2),    // ~20% in
+          Math.floor(totalWords * 0.5),    // Middle
+          Math.floor(totalWords * 0.8)     // ~80% in
+        ]
+        // Remove duplicates and sort
+        return [...new Set(positions)].sort((a, b) => a - b)
+      }
+    },
+
+    // Clear all anchor highlights
+    clearAnchorHighlights() {
+      const allWords = document.querySelectorAll('.wbw-word, word, .word-item')
+      allWords.forEach(word => {
+        word.classList.remove('anchor-highlight')
+        word.classList.remove('anchor-pulse')
+      })
+    },
+
+    // Watch for DOM changes (verse navigation, new verses loading)
+    setupAnchorObserver() {
+      if (this.anchorHighlightObserver) {
+        this.anchorHighlightObserver.disconnect()
+      }
+
+      this.anchorHighlightObserver = new MutationObserver((mutations) => {
+        let shouldReapply = false
+        mutations.forEach(mutation => {
+          if (mutation.type === 'childList' && mutation.addedNodes.length) {
+            shouldReapply = true
+          }
+          if (mutation.type === 'attributes' &&
+            mutation.attributeName === 'class' &&
+            mutation.target.classList?.contains('verse-card')) {
+            shouldReapply = true
+          }
+        })
+
+        if (shouldReapply) {
+          setTimeout(() => this.applyAnchorHighlights(), 100)
+        }
+      })
+
+      // Watch the workspace for changes
+      const workspace = document.querySelector('.workspace')
+      if (workspace) {
+        this.anchorHighlightObserver.observe(workspace, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['class']
+        })
+      }
+    },
+
+    // Watch for active verse changes to highlight anchors in new content
+    watchActiveVerse() {
+      if (!this.anchorModeEnabled) return
+
+      // Re-apply highlights when active verse changes
+      this.$watch('effectiveActiveVerseKey', () => {
+        this.applyAnchorHighlights()
+      })
+
+      // Also watch for verse data loading
+      this.$watch('isDataReady', (newVal) => {
+        if (newVal && this.anchorModeEnabled) {
+          setTimeout(() => this.applyAnchorHighlights(), 200)
+        }
+      })
+    },
+
+    // Update the getDisplayArabic method to preserve anchor classes
+    // Add this to your existing getDisplayArabic method or override
+    preserveAnchorClasses() {
+      // This ensures highlights persist when verses re-render
+      if (this.anchorModeEnabled) {
+        setTimeout(() => this.applyAnchorHighlights(), 50)
+      }
+    },
     showCountdown(callback) {
       this.showCountdownOverlay = true
       this.countdownValue = 3
@@ -5499,42 +5742,57 @@ export default {
         const raw = localStorage.getItem('telawa.uiState')
         if (raw) {
           const state = JSON.parse(raw)
-          this.theme = state.theme || this.theme
-          this.tab = ['tools', 'settings'].includes(state.tab) ? state.tab : 'tools'
-          this.currentMode = state.currentMode || 'beginner'
-          this.flowStep = ['learn', 'practice', 'recall'].includes(state.flowStep)
-            ? state.flowStep
-            : (state.flowStep === 'read' ? 'learn' : state.flowStep === 'listen' ? 'practice' : 'learn')
-          this.flowListenPlays = Math.max(0, Number(state.flowListenPlays || 0))
-          this.showTranslation = state.showTranslation ?? this.showTranslation
-          this.showTransliteration = state.showTransliteration ?? this.showTransliteration
-          this.showWordByWord = state.showWordByWord ?? this.showWordByWord
-          this.wordByWordAudioEnabled = state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
-          this.chainingEnabled = state.chainingEnabled ?? this.chainingEnabled
-          this.chainingMethod = ['linking', 'cumulative'].includes(state.chainingMethod)
-            ? state.chainingMethod
-            : this.chainingMethod
-          this.chainingRepetitions = Math.max(1, Math.min(5, Number(state.chainingRepetitions || this.chainingRepetitions || 1)))
-          this.defaultFontSize = Number(state.defaultFontSize ?? this.defaultFontSize ?? 100)
-          this.settingsDraft = {
-            tajweedEnabled: state.tajweedEnabled ?? this.tajweedEnabled ?? false,
-            showTranslation: state.showTranslation ?? this.showTranslation,
-            showTransliteration: state.showTransliteration ?? this.showTransliteration,
-            showWordByWord: state.showWordByWord ?? this.showWordByWord,
-            wordByWordAudioEnabled: state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled,
-            defaultFontSize: Number(state.defaultFontSize ?? this.defaultFontSize ?? 100)
+
+          // Only apply if state exists
+          if (state) {
+            this.theme = state.theme || this.theme
+            this.tab = ['tools', 'settings'].includes(state.tab) ? state.tab : 'tools'
+            this.currentMode = state.currentMode || 'beginner'
+            this.flowStep = ['learn', 'practice', 'recall'].includes(state.flowStep)
+              ? state.flowStep
+              : (state.flowStep === 'read' ? 'learn' : state.flowStep === 'listen' ? 'practice' : 'learn')
+            this.flowListenPlays = Math.max(0, Number(state.flowListenPlays || 0))
+            this.showTranslation = state.showTranslation ?? this.showTranslation
+            this.showTransliteration = state.showTransliteration ?? this.showTransliteration
+            this.showWordByWord = state.showWordByWord ?? this.showWordByWord
+            this.wordByWordAudioEnabled = state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
+            this.chainingEnabled = state.chainingEnabled ?? this.chainingEnabled
+            this.chainingMethod = ['linking', 'cumulative'].includes(state.chainingMethod)
+              ? state.chainingMethod
+              : this.chainingMethod
+            this.chainingRepetitions = Math.max(1, Math.min(5, Number(state.chainingRepetitions || this.chainingRepetitions || 1)))
+            this.defaultFontSize = Number(state.defaultFontSize ?? this.defaultFontSize ?? 100)
+
+            // Anchor Mode settings
+            this.anchorModeEnabled = state.anchorModeEnabled ?? false
+            this.anchorCount = state.anchorCount ?? 2
+
+            this.settingsDraft = {
+              tajweedEnabled: state.tajweedEnabled ?? this.tajweedEnabled ?? false,
+              showTranslation: state.showTranslation ?? this.showTranslation,
+              showTransliteration: state.showTransliteration ?? this.showTransliteration,
+              showWordByWord: state.showWordByWord ?? this.showWordByWord,
+              wordByWordAudioEnabled: state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled,
+              defaultFontSize: Number(state.defaultFontSize ?? this.defaultFontSize ?? 100)
+            }
+            this.fontScale = state.fontScale ?? this.fontScale
+            this.uiScale = Number(state.uiScale ?? this.uiScale)
+            this.enScale = Number(state.enScale ?? this.enScale)
+            this.quranFont = state.quranFont || this.quranFont
+            this.script = state.script || this.script
+            this.sectionOpen = { ...this.sectionOpen, ...(state.sectionOpen || {}) }
+            this.tajweedEnabled = state.tajweedEnabled ?? false
+            this.mainCardCollapsed = !!state.mainCardCollapsed
+            this.feedbackCollapsed = !!state.feedbackCollapsed
           }
-          this.fontScale = state.fontScale ?? this.fontScale
-          this.uiScale = Number(state.uiScale ?? this.uiScale)
-          this.enScale = Number(state.enScale ?? this.enScale)
-          this.quranFont = state.quranFont || this.quranFont
-          this.script = state.script || this.script
-          this.sectionOpen = { ...this.sectionOpen, ...(state.sectionOpen || {}) }
-          this.tajweedEnabled = state.tajweedEnabled ?? false
-          this.mainCardCollapsed = !!state.mainCardCollapsed
-          this.feedbackCollapsed = !!state.feedbackCollapsed
         }
-      } catch (e) { console.error(e) }
+      } catch (e) {
+        console.error('Error loading UI state:', e)
+        // Set defaults if loading fails
+        this.anchorModeEnabled = false
+        this.anchorCount = 2
+      }
+
       this.showTools = false
       this.beginner = this.loadModeState('beginner')
       this.advanced = this.loadModeState('advanced')
@@ -5542,9 +5800,12 @@ export default {
     },
 
     persistUiState() {
+
       if (this.isBootstrapping) return
       try {
         localStorage.setItem('telawa.uiState', JSON.stringify({
+          anchorModeEnabled: this.anchorModeEnabled,
+          anchorCount: this.anchorCount,
           theme: this.theme,
           showTools: this.showTools,
           tab: this.tab,
@@ -5567,7 +5828,8 @@ export default {
           sectionOpen: this.sectionOpen,
           tajweedEnabled: this.tajweedEnabled,
           mainCardCollapsed: this.mainCardCollapsed,
-          feedbackCollapsed: this.feedbackCollapsed
+          feedbackCollapsed: this.feedbackCollapsed,
+
         }))
       } catch (e) {
         console.error('Failed to persist UI state:', e)
@@ -6064,6 +6326,126 @@ export default {
   box-sizing: border-box;
 }
 
+.technique-desc-hint {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--accent);
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.technique-example-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-top: 8px;
+  background: rgba(154, 103, 56, 0.08);
+  border-radius: 10px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  border: 1px solid rgba(154, 103, 56, 0.12);
+}
+
+.technique-example-hint i {
+  color: var(--accent);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.technique-example-hint strong {
+  color: var(--accent);
+}
+
+/* Anchor Mode Styles - Enhanced */
+.verse-arabic .wbw-word.anchor-highlight,
+.verse-arabic word.anchor-highlight,
+.word-item.anchor-highlight {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.3), rgba(255, 152, 0, 0.4));
+  border-bottom: 3px solid #ff9800;
+  border-radius: 8px;
+  transform: scale(1.02);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.2);
+}
+
+/* Animation for newly highlighted anchors */
+.anchor-pulse {
+  animation: anchorPulse 0.6s ease-out;
+}
+
+@keyframes anchorPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7);
+  }
+
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 8px rgba(255, 152, 0, 0);
+  }
+
+  100% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0);
+  }
+}
+
+.verse-arabic .wbw-word.anchor-highlight:hover,
+.verse-arabic word.anchor-highlight:hover,
+.word-item.anchor-highlight:hover {
+  background: rgba(255, 152, 0, 0.6);
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+}
+
+/* Tooltip for anchors */
+.anchor-highlight::after {
+  content: "🔗 Memory Anchor";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.anchor-highlight:hover::after {
+  opacity: 1;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .anchor-highlight {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 152, 0, 0.3));
+  border-bottom-color: #ffb74d;
+}
+
+[data-theme="dark"] .anchor-highlight:hover {
+  background: rgba(255, 152, 0, 0.4);
+}
+
+.main.blur-mode-active .verse-card.blur-upcoming .anchor-highlight {
+  filter: blur(calc(var(--recall-blur, 10px) - 4px));
+}
+
+.technique-select {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 0.8rem;
+}
+
 .verse-small-play-btn {
   width: 32px;
   height: 32px;
@@ -6122,8 +6504,15 @@ export default {
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
 }
 
 @media (max-width: 640px) {
@@ -7707,9 +8096,47 @@ export default {
   overflow: hidden;
 }
 
+/* Fix tools panel positioning - ensure it goes from very top */
 .tools {
+  position: fixed;
+  top: 0;           /* Changed from auto/padding */
+  right: 0;
+  bottom: 0;
+  width: min(var(--tools-width), 92vw);
+  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));
+  border-left: 1px solid var(--border);
+  backdrop-filter: blur(14px);
   transform: translateX(100%);
-  transition: transform 0.3s ease;
+  transition: transform 0.25s ease;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  box-shadow: var(--shadow-lg);
+  isolation: isolate;
+}
+
+/* Adjust tools-top padding to account for no navbar offset */
+.tools-top {
+  padding: 18px 18px 12px;
+  border-bottom: 1px solid var(--border);
+  padding-top: calc(18px + env(safe-area-inset-top, 0px));
+}
+
+/* Ensure tools body scrolls correctly */
+.tools-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 20px calc(var(--tools-footer-h) + 26px);
+}
+
+body.has-navbar .tools {
+  top: 0; /* Still 0, but adjust internal spacing */
+}
+
+body.has-navbar .tools-top {
+  padding-top: calc(18px + var(--navbar-height, 0px));
 }
 
 .tools.open {
@@ -11505,7 +11932,7 @@ html {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 100;
+  z-index: 100; /* Higher than tools? Lower? Tools should be 60, navbar 100 */
   background: var(--surface-strong);
 }
 

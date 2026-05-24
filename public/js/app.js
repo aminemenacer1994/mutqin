@@ -23675,15 +23675,15 @@ function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" !=
 function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 function _objectWithoutProperties(e, t) { if (null == e) return {}; var o, r, i = _objectWithoutPropertiesLoose(e, t); if (Object.getOwnPropertySymbols) { var n = Object.getOwnPropertySymbols(e); for (r = 0; r < n.length; r++) o = n[r], -1 === t.indexOf(o) && {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]); } return i; }
 function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t = {}; for (var n in r) if ({}.hasOwnProperty.call(r, n)) { if (-1 !== e.indexOf(n)) continue; t[n] = r[n]; } return t; }
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
 function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
 function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
-function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
-function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
 function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
 function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
@@ -23807,6 +23807,9 @@ function createAdvancedState() {
   data: function data() {
     var _ref;
     return _ref = {
+      anchorModeEnabled: false,
+      anchorCount: 2,
+      anchorHighlightObserver: null,
       showCountdownOverlay: false,
       countdownValue: 3,
       countdownInterval: null,
@@ -24005,6 +24008,15 @@ function createAdvancedState() {
     }), "audioTimeUpdate", null), "audioEnded", null), "audioError", null), "lastAudioDebug", null), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_ref, "alquranAudioEditions", []), "alquranEdition", ''), "currentVerseIndex", 0), "isAudioLoading", false), "sessionCompleted", false), "hybridPendingKey", null), "quizSkill", 'recite_text'), "quizSessionStats", null), "quizLastResult", null), "quizSummaryActive", false), _defineProperty(_defineProperty(_defineProperty(_ref, "verseRequestId", 0), "verseDataCache", {}), "verseScrollMemory", {});
   },
   computed: (_computed = {
+    anchorModeDescription: function anchorModeDescription() {
+      if (!this.anchorModeEnabled) return 'Anchor mode off · use key words as memory hooks';
+      var anchors = {
+        1: 'first/last word',
+        2: 'key word pairs',
+        3: 'complete structure'
+      };
+      return "Using ".concat(anchors[this.anchorCount], " as mental anchors for each ayah");
+    },
     activeVerseRef: function activeVerseRef() {
       var _this = this;
       return this.verses.find(function (v) {
@@ -24583,11 +24595,29 @@ function createAdvancedState() {
       return _regenerator().w(function (_context) {
         while (1) switch (_context.n) {
           case 0:
+            _this7.watchActiveVerse();
             _this7.$nextTick(function () {
               var navbar = document.querySelector('.navbar');
               if (navbar) {
                 var navbarHeight = navbar.offsetHeight;
                 document.documentElement.style.setProperty('--navbar-height', "".concat(navbarHeight, "px"));
+              }
+            });
+            // Re-apply highlights when word-by-word toggles
+            _this7.$watch('showWordByWord', function () {
+              if (_this7.anchorModeEnabled) {
+                setTimeout(function () {
+                  return _this7.applyAnchorHighlights();
+                }, 100);
+              }
+            });
+
+            // Re-apply when tajweed toggles
+            _this7.$watch('tajweedEnabled', function () {
+              if (_this7.anchorModeEnabled) {
+                setTimeout(function () {
+                  return _this7.applyAnchorHighlights();
+                }, 100);
               }
             });
             _this7.unwatchMutqinState = (0,_composables_useMutqinPersistence__WEBPACK_IMPORTED_MODULE_2__.watchMutqinState)(_this7.mutqinState);
@@ -24669,6 +24699,9 @@ function createAdvancedState() {
     }))();
   },
   beforeUnmount: function beforeUnmount() {
+    if (this.anchorHighlightObserver) {
+      this.anchorHighlightObserver.disconnect();
+    }
     window.removeEventListener('online', this.handleOnline);
     window.removeEventListener('offline', this.handleOffline);
     window.removeEventListener('beforeunload', this.persistAllState);
@@ -24759,20 +24792,196 @@ function createAdvancedState() {
     if (this.showWordByWord) this.restoreWordScroll(newVal);
   }), "focusModeEnabled", 'persistControlState'), "blurModeEnabled", 'persistControlState'), "blurIntensity", 'persistControlState'), "defaultFontSize", 'persistUiState')),
   methods: (_methods = {
-    // Add these methods to your methods section (replace if existing):
-    showCountdown: function showCountdown(callback) {
+    toggleAnchorMode: function toggleAnchorMode() {
+      this.anchorModeEnabled = !this.anchorModeEnabled;
+      if (this.anchorModeEnabled) {
+        this.applyAnchorHighlights();
+        this.showBanner('Anchor Mode: Key words will be highlighted as memory hooks', 'info', 3000);
+        // Watch for verse changes
+        this.setupAnchorObserver();
+      } else {
+        this.clearAnchorHighlights();
+        if (this.anchorHighlightObserver) {
+          this.anchorHighlightObserver.disconnect();
+          this.anchorHighlightObserver = null;
+        }
+        this.showBanner('Anchor Mode disabled', 'info', 1500);
+      }
+      this.persistUiState();
+    },
+    // Handle anchor count change dynamically
+    onAnchorCountChange: function onAnchorCountChange() {
+      if (this.anchorModeEnabled) {
+        this.applyAnchorHighlights();
+        var anchorText = {
+          1: '1 anchor (center)',
+          2: '2 anchors (start+end)',
+          3: '3 anchors (strategic)'
+        };
+        this.showBanner("Anchor Mode: Using ".concat(anchorText[this.anchorCount]), 'info', 2000);
+      }
+    },
+    // Main function to apply anchor highlights to all verses
+    applyAnchorHighlights: function applyAnchorHighlights() {
       var _this8 = this;
+      if (!this.anchorModeEnabled) return;
+      this.$nextTick(function () {
+        var verseCards = document.querySelectorAll('.verse-card');
+        verseCards.forEach(function (card) {
+          _this8.highlightAnchorsForCard(card);
+        });
+      });
+    },
+    highlightAnchorsForCard: function highlightAnchorsForCard(card) {
+      if (!this.anchorModeEnabled) return;
+
+      // Get all word elements (supports both word-by-word modes)
+      var arabicDiv = card.querySelector('.verse-arabic');
+      if (!arabicDiv) return;
+
+      // Get words - handles both tajweed and non-tajweed modes
+      var words = arabicDiv.querySelectorAll('.wbw-word, word');
+
+      // If no word elements, try to get from word-by-word section
+      if (!words.length) {
+        var wordItems = card.querySelectorAll('.word-item');
+        if (wordItems.length) {
+          words = wordItems;
+        }
+      }
+      if (!words.length) return;
+
+      // Calculate which indices to highlight
+      var totalWords = words.length;
+      var anchorIndices = this.getAnchorIndices(totalWords);
+
+      // Remove existing highlights
+      words.forEach(function (word) {
+        word.classList.remove('anchor-highlight');
+        word.classList.remove('anchor-pulse');
+      });
+
+      // Apply new highlights with animation
+      anchorIndices.forEach(function (index, i) {
+        if (words[index]) {
+          words[index].classList.add('anchor-highlight');
+          // Add sequential animation delay
+          setTimeout(function () {
+            if (words[index]) words[index].classList.add('anchor-pulse');
+          }, i * 100);
+        }
+      });
+    },
+    getAnchorIndices: function getAnchorIndices(totalWords) {
+      if (totalWords === 0) return [];
+      if (totalWords === 1) return [0];
+      if (totalWords === 2) return [0, 1];
+      if (this.anchorCount === 1) {
+        // Center word
+        return [Math.floor(totalWords / 2)];
+      } else if (this.anchorCount === 2) {
+        // First and last
+        return [0, totalWords - 1];
+      } else {
+        // 3 anchors: strategic positions (20%, 50%, 80%)
+        var positions = [Math.floor(totalWords * 0.2),
+        // ~20% in
+        Math.floor(totalWords * 0.5),
+        // Middle
+        Math.floor(totalWords * 0.8) // ~80% in
+        ];
+        // Remove duplicates and sort
+        return _toConsumableArray(new Set(positions)).sort(function (a, b) {
+          return a - b;
+        });
+      }
+    },
+    // Clear all anchor highlights
+    clearAnchorHighlights: function clearAnchorHighlights() {
+      var allWords = document.querySelectorAll('.wbw-word, word, .word-item');
+      allWords.forEach(function (word) {
+        word.classList.remove('anchor-highlight');
+        word.classList.remove('anchor-pulse');
+      });
+    },
+    // Watch for DOM changes (verse navigation, new verses loading)
+    setupAnchorObserver: function setupAnchorObserver() {
+      var _this9 = this;
+      if (this.anchorHighlightObserver) {
+        this.anchorHighlightObserver.disconnect();
+      }
+      this.anchorHighlightObserver = new MutationObserver(function (mutations) {
+        var shouldReapply = false;
+        mutations.forEach(function (mutation) {
+          var _mutation$target$clas;
+          if (mutation.type === 'childList' && mutation.addedNodes.length) {
+            shouldReapply = true;
+          }
+          if (mutation.type === 'attributes' && mutation.attributeName === 'class' && (_mutation$target$clas = mutation.target.classList) !== null && _mutation$target$clas !== void 0 && _mutation$target$clas.contains('verse-card')) {
+            shouldReapply = true;
+          }
+        });
+        if (shouldReapply) {
+          setTimeout(function () {
+            return _this9.applyAnchorHighlights();
+          }, 100);
+        }
+      });
+
+      // Watch the workspace for changes
+      var workspace = document.querySelector('.workspace');
+      if (workspace) {
+        this.anchorHighlightObserver.observe(workspace, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['class']
+        });
+      }
+    },
+    // Watch for active verse changes to highlight anchors in new content
+    watchActiveVerse: function watchActiveVerse() {
+      var _this0 = this;
+      if (!this.anchorModeEnabled) return;
+
+      // Re-apply highlights when active verse changes
+      this.$watch('effectiveActiveVerseKey', function () {
+        _this0.applyAnchorHighlights();
+      });
+
+      // Also watch for verse data loading
+      this.$watch('isDataReady', function (newVal) {
+        if (newVal && _this0.anchorModeEnabled) {
+          setTimeout(function () {
+            return _this0.applyAnchorHighlights();
+          }, 200);
+        }
+      });
+    },
+    // Update the getDisplayArabic method to preserve anchor classes
+    // Add this to your existing getDisplayArabic method or override
+    preserveAnchorClasses: function preserveAnchorClasses() {
+      var _this1 = this;
+      // This ensures highlights persist when verses re-render
+      if (this.anchorModeEnabled) {
+        setTimeout(function () {
+          return _this1.applyAnchorHighlights();
+        }, 50);
+      }
+    },
+    showCountdown: function showCountdown(callback) {
+      var _this10 = this;
       this.showCountdownOverlay = true;
       this.countdownValue = 3;
       if (this.countdownInterval) {
         clearInterval(this.countdownInterval);
       }
       this.countdownInterval = setInterval(function () {
-        _this8.countdownValue--;
-        if (_this8.countdownValue < 0) {
-          clearInterval(_this8.countdownInterval);
-          _this8.countdownInterval = null;
-          _this8.showCountdownOverlay = false;
+        _this10.countdownValue--;
+        if (_this10.countdownValue < 0) {
+          clearInterval(_this10.countdownInterval);
+          _this10.countdownInterval = null;
+          _this10.showCountdownOverlay = false;
           if (callback) callback();
         }
       }, 1000);
@@ -24802,7 +25011,7 @@ function createAdvancedState() {
       this.startSessionWithCountdown();
     }
   }, _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "showCountdown", function showCountdown(callback) {
-    var _this9 = this;
+    var _this11 = this;
     console.log('Countdown started'); // Debug log
     this.showCountdownOverlay = true;
     this.countdownValue = 3;
@@ -24810,12 +25019,12 @@ function createAdvancedState() {
       clearInterval(this.countdownInterval);
     }
     this.countdownInterval = setInterval(function () {
-      console.log('Countdown:', _this9.countdownValue); // Debug log
-      _this9.countdownValue--;
-      if (_this9.countdownValue < 0) {
-        clearInterval(_this9.countdownInterval);
-        _this9.countdownInterval = null;
-        _this9.showCountdownOverlay = false;
+      console.log('Countdown:', _this11.countdownValue); // Debug log
+      _this11.countdownValue--;
+      if (_this11.countdownValue < 0) {
+        clearInterval(_this11.countdownInterval);
+        _this11.countdownInterval = null;
+        _this11.showCountdownOverlay = false;
         console.log('Countdown finished, starting session'); // Debug log
         if (callback && typeof callback === 'function') {
           callback();
@@ -24823,7 +25032,7 @@ function createAdvancedState() {
       }
     }, 1000);
   }), "startSessionWithCountdown", function startSessionWithCountdown() {
-    var _this0 = this;
+    var _this12 = this;
     console.log('startSessionWithCountdown called'); // Debug log
     if (!this.canStartSession) {
       this.showTools = true;
@@ -24831,17 +25040,17 @@ function createAdvancedState() {
       return;
     }
     this.showCountdown(function () {
-      _this0.startSession();
+      _this12.startSession();
     });
   }), "startSessionWithCountdown", function startSessionWithCountdown() {
-    var _this1 = this;
+    var _this13 = this;
     if (!this.canStartSession) {
       this.showTools = true;
       this.showBanner('Choose a valid surah and ayah range before starting.', 'info', 3600);
       return;
     }
     this.showCountdown(function () {
-      _this1.startSession();
+      _this13.startSession();
     });
   }), "saveCurrentSessionWithName", function saveCurrentSessionWithName() {
     var _this$currentChapter4;
@@ -24976,7 +25185,7 @@ function createAdvancedState() {
     this.persistSavedSessions();
     this.showBanner('Session saved', 'success', 1500);
   }), "loadSavedSession", function loadSavedSession(sessionId) {
-    var _this10 = this;
+    var _this14 = this;
     var session = this.savedSessions.find(function (s) {
       return s.id === sessionId;
     });
@@ -25006,7 +25215,7 @@ function createAdvancedState() {
 
     // Auto-start session
     this.$nextTick(function () {
-      _this10.startSession();
+      _this14.startSession();
     });
   }), "deleteSavedSession", function deleteSavedSession(sessionId) {
     if (confirm('Delete this saved session? This action cannot be undone.')) {
@@ -25065,22 +25274,22 @@ function createAdvancedState() {
     if (action === 'discard-continue') this.clearContinueSession();
     if (action === 'delete-saved-session' && (_this$confirmModal$da = this.confirmModal.data) !== null && _this$confirmModal$da !== void 0 && _this$confirmModal$da.sessionId) this.performDeleteSavedSession(this.confirmModal.data.sessionId);
   }), "downloadVerseAudio", function downloadVerseAudio(verse) {
-    var _this11 = this;
+    var _this15 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
       var audioUrl, filename, downloadUrl, anchor;
       return _regenerator().w(function (_context2) {
         while (1) switch (_context2.n) {
           case 0:
-            audioUrl = _this11.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
+            audioUrl = _this15.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
             if (audioUrl) {
               _context2.n = 1;
               break;
             }
-            _this11.showBanner('Audio not available for this ayah', 'info', 2200);
+            _this15.showBanner('Audio not available for this ayah', 'info', 2200);
             return _context2.a(2);
           case 1:
             try {
-              filename = "surah-".concat(_this11.chapterId, "-ayah-").concat(verse.number, ".mp3");
+              filename = "surah-".concat(_this15.chapterId, "-ayah-").concat(verse.number, ".mp3");
               downloadUrl = "/memorisation/audio-download?url=".concat(encodeURIComponent(audioUrl), "&filename=").concat(encodeURIComponent(filename));
               anchor = document.createElement('a');
               anchor.href = downloadUrl;
@@ -25088,10 +25297,10 @@ function createAdvancedState() {
               document.body.appendChild(anchor);
               anchor.click();
               anchor.remove();
-              _this11.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
+              _this15.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
             } catch (error) {
               console.error('Verse download failed:', error);
-              _this11.showBanner('Failed to download ayah audio', 'error', 2600);
+              _this15.showBanner('Failed to download ayah audio', 'error', 2600);
             }
           case 2:
             return _context2.a(2);
@@ -25134,7 +25343,7 @@ function createAdvancedState() {
     if (!verseKey) return null;
     return this.setActiveVerse(verseKey, options);
   }), "openToolsPanel", function openToolsPanel() {
-    var _this12 = this;
+    var _this16 = this;
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
     var _options$verseKey = options.verseKey,
       verseKey = _options$verseKey === void 0 ? null : _options$verseKey,
@@ -25155,7 +25364,7 @@ function createAdvancedState() {
     this.showTools = true; // Ensure this is true
     this.persistUiState();
     this.$nextTick(function () {
-      if (_this12.$refs.toolsPanel) _this12.$refs.toolsPanel.focus({
+      if (_this16.$refs.toolsPanel) _this16.$refs.toolsPanel.focus({
         preventScroll: true
       });
     });
@@ -25305,14 +25514,14 @@ function createAdvancedState() {
       localStorage.setItem("telawa.verseCache.".concat(key), JSON.stringify(wrapped));
     } catch (e) {}
   }), "scheduleLoadVerses", function scheduleLoadVerses() {
-    var _this13 = this;
+    var _this17 = this;
     var mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.currentMode;
     if (this.loadVersesTimer) clearTimeout(this.loadVersesTimer);
     this.loadVersesTimer = setTimeout(function () {
-      _this13.loadVerses(mode);
+      _this17.loadVerses(mode);
     }, 200);
   }), "syncWorkspaceFromControls", function syncWorkspaceFromControls() {
-    var _this14 = this;
+    var _this18 = this;
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
     if (this.isBootstrapping) return;
     var mode = options.mode || this.currentMode;
@@ -25337,32 +25546,32 @@ function createAdvancedState() {
       return;
     }
     this.workspaceSyncTimer = setTimeout(function () {
-      _this14.loadVerses(mode);
+      _this18.loadVerses(mode);
     }, 160);
   }), "applyWorkspaceControls", function applyWorkspaceControls() {
     var _arguments = arguments,
-      _this15 = this;
+      _this19 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
       var options, mode;
       return _regenerator().w(function (_context3) {
         while (1) switch (_context3.n) {
           case 0:
             options = _arguments.length > 0 && _arguments[0] !== undefined ? _arguments[0] : {};
-            if (!_this15.isBootstrapping) {
+            if (!_this19.isBootstrapping) {
               _context3.n = 1;
               break;
             }
             return _context3.a(2);
           case 1:
-            mode = options.mode || _this15.currentMode;
-            if (_this15.workspaceSyncTimer) clearTimeout(_this15.workspaceSyncTimer);
-            _this15.persistUiState();
-            _this15.syncWorkspaceFromControls(_objectSpread(_objectSpread({}, options), {}, {
+            mode = options.mode || _this19.currentMode;
+            if (_this19.workspaceSyncTimer) clearTimeout(_this19.workspaceSyncTimer);
+            _this19.persistUiState();
+            _this19.syncWorkspaceFromControls(_objectSpread(_objectSpread({}, options), {}, {
               mode: mode,
               immediate: true
             }));
             _context3.n = 2;
-            return _this15.$nextTick();
+            return _this19.$nextTick();
           case 2:
             return _context3.a(2);
         }
@@ -25722,42 +25931,42 @@ function createAdvancedState() {
       console.error(e);
     }
   }), "continueLastSession", function continueLastSession() {
-    var _this16 = this;
+    var _this20 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4() {
-      var _payload$config3, _this16$mutqinState$s, _store$queue4, _store$queue5, _payload$config4;
+      var _payload$config3, _this20$mutqinState$s, _store$queue4, _store$queue5, _payload$config4;
       var payload, target, store, canonicalIndex, canonicalItem, targetKey, restoredQueueIndex, _store$queue, _store$queue2, currentQueueKey, _store$queue3, exactIndex, restoredKey;
       return _regenerator().w(function (_context4) {
         while (1) switch (_context4.n) {
           case 0:
-            payload = _this16.continueSessionPayload;
+            payload = _this20.continueSessionPayload;
             if (payload) {
               _context4.n = 1;
               break;
             }
             return _context4.a(2);
           case 1:
-            _this16.hasContinueSession = false;
+            _this20.hasContinueSession = false;
             if ((_payload$config3 = payload.config) !== null && _payload$config3 !== void 0 && _payload$config3.chapterId) {
               _context4.n = 2;
               break;
             }
-            _this16.clearContinueSession();
+            _this20.clearContinueSession();
             return _context4.a(2);
           case 2:
-            _this16.currentMode = payload.mode || 'beginner';
-            _this16.tab = payload.tab || _this16.currentMode;
-            target = _this16.currentMode === 'beginner' ? 'beginner' : 'advanced';
-            _this16[target] = _objectSpread(_objectSpread({}, target === 'beginner' ? createBeginnerState() : createAdvancedState()), _this16.cloneModeState(payload.config || {}));
+            _this20.currentMode = payload.mode || 'beginner';
+            _this20.tab = payload.tab || _this20.currentMode;
+            target = _this20.currentMode === 'beginner' ? 'beginner' : 'advanced';
+            _this20[target] = _objectSpread(_objectSpread({}, target === 'beginner' ? createBeginnerState() : createAdvancedState()), _this20.cloneModeState(payload.config || {}));
             // Chaining removed.
-            _this16.applySessionConfig(_this16.buildSessionConfig(_this16.currentMode));
+            _this20.applySessionConfig(_this20.buildSessionConfig(_this20.currentMode));
             _context4.n = 3;
-            return _this16.loadChapter();
+            return _this20.loadChapter();
           case 3:
-            _this16.buildQueue(_this16.currentMode);
-            store = _this16.getModeStore(_this16.currentMode);
+            _this20.buildQueue(_this20.currentMode);
+            store = _this20.getModeStore(_this20.currentMode);
             canonicalIndex = Number.isFinite(Number(payload.mutqinSessionIndex)) ? Number(payload.mutqinSessionIndex) : null;
-            if (canonicalIndex !== null) (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this16.mutqinState, canonicalIndex);
-            canonicalItem = canonicalIndex !== null ? (_this16$mutqinState$s = _this16.mutqinState.sessionState) === null || _this16$mutqinState$s === void 0 || (_this16$mutqinState$s = _this16$mutqinState$s.queue) === null || _this16$mutqinState$s === void 0 ? void 0 : _this16$mutqinState$s[canonicalIndex] : null;
+            if (canonicalIndex !== null) (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this20.mutqinState, canonicalIndex);
+            canonicalItem = canonicalIndex !== null ? (_this20$mutqinState$s = _this20.mutqinState.sessionState) === null || _this20$mutqinState$s === void 0 || (_this20$mutqinState$s = _this20$mutqinState$s.queue) === null || _this20$mutqinState$s === void 0 ? void 0 : _this20$mutqinState$s[canonicalIndex] : null;
             targetKey = payload.activeVerseKey || payload.activeKey || (canonicalItem === null || canonicalItem === void 0 ? void 0 : canonicalItem.ayahId) || null;
             restoredQueueIndex = Math.max(0, Number(payload.queueIndex || 0));
             if (targetKey) {
@@ -25773,29 +25982,29 @@ function createAdvancedState() {
             store.queueIndex = restoredQueueIndex;
             restoredKey = ((_store$queue4 = store.queue) === null || _store$queue4 === void 0 || (_store$queue4 = _store$queue4[restoredQueueIndex]) === null || _store$queue4 === void 0 || (_store$queue4 = _store$queue4.verse) === null || _store$queue4 === void 0 ? void 0 : _store$queue4.key) || ((_store$queue5 = store.queue) === null || _store$queue5 === void 0 || (_store$queue5 = _store$queue5[restoredQueueIndex]) === null || _store$queue5 === void 0 ? void 0 : _store$queue5.key) || targetKey;
             if (restoredKey) {
-              _this16.setActiveVerse(restoredKey, {
-                mode: _this16.currentMode,
+              _this20.setActiveVerse(restoredKey, {
+                mode: _this20.currentMode,
                 queueIndex: restoredQueueIndex,
                 scroll: false
               });
             } else {
-              _this16.syncActiveVerseState(_this16.currentMode, targetKey);
+              _this20.syncActiveVerseState(_this20.currentMode, targetKey);
             }
-            _this16.playerVisible = !!payload.playerVisible;
-            _this16.restoredAudioState = {
+            _this20.playerVisible = !!payload.playerVisible;
+            _this20.restoredAudioState = {
               src: payload.audioSrc || '',
               currentTime: Number(payload.currentTime || 0),
               playerVisible: !!payload.playerVisible,
-              speed: Number(((_payload$config4 = payload.config) === null || _payload$config4 === void 0 ? void 0 : _payload$config4.speed) || _this16.speed || 1),
+              speed: Number(((_payload$config4 = payload.config) === null || _payload$config4 === void 0 ? void 0 : _payload$config4.speed) || _this20.speed || 1),
               isPlaying: !!payload.isPlaying
             };
-            _this16.applyRestoredAudioState();
+            _this20.applyRestoredAudioState();
             // Advanced auto-open used to be driven by chaining/loop settings. Removed.
-            _this16.persistAllState();
-            _this16.showBanner('Session restored', 'success', 2200);
-            _this16.$nextTick(function () {
-              if (_this16.effectiveActiveVerseKey) {
-                var el = document.querySelector(".verse-card[data-verse-key=\"".concat(_this16.effectiveActiveVerseKey, "\"]"));
+            _this20.persistAllState();
+            _this20.showBanner('Session restored', 'success', 2200);
+            _this20.$nextTick(function () {
+              if (_this20.effectiveActiveVerseKey) {
+                var el = document.querySelector(".verse-card[data-verse-key=\"".concat(_this20.effectiveActiveVerseKey, "\"]"));
                 if (el) el.scrollIntoView({
                   behavior: 'smooth',
                   block: 'center'
@@ -25815,7 +26024,7 @@ function createAdvancedState() {
     }
   }), "applyRestoredAudioState", function applyRestoredAudioState() {
     var _this$activeVerseRef,
-      _this17 = this;
+      _this21 = this;
     var state = this.restoredAudioState;
     if (!state || !this.audioElement || !state.src) return;
     var activeAudio = (_this$activeVerseRef = this.activeVerseRef) !== null && _this$activeVerseRef !== void 0 && _this$activeVerseRef.audio ? this.normalizeAudioUrl(this.activeVerseRef.audio) : '';
@@ -25828,15 +26037,15 @@ function createAdvancedState() {
     this.speed = Number(state.speed || this.speed || 1);
     var _seekOnLoad = function seekOnLoad() {
       try {
-        _this17.audioElement.currentTime = Number(state.currentTime || 0);
-        _this17.audioElement.playbackRate = Number(state.speed || _this17.speed || 1);
+        _this21.audioElement.currentTime = Number(state.currentTime || 0);
+        _this21.audioElement.playbackRate = Number(state.speed || _this21.speed || 1);
         if (state.isPlaying) {
-          _this17.audioElement.play().then(function () {
-            _this17.isPlaying = true;
+          _this21.audioElement.play().then(function () {
+            _this21.isPlaying = true;
           })["catch"](function () {});
         }
       } catch (e) {}
-      _this17.audioElement.removeEventListener('loadedmetadata', _seekOnLoad);
+      _this21.audioElement.removeEventListener('loadedmetadata', _seekOnLoad);
     };
     this.audioElement.addEventListener('loadedmetadata', _seekOnLoad);
   }), "openConfirmModal", function openConfirmModal(options) {
@@ -25945,7 +26154,7 @@ function createAdvancedState() {
     this.persistCentralSessionState();
     this.showBanner("Speed changed to ".concat(safeSpeed, "x"), 'info', 1000);
   }), "setActiveTab", function setActiveTab(tabName) {
-    var _this18 = this;
+    var _this22 = this;
     console.log('Setting active tab to:', tabName); // Debug log
     this.tab = tabName;
     if (this.tab === 'settings') {
@@ -25957,7 +26166,7 @@ function createAdvancedState() {
     this.centralSession.activeTab = this.tab;
     this.persistCentralSessionState();
     this.$nextTick(function () {
-      return _this18.scrollToWorkspaceMain();
+      return _this22.scrollToWorkspaceMain();
     });
   }), "scrollToWorkspaceMain", function scrollToWorkspaceMain() {
     var target = this.$refs.workspaceMain || document.getElementById('memorisationWorkspaceMain');
@@ -26028,17 +26237,17 @@ function createAdvancedState() {
   }), "openModeSettings", function openModeSettings() {
     this.openToolsPanel();
   }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "toggleTajweed", function toggleTajweed() {
-    var _this19 = this;
+    var _this23 = this;
     this.tajweedEnabled = !this.tajweedEnabled;
     this.persistUiState();
     this.persistCentralSessionState();
 
     // Force re-render of verses to apply tajweed
     this.$nextTick(function () {
-      _this19.$forceUpdate();
+      _this23.$forceUpdate();
       // Also reload verses to ensure fresh data
-      if (_this19.verses && _this19.verses.length) {
-        _this19.loadVerses(_this19.currentMode);
+      if (_this23.verses && _this23.verses.length) {
+        _this23.loadVerses(_this23.currentMode);
       }
     });
     this.showBanner(this.tajweedEnabled ? 'Tajweed colors enabled' : 'Tajweed colors disabled', 'info', 1500);
@@ -26054,35 +26263,35 @@ function createAdvancedState() {
     this.persistUiState();
     this.$forceUpdate();
   }), "setupWordClickHandler", function setupWordClickHandler() {
-    var _this20 = this;
+    var _this24 = this;
     document.addEventListener('click', function (e) {
       var wordElement = e.target.closest('.wbw-word');
-      if (wordElement && _this20.wordByWordAudioEnabled) {
+      if (wordElement && _this24.wordByWordAudioEnabled) {
         var verseKey = wordElement.dataset.verseKey;
         var wordIndex = parseInt(wordElement.dataset.wordIndex);
         var wordAudio = wordElement.dataset.wordAudio;
         if (wordAudio) {
-          _this20.playWordAudio(wordAudio);
+          _this24.playWordAudio(wordAudio);
         } else {
           // Find verse and play from this word position
-          var verse = _this20.verses.find(function (v) {
+          var verse = _this24.verses.find(function (v) {
             return v.key === verseKey;
           });
           if (verse && verse.audio) {
-            _this20.playVerse(verse);
+            _this24.playVerse(verse);
           }
         }
       }
     });
   }), "getRemainingTimeDetails", function getRemainingTimeDetails() {
-    var _this21 = this;
+    var _this25 = this;
     var remainingItems = (this.queue || []).slice(this.queueIndex);
     if (!remainingItems.length) return null;
     var reviewTimePerAyah = 5;
     var totalAudioSeconds = 0;
     var totalReviewSeconds = 0;
     remainingItems.forEach(function (item, index) {
-      totalAudioSeconds += _this21.getQueueItemAudioSeconds(item, index === 0);
+      totalAudioSeconds += _this25.getQueueItemAudioSeconds(item, index === 0);
       totalReviewSeconds += reviewTimePerAyah;
     });
     var totalSeconds = totalAudioSeconds + totalReviewSeconds;
@@ -26107,9 +26316,9 @@ function createAdvancedState() {
     this.fontDropdownOpen = false;
     this.persistUiState();
   }), "getCurrentFontLabel", function getCurrentFontLabel() {
-    var _this22 = this;
+    var _this26 = this;
     var font = this.quranFontOptions.find(function (f) {
-      return f.value === _this22.quranFont;
+      return f.value === _this26.quranFont;
     });
     return font ? font.label : 'Font';
   }), "getFontIcon", function getFontIcon(fontValue) {
@@ -26127,9 +26336,9 @@ function createAdvancedState() {
     this.persistCentralSessionState();
     this.showBanner(this.tajweedEnabled ? 'Tajweed colors enabled' : 'Tajweed colors disabled', 'info', 1500);
   }), "updatePlannerSurah", function updatePlannerSurah() {
-    var _this23 = this;
+    var _this27 = this;
     var selectedSurah = this.chapters.find(function (c) {
-      return c.id === _this23.plannerConfig.surahId;
+      return c.id === _this27.plannerConfig.surahId;
     });
     if (selectedSurah) {
       this.plannerConfig.totalVersesInSurah = selectedSurah.verses_count;
@@ -26230,26 +26439,26 @@ function createAdvancedState() {
     var verseNumber = parseInt(verseParts[1]);
     return Math.abs(verseNumber - targetNumber) === 1;
   }), "downloadOfflineVerses", function downloadOfflineVerses() {
-    var _this24 = this;
+    var _this28 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5() {
-      var _this24$currentChapte, _this24$verses$, surahId, surahName, found, storageKey, offlineData, catalogKey, catalog, entry, filtered, _t;
+      var _this28$currentChapte, _this28$verses$, surahId, surahName, found, storageKey, offlineData, catalogKey, catalog, entry, filtered, _t;
       return _regenerator().w(function (_context5) {
         while (1) switch (_context5.p = _context5.n) {
           case 0:
-            if (!(!_this24.verses || !_this24.verses.length)) {
+            if (!(!_this28.verses || !_this28.verses.length)) {
               _context5.n = 1;
               break;
             }
-            _this24.showBanner('Load a surah first before downloading', 'info', 3000);
-            _this24.showTools = true;
+            _this28.showBanner('Load a surah first before downloading', 'info', 3000);
+            _this28.showTools = true;
             return _context5.a(2);
           case 1:
             _context5.p = 1;
-            surahId = _this24.chapterId;
-            surahName = (_this24$currentChapte = _this24.currentChapter) === null || _this24$currentChapte === void 0 ? void 0 : _this24$currentChapte.name_simple;
-            if (!surahId && (_this24$verses$ = _this24.verses[0]) !== null && _this24$verses$ !== void 0 && _this24$verses$.key) {
-              surahId = parseInt(_this24.verses[0].key.split(':')[0]);
-              found = _this24.chapters.find(function (c) {
+            surahId = _this28.chapterId;
+            surahName = (_this28$currentChapte = _this28.currentChapter) === null || _this28$currentChapte === void 0 ? void 0 : _this28$currentChapte.name_simple;
+            if (!surahId && (_this28$verses$ = _this28.verses[0]) !== null && _this28$verses$ !== void 0 && _this28$verses$.key) {
+              surahId = parseInt(_this28.verses[0].key.split(':')[0]);
+              found = _this28.chapters.find(function (c) {
                 return c.id === surahId;
               });
               surahName = (found === null || found === void 0 ? void 0 : found.name_simple) || 'Selected surah';
@@ -26258,21 +26467,21 @@ function createAdvancedState() {
               _context5.n = 2;
               break;
             }
-            _this24.showBanner('Could not identify surah', 'error', 3000);
+            _this28.showBanner('Could not identify surah', 'error', 3000);
             return _context5.a(2);
           case 2:
-            storageKey = "offline_surah_".concat(surahId, "_").concat(_this24.rangeStart, "_").concat(_this24.rangeEnd);
+            storageKey = "offline_surah_".concat(surahId, "_").concat(_this28.rangeStart, "_").concat(_this28.rangeEnd);
             offlineData = {
               metadata: {
                 surah: surahName,
                 surahId: surahId,
-                rangeStart: _this24.rangeStart,
-                rangeEnd: _this24.rangeEnd,
-                reciterId: _this24.reciterId,
+                rangeStart: _this28.rangeStart,
+                rangeEnd: _this28.rangeEnd,
+                reciterId: _this28.reciterId,
                 downloadedAt: new Date().toISOString(),
-                totalVerses: _this24.verses.length
+                totalVerses: _this28.verses.length
               },
-              verses: _this24.verses
+              verses: _this28.verses
             };
             localStorage.setItem(storageKey, JSON.stringify(offlineData));
 
@@ -26288,8 +26497,8 @@ function createAdvancedState() {
               id: storageKey,
               surah: surahName,
               surahId: surahId,
-              range: "".concat(_this24.rangeStart, "-").concat(_this24.rangeEnd),
-              count: _this24.verses.length,
+              range: "".concat(_this28.rangeStart, "-").concat(_this28.rangeEnd),
+              count: _this28.verses.length,
               date: new Date().toLocaleDateString()
             };
             filtered = catalog.filter(function (c) {
@@ -26297,15 +26506,15 @@ function createAdvancedState() {
             });
             filtered.push(entry);
             localStorage.setItem(catalogKey, JSON.stringify(filtered));
-            _this24.offlineSurahs = filtered;
-            _this24.showBanner("Saved ".concat(_this24.verses.length, " verses from ").concat(surahName, " for offline reading."), 'success', 3000);
+            _this28.offlineSurahs = filtered;
+            _this28.showBanner("Saved ".concat(_this28.verses.length, " verses from ").concat(surahName, " for offline reading."), 'success', 3000);
             _context5.n = 4;
             break;
           case 3:
             _context5.p = 3;
             _t = _context5.v;
             console.error('Download failed:', _t);
-            _this24.showBanner('Failed to download verses', 'error', 3000);
+            _this28.showBanner('Failed to download verses', 'error', 3000);
           case 4:
             return _context5.a(2);
         }
@@ -26365,22 +26574,22 @@ function createAdvancedState() {
     this.pendingDeleteId = '';
     this.showBanner('Offline surah removed', 'info', 2000);
   }), "downloadVerseAudio", function downloadVerseAudio(verse) {
-    var _this25 = this;
+    var _this29 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6() {
       var audioUrl, filename, downloadUrl, anchor;
       return _regenerator().w(function (_context6) {
         while (1) switch (_context6.n) {
           case 0:
-            audioUrl = _this25.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
+            audioUrl = _this29.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
             if (audioUrl) {
               _context6.n = 1;
               break;
             }
-            _this25.showBanner('Audio not available for this ayah', 'info', 2200);
+            _this29.showBanner('Audio not available for this ayah', 'info', 2200);
             return _context6.a(2);
           case 1:
             try {
-              filename = "surah-".concat(_this25.chapterId, "-ayah-").concat(verse.number, ".mp3");
+              filename = "surah-".concat(_this29.chapterId, "-ayah-").concat(verse.number, ".mp3");
               downloadUrl = "/memorisation/audio-download?url=".concat(encodeURIComponent(audioUrl), "&filename=").concat(encodeURIComponent(filename));
               anchor = document.createElement('a');
               anchor.href = downloadUrl;
@@ -26388,10 +26597,10 @@ function createAdvancedState() {
               document.body.appendChild(anchor);
               anchor.click();
               anchor.remove();
-              _this25.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
+              _this29.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
             } catch (error) {
               console.error('Verse download failed:', error);
-              _this25.showBanner('Failed to download ayah audio', 'error', 2600);
+              _this29.showBanner('Failed to download ayah audio', 'error', 2600);
             }
           case 2:
             return _context6.a(2);
@@ -26566,7 +26775,7 @@ function createAdvancedState() {
     var highlightedHtml = this.splitArabicIntoWords(verse.arabic, verse.key);
     return highlightedHtml;
   }), "splitArabicIntoWords", function splitArabicIntoWords(verse) {
-    var _this26 = this;
+    var _this30 = this;
     if (!verse || !verse.arabic) return '';
 
     // Get words from the verse object or tokenize
@@ -26582,16 +26791,16 @@ function createAdvancedState() {
     var html = '';
     words.forEach(function (word, idx) {
       var escapedWord = escapeHtml(word);
-      var isActive = _this26.currentHighlightedVerseKey === verse.key && _this26.currentWordIndex === idx;
+      var isActive = _this30.currentHighlightedVerseKey === verse.key && _this30.currentWordIndex === idx;
       var activeClass = isActive ? ' highlighted phrase-highlighted' : '';
-      var weakClass = _this26.isWeakAyah(verse.key) ? ' weak-word' : '';
-      var masteredClass = _this26.isMasteredAyah(verse.key) ? ' mastered-word' : '';
+      var weakClass = _this30.isWeakAyah(verse.key) ? ' weak-word' : '';
+      var masteredClass = _this30.isMasteredAyah(verse.key) ? ' mastered-word' : '';
       html += "<word class=\"wbw-word".concat(activeClass).concat(weakClass).concat(masteredClass, "\" data-word-index=\"").concat(idx, "\" data-verse-key=\"").concat(verse.key, "\" title=\"Word ").concat(idx + 1, "\">").concat(escapedWord, "</word> ");
     });
     return html;
   }), "getWordTimings", function getWordTimings(verse) {
     var _arguments2 = arguments,
-      _this27 = this;
+      _this31 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7() {
       var actualDuration, sourceWords, arabicText, safeDuration, cacheKey, cleanedWords, weightedUnits, totalUnits, timestamps, currentTime;
       return _regenerator().w(function (_context7) {
@@ -26630,16 +26839,16 @@ function createAdvancedState() {
             } else if (verse.duration && Number(verse.duration) > 0) {
               safeDuration = Number(verse.duration);
             } else {
-              safeDuration = _this27.estimateVerseDuration(verse);
+              safeDuration = _this31.estimateVerseDuration(verse);
             }
 
             // Keep timestamps in media-time because audioElement.currentTime is also media-time.
-            cacheKey = "".concat(verse.key, "_").concat(_this27.reciterId, "_").concat(Math.round(safeDuration * 10));
-            if (!_this27.wordTimestampsMap.has(cacheKey)) {
+            cacheKey = "".concat(verse.key, "_").concat(_this31.reciterId, "_").concat(Math.round(safeDuration * 10));
+            if (!_this31.wordTimestampsMap.has(cacheKey)) {
               _context7.n = 3;
               break;
             }
-            return _context7.a(2, _this27.wordTimestampsMap.get(cacheKey));
+            return _context7.a(2, _this31.wordTimestampsMap.get(cacheKey));
           case 3:
             // Build a normalized timing track so highlight end time always matches audio end time.
             cleanedWords = sourceWords.map(function (word) {
@@ -26665,13 +26874,13 @@ function createAdvancedState() {
               });
               currentTime += wordDuration;
             });
-            _this27.wordTimestampsMap.set(cacheKey, timestamps);
+            _this31.wordTimestampsMap.set(cacheKey, timestamps);
             return _context7.a(2, timestamps);
         }
       }, _callee7);
     }))();
   }), "calculateWordTimings", function calculateWordTimings(verse) {
-    var _this28 = this;
+    var _this32 = this;
     var audioDuration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     return new Promise(function (resolve) {
       if (!verse.words || verse.words.length === 0) {
@@ -26679,7 +26888,7 @@ function createAdvancedState() {
         return;
       }
       var wordCount = verse.words.length;
-      var totalDuration = audioDuration || _this28.estimateVerseDuration(verse);
+      var totalDuration = audioDuration || _this32.estimateVerseDuration(verse);
       var durationPerWord = totalDuration / wordCount;
       var timestamps = [];
       var currentTime = 0;
@@ -26700,14 +26909,14 @@ function createAdvancedState() {
     var baseDuration = Math.min(45, Math.max(5, arabicLength / 10));
     return baseDuration;
   }), "startWordHighlighting", function startWordHighlighting(verse) {
-    var _this29 = this;
+    var _this33 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee8() {
-      var _this29$audioElement;
+      var _this33$audioElement;
       var duration, timestamps, _updateHighlight;
       return _regenerator().w(function (_context8) {
         while (1) switch (_context8.n) {
           case 0:
-            if (!_this29.wordHighlightLoading) {
+            if (!_this33.wordHighlightLoading) {
               _context8.n = 1;
               break;
             }
@@ -26719,38 +26928,38 @@ function createAdvancedState() {
             }
             return _context8.a(2);
           case 2:
-            if (_this29.wordByWordAudioEnabled) {
+            if (_this33.wordByWordAudioEnabled) {
               _context8.n = 3;
               break;
             }
             return _context8.a(2);
           case 3:
-            _this29.stopWordHighlighting();
-            _this29.wordHighlightLoading = true;
-            _this29.currentHighlightedVerseKey = verse.key;
-            _this29.currentWordIndex = -1;
-            _this29.currentPhraseIndex = -1;
+            _this33.stopWordHighlighting();
+            _this33.wordHighlightLoading = true;
+            _this33.currentHighlightedVerseKey = verse.key;
+            _this33.currentWordIndex = -1;
+            _this33.currentPhraseIndex = -1;
 
             // Get word timings regardless of tajweed setting
-            duration = Number((_this29$audioElement = _this29.audioElement) === null || _this29$audioElement === void 0 ? void 0 : _this29$audioElement.duration) || null;
+            duration = Number((_this33$audioElement = _this33.audioElement) === null || _this33$audioElement === void 0 ? void 0 : _this33$audioElement.duration) || null;
             _context8.n = 4;
-            return _this29.getWordTimings(verse, duration);
+            return _this33.getWordTimings(verse, duration);
           case 4:
             timestamps = _context8.v;
-            _this29.wordHighlightLoading = false;
+            _this33.wordHighlightLoading = false;
             if (!(!timestamps || !timestamps.length)) {
               _context8.n = 5;
               break;
             }
             return _context8.a(2);
           case 5:
-            _this29.wordHighlightTimestamps = timestamps;
+            _this33.wordHighlightTimestamps = timestamps;
             _updateHighlight = function updateHighlight() {
-              if (!_this29.audioElement || _this29.audioElement.paused || _this29.audioElement.ended) return;
-              _this29.syncWordHighlightFromAudio(verse);
-              _this29.wordHighlightFrame = window.requestAnimationFrame(_updateHighlight);
+              if (!_this33.audioElement || _this33.audioElement.paused || _this33.audioElement.ended) return;
+              _this33.syncWordHighlightFromAudio(verse);
+              _this33.wordHighlightFrame = window.requestAnimationFrame(_updateHighlight);
             };
-            _this29.wordHighlightHandler = _updateHighlight;
+            _this33.wordHighlightHandler = _updateHighlight;
             _updateHighlight();
           case 6:
             return _context8.a(2);
@@ -26777,12 +26986,12 @@ function createAdvancedState() {
     var activeIndex = active ? active.index : -1;
     this.updateWordHighlight(verse.key, activeIndex);
   }), "restoreWordScroll", function restoreWordScroll(verseKey) {
-    var _this30 = this;
+    var _this34 = this;
     this.$nextTick(function () {
       if (!verseKey) return;
       var verseCard = document.querySelector(".verse-card[data-verse-key=\"".concat(verseKey, "\"]"));
       var wordsWrap = verseCard === null || verseCard === void 0 ? void 0 : verseCard.querySelector('.verse-words');
-      var remembered = _this30.verseScrollMemory[verseKey];
+      var remembered = _this34.verseScrollMemory[verseKey];
       if (!wordsWrap || !remembered) return;
       wordsWrap.scrollTop = Number(remembered.top || 0);
       wordsWrap.scrollLeft = Number(remembered.left || 0);
@@ -26806,7 +27015,7 @@ function createAdvancedState() {
     this.currentHighlightedVerseKey = null;
     this.wordHighlightTimestamps = [];
   }), "initAudio", function initAudio() {
-    var _this31 = this;
+    var _this35 = this;
     this.audioElement = this.$refs.audio;
     if (!this.audioElement) return;
     this.audioElement.removeEventListener('timeupdate', this.audioTimeUpdate);
@@ -26816,75 +27025,75 @@ function createAdvancedState() {
     this.audioElement.removeEventListener('seeked', this.audioSeeked);
     this.audioElement.removeEventListener('pause', this.audioPaused);
     this.audioTimeUpdate = function () {
-      _this31.currentTime = _this31.audioElement.currentTime;
-      _this31.duration = _this31.audioElement.duration;
-      _this31.updateActiveWaveIndex(); // Move this after currentTime/duration are set
-      _this31.centralSession.audio.currentTime = Number(_this31.currentTime || 0);
-      _this31.centralSession.audio.speed = Number(_this31.speed || 1);
-      if (_this31.segmentEndTime > 0 && Number(_this31.currentTime || 0) >= _this31.segmentEndTime - 0.04) {
-        _this31.handleSegmentBoundary();
+      _this35.currentTime = _this35.audioElement.currentTime;
+      _this35.duration = _this35.audioElement.duration;
+      _this35.updateActiveWaveIndex(); // Move this after currentTime/duration are set
+      _this35.centralSession.audio.currentTime = Number(_this35.currentTime || 0);
+      _this35.centralSession.audio.speed = Number(_this35.speed || 1);
+      if (_this35.segmentEndTime > 0 && Number(_this35.currentTime || 0) >= _this35.segmentEndTime - 0.04) {
+        _this35.handleSegmentBoundary();
         return;
       }
-      if (_this31.wordByWordAudioEnabled) {
-        var _verse = _this31.activeVerseRef;
+      if (_this35.wordByWordAudioEnabled) {
+        var _verse = _this35.activeVerseRef;
         if (_verse && _verse.key) {
-          if (_this31.currentHighlightedVerseKey !== _verse.key && !_this31.wordHighlightLoading) {
-            _this31.startWordHighlighting(_verse);
-          } else if (!_this31.wordHighlightLoading) {
-            _this31.syncWordHighlightFromAudio(_verse);
+          if (_this35.currentHighlightedVerseKey !== _verse.key && !_this35.wordHighlightLoading) {
+            _this35.startWordHighlighting(_verse);
+          } else if (!_this35.wordHighlightLoading) {
+            _this35.syncWordHighlightFromAudio(_verse);
           }
         }
       }
 
       // Waveform - separate from word highlighting (works even if word-by-word is off)
-      var verse = _this31.activeVerseRef;
-      if (verse && verse.key !== _this31.currentWaveVerseKey) {
-        _this31.currentWaveVerseKey = verse.key;
+      var verse = _this35.activeVerseRef;
+      if (verse && verse.key !== _this35.currentWaveVerseKey) {
+        _this35.currentWaveVerseKey = verse.key;
       }
     };
     this.audioEnded = function () {
-      if (_this31.advanceLocked) return;
-      _this31.advanceLocked = true;
-      _this31.isPlaying = false;
-      _this31.stopWordHighlighting();
-      if (_this31.guidedUiStep === 'learn') {
-        _this31.flowListenPlays += 1;
-        _this31.persistUiState();
+      if (_this35.advanceLocked) return;
+      _this35.advanceLocked = true;
+      _this35.isPlaying = false;
+      _this35.stopWordHighlighting();
+      if (_this35.guidedUiStep === 'learn') {
+        _this35.flowListenPlays += 1;
+        _this35.persistUiState();
       }
-      if (_this31.playMode === 'auto') {
+      if (_this35.playMode === 'auto') {
         window.setTimeout(function () {
-          _this31.advanceLocked = false;
-          _this31.next();
-        }, Math.max(0, Number(_this31.delay || 0)) * 1000);
+          _this35.advanceLocked = false;
+          _this35.next();
+        }, Math.max(0, Number(_this35.delay || 0)) * 1000);
       } else {
-        _this31.advanceLocked = false;
+        _this35.advanceLocked = false;
       }
     };
     this.audioSeeking = function () {
       // Prevent stale highlight when the user scrubs.
-      _this31.currentWordIndex = -1;
-      _this31.updateWordHighlight(_this31.currentHighlightedVerseKey, -1);
+      _this35.currentWordIndex = -1;
+      _this35.updateWordHighlight(_this35.currentHighlightedVerseKey, -1);
     };
     this.audioSeeked = function () {
-      var _this31$audioElement;
-      var verse = _this31.activeVerseRef;
+      var _this35$audioElement;
+      var verse = _this35.activeVerseRef;
       if (!verse) return;
-      if (_this31.wordByWordAudioEnabled && !((_this31$audioElement = _this31.audioElement) !== null && _this31$audioElement !== void 0 && _this31$audioElement.paused)) {
-        _this31.startWordHighlighting(verse);
+      if (_this35.wordByWordAudioEnabled && !((_this35$audioElement = _this35.audioElement) !== null && _this35$audioElement !== void 0 && _this35$audioElement.paused)) {
+        _this35.startWordHighlighting(verse);
       }
     };
     this.audioPaused = function () {
       // Ensure state is consistent even if pause is triggered outside our toggle handler.
-      _this31.isPlaying = false;
-      if (_this31.wordHighlightFrame) window.cancelAnimationFrame(_this31.wordHighlightFrame);
-      _this31.wordHighlightFrame = null;
+      _this35.isPlaying = false;
+      if (_this35.wordHighlightFrame) window.cancelAnimationFrame(_this35.wordHighlightFrame);
+      _this35.wordHighlightFrame = null;
     };
     this.audioError = function (e) {
       console.error('Audio error:', e);
-      _this31.isPlaying = false;
-      _this31.sessionErrorCount += 1;
-      _this31.stopWordHighlighting();
-      _this31.showBanner('Audio playback error', 'error', 3000);
+      _this35.isPlaying = false;
+      _this35.sessionErrorCount += 1;
+      _this35.stopWordHighlighting();
+      _this35.showBanner('Audio playback error', 'error', 3000);
     };
     this.audioElement.addEventListener('timeupdate', this.audioTimeUpdate);
     this.audioElement.addEventListener('ended', this.audioEnded);
@@ -26894,86 +27103,86 @@ function createAdvancedState() {
     this.audioElement.addEventListener('pause', this.audioPaused);
   }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "playVerse", function playVerse(verse) {
     var _arguments3 = arguments,
-      _this32 = this;
+      _this36 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
-      var _this32$audioElement;
+      var _this36$audioElement;
       var options, audioUrl, currentSrc, isSameSource;
       return _regenerator().w(function (_context1) {
         while (1) switch (_context1.n) {
           case 0:
             options = _arguments3.length > 1 && _arguments3[1] !== undefined ? _arguments3[1] : {};
-            if (!(_this32.playRequestLocked && !options.force)) {
+            if (!(_this36.playRequestLocked && !options.force)) {
               _context1.n = 1;
               break;
             }
             return _context1.a(2);
           case 1:
-            _this32.playRequestLocked = true;
-            if (_this32.segmentPlaybackTimer) {
-              clearTimeout(_this32.segmentPlaybackTimer);
-              _this32.segmentPlaybackTimer = null;
+            _this36.playRequestLocked = true;
+            if (_this36.segmentPlaybackTimer) {
+              clearTimeout(_this36.segmentPlaybackTimer);
+              _this36.segmentPlaybackTimer = null;
             }
-            _this32.segmentEndTime = 0;
+            _this36.segmentEndTime = 0;
             if (verse) {
               _context1.n = 2;
               break;
             }
             console.error('No verse provided');
-            _this32.playRequestLocked = false;
+            _this36.playRequestLocked = false;
             return _context1.a(2);
           case 2:
             if (verse.audio) {
               _context1.n = 3;
               break;
             }
-            _this32.showBanner("Audio not available for verse ".concat(verse.number), 'info', 2000);
-            _this32.playRequestLocked = false;
+            _this36.showBanner("Audio not available for verse ".concat(verse.number), 'info', 2000);
+            _this36.playRequestLocked = false;
             return _context1.a(2);
           case 3:
-            audioUrl = _this32.normalizeAudioUrl(verse.audio);
-            currentSrc = (_this32$audioElement = _this32.audioElement) !== null && _this32$audioElement !== void 0 && _this32$audioElement.currentSrc ? _this32.normalizeAudioUrl(_this32.audioElement.currentSrc) : '';
+            audioUrl = _this36.normalizeAudioUrl(verse.audio);
+            currentSrc = (_this36$audioElement = _this36.audioElement) !== null && _this36$audioElement !== void 0 && _this36$audioElement.currentSrc ? _this36.normalizeAudioUrl(_this36.audioElement.currentSrc) : '';
             isSameSource = !!currentSrc && currentSrc === audioUrl; // Toggle if same verse is playing
-            if (!(!options.force && _this32.activeKey === verse.key && isSameSource)) {
+            if (!(!options.force && _this36.activeKey === verse.key && isSameSource)) {
               _context1.n = 4;
               break;
             }
-            _this32.togglePlay();
-            _this32.playRequestLocked = false;
+            _this36.togglePlay();
+            _this36.playRequestLocked = false;
             return _context1.a(2);
           case 4:
             // Stop current playback and highlighting
-            _this32.stopWordHighlighting();
-            if (_this32.audioElement) {
+            _this36.stopWordHighlighting();
+            if (_this36.audioElement) {
               try {
-                _this32.audioElement.pause();
+                _this36.audioElement.pause();
               } catch (e) {
                 console.warn('Error pausing audio:', e);
               }
             }
-            _this32.setActiveVerse(verse.key, {
+            _this36.setActiveVerse(verse.key, {
               scroll: false,
               queueIndex: Number.isFinite(options.queueIndex) ? Number(options.queueIndex) : undefined
             });
-            if (_this32.audioElement) {
+            if (_this36.audioElement) {
               _context1.n = 6;
               break;
             }
-            _this32.audioElement = _this32.$refs.audio;
-            if (_this32.audioElement) {
+            _this36.audioElement = _this36.$refs.audio;
+            if (_this36.audioElement) {
               _context1.n = 5;
               break;
             }
-            _this32.showBanner('Audio system not ready', 'error', 3000);
-            _this32.playRequestLocked = false;
+            _this36.showBanner('Audio system not ready', 'error', 3000);
+            _this36.playRequestLocked = false;
             return _context1.a(2);
           case 5:
-            _this32.initAudio();
+            _this36.initAudio();
           case 6:
             if (!isSameSource) {
-              _this32.audioElement.src = audioUrl;
-              _this32.audioElement.load();
+              _this36.audioElement.src = audioUrl;
+              _this36.audioElement.load();
             }
-            _this32.playerVisible = true;
+            _this36.playerVisible = true;
             return _context1.a(2, new Promise(function (resolve, reject) {
               var timeout = setTimeout(function () {
                 reject(new Error('Audio load timeout'));
@@ -26985,42 +27194,42 @@ function createAdvancedState() {
                     while (1) switch (_context9.p = _context9.n) {
                       case 0:
                         clearTimeout(timeout);
-                        _this32.audioElement.playbackRate = _this32.speed;
+                        _this36.audioElement.playbackRate = _this36.speed;
                         segment = options.segment || null;
                         segmentTotal = Math.max(1, Number((segment === null || segment === void 0 ? void 0 : segment.sequenceTotal) || (segment === null || segment === void 0 ? void 0 : segment.total) || 1));
                         segmentIndex = Math.max(0, Math.min(segmentTotal - 1, Number((segment === null || segment === void 0 ? void 0 : segment.index) || 0)));
                         segmentEnd = 0;
-                        if (segment && Number.isFinite(_this32.audioElement.duration) && _this32.audioElement.duration > 0 && segmentTotal > 1) {
-                          duration = Number(_this32.audioElement.duration || 0);
+                        if (segment && Number.isFinite(_this36.audioElement.duration) && _this36.audioElement.duration > 0 && segmentTotal > 1) {
+                          duration = Number(_this36.audioElement.duration || 0);
                           segmentStart = Math.max(0, duration * (segmentIndex / segmentTotal));
                           segmentEnd = Math.min(duration, duration * ((segmentIndex + 1) / segmentTotal));
-                          _this32.segmentEndTime = segmentEnd;
-                          _this32.audioElement.currentTime = segmentStart;
+                          _this36.segmentEndTime = segmentEnd;
+                          _this36.audioElement.currentTime = segmentStart;
                         }
                         _context9.p = 1;
                         _context9.n = 2;
-                        return _this32.audioElement.play();
+                        return _this36.audioElement.play();
                       case 2:
-                        _this32.isPlaying = true;
-                        _this32.markPlaybackStart();
-                        _this32.addActivityEvent({
+                        _this36.isPlaying = true;
+                        _this36.markPlaybackStart();
+                        _this36.addActivityEvent({
                           ts: Date.now(),
                           type: 'play',
                           verseKey: verse.key
                         });
-                        _this32.recomputeAnalytics();
-                        if (_this32.wordByWordAudioEnabled) {
-                          _this32.startWordHighlighting(verse);
+                        _this36.recomputeAnalytics();
+                        if (_this36.wordByWordAudioEnabled) {
+                          _this36.startWordHighlighting(verse);
                         }
-                        _this32.playRequestLocked = false;
+                        _this36.playRequestLocked = false;
                         resolve();
                         _context9.n = 4;
                         break;
                       case 3:
                         _context9.p = 3;
                         _t2 = _context9.v;
-                        _this32.isPlaying = false;
-                        _this32.playRequestLocked = false;
+                        _this36.isPlaying = false;
+                        _this36.playRequestLocked = false;
                         reject(_t2);
                       case 4:
                         return _context9.a(2);
@@ -27039,7 +27248,7 @@ function createAdvancedState() {
                         _context0.n = 1;
                         return startPlayback();
                       case 1:
-                        _this32.audioElement.removeEventListener('canplay', _canPlayHandler);
+                        _this36.audioElement.removeEventListener('canplay', _canPlayHandler);
                       case 2:
                         return _context0.a(2);
                     }
@@ -27051,24 +27260,24 @@ function createAdvancedState() {
               }();
               var _errorHandler = function errorHandler(err) {
                 clearTimeout(timeout);
-                _this32.isPlaying = false;
-                _this32.playRequestLocked = false;
+                _this36.isPlaying = false;
+                _this36.playRequestLocked = false;
                 reject(err);
-                _this32.audioElement.removeEventListener('error', _errorHandler);
+                _this36.audioElement.removeEventListener('error', _errorHandler);
               };
-              _this32.audioElement.addEventListener('error', _errorHandler, {
+              _this36.audioElement.addEventListener('error', _errorHandler, {
                 once: true
               });
-              if (isSameSource && _this32.audioElement.readyState >= 2) {
+              if (isSameSource && _this36.audioElement.readyState >= 2) {
                 startPlayback();
               } else {
-                _this32.audioElement.addEventListener('canplay', _canPlayHandler);
+                _this36.audioElement.addEventListener('canplay', _canPlayHandler);
               }
             })["catch"](function (err) {
               console.error('playVerse failed:', err);
-              _this32.isPlaying = false;
-              _this32.playRequestLocked = false;
-              _this32.showBanner('Failed to play audio', 'error', 3000);
+              _this36.isPlaying = false;
+              _this36.playRequestLocked = false;
+              _this36.showBanner('Failed to play audio', 'error', 3000);
             }));
         }
       }, _callee1);
@@ -27096,18 +27305,18 @@ function createAdvancedState() {
     this.isPlaying = false;
   }), "togglePlay", function togglePlay() {
     var _this$audioElement5,
-      _this33 = this;
+      _this37 = this;
     if (!((_this$audioElement5 = this.audioElement) !== null && _this$audioElement5 !== void 0 && _this$audioElement5.src)) return;
     if (this.audioElement.paused) {
       this.audioElement.play().then(function () {
-        _this33.isPlaying = true;
-        var verse = _this33.activeVerseRef;
-        if (verse && _this33.wordByWordAudioEnabled) {
-          _this33.startWordHighlighting(verse);
+        _this37.isPlaying = true;
+        var verse = _this37.activeVerseRef;
+        if (verse && _this37.wordByWordAudioEnabled) {
+          _this37.startWordHighlighting(verse);
         }
       })["catch"](function (err) {
         console.error('Failed to play:', err);
-        _this33.showBanner('Playback failed', 'error', 2000);
+        _this37.showBanner('Playback failed', 'error', 2000);
       });
     } else {
       this.audioElement.pause();
@@ -27116,7 +27325,7 @@ function createAdvancedState() {
   }), "applySpeed", function applySpeed() {
     if (this.audioElement) this.audioElement.playbackRate = this.speed;
   }), "next", function next() {
-    var _this34 = this;
+    var _this38 = this;
     if (this.advanceLocked) return;
     this.advanceLocked = true;
     if (this.canNext) {
@@ -27134,7 +27343,7 @@ function createAdvancedState() {
           queueIndex: this.queueIndex
         });
         this.$nextTick(function () {
-          return _this34.$forceUpdate();
+          return _this38.$forceUpdate();
         });
       }
       var v = this.queue[this.queueIndex];
@@ -27143,7 +27352,7 @@ function createAdvancedState() {
           force: true,
           queueIndex: this.queueIndex
         })["finally"](function () {
-          _this34.advanceLocked = false;
+          _this38.advanceLocked = false;
         });
       } else {
         this.advanceLocked = false;
@@ -27154,7 +27363,7 @@ function createAdvancedState() {
     this.handleSessionComplete();
   }), "prev", function prev() {
     var _entry$verse2,
-      _this35 = this;
+      _this39 = this;
     if (!this.canPrev) return;
     if (this.advanceLocked) return;
     this.advanceLocked = true;
@@ -27172,7 +27381,7 @@ function createAdvancedState() {
         queueIndex: this.queueIndex
       });
       this.$nextTick(function () {
-        return _this35.$forceUpdate();
+        return _this39.$forceUpdate();
       });
     }
     var v = this.queue[this.queueIndex];
@@ -27181,7 +27390,7 @@ function createAdvancedState() {
         force: true,
         queueIndex: this.queueIndex
       })["finally"](function () {
-        _this35.advanceLocked = false;
+        _this39.advanceLocked = false;
       });
     } else {
       this.advanceLocked = false;
@@ -27206,14 +27415,14 @@ function createAdvancedState() {
     this.persistAudioState();
   }), "loadVerses", function loadVerses() {
     var _arguments4 = arguments,
-      _this36 = this;
+      _this40 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee10() {
       var mode, target, chapterId, rangeStart, rangeEnd, reciterId, requestId, targetConfig, _cached$verses, _audioRes$data, _translationRes$data, _translitRes$data, _arabicRes$data, _tajweedRes$data, cached, _yield$Promise$all, _yield$Promise$all2, audioRes, translationRes, translitRes, arabicRes, tajweedRes, audioSurah, translationSurah, translitSurah, arabicSurah, tajweedEdition, audioAyahs, arabicByNumber, translationByNumber, translitByNumber, tajweedByNumber, start, end, mappedVerses, _t3;
       return _regenerator().w(function (_context10) {
         while (1) switch (_context10.p = _context10.n) {
           case 0:
-            mode = _arguments4.length > 0 && _arguments4[0] !== undefined ? _arguments4[0] : _this36.currentMode;
-            target = mode === 'beginner' ? _this36.beginner : _this36.advanced;
+            mode = _arguments4.length > 0 && _arguments4[0] !== undefined ? _arguments4[0] : _this40.currentMode;
+            target = mode === 'beginner' ? _this40.beginner : _this40.advanced;
             chapterId = Number(target.chapterId || 0);
             if (chapterId) {
               _context10.n = 1;
@@ -27224,26 +27433,26 @@ function createAdvancedState() {
             rangeStart = Number(target.rangeStart || 1);
             rangeEnd = Number(target.rangeEnd || rangeStart || 1);
             reciterId = target.reciterId || DEFAULT_ALQURAN_RECITER;
-            requestId = ++_this36.verseRequestId;
-            targetConfig = _this36.buildSessionConfig(mode);
-            _this36.isDataReady = false;
+            requestId = ++_this40.verseRequestId;
+            targetConfig = _this40.buildSessionConfig(mode);
+            _this40.isDataReady = false;
             _context10.p = 2;
-            cached = _this36.getCachedVerses(mode, targetConfig);
+            cached = _this40.getCachedVerses(mode, targetConfig);
             if (!(cached !== null && cached !== void 0 && (_cached$verses = cached.verses) !== null && _cached$verses !== void 0 && _cached$verses.length)) {
               _context10.n = 3;
               break;
             }
             if (mode === 'beginner') {
-              _this36.beginner.verses = cached.verses;
-              _this36.beginner.loadedConfig = cached.loadedConfig;
+              _this40.beginner.verses = cached.verses;
+              _this40.beginner.loadedConfig = cached.loadedConfig;
             } else {
-              _this36.advanced.verses = cached.verses;
-              _this36.advanced.loadedConfig = cached.loadedConfig;
+              _this40.advanced.verses = cached.verses;
+              _this40.advanced.loadedConfig = cached.loadedConfig;
             }
-            _this36.buildQueue(mode);
-            _this36.syncActiveVerseState(mode);
-            _this36.syncMutqinAyahs(cached.verses);
-            _this36.isDataReady = true;
+            _this40.buildQueue(mode);
+            _this40.syncActiveVerseState(mode);
+            _this40.syncMutqinAyahs(cached.verses);
+            _this40.isDataReady = true;
             return _context10.a(2);
           case 3:
             _context10.n = 4;
@@ -27256,7 +27465,7 @@ function createAdvancedState() {
             translitRes = _yield$Promise$all2[2];
             arabicRes = _yield$Promise$all2[3];
             tajweedRes = _yield$Promise$all2[4];
-            if (!(requestId !== _this36.verseRequestId)) {
+            if (!(requestId !== _this40.verseRequestId)) {
               _context10.n = 5;
               break;
             }
@@ -27302,9 +27511,9 @@ function createAdvancedState() {
                 chapterId: chapterId,
                 arabic: arabic,
                 arabic_tajweed: tajweedByNumber.get(ayah.numberInSurah) || '',
-                translation: _this36.cleanTranslationText(translation),
+                translation: _this40.cleanTranslationText(translation),
                 transliteration: transliteration,
-                audio: _this36.normalizeAudioUrl(ayah.audio || ((_ayah$audioSecondary = ayah.audioSecondary) === null || _ayah$audioSecondary === void 0 ? void 0 : _ayah$audioSecondary[0]) || ''),
+                audio: _this40.normalizeAudioUrl(ayah.audio || ((_ayah$audioSecondary = ayah.audioSecondary) === null || _ayah$audioSecondary === void 0 ? void 0 : _ayah$audioSecondary[0]) || ''),
                 words: arabicWords.map(function (word, index) {
                   return {
                     ar: word,
@@ -27316,44 +27525,44 @@ function createAdvancedState() {
               };
             });
             if (mode === 'beginner') {
-              _this36.beginner.verses = mappedVerses;
-              _this36.beginner.loadedConfig = {
+              _this40.beginner.verses = mappedVerses;
+              _this40.beginner.loadedConfig = {
                 chapterId: chapterId,
                 rangeStart: start,
                 rangeEnd: end,
                 reciterId: reciterId,
-                showWordByWord: _this36.showWordByWord,
-                tajweedEnabled: _this36.tajweedEnabled
+                showWordByWord: _this40.showWordByWord,
+                tajweedEnabled: _this40.tajweedEnabled
               };
             } else {
-              _this36.advanced.verses = mappedVerses;
-              _this36.advanced.loadedConfig = {
+              _this40.advanced.verses = mappedVerses;
+              _this40.advanced.loadedConfig = {
                 chapterId: chapterId,
                 rangeStart: start,
                 rangeEnd: end,
                 reciterId: reciterId,
-                showWordByWord: _this36.showWordByWord,
-                tajweedEnabled: _this36.tajweedEnabled
+                showWordByWord: _this40.showWordByWord,
+                tajweedEnabled: _this40.tajweedEnabled
               };
             }
-            _this36.syncMutqinAyahs(mappedVerses);
-            _this36.setCachedVerses(mode, targetConfig, {
+            _this40.syncMutqinAyahs(mappedVerses);
+            _this40.setCachedVerses(mode, targetConfig, {
               verses: mappedVerses,
-              loadedConfig: mode === 'beginner' ? _this36.beginner.loadedConfig : _this36.advanced.loadedConfig
+              loadedConfig: mode === 'beginner' ? _this40.beginner.loadedConfig : _this40.advanced.loadedConfig
             });
-            _this36.buildQueue(mode);
-            _this36.syncActiveVerseState(mode);
+            _this40.buildQueue(mode);
+            _this40.syncActiveVerseState(mode);
 
             // Set ready after data loads
-            _this36.isDataReady = true;
+            _this40.isDataReady = true;
             _context10.n = 7;
             break;
           case 6:
             _context10.p = 6;
             _t3 = _context10.v;
             console.error('Error loading verses:', _t3);
-            _this36.showBanner('Failed to load verses', 'error', 3000);
-            _this36.isDataReady = true;
+            _this40.showBanner('Failed to load verses', 'error', 3000);
+            _this40.isDataReady = true;
           case 7:
             return _context10.a(2);
         }
@@ -27588,105 +27797,105 @@ function createAdvancedState() {
       console.error("Failed to persist ".concat(mode, " mode state:"), e);
     }
   }), "startSession", function startSession() {
-    var _this37 = this;
+    var _this41 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee11() {
       var config, mode, currentVerses, modeNeedsReload, updatedVerses, builtQueue, sessionState, canonicalIndex, playbackIndex, nextCanonicalIndex, first, chainingStatus;
       return _regenerator().w(function (_context11) {
         while (1) switch (_context11.n) {
           case 0:
-            config = _this37.sessionConfig;
-            mode = config.mode || _this37.currentMode;
+            config = _this41.sessionConfig;
+            mode = config.mode || _this41.currentMode;
             if (!(!config.chapterId || config.chapterId === 0)) {
               _context11.n = 1;
               break;
             }
-            _this37.showTools = true;
-            _this37.showBanner('Please select a surah first', 'info', 3600);
+            _this41.showTools = true;
+            _this41.showBanner('Please select a surah first', 'info', 3600);
             return _context11.a(2);
           case 1:
-            if (_this37.validateSettings()) {
+            if (_this41.validateSettings()) {
               _context11.n = 2;
               break;
             }
             return _context11.a(2);
           case 2:
-            _this37.applySessionConfig(config);
-            _this37.persistModeState(mode);
-            _this37.persistUiState();
-            _this37.sessionCompleted = false;
-            _this37.sessionStartedAt = Date.now();
-            _this37.sessionErrorCount = 0;
-            _this37.statsTick = Date.now();
-            currentVerses = mode === 'beginner' ? _this37.beginner.verses : _this37.advanced.verses;
-            modeNeedsReload = !currentVerses || !currentVerses.length || !_this37.modeDataMatchesConfig(mode, config);
+            _this41.applySessionConfig(config);
+            _this41.persistModeState(mode);
+            _this41.persistUiState();
+            _this41.sessionCompleted = false;
+            _this41.sessionStartedAt = Date.now();
+            _this41.sessionErrorCount = 0;
+            _this41.statsTick = Date.now();
+            currentVerses = mode === 'beginner' ? _this41.beginner.verses : _this41.advanced.verses;
+            modeNeedsReload = !currentVerses || !currentVerses.length || !_this41.modeDataMatchesConfig(mode, config);
             if (!modeNeedsReload) {
               _context11.n = 3;
               break;
             }
             _context11.n = 3;
-            return _this37.loadVerses(mode);
+            return _this41.loadVerses(mode);
           case 3:
-            updatedVerses = mode === 'beginner' ? _this37.beginner.verses : _this37.advanced.verses;
+            updatedVerses = mode === 'beginner' ? _this41.beginner.verses : _this41.advanced.verses;
             if (!(!updatedVerses || updatedVerses.length === 0)) {
               _context11.n = 4;
               break;
             }
-            _this37.showBanner('No verses loaded. Check your network connection.', 'error');
+            _this41.showBanner('No verses loaded. Check your network connection.', 'error');
             return _context11.a(2);
           case 4:
-            if (!_this37.audioElement) {
-              _this37.initAudio();
+            if (!_this41.audioElement) {
+              _this41.initAudio();
             }
 
             // Rebuild queue with current chaining settings
             console.log('[startSession] Building queue with settings:', {
-              enabled: _this37.chainingEnabled,
-              method: _this37.chainingMethod,
-              repetitions: _this37.chainingRepetitions
+              enabled: _this41.chainingEnabled,
+              method: _this41.chainingMethod,
+              repetitions: _this41.chainingRepetitions
             });
-            _this37.buildQueue(mode);
-            builtQueue = mode === 'beginner' ? _this37.beginner.queue : _this37.advanced.queue;
+            _this41.buildQueue(mode);
+            builtQueue = mode === 'beginner' ? _this41.beginner.queue : _this41.advanced.queue;
             if (!(!builtQueue || builtQueue.length === 0)) {
               _context11.n = 5;
               break;
             }
-            _this37.showBanner('Nothing to play. Check the selected range.', 'error');
+            _this41.showBanner('Nothing to play. Check the selected range.', 'error');
             return _context11.a(2);
           case 5:
-            _this37.syncMutqinAyahs(updatedVerses);
-            sessionState = _this37.syncMutqinSession(builtQueue, mode);
+            _this41.syncMutqinAyahs(updatedVerses);
+            sessionState = _this41.syncMutqinSession(builtQueue, mode);
             canonicalIndex = Math.max(0, Number((sessionState === null || sessionState === void 0 ? void 0 : sessionState.current_index) || 0));
             playbackIndex = canonicalIndex > 0 ? Math.min(canonicalIndex - 1, builtQueue.length - 1) : 0;
-            _this37.queueIndex = playbackIndex;
-            _this37.getModeStore(mode).queueIndex = playbackIndex;
+            _this41.queueIndex = playbackIndex;
+            _this41.getModeStore(mode).queueIndex = playbackIndex;
             nextCanonicalIndex = canonicalIndex > 0 ? canonicalIndex : 1;
-            (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this37.mutqinState, nextCanonicalIndex);
+            (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this41.mutqinState, nextCanonicalIndex);
             first = builtQueue[playbackIndex];
             if (!(first && first.verse)) {
               _context11.n = 7;
               break;
             }
-            _this37.setActiveVerse(first.verse.key, {
+            _this41.setActiveVerse(first.verse.key, {
               mode: mode,
               queueIndex: playbackIndex,
               scroll: false
             });
             _context11.n = 6;
-            return _this37.$nextTick();
+            return _this41.$nextTick();
           case 6:
-            if (_this37.audioElement) {
-              _this37.audioElement.playbackRate = _this37.speed;
+            if (_this41.audioElement) {
+              _this41.audioElement.playbackRate = _this41.speed;
             }
             _context11.n = 7;
-            return _this37.playQueueEntry(first, {
+            return _this41.playQueueEntry(first, {
               force: true,
               queueIndex: playbackIndex
             });
           case 7:
-            _this37.showTools = false;
-            _this37.flowStep = 'learn';
-            chainingStatus = _this37.chainingEnabled ? "".concat(_this37.chainingMethod, " chaining (").concat(_this37.chainingRepetitions, "x)") : 'no chaining';
-            _this37.showBanner("Session started with ".concat(builtQueue.length, " guided repetitions using ").concat(chainingStatus), 'success', 3000);
+            _this41.showTools = false;
+            _this41.flowStep = 'learn';
+            chainingStatus = _this41.chainingEnabled ? "".concat(_this41.chainingMethod, " chaining (").concat(_this41.chainingRepetitions, "x)") : 'no chaining';
+            _this41.showBanner("Session started with ".concat(builtQueue.length, " guided repetitions using ").concat(chainingStatus), 'success', 3000);
           case 8:
             return _context11.a(2);
         }
@@ -27717,7 +27926,7 @@ function createAdvancedState() {
     var arabicLength = String(verse.arabic || verse.text || '').replace(/[^ء-ي]/g, '').length || 80;
     return Math.max(5, Math.min(45, arabicLength * 0.12)) / speedFactor;
   }), "showBanner", function showBanner(message) {
-    var _this38 = this;
+    var _this42 = this;
     var kind = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'info';
     var ttlMs = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 3500;
     var action = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
@@ -27730,7 +27939,7 @@ function createAdvancedState() {
       actionLabel: (action === null || action === void 0 ? void 0 : action.label) || ''
     };
     this.bannerTimer = setTimeout(function () {
-      if (_this38.banner && Date.now() - _this38.banner.at >= ttlMs) _this38.banner = null;
+      if (_this42.banner && Date.now() - _this42.banner.at >= ttlMs) _this42.banner = null;
     }, ttlMs + 50);
   }), "runBannerAction", function runBannerAction() {
     var _this$banner;
@@ -27748,7 +27957,7 @@ function createAdvancedState() {
     if (!Array.isArray(verses) || !verses.length) return;
     (0,_composables_useAyahState__WEBPACK_IMPORTED_MODULE_3__.seedAyahs)(this.mutqinState, verses);
   }), "syncMutqinSession", function syncMutqinSession() {
-    var _this39 = this;
+    var _this43 = this;
     var queue = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.queue;
     var mode = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.currentMode;
     var playbackQueue = (queue || []).map(function (item) {
@@ -27777,18 +27986,18 @@ function createAdvancedState() {
     var planner = (0,_composables_useDailyPlanner__WEBPACK_IMPORTED_MODULE_5__.createDailyPlan)(this.mutqinState, uniqueVerses, {
       repetitions: 1,
       audioDurations: uniqueVerses.reduce(function (map, verse) {
-        map[verse.key] = Number(verse.duration || _this39.duration || 0);
+        map[verse.key] = Number(verse.duration || _this43.duration || 0);
         return map;
       }, {}),
       reviewSeconds: 18
     });
     var plannerQueue = uniqueVerses.slice(0, 1).map(function (verse) {
-      var _this39$currentChapte;
+      var _this43$currentChapte;
       return {
         phase: 'Planner',
         ayahId: verse.key,
         verse: verse,
-        prompt: "".concat(((_this39$currentChapte = _this39.currentChapter) === null || _this39$currentChapte === void 0 ? void 0 : _this39$currentChapte.name_simple) || 'Session', " ayahs ").concat(_this39.rangeStart, "-").concat(_this39.rangeEnd)
+        prompt: "".concat(((_this43$currentChapte = _this43.currentChapter) === null || _this43$currentChapte === void 0 ? void 0 : _this43$currentChapte.name_simple) || 'Session', " ayahs ").concat(_this43.rangeStart, "-").concat(_this43.rangeEnd)
       };
     });
     var recallQueue = uniqueVerses.map(function (verse) {
@@ -28074,11 +28283,11 @@ function createAdvancedState() {
     document.documentElement.setAttribute('data-theme', this.theme);
     this.persistUiState();
   }), "toggleSection", function toggleSection(key) {
-    var _this40 = this;
+    var _this44 = this;
     var nextValue = !this.sectionOpen[key];
     Object.keys(this.sectionOpen).forEach(function (sectionKey) {
       if (['session_tools', 'live_stats'].includes(sectionKey)) {
-        _this40.sectionOpen[sectionKey] = false;
+        _this44.sectionOpen[sectionKey] = false;
       }
     });
     this.sectionOpen[key] = nextValue;
@@ -28104,41 +28313,52 @@ function createAdvancedState() {
     try {
       var raw = localStorage.getItem('telawa.uiState');
       if (raw) {
-        var _state$showTranslatio, _state$showTransliter, _state$showWordByWord, _state$wordByWordAudi, _state$chainingEnable, _ref6, _state$defaultFontSiz, _ref7, _state$tajweedEnabled, _state$showTranslatio2, _state$showTransliter2, _state$showWordByWord2, _state$wordByWordAudi2, _ref8, _state$defaultFontSiz2, _state$fontScale, _state$uiScale, _state$enScale, _state$tajweedEnabled2;
         var state = JSON.parse(raw);
-        this.theme = state.theme || this.theme;
-        this.tab = ['tools', 'settings'].includes(state.tab) ? state.tab : 'tools';
-        this.currentMode = state.currentMode || 'beginner';
-        this.flowStep = ['learn', 'practice', 'recall'].includes(state.flowStep) ? state.flowStep : state.flowStep === 'read' ? 'learn' : state.flowStep === 'listen' ? 'practice' : 'learn';
-        this.flowListenPlays = Math.max(0, Number(state.flowListenPlays || 0));
-        this.showTranslation = (_state$showTranslatio = state.showTranslation) !== null && _state$showTranslatio !== void 0 ? _state$showTranslatio : this.showTranslation;
-        this.showTransliteration = (_state$showTransliter = state.showTransliteration) !== null && _state$showTransliter !== void 0 ? _state$showTransliter : this.showTransliteration;
-        this.showWordByWord = (_state$showWordByWord = state.showWordByWord) !== null && _state$showWordByWord !== void 0 ? _state$showWordByWord : this.showWordByWord;
-        this.wordByWordAudioEnabled = (_state$wordByWordAudi = state.wordByWordAudioEnabled) !== null && _state$wordByWordAudi !== void 0 ? _state$wordByWordAudi : this.wordByWordAudioEnabled;
-        this.chainingEnabled = (_state$chainingEnable = state.chainingEnabled) !== null && _state$chainingEnable !== void 0 ? _state$chainingEnable : this.chainingEnabled;
-        this.chainingMethod = ['linking', 'cumulative'].includes(state.chainingMethod) ? state.chainingMethod : this.chainingMethod;
-        this.chainingRepetitions = Math.max(1, Math.min(5, Number(state.chainingRepetitions || this.chainingRepetitions || 1)));
-        this.defaultFontSize = Number((_ref6 = (_state$defaultFontSiz = state.defaultFontSize) !== null && _state$defaultFontSiz !== void 0 ? _state$defaultFontSiz : this.defaultFontSize) !== null && _ref6 !== void 0 ? _ref6 : 100);
-        this.settingsDraft = {
-          tajweedEnabled: (_ref7 = (_state$tajweedEnabled = state.tajweedEnabled) !== null && _state$tajweedEnabled !== void 0 ? _state$tajweedEnabled : this.tajweedEnabled) !== null && _ref7 !== void 0 ? _ref7 : false,
-          showTranslation: (_state$showTranslatio2 = state.showTranslation) !== null && _state$showTranslatio2 !== void 0 ? _state$showTranslatio2 : this.showTranslation,
-          showTransliteration: (_state$showTransliter2 = state.showTransliteration) !== null && _state$showTransliter2 !== void 0 ? _state$showTransliter2 : this.showTransliteration,
-          showWordByWord: (_state$showWordByWord2 = state.showWordByWord) !== null && _state$showWordByWord2 !== void 0 ? _state$showWordByWord2 : this.showWordByWord,
-          wordByWordAudioEnabled: (_state$wordByWordAudi2 = state.wordByWordAudioEnabled) !== null && _state$wordByWordAudi2 !== void 0 ? _state$wordByWordAudi2 : this.wordByWordAudioEnabled,
-          defaultFontSize: Number((_ref8 = (_state$defaultFontSiz2 = state.defaultFontSize) !== null && _state$defaultFontSiz2 !== void 0 ? _state$defaultFontSiz2 : this.defaultFontSize) !== null && _ref8 !== void 0 ? _ref8 : 100)
-        };
-        this.fontScale = (_state$fontScale = state.fontScale) !== null && _state$fontScale !== void 0 ? _state$fontScale : this.fontScale;
-        this.uiScale = Number((_state$uiScale = state.uiScale) !== null && _state$uiScale !== void 0 ? _state$uiScale : this.uiScale);
-        this.enScale = Number((_state$enScale = state.enScale) !== null && _state$enScale !== void 0 ? _state$enScale : this.enScale);
-        this.quranFont = state.quranFont || this.quranFont;
-        this.script = state.script || this.script;
-        this.sectionOpen = _objectSpread(_objectSpread({}, this.sectionOpen), state.sectionOpen || {});
-        this.tajweedEnabled = (_state$tajweedEnabled2 = state.tajweedEnabled) !== null && _state$tajweedEnabled2 !== void 0 ? _state$tajweedEnabled2 : false;
-        this.mainCardCollapsed = !!state.mainCardCollapsed;
-        this.feedbackCollapsed = !!state.feedbackCollapsed;
+
+        // Only apply if state exists
+        if (state) {
+          var _state$showTranslatio, _state$showTransliter, _state$showWordByWord, _state$wordByWordAudi, _state$chainingEnable, _ref6, _state$defaultFontSiz, _state$anchorModeEnab, _state$anchorCount, _ref7, _state$tajweedEnabled, _state$showTranslatio2, _state$showTransliter2, _state$showWordByWord2, _state$wordByWordAudi2, _ref8, _state$defaultFontSiz2, _state$fontScale, _state$uiScale, _state$enScale, _state$tajweedEnabled2;
+          this.theme = state.theme || this.theme;
+          this.tab = ['tools', 'settings'].includes(state.tab) ? state.tab : 'tools';
+          this.currentMode = state.currentMode || 'beginner';
+          this.flowStep = ['learn', 'practice', 'recall'].includes(state.flowStep) ? state.flowStep : state.flowStep === 'read' ? 'learn' : state.flowStep === 'listen' ? 'practice' : 'learn';
+          this.flowListenPlays = Math.max(0, Number(state.flowListenPlays || 0));
+          this.showTranslation = (_state$showTranslatio = state.showTranslation) !== null && _state$showTranslatio !== void 0 ? _state$showTranslatio : this.showTranslation;
+          this.showTransliteration = (_state$showTransliter = state.showTransliteration) !== null && _state$showTransliter !== void 0 ? _state$showTransliter : this.showTransliteration;
+          this.showWordByWord = (_state$showWordByWord = state.showWordByWord) !== null && _state$showWordByWord !== void 0 ? _state$showWordByWord : this.showWordByWord;
+          this.wordByWordAudioEnabled = (_state$wordByWordAudi = state.wordByWordAudioEnabled) !== null && _state$wordByWordAudi !== void 0 ? _state$wordByWordAudi : this.wordByWordAudioEnabled;
+          this.chainingEnabled = (_state$chainingEnable = state.chainingEnabled) !== null && _state$chainingEnable !== void 0 ? _state$chainingEnable : this.chainingEnabled;
+          this.chainingMethod = ['linking', 'cumulative'].includes(state.chainingMethod) ? state.chainingMethod : this.chainingMethod;
+          this.chainingRepetitions = Math.max(1, Math.min(5, Number(state.chainingRepetitions || this.chainingRepetitions || 1)));
+          this.defaultFontSize = Number((_ref6 = (_state$defaultFontSiz = state.defaultFontSize) !== null && _state$defaultFontSiz !== void 0 ? _state$defaultFontSiz : this.defaultFontSize) !== null && _ref6 !== void 0 ? _ref6 : 100);
+
+          // Anchor Mode settings
+          this.anchorModeEnabled = (_state$anchorModeEnab = state.anchorModeEnabled) !== null && _state$anchorModeEnab !== void 0 ? _state$anchorModeEnab : false;
+          this.anchorCount = (_state$anchorCount = state.anchorCount) !== null && _state$anchorCount !== void 0 ? _state$anchorCount : 2;
+          this.settingsDraft = {
+            tajweedEnabled: (_ref7 = (_state$tajweedEnabled = state.tajweedEnabled) !== null && _state$tajweedEnabled !== void 0 ? _state$tajweedEnabled : this.tajweedEnabled) !== null && _ref7 !== void 0 ? _ref7 : false,
+            showTranslation: (_state$showTranslatio2 = state.showTranslation) !== null && _state$showTranslatio2 !== void 0 ? _state$showTranslatio2 : this.showTranslation,
+            showTransliteration: (_state$showTransliter2 = state.showTransliteration) !== null && _state$showTransliter2 !== void 0 ? _state$showTransliter2 : this.showTransliteration,
+            showWordByWord: (_state$showWordByWord2 = state.showWordByWord) !== null && _state$showWordByWord2 !== void 0 ? _state$showWordByWord2 : this.showWordByWord,
+            wordByWordAudioEnabled: (_state$wordByWordAudi2 = state.wordByWordAudioEnabled) !== null && _state$wordByWordAudi2 !== void 0 ? _state$wordByWordAudi2 : this.wordByWordAudioEnabled,
+            defaultFontSize: Number((_ref8 = (_state$defaultFontSiz2 = state.defaultFontSize) !== null && _state$defaultFontSiz2 !== void 0 ? _state$defaultFontSiz2 : this.defaultFontSize) !== null && _ref8 !== void 0 ? _ref8 : 100)
+          };
+          this.fontScale = (_state$fontScale = state.fontScale) !== null && _state$fontScale !== void 0 ? _state$fontScale : this.fontScale;
+          this.uiScale = Number((_state$uiScale = state.uiScale) !== null && _state$uiScale !== void 0 ? _state$uiScale : this.uiScale);
+          this.enScale = Number((_state$enScale = state.enScale) !== null && _state$enScale !== void 0 ? _state$enScale : this.enScale);
+          this.quranFont = state.quranFont || this.quranFont;
+          this.script = state.script || this.script;
+          this.sectionOpen = _objectSpread(_objectSpread({}, this.sectionOpen), state.sectionOpen || {});
+          this.tajweedEnabled = (_state$tajweedEnabled2 = state.tajweedEnabled) !== null && _state$tajweedEnabled2 !== void 0 ? _state$tajweedEnabled2 : false;
+          this.mainCardCollapsed = !!state.mainCardCollapsed;
+          this.feedbackCollapsed = !!state.feedbackCollapsed;
+        }
       }
     } catch (e) {
-      console.error(e);
+      console.error('Error loading UI state:', e);
+      // Set defaults if loading fails
+      this.anchorModeEnabled = false;
+      this.anchorCount = 2;
     }
     this.showTools = false;
     this.beginner = this.loadModeState('beginner');
@@ -28148,6 +28368,8 @@ function createAdvancedState() {
     if (this.isBootstrapping) return;
     try {
       localStorage.setItem('telawa.uiState', JSON.stringify({
+        anchorModeEnabled: this.anchorModeEnabled,
+        anchorCount: this.anchorCount,
         theme: this.theme,
         showTools: this.showTools,
         tab: this.tab,
@@ -28192,7 +28414,7 @@ function createAdvancedState() {
       console.error(e);
     }
   }), "restoreSessionState", function restoreSessionState() {
-    var _this41 = this;
+    var _this45 = this;
     ;
     ['beginner', 'advanced'].forEach(function (mode) {
       var saved = localStorage.getItem(SESSION_STORAGE_KEYS[mode]);
@@ -28200,14 +28422,14 @@ function createAdvancedState() {
       try {
         var state = JSON.parse(saved);
         if (Date.now() - state.timestamp < 24 * 60 * 60 * 1000) {
-          var target = mode === 'beginner' ? _this41.beginner : _this41.advanced;
+          var target = mode === 'beginner' ? _this45.beginner : _this45.advanced;
           var restoredKey = state.activeVerseKey || state.activeKey || null;
           target.activeKey = restoredKey;
           target.queueIndex = Number(state.queueIndex || 0);
-          if (mode === _this41.currentMode) {
-            _this41.activeVerseKey = restoredKey;
-            _this41.activeKey = restoredKey;
-            _this41.queueIndex = target.queueIndex;
+          if (mode === _this45.currentMode) {
+            _this45.activeVerseKey = restoredKey;
+            _this45.activeKey = restoredKey;
+            _this45.queueIndex = target.queueIndex;
           }
         }
       } catch (e) {
@@ -28240,7 +28462,7 @@ function createAdvancedState() {
     this.persistSm2();
     (0,_composables_useMutqinPersistence__WEBPACK_IMPORTED_MODULE_2__.saveMutqinState)(this.mutqinState);
   }), "loadChapters", function loadChapters() {
-    var _this42 = this;
+    var _this46 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee12() {
       var _res$data, res, _t4;
       return _regenerator().w(function (_context12) {
@@ -28255,13 +28477,13 @@ function createAdvancedState() {
             });
           case 1:
             res = _context12.v;
-            _this42.chapters = ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.chapters) || [];
-            if (!_this42.chapterId) {
+            _this46.chapters = ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.chapters) || [];
+            if (!_this46.chapterId) {
               _context12.n = 2;
               break;
             }
             _context12.n = 2;
-            return _this42.loadChapter();
+            return _this46.loadChapter();
           case 2:
             _context12.n = 4;
             break;
@@ -28269,7 +28491,7 @@ function createAdvancedState() {
             _context12.p = 3;
             _t4 = _context12.v;
             console.error('Failed to load chapters:', _t4);
-            _this42.showBanner('Failed to load surah list', 'error', 3000);
+            _this46.showBanner('Failed to load surah list', 'error', 3000);
           case 4:
             return _context12.a(2);
         }
@@ -28277,45 +28499,45 @@ function createAdvancedState() {
     }))();
   }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "loadChapter", function loadChapter() {
     var _arguments5 = arguments,
-      _this43 = this;
+      _this47 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee13() {
-      var _this43$currentChapte;
+      var _this47$currentChapte;
       var mode, target, chapterId, max;
       return _regenerator().w(function (_context13) {
         while (1) switch (_context13.n) {
           case 0:
-            mode = _arguments5.length > 0 && _arguments5[0] !== undefined ? _arguments5[0] : _this43.currentMode;
-            target = mode === 'beginner' ? _this43.beginner : _this43.advanced;
+            mode = _arguments5.length > 0 && _arguments5[0] !== undefined ? _arguments5[0] : _this47.currentMode;
+            target = mode === 'beginner' ? _this47.beginner : _this47.advanced;
             chapterId = Number(target.chapterId || 0);
             if (chapterId) {
               _context13.n = 1;
               break;
             }
-            _this43.currentChapter = null;
+            _this47.currentChapter = null;
             return _context13.a(2);
           case 1:
-            _this43.currentChapter = _this43.chapters.find(function (c) {
+            _this47.currentChapter = _this47.chapters.find(function (c) {
               return c.id === chapterId;
             });
-            max = ((_this43$currentChapte = _this43.currentChapter) === null || _this43$currentChapte === void 0 ? void 0 : _this43$currentChapte.verses_count) || 286;
+            max = ((_this47$currentChapte = _this47.currentChapter) === null || _this47$currentChapte === void 0 ? void 0 : _this47$currentChapte.verses_count) || 286;
             if (mode === 'beginner') {
-              _this43.beginner.rangeEnd = Math.min(_this43.beginner.rangeEnd, max);
-              _this43.beginner.rangeStart = Math.max(1, _this43.beginner.rangeStart);
+              _this47.beginner.rangeEnd = Math.min(_this47.beginner.rangeEnd, max);
+              _this47.beginner.rangeStart = Math.max(1, _this47.beginner.rangeStart);
             } else {
-              _this43.advanced.rangeEnd = Math.min(_this43.advanced.rangeEnd, max);
-              _this43.advanced.rangeStart = Math.max(1, _this43.advanced.rangeStart);
+              _this47.advanced.rangeEnd = Math.min(_this47.advanced.rangeEnd, max);
+              _this47.advanced.rangeStart = Math.max(1, _this47.advanced.rangeStart);
             }
             _context13.n = 2;
-            return _this43.loadVerses(mode);
+            return _this47.loadVerses(mode);
           case 2:
             return _context13.a(2);
         }
       }, _callee13);
     }))();
   }), "loadReciters", function loadReciters() {
-    var _this44 = this;
+    var _this48 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee14() {
-      var _res$data2, res, list, allow, available, filtered, _this44$reciters$, _t5;
+      var _res$data2, res, list, allow, available, filtered, _this48$reciters$, _t5;
       return _regenerator().w(function (_context14) {
         while (1) switch (_context14.p = _context14.n) {
           case 0:
@@ -28366,7 +28588,7 @@ function createAdvancedState() {
                 name: entry.label
               };
             });
-            _this44.reciters = filtered.length ? filtered : list.filter(function (edition) {
+            _this48.reciters = filtered.length ? filtered : list.filter(function (edition) {
               return edition.format === 'audio';
             }).map(function (edition) {
               return {
@@ -28374,10 +28596,10 @@ function createAdvancedState() {
                 name: edition.englishName || edition.name || edition.identifier
               };
             });
-            if (!_this44.reciters.some(function (reciter) {
-              return reciter.id === _this44.reciterId;
+            if (!_this48.reciters.some(function (reciter) {
+              return reciter.id === _this48.reciterId;
             })) {
-              _this44.reciterId = ((_this44$reciters$ = _this44.reciters[0]) === null || _this44$reciters$ === void 0 ? void 0 : _this44$reciters$.id) || DEFAULT_ALQURAN_RECITER;
+              _this48.reciterId = ((_this48$reciters$ = _this48.reciters[0]) === null || _this48$reciters$ === void 0 ? void 0 : _this48$reciters$.id) || DEFAULT_ALQURAN_RECITER;
             }
             _context14.n = 4;
             break;
@@ -28686,16 +28908,16 @@ function createAdvancedState() {
     this.quizIndex = 0;
     this.nextQuizCard();
   }), "playWordAudio", function playWordAudio(url) {
-    var _this45 = this;
+    var _this49 = this;
     var key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
     if (!url) return;
     this.activeWordAudio = key;
     var a = new Audio(url);
     a.addEventListener('ended', function () {
-      if (_this45.activeWordAudio === key) _this45.activeWordAudio = '';
+      if (_this49.activeWordAudio === key) _this49.activeWordAudio = '';
     });
     a.play()["catch"](function () {
-      _this45.activeWordAudio = '';
+      _this49.activeWordAudio = '';
     });
   }))
 });
@@ -29212,154 +29434,171 @@ var _hoisted_94 = {
   "class": "technique-preview"
 };
 var _hoisted_95 = {
-  "class": "sheet"
+  "class": "technique-row technique-row-stacked"
 };
 var _hoisted_96 = {
-  "class": "saved-sessions-container"
+  "class": "technique-row-main"
 };
 var _hoisted_97 = {
   key: 0,
-  "class": "empty-state"
+  "class": "technique-control"
 };
 var _hoisted_98 = {
+  "class": "technique-preview"
+};
+var _hoisted_99 = {
+  key: 1,
+  "class": "technique-example-hint"
+};
+var _hoisted_100 = {
+  "class": "sheet"
+};
+var _hoisted_101 = {
+  "class": "saved-sessions-container"
+};
+var _hoisted_102 = {
+  key: 0,
+  "class": "empty-state"
+};
+var _hoisted_103 = {
   key: 1,
   "class": "sessions-list"
 };
-var _hoisted_99 = ["onClick"];
-var _hoisted_100 = {
+var _hoisted_104 = ["onClick"];
+var _hoisted_105 = {
   "class": "session-name"
 };
-var _hoisted_101 = {
+var _hoisted_106 = {
   "class": "session-details"
 };
-var _hoisted_102 = ["onClick"];
-var _hoisted_103 = {
+var _hoisted_107 = ["onClick"];
+var _hoisted_108 = {
   key: 2,
   "class": "save-section"
 };
-var _hoisted_104 = {
+var _hoisted_109 = {
   "class": "current-info"
 };
-var _hoisted_105 = {
+var _hoisted_110 = {
   "class": "sheet"
 };
-var _hoisted_106 = {
+var _hoisted_111 = {
   "class": "settings-panels"
 };
-var _hoisted_107 = {
-  "class": "settings-group"
-};
-var _hoisted_108 = {
-  "class": "settings-card-grid settings-display-grid"
-};
-var _hoisted_109 = {
-  "class": "settings-card settings-card-toggle"
-};
-var _hoisted_110 = {
-  "class": "settings-card settings-card-range"
-};
-var _hoisted_111 = {
-  "class": "settings-row-copy"
-};
 var _hoisted_112 = {
-  "class": "settings-range-wrap"
+  "class": "settings-group"
 };
 var _hoisted_113 = {
-  "class": "inline-setting-pill"
+  "class": "settings-card-grid settings-display-grid"
 };
 var _hoisted_114 = {
-  "class": "settings-group"
+  "class": "settings-card settings-card-toggle"
 };
 var _hoisted_115 = {
-  "class": "settings-card-grid"
+  "class": "settings-card settings-card-range"
 };
 var _hoisted_116 = {
-  "class": "settings-card settings-card-toggle"
+  "class": "settings-row-copy"
 };
 var _hoisted_117 = {
-  "class": "settings-card settings-card-toggle"
+  "class": "settings-range-wrap"
 };
 var _hoisted_118 = {
-  "class": "settings-card settings-card-toggle"
+  "class": "inline-setting-pill"
 };
 var _hoisted_119 = {
-  "class": "settings-card settings-card-toggle"
+  "class": "settings-group"
 };
 var _hoisted_120 = {
+  "class": "settings-card-grid"
+};
+var _hoisted_121 = {
+  "class": "settings-card settings-card-toggle"
+};
+var _hoisted_122 = {
+  "class": "settings-card settings-card-toggle"
+};
+var _hoisted_123 = {
+  "class": "settings-card settings-card-toggle"
+};
+var _hoisted_124 = {
+  "class": "settings-card settings-card-toggle"
+};
+var _hoisted_125 = {
   key: 2,
   "class": "main container"
 };
-var _hoisted_121 = {
+var _hoisted_126 = {
   "class": "modal-content save-name-modal"
 };
-var _hoisted_122 = {
-  "class": "modal-header"
-};
-var _hoisted_123 = {
-  "class": "modal-body"
-};
-var _hoisted_124 = {
-  "class": "save-name-input-group"
-};
-var _hoisted_125 = {
-  "class": "save-preview-info"
-};
-var _hoisted_126 = {
-  "class": "modal-footer"
-};
 var _hoisted_127 = {
-  "class": "modal-content confirm-modal",
-  role: "dialog",
-  "aria-modal": "true"
+  "class": "modal-header"
 };
 var _hoisted_128 = {
-  "class": "modal-header"
-};
-var _hoisted_129 = {
   "class": "modal-body"
 };
+var _hoisted_129 = {
+  "class": "save-name-input-group"
+};
 var _hoisted_130 = {
-  "class": "confirm-copy"
+  "class": "save-preview-info"
 };
 var _hoisted_131 = {
   "class": "modal-footer"
 };
 var _hoisted_132 = {
+  "class": "modal-content confirm-modal",
+  role: "dialog",
+  "aria-modal": "true"
+};
+var _hoisted_133 = {
+  "class": "modal-header"
+};
+var _hoisted_134 = {
+  "class": "modal-body"
+};
+var _hoisted_135 = {
+  "class": "confirm-copy"
+};
+var _hoisted_136 = {
+  "class": "modal-footer"
+};
+var _hoisted_137 = {
   key: 5,
   "class": "countdown-overlay"
 };
-var _hoisted_133 = {
+var _hoisted_138 = {
   "class": "countdown-modal"
 };
-var _hoisted_134 = {
+var _hoisted_139 = {
   "class": "countdown-number"
 };
-var _hoisted_135 = {
+var _hoisted_140 = {
   "class": "player-main"
 };
-var _hoisted_136 = {
+var _hoisted_141 = {
   "class": "player-info"
 };
-var _hoisted_137 = {
+var _hoisted_142 = {
   "class": "player-chapter"
 };
-var _hoisted_138 = {
+var _hoisted_143 = {
   "class": "player-verse"
 };
-var _hoisted_139 = ["title"];
-var _hoisted_140 = {
+var _hoisted_144 = ["title"];
+var _hoisted_145 = {
   "class": "player-controls"
 };
-var _hoisted_141 = {
+var _hoisted_146 = {
   "class": "player-progress-wrap"
 };
-var _hoisted_142 = {
+var _hoisted_147 = {
   "class": "player-time"
 };
-var _hoisted_143 = {
+var _hoisted_148 = {
   "class": "player-time"
 };
-var _hoisted_144 = {
+var _hoisted_149 = {
   ref: "audio",
   style: {
     "display": "none"
@@ -29386,7 +29625,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $data.banner = null;
     }),
     "aria-label": "Dismiss"
-  }, _toConsumableArray(_cache[68] || (_cache[68] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[71] || (_cache[71] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */)])))])], 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Main Content "), $data.appReady && $options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 1,
@@ -29397,21 +29636,21 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       'flow-practice': $options.guidedUiStep === 'practice',
       'flow-recall': $options.guidedUiStep === 'recall'
     }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [!$options.hasVerses && !$options.currentConfig.chapterId ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [$data.hasContinueSession ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [_cache[69] || (_cache[69] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [!$options.hasVerses && !$options.currentConfig.chapterId ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [$data.hasContinueSession ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [_cache[72] || (_cache[72] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "continue-session-kicker"
   }, "Continue where you left off", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.continueSessionLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.continueSessionMeta), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-primary continue-session-btn",
     onClick: _cache[2] || (_cache[2] = function () {
       return $options.continueLastSession && $options.continueLastSession.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[70] || (_cache[70] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[73] || (_cache[73] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-fill"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Continue Session ", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-ghost continue-session-dismiss",
     onClick: _cache[3] || (_cache[3] = function () {
       return $options.confirmDiscardContinueSession && $options.confirmDiscardContinueSession.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[71] || (_cache[71] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[74] || (_cache[74] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */)])))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-primary setup-primary",
@@ -29422,11 +29661,11 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.openToolsPanel();
     }),
     title: "Open controls"
-  }, _toConsumableArray(_cache[72] || (_cache[72] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[75] || (_cache[75] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Open Session Controls ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_9), _cache[73] || (_cache[73] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Open Session Controls ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_9), _cache[76] || (_cache[76] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
     "class": "offcanvas-launcher-copy"
-  }, " Session setup lives in the offcanvas. ", -1 /* CACHED */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true),  false ? (0) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Grid "), !$data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_17, _toConsumableArray(_cache[80] || (_cache[80] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, " Session setup lives in the offcanvas. ", -1 /* CACHED */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true),  false ? (0) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Grid "), !$data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_17, _toConsumableArray(_cache[83] || (_cache[83] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-hourglass-split"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Loading...", -1 /* CACHED */)])))) : $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_18, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["workspace-shell", {
@@ -29439,7 +29678,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.toggleFullScreen && $options.toggleFullScreen.apply($options, arguments);
     }),
     title: "Full screen mode"
-  }, _toConsumableArray(_cache[81] || (_cache[81] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[84] || (_cache[84] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrows-fullscreen"
   }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "action-icon-btn",
@@ -29447,7 +29686,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.toggleKeyboardShortcuts && $options.toggleKeyboardShortcuts.apply($options, arguments);
     }),
     title: "Keyboard shortcuts"
-  }, _toConsumableArray(_cache[82] || (_cache[82] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[85] || (_cache[85] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-keyboard"
   }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "action-btn action-btn-secondary",
@@ -29456,7 +29695,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.openAdvancedControls && $options.openAdvancedControls.apply($options, arguments);
     }),
     title: "Open session controls"
-  }, _toConsumableArray(_cache[83] || (_cache[83] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[86] || (_cache[86] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Controls", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "action-btn action-btn-primary",
@@ -29473,18 +29712,18 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[16] || (_cache[16] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
       return $data.showKeyboardShortcuts = false;
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [_cache[85] || (_cache[85] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [_cache[88] || (_cache[88] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-keyboard"
   }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Keyboard Shortcuts")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "shortcuts-modal-close",
     onClick: _cache[15] || (_cache[15] = function ($event) {
       return $data.showKeyboardShortcuts = false;
     })
-  }, _toConsumableArray(_cache[84] || (_cache[84] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[87] || (_cache[87] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), _cache[86] || (_cache[86] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"shortcuts-modal-body\"><div class=\"shortcuts-grid\"><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Navigation</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↑</kbd></div><span>Previous verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↓</kbd></div><span>Next verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>←</kbd> / <kbd>J</kbd></div><span>Previous in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>→</kbd> / <kbd>K</kbd></div><span>Next in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Home</kbd></div><span>First verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>End</kbd></div><span>Last verse</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Playback</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Space</kbd></div><span>Play / Pause</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Enter</kbd></div><span>Play current verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>P</kbd></div><span>Play current verse</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Session</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Ctrl</kbd> + <kbd>S</kbd></div><span>Save session</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Esc</kbd></div><span>Close modals</span></div></div></div></div>", 1))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + " of " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "% complete", 1 /* TEXT */), $options.etaLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_28, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), !$data.mainCardCollapsed && $data.chainingEnabled && $options.hasSessionFeedback ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_29, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_30, [_cache[87] || (_cache[87] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)])))]), _cache[89] || (_cache[89] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"shortcuts-modal-body\"><div class=\"shortcuts-grid\"><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Navigation</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↑</kbd></div><span>Previous verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↓</kbd></div><span>Next verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>←</kbd> / <kbd>J</kbd></div><span>Previous in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>→</kbd> / <kbd>K</kbd></div><span>Next in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Home</kbd></div><span>First verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>End</kbd></div><span>Last verse</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Playback</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Space</kbd></div><span>Play / Pause</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Enter</kbd></div><span>Play current verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>P</kbd></div><span>Play current verse</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Session</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Ctrl</kbd> + <kbd>S</kbd></div><span>Save session</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Esc</kbd></div><span>Close modals</span></div></div></div></div>", 1))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + " of " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "% complete", 1 /* TEXT */), $options.etaLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_28, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), !$data.mainCardCollapsed && $data.chainingEnabled && $options.hasSessionFeedback ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_29, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_30, [_cache[90] || (_cache[90] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-link-45deg"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions) + "x ", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_31, [_cache[88] || (_cache[88] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions) + "x ", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_31, [_cache[91] || (_cache[91] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-diagram-3"
   }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingProgressLabel), 1 /* TEXT */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.mainCardCollapsed]])], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("main", _hoisted_32, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_33, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.verses, function (verse) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
@@ -29524,7 +29763,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       }, ["stop"]),
       disabled: !verse.audio,
       title: "Download audio for offline listening"
-    }, _toConsumableArray(_cache[89] || (_cache[89] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[92] || (_cache[92] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-download"
     }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_42), !$options.hasSessionFeedback ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_43, "Preview")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), verse.arabic && $data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: 0,
@@ -29541,9 +29780,9 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         'font-family': $options.quranFontFamily,
         'font-size': $options.getVerseFontSize(verse.key) / 100 + 'rem'
       })
-    }, null, 14 /* CLASS, STYLE, PROPS */, _hoisted_44)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Keep in-workspace aids available, but visually quieter "), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_45, [_cache[90] || (_cache[90] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    }, null, 14 /* CLASS, STYLE, PROPS */, _hoisted_44)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Keep in-workspace aids available, but visually quieter "), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_45, [_cache[93] || (_cache[93] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
       "class": "verse-aid-title"
-    }, "Transliteration", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_46, [_cache[91] || (_cache[91] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    }, "Transliteration", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_46, [_cache[94] || (_cache[94] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
       "class": "verse-aid-title"
     }, "Translation", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.translation), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showWordByWord && verse.words && verse.words.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: 3,
@@ -29570,7 +29809,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
           return $options.playWordAudio(word.audio);
         }, ["stop"])
-      }, _toConsumableArray(_cache[92] || (_cache[92] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[95] || (_cache[95] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-volume-up"
       }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_51)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 10 /* CLASS, PROPS */, _hoisted_48);
     }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_47)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 42 /* CLASS, PROPS, NEED_HYDRATION */, _hoisted_34);
@@ -29592,7 +29831,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "aria-labelledby": "memorisationToolsTitle",
     "aria-hidden": $data.showTools ? 'false' : 'true',
     tabindex: "-1"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_53, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_54, [_cache[94] || (_cache[94] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_53, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_54, [_cache[97] || (_cache[97] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     id: "memorisationToolsTitle",
     "class": "tools-title"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("b", null, "Controls")])], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
@@ -29601,7 +29840,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.closeToolsPanel && $options.closeToolsPanel.apply($options, arguments);
     }),
     "aria-label": "Close panel"
-  }, _toConsumableArray(_cache[93] || (_cache[93] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[96] || (_cache[96] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" REPLACE your entire tools-tabs div with this "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Replace your tools-tabs div with this "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_55, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["col-12 col-md-4", {
@@ -29611,7 +29850,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.setActiveTab('tools');
     }),
     title: "Session tools"
-  }, _toConsumableArray(_cache[95] || (_cache[95] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[98] || (_cache[98] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Session ", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["col-12 col-md-4", {
@@ -29621,7 +29860,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.setActiveTab('saved');
     }),
     title: "Saved sessions"
-  }, _toConsumableArray(_cache[96] || (_cache[96] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[99] || (_cache[99] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-clock-history"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Saved ", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["col-12 col-md-4", {
@@ -29630,7 +29869,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[23] || (_cache[23] = function ($event) {
       return $options.setActiveTab('settings');
     })
-  }, _toConsumableArray(_cache[97] || (_cache[97] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[100] || (_cache[100] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-gear"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Settings ", -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_56, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" TOOLS TAB "), $data.tab === 'tools' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_57, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Session Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_58, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
@@ -29638,28 +29877,28 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.toggleSection('advanced_setup');
     }),
     type: "button"
-  }, [_cache[99] || (_cache[99] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Session Setup</span><span class=\"st-sub\">Choose what you memorise</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[102] || (_cache[102] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Session Setup</span><span class=\"st-sub\">Choose what you memorise</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_setup
     }])
-  }, _toConsumableArray(_cache[98] || (_cache[98] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[101] || (_cache[101] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_59, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_60, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_61, [_cache[101] || (_cache[101] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_59, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_60, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_61, [_cache[104] || (_cache[104] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     value: $options.chapterId,
     onChange: _cache[25] || (_cache[25] = function () {
       return $options.onChapterChange && $options.onChapterChange.apply($options, arguments);
     }),
     "class": "select"
-  }, [_cache[100] || (_cache[100] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+  }, [_cache[103] || (_cache[103] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: 0
   }, "Choose a surah...", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (c) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: c.id,
       value: c.id
     }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_63);
-  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_62), _cache[102] || (_cache[102] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_62), _cache[105] || (_cache[105] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Pick the surah you want to work on.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_64, [_cache[104] || (_cache[104] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verse range", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_65, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Pick the surah you want to work on.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_64, [_cache[107] || (_cache[107] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verse range", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_65, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
     "onUpdate:modelValue": _cache[26] || (_cache[26] = function ($event) {
@@ -29671,7 +29910,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     min: "1"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeStart, void 0, {
     number: true
-  }]]), _cache[103] || (_cache[103] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }]]), _cache[106] || (_cache[106] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
     "onUpdate:modelValue": _cache[28] || (_cache[28] = function ($event) {
@@ -29683,9 +29922,9 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     min: "1"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeEnd, void 0, {
     number: true
-  }]])]), _cache[105] || (_cache[105] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }]])]), _cache[108] || (_cache[108] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Keep ranges small for focused memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_66, [_cache[106] || (_cache[106] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }, "Keep ranges small for focused memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_66, [_cache[109] || (_cache[109] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     "onUpdate:modelValue": _cache[30] || (_cache[30] = function ($event) {
       return $options.reciterId = $event;
     }),
@@ -29698,7 +29937,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       key: r.id,
       value: r.id
     }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_67);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]]), _cache[107] || (_cache[107] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]]), _cache[110] || (_cache[110] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
   }, "Changes the audio voice for the session.", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_68, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
@@ -29706,13 +29945,13 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.toggleSection('advanced_playback');
     }),
     type: "button"
-  }, [_cache[109] || (_cache[109] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Audio</span><span class=\"st-sub\">Playback settings</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[112] || (_cache[112] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Audio</span><span class=\"st-sub\">Playback settings</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_playback
     }])
-  }, _toConsumableArray(_cache[108] || (_cache[108] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[111] || (_cache[111] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_69, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_70, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_71, [_cache[110] || (_cache[110] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_72, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.speedOptions, function (option) {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_69, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_70, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_71, [_cache[113] || (_cache[113] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_72, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.speedOptions, function (option) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("label", {
       "class": "radio",
       key: "tool-speed-".concat(option)
@@ -29724,37 +29963,37 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         return $options.setPlaybackSpeed(option);
       }
     }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_73), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(option) + "x ", 1 /* TEXT */)]);
-  }), 128 /* KEYED_FRAGMENT */))]), _cache[111] || (_cache[111] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }), 128 /* KEYED_FRAGMENT */))]), _cache[114] || (_cache[114] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Use slower speed for early memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_74, [_cache[114] || (_cache[114] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_75, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_76, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Use slower speed for early memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_74, [_cache[117] || (_cache[117] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_75, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_76, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "auto",
     "onUpdate:modelValue": _cache[33] || (_cache[33] = function ($event) {
       return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[112] || (_cache[112] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_77, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[115] || (_cache[115] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_77, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "manual",
     "onUpdate:modelValue": _cache[34] || (_cache[34] = function ($event) {
       return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[113] || (_cache[113] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No", -1 /* CACHED */))])]), _cache[115] || (_cache[115] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[116] || (_cache[116] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No", -1 /* CACHED */))])]), _cache[118] || (_cache[118] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Auto moves to the next queue item when audio ends.", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_playback]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Memorisation Techniques Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_78, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Auto moves to the next queue item when audio ends.", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_playback]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Memorisation Techniques Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Memorisation Techniques Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_78, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
     onClick: _cache[35] || (_cache[35] = function ($event) {
       return $options.toggleSection('memorisation_techniques');
     }),
     type: "button"
-  }, [_cache[117] || (_cache[117] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-stars\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Memorisation Techniques</span><span class=\"st-sub\">Optional focus, recall, and chaining aids</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[120] || (_cache[120] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-stars\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Memorisation Techniques</span><span class=\"st-sub\">Focus, recall, chaining, and anchor aids</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.memorisation_techniques
     }])
-  }, _toConsumableArray(_cache[116] || (_cache[116] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[119] || (_cache[119] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_79, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_80, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_81, [_cache[118] || (_cache[118] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_79, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_80, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Focus Mode "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_81, [_cache[121] || (_cache[121] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "technique-copy"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Focus Mode"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, "Reduces distractions around the active ayah.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "🎯 Focus Mode"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, "Reduces distractions around the active ayah.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip technique-toggle", {
       active: $data.focusModeEnabled
     }]),
@@ -29762,9 +30001,9 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $data.focusModeEnabled = !$data.focusModeEnabled;
     }),
     type: "button"
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.focusModeEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_82, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_83, [_cache[119] || (_cache[119] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.focusModeEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Blur Mode "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_82, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_83, [_cache[122] || (_cache[122] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "technique-copy"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Blur Mode"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, "Supports active recall through progressive concealment.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "🌫️ Blur Mode"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, "Supports active recall through progressive concealment.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip technique-toggle", {
       active: $data.blurModeEnabled
     }]),
@@ -29772,7 +30011,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $data.blurModeEnabled = !$data.blurModeEnabled;
     }),
     type: "button"
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.blurModeEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), $data.blurModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_84, [_cache[120] || (_cache[120] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Intensity", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.blurModeEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), $data.blurModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_84, [_cache[123] || (_cache[123] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Intensity", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     min: "4",
     max: "18",
@@ -29783,9 +30022,9 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": "input technique-range"
   }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.blurIntensity, void 0, {
     number: true
-  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_85, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.blurIntensity) + "px", 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.blurModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_86, _toConsumableArray(_cache[121] || (_cache[121] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_85, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.blurIntensity) + "px", 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.blurModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_86, _toConsumableArray(_cache[124] || (_cache[124] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-info-circle"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Peek:"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Hold "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("kbd", null, "Spacebar"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" or hover over blurred verses to temporarily see clearly")], -1 /* CACHED */)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_87, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_88, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_89, [_cache[122] || (_cache[122] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Chaining", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodDescription), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Peek:"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Hold "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("kbd", null, "Spacebar"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" or hover over blurred verses to temporarily see clearly")], -1 /* CACHED */)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Chaining "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_87, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_88, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_89, [_cache[125] || (_cache[125] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "🔗 Chaining", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodDescription), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip technique-toggle", {
       active: $data.chainingEnabled
     }]),
@@ -29809,7 +30048,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[41] || (_cache[41] = function ($event) {
       return $options.setChainingMethod('cumulative');
     })
-  }, " Cumulative ", 2 /* CLASS */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_91, [_cache[123] || (_cache[123] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Repeats per step", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, " Cumulative ", 2 /* CLASS */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_91, [_cache[126] || (_cache[126] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Repeats per step", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     min: "1",
     max: "5",
@@ -29819,15 +30058,45 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.setChainingRepetitions(Number($event.target.value));
     }),
     "class": "input technique-range"
-  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_92), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_93, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_94, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodPreview), 1 /* TEXT */)])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.memorisation_techniques]])])])) : $data.tab === 'saved' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_92), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_93, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_94, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodPreview), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" ANCHOR MODE (with description) "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_95, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_96, [_cache[127] || (_cache[127] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "technique-copy"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "📍 Anchor Mode"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, "Creates mental hooks using key words or phrases as anchors."), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "technique-desc-hint"
+  }, "Remember 1-3 key words → recall the whole ayah")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip technique-toggle", {
+      active: $data.anchorModeEnabled
+    }]),
+    onClick: _cache[43] || (_cache[43] = function () {
+      return $options.toggleAnchorMode && $options.toggleAnchorMode.apply($options, arguments);
+    }),
+    type: "button"
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.anchorModeEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), $data.anchorModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_97, [_cache[130] || (_cache[130] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Anchor points per ayah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[44] || (_cache[44] = function ($event) {
+      return $data.anchorCount = $event;
+    }),
+    onChange: _cache[45] || (_cache[45] = function () {
+      return $options.onAnchorCountChange && $options.onAnchorCountChange.apply($options, arguments);
+    }),
+    "class": "input technique-select"
+  }, [_cache[128] || (_cache[128] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+    value: 1
+  }, "1 anchor (center word) — Minimalist", -1 /* CACHED */)), _cache[129] || (_cache[129] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+    value: 2
+  }, "2 anchors (first + last) — Balanced", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <option :value=\"3\">3 anchors (strategic) — Full structure</option> ")], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.anchorCount, void 0, {
+    number: true
+  }]])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_98, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[131] || (_cache[131] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-pin-angle"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.anchorModeDescription), 1 /* TEXT */)])]), $data.anchorModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_99, _toConsumableArray(_cache[132] || (_cache[132] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-lightbulb"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "How it works:"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Highlighted words become memory anchors. Memorise the anchor words first, then the surrounding text attaches naturally.")], -1 /* CACHED */)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.memorisation_techniques]])])])) : $data.tab === 'saved' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 1
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Replace your entire saved tab section with this "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_95, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_96, [_cache[133] || (_cache[133] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Replace your entire saved tab section with this "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_100, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_101, [_cache[142] || (_cache[142] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "saved-header"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-bookmark-check"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Saved Sessions")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Your memorisation sessions, ready to resume")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Saved Sessions List "), $data.savedSessions.length === 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_97, _toConsumableArray(_cache[124] || (_cache[124] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Saved Sessions")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Your memorisation sessions, ready to resume")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Saved Sessions List "), $data.savedSessions.length === 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_102, _toConsumableArray(_cache[133] || (_cache[133] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-journal-bookmark"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "No saved sessions yet", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Save your current session to get started", -1 /* CACHED */)])))) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_98, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.savedSessions, function (session) {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "No saved sessions yet", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Save your current session to get started", -1 /* CACHED */)])))) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_103, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.savedSessions, function (session) {
     var _session$config, _session$config2, _session$config3, _session$config4;
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: session.id,
@@ -29837,41 +30106,41 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       onClick: function onClick($event) {
         return $options.loadSavedSession(session.id);
       }
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_100, [_cache[125] || (_cache[125] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_105, [_cache[134] || (_cache[134] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-bookmark-fill"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(session.name), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_101, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[126] || (_cache[126] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(session.name), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_106, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[135] || (_cache[135] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-book"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_session$config = session.config) === null || _session$config === void 0 ? void 0 : _session$config.chapterName) || "Surah\n                        ".concat((_session$config2 = session.config) === null || _session$config2 === void 0 ? void 0 : _session$config2.chapterId)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[127] || (_cache[127] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_session$config = session.config) === null || _session$config === void 0 ? void 0 : _session$config.chapterName) || "Surah\n                        ".concat((_session$config2 = session.config) === null || _session$config2 === void 0 ? void 0 : _session$config2.chapterId)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[136] || (_cache[136] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-text-paragraph"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_session$config3 = session.config) === null || _session$config3 === void 0 ? void 0 : _session$config3.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_session$config4 = session.config) === null || _session$config4 === void 0 ? void 0 : _session$config4.rangeEnd), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[128] || (_cache[128] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_session$config3 = session.config) === null || _session$config3 === void 0 ? void 0 : _session$config3.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_session$config4 = session.config) === null || _session$config4 === void 0 ? void 0 : _session$config4.rangeEnd), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[137] || (_cache[137] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-clock"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatDate(session.savedAt)), 1 /* TEXT */)])])], 8 /* PROPS */, _hoisted_99), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatDate(session.savedAt)), 1 /* TEXT */)])])], 8 /* PROPS */, _hoisted_104), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "delete-btn",
       onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
         return $options.deleteSavedSession(session.id);
       }, ["stop"]),
       title: "Delete session"
-    }, _toConsumableArray(_cache[129] || (_cache[129] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[138] || (_cache[138] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-trash3"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_102)]);
-  }), 128 /* KEYED_FRAGMENT */))])), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Save Current Session "), $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_103, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_104, [_cache[131] || (_cache[131] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_107)]);
+  }), 128 /* KEYED_FRAGMENT */))])), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Save Current Session "), $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_108, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_109, [_cache[140] || (_cache[140] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-circle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[130] || (_cache[130] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Current Session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter = $data.currentChapter) === null || _$data$currentChapter === void 0 ? void 0 : _$data$currentChapter.name_simple) || 'No surah') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[139] || (_cache[139] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Current Session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter = $data.currentChapter) === null || _$data$currentChapter === void 0 ? void 0 : _$data$currentChapter.name_simple) || 'No surah') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "save-btn",
-    onClick: _cache[43] || (_cache[43] = function ($event) {
+    onClick: _cache[46] || (_cache[46] = function ($event) {
       return $options.saveCurrentSessionWithName();
     })
-  }, _toConsumableArray(_cache[132] || (_cache[132] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[141] || (_cache[141] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-save"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Save ", -1 /* CACHED */)])))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : $data.tab === 'settings' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 2
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" SETTINGS TAB "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" SETTINGS TAB "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_105, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_106, [_cache[141] || (_cache[141] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" SETTINGS TAB "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" SETTINGS TAB "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_110, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_111, [_cache[150] || (_cache[150] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "settings-notice"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-info-circle"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "All changes are applied instantly")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_107, [_cache[136] || (_cache[136] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "All changes are applied instantly")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_112, [_cache[145] || (_cache[145] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "settings-group-title"
-  }, "Display", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_108, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_109, [_cache[134] || (_cache[134] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Display", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_113, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_114, [_cache[143] || (_cache[143] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "settings-row-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "settings-icon"
@@ -29881,29 +30150,29 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip settings-toggle", {
       active: $data.tajweedEnabled
     }]),
-    onClick: _cache[44] || (_cache[44] = function () {
+    onClick: _cache[47] || (_cache[47] = function () {
       return $options.toggleTajweed && $options.toggleTajweed.apply($options, arguments);
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.tajweedEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_110, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_111, [_cache[135] || (_cache[135] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.tajweedEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_115, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_116, [_cache[144] || (_cache[144] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "settings-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrows-angle-expand"
-  })]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Font size")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, "Verse scale (" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.defaultFontSize) + "%)", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_112, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  })]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Font size")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, "Verse scale (" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.defaultFontSize) + "%)", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_117, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     min: "80",
     max: "160",
     step: "5",
-    "onUpdate:modelValue": _cache[45] || (_cache[45] = function ($event) {
+    "onUpdate:modelValue": _cache[48] || (_cache[48] = function ($event) {
       return $data.defaultFontSize = $event;
     }),
-    onInput: _cache[46] || (_cache[46] = function () {
+    onInput: _cache[49] || (_cache[49] = function () {
       return $options.updateDefaultFontSize && $options.updateDefaultFontSize.apply($options, arguments);
     }),
     "class": "input settings-range",
     "aria-label": "Font size"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.defaultFontSize, void 0, {
     number: true
-  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_113, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.defaultFontSize) + "%", 1 /* TEXT */)])])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_114, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_115, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_116, [_cache[137] || (_cache[137] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_118, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.defaultFontSize) + "%", 1 /* TEXT */)])])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_119, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_120, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_121, [_cache[146] || (_cache[146] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "settings-row-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "settings-icon"
@@ -29913,10 +30182,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip settings-toggle", {
       active: $data.showTranslation
     }]),
-    onClick: _cache[47] || (_cache[47] = function ($event) {
+    onClick: _cache[50] || (_cache[50] = function ($event) {
       return $options.toggleReadingOption('translation');
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showTranslation ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_117, [_cache[138] || (_cache[138] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showTranslation ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_122, [_cache[147] || (_cache[147] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "settings-row-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "settings-icon"
@@ -29926,10 +30195,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip settings-toggle", {
       active: $data.showTransliteration
     }]),
-    onClick: _cache[48] || (_cache[48] = function ($event) {
+    onClick: _cache[51] || (_cache[51] = function ($event) {
       return $options.toggleReadingOption('transliteration');
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showTransliteration ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_118, [_cache[139] || (_cache[139] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showTransliteration ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_123, [_cache[148] || (_cache[148] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "settings-row-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "settings-icon"
@@ -29939,10 +30208,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip settings-toggle", {
       active: $data.showWordByWord
     }]),
-    onClick: _cache[49] || (_cache[49] = function ($event) {
+    onClick: _cache[52] || (_cache[52] = function ($event) {
       return $options.toggleReadingOption('wbw');
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showWordByWord ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_119, [_cache[140] || (_cache[140] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showWordByWord ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_124, [_cache[149] || (_cache[149] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "settings-row-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "settings-icon"
@@ -29952,7 +30221,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip settings-toggle", {
       active: $data.wordByWordAudioEnabled
     }]),
-    onClick: _cache[50] || (_cache[50] = function ($event) {
+    onClick: _cache[53] || (_cache[53] = function ($event) {
       return $data.wordByWordAudioEnabled = !$data.wordByWordAudioEnabled;
     })
   }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.wordByWordAudioEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)])])])])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
@@ -29961,86 +30230,86 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     }])
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-btn tools-btn-ghost tools-btn-soft",
-    onClick: _cache[51] || (_cache[51] = function () {
+    onClick: _cache[54] || (_cache[54] = function () {
       return $options.resetControls && $options.resetControls.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[142] || (_cache[142] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[151] || (_cache[151] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-counterclockwise"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Reset", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-btn tools-btn-primary tools-btn-soft",
-    onClick: _cache[52] || (_cache[52] = function () {
+    onClick: _cache[55] || (_cache[55] = function () {
       return $options.startSessionAndClose && $options.startSessionAndClose.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[143] || (_cache[143] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[152] || (_cache[152] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-fill"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Start Session", -1 /* CACHED */)])))], 2 /* CLASS */)], 10 /* CLASS, PROPS */, _hoisted_52)], 2 /* CLASS */)) : $data.appReady && !$options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_120, _toConsumableArray(_cache[144] || (_cache[144] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"login-hero\"><div class=\"login-card\"><div class=\"login-icon\"><i class=\"bi bi-book-half\"></i></div><h1>Welcome to Mutqin</h1><p class=\"login-subtitle\">Your personal Quran memorisation companion</p><div class=\"login-features\"><div class=\"feature\"><i class=\"bi bi-cloud-check\"></i><span>Sync across devices</span></div><div class=\"feature\"><i class=\"bi bi-graph-up\"></i><span>Track your progress</span></div><div class=\"feature\"><i class=\"bi bi-calendar-check\"></i><span>Never lose your place</span></div></div><a href=\"/login\" class=\"login-btn\" style=\"text-decoration:none;\"><i class=\"bi bi-box-arrow-in-right\"></i><span>Sign in to continue</span></a><p class=\"login-note\"> Your sessions, progress, and resume history sync after login </p></div></div>", 1)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Save Session Name Modal - Add after your existing modals "), $data.showSaveNameModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Start Session", -1 /* CACHED */)])))], 2 /* CLASS */)], 10 /* CLASS, PROPS */, _hoisted_52)], 2 /* CLASS */)) : $data.appReady && !$options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_125, _toConsumableArray(_cache[153] || (_cache[153] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"login-hero\"><div class=\"login-card\"><div class=\"login-icon\"><i class=\"bi bi-book-half\"></i></div><h1>Welcome to Mutqin</h1><p class=\"login-subtitle\">Your personal Quran memorisation companion</p><div class=\"login-features\"><div class=\"feature\"><i class=\"bi bi-cloud-check\"></i><span>Sync across devices</span></div><div class=\"feature\"><i class=\"bi bi-graph-up\"></i><span>Track your progress</span></div><div class=\"feature\"><i class=\"bi bi-calendar-check\"></i><span>Never lose your place</span></div></div><a href=\"/login\" class=\"login-btn\" style=\"text-decoration:none;\"><i class=\"bi bi-box-arrow-in-right\"></i><span>Sign in to continue</span></a><p class=\"login-note\"> Your sessions, progress, and resume history sync after login </p></div></div>", 1)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Save Session Name Modal - Add after your existing modals "), $data.showSaveNameModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 3,
     "class": "modal-overlay",
-    onClick: _cache[58] || (_cache[58] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
+    onClick: _cache[61] || (_cache[61] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
       return $data.showSaveNameModal = false;
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_121, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_122, [_cache[146] || (_cache[146] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_126, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_127, [_cache[155] || (_cache[155] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-save"
   }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Save Session")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-icon",
-    onClick: _cache[53] || (_cache[53] = function ($event) {
+    onClick: _cache[56] || (_cache[56] = function ($event) {
       return $data.showSaveNameModal = false;
     })
-  }, _toConsumableArray(_cache[145] || (_cache[145] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[154] || (_cache[154] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_123, [_cache[149] || (_cache[149] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_128, [_cache[158] || (_cache[158] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
     "class": "save-modal-desc"
-  }, "Give your session a name to easily find it later", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_124, [_cache[147] || (_cache[147] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Session Name", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Give your session a name to easily find it later", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_129, [_cache[156] || (_cache[156] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Session Name", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "text",
-    "onUpdate:modelValue": _cache[54] || (_cache[54] = function ($event) {
+    "onUpdate:modelValue": _cache[57] || (_cache[57] = function ($event) {
       return $data.saveSessionName = $event;
     }),
     "class": "save-name-input",
     placeholder: "e.g., Al-Fatihah Focus",
-    onKeyup: _cache[55] || (_cache[55] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)(function () {
+    onKeyup: _cache[58] || (_cache[58] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)(function () {
       return $options.confirmSaveSession && $options.confirmSaveSession.apply($options, arguments);
     }, ["enter"])),
     autofocus: ""
-  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.saveSessionName]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_125, [_cache[148] || (_cache[148] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.saveSessionName]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_130, [_cache[157] || (_cache[157] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-info-circle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter2 = $data.currentChapter) === null || _$data$currentChapter2 === void 0 ? void 0 : _$data$currentChapter2.name_simple) || 'Surah') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_126, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter2 = $data.currentChapter) === null || _$data$currentChapter2 === void 0 ? void 0 : _$data$currentChapter2.name_simple) || 'Surah') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_131, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary",
-    onClick: _cache[56] || (_cache[56] = function ($event) {
+    onClick: _cache[59] || (_cache[59] = function ($event) {
       return $data.showSaveNameModal = false;
     })
   }, "Cancel"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-primary",
-    onClick: _cache[57] || (_cache[57] = function () {
+    onClick: _cache[60] || (_cache[60] = function () {
       return $options.confirmSaveSession && $options.confirmSaveSession.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[150] || (_cache[150] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[159] || (_cache[159] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-save"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Save Session ", -1 /* CACHED */)])))])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showConfirmModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 4,
     "class": "modal-overlay",
-    onClick: _cache[62] || (_cache[62] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onClick: _cache[65] || (_cache[65] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_127, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_128, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_132, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_133, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-icon",
-    onClick: _cache[59] || (_cache[59] = function () {
+    onClick: _cache[62] || (_cache[62] = function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[151] || (_cache[151] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[160] || (_cache[160] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_129, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_130, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.message), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_131, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_134, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_135, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.message), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_136, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary",
-    onClick: _cache[60] || (_cache[60] = function () {
+    onClick: _cache[63] || (_cache[63] = function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     })
   }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.cancelLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["btn-primary", {
       'btn-danger': $data.confirmModal.tone === 'danger'
     }]),
-    onClick: _cache[61] || (_cache[61] = function () {
+    onClick: _cache[64] || (_cache[64] = function () {
       return $options.runConfirmAction && $options.runConfirmAction.apply($options, arguments);
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.confirmLabel), 3 /* TEXT, CLASS */)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Resume Modal (Logged In) "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <div class=\"modal-overlay\" v-if=\"showResumeModal && isLoggedIn && hasContinueSession\"\n      @click.self=\"showResumeModal = false\">\n      <div class=\"modal-content confirm-modal resume-modal\" role=\"dialog\" aria-modal=\"true\">\n        <div class=\"modal-header\">\n          <div>\n            <h2>{{ resumeModalTitle }}</h2>\n            <small class=\"resume-saved-at\" v-if=\"resumeSavedAtLabel\">Last saved at {{ resumeSavedAtLabel }}</small>\n          </div>\n          <button class=\"btn-icon\" @click=\"showResumeModal = false\"><i class=\"bi bi-x-lg\"></i></button>\n        </div>\n        <div class=\"modal-body\">\n          <p class=\"confirm-copy resume-copy\">{{ continueSessionMeta }}</p>\n          <div class=\"pill\" style=\"margin-top: 10px; padding: 12px 14px;\">\n            <strong>Resume:</strong>\n            Ayah {{ continueSessionPayload?.activeVerseKey ? String(continueSessionPayload.activeVerseKey).split(':')[1]\n              : continueSessionPayload?.config?.rangeStart }}\n            · Range {{ continueSessionPayload?.config?.rangeStart }}-{{ continueSessionPayload?.config?.rangeEnd }}\n          </div>\n          <div v-if=\"dueCount\" class=\"pill\" style=\"margin-top: 10px; padding: 12px 14px;\">\n            <strong>Reviews due:</strong> {{ dueCount }}\n          </div>\n          <details class=\"resume-details\">\n            <summary>Details</summary>\n            <div class=\"resume-feedback-bars\">\n              <div class=\"resume-feedback-row\"><span>Chain</span><strong>{{ resumeFeedback.chainProgress }}%</strong>\n              </div>\n              <div class=\"progress-bar-track\">\n                <div class=\"progress-bar-fill\" :style=\"{ width: resumeFeedback.chainProgress + '%' }\"></div>\n              </div>\n              <div class=\"resume-feedback-row\"><span>Repetition</span><strong>{{ resumeFeedback.repetitionProgress\n                  }}%</strong></div>\n              <div class=\"progress-bar-track\">\n                <div class=\"progress-bar-fill resume-progress-repetition\"\n                  :style=\"{ width: resumeFeedback.repetitionProgress + '%' }\"></div>\n              </div>\n              <div class=\"resume-feedback-row\"><span>Retention</span><strong>{{ resumeFeedback.retentionProgress\n                  }}%</strong></div>\n              <div class=\"progress-bar-track\">\n                <div class=\"progress-bar-fill resume-progress-retention\"\n                  :style=\"{ width: resumeFeedback.retentionProgress + '%' }\"></div>\n              </div>\n            </div>\n            <div class=\"resume-grid\">\n              <div class=\"pill\"><i class=\"bi bi-link-45deg\"></i><span>{{ continueSessionPayload?.config?.chainingEnabled\n                === false ? 'Chaining off' : (continueSessionPayload?.config?.chainingMethod === 'cumulative' ?\n                  'Cumulative chain' : 'Linking chain') }}</span></div>\n              <div class=\"pill pill-status-mastered\"><i class=\"bi bi-check2-circle\"></i><span>{{ feedbackCounts.mastered\n                  }} mastered</span></div>\n              <div class=\"pill pill-status-weak\"><i class=\"bi bi-exclamation-circle\"></i><span>{{ feedbackCounts.weak }}\n                  weak</span></div>\n              <div class=\"pill pill-status-repeat\"><i class=\"bi bi-arrow-repeat\"></i><span>{{ feedbackCounts.repeat }}\n                  need repetition</span></div>\n            </div>\n            <div class=\"pill\" style=\"margin-top: 10px; padding: 12px 14px;\">\n              <strong>Next:</strong> {{ resumeWhatNext }}\n            </div>\n          </details>\n        </div>\n        <div class=\"modal-footer\">\n          <button class=\"btn-secondary\" @click=\"showResumeModal = false\">Not now</button>\n          <button class=\"btn-primary\" @click=\"showResumeModal = false; continueLastSession()\">\n            <i class=\"bi bi-arrow-right-circle\"></i> Go to session\n          </button>\n        </div>\n      </div>\n    </div> "), $data.showCountdownOverlay ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_132, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_133, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_134, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.countdownValue), 1 /* TEXT */), _cache[152] || (_cache[152] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.confirmLabel), 3 /* TEXT, CLASS */)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Resume Modal (Logged In) "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <div class=\"modal-overlay\" v-if=\"showResumeModal && isLoggedIn && hasContinueSession\"\n      @click.self=\"showResumeModal = false\">\n      <div class=\"modal-content confirm-modal resume-modal\" role=\"dialog\" aria-modal=\"true\">\n        <div class=\"modal-header\">\n          <div>\n            <h2>{{ resumeModalTitle }}</h2>\n            <small class=\"resume-saved-at\" v-if=\"resumeSavedAtLabel\">Last saved at {{ resumeSavedAtLabel }}</small>\n          </div>\n          <button class=\"btn-icon\" @click=\"showResumeModal = false\"><i class=\"bi bi-x-lg\"></i></button>\n        </div>\n        <div class=\"modal-body\">\n          <p class=\"confirm-copy resume-copy\">{{ continueSessionMeta }}</p>\n          <div class=\"pill\" style=\"margin-top: 10px; padding: 12px 14px;\">\n            <strong>Resume:</strong>\n            Ayah {{ continueSessionPayload?.activeVerseKey ? String(continueSessionPayload.activeVerseKey).split(':')[1]\n              : continueSessionPayload?.config?.rangeStart }}\n            · Range {{ continueSessionPayload?.config?.rangeStart }}-{{ continueSessionPayload?.config?.rangeEnd }}\n          </div>\n          <div v-if=\"dueCount\" class=\"pill\" style=\"margin-top: 10px; padding: 12px 14px;\">\n            <strong>Reviews due:</strong> {{ dueCount }}\n          </div>\n          <details class=\"resume-details\">\n            <summary>Details</summary>\n            <div class=\"resume-feedback-bars\">\n              <div class=\"resume-feedback-row\"><span>Chain</span><strong>{{ resumeFeedback.chainProgress }}%</strong>\n              </div>\n              <div class=\"progress-bar-track\">\n                <div class=\"progress-bar-fill\" :style=\"{ width: resumeFeedback.chainProgress + '%' }\"></div>\n              </div>\n              <div class=\"resume-feedback-row\"><span>Repetition</span><strong>{{ resumeFeedback.repetitionProgress\n                  }}%</strong></div>\n              <div class=\"progress-bar-track\">\n                <div class=\"progress-bar-fill resume-progress-repetition\"\n                  :style=\"{ width: resumeFeedback.repetitionProgress + '%' }\"></div>\n              </div>\n              <div class=\"resume-feedback-row\"><span>Retention</span><strong>{{ resumeFeedback.retentionProgress\n                  }}%</strong></div>\n              <div class=\"progress-bar-track\">\n                <div class=\"progress-bar-fill resume-progress-retention\"\n                  :style=\"{ width: resumeFeedback.retentionProgress + '%' }\"></div>\n              </div>\n            </div>\n            <div class=\"resume-grid\">\n              <div class=\"pill\"><i class=\"bi bi-link-45deg\"></i><span>{{ continueSessionPayload?.config?.chainingEnabled\n                === false ? 'Chaining off' : (continueSessionPayload?.config?.chainingMethod === 'cumulative' ?\n                  'Cumulative chain' : 'Linking chain') }}</span></div>\n              <div class=\"pill pill-status-mastered\"><i class=\"bi bi-check2-circle\"></i><span>{{ feedbackCounts.mastered\n                  }} mastered</span></div>\n              <div class=\"pill pill-status-weak\"><i class=\"bi bi-exclamation-circle\"></i><span>{{ feedbackCounts.weak }}\n                  weak</span></div>\n              <div class=\"pill pill-status-repeat\"><i class=\"bi bi-arrow-repeat\"></i><span>{{ feedbackCounts.repeat }}\n                  need repetition</span></div>\n            </div>\n            <div class=\"pill\" style=\"margin-top: 10px; padding: 12px 14px;\">\n              <strong>Next:</strong> {{ resumeWhatNext }}\n            </div>\n          </details>\n        </div>\n        <div class=\"modal-footer\">\n          <button class=\"btn-secondary\" @click=\"showResumeModal = false\">Not now</button>\n          <button class=\"btn-primary\" @click=\"showResumeModal = false; continueLastSession()\">\n            <i class=\"bi bi-arrow-right-circle\"></i> Go to session\n          </button>\n        </div>\n      </div>\n    </div> "), $data.showCountdownOverlay ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_137, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_138, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_139, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.countdownValue), 1 /* TEXT */), _cache[161] || (_cache[161] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "countdown-text"
   }, "Prepare yourself", -1 /* CACHED */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Global Audio Player - Updated with Speed Controls "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(vue__WEBPACK_IMPORTED_MODULE_0__.Transition, {
     name: "slide-up"
@@ -30052,21 +30321,21 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["player-bar", {
           collapsed: $data.playerCollapsed
         }])
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_135, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_136, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_137, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter3 = $data.currentChapter) === null || _$data$currentChapter3 === void 0 ? void 0 : _$data$currentChapter3.name_simple) || 'Quran'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_138, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activeAyahLabel) + " ", 1 /* TEXT */), $options.etaLabel && $data.isPlaying ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_140, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_141, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_142, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter3 = $data.currentChapter) === null || _$data$currentChapter3 === void 0 ? void 0 : _$data$currentChapter3.name_simple) || 'Quran'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_143, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activeAyahLabel) + " ", 1 /* TEXT */), $options.etaLabel && $data.isPlaying ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
         key: 0,
         "class": "player-eta",
         title: $options.getEtaTooltip()
-      }, " • " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel) + " remaining ", 9 /* TEXT, PROPS */, _hoisted_139)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_140, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      }, " • " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel) + " remaining ", 9 /* TEXT, PROPS */, _hoisted_144)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_145, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[63] || (_cache[63] = function () {
+        onClick: _cache[66] || (_cache[66] = function () {
           return $options.prev && $options.prev.apply($options, arguments);
         }),
         title: "Previous"
-      }, _toConsumableArray(_cache[153] || (_cache[153] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[162] || (_cache[162] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-skip-start-fill"
       }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn player-play",
-        onClick: _cache[64] || (_cache[64] = function () {
+        onClick: _cache[67] || (_cache[67] = function () {
           return $options.togglePlay && $options.togglePlay.apply($options, arguments);
         }),
         title: "Play/Pause"
@@ -30074,15 +30343,15 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
       }, null, 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[65] || (_cache[65] = function () {
+        onClick: _cache[68] || (_cache[68] = function () {
           return $options.next && $options.next.apply($options, arguments);
         }),
         title: "Next"
-      }, _toConsumableArray(_cache[154] || (_cache[154] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[163] || (_cache[163] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-skip-end-fill"
-      }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_141, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_142, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_146, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_147, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
         "class": "player-progress-bg",
-        onClick: _cache[66] || (_cache[66] = function () {
+        onClick: _cache[69] || (_cache[69] = function () {
           return _ctx.seek && _ctx.seek.apply(_ctx, arguments);
         }),
         ref: "progress"
@@ -30091,18 +30360,18 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
           width: $data.currentTime / ($data.duration || 1) * 100 + '%'
         })
-      }, null, 4 /* STYLE */)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_143, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.duration)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      }, null, 4 /* STYLE */)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_148, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.duration)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[67] || (_cache[67] = function ($event) {
+        onClick: _cache[70] || (_cache[70] = function ($event) {
           return $data.playerVisible = false;
         }),
         title: "Close player"
-      }, _toConsumableArray(_cache[155] || (_cache[155] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[164] || (_cache[164] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-x-lg"
       }, null, -1 /* CACHED */)])))])], 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)];
     }),
     _: 1 /* STABLE */
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio System "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_144, null, 512 /* NEED_PATCH */)], 12 /* STYLE, PROPS */, _hoisted_1);
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio System "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_149, null, 512 /* NEED_PATCH */)], 12 /* STYLE, PROPS */, _hoisted_1);
 }
 
 /***/ }),
@@ -37566,7 +37835,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n:root {\n  --bg: #f3eee6;\n  --surface: rgba(255, 250, 243, 0.88);\n  --surface-strong: rgba(255, 255, 255, 0.92);\n  --border: rgba(78, 58, 38, 0.10);\n  --text: #1f1a17;\n  --text-muted: #6c6258;\n  --accent: #9a6738;\n  --accent-strong: #6e4726;\n  --accent-soft: #d8c1a8;\n  --accent-light: rgba(154, 103, 56, 0.10);\n  --accent-wash: rgba(228, 211, 194, 0.42);\n  --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);\n  --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);\n  --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);\n  --radius: 16px;\n  --navbar-offset: 56px;\n  --tools-width: 440px;\n  --tools-footer-h: 78px;\n  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;\n  --font-ui: \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n[data-theme=\"dark\"] {\n  --bg: #14110f;\n  --surface: rgba(31, 27, 24, 0.92);\n  --surface-strong: rgba(43, 37, 32, 0.96);\n  --border: rgba(255, 236, 216, 0.16);\n  --text: #f7ebdf;\n  --text-muted: #d1c2b3;\n  --accent: #d0a06b;\n  --accent-strong: #efc18d;\n  --accent-soft: #5f4530;\n  --accent-light: rgba(208, 160, 107, 0.14);\n  --accent-wash: rgba(208, 160, 107, 0.08);\n  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);\n  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);\n  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);\n}\n[data-theme=\"sepia\"] {\n  --bg: #efe2cb;\n  --surface: rgba(250, 241, 227, 0.88);\n  --surface-strong: rgba(255, 248, 237, 0.94);\n  --text: #352516;\n  --text-muted: #75624f;\n  --accent: #b8824e;\n  --accent-strong: #8f6033;\n  --accent-soft: #dcc3a6;\n  --accent-light: rgba(184, 130, 78, 0.12);\n  --accent-wash: rgba(221, 194, 162, 0.35);\n}\n[v-cloak] {\n  display: none !important;\n}\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\n.verse-small-play-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: white;\n  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);\n}\n.verse-small-play-btn i {\n  font-size: 0.8rem;\n}\n.verse-small-play-btn:hover {\n  transform: scale(1.05);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--accent);\n}\n\n/* Add to your style section */\n.countdown-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.85);\n  backdrop-filter: blur(12px);\n  z-index: 99999;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.countdown-modal {\n  text-align: center;\n}\n.countdown-number {\n  font-size: 8rem;\n  font-weight: 800;\n  color: var(--accent);\n  animation: pulse 1s ease infinite;\n}\n.countdown-text {\n  font-size: 1.5rem;\n  color: white;\n  margin-top: 20px;\n}\n@keyframes pulse {\n0%, 100% { transform: scale(1);\n}\n50% { transform: scale(1.1);\n}\n}\n@media (max-width: 640px) {\n.countdown-number {\n    font-size: 5rem;\n}\n.countdown-text {\n    font-size: 1.2rem;\n}\n}\n\n/* Add these styles if missing */\n.technique-peek-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  margin-top: 8px;\n  border-radius: 10px;\n  background: rgba(154, 103, 56, 0.08);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.technique-peek-hint i {\n  color: var(--accent);\n  font-size: 0.8rem;\n  flex-shrink: 0;\n}\n.technique-peek-hint kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.65rem;\n  font-weight: 600;\n  color: var(--accent);\n  display: inline-block;\n}\n\n/* Add to style section */\n.countdown-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.85);\n  backdrop-filter: blur(12px);\n  z-index: 10000;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  animation: fadeIn 0.3s ease;\n}\n.countdown-modal {\n  text-align: center;\n  animation: scaleIn 0.4s cubic-bezier(0.34, 1.2, 0.64, 1);\n}\n.countdown-number {\n  font-size: 8rem;\n  font-weight: 800;\n  color: var(--accent);\n  text-shadow: 0 0 30px rgba(154, 103, 56, 0.5);\n  animation: pulse 1s ease infinite;\n  font-family: monospace;\n}\n.countdown-text {\n  font-size: 1.5rem;\n  color: white;\n  margin-top: 20px;\n  font-weight: 500;\n  letter-spacing: 2px;\n}\n.countdown-hint {\n  font-size: 0.85rem;\n  color: rgba(255, 255, 255, 0.6);\n  margin-top: 12px;\n}\n@keyframes fadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n@keyframes scaleIn {\nfrom {\n    opacity: 0;\n    transform: scale(0.8);\n}\nto {\n    opacity: 1;\n    transform: scale(1);\n}\n}\n@keyframes pulse {\n0%,\n  100% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.1);\n}\n}\n@media (max-width: 640px) {\n.countdown-number {\n    font-size: 5rem;\n}\n.countdown-text {\n    font-size: 1.2rem;\n}\n}\n\n\n/* Mobile */\n@media (max-width: 768px) {\n.wavemark-bars {\n    height: 30px;\n    gap: 1.5px;\n}\n.wavemark-playhead::before {\n    width: 8px;\n    height: 8px;\n    top: -5px;\n    left: -3px;\n}\n}\n.waveform-canvas {\n  width: 100%;\n  height: 60px;\n  display: block;\n  border-radius: 8px;\n  cursor: pointer;\n}\n\n/* Settings notice */\n.settings-notice {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 14px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  margin-bottom: 20px;\n  font-size: 0.75rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.settings-notice i {\n  font-size: 0.9rem;\n}\n\n/* Login Hero Section */\n.login-hero {\n  min-height: calc(100vh - 100px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  padding: 40px 20px;\n}\n.login-card {\n  max-width: 480px;\n  width: 100%;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  border-radius: 32px;\n  padding: 48px 40px;\n  text-align: center;\n  box-shadow: var(--shadow-lg);\n  animation: loginFadeIn 0.5s ease-out;\n}\n.login-icon {\n  width: 80px;\n  height: 80px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  margin: 0 auto 24px;\n  box-shadow: 0 8px 24px rgba(154, 103, 56, 0.25);\n}\n.login-icon i {\n  font-size: 2.5rem;\n  color: white;\n}\n.login-card h1 {\n  font-size: 1.8rem;\n  font-weight: 700;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.login-subtitle {\n  font-size: 0.95rem;\n  color: var(--text-muted);\n  margin-bottom: 32px;\n}\n.login-features {\n  display: flex;\n  justify-content: center;\n  gap: 24px;\n  margin-bottom: 40px;\n  flex-wrap: wrap;\n}\n.feature {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 8px;\n}\n.feature i {\n  font-size: 1.5rem;\n  color: var(--accent);\n  background: var(--accent-light);\n  width: 48px;\n  height: 48px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 24px;\n  transition: all 0.2s ease;\n}\n.feature span {\n  font-size: 0.75rem;\n  font-weight: 500;\n  color: var(--text-muted);\n}\n.login-btn {\n  width: 100%;\n  padding: 14px 24px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 60px;\n  font-size: 1rem;\n  font-weight: 600;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  transition: all 0.2s ease;\n  margin-bottom: 20px;\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.login-btn:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 24px rgba(154, 103, 56, 0.4);\n}\n.login-btn:active {\n  transform: translateY(0);\n}\n.login-note {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin: 0;\n  line-height: 1.4;\n}\n@keyframes loginFadeIn {\nfrom {\n    opacity: 0;\n    transform: translateY(20px);\n}\nto {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n/* Responsive */\n@media (max-width: 520px) {\n.login-card {\n    padding: 32px 24px;\n}\n.login-icon {\n    width: 64px;\n    height: 64px;\n}\n.login-icon i {\n    font-size: 2rem;\n}\n.login-card h1 {\n    font-size: 1.5rem;\n}\n.login-features {\n    gap: 16px;\n}\n.feature i {\n    width: 40px;\n    height: 40px;\n    font-size: 1.2rem;\n}\n.feature span {\n    font-size: 0.7rem;\n}\n}\n\n/* Save Name Modal Styles */\n.save-name-modal {\n  max-width: 420px;\n  width: 100%;\n}\n.save-modal-desc {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n  margin-bottom: 20px;\n  line-height: 1.4;\n}\n.save-name-input-group {\n  margin-bottom: 16px;\n}\n.save-name-input-group label {\n  display: block;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.save-name-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  color: var(--text);\n  transition: all 0.2s;\n}\n.save-name-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 3px var(--accent-light);\n}\n.save-preview-info {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-top: 8px;\n}\n.save-preview-info i {\n  color: var(--accent);\n  font-size: 0.9rem;\n}\n\n/* Fix saved tab layout */\n.saved-sessions-container {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  padding: 16px;\n  box-shadow: var(--shadow-sm);\n}\n.saved-header {\n  margin-bottom: 16px;\n  padding-bottom: 12px;\n  border-bottom: 1px solid var(--border);\n}\n.saved-header h3 {\n  margin: 0 0 4px 0;\n  font-size: 0.9rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.saved-header p {\n  margin: 0;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.sessions-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  margin-bottom: 16px;\n  max-height: 320px;\n  overflow-y: auto;\n}\n.session-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  transition: all 0.2s ease;\n  overflow: hidden;\n}\n.session-info {\n  flex: 1;\n  min-width: 0;\n  padding: 10px 12px;\n  cursor: pointer;\n}\n.session-info:hover {\n  background: var(--accent-light);\n}\n.session-name {\n  font-weight: 600;\n  font-size: 0.8rem;\n  color: var(--text);\n  margin-bottom: 4px;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.session-name i {\n  color: var(--accent);\n  font-size: 0.7rem;\n}\n.session-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n  font-size: 0.6rem;\n  color: var(--text-muted);\n}\n.session-meta span {\n  display: inline-flex;\n  align-items: center;\n  gap: 3px;\n}\n.delete-btn {\n  width: 36px;\n  height: 36px;\n  margin-right: 8px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: #dc3545;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.delete-btn:hover {\n  background: #dc3545;\n  color: white;\n  border-color: #dc3545;\n}\n.save-section {\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.current-info {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 1;\n  min-width: 0;\n  padding: 8px 10px;\n  background: var(--accent-light);\n  border-radius: 10px;\n}\n.current-info i {\n  font-size: 1rem;\n  color: var(--accent);\n  flex-shrink: 0;\n}\n.current-info div {\n  display: flex;\n  flex-direction: column;\n  min-width: 0;\n}\n.current-info strong {\n  font-size: 0.75rem;\n  color: var(--text);\n}\n.current-info small {\n  font-size: 0.6rem;\n  color: var(--text-muted);\n}\n.save-btn {\n  padding: 8px 16px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 10px;\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  gap: 5px;\n  transition: all 0.2s;\n  flex-shrink: 0;\n}\n.save-btn:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.save-btn:active {\n  transform: translateY(0);\n}\n\n/* Saved Tab Styles - Clean Version */\n.saved-header {\n  margin-bottom: 24px;\n  padding-bottom: 16px;\n  border-bottom: 1px solid var(--border);\n}\n.saved-header h3 {\n  margin: 0 0 6px 0;\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.saved-header p {\n  margin: 0;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.empty-state {\n  text-align: center;\n  padding: 48px 24px;\n  color: var(--text-muted);\n}\n.empty-state i {\n  font-size: 3rem;\n  margin-bottom: 12px;\n  opacity: 0.4;\n}\n.empty-state p {\n  margin-bottom: 4px;\n  font-weight: 500;\n  color: var(--text);\n}\n.empty-state span {\n  font-size: 0.7rem;\n}\n.sessions-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  margin-bottom: 24px;\n  max-height: 320px;\n  overflow-y: auto;\n}\n.session-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 12px 14px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.session-item:hover {\n  border-color: var(--accent);\n  background: var(--accent-light);\n  transform: translateX(2px);\n}\n.session-info {\n  flex: 1;\n  min-width: 0;\n}\n.session-name {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-weight: 600;\n  font-size: 0.85rem;\n  color: var(--text);\n  margin-bottom: 6px;\n}\n.session-name i {\n  color: var(--accent);\n  font-size: 0.8rem;\n}\n.session-details {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.session-details span {\n  display: inline-flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.session-details i {\n  font-size: 0.6rem;\n}\n.delete-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: #dc3545;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.delete-btn:hover {\n  background: #dc3545;\n  color: white;\n  border-color: #dc3545;\n}\n.save-section {\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.current-info {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex: 1;\n  min-width: 0;\n}\n.current-info i {\n  font-size: 1.2rem;\n  color: var(--accent);\n  flex-shrink: 0;\n}\n.current-info div {\n  display: flex;\n  flex-direction: column;\n  min-width: 0;\n}\n.current-info strong {\n  font-size: 0.8rem;\n  color: var(--text);\n}\n.current-info small {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.save-btn {\n  padding: 8px 16px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 10px;\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  transition: all 0.2s;\n  flex-shrink: 0;\n}\n.save-btn:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.action-icon {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 52px;\n  height: 42px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  font-size: 1.2rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: rgba(0, 0, 0, 0.78);\n}\n.action-icon:hover {\n  transform: translateY(-2px);\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n\n/* Add to your style section */\n.tools-tabs button {\n  flex: 1;\n  padding: 8px 12px;\n  font-size: 0.8rem;\n}\n.saved-sessions-container {\n  padding: 16px;\n}\n.saved-session-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 12px;\n  margin-bottom: 12px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.saved-session-card:hover {\n  border-color: var(--accent);\n  transform: translateX(4px);\n  box-shadow: var(--shadow-sm);\n}\n.saved-session-header {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin-bottom: 8px;\n}\n.session-icon {\n  width: 36px;\n  height: 36px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--accent);\n}\n.session-details {\n  flex: 1;\n}\n.session-title {\n  font-weight: 600;\n  font-size: 0.85rem;\n  color: var(--text);\n}\n.session-range {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.session-delete-btn-icon {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: #dc3545;\n  transition: all 0.2s;\n}\n.session-delete-btn-icon:hover {\n  background: #dc3545;\n  color: white;\n  border-color: #dc3545;\n}\n.session-footer {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  padding-left: 48px;\n}\n.session-resume-hint {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  color: var(--accent);\n}\n.save-current-session-panel {\n  margin-top: 20px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.save-session-btn-full {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 12px;\n  cursor: pointer;\n  font-weight: 600;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.save-session-btn-full:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.empty-saved-state {\n  text-align: center;\n  padding: 48px 24px;\n  color: var(--text-muted);\n}\n.empty-saved-state i {\n  font-size: 3rem;\n  margin-bottom: 12px;\n  opacity: 0.5;\n}\n\n/* Action Buttons Group - Perfect Alignment */\n.action-buttons-group {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.action-icon-btn {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  width: 42px;\n  height: 42px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  font-size: 1.1rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n  flex-shrink: 0;\n}\n.action-icon-btn:hover {\n  transform: translateY(-1px);\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n.action-icon-btn:active {\n  transform: translateY(0);\n}\n.action-btn {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  height: 42px;\n  padding: 0 18px;\n  border-radius: 12px;\n  font-weight: 600;\n  font-size: 0.85rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  border: none;\n  white-space: nowrap;\n  flex-shrink: 0;\n}\n.action-btn-secondary {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  border: 1px solid var(--border);\n  color: var(--text);\n  box-shadow: var(--shadow-sm);\n}\n.action-btn-secondary:hover {\n  transform: translateY(-1px);\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n.action-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.25);\n  border: none;\n}\n.action-btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.35);\n}\n.action-btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n  transform: none;\n}\n.action-btn-secondary:active,\n.action-icon-btn:active {\n  transform: translateY(0);\n}\n\n/* Responsive adjustments */\n@media (max-width: 640px) {\n.action-buttons-group {\n    gap: 6px;\n}\n.action-icon-btn {\n    width: 38px;\n    height: 38px;\n    font-size: 1rem;\n}\n.action-btn {\n    height: 38px;\n    padding: 0 14px;\n    font-size: 0.8rem;\n}\n.action-btn span {\n    display: inline-block;\n}\n}\n@media (max-width: 480px) {\n.action-btn span {\n    display: none;\n}\n.action-btn {\n    width: 42px;\n    padding: 0;\n}\n.action-btn i {\n    font-size: 1.1rem;\n    margin: 0;\n}\n}\n\n/* Keyboard Shortcuts Modal - Larger & Cleaner */\n.keyboard-shortcuts-modal {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.6);\n  backdrop-filter: blur(8px);\n  z-index: 1000;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  animation: modalFadeIn 0.2s ease;\n}\n.shortcuts-modal {\n  background: var(--surface-strong);\n  border-radius: 24px;\n  width: min(520px, 90vw);\n  max-width: 520px;\n  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.3);\n  border: 1px solid var(--border);\n  animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n  overflow: hidden;\n}\n.shortcuts-modal-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 20px 24px;\n  background: linear-gradient(135deg, var(--surface), var(--surface-strong));\n  border-bottom: 1px solid var(--border);\n}\n.shortcuts-modal-header h3 {\n  margin: 0;\n  font-size: 1.2rem;\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  color: var(--text);\n  font-weight: 600;\n}\n.shortcuts-modal-header h3 i {\n  font-size: 1.3rem;\n  color: var(--accent);\n}\n.shortcuts-modal-close {\n  width: 36px;\n  height: 36px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n  color: var(--text-muted);\n}\n.shortcuts-modal-close:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n  transform: rotate(90deg);\n}\n.shortcuts-modal-body {\n  padding: 24px;\n  max-height: none;\n  overflow-y: visible;\n}\n.shortcuts-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));\n  gap: 24px;\n}\n.shortcut-card {\n  background: var(--surface);\n  border-radius: 16px;\n  padding: 16px;\n  border: 1px solid var(--border);\n}\n.shortcut-card-title {\n  font-size: 0.75rem;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--accent);\n  padding-bottom: 12px;\n  margin-bottom: 12px;\n  border-bottom: 2px solid var(--accent-light);\n}\n.shortcut-row {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 0;\n  border-bottom: 1px solid var(--border);\n}\n.shortcut-row:last-child {\n  border-bottom: none;\n}\n.shortcut-keys {\n  display: flex;\n  gap: 6px;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.shortcut-keys kbd {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border: 1px solid var(--border);\n  border-radius: 8px;\n  padding: 4px 10px;\n  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;\n  font-size: 0.7rem;\n  font-weight: 700;\n  color: var(--accent);\n  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);\n  letter-spacing: 0.5px;\n}\n.shortcut-row span {\n  color: var(--text-muted);\n  font-size: 0.85rem;\n  font-weight: 500;\n}\n@keyframes modalFadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n@keyframes modalSlideUp {\nfrom {\n    opacity: 0;\n    transform: translateY(30px) scale(0.95);\n}\nto {\n    opacity: 1;\n    transform: translateY(0) scale(1);\n}\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.action-buttons-group {\n    width: 100%;\n    gap: 8px;\n}\n.action-icon {\n    min-width: 44px;\n    height: 40px;\n}\n.action-btn {\n    min-width: 0;\n    flex: 1;\n    padding: 0 12px;\n    height: 40px;\n    font-size: 0.8rem;\n}\n.action-btn span {\n    display: inline;\n}\n.shortcuts-modal {\n    width: 95vw;\n\n    margin: 16px;\n}\n.shortcuts-modal-header {\n    padding: 16px 20px;\n}\n.shortcuts-modal-header h3 {\n    font-size: 1rem;\n}\n.shortcuts-modal-body {\n    padding: 16px;\n}\n.shortcuts-grid {\n    grid-template-columns: 1fr;\n    gap: 16px;\n}\n.shortcut-card {\n    padding: 12px;\n}\n.shortcut-row {\n    padding: 8px 0;\n}\n.shortcut-keys kbd {\n    padding: 3px 8px;\n    font-size: 0.65rem;\n}\n.shortcut-row span {\n    font-size: 0.8rem;\n}\n}\n@media (max-width: 480px) {\n.action-btn span {\n    display: none;\n}\n.action-btn {\n    min-width: 44px;\n    padding: 0;\n}\n.action-btn i {\n    font-size: 1.1rem;\n    margin: 0;\n}\n}\n\n/* Keyboard Shortcuts Dropdown - Compact */\n.shortcuts-panel.compact {\n  background: var(--surface-strong);\n  border-radius: 14px;\n  width: 280px;\n  box-shadow: var(--shadow-lg);\n  border: 1px solid var(--border);\n  animation: slideUp 0.2s ease;\n  overflow: hidden;\n}\n.shortcuts-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 14px;\n  border-bottom: 1px solid var(--border);\n  background: var(--surface);\n}\n.shortcuts-header h3 {\n  margin: 0;\n  font-size: 0.85rem;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--text);\n}\n.shortcuts-header h3 i {\n  font-size: 0.9rem;\n}\n.shortcuts-close {\n  width: 26px;\n  height: 26px;\n  border-radius: 6px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 18px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.15s;\n  color: var(--text-muted);\n}\n.shortcuts-close:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.shortcuts-list {\n  padding: 8px 6px;\n  max-height: 400px;\n  overflow-y: auto;\n}\n.shortcut-item {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 6px 10px;\n  border-radius: 6px;\n  font-size: 0.75rem;\n}\n.shortcut-item:hover {\n  background: var(--accent-light);\n}\n.shortcut-item kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--accent);\n  box-shadow: 0 1px 0 var(--border);\n}\n.shortcut-item span {\n  color: var(--text-muted);\n  font-size: 0.75rem;\n}\n@keyframes fadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n@keyframes slideUp {\nfrom {\n    opacity: 0;\n    transform: translateY(10px);\n}\nto {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n/* Saved Sessions Styles */\n.saved-sessions-list {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n  max-height: 300px;\n  overflow-y: auto;\n}\n.saved-session-item {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 10px 12px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 10px;\n  transition: all 0.2s ease;\n}\n.saved-session-item:hover {\n  border-color: var(--accent);\n  background: var(--surface-strong);\n}\n.session-info {\n  flex: 1;\n  min-width: 0;\n}\n.session-name {\n  font-weight: 600;\n  font-size: 0.85rem;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.session-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.session-meta span {\n  display: inline-flex;\n  align-items: center;\n  gap: 3px;\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.session-actions {\n  display: flex;\n  gap: 6px;\n  flex-shrink: 0;\n}\n.session-load-btn,\n.session-delete-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  transition: all 0.2s ease;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.session-load-btn {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.session-load-btn:hover {\n  background: var(--accent-strong);\n  transform: scale(1.05);\n}\n.session-delete-btn {\n  background: rgba(220, 53, 69, 0.1);\n  color: #dc3545;\n}\n.session-delete-btn:hover {\n  background: #dc3545;\n  color: white;\n}\n.save-current-session {\n  margin-top: 12px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n}\n.save-session-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.save-session-info {\n  flex: 1;\n}\n.save-session-info strong {\n  display: block;\n  font-size: 0.8rem;\n  color: var(--text);\n  margin-bottom: 2px;\n}\n.save-session-info small {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.save-session-btn {\n  padding: 6px 14px;\n  border-radius: 8px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  gap: 5px;\n  transition: all 0.2s ease;\n}\n.save-session-btn:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\n.verse-download-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.82);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--accent);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.verse-download-btn:hover:not(:disabled) {\n  transform: scale(1.05);\n  border-color: var(--accent);\n  background: rgba(255, 255, 255, 0.96);\n}\n.verse-download-btn:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n\n/* Add to your style section */\n.main.tools-open {\n  overflow: hidden;\n}\n.tools {\n  transform: translateX(100%);\n  transition: transform 0.3s ease;\n}\n.tools.open {\n  transform: translateX(0);\n}\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.5);\n  z-index: 59;\n}\n\n/* Replace the existing blur mode CSS with this */\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-aid {\n  filter: blur(var(--recall-blur, 10px));\n  opacity: 0.7;\n  transition: filter 0.3s ease, opacity 0.3s ease;\n}\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .tajweed-mark,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic word,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .wbw-word {\n  filter: blur(var(--recall-blur, 10px));\n}\n\n/* Keep active verse clear */\n.main.blur-mode-active .verse-card.active .verse-arabic,\n.main.blur-mode-active .verse-card.active .verse-aid {\n  filter: none;\n  opacity: 1;\n}\n\n/* Force tajweed spans to display properly */\n.verse-arabic.tajweed-enabled span[class*=\"tajweed-\"] {\n  display: inline !important;\n}\n\n/* Ensure proper line height for tajweed text */\n.verse-arabic.tajweed-enabled {\n  line-height: 2.2 !important;\n  font-family: var(--font-ar);\n}\n\n/* Make tajweed colors visible */\n.verse-arabic.tajweed-enabled .tajweed-ham_wasl,\n.verse-arabic.tajweed-enabled .tajweed-slnt {\n  color: #7e8a97;\n}\n.verse-arabic.tajweed-enabled .tajweed-ghn,\n.verse-arabic.tajweed-enabled .tajweed-idgh_ghn,\n.verse-arabic.tajweed-enabled .tajweed-iqlb {\n  color: #2e9d62;\n  background: rgba(46, 157, 98, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,\n.verse-arabic.tajweed-enabled .tajweed-ikhf,\n.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw {\n  color: #9b59b6;\n  background: rgba(155, 89, 182, 0.10);\n}\n.verse-arabic {\n  --verse-font-percent: 100;\n  --verse-font-size: clamp(2rem, calc(var(--verse-font-percent, 120) * 0.02rem), 3.8rem);\n  font-family: var(--font-ar);\n  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));\n  line-height: 2;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n\n/* Force re-render when font changes */\n.verse-arabic.tajweed-enabled,\n.verse-arabic:not(.tajweed-enabled) {\n  transition: font-size 0.1s ease;\n}\n@keyframes wordHighlightPulse {\n0% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.03);\n}\n100% {\n    transform: scale(1.02);\n}\n}\n\n/* Combined Tajweed + Word Highlighting */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n\n/* Preserve tajweed colors inside highlighted words but make them visible */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {\n  color: inherit !important;\n  background: transparent !important;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*=\"tajweed-\"] {\n  color: white !important;\n  background: transparent !important;\n}\n\n/* Mode Button Styling */\n.mode-btn {\n  background: var(--surface);\n  border: 1px solid var(--accent);\n  color: var(--accent);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mode-btn i:first-child {\n  font-size: 0.85rem;\n}\n.mode-btn .bi-chevron-down {\n  font-size: 0.7rem;\n  transition: transform 0.2s;\n}\n.mode-btn:hover .bi-chevron-down {\n  transform: translateY(2px);\n}\n.mode-btn:hover {\n  background: var(--accent-light);\n}\n\n/* Make all buttons consistent */\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn:disabled,\n.rail-btn-ghost:disabled,\n.rail-btn-primary:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n  pointer-events: none;\n  transform: none;\n  box-shadow: none;\n}\n.rail-btn-resume {\n  background: rgba(255, 255, 255, 0.92);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.rail-btn-resume:hover {\n  background: var(--accent-light);\n  transform: translateY(-1px);\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\nbody {\n  font-family: var(--font-ui);\n  background: var(--bg);\n  color: var(--text);\n}\nhtml {\n  background: var(--bg);\n}\n.app {\n  min-height: 100vh;\n  font-size: calc(16px * var(--ui-scale, 1));\n  animation: appFade 260ms ease-out;\n}\n.verse-arabic {\n  min-height: 60px;\n}\n\n/* Session Rail */\n.session-rail {\n  background: var(--surface);\n  border-radius: 20px;\n  margin-bottom: 20px;\n  padding: 12px 16px 14px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.session-rail-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 10px;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.session-rail-copy {\n  flex: 1;\n  min-width: 0;\n}\n.session-rail-headline {\n  display: flex;\n  align-items: baseline;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.session-rail-pills {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  margin-top: 6px;\n}\n.session-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 4px;\n  padding: 5px 9px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n  font-size: 0.71rem;\n  white-space: nowrap;\n}\n.session-pill strong {\n  color: var(--text);\n  font-weight: 700;\n}\n.session-pill-focus {\n  max-width: min(280px, 100%);\n}\n.session-pill-focus strong {\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.session-rail-kicker {\n  font-size: 0.7rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.session-rail-meta {\n  font-size: 0.72rem;\n  color: var(--text-muted);\n  margin-top: 2px;\n}\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\n.session-rail-subnote {\n  margin-top: 10px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n}\n\n/* Mode Indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 10px;\n  padding: 6px 14px;\n  margin: 8px 0 12px 0;\n  background: var(--accent-light);\n  border-radius: 40px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n.mode-switch-btn {\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 4px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.mode-switch-btn:hover {\n  background: rgba(154, 103, 56, 0.2);\n  transform: rotate(180deg);\n}\n.progress-bar-wide {\n  margin-top: 10px;\n  height: 6px;\n  position: relative;\n  overflow: visible;\n}\n.progress-label {\n  position: absolute;\n  top: -24px;\n  right: 0;\n  font-size: 0.72rem;\n  font-weight: 700;\n  color: var(--accent);\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.session-rail-top {\n    flex-direction: column;\n    align-items: stretch;\n}\n.session-rail-actions {\n    justify-content: stretch;\n    width: 100%;\n    flex-wrap: wrap;\n}\n.rail-btn {\n    flex: 1;\n    justify-content: center;\n}\n}\n.verse-arabic-loading {\n  min-height: 60px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--text-muted);\n  animation: pulse 1s infinite;\n}\n@keyframes pulse {\n0%,\n  100% {\n    opacity: 0.3;\n}\n50% {\n    opacity: 0.6;\n}\n}\n\n/* Ensure HTML content is styled properly before Vue mounts */\n.verse-arabic word,\n.verse-arabic .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n}\n\n/* Prevent raw HTML showing */\n.verse-arabic:empty {\n  display: none;\n}\n\n/* Tajweed styles */\n.verse-arabic.tajweed-enabled [class*=\"tajweed\"] {\n  display: inline;\n}\n\n/* Color rules for tajweed - adjust based on what API returns */\n.verse-arabic [class*=\"ghunnah\"],\n.verse-arabic [class*=\"Ghunnah\"] {\n  color: #2ecc71;\n}\n.verse-arabic [class*=\"madd\"],\n.verse-arabic [class*=\"Madd\"] {\n  color: #e74c3c;\n}\n.verse-arabic [class*=\"qalqalah\"],\n.verse-arabic [class*=\"Qalqalah\"] {\n  color: #f39c12;\n}\n.verse-arabic [class*=\"ikhfa\"],\n.verse-arabic [class*=\"Ikhfa\"] {\n  color: #9b59b6;\n}\n.verse-arabic [class*=\"idgham\"],\n.verse-arabic [class*=\"Idgham\"] {\n  color: #3498db;\n}\n\n/* Word by Word styles */\n.wbw-word {\n  display: inline-block;\n  padding: 5px 8px;\n  margin: 2px 3px;\n  border-radius: 8px;\n  transition: all 0.2s ease;\n  cursor: pointer;\n  font-size: 1.05rem;\n  background: rgba(154, 103, 56, 0.05);\n}\n.wbw-word:hover {\n  background: var(--accent-light);\n  transform: scale(1.02);\n}\n.wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n  animation: pop 180ms ease-out;\n}\n.verse-arabic.verse-weak .wbw-word.weak-word {\n  background: #fff3bf;\n  color: #5f4b00;\n}\n.verse-arabic.verse-mastered .wbw-word.mastered-word {\n  background: #d3f9d8;\n  color: #1f6f31;\n}\n@keyframes pop {\nfrom {\n    transform: scale(1.01);\n}\nto {\n    transform: scale(1.05);\n}\n}\n\n/* Word highlighting styles */\n.verse-arabic word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n.rail-stat strong,\n.player-eta {\n  cursor: help;\n  border-bottom: 1px dotted var(--text-muted);\n}\n\n/* Optional: Show detailed breakdown on hover */\n.rail-stat:hover strong::after {\n  content: attr(title);\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: var(--surface-strong);\n  color: var(--text);\n  padding: 4px 8px;\n  border-radius: 8px;\n  font-size: 0.7rem;\n  white-space: nowrap;\n  z-index: 100;\n  box-shadow: var(--shadow-sm);\n  border: 1px solid var(--border);\n}\n\n/* Minimized Session Rail */\n.session-rail-mini {\n  position: sticky;\n  top: 12px;\n  z-index: 18;\n  padding: 10px;\n  padding-top: 8px;\n  margin-bottom: 20px;\n  background: var(--surface);\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-sm);\n  overflow: hidden;\n  transition: all 0.2s ease;\n}\n.session-rail-mini:hover {\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent-soft);\n}\n.rail-mini-content {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 8px 12px 8px 16px;\n}\n.rail-mini-info {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  flex: 1;\n}\n.rail-mini-icon {\n  width: 32px;\n  height: 32px;\n  background: var(--accent-light);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.rail-mini-icon i {\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.rail-mini-details {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-mini-surah {\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.rail-mini-progress {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.rail-mini-stats {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.mini-stat-item {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.mini-stat-item i {\n  font-size: 0.7rem;\n  color: var(--accent);\n}\n.rail-mini-actions {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mini-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n}\n.mini-btn:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n}\n.mini-btn:first-child {\n  background: var(--accent);\n  border-color: var(--accent);\n  color: white;\n}\n.mini-btn:first-child:hover {\n  transform: scale(1.05);\n  background: var(--accent-strong);\n}\n.rail-mini-progress {\n  height: 2px;\n  background: var(--border);\n}\n.progress-fill-mini {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.rail-mini-stats {\n    display: none;\n}\n.rail-mini-content {\n    padding: 6px 10px 6px 12px;\n}\n.rail-mini-surah {\n    font-size: 0.75rem;\n}\n}\n\n/* Font Dropdown */\n.font-dropdown {\n  position: relative;\n}\n.font-dropdown-trigger {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 999px;\n  font-size: 0.75rem;\n  cursor: pointer;\n  transition: all 0.2s;\n  color: var(--text);\n}\n.font-dropdown-trigger:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.font-dropdown-trigger .bi-chevron-down {\n  transition: transform 0.2s;\n  font-size: 0.7rem;\n}\n.font-dropdown-trigger .bi-chevron-down.rotated {\n  transform: rotate(180deg);\n}\n.font-dropdown-menu {\n  position: absolute;\n  top: calc(100% + 8px);\n  right: 0;\n  min-width: 200px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  box-shadow: var(--shadow-lg);\n  overflow: hidden;\n  z-index: 100;\n  backdrop-filter: blur(12px);\n}\n.font-option {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  width: 100%;\n  padding: 10px 14px;\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  font-size: 0.8rem;\n  text-align: left;\n  transition: all 0.15s;\n  color: var(--text);\n}\n.font-option:hover {\n  background: var(--accent-light);\n}\n.font-option.active {\n  background: var(--accent);\n  color: white;\n}\n.font-option .check-icon {\n  margin-left: auto;\n  font-size: 0.8rem;\n}\n\n/* Dropdown Animation */\n.dropdown-fade-enter-active,\n.dropdown-fade-leave-active {\n  transition: all 0.2s ease;\n}\n.dropdown-fade-enter-from,\n.dropdown-fade-leave-to {\n  opacity: 0;\n  transform: translateY(-8px);\n}\n\n/* Tajweed styles for AlQuran quran-tajweed edition */\n.verse-arabic.tajweed-enabled {\n  line-height: 2;\n  white-space: normal;\n  overflow-wrap: anywhere;\n}\n.verse-arabic.tajweed-enabled .tajweed-mark {\n  display: inline;\n  border-radius: 0.2em;\n  padding: 0 0.03em;\n}\n.verse-arabic.tajweed-enabled .tajweed-ham_wasl,\n.verse-arabic.tajweed-enabled .tajweed-slnt {\n  color: #7e8a97;\n}\n.verse-arabic.tajweed-enabled .tajweed-ghn,\n.verse-arabic.tajweed-enabled .tajweed-idgh_ghn,\n.verse-arabic.tajweed-enabled .tajweed-iqlb {\n  color: #2e9d62;\n  background: rgba(46, 157, 98, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,\n.verse-arabic.tajweed-enabled .tajweed-ikhf,\n.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw {\n  color: #9b59b6;\n  background: rgba(155, 89, 182, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-qlq,\n.verse-arabic.tajweed-enabled .tajweed-lqlq {\n  color: #d98824;\n  background: rgba(217, 136, 36, 0.12);\n}\n.verse-arabic.tajweed-enabled .tajweed-madda_normal,\n.verse-arabic.tajweed-enabled .tajweed-madda_permissible,\n.verse-arabic.tajweed-enabled .tajweed-madda_necessary,\n.verse-arabic.tajweed-enabled .tajweed-madda_obligatory,\n.verse-arabic.tajweed-enabled .tajweed-madda_pbligatory {\n  color: #d55245;\n  background: rgba(213, 82, 69, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_mus,\n.verse-arabic.tajweed-enabled .tajweed-idghm_shfw,\n.verse-arabic.tajweed-enabled .tajweed-idgh_shfw,\n.verse-arabic.tajweed-enabled .tajweed-ghn+.tajweed-mark {\n  color: #2b7bbb;\n  background: rgba(43, 123, 187, 0.10);\n}\n\n/* Toolbar chip active state for tajweed */\n.toolbar-chip.active {\n  background: var(--accent);\n  color: white;\n}\n.verse-play-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: white;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.verse-play-btn i {\n  font-size: 0.9rem;\n}\n.verse-play-btn:hover {\n  transform: scale(1.05);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--accent);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.verse-play-btn:active {\n  transform: scale(0.98);\n}\n.verse-preview-label {\n  margin-left: 10px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n  font-weight: 650;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n}\n.resume-details {\n  margin-top: 10px;\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.72);\n  padding: 10px 12px;\n}\n.resume-details summary {\n  cursor: pointer;\n  list-style: none;\n  font-weight: 650;\n  color: var(--text);\n}\n.resume-details summary::-webkit-details-marker {\n  display: none;\n}\n.verse-download-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.82);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--accent);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.verse-download-btn:hover:not(:disabled) {\n  transform: scale(1.05);\n  border-color: var(--accent);\n  background: rgba(255, 255, 255, 0.96);\n}\n.verse-download-btn:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n.speed-label {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-right: 4px;\n}\n.speed-controls {\n  display: flex;\n  gap: 4px;\n}\n.speed-btn {\n  padding: 4px 8px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.speed-btn.active {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.streak-motivation {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border-radius: 40px;\n  font-size: 0.75rem;\n}\n.streak-badge {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-weight: 500;\n}\n.motivation-message {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--text-muted);\n  font-size: 0.7rem;\n}\n.pa-note {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n  margin-top: 4px;\n  display: block;\n}\n\n/* Active tab indicator with pulse effect */\n.tools-tabs button.active-tab {\n  position: relative;\n  animation: tabPulse 0.22s ease-out;\n}\n@keyframes tabPulse {\n0% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 var(--accent);\n}\n50% {\n    transform: scale(1.012);\n    box-shadow: 0 0 0 3px var(--accent-light);\n}\n100% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n.quick-tools {\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.78);\n}\n.quick-tools-grid {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n  padding: 12px 14px;\n}\n.quick-tool {\n  border: 1px solid rgba(154, 103, 56, 0.10);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.82);\n  padding: 10px;\n  display: grid;\n  gap: 8px;\n  min-width: 0;\n}\n.quick-tool-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 8px;\n}\n.quick-tool-label {\n  font-size: 0.74rem;\n  font-weight: 750;\n  color: var(--text);\n}\n.quick-tool-value {\n  font-size: 0.74rem;\n  font-weight: 650;\n  color: var(--text-muted);\n}\n.quick-tool-body {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.quick-tool-body.disabled {\n  opacity: 0.55;\n}\n.quick-tool-body-muted {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n}\n.quick-range {\n  flex: 1 1 auto;\n  min-width: 0;\n}\n.toggle-chip-compact {\n  min-height: 34px;\n  padding: 6px 10px;\n  font-size: 0.82rem;\n}\n\n/* Toggle switch animation and visual feedback */\n.switch {\n  transition: all 0.2s ease;\n}\n.switch:active {\n  transform: scale(0.98);\n}\n.switch-ui {\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n  animation: switchPulse 0.3s ease-out;\n}\n@keyframes switchPulse {\n0% {\n    box-shadow: 0 0 0 0 rgba(139, 94, 60, 0.4);\n}\n50% {\n    box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.2);\n}\n100% {\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Field hint styling */\n.field-hint {\n  font-size: calc(0.7rem * var(--en-scale, 1));\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.26;\n  display: block;\n}\n\n/* Verse Arabic styling */\n.verse-arabic {\n  --verse-font-percent: 100;\n  --verse-font-size: clamp(1.5rem, calc(var(--verse-font-percent, 150) * 0.0175rem), 3.25rem);\n  font-family: var(--font-ar);\n  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n.verse-arabic word {\n  display: inline-block;\n  font-size: 1em;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-card {\n  background: var(--surface);\n  border-radius: 20px;\n  padding: 26px;\n  transition: all 0.2s ease;\n  border: 1px solid var(--border);\n  position: relative;\n  direction: ltr;\n  overflow: hidden;\n  width: 100%;\n}\n.verse-card::before {\n  content: \"\";\n  position: absolute;\n  inset: 0;\n  pointer-events: none;\n  background:\n    linear-gradient(180deg, rgba(184, 130, 78, 0.03), transparent 22%),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.05), transparent 28%);\n}\n.verse-card.active {\n  border-color: var(--accent);\n  background: linear-gradient(145deg, rgba(184, 130, 78, 0.14), rgba(154, 103, 56, 0.04));\n  box-shadow: 0 0 0 1px var(--accent), 0 14px 32px rgba(154, 103, 56, 0.18);\n  transform: translateY(-1px);\n  transition: all 0.2s ease;\n}\n.main.focus-mode-active .verse-card:not(.active) {\n  opacity: 0.54;\n  filter: saturate(0.72);\n}\n.main.focus-mode-active .workspace-fab-live,\n.main.focus-mode-active .verse-card:not(.active) .verse-aid {\n  opacity: 0.38;\n}\n\n\n\n/* Removed: \"For serious huffadh training\" badge */\n.verse-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 16px;\n}\n.verse-badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-number {\n  font-size: 0.78rem;\n  padding: 6px 12px;\n  background: var(--accent);\n  border-radius: 999px;\n  color: #fff;\n  font-weight: 700;\n  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.24);\n}\n.verse-status-badge,\n.verse-status-subtle {\n  border-radius: 999px;\n  padding: 5px 10px;\n  font-size: 0.68rem;\n  font-weight: 600;\n}\n.verse-status-badge {\n  background: var(--accent-light);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.verse-status-subtle {\n  background: var(--bg-elevated);\n  color: var(--text-muted);\n}\n.verse-ref {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex-shrink: 0;\n}\n\n/* Font controls */\n.verse-font-controls {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  padding: 2px 6px;\n  margin-right: 8px;\n}\n.verse-font-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 12px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 10px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.verse-font-btn:hover {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n}\n.verse-font-size-indicator {\n  font-size: 10px;\n  min-width: 35px;\n  text-align: center;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n\n/* Session rail */\n.session-rail {\n  position: sticky;\n  top: 14px;\n  z-index: 18;\n  margin-bottom: 18px;\n  padding: 12px 14px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-md);\n  animation: railIn 280ms ease-out;\n}\n.session-rail-top {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  gap: 12px;\n  align-items: center;\n}\n.session-rail-kicker {\n  font-size: 10px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  margin-top: 2px;\n  font-size: 14px;\n  font-weight: 450;\n}\n.session-rail-meta {\n  margin-top: 2px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.session-rail-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 8px;\n  margin-top: 10px;\n}\n.rail-stat {\n  padding: 8px 10px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-stat span {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n}\n.rail-stat strong {\n  font-size: 0.78rem;\n  font-weight: 500;\n}\n.rail-btn {\n  height: 34px;\n  padding: 0 12px;\n  border-radius: 13px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  color: var(--text);\n  font-size: 12px;\n  font-weight: 450;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.rail-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);\n}\n.progress-bar {\n  flex: 1;\n  height: 4px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-wide {\n  margin-top: 10px;\n}\n.progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s;\n}\n\n/* Mode indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  margin: 8px 0 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n\n/* Reading toolbar */\n.reading-toolbar {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  margin-bottom: 16px;\n  padding: 12px 14px;\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.reading-toolbar-group {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  align-items: flex-start;\n}\n.toolbar-chip {\n  border: 0;\n  border-radius: 999px;\n  padding: 8px 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  font-size: 0.75rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: var(--shadow-sm);\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.toolbar-chip i,\n.rail-btn i,\n.tools-tabs button i,\n.st-ico i {\n  font-size: 0.9rem;\n  line-height: 1;\n}\n.toolbar-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.toolbar-chip:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n\n/* Tools panel */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  width: min(var(--tools-width), 92vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n}\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(15, 12, 8, 0.35);\n  backdrop-filter: blur(1px);\n  z-index: 59;\n}\n.tools.open {\n  transform: translateX(0);\n}\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n}\n.tools-topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.tools-title {\n  font-size: 1rem;\n  font-weight: 700;\n  letter-spacing: -0.2px;\n  color: var(--text);\n}\n.tools-context {\n  margin-top: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 600;\n}\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n  color: rgba(0, 0, 0, 0.7);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n  overflow-x: auto;\n  -webkit-overflow-scrolling: touch;\n  width: 100%;\n}\n.tools-tabs button {\n  flex: 1 1 0;\n  padding: 7px 10px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.82rem;\n  cursor: pointer;\n  color: rgba(0, 0, 0, 0.55);\n  font-weight: 450;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: background 140ms ease, color 140ms ease, transform 140ms ease, box-shadow 160ms ease;\n  white-space: nowrap;\n}\n.tools-tabs button.active {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));\n  box-shadow: var(--shadow-sm);\n  color: rgba(0, 0, 0, 0.85);\n}\n.tools-body {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n}\n\n/* Compact mode (default) to reduce cognitive load */\n.tools-body.compact .st-sub,\n.tools-body.compact .field-hint,\n.tools-body.compact .analytics-help,\n.tools-body.compact .stat-help {\n  display: block !important;\n}\n.tools-body.compact .sheet {\n  gap: 12px;\n}\n.tools-body.compact .sheet-section {\n  padding: 0;\n  border-radius: 16px;\n}\n.tools-body.compact .sheet-toggle {\n  padding: 12px 14px;\n}\n.tools-body.compact .sheet-content {\n  padding: 12px 14px 14px;\n}\n.tools-body.compact .field-stack {\n  gap: 12px;\n}\n.tools-body.compact .field label {\n  margin-bottom: 6px;\n}\n.sheet {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.sheet-section {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border-radius: 18px;\n  padding: 0;\n  overflow: hidden;\n  box-shadow: var(--shadow-sm);\n  animation: riseSoft 260ms ease-out;\n}\n.sheet-toggle {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border: none;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease;\n}\n.st-left {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.st-ico {\n  width: 24px;\n  height: 24px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));\n  border: 1px solid rgba(139, 94, 60, 0.18);\n  flex: 0 0 auto;\n  font-size: 11px;\n  font-weight: 600;\n  color: var(--accent);\n}\n.st-txt {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 2px;\n  min-width: 0;\n}\n.st-title {\n  font-weight: 450;\n  letter-spacing: -0.2px;\n  color: var(--text);\n  font-size: 0.82rem;\n  white-space: nowrap;\n}\n.st-sub {\n  font-size: 0.66rem;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.st-chev {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  display: grid;\n  place-items: center;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  color: rgba(0, 0, 0, 0.65);\n  transition: transform 0.15s ease;\n  box-shadow: var(--shadow-sm);\n}\n.st-chev.open {\n  transform: rotate(180deg);\n}\n.sheet-content {\n  padding: 12px 12px 14px;\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field-stack {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  min-width: 0;\n}\n.field label {\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n}\n.field-hint {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.35;\n  display: block;\n}\n.select,\n.input {\n  width: 100%;\n  min-width: 0;\n  padding: 11px 12px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--text);\n  font-size: 0.8rem;\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n.range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.range-single {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n  align-items: center;\n}\n.range span {\n  color: rgba(0, 0, 0, 0.35);\n  font-weight: 450;\n  font-size: 11px;\n}\n.radio-group {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.radio {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 0.85rem;\n  color: var(--text);\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  transition: all 0.2s ease;\n}\n.radio:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-sm);\n}\n.radio input {\n  margin: 0;\n}\n.switch {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 11px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  cursor: pointer;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  transition: all 0.2s ease;\n}\n.switch input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.switch-ui {\n  width: 44px;\n  height: 26px;\n  border-radius: 999px;\n  background: rgba(0, 0, 0, 0.12);\n  position: relative;\n  flex: 0 0 auto;\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  content: \"\";\n  position: absolute;\n  top: 3px;\n  left: 3px;\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  background: white;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n}\n.switch input:checked+.switch-ui::after {\n  transform: translateX(18px);\n}\n.switch-text {\n  font-size: 0.74rem;\n  color: rgba(0, 0, 0, 0.72);\n  font-weight: 400;\n}\n.tools-techniques-section {\n  border-color: rgba(139, 94, 60, 0.16);\n  box-shadow: none;\n}\n.techniques-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.technique-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 13px;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.78);\n  box-shadow: 0 10px 24px rgba(63, 39, 18, 0.055);\n}\n.technique-row-stacked {\n  align-items: stretch;\n  flex-direction: column;\n}\n.technique-row-main,\n.technique-control {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.technique-copy {\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  gap: 3px;\n}\n.technique-copy label {\n  margin: 0;\n  color: var(--text);\n  font-family: inherit;\n  font-size: 0.86rem;\n  font-weight: 560;\n  white-space: nowrap;\n}\n.technique-copy small,\n.technique-control span {\n  color: var(--text-muted);\n  font-family: inherit;\n  font-size: 0.73rem;\n  font-weight: 400;\n  line-height: 1.45;\n}\n.technique-toggle {\n  flex: 0 0 86px;\n  min-height: 40px;\n  border-radius: 12px;\n  font-family: inherit;\n  font-size: 0.82rem;\n  font-weight: 560;\n  border-width: 1px;\n}\n.technique-control {\n  padding-top: 12px;\n  border-top: 1px solid rgba(154, 103, 56, 0.10);\n}\n.technique-range {\n  flex: 1 1 auto;\n  min-width: 96px;\n  padding: 0;\n  box-shadow: none;\n}\n.segmented-control {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 6px;\n  padding: 5px;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 14px;\n  background: rgba(98, 73, 49, 0.045);\n}\n.segmented-control button {\n  min-width: 0;\n  min-height: 42px;\n  padding: 9px 10px;\n  border: 1px solid transparent;\n  border-radius: 10px;\n  background: transparent;\n  color: var(--text-muted);\n  font-family: inherit;\n  font-size: 0.8rem;\n  font-weight: 560;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n}\n.segmented-control button.active {\n  background: #fffaf4;\n  color: var(--accent-strong);\n  border-color: rgba(154, 103, 56, 0.20);\n  box-shadow: 0 8px 18px rgba(63, 39, 18, 0.09);\n}\n.technique-preview {\n  padding: 10px 12px;\n  border-radius: 12px;\n  background: rgba(154, 103, 56, 0.07);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: rgba(98, 73, 49, 0.92);\n  font-family: inherit;\n  font-size: 0.74rem;\n  font-weight: 430;\n  line-height: 1.45;\n}\n\n/* Start button */\n.start-btn {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  border-radius: 12px;\n  color: white;\n  font-size: 1rem;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  margin-top: 20px;\n  transition: all 0.2s ease;\n}\n.start-btn:hover:not(:disabled) {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);\n}\n.start-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n\n/* Tools footer */\n.tools-footer {\n  position: absolute;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  height: var(--tools-footer-h);\n  padding: 12px 16px 14px;\n  border-top: 1px solid var(--border);\n  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));\n  display: flex;\n  gap: 10px;\n  justify-content: space-between;\n  align-items: center;\n}\n.tools-btn {\n  flex: 1;\n  min-height: 44px;\n  padding: 10px 10px;\n  border-radius: 15px;\n  font-weight: 500;\n  border: 1px solid rgba(0, 0, 0, 0.1);\n  cursor: pointer;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  line-height: 1;\n}\n.tools-btn-soft {\n  color: var(--text-muted);\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.42));\n  box-shadow: none;\n}\n.tools-btn-soft:hover {\n  color: var(--text);\n  border-color: var(--accent-soft);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.6));\n}\n.tools-btn-primary {\n  color: #fff;\n  border-color: rgba(0, 0, 0, 0.08);\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  box-shadow: var(--shadow-sm);\n}\n.tools-btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n.tools-btn:active:not(:disabled),\n.fab-btn:active:not(:disabled),\n.toggle-chip:active:not(:disabled),\n.sheet-toggle:active:not(:disabled) {\n  transform: translateY(0);\n}\n.tools-btn:hover:not(:disabled),\n.fab-btn:hover:not(:disabled),\n.toggle-chip:hover:not(:disabled),\n.sheet-toggle:hover:not(:disabled) {\n  filter: brightness(1.02);\n}\n.tools-btn-primary:disabled {\n  opacity: 0.55;\n  cursor: not-allowed;\n  box-shadow: none;\n}\n.tools-btn-start {\n  flex: 1.6;\n}\n\n/* Hero section */\n.hero-card {\n  margin-bottom: 16px;\n  padding: 18px 18px 16px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 236, 226, 0.92));\n  box-shadow: var(--shadow-md);\n  display: grid;\n  gap: 14px;\n  animation: riseSoft 260ms ease-out;\n}\n.hero-kicker {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  color: var(--accent);\n}\n.hero-title {\n  margin-top: 6px;\n  font-size: 1.24rem;\n  font-weight: 500;\n  letter-spacing: -0.03em;\n}\n.hero-sub {\n  margin-top: 8px;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  max-width: 56ch;\n}\n.hero-flow {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n}\n.hero-step {\n  padding: 10px 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.62);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.74rem;\n}\n.hero-step span {\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  display: grid;\n  place-items: center;\n  background: var(--accent-light);\n  color: var(--accent);\n  font-size: 11px;\n}\n.hero-step strong {\n  font-weight: 500;\n}\n.hero-points {\n  display: grid;\n  gap: 8px;\n}\n.hero-point {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.hero-point i {\n  color: var(--accent);\n}\n.hero-actions,\n.empty-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cta {\n  flex: 1;\n  padding: 10px 10px;\n  border-radius: 14px;\n  font-weight: 450;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 11px;\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.cta-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);\n}\n.cta-ghost {\n  background: rgba(255, 255, 255, 0.58);\n  box-shadow: var(--shadow-sm);\n}\n\n/* Empty state */\n.empty {\n  padding: 40px 0;\n}\n.empty-card {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: var(--radius);\n  padding: 32px;\n  text-align: center;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-md);\n}\n.empty-icon {\n  font-family: var(--font-ar);\n  font-size: 2.2rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.empty-card h3 {\n  font-weight: 450;\n  margin-bottom: 6px;\n  font-size: 1rem;\n}\n.empty-card p {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  margin-bottom: 16px;\n}\n\n/* Verses grid */\n.workspace {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr);\n  gap: 14px;\n  align-items: start;\n  margin-top: 14px;\n}\n.workspace-main {\n  min-width: 0;\n}\n.workspace-shell {\n  width: 80%;\n  margin: 0 auto 18px;\n}\n.workspace-shell {\n  display: grid;\n  gap: 6px;\n  padding: 10px 12px;\n  border-radius: 20px;\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background:\n    linear-gradient(160deg, rgba(255, 251, 245, 0.98), rgba(255, 255, 255, 0.9)),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.09), transparent 28%);\n  box-shadow: 0 14px 28px rgba(63, 39, 18, 0.07);\n  position: relative;\n}\n.workspace-shell.collapsed {\n  gap: 8px;\n  padding: 12px 14px;\n}\n.workspace-shell-head {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  gap: 16px;\n  align-items: flex-start;\n}\n.workspace-shell-copy {\n  display: grid;\n  gap: 3px;\n  min-width: 0;\n}\n.workspace-shell-kicker {\n  display: inline-flex;\n  width: -moz-fit-content;\n  width: fit-content;\n  padding: 3px 7px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.1);\n  color: var(--accent-strong);\n  font-size: 0.68rem;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 0.06em;\n}\n.workspace-shell-kicker-review {\n  background: rgba(183, 28, 28, 0.12);\n  color: #9f1f1f;\n}\n.workspace-shell-title-row {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  flex-wrap: wrap;\n}\n.workspace-shell-copy h1 {\n  margin: 0;\n  color: var(--text);\n  font-size: clamp(1rem, 1.5vw, 1.25rem);\n  line-height: 1.08;\n  font-weight: 650;\n}\n.workspace-shell-phase {\n  display: inline-flex;\n  align-items: center;\n  min-height: 28px;\n  padding: 5px 10px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.88);\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  color: var(--accent-strong);\n  font-size: 0.73rem;\n  font-weight: 650;\n}\n.workspace-shell-phase-review {\n  border-color: rgba(183, 28, 28, 0.24);\n  color: #9f1f1f;\n  background: rgba(183, 28, 28, 0.09);\n}\n.workspace-shell-copy h2 {\n  margin: 0;\n  color: var(--text);\n  font-size: 1rem;\n  line-height: 1.15;\n  font-weight: 600;\n}\n.workspace-shell-copy p {\n  margin: 0;\n  color: var(--text-muted);\n  max-width: 58ch;\n  font-size: 0.8rem;\n  line-height: 1.35;\n}\n.workspace-shell-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.workspace-shell-meta span {\n  display: inline-flex;\n  align-items: center;\n  min-height: 28px;\n  padding: 5px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.15);\n  background: rgba(255, 255, 255, 0.86);\n  color: rgba(48, 42, 35, 0.86);\n  font-size: 0.76rem;\n  font-weight: 600;\n}\n.workspace-shell-meta-review {\n  border-color: rgba(183, 28, 28, 0.24) !important;\n  color: #9f1f1f !important;\n  background: rgba(183, 28, 28, 0.08) !important;\n}\n.resume-feedback-bars,\n.session-feedback-bars {\n  display: grid;\n  gap: 6px;\n  margin-top: 8px;\n}\n.session-feedback-panel {\n  margin-top: 8px;\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.72);\n  padding: 8px 10px;\n}\n.session-feedback-panel summary {\n  list-style: none;\n  cursor: pointer;\n  display: grid;\n  gap: 2px;\n  color: var(--text);\n  font-weight: 650;\n}\n.session-feedback-panel summary::-webkit-details-marker {\n  display: none;\n}\n.session-feedback-panel summary small {\n  color: var(--text-muted);\n  font-weight: 500;\n  font-size: 0.74rem;\n}\n.resume-feedback-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.resume-progress-repetition {\n  background: linear-gradient(90deg, #f2c94c, #e3a008);\n}\n.resume-progress-retention {\n  background: linear-gradient(90deg, #e57373, #c62828);\n}\n.pill-status-mastered {\n  border-color: rgba(46, 125, 50, 0.22);\n  background: rgba(76, 175, 80, 0.08);\n  color: #2e7d32;\n}\n.pill-status-weak {\n  border-color: rgba(245, 158, 11, 0.22);\n  background: rgba(245, 158, 11, 0.1);\n  color: #8a5a00;\n}\n.pill-status-repeat {\n  border-color: rgba(198, 40, 40, 0.22);\n  background: rgba(229, 57, 53, 0.08);\n  color: #9f1f1f;\n}\n.workspace-shell-chaining {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  align-items: center;\n}\n.workspace-shell-chain-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  min-height: 28px;\n  padding: 5px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background: rgba(255, 255, 255, 0.86);\n  color: rgba(48, 42, 35, 0.86);\n  font-size: 0.72rem;\n  font-weight: 650;\n}\n.workspace-shell-chain-pill i {\n  color: var(--accent-strong);\n}\n.workspace-shell-chain-pill-soft {\n  background: rgba(154, 103, 56, 0.09);\n  border-color: rgba(154, 103, 56, 0.14);\n  color: var(--accent-strong);\n}\n.workspace-shell-actions {\n  display: grid;\n  grid-template-columns: repeat(2, auto);\n  gap: 8px;\n  align-items: start;\n}\n.main-nav-btn,\n.main-card-primary {\n  min-height: 42px;\n  border-radius: 14px;\n  font-weight: 600;\n  font-size: 0.84rem;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  padding: 8px 12px;\n}\n.main-nav-btn {\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background: rgba(255, 255, 255, 0.82);\n  color: var(--text);\n}\n.main-card-primary {\n  border: 0;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  box-shadow: 0 12px 24px rgba(154, 103, 56, 0.18);\n}\n.main-nav-btn:disabled,\n.main-card-primary:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n  box-shadow: none;\n}\n.workspace-fab {\n  position: sticky;\n  top: 14px;\n  z-index: 25;\n  display: flex;\n  min-width: 0;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 8px 10px;\n  margin: 8px 0 6px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.06);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.58));\n  box-shadow: 0 16px 38px rgba(63, 39, 18, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.38);\n  backdrop-filter: blur(10px);\n  animation: cardSoftIn 220ms cubic-bezier(0.16, 1, 0.3, 1);\n  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;\n}\n.workspace-fab:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 20px 44px rgba(63, 39, 18, 0.18), 0 0 0 1px rgba(154, 103, 56, 0.18);\n  border-color: rgba(154, 103, 56, 0.2);\n}\n@keyframes cardSoftIn {\nfrom {\n    transform: translateY(6px);\n    opacity: 0.9;\n}\nto {\n    transform: translateY(0);\n    opacity: 1;\n}\n}\n.workspace-fab-meta {\n  min-width: 0;\n  flex: 1 1 auto;\n  display: grid;\n  gap: 4px;\n}\n.workspace-fab-kicker {\n  display: inline-flex;\n  align-items: center;\n  width: -moz-fit-content;\n  width: fit-content;\n  padding: 4px 8px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.10);\n  color: var(--accent-strong);\n  font-size: 0.68rem;\n  font-weight: 650;\n  letter-spacing: 0.06em;\n  text-transform: uppercase;\n}\n.workspace-fab-title {\n  font-weight: 650;\n  color: var(--text);\n  letter-spacing: -0.2px;\n  font-size: 0.92rem;\n  line-height: 1.15;\n}\n.workspace-fab-sub {\n  margin-top: 3px;\n  font-size: 0.74rem;\n  color: var(--text-muted);\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  align-items: center;\n  line-height: 1.2;\n}\n.workspace-fab-sub span {\n  display: inline-flex;\n  align-items: center;\n  max-width: 100%;\n  padding: 6px 10px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.18);\n  background: rgba(255, 255, 255, 0.86);\n  box-shadow: 0 8px 18px rgba(63, 39, 18, 0.06);\n  color: rgba(48, 42, 35, 0.82);\n  font-weight: 600;\n}\n.workspace-fab-live {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 5px;\n}\n.workspace-fab-live-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  max-width: 100%;\n  min-height: 38px;\n  padding: 8px 12px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.11);\n  border: 1px solid rgba(154, 103, 56, 0.20);\n  color: var(--accent-strong);\n  font-size: 0.82rem;\n  font-weight: 750;\n  box-shadow: 0 10px 20px rgba(63, 39, 18, 0.08);\n}\n.workspace-fab-live-pill i {\n  display: inline-grid;\n  place-items: center;\n  width: 22px;\n  height: 22px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.14);\n}\n.workspace-fab-live-pill-primary {\n  background: linear-gradient(180deg, rgba(154, 103, 56, 0.16), rgba(154, 103, 56, 0.09));\n  border-color: rgba(154, 103, 56, 0.28);\n}\n.workspace-fab-live-pill-mode {\n  background: rgba(255, 255, 255, 0.86);\n}\n.workspace-fab-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n  line-height: 1.26;\n  max-width: 60ch;\n  overflow-wrap: anywhere;\n}\n.workspace-fab-chip {\n  display: inline-flex;\n  align-items: center;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(46, 125, 50, 0.18);\n  background: rgba(46, 125, 50, 0.10);\n  color: rgba(46, 125, 50, 0.95);\n  font-weight: 650;\n  font-size: 0.72rem;\n}\n.workspace-fab-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex: 0 0 auto;\n}\n.fab-btn {\n  min-height: 40px;\n  padding: 8px 11px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.76);\n  box-shadow: var(--shadow-sm);\n  font-weight: 600;\n  font-size: 0.84rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  white-space: nowrap;\n  cursor: pointer;\n  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 140ms ease;\n}\n.fab-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  border-color: transparent;\n  box-shadow: 0 14px 28px rgba(154, 103, 56, 0.22);\n}\n.fab-btn-soft {\n  color: rgba(0, 0, 0, 0.78);\n}\n.fab-btn-ghost {\n  color: rgba(0, 0, 0, 0.78);\n}\n.verses-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n  margin-top: 0;\n}\n.verse-arabic-primary {\n  /* Primary focus: Quran dominates; aids are quieter. */\n  font-size: clamp(2.1rem, 2.75vw, 3.05rem);\n  line-height: 2.25;\n  letter-spacing: 0.01em;\n}\n.verse-aid {\n  opacity: 0.82;\n  filter: saturate(0.78);\n  margin-top: 0.4rem;\n  font-size: 0.93em;\n}\n.verse-aid-title {\n  margin-bottom: 4px;\n  color: var(--accent-strong);\n  font-size: 0.66rem;\n  font-weight: 650;\n  font-style: normal;\n  text-transform: uppercase;\n  letter-spacing: 0.04em;\n}\n.inline-setting-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.input-compact {\n  flex: 0 0 140px;\n}\n.inline-setting-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-height: 30px;\n  min-width: 58px;\n  padding: 0 10px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.08);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: var(--accent-strong);\n  font-size: 0.72rem;\n  font-family: inherit;\n  font-weight: 460;\n}\n.settings-section {\n  padding: 18px;\n  border-radius: 18px;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  background: #fffdf9;\n  box-shadow: 0 18px 42px rgba(40, 28, 16, 0.08);\n}\n.settings-heading {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  align-items: start;\n  gap: 16px;\n  padding-bottom: 16px;\n  margin-bottom: 16px;\n  border-bottom: 1px solid rgba(28, 24, 20, 0.07);\n}\n.settings-heading-copy {\n  min-width: 0;\n  display: grid;\n  gap: 6px;\n}\n.settings-heading-copy h3 {\n  margin: 0;\n  color: #1f1d1a;\n  font-size: 1.12rem;\n  font-weight: 560;\n  line-height: 1.15;\n}\n.settings-heading-copy p {\n  margin: 0;\n  color: #6d655d;\n  font-size: 0.78rem;\n  line-height: 1.45;\n}\n.settings-status {\n  min-height: 30px;\n  padding: 0 11px;\n  border-radius: 999px;\n  background: #f7f2eb;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  color: #614326;\n  font-size: 0.64rem;\n  font-weight: 520;\n  letter-spacing: 0.04em;\n  text-transform: uppercase;\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n}\n.settings-status-dot {\n  width: 7px;\n  height: 7px;\n  border-radius: 999px;\n  background: #2f9f68;\n  box-shadow: 0 0 0 4px rgba(47, 159, 104, 0.12);\n}\n.settings-panels {\n  display: grid;\n  gap: 16px;\n}\n.settings-group {\n  display: grid;\n  gap: 10px;\n}\n.settings-group-title {\n  color: #725233;\n  font-size: 0.64rem;\n  font-weight: 560;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n}\n.settings-card-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 10px;\n}\n.settings-display-grid {\n  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);\n}\n.settings-card {\n  min-width: 0;\n  border-radius: 14px;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  background: linear-gradient(180deg, #ffffff, #fbf8f3);\n  box-shadow: 0 8px 18px rgba(40, 28, 16, 0.045);\n}\n.settings-card-toggle {\n  min-height: 126px;\n  padding: 14px;\n  display: grid;\n  align-content: space-between;\n  gap: 14px;\n}\n.settings-card-range {\n  min-height: 126px;\n  padding: 14px;\n  display: grid;\n  gap: 14px;\n}\n.settings-row-copy {\n  min-width: 0;\n  display: grid;\n  gap: 6px;\n}\n.settings-row-copy label {\n  color: #211f1c;\n  font-size: 0.86rem;\n  font-weight: 540;\n  display: inline-flex;\n  align-items: center;\n  gap: 9px;\n  min-width: 0;\n}\n.settings-row-copy small {\n  color: #6f675f;\n  font-size: 0.7rem;\n  line-height: 1.4;\n}\n.settings-icon {\n  width: 32px;\n  height: 32px;\n  border-radius: 10px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  background: #f7f1ea;\n  border: 1px solid rgba(154, 103, 56, 0.13);\n  color: #8c5b2e;\n  flex: 0 0 auto;\n}\n.settings-toggle {\n  width: 100%;\n  min-height: 40px;\n  padding: 7px 14px;\n  border-radius: 10px;\n  font-size: 0.78rem;\n  font-weight: 540;\n  box-shadow: none;\n  border-width: 1px;\n}\n.settings-range-wrap {\n  width: 100%;\n  min-width: 0;\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  align-items: center;\n  gap: 12px;\n}\n.settings-range {\n  min-width: 0;\n  width: 100%;\n  padding: 0;\n  box-shadow: none;\n}\n.settings-apply-section {\n  padding: 12px;\n  border-radius: 14px;\n  background: #f8f2ea;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  display: grid;\n  gap: 8px;\n}\n.settings-apply-primary {\n  width: 100%;\n  min-height: 48px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  background: #8d5a2c;\n  color: #fff;\n  font-size: 0.92rem;\n  font-weight: 560;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  cursor: pointer;\n  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;\n}\n.settings-apply-primary:hover {\n  transform: translateY(-1px);\n  background: #7b4b22;\n  box-shadow: 0 10px 20px rgba(123, 75, 34, 0.24);\n}\n.settings-apply-section small {\n  color: #6f675f;\n  font-size: 0.7rem;\n}\n.tools-footer.settings-footer {\n  background: transparent;\n  border-top: none;\n  box-shadow: none;\n  pointer-events: none;\n}\n.tools-footer.settings-footer .tools-btn {\n  visibility: hidden;\n}\n.offline-list {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n  margin-bottom: 16px;\n}\n.offline-item {\n  background: var(--bg-elevated);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  transition: all 0.2s ease;\n}\n.offline-item:hover {\n  border-color: var(--accent);\n  background: var(--surface);\n}\n.oi-info {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.oi-name {\n  font-weight: 600;\n  font-size: 1rem;\n}\n.oi-meta {\n  font-size: 0.8rem;\n  opacity: 0.7;\n}\n.oi-date {\n  font-size: 0.7rem;\n  opacity: 0.5;\n}\n.oi-actions {\n  display: flex;\n  gap: 8px;\n}\n.oi-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.oi-load:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.oi-delete:hover {\n  background: #ff4d4d;\n  color: white;\n  border-color: #ff4d4d;\n}\n.empty-mini {\n  text-align: center;\n  padding: 32px 16px;\n  background: var(--bg-elevated);\n  border-radius: 20px;\n  border: 1px dashed var(--border);\n}\n.offline-note {\n  margin-top: 24px;\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  display: flex;\n  gap: 10px;\n  font-size: 0.75rem;\n  line-height: 1.4;\n  color: var(--accent);\n}\n\n/* Floating Player */\n.player-bar {\n  position: fixed;\n  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);\n  left: 50%;\n  transform: translateX(-50%);\n  width: min(calc(100vw - 32px), 960px);\n  max-width: 960px;\n  background: rgba(255, 255, 255, 0.98);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 24px;\n  box-shadow: 0 20px 40px rgba(63, 39, 18, 0.12);\n  z-index: 1000;\n  padding: 12px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  /* Avoid iOS Safari compositing artifacts (black bands) from backdrop-filter on fixed elements. */\n  backdrop-filter: none;\n  -webkit-backdrop-filter: none;\n  transition: transform 0.22s ease, opacity 0.22s ease, padding 0.22s ease;\n}\n.player-bar.collapsed {\n  transform: translateX(-50%);\n  opacity: 0.98;\n}\n.player-main {\n  display: grid;\n  grid-template-columns: minmax(150px, 1.1fr) auto minmax(180px, 1fr) auto auto;\n  align-items: center;\n  gap: clamp(10px, 1.6vw, 20px);\n  min-width: 0;\n}\n.player-info {\n  min-width: 0;\n}\n.player-chapter {\n  font-weight: 700;\n  font-size: 0.9rem;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-verse {\n  font-size: 0.75rem;\n  opacity: 0.7;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-eta {\n  color: var(--accent);\n  font-weight: 500;\n  opacity: 1;\n}\n.player-controls {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n}\n.sheet-fade-enter-active,\n.sheet-fade-leave-active {\n  transition: opacity 0.2s ease, transform 0.2s ease;\n}\n.sheet-fade-enter-from,\n.sheet-fade-leave-to {\n  opacity: 0;\n  transform: translateY(8px);\n}\n.player-btn {\n  width: 44px;\n  height: 44px;\n  border-radius: 12px;\n  border: none;\n  background: none;\n  color: var(--text);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.2rem;\n  transition: all 0.2s ease;\n  flex: 0 0 auto;\n}\n.player-btn:hover {\n  background: rgba(154, 103, 56, 0.08);\n}\n.player-play {\n  background: var(--accent);\n  color: white;\n  width: 52px;\n  height: 52px;\n  border-radius: 16px;\n  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.3);\n}\n.player-play:hover {\n  background: rgba(255, 255, 255, 0.88);\n  color: var(--accent);\n  transform: scale(1.05);\n}\n.player-progress-wrap {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  min-width: 0;\n}\n.player-time {\n  font-size: 0.75rem;\n  font-variant-numeric: tabular-nums;\n  opacity: 0.7;\n  min-width: 40px;\n}\n.player-progress-bg {\n  flex: 1;\n  height: 6px;\n  background: var(--bg-elevated);\n  border-radius: 3px;\n  position: relative;\n  cursor: pointer;\n}\n.player-progress-fill {\n  position: absolute;\n  left: 0;\n  top: 0;\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.1s linear;\n}\n\n/* Animations */\n.slide-up-enter-active,\n.slide-up-leave-active {\n  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.slide-up-enter-from,\n.slide-up-leave-to {\n  transform: translate(-50%, 100px);\n  opacity: 0;\n}\n.verse-translation {\n  font-size: calc(0.94rem * var(--en-scale, 1));\n  color: var(--text);\n  line-height: 1.55;\n  padding-top: 10px;\n  margin-top: 8px;\n  border-top: 1px solid var(--border);\n  display: block;\n  opacity: 0.92;\n}\n.verse-transliteration {\n  font-size: calc(0.98rem * var(--en-scale, 1));\n  color: var(--text);\n  font-style: italic;\n  margin-top: 8px;\n  padding-top: 8px;\n  border-top: 1px solid var(--border);\n  line-height: 1.5;\n  opacity: 0.98;\n}\n.verse-words {\n  display: flex;\n  flex-wrap: nowrap;\n  gap: 8px;\n  direction: rtl;\n  margin-top: 12px;\n  padding-top: 10px;\n  border-top: 1px solid var(--border);\n  overflow-x: auto;\n  overflow-y: hidden;\n  -webkit-overflow-scrolling: touch;\n  scroll-snap-type: x proximity;\n  padding-bottom: 8px;\n}\n.word-item {\n  position: relative;\n  background: var(--accent-light);\n  padding: 6px 12px;\n  border-radius: 20px;\n  display: inline-flex;\n  flex-direction: row-reverse;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.75rem;\n  flex: 0 0 auto;\n  scroll-snap-align: center;\n  cursor: help;\n  min-height: 36px;\n}\n.word-item:hover::after,\n.word-item:focus::after {\n  content: attr(data-tooltip);\n  position: absolute;\n  left: 50%;\n  bottom: calc(100% + 8px);\n  transform: translateX(-50%);\n  z-index: 5;\n  width: -moz-max-content;\n  width: max-content;\n  max-width: 220px;\n  padding: 6px 8px;\n  border-radius: 9px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n  color: var(--text);\n  direction: ltr;\n  text-align: center;\n  font-size: 0.72rem;\n  line-height: 1.25;\n}\n.word-arabic {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n}\n.word-meaning {\n  color: var(--text-muted);\n  font-size: calc(0.82rem * var(--en-scale, 1));\n}\n.word-audio-btn {\n  background: none;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 0 4px;\n}\n.field-switch {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.reading-aid-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 8px;\n}\n.tools,\n.tools-body,\n.sheet-content {\n  overflow-x: hidden;\n}\n.live-stats-grid {\n  display: grid;\n  gap: 10px;\n}\n.live-stat-card {\n  min-height: 72px;\n  padding: 14px 16px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 252, 247, 0.9);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.live-stat-label {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  font-weight: 500;\n}\n.live-stat-card strong {\n  color: var(--text);\n  font-size: 1rem;\n  font-weight: 600;\n}\n.resume-copy {\n  margin-bottom: 8px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(251, 245, 238, 0.96));\n  border-radius: 18px;\n  box-shadow: 0 24px 72px rgba(31, 24, 17, 0.22);\n}\n.modal-header h2 {\n  font-size: 1.05rem;\n  font-weight: 600;\n}\n.resume-modal {\n  background: linear-gradient(180deg, rgba(255, 251, 245, 0.99), rgba(248, 241, 233, 0.97));\n}\n.resume-modal .modal-header,\n.resume-modal .modal-body,\n.resume-modal .modal-footer {\n  padding-top: 18px;\n  padding-bottom: 18px;\n}\n.resume-grid .pill,\n.resume-modal .pill {\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid rgba(184, 130, 78, 0.16);\n}\n.wbw-word.highlighted,\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.03);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.24);\n}\n.wbw-word.phrase-highlighted {\n  box-shadow: 0 0 0 2px rgba(184, 130, 78, 0.18);\n}\n.word-item.highlighted,\n.word-item.phrase-highlighted {\n  background: rgba(184, 130, 78, 0.2);\n}\n\n/* Quiz overlay */\n.quiz-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 80;\n  background: rgba(0, 0, 0, 0.35);\n  backdrop-filter: blur(6px);\n  display: grid;\n  place-items: center;\n  padding: 18px;\n}\n.quiz-card {\n  width: min(680px, 100%);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba, rgba(250, 245, 239, 0.95));\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 22px;\n  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);\n  overflow: hidden;\n}\n.quiz-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 18px 22px 14px;\n  border-bottom: 1px solid rgba(0, 0, 0, 0.08);\n}\n.quiz-title {\n  font-weight: 500;\n  font-size: 1.05rem;\n}\n.quiz-subtitle {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.quiz-close {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.7);\n  cursor: pointer;\n  font-size: 24px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.quiz-progress {\n  padding: 14px 22px 0;\n}\n.quiz-progress-bar {\n  height: 4px;\n  background: var(--border);\n  border-radius: 2px;\n  overflow: hidden;\n}\n.quiz-progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n.quiz-stats {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.quiz-body {\n  padding: 18px 22px 22px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.quiz-question {\n  font-weight: 600;\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.quiz-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.4rem;\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  padding: 16px;\n  background: var(--accent-light);\n  border-radius: 16px;\n}\n.quiz-reveal-btn {\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n}\n.quiz-answer {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.quiz-translation {\n  font-size: 0.9rem;\n  line-height: 1.6;\n  color: var(--text);\n  margin-bottom: 16px;\n}\n.quiz-grade-buttons {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.grade-btn {\n  flex: 1;\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.grade-btn.primary {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.quiz-options {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.quiz-option {\n  padding: 12px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  text-align: left;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.quiz-option:hover {\n  background: var(--accent-light);\n  transform: translateX(4px);\n}\n.quiz-summary {\n  padding: 22px;\n  text-align: center;\n}\n.quiz-summary-icon {\n  font-size: 3rem;\n  margin-bottom: 16px;\n}\n.quiz-summary-stats {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin: 20px 0;\n}\n.quiz-summary-stats .stat {\n  padding: 16px;\n  background: var(--surface);\n  border-radius: 16px;\n}\n.stat-label {\n  display: block;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.stat-value {\n  display: block;\n  font-size: 1.5rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.quiz-summary-mistakes {\n  margin: 20px 0;\n}\n.mistake-tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 8px;\n  justify-content: center;\n}\n.mistake-tag {\n  padding: 6px 12px;\n  background: rgba(190, 73, 73, 0.1);\n  border-radius: 20px;\n  font-size: 0.8rem;\n  color: #c0392b;\n}\n.quiz-actions {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n}\n.btn-outline {\n  padding: 10px 24px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n.btn-primary {\n  padding: 10px 24px;\n  border-radius: 12px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n\n/* Fix banner positioning */\n.banner {\n  position: fixed;\n  top: 80px;\n  left: 50%;\n  transform: translateX(-50%);\n  z-index: 1000;\n  min-width: min(560px, calc(100vw - 32px));\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px 14px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: var(--surface-strong);\n  box-shadow: var(--shadow-lg);\n  font-weight: 450;\n  animation: riseSoft 220ms ease-out;\n}\n.navbar {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  z-index: 100;\n  background: var(--surface-strong);\n}\n\n/* Ensure main content doesn't go under navbar */\n.main.container {\n  padding-top: 80px;\n  /* Adjust to match navbar height + spacing */\n}\n\n/* Mobile adjustment */\n@media (max-width: 768px) {\n.banner {\n    top: calc(env(safe-area-inset-top, 0px) + 60px);\n    width: calc(100% - 32px);\n    min-width: auto;\n}\n.main.container {\n    padding-top: 70px;\n}\n}\n.banner-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.banner-action {\n  border: 0;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  padding: 9px 12px;\n  font-size: 0.78rem;\n  font-weight: 500;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n}\n.banner-x {\n  width: 36px;\n  height: 36px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n}\n\n/* Add this to your \\3c style> */\n.main.container {\n  padding-top: 20px;\n}\n\n/* If you have a navbar, add this */\n.app>.navbar+.main.container,\nbody>.navbar+.app .main.container {\n  padding-top: 80px;\n}\n\n/* Animations */\n@keyframes appFade {\n0% {\n    opacity: 0;\n    transform: translateY(4px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes railIn {\n0% {\n    opacity: 0;\n    transform: translateY(-8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes riseSoft {\n0% {\n    opacity: 0;\n    transform: translateY(8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n\n/* Responsive */\n@media (max-width: 768px) {\n.main {\n    padding: 16px 16px 100px;\n}\n.main.tools-open {\n    padding-right: 16px;\n}\n.tools {\n    left: 0;\n    right: 0;\n    width: 100%;\n}\n.session-rail-stats {\n    grid-template-columns: 1fr 1fr;\n}\n.hero-flow {\n    grid-template-columns: 1fr 1fr;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 8px);\n    justify-content: center;\n}\n.verse-font-controls {\n    gap: 2px;\n    padding: 2px 4px;\n}\n.verse-font-btn {\n    width: 20px;\n    height: 20px;\n}\n.verse-font-size-indicator {\n    min-width: 30px;\n    font-size: 9px;\n}\n}\n@media (max-width: 640px) {\n.quiz-grade-buttons {\n    flex-direction: column;\n}\n.quiz-actions {\n    flex-direction: column;\n}\n.hero-actions,\n  .empty-actions {\n    flex-direction: column;\n}\n.cta {\n    width: 100%;\n}\n}\n\n/* Dark theme overrides */\n[data-theme=\"dark\"] .tools {\n  color: var(--text);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(12, 11, 10, 0.96));\n  border-left-color: var(--border);\n}\n[data-theme=\"dark\"] .sheet-section {\n  border-color: var(--border);\n  background: var(--surface);\n}\n[data-theme=\"dark\"] .tools-top,\n[data-theme=\"dark\"] .tools-footer {\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.92));\n}\n[data-theme=\"dark\"] .tools-footer {\n  background: linear-gradient(to top, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.86), rgba(18, 15, 13, 0));\n}\n[data-theme=\"dark\"] .tools-tabs {\n  background: rgba(255, 255, 255, 0.035);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .tools-tabs button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-tabs button.active {\n  color: var(--text);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .tools-title,\n[data-theme=\"dark\"] .st-title,\n[data-theme=\"dark\"] .technique-copy label,\n[data-theme=\"dark\"] .settings-heading-copy h3,\n[data-theme=\"dark\"] .settings-row-copy label {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .tools-context,\n[data-theme=\"dark\"] .st-sub,\n[data-theme=\"dark\"] .technique-copy small,\n[data-theme=\"dark\"] .technique-control span,\n[data-theme=\"dark\"] .settings-heading-copy p,\n[data-theme=\"dark\"] .settings-row-copy small {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-x,\n[data-theme=\"dark\"] .st-chev,\n[data-theme=\"dark\"] .sheet-toggle,\n[data-theme=\"dark\"] .technique-row,\n[data-theme=\"dark\"] .radio,\n[data-theme=\"dark\"] .toggle-chip,\n[data-theme=\"dark\"] .segmented-control,\n[data-theme=\"dark\"] .technique-preview {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .sheet-toggle {\n  background: rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .st-ico {\n  color: var(--accent-strong);\n  border-color: rgba(239, 193, 141, 0.22);\n  background: rgba(239, 193, 141, 0.10);\n}\n[data-theme=\"dark\"] .segmented-control button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .segmented-control button.active,\n[data-theme=\"dark\"] .toggle-chip.active {\n  color: var(--accent-strong);\n  border-color: rgba(239, 193, 141, 0.42);\n  background: rgba(239, 193, 141, 0.12);\n}\n[data-theme=\"dark\"] .tools-btn-soft {\n  color: var(--text-muted);\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .select,\n[data-theme=\"dark\"] .input {\n  color: var(--text);\n  border-color: var(--border);\n  background: rgba(255, 255, 255, 0.045);\n}\n[data-theme=\"dark\"] .switch {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n}\n[data-theme=\"dark\"] .verse-translation {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .verse-transliteration,\n[data-theme=\"dark\"] .workspace-fab-copy,\n[data-theme=\"dark\"] .workspace-fab-sub,\n[data-theme=\"dark\"] .settings-row-copy small,\n[data-theme=\"dark\"] .field-hint {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .workspace-fab,\n[data-theme=\"dark\"] .workspace-fab-sub span,\n[data-theme=\"dark\"] .workspace-fab-live-pill,\n[data-theme=\"dark\"] .settings-card,\n[data-theme=\"dark\"] .word-item:hover::after,\n[data-theme=\"dark\"] .word-item:focus::after {\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .workspace-fab {\n  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.46), 0 0 0 1px rgba(255, 236, 216, 0.12);\n}\n[data-theme=\"dark\"] .workspace-fab:hover {\n  box-shadow: 0 26px 64px rgba(0, 0, 0, 0.54), 0 0 0 1px rgba(239, 193, 141, 0.20);\n}\n[data-theme=\"dark\"] .settings-section {\n  background: rgba(24, 21, 19, 0.96);\n  border-color: var(--border);\n  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .settings-status {\n  background: rgba(255, 255, 255, 0.05);\n  border-color: rgba(255, 236, 216, 0.12);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .settings-icon {\n  background: rgba(255, 255, 255, 0.04);\n  border-color: rgba(255, 236, 216, 0.12);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .settings-card {\n  background: var(--surface-strong);\n  border-color: rgba(255, 236, 216, 0.10);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .settings-toggle {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 236, 216, 0.14);\n  color: var(--text);\n}\n[data-theme=\"dark\"] .settings-toggle.active {\n  background: rgba(239, 193, 141, 0.13);\n  border-color: rgba(239, 193, 141, 0.42);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .quiz-card {\n  background: rgba(18, 18, 18, 0.92);\n  border-color: rgba(255, 255, 255, 0.10);\n}\n\n/* Sepia theme overrides */\n[data-theme=\"sepia\"] .verse-translation {\n  color: #7a684a;\n}\n\n/* Planner & Analytics UI */\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(12, 10, 8, 0.62);\n  backdrop-filter: blur(8px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 9999;\n  padding: 20px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 250, 243, 0.92));\n  border-radius: 20px;\n  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42);\n  border: 1px solid rgba(255, 255, 255, 0.55);\n  display: flex;\n  flex-direction: column;\n  max-height: 90vh;\n  overflow: hidden;\n  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.resume-modal {\n  width: min(760px, 96vw);\n}\n.resume-modal .modal-header h2 {\n  font-size: clamp(1.25rem, 2.3vw, 1.75rem);\n}\n.resume-saved-at {\n  display: inline-block;\n  margin-top: 4px;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n}\n.resume-grid {\n  margin-top: 12px;\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 10px;\n}\n.resume-grid .pill {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 12px 14px;\n}\n@keyframes modalIn {\nfrom {\n    transform: translateY(10px);\n    opacity: 0.6;\n}\nto {\n    transform: translateY(0);\n    opacity: 1;\n}\n}\n@keyframes modalFadeIn {\nfrom {\n    opacity: 0;\n    transform: translateY(20px) scale(0.95);\n}\nto {\n    opacity: 1;\n    transform: translateY(0) scale(1);\n}\n}\n.modal-header {\n  padding: 20px 24px;\n  border-bottom: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 1.25rem;\n  font-weight: 700;\n}\n.modal-body {\n  padding: 24px;\n  overflow-y: auto;\n}\n.modal-footer {\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--bg-elevated);\n}\n.confirm-modal {\n  max-width: 460px;\n  width: 100%;\n}\n.confirm-copy {\n  color: var(--text-muted);\n  line-height: 1.65;\n}\n.btn-danger {\n  background: #b55041;\n}\n.tools-btn-danger {\n  opacity: 0.82;\n}\n.btn-icon {\n  background: none;\n  border: none;\n  font-size: 1.2rem;\n  color: var(--text-muted);\n  cursor: pointer;\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.btn-icon:hover {\n  background: var(--border);\n  color: var(--text);\n}\n.planner-modal {\n  max-width: 500px;\n  width: 100%;\n}\n.planner-field {\n  margin-bottom: 24px;\n}\n.planner-field label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.planner-select,\n.planner-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.planner-select:focus,\n.planner-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 2px var(--accent-light);\n}\n.verses-per-day-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.quantity-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.quantity-btn:hover:not(:disabled) {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.quantity-btn:disabled {\n  opacity: 0.4;\n  cursor: not-allowed;\n}\n.planner-stats-grid {\n  display: grid;\n  grid-template-columns: repeat(2, 1fr);\n  gap: 12px;\n  margin: 24px 0;\n}\n.planner-stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  transition: all 0.2s;\n}\n.progress-info {\n  display: flex;\n  justify-content: space-between;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.progress-bar-track {\n  height: 6px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-fill {\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.3s ease;\n}\n.modal-footer {\n  display: flex;\n  gap: 12px;\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.btn-secondary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.btn-secondary:hover {\n  background: var(--border);\n}\n.btn-primary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.9rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.btn-primary:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.field-hint {\n  display: block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 6px;\n}\n.pa-lbl {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.analytics-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin-top: 20px;\n}\n.analytics-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.78rem * var(--en-scale, 1));\n  line-height: 1.4;\n}\n.stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 20px;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  transition: transform 0.2s;\n}\n.stat-delta {\n  display: inline-flex;\n  align-items: center;\n  margin-left: 10px;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  font-size: 0.7rem;\n  color: var(--accent-strong);\n  font-weight: 700;\n  vertical-align: middle;\n}\n.stat-card:hover {\n  transform: translateY(-2px);\n  border-color: var(--accent);\n}\n.stat-card i {\n  font-size: 1.8rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.stat-value {\n  font-size: 1.5rem;\n  font-weight: 700;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.stat-label {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n}\n.stat-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.72rem * var(--en-scale, 1));\n  line-height: 1.35;\n}\n.mini-trend {\n  position: relative;\n  width: 80px;\n  height: 24px;\n  margin-top: 10px;\n}\n.mini-trend span {\n  position: absolute;\n  width: 8px;\n  border-radius: 999px;\n  background: linear-gradient(180deg, var(--accent), var(--accent-soft));\n  opacity: 0.9;\n}\n\n/* Home Dashboard UI */\n.home-dashboard {\n  max-width: 800px;\n  margin: 40px auto;\n  padding: 0 20px;\n  animation: modalFadeIn 0.4s ease-out;\n}\n.dashboard-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-end;\n  margin-bottom: 40px;\n  flex-wrap: wrap;\n  gap: 20px;\n}\n.welcome-text {\n  max-width: 500px;\n}\n.header-stats {\n  display: flex;\n  gap: 16px;\n  background: var(--surface);\n  padding: 12px 20px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.mini-stat {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.9rem;\n}\n.mini-stat strong {\n  color: var(--text);\n  font-size: 1rem;\n}\n.dashboard-actions {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));\n  gap: 20px;\n  margin-bottom: 40px;\n}\n.home-dashboard-minimal {\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  min-height: 160px;\n}\n.offcanvas-launcher-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.offcanvas-launcher-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-start-card {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto auto;\n  align-items: center;\n  gap: 18px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.setup-start-copy {\n  min-width: 0;\n}\n.setup-kicker {\n  display: inline-flex;\n  margin-bottom: 6px;\n  color: var(--accent);\n  font-size: 0.72rem;\n  font-weight: 800;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n}\n.setup-start-copy h2 {\n  margin: 0 0 6px;\n  color: var(--text);\n  font-size: clamp(1.2rem, 2vw, 1.65rem);\n  line-height: 1.1;\n}\n.setup-start-copy p {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-review-hint {\n  margin-top: 10px;\n  padding: 10px 12px;\n  border-radius: 12px;\n  background: rgba(184, 130, 78, 0.10);\n  border: 1px solid rgba(184, 130, 78, 0.18);\n  color: var(--accent);\n  font-weight: 700;\n}\n.setup-mode-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(112px, 1fr));\n  gap: 10px;\n}\n.setup-mode-card {\n  min-height: 86px;\n  padding: 12px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: var(--surface);\n  color: var(--text);\n  cursor: pointer;\n  display: grid;\n  justify-items: center;\n  align-content: center;\n  gap: 4px;\n  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;\n}\n.setup-mode-card:hover,\n.setup-mode-card.active {\n  border-color: var(--accent);\n  box-shadow: var(--shadow-sm);\n  transform: translateY(-1px);\n}\n.setup-mode-card i {\n  color: var(--accent);\n  font-size: 1.2rem;\n}\n.setup-mode-card span {\n  font-weight: 800;\n}\n.setup-mode-card small {\n  color: var(--text-muted);\n  font-size: 0.78rem;\n}\n.setup-primary {\n  min-height: 48px;\n  white-space: nowrap;\n}\n.setup-optional-panel,\n.session-tools-panel {\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.68);\n}\n.setup-optional-panel summary,\n.session-tools-panel summary {\n  cursor: pointer;\n  list-style: none;\n  padding: 12px 14px;\n  font-weight: 700;\n  color: var(--text);\n}\n.setup-optional-panel summary::-webkit-details-marker,\n.session-tools-panel summary::-webkit-details-marker {\n  display: none;\n}\n.setup-optional-grid,\n.session-tools-grid {\n  display: grid;\n  gap: 12px;\n  padding: 0 14px 14px;\n}\n.setup-optional-grid {\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.session-tools-grid {\n  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));\n}\n.field-inline-toggle {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.toggle-chip {\n  min-height: 42px;\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  background: var(--surface);\n  color: var(--text);\n  font-family: inherit;\n  font-weight: 540;\n}\n.toggle-chip.active {\n  border-color: var(--accent);\n  color: var(--accent);\n}\n.continue-session-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 16px 18px;\n  margin-bottom: 18px;\n  border: 1px solid var(--accent-soft);\n  border-radius: 18px;\n  background: linear-gradient(135deg, var(--surface), var(--accent-light));\n  box-shadow: var(--shadow-sm);\n  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;\n}\n.continue-session-card:hover {\n  transform: translateY(-2px);\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent);\n}\n.continue-session-copy {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.continue-session-actions {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.continue-session-kicker {\n  font-size: 0.72rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--accent);\n}\n.continue-session-copy small {\n  color: var(--text-muted);\n}\n.continue-session-btn {\n  min-height: 44px;\n  white-space: nowrap;\n}\n.continue-session-dismiss {\n  min-width: 44px;\n  padding-inline: 0;\n  justify-content: center;\n}\n.resume-action {\n  background: linear-gradient(145deg, rgba(154, 103, 56, 0.12), rgba(255, 255, 255, 0.94));\n  border-color: var(--accent-soft);\n}\n.resume-action .action-icon {\n  background: rgba(154, 103, 56, 0.15);\n  color: var(--accent);\n}\n.resume-action .action-arrow {\n  color: var(--accent);\n}\n.action-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n  display: flex;\n  flex-direction: column;\n  position: relative;\n  overflow: hidden;\n}\n.action-card:hover {\n  transform: translateY(-4px);\n  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);\n  border-color: var(--accent);\n}\n.action-card.primary-action {\n  background: linear-gradient(145deg, var(--accent), var(--accent-dark));\n  color: white;\n  border: none;\n}\n.action-card.primary-action .action-icon {\n  background: rgba(255, 255, 255, 0.2);\n  color: white;\n}\n.action-card.primary-action h3,\n.action-card.primary-action p,\n.action-card.primary-action .action-arrow {\n  color: white;\n}\n.action-icon {\n  width: 48px;\n  height: 48px;\n  background: var(--bg-body);\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.5rem;\n  color: var(--accent);\n  margin-bottom: 20px;\n}\n.action-content h3 {\n  font-size: 1.15rem;\n  margin: 0 0 8px 0;\n  color: var(--text);\n}\n.action-content p {\n  font-size: 0.9rem;\n  color: var(--text-muted);\n  margin: 0;\n  line-height: 1.4;\n}\n.action-arrow {\n  position: absolute;\n  bottom: 24px;\n  right: 24px;\n  font-size: 1.2rem;\n  color: var(--accent);\n  opacity: 0;\n  transform: translateX(-10px);\n  transition: all 0.2s ease;\n}\n.action-card:hover .action-arrow {\n  opacity: 1;\n  transform: translateX(0);\n}\n.dashboard-recent {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n}\n.recent-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.recent-header h3 {\n  margin: 0;\n  font-size: 1.1rem;\n}\n.btn-ghost {\n  background: none;\n  border: none;\n  color: var(--accent);\n  font-weight: 500;\n  cursor: pointer;\n  padding: 6px 12px;\n  border-radius: 8px;\n  transition: background 0.2s;\n}\n.btn-ghost:hover {\n  background: var(--accent-light);\n}\n.recent-stats {\n  display: flex;\n  gap: 32px;\n  flex-wrap: wrap;\n}\n.r-stat {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.r-stat span {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.r-stat strong {\n  font-size: 1.4rem;\n  color: var(--text);\n}\n@media (max-width: 768px) {\n.quick-tools-grid {\n    grid-template-columns: 1fr;\n    gap: 8px;\n    padding: 12px;\n}\n.workspace-shell {\n    width: 100%;\n    margin-bottom: 14px;\n}\n.workspace-shell {\n    padding: 14px;\n}\n.workspace-shell-head {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 12px;\n}\n.workspace-shell-actions {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n}\n.workspace-shell-title-row {\n    align-items: flex-start;\n}\n.workspace-shell-phase {\n    min-height: 26px;\n}\n.workspace-shell-meta {\n    gap: 6px;\n}\n.workspace-shell-chaining {\n    gap: 6px;\n}\n.resume-feedback-row {\n    font-size: 0.74rem;\n}\n.resume-grid {\n    grid-template-columns: 1fr;\n}\n.workspace-fab {\n    top: 8px;\n    display: grid;\n    grid-template-columns: minmax(0, 1fr);\n    gap: 8px;\n    padding: 9px;\n    margin: 8px 0 6px;\n    border-radius: 14px;\n}\n.workspace-fab-meta {\n    min-width: 0;\n}\n.workspace-fab-kicker {\n    font-size: 0.64rem;\n}\n.workspace-fab-title {\n    font-size: 0.9rem;\n}\n.workspace-fab-sub {\n    font-size: 0.72rem;\n    gap: 5px;\n}\n.workspace-fab-sub span {\n    flex: 1 1 auto;\n    justify-content: center;\n    min-width: min(128px, 100%);\n}\n.workspace-fab-copy {\n    font-size: 0.78rem;\n}\n.workspace-fab-live {\n    gap: 6px;\n}\n.workspace-fab-live-pill {\n    flex: 1 1 0;\n    min-width: 0;\n    justify-content: center;\n}\n.workspace-fab-actions {\n    display: grid;\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n    gap: 8px;\n    width: 100%;\n}\n.fab-btn {\n    width: 100%;\n    min-width: 0;\n    justify-content: center;\n    padding: 8px 10px;\n    font-size: 0.82rem;\n    min-height: 44px;\n}\n.main-nav-btn,\n  .main-card-primary {\n    width: 100%;\n    min-height: 44px;\n}\n.settings-heading {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 10px;\n    padding-bottom: 12px;\n    margin-bottom: 14px;\n}\n.settings-status {\n    justify-self: start;\n}\n.settings-card-grid,\n  .settings-display-grid {\n    grid-template-columns: minmax(0, 1fr);\n}\n.settings-card-toggle,\n  .settings-card-range {\n    min-height: 0;\n    padding: 13px;\n    gap: 12px;\n}\n.settings-toggle {\n    min-height: 38px;\n}\n.settings-range-wrap {\n    gap: 10px;\n}\n.settings-apply-section {\n    padding: 12px;\n}\n.settings-apply-primary {\n    min-height: 46px;\n    border-radius: 12px;\n    font-size: 0.88rem;\n}\n.setup-start-card {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n    padding: 16px;\n}\n.setup-mode-grid {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.setup-primary {\n    width: 100%;\n    justify-content: center;\n}\n.continue-session-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.dashboard-actions {\n    grid-template-columns: 1fr;\n    gap: 14px;\n    margin-bottom: 20px;\n}\n.offcanvas-launcher-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.action-card {\n    padding: 18px;\n}\n.action-icon {\n    margin-bottom: 14px;\n}\n.continue-session-btn,\n  .btn-primary,\n  .btn-secondary,\n  .tools-btn,\n  .player-btn,\n  .toolbar-chip,\n  .toggle-chip {\n    min-height: 44px;\n}\n.settings-toggle {\n    min-height: 34px;\n}\n.inline-setting-row {\n    align-items: stretch;\n}\n.input-compact,\n  .inline-setting-pill {\n    width: 100%;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.technique-row,\n  .technique-row-main,\n  .technique-control {\n    align-items: stretch;\n    flex-direction: column;\n}\n.technique-toggle,\n  .segmented-control {\n    width: 100%;\n}\n.player-bar {\n    width: calc(100% - 24px);\n    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);\n    padding: 12px 14px;\n}\n.player-bar.collapsed {\n    transform: translateX(-50%);\n}\n.player-main {\n    grid-template-columns: minmax(92px, 0.8fr) auto minmax(72px, 1fr) auto;\n    align-items: center;\n    gap: 8px;\n}\n.player-info {\n    flex: 0 1 120px;\n    min-width: 0;\n}\n.player-chapter {\n    font-size: 0.78rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-verse {\n    font-size: 0.72rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-controls {\n    justify-content: center;\n    gap: 4px;\n}\n.player-progress-wrap {\n    order: 0;\n    min-width: 0;\n    gap: 6px;\n}\n.player-speed-controls {\n    display: none;\n}\n.analytics-grid {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n}\n.session-rail-actions {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.rail-btn {\n    flex: initial;\n    width: 100%;\n    justify-content: center;\n}\n.rail-btn-primary {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.toolbar-chip {\n    flex: initial;\n    width: 100%;\n}\n.font-dropdown {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 4px);\n    justify-content: center;\n    min-width: 0;\n}\n.font-dropdown {\n    width: 100%;\n}\n.font-dropdown-trigger {\n    width: 100%;\n    justify-content: space-between;\n}\n.verse-card {\n    padding: 16px;\n    border-radius: 18px;\n}\n.verse-header {\n    flex-direction: column;\n    align-items: stretch;\n    gap: 12px;\n}\n.verse-badges,\n  .verse-actions {\n    flex-wrap: wrap;\n}\n.verse-actions {\n    justify-content: space-between;\n}\n.verse-font-controls {\n    margin-right: 0;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.modal-content,\n  .confirm-modal,\n  .planner-modal {\n    width: 100%;\n    max-width: 100%;\n    border-radius: 18px;\n}\n.modal-header,\n  .modal-body,\n  .modal-footer {\n    padding-left: 16px;\n    padding-right: 16px;\n}\n.planner-stats-grid {\n    grid-template-columns: 1fr;\n}\n.tools {\n    width: 100vw;\n    max-width: 100vw;\n}\n.tools-top,\n  .tools-body,\n  .tools-footer {\n    padding-left: 14px;\n    padding-right: 14px;\n}\n.tools-tabs {\n    overflow-x: hidden;\n    display: grid;\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n    gap: 8px;\n}\n.tools-tabs button {\n    width: 100%;\n    min-width: 0;\n}\n.reading-aid-grid,\n  .session-tools-grid {\n    grid-template-columns: 1fr;\n}\n.verse-card,\n  .tools,\n  .sheet,\n  .sheet-content {\n    overflow-x: hidden;\n}\n}\n@media (min-width: 769px) and (max-width: 1024px) {\n.dashboard-actions {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n}\n.session-rail-actions {\n    flex-wrap: wrap;\n}\n.reading-toolbar {\n    align-items: flex-start;\n}\n.reading-toolbar-group:first-child {\n    flex: 1 1 100%;\n}\n.toolbar-chip {\n    flex: 0 1 auto;\n}\n.player-bar {\n    width: calc(100vw - 40px);\n}\n.player-main {\n    grid-template-columns: minmax(132px, 0.9fr) auto minmax(150px, 1fr) auto auto;\n    gap: 12px;\n}\n.player-progress-wrap {\n    min-width: 0;\n}\n}\n@media (max-width: 480px) {\n.verse-header {\n    flex-wrap: wrap;\n}\n.verse-badges {\n    flex-wrap: wrap;\n}\n.verse-actions {\n    margin-top: 8px;\n    width: 100%;\n    justify-content: flex-start;\n}\n.session-pill {\n    white-space: normal;\n    text-align: center;\n    justify-content: center;\n}\n.rail-btn,\n  .toolbar-chip {\n    flex: 1 1 100%;\n}\n.player-time {\n    min-width: auto;\n    font-size: 0.7rem;\n}\n.player-progress-wrap {\n    gap: 8px;\n}\n.verse-number,\n  .verse-status-badge,\n  .verse-status-subtle {\n    width: 100%;\n    justify-content: center;\n    text-align: center;\n}\n}\n.verse-status-badge-review {\n  border-color: rgba(183, 28, 28, 0.24);\n  color: #9f1f1f;\n  background: rgba(183, 28, 28, 0.08);\n}\n.verse-card.feedback-mastered {\n  border-left: 4px solid #43a047;\n}\n.verse-card.feedback-weak {\n  border-left: 4px solid #e3a008;\n}\n.verse-card.feedback-repeat {\n  border-left: 4px solid #c62828;\n}\n.main.flow-recall .verse-card.active .verse-arabic {\n  color: transparent;\n  text-shadow: 0 0 22px rgba(232, 237, 247, 0.55);\n}\n.main.flow-practice .verse-card.active .verse-arabic {\n  opacity: 0.45;\n}\n.main.flow-recall .verse-card.active .verse-arabic .tajweed-mark,\n.main.flow-recall .verse-card.active .verse-arabic word,\n.main.flow-recall .verse-card.active .verse-arabic .wbw-word {\n  color: transparent !important;\n  background: transparent !important;\n  box-shadow: none !important;\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n:root {\n  --bg: #f3eee6;\n  --surface: rgba(255, 250, 243, 0.88);\n  --surface-strong: rgba(255, 255, 255, 0.92);\n  --border: rgba(78, 58, 38, 0.10);\n  --text: #1f1a17;\n  --text-muted: #6c6258;\n  --accent: #9a6738;\n  --accent-strong: #6e4726;\n  --accent-soft: #d8c1a8;\n  --accent-light: rgba(154, 103, 56, 0.10);\n  --accent-wash: rgba(228, 211, 194, 0.42);\n  --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);\n  --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);\n  --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);\n  --radius: 16px;\n  --navbar-offset: 56px;\n  --tools-width: 440px;\n  --tools-footer-h: 78px;\n  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;\n  --font-ui: \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n[data-theme=\"dark\"] {\n  --bg: #14110f;\n  --surface: rgba(31, 27, 24, 0.92);\n  --surface-strong: rgba(43, 37, 32, 0.96);\n  --border: rgba(255, 236, 216, 0.16);\n  --text: #f7ebdf;\n  --text-muted: #d1c2b3;\n  --accent: #d0a06b;\n  --accent-strong: #efc18d;\n  --accent-soft: #5f4530;\n  --accent-light: rgba(208, 160, 107, 0.14);\n  --accent-wash: rgba(208, 160, 107, 0.08);\n  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);\n  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);\n  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);\n}\n[data-theme=\"sepia\"] {\n  --bg: #efe2cb;\n  --surface: rgba(250, 241, 227, 0.88);\n  --surface-strong: rgba(255, 248, 237, 0.94);\n  --text: #352516;\n  --text-muted: #75624f;\n  --accent: #b8824e;\n  --accent-strong: #8f6033;\n  --accent-soft: #dcc3a6;\n  --accent-light: rgba(184, 130, 78, 0.12);\n  --accent-wash: rgba(221, 194, 162, 0.35);\n}\n[v-cloak] {\n  display: none !important;\n}\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\n.technique-desc-hint {\n  display: block;\n  font-size: 0.65rem;\n  color: var(--accent);\n  margin-top: 4px;\n  font-weight: 500;\n}\n.technique-example-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  margin-top: 8px;\n  background: rgba(154, 103, 56, 0.08);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n}\n.technique-example-hint i {\n  color: var(--accent);\n  font-size: 0.8rem;\n  flex-shrink: 0;\n}\n.technique-example-hint strong {\n  color: var(--accent);\n}\n\n/* Anchor Mode Styles - Enhanced */\n.verse-arabic .wbw-word.anchor-highlight,\n.verse-arabic word.anchor-highlight,\n.word-item.anchor-highlight {\n  position: relative;\n  background: linear-gradient(135deg, rgba(255, 193, 7, 0.3), rgba(255, 152, 0, 0.4));\n  border-bottom: 3px solid #ff9800;\n  border-radius: 8px;\n  transform: scale(1.02);\n  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);\n  cursor: pointer;\n  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.2);\n}\n\n/* Animation for newly highlighted anchors */\n.anchor-pulse {\n  animation: anchorPulse 0.6s ease-out;\n}\n@keyframes anchorPulse {\n0% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7);\n}\n50% {\n    transform: scale(1.08);\n    box-shadow: 0 0 0 8px rgba(255, 152, 0, 0);\n}\n100% {\n    transform: scale(1.02);\n    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0);\n}\n}\n.verse-arabic .wbw-word.anchor-highlight:hover,\n.verse-arabic word.anchor-highlight:hover,\n.word-item.anchor-highlight:hover {\n  background: rgba(255, 152, 0, 0.6);\n  transform: scale(1.08);\n  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);\n}\n\n/* Tooltip for anchors */\n.anchor-highlight::after {\n  content: \"🔗 Memory Anchor\";\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: #333;\n  color: white;\n  padding: 4px 8px;\n  border-radius: 6px;\n  font-size: 0.7rem;\n  white-space: nowrap;\n  z-index: 100;\n  opacity: 0;\n  pointer-events: none;\n  transition: opacity 0.2s;\n}\n.anchor-highlight:hover::after {\n  opacity: 1;\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .anchor-highlight {\n  background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 152, 0, 0.3));\n  border-bottom-color: #ffb74d;\n}\n[data-theme=\"dark\"] .anchor-highlight:hover {\n  background: rgba(255, 152, 0, 0.4);\n}\n.main.blur-mode-active .verse-card.blur-upcoming .anchor-highlight {\n  filter: blur(calc(var(--recall-blur, 10px) - 4px));\n}\n.technique-select {\n  padding: 8px 12px;\n  border-radius: 10px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  font-size: 0.8rem;\n}\n.verse-small-play-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: white;\n  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);\n}\n.verse-small-play-btn i {\n  font-size: 0.8rem;\n}\n.verse-small-play-btn:hover {\n  transform: scale(1.05);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--accent);\n}\n\n/* Add to your style section */\n.countdown-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.85);\n  backdrop-filter: blur(12px);\n  z-index: 99999;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.countdown-modal {\n  text-align: center;\n}\n.countdown-number {\n  font-size: 8rem;\n  font-weight: 800;\n  color: var(--accent);\n  animation: pulse 1s ease infinite;\n}\n.countdown-text {\n  font-size: 1.5rem;\n  color: white;\n  margin-top: 20px;\n}\n@keyframes pulse {\n0%,\n  100% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.1);\n}\n}\n@media (max-width: 640px) {\n.countdown-number {\n    font-size: 5rem;\n}\n.countdown-text {\n    font-size: 1.2rem;\n}\n}\n\n/* Add these styles if missing */\n.technique-peek-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  margin-top: 8px;\n  border-radius: 10px;\n  background: rgba(154, 103, 56, 0.08);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.technique-peek-hint i {\n  color: var(--accent);\n  font-size: 0.8rem;\n  flex-shrink: 0;\n}\n.technique-peek-hint kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.65rem;\n  font-weight: 600;\n  color: var(--accent);\n  display: inline-block;\n}\n\n/* Add to style section */\n.countdown-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.85);\n  backdrop-filter: blur(12px);\n  z-index: 10000;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  animation: fadeIn 0.3s ease;\n}\n.countdown-modal {\n  text-align: center;\n  animation: scaleIn 0.4s cubic-bezier(0.34, 1.2, 0.64, 1);\n}\n.countdown-number {\n  font-size: 8rem;\n  font-weight: 800;\n  color: var(--accent);\n  text-shadow: 0 0 30px rgba(154, 103, 56, 0.5);\n  animation: pulse 1s ease infinite;\n  font-family: monospace;\n}\n.countdown-text {\n  font-size: 1.5rem;\n  color: white;\n  margin-top: 20px;\n  font-weight: 500;\n  letter-spacing: 2px;\n}\n.countdown-hint {\n  font-size: 0.85rem;\n  color: rgba(255, 255, 255, 0.6);\n  margin-top: 12px;\n}\n@keyframes fadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n@keyframes scaleIn {\nfrom {\n    opacity: 0;\n    transform: scale(0.8);\n}\nto {\n    opacity: 1;\n    transform: scale(1);\n}\n}\n@keyframes pulse {\n0%,\n  100% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.1);\n}\n}\n@media (max-width: 640px) {\n.countdown-number {\n    font-size: 5rem;\n}\n.countdown-text {\n    font-size: 1.2rem;\n}\n}\n\n\n/* Mobile */\n@media (max-width: 768px) {\n.wavemark-bars {\n    height: 30px;\n    gap: 1.5px;\n}\n.wavemark-playhead::before {\n    width: 8px;\n    height: 8px;\n    top: -5px;\n    left: -3px;\n}\n}\n.waveform-canvas {\n  width: 100%;\n  height: 60px;\n  display: block;\n  border-radius: 8px;\n  cursor: pointer;\n}\n\n/* Settings notice */\n.settings-notice {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 14px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  margin-bottom: 20px;\n  font-size: 0.75rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.settings-notice i {\n  font-size: 0.9rem;\n}\n\n/* Login Hero Section */\n.login-hero {\n  min-height: calc(100vh - 100px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  padding: 40px 20px;\n}\n.login-card {\n  max-width: 480px;\n  width: 100%;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  border-radius: 32px;\n  padding: 48px 40px;\n  text-align: center;\n  box-shadow: var(--shadow-lg);\n  animation: loginFadeIn 0.5s ease-out;\n}\n.login-icon {\n  width: 80px;\n  height: 80px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  margin: 0 auto 24px;\n  box-shadow: 0 8px 24px rgba(154, 103, 56, 0.25);\n}\n.login-icon i {\n  font-size: 2.5rem;\n  color: white;\n}\n.login-card h1 {\n  font-size: 1.8rem;\n  font-weight: 700;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.login-subtitle {\n  font-size: 0.95rem;\n  color: var(--text-muted);\n  margin-bottom: 32px;\n}\n.login-features {\n  display: flex;\n  justify-content: center;\n  gap: 24px;\n  margin-bottom: 40px;\n  flex-wrap: wrap;\n}\n.feature {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 8px;\n}\n.feature i {\n  font-size: 1.5rem;\n  color: var(--accent);\n  background: var(--accent-light);\n  width: 48px;\n  height: 48px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 24px;\n  transition: all 0.2s ease;\n}\n.feature span {\n  font-size: 0.75rem;\n  font-weight: 500;\n  color: var(--text-muted);\n}\n.login-btn {\n  width: 100%;\n  padding: 14px 24px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 60px;\n  font-size: 1rem;\n  font-weight: 600;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  transition: all 0.2s ease;\n  margin-bottom: 20px;\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.login-btn:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 24px rgba(154, 103, 56, 0.4);\n}\n.login-btn:active {\n  transform: translateY(0);\n}\n.login-note {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin: 0;\n  line-height: 1.4;\n}\n@keyframes loginFadeIn {\nfrom {\n    opacity: 0;\n    transform: translateY(20px);\n}\nto {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n/* Responsive */\n@media (max-width: 520px) {\n.login-card {\n    padding: 32px 24px;\n}\n.login-icon {\n    width: 64px;\n    height: 64px;\n}\n.login-icon i {\n    font-size: 2rem;\n}\n.login-card h1 {\n    font-size: 1.5rem;\n}\n.login-features {\n    gap: 16px;\n}\n.feature i {\n    width: 40px;\n    height: 40px;\n    font-size: 1.2rem;\n}\n.feature span {\n    font-size: 0.7rem;\n}\n}\n\n/* Save Name Modal Styles */\n.save-name-modal {\n  max-width: 420px;\n  width: 100%;\n}\n.save-modal-desc {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n  margin-bottom: 20px;\n  line-height: 1.4;\n}\n.save-name-input-group {\n  margin-bottom: 16px;\n}\n.save-name-input-group label {\n  display: block;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.save-name-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  color: var(--text);\n  transition: all 0.2s;\n}\n.save-name-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 3px var(--accent-light);\n}\n.save-preview-info {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-top: 8px;\n}\n.save-preview-info i {\n  color: var(--accent);\n  font-size: 0.9rem;\n}\n\n/* Fix saved tab layout */\n.saved-sessions-container {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  padding: 16px;\n  box-shadow: var(--shadow-sm);\n}\n.saved-header {\n  margin-bottom: 16px;\n  padding-bottom: 12px;\n  border-bottom: 1px solid var(--border);\n}\n.saved-header h3 {\n  margin: 0 0 4px 0;\n  font-size: 0.9rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.saved-header p {\n  margin: 0;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.sessions-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  margin-bottom: 16px;\n  max-height: 320px;\n  overflow-y: auto;\n}\n.session-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  transition: all 0.2s ease;\n  overflow: hidden;\n}\n.session-info {\n  flex: 1;\n  min-width: 0;\n  padding: 10px 12px;\n  cursor: pointer;\n}\n.session-info:hover {\n  background: var(--accent-light);\n}\n.session-name {\n  font-weight: 600;\n  font-size: 0.8rem;\n  color: var(--text);\n  margin-bottom: 4px;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.session-name i {\n  color: var(--accent);\n  font-size: 0.7rem;\n}\n.session-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n  font-size: 0.6rem;\n  color: var(--text-muted);\n}\n.session-meta span {\n  display: inline-flex;\n  align-items: center;\n  gap: 3px;\n}\n.delete-btn {\n  width: 36px;\n  height: 36px;\n  margin-right: 8px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: #dc3545;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.delete-btn:hover {\n  background: #dc3545;\n  color: white;\n  border-color: #dc3545;\n}\n.save-section {\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.current-info {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 1;\n  min-width: 0;\n  padding: 8px 10px;\n  background: var(--accent-light);\n  border-radius: 10px;\n}\n.current-info i {\n  font-size: 1rem;\n  color: var(--accent);\n  flex-shrink: 0;\n}\n.current-info div {\n  display: flex;\n  flex-direction: column;\n  min-width: 0;\n}\n.current-info strong {\n  font-size: 0.75rem;\n  color: var(--text);\n}\n.current-info small {\n  font-size: 0.6rem;\n  color: var(--text-muted);\n}\n.save-btn {\n  padding: 8px 16px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 10px;\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  gap: 5px;\n  transition: all 0.2s;\n  flex-shrink: 0;\n}\n.save-btn:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.save-btn:active {\n  transform: translateY(0);\n}\n\n/* Saved Tab Styles - Clean Version */\n.saved-header {\n  margin-bottom: 24px;\n  padding-bottom: 16px;\n  border-bottom: 1px solid var(--border);\n}\n.saved-header h3 {\n  margin: 0 0 6px 0;\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.saved-header p {\n  margin: 0;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.empty-state {\n  text-align: center;\n  padding: 48px 24px;\n  color: var(--text-muted);\n}\n.empty-state i {\n  font-size: 3rem;\n  margin-bottom: 12px;\n  opacity: 0.4;\n}\n.empty-state p {\n  margin-bottom: 4px;\n  font-weight: 500;\n  color: var(--text);\n}\n.empty-state span {\n  font-size: 0.7rem;\n}\n.sessions-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  margin-bottom: 24px;\n  max-height: 320px;\n  overflow-y: auto;\n}\n.session-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 12px 14px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.session-item:hover {\n  border-color: var(--accent);\n  background: var(--accent-light);\n  transform: translateX(2px);\n}\n.session-info {\n  flex: 1;\n  min-width: 0;\n}\n.session-name {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-weight: 600;\n  font-size: 0.85rem;\n  color: var(--text);\n  margin-bottom: 6px;\n}\n.session-name i {\n  color: var(--accent);\n  font-size: 0.8rem;\n}\n.session-details {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.session-details span {\n  display: inline-flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.session-details i {\n  font-size: 0.6rem;\n}\n.delete-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: #dc3545;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.delete-btn:hover {\n  background: #dc3545;\n  color: white;\n  border-color: #dc3545;\n}\n.save-section {\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.current-info {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex: 1;\n  min-width: 0;\n}\n.current-info i {\n  font-size: 1.2rem;\n  color: var(--accent);\n  flex-shrink: 0;\n}\n.current-info div {\n  display: flex;\n  flex-direction: column;\n  min-width: 0;\n}\n.current-info strong {\n  font-size: 0.8rem;\n  color: var(--text);\n}\n.current-info small {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.save-btn {\n  padding: 8px 16px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 10px;\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  transition: all 0.2s;\n  flex-shrink: 0;\n}\n.save-btn:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.action-icon {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 52px;\n  height: 42px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  font-size: 1.2rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: rgba(0, 0, 0, 0.78);\n}\n.action-icon:hover {\n  transform: translateY(-2px);\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n\n/* Add to your style section */\n.tools-tabs button {\n  flex: 1;\n  padding: 8px 12px;\n  font-size: 0.8rem;\n}\n.saved-sessions-container {\n  padding: 16px;\n}\n.saved-session-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 12px;\n  margin-bottom: 12px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.saved-session-card:hover {\n  border-color: var(--accent);\n  transform: translateX(4px);\n  box-shadow: var(--shadow-sm);\n}\n.saved-session-header {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin-bottom: 8px;\n}\n.session-icon {\n  width: 36px;\n  height: 36px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--accent);\n}\n.session-details {\n  flex: 1;\n}\n.session-title {\n  font-weight: 600;\n  font-size: 0.85rem;\n  color: var(--text);\n}\n.session-range {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.session-delete-btn-icon {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: #dc3545;\n  transition: all 0.2s;\n}\n.session-delete-btn-icon:hover {\n  background: #dc3545;\n  color: white;\n  border-color: #dc3545;\n}\n.session-footer {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  padding-left: 48px;\n}\n.session-resume-hint {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  color: var(--accent);\n}\n.save-current-session-panel {\n  margin-top: 20px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.save-session-btn-full {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 12px;\n  cursor: pointer;\n  font-weight: 600;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.save-session-btn-full:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.empty-saved-state {\n  text-align: center;\n  padding: 48px 24px;\n  color: var(--text-muted);\n}\n.empty-saved-state i {\n  font-size: 3rem;\n  margin-bottom: 12px;\n  opacity: 0.5;\n}\n\n/* Action Buttons Group - Perfect Alignment */\n.action-buttons-group {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.action-icon-btn {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  width: 42px;\n  height: 42px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  font-size: 1.1rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n  flex-shrink: 0;\n}\n.action-icon-btn:hover {\n  transform: translateY(-1px);\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n.action-icon-btn:active {\n  transform: translateY(0);\n}\n.action-btn {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  height: 42px;\n  padding: 0 18px;\n  border-radius: 12px;\n  font-weight: 600;\n  font-size: 0.85rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  border: none;\n  white-space: nowrap;\n  flex-shrink: 0;\n}\n.action-btn-secondary {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  border: 1px solid var(--border);\n  color: var(--text);\n  box-shadow: var(--shadow-sm);\n}\n.action-btn-secondary:hover {\n  transform: translateY(-1px);\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n.action-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.25);\n  border: none;\n}\n.action-btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.35);\n}\n.action-btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n  transform: none;\n}\n.action-btn-secondary:active,\n.action-icon-btn:active {\n  transform: translateY(0);\n}\n\n/* Responsive adjustments */\n@media (max-width: 640px) {\n.action-buttons-group {\n    gap: 6px;\n}\n.action-icon-btn {\n    width: 38px;\n    height: 38px;\n    font-size: 1rem;\n}\n.action-btn {\n    height: 38px;\n    padding: 0 14px;\n    font-size: 0.8rem;\n}\n.action-btn span {\n    display: inline-block;\n}\n}\n@media (max-width: 480px) {\n.action-btn span {\n    display: none;\n}\n.action-btn {\n    width: 42px;\n    padding: 0;\n}\n.action-btn i {\n    font-size: 1.1rem;\n    margin: 0;\n}\n}\n\n/* Keyboard Shortcuts Modal - Larger & Cleaner */\n.keyboard-shortcuts-modal {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.6);\n  backdrop-filter: blur(8px);\n  z-index: 1000;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  animation: modalFadeIn 0.2s ease;\n}\n.shortcuts-modal {\n  background: var(--surface-strong);\n  border-radius: 24px;\n  width: min(520px, 90vw);\n  max-width: 520px;\n  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.3);\n  border: 1px solid var(--border);\n  animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n  overflow: hidden;\n}\n.shortcuts-modal-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 20px 24px;\n  background: linear-gradient(135deg, var(--surface), var(--surface-strong));\n  border-bottom: 1px solid var(--border);\n}\n.shortcuts-modal-header h3 {\n  margin: 0;\n  font-size: 1.2rem;\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  color: var(--text);\n  font-weight: 600;\n}\n.shortcuts-modal-header h3 i {\n  font-size: 1.3rem;\n  color: var(--accent);\n}\n.shortcuts-modal-close {\n  width: 36px;\n  height: 36px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n  color: var(--text-muted);\n}\n.shortcuts-modal-close:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n  transform: rotate(90deg);\n}\n.shortcuts-modal-body {\n  padding: 24px;\n  max-height: none;\n  overflow-y: visible;\n}\n.shortcuts-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));\n  gap: 24px;\n}\n.shortcut-card {\n  background: var(--surface);\n  border-radius: 16px;\n  padding: 16px;\n  border: 1px solid var(--border);\n}\n.shortcut-card-title {\n  font-size: 0.75rem;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--accent);\n  padding-bottom: 12px;\n  margin-bottom: 12px;\n  border-bottom: 2px solid var(--accent-light);\n}\n.shortcut-row {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 0;\n  border-bottom: 1px solid var(--border);\n}\n.shortcut-row:last-child {\n  border-bottom: none;\n}\n.shortcut-keys {\n  display: flex;\n  gap: 6px;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.shortcut-keys kbd {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border: 1px solid var(--border);\n  border-radius: 8px;\n  padding: 4px 10px;\n  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;\n  font-size: 0.7rem;\n  font-weight: 700;\n  color: var(--accent);\n  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);\n  letter-spacing: 0.5px;\n}\n.shortcut-row span {\n  color: var(--text-muted);\n  font-size: 0.85rem;\n  font-weight: 500;\n}\n@keyframes modalFadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n@keyframes modalSlideUp {\nfrom {\n    opacity: 0;\n    transform: translateY(30px) scale(0.95);\n}\nto {\n    opacity: 1;\n    transform: translateY(0) scale(1);\n}\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.action-buttons-group {\n    width: 100%;\n    gap: 8px;\n}\n.action-icon {\n    min-width: 44px;\n    height: 40px;\n}\n.action-btn {\n    min-width: 0;\n    flex: 1;\n    padding: 0 12px;\n    height: 40px;\n    font-size: 0.8rem;\n}\n.action-btn span {\n    display: inline;\n}\n.shortcuts-modal {\n    width: 95vw;\n\n    margin: 16px;\n}\n.shortcuts-modal-header {\n    padding: 16px 20px;\n}\n.shortcuts-modal-header h3 {\n    font-size: 1rem;\n}\n.shortcuts-modal-body {\n    padding: 16px;\n}\n.shortcuts-grid {\n    grid-template-columns: 1fr;\n    gap: 16px;\n}\n.shortcut-card {\n    padding: 12px;\n}\n.shortcut-row {\n    padding: 8px 0;\n}\n.shortcut-keys kbd {\n    padding: 3px 8px;\n    font-size: 0.65rem;\n}\n.shortcut-row span {\n    font-size: 0.8rem;\n}\n}\n@media (max-width: 480px) {\n.action-btn span {\n    display: none;\n}\n.action-btn {\n    min-width: 44px;\n    padding: 0;\n}\n.action-btn i {\n    font-size: 1.1rem;\n    margin: 0;\n}\n}\n\n/* Keyboard Shortcuts Dropdown - Compact */\n.shortcuts-panel.compact {\n  background: var(--surface-strong);\n  border-radius: 14px;\n  width: 280px;\n  box-shadow: var(--shadow-lg);\n  border: 1px solid var(--border);\n  animation: slideUp 0.2s ease;\n  overflow: hidden;\n}\n.shortcuts-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 14px;\n  border-bottom: 1px solid var(--border);\n  background: var(--surface);\n}\n.shortcuts-header h3 {\n  margin: 0;\n  font-size: 0.85rem;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--text);\n}\n.shortcuts-header h3 i {\n  font-size: 0.9rem;\n}\n.shortcuts-close {\n  width: 26px;\n  height: 26px;\n  border-radius: 6px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 18px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.15s;\n  color: var(--text-muted);\n}\n.shortcuts-close:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.shortcuts-list {\n  padding: 8px 6px;\n  max-height: 400px;\n  overflow-y: auto;\n}\n.shortcut-item {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 6px 10px;\n  border-radius: 6px;\n  font-size: 0.75rem;\n}\n.shortcut-item:hover {\n  background: var(--accent-light);\n}\n.shortcut-item kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--accent);\n  box-shadow: 0 1px 0 var(--border);\n}\n.shortcut-item span {\n  color: var(--text-muted);\n  font-size: 0.75rem;\n}\n@keyframes fadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n@keyframes slideUp {\nfrom {\n    opacity: 0;\n    transform: translateY(10px);\n}\nto {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n/* Saved Sessions Styles */\n.saved-sessions-list {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n  max-height: 300px;\n  overflow-y: auto;\n}\n.saved-session-item {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 10px 12px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 10px;\n  transition: all 0.2s ease;\n}\n.saved-session-item:hover {\n  border-color: var(--accent);\n  background: var(--surface-strong);\n}\n.session-info {\n  flex: 1;\n  min-width: 0;\n}\n.session-name {\n  font-weight: 600;\n  font-size: 0.85rem;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.session-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.session-meta span {\n  display: inline-flex;\n  align-items: center;\n  gap: 3px;\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.session-actions {\n  display: flex;\n  gap: 6px;\n  flex-shrink: 0;\n}\n.session-load-btn,\n.session-delete-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  transition: all 0.2s ease;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.session-load-btn {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.session-load-btn:hover {\n  background: var(--accent-strong);\n  transform: scale(1.05);\n}\n.session-delete-btn {\n  background: rgba(220, 53, 69, 0.1);\n  color: #dc3545;\n}\n.session-delete-btn:hover {\n  background: #dc3545;\n  color: white;\n}\n.save-current-session {\n  margin-top: 12px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n}\n.save-session-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.save-session-info {\n  flex: 1;\n}\n.save-session-info strong {\n  display: block;\n  font-size: 0.8rem;\n  color: var(--text);\n  margin-bottom: 2px;\n}\n.save-session-info small {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.save-session-btn {\n  padding: 6px 14px;\n  border-radius: 8px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  gap: 5px;\n  transition: all 0.2s ease;\n}\n.save-session-btn:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\n.verse-download-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.82);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--accent);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.verse-download-btn:hover:not(:disabled) {\n  transform: scale(1.05);\n  border-color: var(--accent);\n  background: rgba(255, 255, 255, 0.96);\n}\n.verse-download-btn:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n\n/* Add to your style section */\n.main.tools-open {\n  overflow: hidden;\n}\n\n/* Fix tools panel positioning - ensure it goes from very top */\n.tools {\n  position: fixed;\n  top: 0;           /* Changed from auto/padding */\n  right: 0;\n  bottom: 0;\n  width: min(var(--tools-width), 92vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n}\n\n/* Adjust tools-top padding to account for no navbar offset */\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n  padding-top: calc(18px + env(safe-area-inset-top, 0px));\n}\n\n/* Ensure tools body scrolls correctly */\n.tools-body {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n}\nbody.has-navbar .tools {\n  top: 0; /* Still 0, but adjust internal spacing */\n}\nbody.has-navbar .tools-top {\n  padding-top: calc(18px + var(--navbar-height, 0px));\n}\n.tools.open {\n  transform: translateX(0);\n}\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.5);\n  z-index: 59;\n}\n\n/* Replace the existing blur mode CSS with this */\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-aid {\n  filter: blur(var(--recall-blur, 10px));\n  opacity: 0.7;\n  transition: filter 0.3s ease, opacity 0.3s ease;\n}\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .tajweed-mark,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic word,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .wbw-word {\n  filter: blur(var(--recall-blur, 10px));\n}\n\n/* Keep active verse clear */\n.main.blur-mode-active .verse-card.active .verse-arabic,\n.main.blur-mode-active .verse-card.active .verse-aid {\n  filter: none;\n  opacity: 1;\n}\n\n/* Force tajweed spans to display properly */\n.verse-arabic.tajweed-enabled span[class*=\"tajweed-\"] {\n  display: inline !important;\n}\n\n/* Ensure proper line height for tajweed text */\n.verse-arabic.tajweed-enabled {\n  line-height: 2.2 !important;\n  font-family: var(--font-ar);\n}\n\n/* Make tajweed colors visible */\n.verse-arabic.tajweed-enabled .tajweed-ham_wasl,\n.verse-arabic.tajweed-enabled .tajweed-slnt {\n  color: #7e8a97;\n}\n.verse-arabic.tajweed-enabled .tajweed-ghn,\n.verse-arabic.tajweed-enabled .tajweed-idgh_ghn,\n.verse-arabic.tajweed-enabled .tajweed-iqlb {\n  color: #2e9d62;\n  background: rgba(46, 157, 98, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,\n.verse-arabic.tajweed-enabled .tajweed-ikhf,\n.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw {\n  color: #9b59b6;\n  background: rgba(155, 89, 182, 0.10);\n}\n.verse-arabic {\n  --verse-font-percent: 100;\n  --verse-font-size: clamp(2rem, calc(var(--verse-font-percent, 120) * 0.02rem), 3.8rem);\n  font-family: var(--font-ar);\n  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));\n  line-height: 2;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n\n/* Force re-render when font changes */\n.verse-arabic.tajweed-enabled,\n.verse-arabic:not(.tajweed-enabled) {\n  transition: font-size 0.1s ease;\n}\n@keyframes wordHighlightPulse {\n0% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.03);\n}\n100% {\n    transform: scale(1.02);\n}\n}\n\n/* Combined Tajweed + Word Highlighting */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n\n/* Preserve tajweed colors inside highlighted words but make them visible */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {\n  color: inherit !important;\n  background: transparent !important;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*=\"tajweed-\"] {\n  color: white !important;\n  background: transparent !important;\n}\n\n/* Mode Button Styling */\n.mode-btn {\n  background: var(--surface);\n  border: 1px solid var(--accent);\n  color: var(--accent);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mode-btn i:first-child {\n  font-size: 0.85rem;\n}\n.mode-btn .bi-chevron-down {\n  font-size: 0.7rem;\n  transition: transform 0.2s;\n}\n.mode-btn:hover .bi-chevron-down {\n  transform: translateY(2px);\n}\n.mode-btn:hover {\n  background: var(--accent-light);\n}\n\n/* Make all buttons consistent */\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn:disabled,\n.rail-btn-ghost:disabled,\n.rail-btn-primary:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n  pointer-events: none;\n  transform: none;\n  box-shadow: none;\n}\n.rail-btn-resume {\n  background: rgba(255, 255, 255, 0.92);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.rail-btn-resume:hover {\n  background: var(--accent-light);\n  transform: translateY(-1px);\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\nbody {\n  font-family: var(--font-ui);\n  background: var(--bg);\n  color: var(--text);\n}\nhtml {\n  background: var(--bg);\n}\n.app {\n  min-height: 100vh;\n  font-size: calc(16px * var(--ui-scale, 1));\n  animation: appFade 260ms ease-out;\n}\n.verse-arabic {\n  min-height: 60px;\n}\n\n/* Session Rail */\n.session-rail {\n  background: var(--surface);\n  border-radius: 20px;\n  margin-bottom: 20px;\n  padding: 12px 16px 14px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.session-rail-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 10px;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.session-rail-copy {\n  flex: 1;\n  min-width: 0;\n}\n.session-rail-headline {\n  display: flex;\n  align-items: baseline;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.session-rail-pills {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  margin-top: 6px;\n}\n.session-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 4px;\n  padding: 5px 9px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n  font-size: 0.71rem;\n  white-space: nowrap;\n}\n.session-pill strong {\n  color: var(--text);\n  font-weight: 700;\n}\n.session-pill-focus {\n  max-width: min(280px, 100%);\n}\n.session-pill-focus strong {\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.session-rail-kicker {\n  font-size: 0.7rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.session-rail-meta {\n  font-size: 0.72rem;\n  color: var(--text-muted);\n  margin-top: 2px;\n}\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\n.session-rail-subnote {\n  margin-top: 10px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n}\n\n/* Mode Indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 10px;\n  padding: 6px 14px;\n  margin: 8px 0 12px 0;\n  background: var(--accent-light);\n  border-radius: 40px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n.mode-switch-btn {\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 4px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.mode-switch-btn:hover {\n  background: rgba(154, 103, 56, 0.2);\n  transform: rotate(180deg);\n}\n.progress-bar-wide {\n  margin-top: 10px;\n  height: 6px;\n  position: relative;\n  overflow: visible;\n}\n.progress-label {\n  position: absolute;\n  top: -24px;\n  right: 0;\n  font-size: 0.72rem;\n  font-weight: 700;\n  color: var(--accent);\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.session-rail-top {\n    flex-direction: column;\n    align-items: stretch;\n}\n.session-rail-actions {\n    justify-content: stretch;\n    width: 100%;\n    flex-wrap: wrap;\n}\n.rail-btn {\n    flex: 1;\n    justify-content: center;\n}\n}\n.verse-arabic-loading {\n  min-height: 60px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--text-muted);\n  animation: pulse 1s infinite;\n}\n@keyframes pulse {\n0%,\n  100% {\n    opacity: 0.3;\n}\n50% {\n    opacity: 0.6;\n}\n}\n\n/* Ensure HTML content is styled properly before Vue mounts */\n.verse-arabic word,\n.verse-arabic .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n}\n\n/* Prevent raw HTML showing */\n.verse-arabic:empty {\n  display: none;\n}\n\n/* Tajweed styles */\n.verse-arabic.tajweed-enabled [class*=\"tajweed\"] {\n  display: inline;\n}\n\n/* Color rules for tajweed - adjust based on what API returns */\n.verse-arabic [class*=\"ghunnah\"],\n.verse-arabic [class*=\"Ghunnah\"] {\n  color: #2ecc71;\n}\n.verse-arabic [class*=\"madd\"],\n.verse-arabic [class*=\"Madd\"] {\n  color: #e74c3c;\n}\n.verse-arabic [class*=\"qalqalah\"],\n.verse-arabic [class*=\"Qalqalah\"] {\n  color: #f39c12;\n}\n.verse-arabic [class*=\"ikhfa\"],\n.verse-arabic [class*=\"Ikhfa\"] {\n  color: #9b59b6;\n}\n.verse-arabic [class*=\"idgham\"],\n.verse-arabic [class*=\"Idgham\"] {\n  color: #3498db;\n}\n\n/* Word by Word styles */\n.wbw-word {\n  display: inline-block;\n  padding: 5px 8px;\n  margin: 2px 3px;\n  border-radius: 8px;\n  transition: all 0.2s ease;\n  cursor: pointer;\n  font-size: 1.05rem;\n  background: rgba(154, 103, 56, 0.05);\n}\n.wbw-word:hover {\n  background: var(--accent-light);\n  transform: scale(1.02);\n}\n.wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n  animation: pop 180ms ease-out;\n}\n.verse-arabic.verse-weak .wbw-word.weak-word {\n  background: #fff3bf;\n  color: #5f4b00;\n}\n.verse-arabic.verse-mastered .wbw-word.mastered-word {\n  background: #d3f9d8;\n  color: #1f6f31;\n}\n@keyframes pop {\nfrom {\n    transform: scale(1.01);\n}\nto {\n    transform: scale(1.05);\n}\n}\n\n/* Word highlighting styles */\n.verse-arabic word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n.rail-stat strong,\n.player-eta {\n  cursor: help;\n  border-bottom: 1px dotted var(--text-muted);\n}\n\n/* Optional: Show detailed breakdown on hover */\n.rail-stat:hover strong::after {\n  content: attr(title);\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: var(--surface-strong);\n  color: var(--text);\n  padding: 4px 8px;\n  border-radius: 8px;\n  font-size: 0.7rem;\n  white-space: nowrap;\n  z-index: 100;\n  box-shadow: var(--shadow-sm);\n  border: 1px solid var(--border);\n}\n\n/* Minimized Session Rail */\n.session-rail-mini {\n  position: sticky;\n  top: 12px;\n  z-index: 18;\n  padding: 10px;\n  padding-top: 8px;\n  margin-bottom: 20px;\n  background: var(--surface);\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-sm);\n  overflow: hidden;\n  transition: all 0.2s ease;\n}\n.session-rail-mini:hover {\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent-soft);\n}\n.rail-mini-content {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 8px 12px 8px 16px;\n}\n.rail-mini-info {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  flex: 1;\n}\n.rail-mini-icon {\n  width: 32px;\n  height: 32px;\n  background: var(--accent-light);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.rail-mini-icon i {\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.rail-mini-details {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-mini-surah {\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.rail-mini-progress {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.rail-mini-stats {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.mini-stat-item {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.mini-stat-item i {\n  font-size: 0.7rem;\n  color: var(--accent);\n}\n.rail-mini-actions {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mini-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n}\n.mini-btn:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n}\n.mini-btn:first-child {\n  background: var(--accent);\n  border-color: var(--accent);\n  color: white;\n}\n.mini-btn:first-child:hover {\n  transform: scale(1.05);\n  background: var(--accent-strong);\n}\n.rail-mini-progress {\n  height: 2px;\n  background: var(--border);\n}\n.progress-fill-mini {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.rail-mini-stats {\n    display: none;\n}\n.rail-mini-content {\n    padding: 6px 10px 6px 12px;\n}\n.rail-mini-surah {\n    font-size: 0.75rem;\n}\n}\n\n/* Font Dropdown */\n.font-dropdown {\n  position: relative;\n}\n.font-dropdown-trigger {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 999px;\n  font-size: 0.75rem;\n  cursor: pointer;\n  transition: all 0.2s;\n  color: var(--text);\n}\n.font-dropdown-trigger:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.font-dropdown-trigger .bi-chevron-down {\n  transition: transform 0.2s;\n  font-size: 0.7rem;\n}\n.font-dropdown-trigger .bi-chevron-down.rotated {\n  transform: rotate(180deg);\n}\n.font-dropdown-menu {\n  position: absolute;\n  top: calc(100% + 8px);\n  right: 0;\n  min-width: 200px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  box-shadow: var(--shadow-lg);\n  overflow: hidden;\n  z-index: 100;\n  backdrop-filter: blur(12px);\n}\n.font-option {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  width: 100%;\n  padding: 10px 14px;\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  font-size: 0.8rem;\n  text-align: left;\n  transition: all 0.15s;\n  color: var(--text);\n}\n.font-option:hover {\n  background: var(--accent-light);\n}\n.font-option.active {\n  background: var(--accent);\n  color: white;\n}\n.font-option .check-icon {\n  margin-left: auto;\n  font-size: 0.8rem;\n}\n\n/* Dropdown Animation */\n.dropdown-fade-enter-active,\n.dropdown-fade-leave-active {\n  transition: all 0.2s ease;\n}\n.dropdown-fade-enter-from,\n.dropdown-fade-leave-to {\n  opacity: 0;\n  transform: translateY(-8px);\n}\n\n/* Tajweed styles for AlQuran quran-tajweed edition */\n.verse-arabic.tajweed-enabled {\n  line-height: 2;\n  white-space: normal;\n  overflow-wrap: anywhere;\n}\n.verse-arabic.tajweed-enabled .tajweed-mark {\n  display: inline;\n  border-radius: 0.2em;\n  padding: 0 0.03em;\n}\n.verse-arabic.tajweed-enabled .tajweed-ham_wasl,\n.verse-arabic.tajweed-enabled .tajweed-slnt {\n  color: #7e8a97;\n}\n.verse-arabic.tajweed-enabled .tajweed-ghn,\n.verse-arabic.tajweed-enabled .tajweed-idgh_ghn,\n.verse-arabic.tajweed-enabled .tajweed-iqlb {\n  color: #2e9d62;\n  background: rgba(46, 157, 98, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,\n.verse-arabic.tajweed-enabled .tajweed-ikhf,\n.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw {\n  color: #9b59b6;\n  background: rgba(155, 89, 182, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-qlq,\n.verse-arabic.tajweed-enabled .tajweed-lqlq {\n  color: #d98824;\n  background: rgba(217, 136, 36, 0.12);\n}\n.verse-arabic.tajweed-enabled .tajweed-madda_normal,\n.verse-arabic.tajweed-enabled .tajweed-madda_permissible,\n.verse-arabic.tajweed-enabled .tajweed-madda_necessary,\n.verse-arabic.tajweed-enabled .tajweed-madda_obligatory,\n.verse-arabic.tajweed-enabled .tajweed-madda_pbligatory {\n  color: #d55245;\n  background: rgba(213, 82, 69, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_mus,\n.verse-arabic.tajweed-enabled .tajweed-idghm_shfw,\n.verse-arabic.tajweed-enabled .tajweed-idgh_shfw,\n.verse-arabic.tajweed-enabled .tajweed-ghn+.tajweed-mark {\n  color: #2b7bbb;\n  background: rgba(43, 123, 187, 0.10);\n}\n\n/* Toolbar chip active state for tajweed */\n.toolbar-chip.active {\n  background: var(--accent);\n  color: white;\n}\n.verse-play-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: white;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.verse-play-btn i {\n  font-size: 0.9rem;\n}\n.verse-play-btn:hover {\n  transform: scale(1.05);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--accent);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.verse-play-btn:active {\n  transform: scale(0.98);\n}\n.verse-preview-label {\n  margin-left: 10px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n  font-weight: 650;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n}\n.resume-details {\n  margin-top: 10px;\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.72);\n  padding: 10px 12px;\n}\n.resume-details summary {\n  cursor: pointer;\n  list-style: none;\n  font-weight: 650;\n  color: var(--text);\n}\n.resume-details summary::-webkit-details-marker {\n  display: none;\n}\n.verse-download-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.82);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--accent);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.verse-download-btn:hover:not(:disabled) {\n  transform: scale(1.05);\n  border-color: var(--accent);\n  background: rgba(255, 255, 255, 0.96);\n}\n.verse-download-btn:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n.speed-label {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-right: 4px;\n}\n.speed-controls {\n  display: flex;\n  gap: 4px;\n}\n.speed-btn {\n  padding: 4px 8px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.speed-btn.active {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.streak-motivation {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border-radius: 40px;\n  font-size: 0.75rem;\n}\n.streak-badge {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-weight: 500;\n}\n.motivation-message {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--text-muted);\n  font-size: 0.7rem;\n}\n.pa-note {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n  margin-top: 4px;\n  display: block;\n}\n\n/* Active tab indicator with pulse effect */\n.tools-tabs button.active-tab {\n  position: relative;\n  animation: tabPulse 0.22s ease-out;\n}\n@keyframes tabPulse {\n0% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 var(--accent);\n}\n50% {\n    transform: scale(1.012);\n    box-shadow: 0 0 0 3px var(--accent-light);\n}\n100% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n.quick-tools {\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.78);\n}\n.quick-tools-grid {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n  padding: 12px 14px;\n}\n.quick-tool {\n  border: 1px solid rgba(154, 103, 56, 0.10);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.82);\n  padding: 10px;\n  display: grid;\n  gap: 8px;\n  min-width: 0;\n}\n.quick-tool-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 8px;\n}\n.quick-tool-label {\n  font-size: 0.74rem;\n  font-weight: 750;\n  color: var(--text);\n}\n.quick-tool-value {\n  font-size: 0.74rem;\n  font-weight: 650;\n  color: var(--text-muted);\n}\n.quick-tool-body {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.quick-tool-body.disabled {\n  opacity: 0.55;\n}\n.quick-tool-body-muted {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n}\n.quick-range {\n  flex: 1 1 auto;\n  min-width: 0;\n}\n.toggle-chip-compact {\n  min-height: 34px;\n  padding: 6px 10px;\n  font-size: 0.82rem;\n}\n\n/* Toggle switch animation and visual feedback */\n.switch {\n  transition: all 0.2s ease;\n}\n.switch:active {\n  transform: scale(0.98);\n}\n.switch-ui {\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n  animation: switchPulse 0.3s ease-out;\n}\n@keyframes switchPulse {\n0% {\n    box-shadow: 0 0 0 0 rgba(139, 94, 60, 0.4);\n}\n50% {\n    box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.2);\n}\n100% {\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Field hint styling */\n.field-hint {\n  font-size: calc(0.7rem * var(--en-scale, 1));\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.26;\n  display: block;\n}\n\n/* Verse Arabic styling */\n.verse-arabic {\n  --verse-font-percent: 100;\n  --verse-font-size: clamp(1.5rem, calc(var(--verse-font-percent, 150) * 0.0175rem), 3.25rem);\n  font-family: var(--font-ar);\n  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n.verse-arabic word {\n  display: inline-block;\n  font-size: 1em;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-card {\n  background: var(--surface);\n  border-radius: 20px;\n  padding: 26px;\n  transition: all 0.2s ease;\n  border: 1px solid var(--border);\n  position: relative;\n  direction: ltr;\n  overflow: hidden;\n  width: 100%;\n}\n.verse-card::before {\n  content: \"\";\n  position: absolute;\n  inset: 0;\n  pointer-events: none;\n  background:\n    linear-gradient(180deg, rgba(184, 130, 78, 0.03), transparent 22%),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.05), transparent 28%);\n}\n.verse-card.active {\n  border-color: var(--accent);\n  background: linear-gradient(145deg, rgba(184, 130, 78, 0.14), rgba(154, 103, 56, 0.04));\n  box-shadow: 0 0 0 1px var(--accent), 0 14px 32px rgba(154, 103, 56, 0.18);\n  transform: translateY(-1px);\n  transition: all 0.2s ease;\n}\n.main.focus-mode-active .verse-card:not(.active) {\n  opacity: 0.54;\n  filter: saturate(0.72);\n}\n.main.focus-mode-active .workspace-fab-live,\n.main.focus-mode-active .verse-card:not(.active) .verse-aid {\n  opacity: 0.38;\n}\n\n\n\n/* Removed: \"For serious huffadh training\" badge */\n.verse-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 16px;\n}\n.verse-badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-number {\n  font-size: 0.78rem;\n  padding: 6px 12px;\n  background: var(--accent);\n  border-radius: 999px;\n  color: #fff;\n  font-weight: 700;\n  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.24);\n}\n.verse-status-badge,\n.verse-status-subtle {\n  border-radius: 999px;\n  padding: 5px 10px;\n  font-size: 0.68rem;\n  font-weight: 600;\n}\n.verse-status-badge {\n  background: var(--accent-light);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.verse-status-subtle {\n  background: var(--bg-elevated);\n  color: var(--text-muted);\n}\n.verse-ref {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex-shrink: 0;\n}\n\n/* Font controls */\n.verse-font-controls {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  padding: 2px 6px;\n  margin-right: 8px;\n}\n.verse-font-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 12px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 10px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.verse-font-btn:hover {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n}\n.verse-font-size-indicator {\n  font-size: 10px;\n  min-width: 35px;\n  text-align: center;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n\n/* Session rail */\n.session-rail {\n  position: sticky;\n  top: 14px;\n  z-index: 18;\n  margin-bottom: 18px;\n  padding: 12px 14px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-md);\n  animation: railIn 280ms ease-out;\n}\n.session-rail-top {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  gap: 12px;\n  align-items: center;\n}\n.session-rail-kicker {\n  font-size: 10px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  margin-top: 2px;\n  font-size: 14px;\n  font-weight: 450;\n}\n.session-rail-meta {\n  margin-top: 2px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.session-rail-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 8px;\n  margin-top: 10px;\n}\n.rail-stat {\n  padding: 8px 10px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-stat span {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n}\n.rail-stat strong {\n  font-size: 0.78rem;\n  font-weight: 500;\n}\n.rail-btn {\n  height: 34px;\n  padding: 0 12px;\n  border-radius: 13px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  color: var(--text);\n  font-size: 12px;\n  font-weight: 450;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.rail-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);\n}\n.progress-bar {\n  flex: 1;\n  height: 4px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-wide {\n  margin-top: 10px;\n}\n.progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s;\n}\n\n/* Mode indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  margin: 8px 0 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n\n/* Reading toolbar */\n.reading-toolbar {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  margin-bottom: 16px;\n  padding: 12px 14px;\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.reading-toolbar-group {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  align-items: flex-start;\n}\n.toolbar-chip {\n  border: 0;\n  border-radius: 999px;\n  padding: 8px 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  font-size: 0.75rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: var(--shadow-sm);\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.toolbar-chip i,\n.rail-btn i,\n.tools-tabs button i,\n.st-ico i {\n  font-size: 0.9rem;\n  line-height: 1;\n}\n.toolbar-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.toolbar-chip:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n\n/* Tools panel */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  width: min(var(--tools-width), 92vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n}\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(15, 12, 8, 0.35);\n  backdrop-filter: blur(1px);\n  z-index: 59;\n}\n.tools.open {\n  transform: translateX(0);\n}\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n}\n.tools-topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.tools-title {\n  font-size: 1rem;\n  font-weight: 700;\n  letter-spacing: -0.2px;\n  color: var(--text);\n}\n.tools-context {\n  margin-top: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 600;\n}\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n  color: rgba(0, 0, 0, 0.7);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n  overflow-x: auto;\n  -webkit-overflow-scrolling: touch;\n  width: 100%;\n}\n.tools-tabs button {\n  flex: 1 1 0;\n  padding: 7px 10px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.82rem;\n  cursor: pointer;\n  color: rgba(0, 0, 0, 0.55);\n  font-weight: 450;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: background 140ms ease, color 140ms ease, transform 140ms ease, box-shadow 160ms ease;\n  white-space: nowrap;\n}\n.tools-tabs button.active {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));\n  box-shadow: var(--shadow-sm);\n  color: rgba(0, 0, 0, 0.85);\n}\n.tools-body {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n}\n\n/* Compact mode (default) to reduce cognitive load */\n.tools-body.compact .st-sub,\n.tools-body.compact .field-hint,\n.tools-body.compact .analytics-help,\n.tools-body.compact .stat-help {\n  display: block !important;\n}\n.tools-body.compact .sheet {\n  gap: 12px;\n}\n.tools-body.compact .sheet-section {\n  padding: 0;\n  border-radius: 16px;\n}\n.tools-body.compact .sheet-toggle {\n  padding: 12px 14px;\n}\n.tools-body.compact .sheet-content {\n  padding: 12px 14px 14px;\n}\n.tools-body.compact .field-stack {\n  gap: 12px;\n}\n.tools-body.compact .field label {\n  margin-bottom: 6px;\n}\n.sheet {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.sheet-section {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border-radius: 18px;\n  padding: 0;\n  overflow: hidden;\n  box-shadow: var(--shadow-sm);\n  animation: riseSoft 260ms ease-out;\n}\n.sheet-toggle {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border: none;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease;\n}\n.st-left {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.st-ico {\n  width: 24px;\n  height: 24px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));\n  border: 1px solid rgba(139, 94, 60, 0.18);\n  flex: 0 0 auto;\n  font-size: 11px;\n  font-weight: 600;\n  color: var(--accent);\n}\n.st-txt {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 2px;\n  min-width: 0;\n}\n.st-title {\n  font-weight: 450;\n  letter-spacing: -0.2px;\n  color: var(--text);\n  font-size: 0.82rem;\n  white-space: nowrap;\n}\n.st-sub {\n  font-size: 0.66rem;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.st-chev {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  display: grid;\n  place-items: center;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  color: rgba(0, 0, 0, 0.65);\n  transition: transform 0.15s ease;\n  box-shadow: var(--shadow-sm);\n}\n.st-chev.open {\n  transform: rotate(180deg);\n}\n.sheet-content {\n  padding: 12px 12px 14px;\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field-stack {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  min-width: 0;\n}\n.field label {\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n}\n.field-hint {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.35;\n  display: block;\n}\n.select,\n.input {\n  width: 100%;\n  min-width: 0;\n  padding: 11px 12px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--text);\n  font-size: 0.8rem;\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n.range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.range-single {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n  align-items: center;\n}\n.range span {\n  color: rgba(0, 0, 0, 0.35);\n  font-weight: 450;\n  font-size: 11px;\n}\n.radio-group {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.radio {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 0.85rem;\n  color: var(--text);\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  transition: all 0.2s ease;\n}\n.radio:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-sm);\n}\n.radio input {\n  margin: 0;\n}\n.switch {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 11px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  cursor: pointer;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  transition: all 0.2s ease;\n}\n.switch input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.switch-ui {\n  width: 44px;\n  height: 26px;\n  border-radius: 999px;\n  background: rgba(0, 0, 0, 0.12);\n  position: relative;\n  flex: 0 0 auto;\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  content: \"\";\n  position: absolute;\n  top: 3px;\n  left: 3px;\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  background: white;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n}\n.switch input:checked+.switch-ui::after {\n  transform: translateX(18px);\n}\n.switch-text {\n  font-size: 0.74rem;\n  color: rgba(0, 0, 0, 0.72);\n  font-weight: 400;\n}\n.tools-techniques-section {\n  border-color: rgba(139, 94, 60, 0.16);\n  box-shadow: none;\n}\n.techniques-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.technique-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 13px;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.78);\n  box-shadow: 0 10px 24px rgba(63, 39, 18, 0.055);\n}\n.technique-row-stacked {\n  align-items: stretch;\n  flex-direction: column;\n}\n.technique-row-main,\n.technique-control {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.technique-copy {\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  gap: 3px;\n}\n.technique-copy label {\n  margin: 0;\n  color: var(--text);\n  font-family: inherit;\n  font-size: 0.86rem;\n  font-weight: 560;\n  white-space: nowrap;\n}\n.technique-copy small,\n.technique-control span {\n  color: var(--text-muted);\n  font-family: inherit;\n  font-size: 0.73rem;\n  font-weight: 400;\n  line-height: 1.45;\n}\n.technique-toggle {\n  flex: 0 0 86px;\n  min-height: 40px;\n  border-radius: 12px;\n  font-family: inherit;\n  font-size: 0.82rem;\n  font-weight: 560;\n  border-width: 1px;\n}\n.technique-control {\n  padding-top: 12px;\n  border-top: 1px solid rgba(154, 103, 56, 0.10);\n}\n.technique-range {\n  flex: 1 1 auto;\n  min-width: 96px;\n  padding: 0;\n  box-shadow: none;\n}\n.segmented-control {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 6px;\n  padding: 5px;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 14px;\n  background: rgba(98, 73, 49, 0.045);\n}\n.segmented-control button {\n  min-width: 0;\n  min-height: 42px;\n  padding: 9px 10px;\n  border: 1px solid transparent;\n  border-radius: 10px;\n  background: transparent;\n  color: var(--text-muted);\n  font-family: inherit;\n  font-size: 0.8rem;\n  font-weight: 560;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n}\n.segmented-control button.active {\n  background: #fffaf4;\n  color: var(--accent-strong);\n  border-color: rgba(154, 103, 56, 0.20);\n  box-shadow: 0 8px 18px rgba(63, 39, 18, 0.09);\n}\n.technique-preview {\n  padding: 10px 12px;\n  border-radius: 12px;\n  background: rgba(154, 103, 56, 0.07);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: rgba(98, 73, 49, 0.92);\n  font-family: inherit;\n  font-size: 0.74rem;\n  font-weight: 430;\n  line-height: 1.45;\n}\n\n/* Start button */\n.start-btn {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  border-radius: 12px;\n  color: white;\n  font-size: 1rem;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  margin-top: 20px;\n  transition: all 0.2s ease;\n}\n.start-btn:hover:not(:disabled) {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);\n}\n.start-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n\n/* Tools footer */\n.tools-footer {\n  position: absolute;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  height: var(--tools-footer-h);\n  padding: 12px 16px 14px;\n  border-top: 1px solid var(--border);\n  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));\n  display: flex;\n  gap: 10px;\n  justify-content: space-between;\n  align-items: center;\n}\n.tools-btn {\n  flex: 1;\n  min-height: 44px;\n  padding: 10px 10px;\n  border-radius: 15px;\n  font-weight: 500;\n  border: 1px solid rgba(0, 0, 0, 0.1);\n  cursor: pointer;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  line-height: 1;\n}\n.tools-btn-soft {\n  color: var(--text-muted);\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.42));\n  box-shadow: none;\n}\n.tools-btn-soft:hover {\n  color: var(--text);\n  border-color: var(--accent-soft);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.6));\n}\n.tools-btn-primary {\n  color: #fff;\n  border-color: rgba(0, 0, 0, 0.08);\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  box-shadow: var(--shadow-sm);\n}\n.tools-btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n.tools-btn:active:not(:disabled),\n.fab-btn:active:not(:disabled),\n.toggle-chip:active:not(:disabled),\n.sheet-toggle:active:not(:disabled) {\n  transform: translateY(0);\n}\n.tools-btn:hover:not(:disabled),\n.fab-btn:hover:not(:disabled),\n.toggle-chip:hover:not(:disabled),\n.sheet-toggle:hover:not(:disabled) {\n  filter: brightness(1.02);\n}\n.tools-btn-primary:disabled {\n  opacity: 0.55;\n  cursor: not-allowed;\n  box-shadow: none;\n}\n.tools-btn-start {\n  flex: 1.6;\n}\n\n/* Hero section */\n.hero-card {\n  margin-bottom: 16px;\n  padding: 18px 18px 16px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 236, 226, 0.92));\n  box-shadow: var(--shadow-md);\n  display: grid;\n  gap: 14px;\n  animation: riseSoft 260ms ease-out;\n}\n.hero-kicker {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  color: var(--accent);\n}\n.hero-title {\n  margin-top: 6px;\n  font-size: 1.24rem;\n  font-weight: 500;\n  letter-spacing: -0.03em;\n}\n.hero-sub {\n  margin-top: 8px;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  max-width: 56ch;\n}\n.hero-flow {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n}\n.hero-step {\n  padding: 10px 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.62);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.74rem;\n}\n.hero-step span {\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  display: grid;\n  place-items: center;\n  background: var(--accent-light);\n  color: var(--accent);\n  font-size: 11px;\n}\n.hero-step strong {\n  font-weight: 500;\n}\n.hero-points {\n  display: grid;\n  gap: 8px;\n}\n.hero-point {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.hero-point i {\n  color: var(--accent);\n}\n.hero-actions,\n.empty-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cta {\n  flex: 1;\n  padding: 10px 10px;\n  border-radius: 14px;\n  font-weight: 450;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 11px;\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.cta-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);\n}\n.cta-ghost {\n  background: rgba(255, 255, 255, 0.58);\n  box-shadow: var(--shadow-sm);\n}\n\n/* Empty state */\n.empty {\n  padding: 40px 0;\n}\n.empty-card {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: var(--radius);\n  padding: 32px;\n  text-align: center;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-md);\n}\n.empty-icon {\n  font-family: var(--font-ar);\n  font-size: 2.2rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.empty-card h3 {\n  font-weight: 450;\n  margin-bottom: 6px;\n  font-size: 1rem;\n}\n.empty-card p {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  margin-bottom: 16px;\n}\n\n/* Verses grid */\n.workspace {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr);\n  gap: 14px;\n  align-items: start;\n  margin-top: 14px;\n}\n.workspace-main {\n  min-width: 0;\n}\n.workspace-shell {\n  width: 80%;\n  margin: 0 auto 18px;\n}\n.workspace-shell {\n  display: grid;\n  gap: 6px;\n  padding: 10px 12px;\n  border-radius: 20px;\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background:\n    linear-gradient(160deg, rgba(255, 251, 245, 0.98), rgba(255, 255, 255, 0.9)),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.09), transparent 28%);\n  box-shadow: 0 14px 28px rgba(63, 39, 18, 0.07);\n  position: relative;\n}\n.workspace-shell.collapsed {\n  gap: 8px;\n  padding: 12px 14px;\n}\n.workspace-shell-head {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  gap: 16px;\n  align-items: flex-start;\n}\n.workspace-shell-copy {\n  display: grid;\n  gap: 3px;\n  min-width: 0;\n}\n.workspace-shell-kicker {\n  display: inline-flex;\n  width: -moz-fit-content;\n  width: fit-content;\n  padding: 3px 7px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.1);\n  color: var(--accent-strong);\n  font-size: 0.68rem;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 0.06em;\n}\n.workspace-shell-kicker-review {\n  background: rgba(183, 28, 28, 0.12);\n  color: #9f1f1f;\n}\n.workspace-shell-title-row {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  flex-wrap: wrap;\n}\n.workspace-shell-copy h1 {\n  margin: 0;\n  color: var(--text);\n  font-size: clamp(1rem, 1.5vw, 1.25rem);\n  line-height: 1.08;\n  font-weight: 650;\n}\n.workspace-shell-phase {\n  display: inline-flex;\n  align-items: center;\n  min-height: 28px;\n  padding: 5px 10px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.88);\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  color: var(--accent-strong);\n  font-size: 0.73rem;\n  font-weight: 650;\n}\n.workspace-shell-phase-review {\n  border-color: rgba(183, 28, 28, 0.24);\n  color: #9f1f1f;\n  background: rgba(183, 28, 28, 0.09);\n}\n.workspace-shell-copy h2 {\n  margin: 0;\n  color: var(--text);\n  font-size: 1rem;\n  line-height: 1.15;\n  font-weight: 600;\n}\n.workspace-shell-copy p {\n  margin: 0;\n  color: var(--text-muted);\n  max-width: 58ch;\n  font-size: 0.8rem;\n  line-height: 1.35;\n}\n.workspace-shell-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.workspace-shell-meta span {\n  display: inline-flex;\n  align-items: center;\n  min-height: 28px;\n  padding: 5px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.15);\n  background: rgba(255, 255, 255, 0.86);\n  color: rgba(48, 42, 35, 0.86);\n  font-size: 0.76rem;\n  font-weight: 600;\n}\n.workspace-shell-meta-review {\n  border-color: rgba(183, 28, 28, 0.24) !important;\n  color: #9f1f1f !important;\n  background: rgba(183, 28, 28, 0.08) !important;\n}\n.resume-feedback-bars,\n.session-feedback-bars {\n  display: grid;\n  gap: 6px;\n  margin-top: 8px;\n}\n.session-feedback-panel {\n  margin-top: 8px;\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.72);\n  padding: 8px 10px;\n}\n.session-feedback-panel summary {\n  list-style: none;\n  cursor: pointer;\n  display: grid;\n  gap: 2px;\n  color: var(--text);\n  font-weight: 650;\n}\n.session-feedback-panel summary::-webkit-details-marker {\n  display: none;\n}\n.session-feedback-panel summary small {\n  color: var(--text-muted);\n  font-weight: 500;\n  font-size: 0.74rem;\n}\n.resume-feedback-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.resume-progress-repetition {\n  background: linear-gradient(90deg, #f2c94c, #e3a008);\n}\n.resume-progress-retention {\n  background: linear-gradient(90deg, #e57373, #c62828);\n}\n.pill-status-mastered {\n  border-color: rgba(46, 125, 50, 0.22);\n  background: rgba(76, 175, 80, 0.08);\n  color: #2e7d32;\n}\n.pill-status-weak {\n  border-color: rgba(245, 158, 11, 0.22);\n  background: rgba(245, 158, 11, 0.1);\n  color: #8a5a00;\n}\n.pill-status-repeat {\n  border-color: rgba(198, 40, 40, 0.22);\n  background: rgba(229, 57, 53, 0.08);\n  color: #9f1f1f;\n}\n.workspace-shell-chaining {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  align-items: center;\n}\n.workspace-shell-chain-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  min-height: 28px;\n  padding: 5px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background: rgba(255, 255, 255, 0.86);\n  color: rgba(48, 42, 35, 0.86);\n  font-size: 0.72rem;\n  font-weight: 650;\n}\n.workspace-shell-chain-pill i {\n  color: var(--accent-strong);\n}\n.workspace-shell-chain-pill-soft {\n  background: rgba(154, 103, 56, 0.09);\n  border-color: rgba(154, 103, 56, 0.14);\n  color: var(--accent-strong);\n}\n.workspace-shell-actions {\n  display: grid;\n  grid-template-columns: repeat(2, auto);\n  gap: 8px;\n  align-items: start;\n}\n.main-nav-btn,\n.main-card-primary {\n  min-height: 42px;\n  border-radius: 14px;\n  font-weight: 600;\n  font-size: 0.84rem;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  padding: 8px 12px;\n}\n.main-nav-btn {\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background: rgba(255, 255, 255, 0.82);\n  color: var(--text);\n}\n.main-card-primary {\n  border: 0;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  box-shadow: 0 12px 24px rgba(154, 103, 56, 0.18);\n}\n.main-nav-btn:disabled,\n.main-card-primary:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n  box-shadow: none;\n}\n.workspace-fab {\n  position: sticky;\n  top: 14px;\n  z-index: 25;\n  display: flex;\n  min-width: 0;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 8px 10px;\n  margin: 8px 0 6px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.06);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.58));\n  box-shadow: 0 16px 38px rgba(63, 39, 18, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.38);\n  backdrop-filter: blur(10px);\n  animation: cardSoftIn 220ms cubic-bezier(0.16, 1, 0.3, 1);\n  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;\n}\n.workspace-fab:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 20px 44px rgba(63, 39, 18, 0.18), 0 0 0 1px rgba(154, 103, 56, 0.18);\n  border-color: rgba(154, 103, 56, 0.2);\n}\n@keyframes cardSoftIn {\nfrom {\n    transform: translateY(6px);\n    opacity: 0.9;\n}\nto {\n    transform: translateY(0);\n    opacity: 1;\n}\n}\n.workspace-fab-meta {\n  min-width: 0;\n  flex: 1 1 auto;\n  display: grid;\n  gap: 4px;\n}\n.workspace-fab-kicker {\n  display: inline-flex;\n  align-items: center;\n  width: -moz-fit-content;\n  width: fit-content;\n  padding: 4px 8px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.10);\n  color: var(--accent-strong);\n  font-size: 0.68rem;\n  font-weight: 650;\n  letter-spacing: 0.06em;\n  text-transform: uppercase;\n}\n.workspace-fab-title {\n  font-weight: 650;\n  color: var(--text);\n  letter-spacing: -0.2px;\n  font-size: 0.92rem;\n  line-height: 1.15;\n}\n.workspace-fab-sub {\n  margin-top: 3px;\n  font-size: 0.74rem;\n  color: var(--text-muted);\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  align-items: center;\n  line-height: 1.2;\n}\n.workspace-fab-sub span {\n  display: inline-flex;\n  align-items: center;\n  max-width: 100%;\n  padding: 6px 10px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.18);\n  background: rgba(255, 255, 255, 0.86);\n  box-shadow: 0 8px 18px rgba(63, 39, 18, 0.06);\n  color: rgba(48, 42, 35, 0.82);\n  font-weight: 600;\n}\n.workspace-fab-live {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 5px;\n}\n.workspace-fab-live-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  max-width: 100%;\n  min-height: 38px;\n  padding: 8px 12px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.11);\n  border: 1px solid rgba(154, 103, 56, 0.20);\n  color: var(--accent-strong);\n  font-size: 0.82rem;\n  font-weight: 750;\n  box-shadow: 0 10px 20px rgba(63, 39, 18, 0.08);\n}\n.workspace-fab-live-pill i {\n  display: inline-grid;\n  place-items: center;\n  width: 22px;\n  height: 22px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.14);\n}\n.workspace-fab-live-pill-primary {\n  background: linear-gradient(180deg, rgba(154, 103, 56, 0.16), rgba(154, 103, 56, 0.09));\n  border-color: rgba(154, 103, 56, 0.28);\n}\n.workspace-fab-live-pill-mode {\n  background: rgba(255, 255, 255, 0.86);\n}\n.workspace-fab-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n  line-height: 1.26;\n  max-width: 60ch;\n  overflow-wrap: anywhere;\n}\n.workspace-fab-chip {\n  display: inline-flex;\n  align-items: center;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(46, 125, 50, 0.18);\n  background: rgba(46, 125, 50, 0.10);\n  color: rgba(46, 125, 50, 0.95);\n  font-weight: 650;\n  font-size: 0.72rem;\n}\n.workspace-fab-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex: 0 0 auto;\n}\n.fab-btn {\n  min-height: 40px;\n  padding: 8px 11px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.76);\n  box-shadow: var(--shadow-sm);\n  font-weight: 600;\n  font-size: 0.84rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  white-space: nowrap;\n  cursor: pointer;\n  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 140ms ease;\n}\n.fab-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  border-color: transparent;\n  box-shadow: 0 14px 28px rgba(154, 103, 56, 0.22);\n}\n.fab-btn-soft {\n  color: rgba(0, 0, 0, 0.78);\n}\n.fab-btn-ghost {\n  color: rgba(0, 0, 0, 0.78);\n}\n.verses-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n  margin-top: 0;\n}\n.verse-arabic-primary {\n  /* Primary focus: Quran dominates; aids are quieter. */\n  font-size: clamp(2.1rem, 2.75vw, 3.05rem);\n  line-height: 2.25;\n  letter-spacing: 0.01em;\n}\n.verse-aid {\n  opacity: 0.82;\n  filter: saturate(0.78);\n  margin-top: 0.4rem;\n  font-size: 0.93em;\n}\n.verse-aid-title {\n  margin-bottom: 4px;\n  color: var(--accent-strong);\n  font-size: 0.66rem;\n  font-weight: 650;\n  font-style: normal;\n  text-transform: uppercase;\n  letter-spacing: 0.04em;\n}\n.inline-setting-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.input-compact {\n  flex: 0 0 140px;\n}\n.inline-setting-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-height: 30px;\n  min-width: 58px;\n  padding: 0 10px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.08);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: var(--accent-strong);\n  font-size: 0.72rem;\n  font-family: inherit;\n  font-weight: 460;\n}\n.settings-section {\n  padding: 18px;\n  border-radius: 18px;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  background: #fffdf9;\n  box-shadow: 0 18px 42px rgba(40, 28, 16, 0.08);\n}\n.settings-heading {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  align-items: start;\n  gap: 16px;\n  padding-bottom: 16px;\n  margin-bottom: 16px;\n  border-bottom: 1px solid rgba(28, 24, 20, 0.07);\n}\n.settings-heading-copy {\n  min-width: 0;\n  display: grid;\n  gap: 6px;\n}\n.settings-heading-copy h3 {\n  margin: 0;\n  color: #1f1d1a;\n  font-size: 1.12rem;\n  font-weight: 560;\n  line-height: 1.15;\n}\n.settings-heading-copy p {\n  margin: 0;\n  color: #6d655d;\n  font-size: 0.78rem;\n  line-height: 1.45;\n}\n.settings-status {\n  min-height: 30px;\n  padding: 0 11px;\n  border-radius: 999px;\n  background: #f7f2eb;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  color: #614326;\n  font-size: 0.64rem;\n  font-weight: 520;\n  letter-spacing: 0.04em;\n  text-transform: uppercase;\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n}\n.settings-status-dot {\n  width: 7px;\n  height: 7px;\n  border-radius: 999px;\n  background: #2f9f68;\n  box-shadow: 0 0 0 4px rgba(47, 159, 104, 0.12);\n}\n.settings-panels {\n  display: grid;\n  gap: 16px;\n}\n.settings-group {\n  display: grid;\n  gap: 10px;\n}\n.settings-group-title {\n  color: #725233;\n  font-size: 0.64rem;\n  font-weight: 560;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n}\n.settings-card-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 10px;\n}\n.settings-display-grid {\n  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);\n}\n.settings-card {\n  min-width: 0;\n  border-radius: 14px;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  background: linear-gradient(180deg, #ffffff, #fbf8f3);\n  box-shadow: 0 8px 18px rgba(40, 28, 16, 0.045);\n}\n.settings-card-toggle {\n  min-height: 126px;\n  padding: 14px;\n  display: grid;\n  align-content: space-between;\n  gap: 14px;\n}\n.settings-card-range {\n  min-height: 126px;\n  padding: 14px;\n  display: grid;\n  gap: 14px;\n}\n.settings-row-copy {\n  min-width: 0;\n  display: grid;\n  gap: 6px;\n}\n.settings-row-copy label {\n  color: #211f1c;\n  font-size: 0.86rem;\n  font-weight: 540;\n  display: inline-flex;\n  align-items: center;\n  gap: 9px;\n  min-width: 0;\n}\n.settings-row-copy small {\n  color: #6f675f;\n  font-size: 0.7rem;\n  line-height: 1.4;\n}\n.settings-icon {\n  width: 32px;\n  height: 32px;\n  border-radius: 10px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  background: #f7f1ea;\n  border: 1px solid rgba(154, 103, 56, 0.13);\n  color: #8c5b2e;\n  flex: 0 0 auto;\n}\n.settings-toggle {\n  width: 100%;\n  min-height: 40px;\n  padding: 7px 14px;\n  border-radius: 10px;\n  font-size: 0.78rem;\n  font-weight: 540;\n  box-shadow: none;\n  border-width: 1px;\n}\n.settings-range-wrap {\n  width: 100%;\n  min-width: 0;\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  align-items: center;\n  gap: 12px;\n}\n.settings-range {\n  min-width: 0;\n  width: 100%;\n  padding: 0;\n  box-shadow: none;\n}\n.settings-apply-section {\n  padding: 12px;\n  border-radius: 14px;\n  background: #f8f2ea;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  display: grid;\n  gap: 8px;\n}\n.settings-apply-primary {\n  width: 100%;\n  min-height: 48px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  background: #8d5a2c;\n  color: #fff;\n  font-size: 0.92rem;\n  font-weight: 560;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  cursor: pointer;\n  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;\n}\n.settings-apply-primary:hover {\n  transform: translateY(-1px);\n  background: #7b4b22;\n  box-shadow: 0 10px 20px rgba(123, 75, 34, 0.24);\n}\n.settings-apply-section small {\n  color: #6f675f;\n  font-size: 0.7rem;\n}\n.tools-footer.settings-footer {\n  background: transparent;\n  border-top: none;\n  box-shadow: none;\n  pointer-events: none;\n}\n.tools-footer.settings-footer .tools-btn {\n  visibility: hidden;\n}\n.offline-list {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n  margin-bottom: 16px;\n}\n.offline-item {\n  background: var(--bg-elevated);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  transition: all 0.2s ease;\n}\n.offline-item:hover {\n  border-color: var(--accent);\n  background: var(--surface);\n}\n.oi-info {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.oi-name {\n  font-weight: 600;\n  font-size: 1rem;\n}\n.oi-meta {\n  font-size: 0.8rem;\n  opacity: 0.7;\n}\n.oi-date {\n  font-size: 0.7rem;\n  opacity: 0.5;\n}\n.oi-actions {\n  display: flex;\n  gap: 8px;\n}\n.oi-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.oi-load:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.oi-delete:hover {\n  background: #ff4d4d;\n  color: white;\n  border-color: #ff4d4d;\n}\n.empty-mini {\n  text-align: center;\n  padding: 32px 16px;\n  background: var(--bg-elevated);\n  border-radius: 20px;\n  border: 1px dashed var(--border);\n}\n.offline-note {\n  margin-top: 24px;\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  display: flex;\n  gap: 10px;\n  font-size: 0.75rem;\n  line-height: 1.4;\n  color: var(--accent);\n}\n\n/* Floating Player */\n.player-bar {\n  position: fixed;\n  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);\n  left: 50%;\n  transform: translateX(-50%);\n  width: min(calc(100vw - 32px), 960px);\n  max-width: 960px;\n  background: rgba(255, 255, 255, 0.98);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 24px;\n  box-shadow: 0 20px 40px rgba(63, 39, 18, 0.12);\n  z-index: 1000;\n  padding: 12px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  /* Avoid iOS Safari compositing artifacts (black bands) from backdrop-filter on fixed elements. */\n  backdrop-filter: none;\n  -webkit-backdrop-filter: none;\n  transition: transform 0.22s ease, opacity 0.22s ease, padding 0.22s ease;\n}\n.player-bar.collapsed {\n  transform: translateX(-50%);\n  opacity: 0.98;\n}\n.player-main {\n  display: grid;\n  grid-template-columns: minmax(150px, 1.1fr) auto minmax(180px, 1fr) auto auto;\n  align-items: center;\n  gap: clamp(10px, 1.6vw, 20px);\n  min-width: 0;\n}\n.player-info {\n  min-width: 0;\n}\n.player-chapter {\n  font-weight: 700;\n  font-size: 0.9rem;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-verse {\n  font-size: 0.75rem;\n  opacity: 0.7;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-eta {\n  color: var(--accent);\n  font-weight: 500;\n  opacity: 1;\n}\n.player-controls {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n}\n.sheet-fade-enter-active,\n.sheet-fade-leave-active {\n  transition: opacity 0.2s ease, transform 0.2s ease;\n}\n.sheet-fade-enter-from,\n.sheet-fade-leave-to {\n  opacity: 0;\n  transform: translateY(8px);\n}\n.player-btn {\n  width: 44px;\n  height: 44px;\n  border-radius: 12px;\n  border: none;\n  background: none;\n  color: var(--text);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.2rem;\n  transition: all 0.2s ease;\n  flex: 0 0 auto;\n}\n.player-btn:hover {\n  background: rgba(154, 103, 56, 0.08);\n}\n.player-play {\n  background: var(--accent);\n  color: white;\n  width: 52px;\n  height: 52px;\n  border-radius: 16px;\n  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.3);\n}\n.player-play:hover {\n  background: rgba(255, 255, 255, 0.88);\n  color: var(--accent);\n  transform: scale(1.05);\n}\n.player-progress-wrap {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  min-width: 0;\n}\n.player-time {\n  font-size: 0.75rem;\n  font-variant-numeric: tabular-nums;\n  opacity: 0.7;\n  min-width: 40px;\n}\n.player-progress-bg {\n  flex: 1;\n  height: 6px;\n  background: var(--bg-elevated);\n  border-radius: 3px;\n  position: relative;\n  cursor: pointer;\n}\n.player-progress-fill {\n  position: absolute;\n  left: 0;\n  top: 0;\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.1s linear;\n}\n\n/* Animations */\n.slide-up-enter-active,\n.slide-up-leave-active {\n  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.slide-up-enter-from,\n.slide-up-leave-to {\n  transform: translate(-50%, 100px);\n  opacity: 0;\n}\n.verse-translation {\n  font-size: calc(0.94rem * var(--en-scale, 1));\n  color: var(--text);\n  line-height: 1.55;\n  padding-top: 10px;\n  margin-top: 8px;\n  border-top: 1px solid var(--border);\n  display: block;\n  opacity: 0.92;\n}\n.verse-transliteration {\n  font-size: calc(0.98rem * var(--en-scale, 1));\n  color: var(--text);\n  font-style: italic;\n  margin-top: 8px;\n  padding-top: 8px;\n  border-top: 1px solid var(--border);\n  line-height: 1.5;\n  opacity: 0.98;\n}\n.verse-words {\n  display: flex;\n  flex-wrap: nowrap;\n  gap: 8px;\n  direction: rtl;\n  margin-top: 12px;\n  padding-top: 10px;\n  border-top: 1px solid var(--border);\n  overflow-x: auto;\n  overflow-y: hidden;\n  -webkit-overflow-scrolling: touch;\n  scroll-snap-type: x proximity;\n  padding-bottom: 8px;\n}\n.word-item {\n  position: relative;\n  background: var(--accent-light);\n  padding: 6px 12px;\n  border-radius: 20px;\n  display: inline-flex;\n  flex-direction: row-reverse;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.75rem;\n  flex: 0 0 auto;\n  scroll-snap-align: center;\n  cursor: help;\n  min-height: 36px;\n}\n.word-item:hover::after,\n.word-item:focus::after {\n  content: attr(data-tooltip);\n  position: absolute;\n  left: 50%;\n  bottom: calc(100% + 8px);\n  transform: translateX(-50%);\n  z-index: 5;\n  width: -moz-max-content;\n  width: max-content;\n  max-width: 220px;\n  padding: 6px 8px;\n  border-radius: 9px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n  color: var(--text);\n  direction: ltr;\n  text-align: center;\n  font-size: 0.72rem;\n  line-height: 1.25;\n}\n.word-arabic {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n}\n.word-meaning {\n  color: var(--text-muted);\n  font-size: calc(0.82rem * var(--en-scale, 1));\n}\n.word-audio-btn {\n  background: none;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 0 4px;\n}\n.field-switch {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.reading-aid-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 8px;\n}\n.tools,\n.tools-body,\n.sheet-content {\n  overflow-x: hidden;\n}\n.live-stats-grid {\n  display: grid;\n  gap: 10px;\n}\n.live-stat-card {\n  min-height: 72px;\n  padding: 14px 16px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 252, 247, 0.9);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.live-stat-label {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  font-weight: 500;\n}\n.live-stat-card strong {\n  color: var(--text);\n  font-size: 1rem;\n  font-weight: 600;\n}\n.resume-copy {\n  margin-bottom: 8px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(251, 245, 238, 0.96));\n  border-radius: 18px;\n  box-shadow: 0 24px 72px rgba(31, 24, 17, 0.22);\n}\n.modal-header h2 {\n  font-size: 1.05rem;\n  font-weight: 600;\n}\n.resume-modal {\n  background: linear-gradient(180deg, rgba(255, 251, 245, 0.99), rgba(248, 241, 233, 0.97));\n}\n.resume-modal .modal-header,\n.resume-modal .modal-body,\n.resume-modal .modal-footer {\n  padding-top: 18px;\n  padding-bottom: 18px;\n}\n.resume-grid .pill,\n.resume-modal .pill {\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid rgba(184, 130, 78, 0.16);\n}\n.wbw-word.highlighted,\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.03);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.24);\n}\n.wbw-word.phrase-highlighted {\n  box-shadow: 0 0 0 2px rgba(184, 130, 78, 0.18);\n}\n.word-item.highlighted,\n.word-item.phrase-highlighted {\n  background: rgba(184, 130, 78, 0.2);\n}\n\n/* Quiz overlay */\n.quiz-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 80;\n  background: rgba(0, 0, 0, 0.35);\n  backdrop-filter: blur(6px);\n  display: grid;\n  place-items: center;\n  padding: 18px;\n}\n.quiz-card {\n  width: min(680px, 100%);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba, rgba(250, 245, 239, 0.95));\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 22px;\n  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);\n  overflow: hidden;\n}\n.quiz-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 18px 22px 14px;\n  border-bottom: 1px solid rgba(0, 0, 0, 0.08);\n}\n.quiz-title {\n  font-weight: 500;\n  font-size: 1.05rem;\n}\n.quiz-subtitle {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.quiz-close {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.7);\n  cursor: pointer;\n  font-size: 24px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.quiz-progress {\n  padding: 14px 22px 0;\n}\n.quiz-progress-bar {\n  height: 4px;\n  background: var(--border);\n  border-radius: 2px;\n  overflow: hidden;\n}\n.quiz-progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n.quiz-stats {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.quiz-body {\n  padding: 18px 22px 22px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.quiz-question {\n  font-weight: 600;\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.quiz-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.4rem;\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  padding: 16px;\n  background: var(--accent-light);\n  border-radius: 16px;\n}\n.quiz-reveal-btn {\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n}\n.quiz-answer {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.quiz-translation {\n  font-size: 0.9rem;\n  line-height: 1.6;\n  color: var(--text);\n  margin-bottom: 16px;\n}\n.quiz-grade-buttons {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.grade-btn {\n  flex: 1;\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.grade-btn.primary {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.quiz-options {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.quiz-option {\n  padding: 12px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  text-align: left;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.quiz-option:hover {\n  background: var(--accent-light);\n  transform: translateX(4px);\n}\n.quiz-summary {\n  padding: 22px;\n  text-align: center;\n}\n.quiz-summary-icon {\n  font-size: 3rem;\n  margin-bottom: 16px;\n}\n.quiz-summary-stats {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin: 20px 0;\n}\n.quiz-summary-stats .stat {\n  padding: 16px;\n  background: var(--surface);\n  border-radius: 16px;\n}\n.stat-label {\n  display: block;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.stat-value {\n  display: block;\n  font-size: 1.5rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.quiz-summary-mistakes {\n  margin: 20px 0;\n}\n.mistake-tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 8px;\n  justify-content: center;\n}\n.mistake-tag {\n  padding: 6px 12px;\n  background: rgba(190, 73, 73, 0.1);\n  border-radius: 20px;\n  font-size: 0.8rem;\n  color: #c0392b;\n}\n.quiz-actions {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n}\n.btn-outline {\n  padding: 10px 24px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n.btn-primary {\n  padding: 10px 24px;\n  border-radius: 12px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n\n/* Fix banner positioning */\n.banner {\n  position: fixed;\n  top: 80px;\n  left: 50%;\n  transform: translateX(-50%);\n  z-index: 1000;\n  min-width: min(560px, calc(100vw - 32px));\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px 14px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: var(--surface-strong);\n  box-shadow: var(--shadow-lg);\n  font-weight: 450;\n  animation: riseSoft 220ms ease-out;\n}\n.navbar {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  z-index: 100; /* Higher than tools? Lower? Tools should be 60, navbar 100 */\n  background: var(--surface-strong);\n}\n\n/* Ensure main content doesn't go under navbar */\n.main.container {\n  padding-top: 80px;\n  /* Adjust to match navbar height + spacing */\n}\n\n/* Mobile adjustment */\n@media (max-width: 768px) {\n.banner {\n    top: calc(env(safe-area-inset-top, 0px) + 60px);\n    width: calc(100% - 32px);\n    min-width: auto;\n}\n.main.container {\n    padding-top: 70px;\n}\n}\n.banner-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.banner-action {\n  border: 0;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  padding: 9px 12px;\n  font-size: 0.78rem;\n  font-weight: 500;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n}\n.banner-x {\n  width: 36px;\n  height: 36px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n}\n\n/* Add this to your \\3c style> */\n.main.container {\n  padding-top: 20px;\n}\n\n/* If you have a navbar, add this */\n.app>.navbar+.main.container,\nbody>.navbar+.app .main.container {\n  padding-top: 80px;\n}\n\n/* Animations */\n@keyframes appFade {\n0% {\n    opacity: 0;\n    transform: translateY(4px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes railIn {\n0% {\n    opacity: 0;\n    transform: translateY(-8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes riseSoft {\n0% {\n    opacity: 0;\n    transform: translateY(8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n\n/* Responsive */\n@media (max-width: 768px) {\n.main {\n    padding: 16px 16px 100px;\n}\n.main.tools-open {\n    padding-right: 16px;\n}\n.tools {\n    left: 0;\n    right: 0;\n    width: 100%;\n}\n.session-rail-stats {\n    grid-template-columns: 1fr 1fr;\n}\n.hero-flow {\n    grid-template-columns: 1fr 1fr;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 8px);\n    justify-content: center;\n}\n.verse-font-controls {\n    gap: 2px;\n    padding: 2px 4px;\n}\n.verse-font-btn {\n    width: 20px;\n    height: 20px;\n}\n.verse-font-size-indicator {\n    min-width: 30px;\n    font-size: 9px;\n}\n}\n@media (max-width: 640px) {\n.quiz-grade-buttons {\n    flex-direction: column;\n}\n.quiz-actions {\n    flex-direction: column;\n}\n.hero-actions,\n  .empty-actions {\n    flex-direction: column;\n}\n.cta {\n    width: 100%;\n}\n}\n\n/* Dark theme overrides */\n[data-theme=\"dark\"] .tools {\n  color: var(--text);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(12, 11, 10, 0.96));\n  border-left-color: var(--border);\n}\n[data-theme=\"dark\"] .sheet-section {\n  border-color: var(--border);\n  background: var(--surface);\n}\n[data-theme=\"dark\"] .tools-top,\n[data-theme=\"dark\"] .tools-footer {\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.92));\n}\n[data-theme=\"dark\"] .tools-footer {\n  background: linear-gradient(to top, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.86), rgba(18, 15, 13, 0));\n}\n[data-theme=\"dark\"] .tools-tabs {\n  background: rgba(255, 255, 255, 0.035);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .tools-tabs button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-tabs button.active {\n  color: var(--text);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .tools-title,\n[data-theme=\"dark\"] .st-title,\n[data-theme=\"dark\"] .technique-copy label,\n[data-theme=\"dark\"] .settings-heading-copy h3,\n[data-theme=\"dark\"] .settings-row-copy label {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .tools-context,\n[data-theme=\"dark\"] .st-sub,\n[data-theme=\"dark\"] .technique-copy small,\n[data-theme=\"dark\"] .technique-control span,\n[data-theme=\"dark\"] .settings-heading-copy p,\n[data-theme=\"dark\"] .settings-row-copy small {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-x,\n[data-theme=\"dark\"] .st-chev,\n[data-theme=\"dark\"] .sheet-toggle,\n[data-theme=\"dark\"] .technique-row,\n[data-theme=\"dark\"] .radio,\n[data-theme=\"dark\"] .toggle-chip,\n[data-theme=\"dark\"] .segmented-control,\n[data-theme=\"dark\"] .technique-preview {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .sheet-toggle {\n  background: rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .st-ico {\n  color: var(--accent-strong);\n  border-color: rgba(239, 193, 141, 0.22);\n  background: rgba(239, 193, 141, 0.10);\n}\n[data-theme=\"dark\"] .segmented-control button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .segmented-control button.active,\n[data-theme=\"dark\"] .toggle-chip.active {\n  color: var(--accent-strong);\n  border-color: rgba(239, 193, 141, 0.42);\n  background: rgba(239, 193, 141, 0.12);\n}\n[data-theme=\"dark\"] .tools-btn-soft {\n  color: var(--text-muted);\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .select,\n[data-theme=\"dark\"] .input {\n  color: var(--text);\n  border-color: var(--border);\n  background: rgba(255, 255, 255, 0.045);\n}\n[data-theme=\"dark\"] .switch {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n}\n[data-theme=\"dark\"] .verse-translation {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .verse-transliteration,\n[data-theme=\"dark\"] .workspace-fab-copy,\n[data-theme=\"dark\"] .workspace-fab-sub,\n[data-theme=\"dark\"] .settings-row-copy small,\n[data-theme=\"dark\"] .field-hint {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .workspace-fab,\n[data-theme=\"dark\"] .workspace-fab-sub span,\n[data-theme=\"dark\"] .workspace-fab-live-pill,\n[data-theme=\"dark\"] .settings-card,\n[data-theme=\"dark\"] .word-item:hover::after,\n[data-theme=\"dark\"] .word-item:focus::after {\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .workspace-fab {\n  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.46), 0 0 0 1px rgba(255, 236, 216, 0.12);\n}\n[data-theme=\"dark\"] .workspace-fab:hover {\n  box-shadow: 0 26px 64px rgba(0, 0, 0, 0.54), 0 0 0 1px rgba(239, 193, 141, 0.20);\n}\n[data-theme=\"dark\"] .settings-section {\n  background: rgba(24, 21, 19, 0.96);\n  border-color: var(--border);\n  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .settings-status {\n  background: rgba(255, 255, 255, 0.05);\n  border-color: rgba(255, 236, 216, 0.12);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .settings-icon {\n  background: rgba(255, 255, 255, 0.04);\n  border-color: rgba(255, 236, 216, 0.12);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .settings-card {\n  background: var(--surface-strong);\n  border-color: rgba(255, 236, 216, 0.10);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .settings-toggle {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 236, 216, 0.14);\n  color: var(--text);\n}\n[data-theme=\"dark\"] .settings-toggle.active {\n  background: rgba(239, 193, 141, 0.13);\n  border-color: rgba(239, 193, 141, 0.42);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .quiz-card {\n  background: rgba(18, 18, 18, 0.92);\n  border-color: rgba(255, 255, 255, 0.10);\n}\n\n/* Sepia theme overrides */\n[data-theme=\"sepia\"] .verse-translation {\n  color: #7a684a;\n}\n\n/* Planner & Analytics UI */\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(12, 10, 8, 0.62);\n  backdrop-filter: blur(8px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 9999;\n  padding: 20px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 250, 243, 0.92));\n  border-radius: 20px;\n  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42);\n  border: 1px solid rgba(255, 255, 255, 0.55);\n  display: flex;\n  flex-direction: column;\n  max-height: 90vh;\n  overflow: hidden;\n  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.resume-modal {\n  width: min(760px, 96vw);\n}\n.resume-modal .modal-header h2 {\n  font-size: clamp(1.25rem, 2.3vw, 1.75rem);\n}\n.resume-saved-at {\n  display: inline-block;\n  margin-top: 4px;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n}\n.resume-grid {\n  margin-top: 12px;\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 10px;\n}\n.resume-grid .pill {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 12px 14px;\n}\n@keyframes modalIn {\nfrom {\n    transform: translateY(10px);\n    opacity: 0.6;\n}\nto {\n    transform: translateY(0);\n    opacity: 1;\n}\n}\n@keyframes modalFadeIn {\nfrom {\n    opacity: 0;\n    transform: translateY(20px) scale(0.95);\n}\nto {\n    opacity: 1;\n    transform: translateY(0) scale(1);\n}\n}\n.modal-header {\n  padding: 20px 24px;\n  border-bottom: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 1.25rem;\n  font-weight: 700;\n}\n.modal-body {\n  padding: 24px;\n  overflow-y: auto;\n}\n.modal-footer {\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--bg-elevated);\n}\n.confirm-modal {\n  max-width: 460px;\n  width: 100%;\n}\n.confirm-copy {\n  color: var(--text-muted);\n  line-height: 1.65;\n}\n.btn-danger {\n  background: #b55041;\n}\n.tools-btn-danger {\n  opacity: 0.82;\n}\n.btn-icon {\n  background: none;\n  border: none;\n  font-size: 1.2rem;\n  color: var(--text-muted);\n  cursor: pointer;\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.btn-icon:hover {\n  background: var(--border);\n  color: var(--text);\n}\n.planner-modal {\n  max-width: 500px;\n  width: 100%;\n}\n.planner-field {\n  margin-bottom: 24px;\n}\n.planner-field label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.planner-select,\n.planner-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.planner-select:focus,\n.planner-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 2px var(--accent-light);\n}\n.verses-per-day-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.quantity-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.quantity-btn:hover:not(:disabled) {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.quantity-btn:disabled {\n  opacity: 0.4;\n  cursor: not-allowed;\n}\n.planner-stats-grid {\n  display: grid;\n  grid-template-columns: repeat(2, 1fr);\n  gap: 12px;\n  margin: 24px 0;\n}\n.planner-stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  transition: all 0.2s;\n}\n.progress-info {\n  display: flex;\n  justify-content: space-between;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.progress-bar-track {\n  height: 6px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-fill {\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.3s ease;\n}\n.modal-footer {\n  display: flex;\n  gap: 12px;\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.btn-secondary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.btn-secondary:hover {\n  background: var(--border);\n}\n.btn-primary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.9rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.btn-primary:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.field-hint {\n  display: block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 6px;\n}\n.pa-lbl {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.analytics-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin-top: 20px;\n}\n.analytics-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.78rem * var(--en-scale, 1));\n  line-height: 1.4;\n}\n.stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 20px;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  transition: transform 0.2s;\n}\n.stat-delta {\n  display: inline-flex;\n  align-items: center;\n  margin-left: 10px;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  font-size: 0.7rem;\n  color: var(--accent-strong);\n  font-weight: 700;\n  vertical-align: middle;\n}\n.stat-card:hover {\n  transform: translateY(-2px);\n  border-color: var(--accent);\n}\n.stat-card i {\n  font-size: 1.8rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.stat-value {\n  font-size: 1.5rem;\n  font-weight: 700;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.stat-label {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n}\n.stat-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.72rem * var(--en-scale, 1));\n  line-height: 1.35;\n}\n.mini-trend {\n  position: relative;\n  width: 80px;\n  height: 24px;\n  margin-top: 10px;\n}\n.mini-trend span {\n  position: absolute;\n  width: 8px;\n  border-radius: 999px;\n  background: linear-gradient(180deg, var(--accent), var(--accent-soft));\n  opacity: 0.9;\n}\n\n/* Home Dashboard UI */\n.home-dashboard {\n  max-width: 800px;\n  margin: 40px auto;\n  padding: 0 20px;\n  animation: modalFadeIn 0.4s ease-out;\n}\n.dashboard-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-end;\n  margin-bottom: 40px;\n  flex-wrap: wrap;\n  gap: 20px;\n}\n.welcome-text {\n  max-width: 500px;\n}\n.header-stats {\n  display: flex;\n  gap: 16px;\n  background: var(--surface);\n  padding: 12px 20px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.mini-stat {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.9rem;\n}\n.mini-stat strong {\n  color: var(--text);\n  font-size: 1rem;\n}\n.dashboard-actions {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));\n  gap: 20px;\n  margin-bottom: 40px;\n}\n.home-dashboard-minimal {\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  min-height: 160px;\n}\n.offcanvas-launcher-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.offcanvas-launcher-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-start-card {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto auto;\n  align-items: center;\n  gap: 18px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.setup-start-copy {\n  min-width: 0;\n}\n.setup-kicker {\n  display: inline-flex;\n  margin-bottom: 6px;\n  color: var(--accent);\n  font-size: 0.72rem;\n  font-weight: 800;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n}\n.setup-start-copy h2 {\n  margin: 0 0 6px;\n  color: var(--text);\n  font-size: clamp(1.2rem, 2vw, 1.65rem);\n  line-height: 1.1;\n}\n.setup-start-copy p {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-review-hint {\n  margin-top: 10px;\n  padding: 10px 12px;\n  border-radius: 12px;\n  background: rgba(184, 130, 78, 0.10);\n  border: 1px solid rgba(184, 130, 78, 0.18);\n  color: var(--accent);\n  font-weight: 700;\n}\n.setup-mode-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(112px, 1fr));\n  gap: 10px;\n}\n.setup-mode-card {\n  min-height: 86px;\n  padding: 12px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: var(--surface);\n  color: var(--text);\n  cursor: pointer;\n  display: grid;\n  justify-items: center;\n  align-content: center;\n  gap: 4px;\n  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;\n}\n.setup-mode-card:hover,\n.setup-mode-card.active {\n  border-color: var(--accent);\n  box-shadow: var(--shadow-sm);\n  transform: translateY(-1px);\n}\n.setup-mode-card i {\n  color: var(--accent);\n  font-size: 1.2rem;\n}\n.setup-mode-card span {\n  font-weight: 800;\n}\n.setup-mode-card small {\n  color: var(--text-muted);\n  font-size: 0.78rem;\n}\n.setup-primary {\n  min-height: 48px;\n  white-space: nowrap;\n}\n.setup-optional-panel,\n.session-tools-panel {\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.68);\n}\n.setup-optional-panel summary,\n.session-tools-panel summary {\n  cursor: pointer;\n  list-style: none;\n  padding: 12px 14px;\n  font-weight: 700;\n  color: var(--text);\n}\n.setup-optional-panel summary::-webkit-details-marker,\n.session-tools-panel summary::-webkit-details-marker {\n  display: none;\n}\n.setup-optional-grid,\n.session-tools-grid {\n  display: grid;\n  gap: 12px;\n  padding: 0 14px 14px;\n}\n.setup-optional-grid {\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.session-tools-grid {\n  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));\n}\n.field-inline-toggle {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.toggle-chip {\n  min-height: 42px;\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  background: var(--surface);\n  color: var(--text);\n  font-family: inherit;\n  font-weight: 540;\n}\n.toggle-chip.active {\n  border-color: var(--accent);\n  color: var(--accent);\n}\n.continue-session-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 16px 18px;\n  margin-bottom: 18px;\n  border: 1px solid var(--accent-soft);\n  border-radius: 18px;\n  background: linear-gradient(135deg, var(--surface), var(--accent-light));\n  box-shadow: var(--shadow-sm);\n  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;\n}\n.continue-session-card:hover {\n  transform: translateY(-2px);\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent);\n}\n.continue-session-copy {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.continue-session-actions {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.continue-session-kicker {\n  font-size: 0.72rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--accent);\n}\n.continue-session-copy small {\n  color: var(--text-muted);\n}\n.continue-session-btn {\n  min-height: 44px;\n  white-space: nowrap;\n}\n.continue-session-dismiss {\n  min-width: 44px;\n  padding-inline: 0;\n  justify-content: center;\n}\n.resume-action {\n  background: linear-gradient(145deg, rgba(154, 103, 56, 0.12), rgba(255, 255, 255, 0.94));\n  border-color: var(--accent-soft);\n}\n.resume-action .action-icon {\n  background: rgba(154, 103, 56, 0.15);\n  color: var(--accent);\n}\n.resume-action .action-arrow {\n  color: var(--accent);\n}\n.action-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n  display: flex;\n  flex-direction: column;\n  position: relative;\n  overflow: hidden;\n}\n.action-card:hover {\n  transform: translateY(-4px);\n  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);\n  border-color: var(--accent);\n}\n.action-card.primary-action {\n  background: linear-gradient(145deg, var(--accent), var(--accent-dark));\n  color: white;\n  border: none;\n}\n.action-card.primary-action .action-icon {\n  background: rgba(255, 255, 255, 0.2);\n  color: white;\n}\n.action-card.primary-action h3,\n.action-card.primary-action p,\n.action-card.primary-action .action-arrow {\n  color: white;\n}\n.action-icon {\n  width: 48px;\n  height: 48px;\n  background: var(--bg-body);\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.5rem;\n  color: var(--accent);\n  margin-bottom: 20px;\n}\n.action-content h3 {\n  font-size: 1.15rem;\n  margin: 0 0 8px 0;\n  color: var(--text);\n}\n.action-content p {\n  font-size: 0.9rem;\n  color: var(--text-muted);\n  margin: 0;\n  line-height: 1.4;\n}\n.action-arrow {\n  position: absolute;\n  bottom: 24px;\n  right: 24px;\n  font-size: 1.2rem;\n  color: var(--accent);\n  opacity: 0;\n  transform: translateX(-10px);\n  transition: all 0.2s ease;\n}\n.action-card:hover .action-arrow {\n  opacity: 1;\n  transform: translateX(0);\n}\n.dashboard-recent {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n}\n.recent-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.recent-header h3 {\n  margin: 0;\n  font-size: 1.1rem;\n}\n.btn-ghost {\n  background: none;\n  border: none;\n  color: var(--accent);\n  font-weight: 500;\n  cursor: pointer;\n  padding: 6px 12px;\n  border-radius: 8px;\n  transition: background 0.2s;\n}\n.btn-ghost:hover {\n  background: var(--accent-light);\n}\n.recent-stats {\n  display: flex;\n  gap: 32px;\n  flex-wrap: wrap;\n}\n.r-stat {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.r-stat span {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.r-stat strong {\n  font-size: 1.4rem;\n  color: var(--text);\n}\n@media (max-width: 768px) {\n.quick-tools-grid {\n    grid-template-columns: 1fr;\n    gap: 8px;\n    padding: 12px;\n}\n.workspace-shell {\n    width: 100%;\n    margin-bottom: 14px;\n}\n.workspace-shell {\n    padding: 14px;\n}\n.workspace-shell-head {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 12px;\n}\n.workspace-shell-actions {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n}\n.workspace-shell-title-row {\n    align-items: flex-start;\n}\n.workspace-shell-phase {\n    min-height: 26px;\n}\n.workspace-shell-meta {\n    gap: 6px;\n}\n.workspace-shell-chaining {\n    gap: 6px;\n}\n.resume-feedback-row {\n    font-size: 0.74rem;\n}\n.resume-grid {\n    grid-template-columns: 1fr;\n}\n.workspace-fab {\n    top: 8px;\n    display: grid;\n    grid-template-columns: minmax(0, 1fr);\n    gap: 8px;\n    padding: 9px;\n    margin: 8px 0 6px;\n    border-radius: 14px;\n}\n.workspace-fab-meta {\n    min-width: 0;\n}\n.workspace-fab-kicker {\n    font-size: 0.64rem;\n}\n.workspace-fab-title {\n    font-size: 0.9rem;\n}\n.workspace-fab-sub {\n    font-size: 0.72rem;\n    gap: 5px;\n}\n.workspace-fab-sub span {\n    flex: 1 1 auto;\n    justify-content: center;\n    min-width: min(128px, 100%);\n}\n.workspace-fab-copy {\n    font-size: 0.78rem;\n}\n.workspace-fab-live {\n    gap: 6px;\n}\n.workspace-fab-live-pill {\n    flex: 1 1 0;\n    min-width: 0;\n    justify-content: center;\n}\n.workspace-fab-actions {\n    display: grid;\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n    gap: 8px;\n    width: 100%;\n}\n.fab-btn {\n    width: 100%;\n    min-width: 0;\n    justify-content: center;\n    padding: 8px 10px;\n    font-size: 0.82rem;\n    min-height: 44px;\n}\n.main-nav-btn,\n  .main-card-primary {\n    width: 100%;\n    min-height: 44px;\n}\n.settings-heading {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 10px;\n    padding-bottom: 12px;\n    margin-bottom: 14px;\n}\n.settings-status {\n    justify-self: start;\n}\n.settings-card-grid,\n  .settings-display-grid {\n    grid-template-columns: minmax(0, 1fr);\n}\n.settings-card-toggle,\n  .settings-card-range {\n    min-height: 0;\n    padding: 13px;\n    gap: 12px;\n}\n.settings-toggle {\n    min-height: 38px;\n}\n.settings-range-wrap {\n    gap: 10px;\n}\n.settings-apply-section {\n    padding: 12px;\n}\n.settings-apply-primary {\n    min-height: 46px;\n    border-radius: 12px;\n    font-size: 0.88rem;\n}\n.setup-start-card {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n    padding: 16px;\n}\n.setup-mode-grid {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.setup-primary {\n    width: 100%;\n    justify-content: center;\n}\n.continue-session-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.dashboard-actions {\n    grid-template-columns: 1fr;\n    gap: 14px;\n    margin-bottom: 20px;\n}\n.offcanvas-launcher-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.action-card {\n    padding: 18px;\n}\n.action-icon {\n    margin-bottom: 14px;\n}\n.continue-session-btn,\n  .btn-primary,\n  .btn-secondary,\n  .tools-btn,\n  .player-btn,\n  .toolbar-chip,\n  .toggle-chip {\n    min-height: 44px;\n}\n.settings-toggle {\n    min-height: 34px;\n}\n.inline-setting-row {\n    align-items: stretch;\n}\n.input-compact,\n  .inline-setting-pill {\n    width: 100%;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.technique-row,\n  .technique-row-main,\n  .technique-control {\n    align-items: stretch;\n    flex-direction: column;\n}\n.technique-toggle,\n  .segmented-control {\n    width: 100%;\n}\n.player-bar {\n    width: calc(100% - 24px);\n    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);\n    padding: 12px 14px;\n}\n.player-bar.collapsed {\n    transform: translateX(-50%);\n}\n.player-main {\n    grid-template-columns: minmax(92px, 0.8fr) auto minmax(72px, 1fr) auto;\n    align-items: center;\n    gap: 8px;\n}\n.player-info {\n    flex: 0 1 120px;\n    min-width: 0;\n}\n.player-chapter {\n    font-size: 0.78rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-verse {\n    font-size: 0.72rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-controls {\n    justify-content: center;\n    gap: 4px;\n}\n.player-progress-wrap {\n    order: 0;\n    min-width: 0;\n    gap: 6px;\n}\n.player-speed-controls {\n    display: none;\n}\n.analytics-grid {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n}\n.session-rail-actions {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.rail-btn {\n    flex: initial;\n    width: 100%;\n    justify-content: center;\n}\n.rail-btn-primary {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.toolbar-chip {\n    flex: initial;\n    width: 100%;\n}\n.font-dropdown {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 4px);\n    justify-content: center;\n    min-width: 0;\n}\n.font-dropdown {\n    width: 100%;\n}\n.font-dropdown-trigger {\n    width: 100%;\n    justify-content: space-between;\n}\n.verse-card {\n    padding: 16px;\n    border-radius: 18px;\n}\n.verse-header {\n    flex-direction: column;\n    align-items: stretch;\n    gap: 12px;\n}\n.verse-badges,\n  .verse-actions {\n    flex-wrap: wrap;\n}\n.verse-actions {\n    justify-content: space-between;\n}\n.verse-font-controls {\n    margin-right: 0;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.modal-content,\n  .confirm-modal,\n  .planner-modal {\n    width: 100%;\n    max-width: 100%;\n    border-radius: 18px;\n}\n.modal-header,\n  .modal-body,\n  .modal-footer {\n    padding-left: 16px;\n    padding-right: 16px;\n}\n.planner-stats-grid {\n    grid-template-columns: 1fr;\n}\n.tools {\n    width: 100vw;\n    max-width: 100vw;\n}\n.tools-top,\n  .tools-body,\n  .tools-footer {\n    padding-left: 14px;\n    padding-right: 14px;\n}\n.tools-tabs {\n    overflow-x: hidden;\n    display: grid;\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n    gap: 8px;\n}\n.tools-tabs button {\n    width: 100%;\n    min-width: 0;\n}\n.reading-aid-grid,\n  .session-tools-grid {\n    grid-template-columns: 1fr;\n}\n.verse-card,\n  .tools,\n  .sheet,\n  .sheet-content {\n    overflow-x: hidden;\n}\n}\n@media (min-width: 769px) and (max-width: 1024px) {\n.dashboard-actions {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n}\n.session-rail-actions {\n    flex-wrap: wrap;\n}\n.reading-toolbar {\n    align-items: flex-start;\n}\n.reading-toolbar-group:first-child {\n    flex: 1 1 100%;\n}\n.toolbar-chip {\n    flex: 0 1 auto;\n}\n.player-bar {\n    width: calc(100vw - 40px);\n}\n.player-main {\n    grid-template-columns: minmax(132px, 0.9fr) auto minmax(150px, 1fr) auto auto;\n    gap: 12px;\n}\n.player-progress-wrap {\n    min-width: 0;\n}\n}\n@media (max-width: 480px) {\n.verse-header {\n    flex-wrap: wrap;\n}\n.verse-badges {\n    flex-wrap: wrap;\n}\n.verse-actions {\n    margin-top: 8px;\n    width: 100%;\n    justify-content: flex-start;\n}\n.session-pill {\n    white-space: normal;\n    text-align: center;\n    justify-content: center;\n}\n.rail-btn,\n  .toolbar-chip {\n    flex: 1 1 100%;\n}\n.player-time {\n    min-width: auto;\n    font-size: 0.7rem;\n}\n.player-progress-wrap {\n    gap: 8px;\n}\n.verse-number,\n  .verse-status-badge,\n  .verse-status-subtle {\n    width: 100%;\n    justify-content: center;\n    text-align: center;\n}\n}\n.verse-status-badge-review {\n  border-color: rgba(183, 28, 28, 0.24);\n  color: #9f1f1f;\n  background: rgba(183, 28, 28, 0.08);\n}\n.verse-card.feedback-mastered {\n  border-left: 4px solid #43a047;\n}\n.verse-card.feedback-weak {\n  border-left: 4px solid #e3a008;\n}\n.verse-card.feedback-repeat {\n  border-left: 4px solid #c62828;\n}\n.main.flow-recall .verse-card.active .verse-arabic {\n  color: transparent;\n  text-shadow: 0 0 22px rgba(232, 237, 247, 0.55);\n}\n.main.flow-practice .verse-card.active .verse-arabic {\n  opacity: 0.45;\n}\n.main.flow-recall .verse-card.active .verse-arabic .tajweed-mark,\n.main.flow-recall .verse-card.active .verse-arabic word,\n.main.flow-recall .verse-card.active .verse-arabic .wbw-word {\n  color: transparent !important;\n  background: transparent !important;\n  box-shadow: none !important;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
