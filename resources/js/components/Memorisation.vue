@@ -670,91 +670,117 @@
             </div>
           </div>
 
-          <!-- SETTINGS TAB -->
-          <div v-else-if="tab === 'settings'" class="sheet">
-            <div class="settings-panels">
-              <div class="settings-notice">
-                <i class="bi bi-info-circle"></i>
-                <span>All changes are applied instantly</span>
+          <!-- SETTINGS TAB - Cleaner with bigger text and Start Session footer -->
+        <div v-else-if="tab === 'settings'" class="sheet">
+          
+          <!-- Display Settings Section -->
+          <section class="sheet-section">
+            <button class="sheet-toggle" @click="toggleSection('display_settings')" type="button">
+              <span class="st-left">
+                <span class="st-ico"><i class="bi bi-display"></i></span>
+                <span class="st-txt">
+                  <span class="st-title">Display</span>
+                  <span class="st-sub">Customize how the Quran appears</span>
+                </span>
+              </span>
+              <span class="st-chev" :class="{ open: sectionOpen.display_settings }"><i class="bi bi-chevron-down"></i></span>
+            </button>
+            <div class="sheet-content" v-show="sectionOpen.display_settings">
+              
+              <!-- Tajweed -->
+              <div class="setting-item">
+                <div class="setting-info">
+                  <div class="setting-label">Tajweed</div>
+                  <div class="setting-description">Recitation color rules (Idgham, Ikhfa, Madd, etc.)</div>
+                </div>
+                <button class="toggle-chip" :class="{ active: tajweedEnabled }" @click="toggleTajweed">
+                  {{ tajweedEnabled ? 'On' : 'Off' }}
+                </button>
               </div>
-              <section class="settings-group">
-                <span class="settings-group-title">Display</span>
-                <div class="settings-card-grid settings-display-grid">
-                  <div class="settings-card settings-card-toggle">
-                    <div class="settings-row-copy">
-                      <label><span class="settings-icon"><i
-                            class="bi bi-palette2"></i></span><span>Tajweed</span></label>
-                      <small>Recitation colors</small>
-                    </div>
-                    <button class="toggle-chip settings-toggle" :class="{ active: tajweedEnabled }"
-                      @click="toggleTajweed">
-                      {{ tajweedEnabled ? 'On' : 'Off' }}
-                    </button>
-                  </div>
-                  <div class="settings-card settings-card-range">
-                    <div class="settings-row-copy">
-                      <label><span class="settings-icon"><i class="bi bi-arrows-angle-expand"></i></span><span>Font
-                          size</span></label>
-                      <small>Verse scale ({{ defaultFontSize }}%)</small>
-                    </div>
-                    <div class="settings-range-wrap">
-                      <input type="range" min="80" max="160" step="5" v-model.number="defaultFontSize"
-                        @input="updateDefaultFontSize" class="input settings-range" aria-label="Font size">
-                      <span class="inline-setting-pill">{{ defaultFontSize }}%</span>
-                    </div>
-                  </div>
+
+              <!-- Font Size -->
+              <div class="setting-item setting-item-range">
+                <div class="setting-info">
+                  <div class="setting-label">Font size</div>
+                  <div class="setting-description">Adjust the Arabic text size for better readability</div>
                 </div>
-              </section>
-              <section class="settings-group">
-                <div class="settings-card-grid">
-                  <div class="settings-card settings-card-toggle">
-                    <div class="settings-row-copy">
-                      <label><span class="settings-icon"><i
-                            class="bi bi-translate"></i></span><span>Translation</span></label>
-                      <small>English meaning</small>
-                    </div>
-                    <button class="toggle-chip settings-toggle" :class="{ active: showTranslation }"
-                      @click="toggleReadingOption('translation')">
-                      {{ showTranslation ? 'On' : 'Off' }}
-                    </button>
-                  </div>
-                  <div class="settings-card settings-card-toggle">
-                    <div class="settings-row-copy">
-                      <label><span class="settings-icon"><i
-                            class="bi bi-type"></i></span><span>Transliteration</span></label>
-                      <small>Latin reading aid</small>
-                    </div>
-                    <button class="toggle-chip settings-toggle" :class="{ active: showTransliteration }"
-                      @click="toggleReadingOption('transliteration')">
-                      {{ showTransliteration ? 'On' : 'Off' }}
-                    </button>
-                  </div>
-                  <div class="settings-card settings-card-toggle">
-                    <div class="settings-row-copy">
-                      <label><span class="settings-icon"><i class="bi bi-grid-3x2-gap"></i></span><span>Word by
-                          word</span></label>
-                      <small>Word chips</small>
-                    </div>
-                    <button class="toggle-chip settings-toggle" :class="{ active: showWordByWord }"
-                      @click="toggleReadingOption('wbw')">
-                      {{ showWordByWord ? 'On' : 'Off' }}
-                    </button>
-                  </div>
-                  <div class="settings-card settings-card-toggle">
-                    <div class="settings-row-copy">
-                      <label><span class="settings-icon"><i class="bi bi-volume-up"></i></span><span>Word
-                          audio</span></label>
-                      <small>Timing and highlight</small>
-                    </div>
-                    <button class="toggle-chip settings-toggle" :class="{ active: wordByWordAudioEnabled }"
-                      @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
-                      {{ wordByWordAudioEnabled ? 'On' : 'Off' }}
-                    </button>
-                  </div>
+                <div class="range-control-compact">
+                  <span class="range-value-badge">{{ defaultFontSize }}%</span>
+                  <input type="range" min="80" max="200" step="5" v-model.number="defaultFontSize"
+                    @input="updateDefaultFontSize" class="input range-slider">
                 </div>
-              </section>
+              </div>
             </div>
+          </section>
+
+          <!-- Reading Aids Section -->
+          <section class="sheet-section">
+            <button class="sheet-toggle" @click="toggleSection('reading_settings')" type="button">
+              <span class="st-left">
+                <span class="st-ico"><i class="bi bi-book-half"></i></span>
+                <span class="st-txt">
+                  <span class="st-title">Reading Aids</span>
+                  <span class="st-sub">Translations and word helpers</span>
+                </span>
+              </span>
+              <span class="st-chev" :class="{ open: sectionOpen.reading_settings }"><i class="bi bi-chevron-down"></i></span>
+            </button>
+            <div class="sheet-content" v-show="sectionOpen.reading_settings">
+              
+              <!-- Translation -->
+              <div class="setting-item">
+                <div class="setting-info">
+                  <div class="setting-label">Translation</div>
+                  <div class="setting-description">English meaning of each verse</div>
+                </div>
+                <button class="toggle-chip" :class="{ active: showTranslation }" @click="toggleReadingOption('translation')">
+                  {{ showTranslation ? 'On' : 'Off' }}
+                </button>
+              </div>
+
+              <!-- Transliteration -->
+              <div class="setting-item">
+                <div class="setting-info">
+                  <div class="setting-label">Transliteration</div>
+                  <div class="setting-description">Latin script pronunciation aid</div>
+                </div>
+                <button class="toggle-chip" :class="{ active: showTransliteration }" @click="toggleReadingOption('transliteration')">
+                  {{ showTransliteration ? 'On' : 'Off' }}
+                </button>
+              </div>
+
+              <!-- Word by Word -->
+              <div class="setting-item">
+                <div class="setting-info">
+                  <div class="setting-label">Word by word</div>
+                  <div class="setting-description">Individual word chips with meanings</div>
+                </div>
+                <button class="toggle-chip" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')">
+                  {{ showWordByWord ? 'On' : 'Off' }}
+                </button>
+              </div>
+
+              <!-- Word Audio -->
+              <div class="setting-item">
+                <div class="setting-info">
+                  <div class="setting-label">Word audio</div>
+                  <div class="setting-description">Audio playback with word highlighting</div>
+                </div>
+                <button class="toggle-chip" :class="{ active: wordByWordAudioEnabled }" @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
+                  {{ wordByWordAudioEnabled ? 'On' : 'Off' }}
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Start Session Footer - ADD THIS -->
+          <div class="settings-start-footer">
+            <button class="settings-start-btn-full" @click="startSessionAndClose">
+              <i class="bi bi-play-fill"></i>
+              <span>Start Session</span>
+            </button>
           </div>
+        </div>
         </div>
 
         <div class="tools-footer" :class="{ 'settings-footer': tab === 'settings' }">
@@ -1424,6 +1450,16 @@ export default {
   },
 
   computed: {
+    tajweedWordAudioConflict() {
+      return this.tajweedEnabled && this.wordByWordAudioEnabled
+    },
+    
+    tajweedWarningMessage() {
+      if (this.tajweedEnabled && this.wordByWordAudioEnabled) {
+        return '⚠️ Tajweed and Word Audio both enabled. Performance may be affected.'
+      }
+      return ''
+    },
     anchorModeDescription() {
       if (!this.anchorModeEnabled) return 'Anchor mode off · use key words as memory hooks'
       const anchors = { 1: 'first/last word', 2: 'key word pairs', 3: 'complete structure' }
@@ -2822,21 +2858,32 @@ export default {
     getDisplayArabic(verse) {
       if (!verse || !verse.arabic) return ''
 
-      // Debug logging - remove in production
+      // Debug logging
       if (this.tajweedEnabled) {
         console.log('Tajweed enabled for verse:', verse.key, 'Has tajweed data:', !!verse.arabic_tajweed)
       }
 
-      // Return tajweed HTML if enabled and available
+      // If Tajweed is enabled AND we have Tajweed data
       if (this.tajweedEnabled && verse.arabic_tajweed) {
         const tajweedHtml = this.normalizeTajweedMarkup(verse.arabic_tajweed)
-        console.log('Tajweed HTML length:', tajweedHtml?.length || 0)
+        
+        // If word-by-word audio is enabled, wrap words in Tajweed HTML
+        if (this.wordByWordAudioEnabled) {
+          return this.wrapTajweedWithWordHighlighting(verse, tajweedHtml)
+        }
+        
         return tajweedHtml
       }
 
-      // Fallback to plain Arabic
-      return this.stripTajweedMarkup(verse.arabic || '')
-    },
+  // Fallback to plain Arabic (with word wrapping if audio enabled)
+  const arabicText = this.stripTajweedMarkup(verse.arabic || '')
+  
+  if (this.wordByWordAudioEnabled) {
+    return this.splitArabicIntoWords(verse)
+  }
+  
+  return arabicText
+},
 
     // Fix banner positioning - update CSS
     toggleKeyboardShortcuts() {
@@ -3181,7 +3228,7 @@ export default {
           ? config.reciterId
           : DEFAULT_ALQURAN_RECITER,
         showWordByWord: !!config.showWordByWord,
-        tajweedEnabled: !!config.tajweedEnabled
+        tajweedEnabled: !!this.tajweedEnabled  // Add this line
       })
     },
 
@@ -3959,18 +4006,22 @@ export default {
     // Alternative: Direct mode toggle with confirmation
     toggleTajweed() {
       this.tajweedEnabled = !this.tajweedEnabled
+      
+      // If enabling Tajweed and word audio is on, show a warning
+      if (this.tajweedEnabled && this.wordByWordAudioEnabled) {
+        this.showBanner(
+          'Tajweed colors enabled. Word audio highlighting works but may affect performance.',
+          'info',
+          3000
+        )
+      }
+      
       this.persistUiState()
       this.persistCentralSessionState()
-
-      // Force re-render of verses to apply tajweed
-      this.$nextTick(() => {
-        this.$forceUpdate()
-        // Also reload verses to ensure fresh data
-        if (this.verses && this.verses.length) {
-          this.loadVerses(this.currentMode)
-        }
-      })
-
+      
+      // Force re-render
+      this.$forceUpdate()
+      
       this.showBanner(
         this.tajweedEnabled ? 'Tajweed colors enabled' : 'Tajweed colors disabled',
         'info',
@@ -4068,25 +4119,26 @@ export default {
     },
     toggleTajweed() {
       this.tajweedEnabled = !this.tajweedEnabled
+      
+      // Clear cache for current config to force reload
+      const currentConfig = this.buildSessionConfig(this.currentMode)
+      const cacheKey = this.getVerseCacheKey(this.currentMode, currentConfig)
+      delete this.verseDataCache[cacheKey]
+      localStorage.removeItem(`telawa.verseCache.${cacheKey}`)
+      
+      // Force reload verses
+      this.loadVerses(this.currentMode)
+      
       this.persistUiState()
       this.persistCentralSessionState()
+      
       this.showBanner(
         this.tajweedEnabled ? 'Tajweed colors enabled' : 'Tajweed colors disabled',
         'info',
         1500
       )
     },
-    updatePlannerSurah() {
-      const selectedSurah = this.chapters.find(c => c.id === this.plannerConfig.surahId)
-      if (selectedSurah) {
-        this.plannerConfig.totalVersesInSurah = selectedSurah.verses_count
-        // Reset versesPerDay if it exceeds total verses
-        if (this.plannerConfig.versesPerDay > this.plannerConfig.totalVersesInSurah) {
-          this.plannerConfig.versesPerDay = this.plannerConfig.totalVersesInSurah
-        }
-      }
-    },
-
+    
     adjustVersesPerDay(change) {
       const newValue = this.plannerConfig.versesPerDay + change
       if (newValue >= 1 && newValue <= this.plannerConfig.totalVersesInSurah) {
@@ -4383,40 +4435,24 @@ export default {
       return this.stripTajweedMarkup(verse.arabic || verse.arabic_tajweed || '')
     },
 
-    wrapTajweedWithWordHighlighting(verse) {
-      if (!verse.arabic_tajweed) return verse.arabic || ''
-
-      // First normalize the Tajweed markup
-      let tajweedHtml = this.normalizeTajweedMarkup(verse.arabic_tajweed)
-
-      // Get the plain words for tokenization
-      let words = []
-      if (verse.words && verse.words.length) {
-        words = verse.words.map(w => w.ar || '').filter(Boolean)
-      } else {
-        words = tokenizeArabicText(verse.arabic)
+    wrapTajweedWithWordHighlighting(verse, tajweedHtml) {
+      if (!tajweedHtml || !verse.words || !verse.words.length) {
+        return this.splitArabicIntoWords(verse)
       }
 
-      if (!words.length) return tajweedHtml
-
-      // For each word, wrap it with word highlighting while preserving internal Tajweed spans
-      let result = tajweedHtml
-      let processedWords = 0
-
-      // Use a safer approach - match text nodes that contain the words
-      // Create a temporary div to parse and manipulate
+      // Create a temporary div to parse the HTML
       const tempDiv = document.createElement('div')
       tempDiv.innerHTML = tajweedHtml
 
+      // Get all text nodes that aren't already wrapped
       const walker = document.createTreeWalker(
         tempDiv,
         NodeFilter.SHOW_TEXT,
         {
-          acceptNode: function (node) {
-            // Only accept text nodes that are not inside already wrapped words
-            if (node.parentElement && node.parentElement.classList &&
-              (node.parentElement.classList.contains('wbw-word') ||
-                node.parentElement.classList.contains('tajweed-mark'))) {
+          acceptNode: function(node) {
+            // Skip if inside a tajweed span (preserve coloring)
+            if (node.parentElement && node.parentElement.classList && 
+                node.parentElement.classList.contains('tajweed-mark')) {
               return NodeFilter.FILTER_SKIP
             }
             return NodeFilter.FILTER_ACCEPT
@@ -4429,41 +4465,37 @@ export default {
         textNodes.push(walker.currentNode)
       }
 
-      // Process each text node to wrap words
+      // Process each text node to wrap individual words
       textNodes.forEach(textNode => {
         let text = textNode.textContent
-        let newHtml = ''
+        let wrappedHtml = ''
         let lastIndex = 0
-
+        
+        // Split by Arabic words (preserving spaces)
+        const words = text.split(/(\s+)/)
+        
         words.forEach((word, idx) => {
-          const wordIndex = text.indexOf(word, lastIndex)
-          if (wordIndex !== -1) {
-            // Add text before the word
-            if (wordIndex > lastIndex) {
-              newHtml += text.substring(lastIndex, wordIndex)
-            }
-            // Wrap the word
-            newHtml += `<word class="wbw-word" data-word-index="${idx}" data-verse-key="${verse.key}">${word}</word>`
-            lastIndex = wordIndex + word.length
-            processedWords++
+          if (word.trim()) {
+            // Find matching word from verse.words
+            const wordIndex = verse.words.findIndex(w => w.ar === word || word.includes(w.ar))
+            const actualIndex = wordIndex >= 0 ? wordIndex : idx
+            
+            wrappedHtml += `<word class="wbw-word" data-word-index="${actualIndex}" data-verse-key="${verse.key}">${word}</word>`
+          } else {
+            wrappedHtml += word // Preserve spaces
           }
         })
-
-        // Add remaining text
-        if (lastIndex < text.length) {
-          newHtml += text.substring(lastIndex)
+        
+        // Replace the text node with wrapped HTML
+        const span = document.createElement('span')
+        span.innerHTML = wrappedHtml
+        textNode.parentNode.replaceChild(span, textNode)
+        
+        // Move children to preserve DOM structure
+        while (span.firstChild) {
+          textNode.parentNode.insertBefore(span.firstChild, span)
         }
-
-        if (newHtml) {
-          const span = document.createElement('span')
-          span.innerHTML = newHtml
-          textNode.parentNode.replaceChild(span, textNode)
-          // Move children to fragment
-          while (span.firstChild) {
-            textNode.parentNode.insertBefore(span.firstChild, span)
-          }
-          textNode.parentNode.removeChild(span)
-        }
+        textNode.parentNode.removeChild(span)
       })
 
       return tempDiv.innerHTML
@@ -4816,7 +4848,6 @@ export default {
       this.audioTimeUpdate = () => {
         this.currentTime = this.audioElement.currentTime
         this.duration = this.audioElement.duration
-        this.updateActiveWaveIndex();  // Move this after currentTime/duration are set
         this.centralSession.audio.currentTime = Number(this.currentTime || 0)
         this.centralSession.audio.speed = Number(this.speed || 1)
 
@@ -6660,6 +6691,527 @@ export default {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* Field header for toggle chips - matching Techniques tab */
+.field-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.field-header label {
+  margin-bottom: 0;
+}
+
+/* Range value pill */
+.range-value-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  padding: 4px 10px;
+  background: var(--accent-light);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* Ensure consistent styling with Techniques tab */
+.sheet-content .field {
+  margin-bottom: 16px;
+}
+
+.sheet-content .field:last-child {
+  margin-bottom: 0;
+}
+
+/* Setting items - matching Techniques tab style */
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+}
+
+.setting-item-range {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+}
+
+.setting-info {
+  flex: 1;
+}
+
+.setting-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.setting-description {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Range control compact */
+.range-control-compact {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.range-value-badge {
+  min-width: 60px;
+  padding: 6px 12px;
+  background: var(--accent-light);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: center;
+}
+
+.range-slider {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--border);
+  -webkit-appearance: none;
+}
+
+.range-slider:focus {
+  outline: none;
+}
+
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--surface);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+/* Larger toggle chips for settings */
+.setting-item .toggle-chip {
+  min-height: 38px;
+  min-width: 80px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .setting-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px 0;
+  }
+  
+  .setting-item .toggle-chip {
+    align-self: flex-start;
+  }
+  
+  .setting-label {
+    font-size: 0.95rem;
+  }
+  
+  .setting-description {
+    font-size: 0.75rem;
+  }
+  
+  .range-control-compact {
+    gap: 12px;
+  }
+  
+  .range-value-badge {
+    min-width: 55px;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Inline field for toggle chips */
+.field-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.field-label-group {
+  flex: 1;
+  min-width: 0;
+}
+
+.field-label-group label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.field-label-group label i {
+  font-size: 0.9rem;
+  color: var(--accent);
+}
+
+.field-label-group small {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+/* Range control */
+.range-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.range-control .input {
+  flex: 1;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .field-inline {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .field-inline .toggle-chip {
+    align-self: flex-start;
+  }
+}
+
+/* Settings Container */
+.settings-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-bottom: 20px;
+}
+
+/* Settings Group */
+.settings-group {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.settings-group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  background: var(--surface-strong);
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+}
+
+.settings-group-header i {
+  font-size: 1rem;
+}
+
+/* Settings Stack */
+.settings-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Settings Row */
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s ease;
+}
+
+.settings-row:last-child {
+  border-bottom: none;
+}
+
+.settings-row:hover {
+  background: var(--accent-light);
+}
+
+.settings-row-info {
+  flex: 1;
+}
+
+.settings-row-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.settings-row-label i {
+  font-size: 1rem;
+  color: var(--accent);
+  width: 20px;
+}
+
+.settings-row-desc {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-left: 30px;
+}
+
+/* Range Row */
+.settings-row-range {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.settings-range-control {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: 30px;
+}
+
+.range-value {
+  min-width: 50px;
+  padding: 4px 8px;
+  background: var(--accent-light);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: center;
+}
+
+.settings-range-input {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  -webkit-appearance: none;
+}
+
+.settings-range-input:focus {
+  outline: none;
+}
+
+.settings-range-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: none;
+}
+
+/* Toggle Button */
+.settings-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.toggle-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 32px;
+  text-align: right;
+}
+
+.settings-toggle-btn.active .toggle-status {
+  color: var(--accent);
+}
+
+.toggle-slider {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: var(--border);
+  border-radius: 24px;
+  transition: all 0.2s ease;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.settings-toggle-btn.active .toggle-slider {
+  background: var(--accent);
+}
+
+.settings-toggle-btn.active .toggle-slider::before {
+  transform: translateX(20px);
+}
+
+/* Warning Notice */
+.settings-notice-warning {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(255, 152, 0, 0.1);
+  border: 1px solid rgba(255, 152, 0, 0.2);
+  border-radius: 12px;
+  font-size: 0.7rem;
+  color: #e6a017;
+}
+
+.settings-notice-warning i {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* Settings Footer Actions */
+.settings-footer-actions {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.settings-reset-btn,
+.settings-start-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.settings-reset-btn {
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.settings-reset-btn:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.settings-start-btn {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: white;
+  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.25);
+}
+
+.settings-start-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.35);
+}
+
+.settings-start-btn:active,
+.settings-reset-btn:active {
+  transform: translateY(0);
+}
+
+/* Dark mode support */
+[data-theme="dark"] .settings-group {
+  background: var(--surface-strong);
+}
+
+[data-theme="dark"] .settings-row:hover {
+  background: rgba(208, 160, 107, 0.08);
+}
+
+[data-theme="dark"] .toggle-slider::before {
+  background: var(--surface);
+}
+
+[data-theme="dark"] .settings-reset-btn {
+  background: var(--surface);
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .settings-row {
+    padding: 14px 16px;
+  }
+  
+  .settings-row-label {
+    font-size: 0.85rem;
+  }
+  
+  .settings-row-desc {
+    font-size: 0.65rem;
+    margin-left: 30px;
+  }
+  
+  .settings-range-control {
+    margin-left: 30px;
+  }
+  
+  .settings-footer-actions {
+    padding: 12px 16px;
+  }
+  
+  .settings-reset-btn,
+  .settings-start-btn {
+    padding: 10px 14px;
+    font-size: 0.8rem;
+  }
 }
 
 /* Technique description styling */
