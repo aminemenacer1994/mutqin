@@ -33,24 +33,32 @@ includesAll('technique controls', [
   /blurModeEnabled = !blurModeEnabled/,
   /v-model\.number="blurIntensity"/,
   /@click="setChainingEnabled\(!chainingEnabled\)"/,
-  /@click="setChainingMethod\('linking'\)"/,
-  /@click="setChainingMethod\('cumulative'\)"/,
+  /@change="setChainingMethod\('linking'\)"/,
+  /@change="setChainingMethod\('cumulative'\)"/,
   /@input="setChainingRepetitions\(Number\(\$event\.target\.value\)\)"/,
   /phase: 'Linking'/,
   /phase: 'Cumulative'/
 ])
 
 includesAll('reading settings controls', [
-  /toggleSettingsOption\('tajweedEnabled'\)/,
-  /toggleSettingsOption\('showTranslation'\)/,
-  /toggleSettingsOption\('showTransliteration'\)/,
-  /toggleSettingsOption\('showWordByWord'\)/,
-  /toggleSettingsOption\('wordByWordAudioEnabled'\)/,
-  /updateSettingsValue\('defaultFontSize', Number\(\$event\.target\.value\)\)/,
+  /v-model\.number="defaultFontSize"/,
+  /@input="updateDefaultFontSize"/,
+  /@click="toggleReadingOption\('translation'\)"/,
+  /@click="toggleReadingOption\('transliteration'\)"/,
+  /@click="toggleReadingOption\('wbw'\)"/,
+  /@click="wordByWordAudioEnabled = !wordByWordAudioEnabled"/,
   /applySettingsChanges\(\{ silent: true \}\)/,
   /syncSettingsDraft\(\)/,
   /toggleSettingsOption\(key\)/,
   /updateSettingsValue\(key, value\)/
+])
+
+includesAll('tajweed independence', [
+  /title="Show tajweed colouring from the Quran API" @click="toggleTajweed"/,
+  /if \(this\.wordByWordAudioEnabled \|\| this\.tajweedEnabled\) \{\s*return this\.splitArabicIntoWords\(verse\)\s*\}/s,
+  /toggleTajweed\(\) \{/,
+  /this\.tajweedEnabled = !this\.tajweedEnabled/,
+  /this\.showBanner\(\s*this\.tajweedEnabled \? 'Tajweed colors enabled' : 'Tajweed colors disabled'/s
 ])
 
 includesAll('workspace application', [
@@ -70,6 +78,30 @@ includesAll('offcanvas workspace sync', [
   /clearWorkspaceForConfigChange\(mode = this\.currentMode\)/,
   /onChapterChange\(event\)/,
   /refreshVerses\(\)/
+])
+
+includesAll('offcanvas stability hooks', [
+  /toolsReturnFocusEl:\s*null/,
+  /syncBodyScrollLock\(locked\)/,
+  /document\.body\.classList\.toggle\('tools-panel-open', !!locked\)/,
+  /focusToolsPanel\(\)/,
+  /restoreToolsFocus\(\)/,
+  /const panelBody = this\.\$refs\.toolsBody/,
+  /if \(this\.showTools\) \{\s*event\.preventDefault\(\)\s*this\.closeToolsPanel\(\)\s*return/s
+])
+
+includesAll('word audio sync stability', [
+  /wordHighlightRequestId:\s*0/,
+  /findWordTimingIndex\(currentTime, timestamps = this\.wordHighlightTimestamps\)/,
+  /queueWordHighlightFrame\(verse = this\.activeVerseRef\)/,
+  /ensureWordHighlightTrack\(verse, options = \{\}\)/,
+  /this\.audioElement\.removeEventListener\('playing', this\.audioPlaying\)/,
+  /this\.audioElement\.removeEventListener\('ratechange', this\.audioRateChange\)/,
+  /this\.audioElement\.addEventListener\('playing', this\.audioPlaying\)/,
+  /this\.audioElement\.addEventListener\('ratechange', this\.audioRateChange\)/,
+  /this\.ensureWordHighlightTrack\(verse\)\.then\(\(\) => \{/,
+  /this\.syncWordHighlightFromAudio\(this\.activeVerseRef\)/,
+  /if \(this\.isPlaying\) this\.queueWordHighlightFrame\(this\.activeVerseRef\)/
 ])
 
 includesAll('chaining runtime application', [
@@ -93,5 +125,8 @@ assert.equal(modeDataMatchesCount, 1, 'modeDataMatchesConfig should have one imp
 
 const rebuildQueueCount = (source.match(/rebuildQueue\(mode = this\.currentMode/g) || []).length
 assert.equal(rebuildQueueCount, 1, 'rebuildQueue should have one implementation')
+
+const toggleTajweedCount = (source.match(/toggleTajweed\(\) \{/g) || []).length
+assert.equal(toggleTajweedCount, 1, 'toggleTajweed should have one implementation')
 
 console.log('mutqin controls wiring passed')

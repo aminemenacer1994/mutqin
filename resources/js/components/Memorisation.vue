@@ -4,7 +4,7 @@
       <span>{{ banner.message }}</span>
       <div class="banner-actions">
         <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
-          }}</button>
+        }}</button>
         <button class="banner-x" @click="banner = null" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
@@ -174,8 +174,8 @@
                     <div class="shortcut-card">
                       <div class="shortcut-card-title">Playback</div>
                       <div class="shortcut-row">
-                        <div class="shortcut-keys"><kbd>Space</kbd></div>
-                        <span>Play / Pause</span>
+                        <div class="shortcut-keys"><kbd>Hold</kbd> <kbd>Space</kbd></div>
+                        <span>Peek blurred upcoming ayahs</span>
                       </div>
                       <div class="shortcut-row">
                         <div class="shortcut-keys"><kbd>Enter</kbd></div>
@@ -183,7 +183,7 @@
                       </div>
                       <div class="shortcut-row">
                         <div class="shortcut-keys"><kbd>P</kbd></div>
-                        <span>Play current verse</span>
+                        <span>Play / Pause audio</span>
                       </div>
                     </div>
                     <div class="shortcut-card">
@@ -227,9 +227,12 @@
               <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" class="verse-card" :class="{
                 active: effectiveActiveVerseKey === verse.key,
                 'serious-training': false,
-                'blur-upcoming': blurModeEnabled && isVerseBlurred(verse.key)
+                'blur-upcoming': blurModeEnabled && isVerseBlurred(verse.key),
+                'peek-revealed': isVersePeekRevealed(verse.key)
               }" @click="onVerseCardClick(verse)" role="button" tabindex="0"
-                @touchstart.passive="onVerseTouchStart($event)" @touchend.passive="onVerseTouchEnd($event)"
+                @mouseenter="onVersePeekEnter(verse.key)" @mouseleave="onVersePeekLeave(verse.key)"
+                @touchstart.passive="onVerseTouchStart($event, verse.key)" @touchend.passive="onVerseTouchEnd($event, verse.key)"
+                @touchcancel.passive="clearTouchPeek"
                 @keydown.enter.prevent="onVerseCardClick(verse)">
                 <div class="verse-header">
                   <div class="verse-badges">
@@ -299,10 +302,25 @@
       </div>
 
       <!-- Advanced Controls Drawer -->
-      <div v-if="showTools" class="tools-backdrop" @click="closeToolsPanel" aria-hidden="true"></div>
-      <aside id="memorisationToolsPanel" ref="toolsPanel" class="tools offcanvas-section" :class="{ open: showTools }"
-        role="dialog" aria-modal="true" aria-labelledby="memorisationToolsTitle"
-        :aria-hidden="showTools ? 'false' : 'true'" tabindex="-1">
+      <div
+        class="tools-backdrop"
+        :class="{ open: showTools }"
+        @click="closeToolsPanel"
+        aria-hidden="true"
+      ></div>
+      <aside 
+          id="memorisationToolsPanel" 
+          ref="toolsPanel" 
+          class="tools offcanvas-section" 
+          :class="{ 'open': showTools }"
+          @click.stop
+          role="dialog" 
+          aria-modal="true" 
+          aria-labelledby="memorisationToolsTitle"
+          :aria-hidden="showTools ? 'false' : 'true'" 
+          tabindex="-1"
+          @keydown.esc.prevent="closeToolsPanel"
+        >
         <div class="tools-top">
           <div class="tools-topbar">
             <div id="memorisationToolsTitle" class="tools-title">
@@ -330,7 +348,7 @@
           </div>
         </div>
 
-        <div class="tools-body compact">
+        <div ref="toolsBody" class="tools-body compact">
           <!-- TOOLS TAB -->
           <div v-if="tab === 'tools'" class="sheet">
             <section class="sheet-section">
@@ -374,7 +392,6 @@
                 </div>
               </div>
             </section>
-
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('advanced_playback')" type="button">
                 <span class="st-left">
@@ -410,218 +427,334 @@
                 </div>
               </div>
             </section>
+            <!-- Repetitions -->
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('repetitions')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-arrow-repeat"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">Repetitions</span>
+                    <span class="st-sub">Repeat each verse before moving on</span>
+                  </span>
+                </span>
+                <span class="st-chev" :class="{ open: sectionOpen.repetitions }">
+                  <i class="bi bi-chevron-down"></i>
+                </span>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.repetitions">
+                <div class="field-stack">
+                  <div class="field">
+                    <div class="field-header">
+                      <label>Repeat count</label>
+                      <span class="range-value-pill">{{ repetitionsPerStep }}x</span>
+                    </div>
+                    <div class="range-control">
+                      <input 
+                        type="range" 
+                        v-model.number="repetitionsPerStep" 
+                        min="1" 
+                        max="50" 
+                        step="1"
+                        class="input technique-range"
+                      />
+                    </div>
+                    <div class="slider-markers">
+                      <span>1x</span><span>12x</span><span>25x</span><span>37x</span><span>50x</span>
+                    </div>
+                    <small class="field-hint">Each verse will be repeated {{ repetitionsPerStep }} time{{ repetitionsPerStep === 1 ? '' : 's' }} before advancing</small>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <!-- Gap between verses -->
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('gap_between')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-pause-circle"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">Gap between verses</span>
+                    <span class="st-sub">Pause after reciter finishes</span>
+                  </span>
+                </span>
+                <span class="st-chev" :class="{ open: sectionOpen.gap_between }">
+                  <i class="bi bi-chevron-down"></i>
+                </span>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.gap_between">
+                <div class="field-stack">
+                  <div class="field">
+                    <label>Pause duration</label>
+                    <div class="radio-group radio-group-tight gap-options">
+                      <label class="radio" :class="{ active: gapBetweenVerses === 'none' }">
+                        <input type="radio" value="none" v-model="gapBetweenVerses"> 
+                        <span class="option-label">None</span>
+                        <span class="option-desc">No pause</span>
+                      </label>
+                      <label class="radio" :class="{ active: gapBetweenVerses === '1x' }">
+                        <input type="radio" value="1x" v-model="gapBetweenVerses"> 
+                        <span class="option-label">1x</span>
+                        <span class="option-desc">Verse duration</span>
+                      </label>
+                      <label class="radio" :class="{ active: gapBetweenVerses === '3s' }">
+                        <input type="radio" value="3s" v-model="gapBetweenVerses"> 
+                        <span class="option-label">3s</span>
+                        <span class="option-desc">Seconds</span>
+                      </label>
+                      <label class="radio" :class="{ active: gapBetweenVerses === '5s' }">
+                        <input type="radio" value="5s" v-model="gapBetweenVerses"> 
+                        <span class="option-label">5s</span>
+                        <span class="option-desc">Seconds</span>
+                      </label>
+                      <label class="radio" :class="{ active: gapBetweenVerses === 'custom' }">
+                        <input type="radio" value="custom" v-model="gapBetweenVerses"> 
+                        <span class="option-label">Custom</span>
+                        <span class="option-desc">Set your own</span>
+                      </label>
+                    </div>
+                    
+                    <div v-if="gapBetweenVerses === 'custom'" class="custom-gap-control mt-2">
+                      <div class="range-control">
+                        <input 
+                          type="range" 
+                          v-model.number="customGapSeconds" 
+                          min="0.5" 
+                          max="10" 
+                          step="0.5"
+                          class="input technique-range"
+                        />
+                        <span class="inline-setting-pill">{{ customGapSeconds }}s</span>
+                      </div>
+                    </div>
+                    
+                    <div class="setting-hint">
+                      <i class="bi bi-info-circle"></i>
+                      <span>Pause after reciter finishes, allowing you to repeat back into the silence</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
 
           <!-- TECHNIQUES TAB -->
-<div v-else-if="tab === 'techniques'" class="sheet">
-  <section class="sheet-section">
-    <button class="sheet-toggle" @click="toggleSection('focus_mode')" type="button">
-      <span class="st-left">
-        <span class="st-ico"><i class="bi bi-bullseye"></i></span>
-        <span class="st-txt">
-          <span class="st-title">Focus Mode</span>
-          <span class="st-sub">Reduce distractions around the active ayah</span>
-        </span>
-      </span>
-      <div class="st-right-group">
-        <div class="toggle-switch" :class="{ active: focusModeEnabled }" @click="focusModeEnabled = !focusModeEnabled">
-          <div class="toggle-switch-knob"></div>
-        </div>
-        <span class="st-chev" :class="{ open: sectionOpen.focus_mode }">
-          <i class="bi bi-chevron-down"></i>
-        </span>
-      </div>
-    </button>
-    <div class="sheet-content" v-show="sectionOpen.focus_mode">
-      <div class="field-stack">
-        <div class="field">
-          <div class="technique-description">
-            <i class="bi bi-info-circle-fill"></i>
-            <span>Focus Mode dims all non-active verses, helping you concentrate on the current ayah without distractions.</span>
-          </div>
-          <div class="technique-best">
-            <i class="bi bi-check-circle-fill"></i>
-            <span>Best for: Deep memorisation sessions</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+          <div v-else-if="tab === 'techniques'" class="sheet">
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('focus_mode')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-bullseye"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">Focus Mode</span>
+                    <span class="st-sub">Reduce distractions around the active ayah</span>
+                  </span>
+                </span>
+                <div class="st-right-group">
+                  <div class="toggle-switch" :class="{ active: focusModeEnabled }"
+                    @click="focusModeEnabled = !focusModeEnabled">
+                    <div class="toggle-switch-knob"></div>
+                  </div>
+                  <span class="st-chev" :class="{ open: sectionOpen.focus_mode }">
+                    <i class="bi bi-chevron-down"></i>
+                  </span>
+                </div>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.focus_mode">
+                <div class="field-stack">
+                  <div class="field">
+                    <div class="technique-description">
+                      <i class="bi bi-info-circle-fill"></i>
+                      <span>Focus Mode dims all non-active verses, helping you concentrate on the current ayah without
+                        distractions.</span>
+                    </div>
+                    <div class="technique-best">
+                      <i class="bi bi-check-circle-fill"></i>
+                      <span>Best for: Deep memorisation sessions</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
 
-  <section class="sheet-section">
-    <button class="sheet-toggle" @click="toggleSection('blur_mode')" type="button">
-      <span class="st-left">
-        <span class="st-ico"><i class="bi bi-cloud-haze2"></i></span>
-        <span class="st-txt">
-          <span class="st-title">Blur Mode</span>
-          <span class="st-sub">Progressive concealment for active recall</span>
-        </span>
-      </span>
-      <div class="st-right-group">
-        <button class="toggle-chip" :class="{ active: blurModeEnabled }"
-          @click="blurModeEnabled = !blurModeEnabled" type="button">
-          {{ blurModeEnabled ? 'On' : 'Off' }}
-        </button>
-        <span class="st-chev" :class="{ open: sectionOpen.blur_mode }"><i class="bi bi-chevron-down"></i></span>
-      </div>
-    </button>
-    <div class="sheet-content" v-show="sectionOpen.blur_mode">
-      <div class="field-stack">
-        <div class="field">
-          <div class="technique-description">
-            <i class="bi bi-info-circle-fill"></i>
-            <span>Blurs upcoming verses, requiring you to recall them before revealing.</span>
-          </div>
-          <div class="technique-best">
-            <i class="bi bi-check-circle-fill"></i>
-            <span>Best for: Active recall testing</span>
-          </div>
-        </div>
-        <div v-if="blurModeEnabled" class="field">
-          <label>Blur Intensity</label>
-          <div class="range-control">
-            <input type="range" min="4" max="18" step="1" v-model.number="blurIntensity" class="input">
-            <span class="inline-setting-pill">{{ blurIntensity }}px</span>
-          </div>
-          <small class="field-hint"><kbd>Spacebar</kbd> or hover to temporarily see clearly</small>
-        </div>
-      </div>
-    </div>
-  </section>
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('blur_mode')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-cloud-haze2"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">Blur Mode</span>
+                    <span class="st-sub">Progressive concealment for active recall</span>
+                  </span>
+                </span>
+                <div class="st-right-group">
+                  <button class="toggle-chip" :class="{ active: blurModeEnabled }"
+                    @click="blurModeEnabled = !blurModeEnabled" type="button">
+                    {{ blurModeEnabled ? 'On' : 'Off' }}
+                  </button>
+                  <span class="st-chev" :class="{ open: sectionOpen.blur_mode }"><i
+                      class="bi bi-chevron-down"></i></span>
+                </div>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.blur_mode">
+                <div class="field-stack">
+                  <div class="field">
+                    <div class="technique-description">
+                      <i class="bi bi-info-circle-fill"></i>
+                      <span>Blurs upcoming verses, requiring you to recall them before revealing.</span>
+                    </div>
+                    <div class="technique-best">
+                      <i class="bi bi-check-circle-fill"></i>
+                      <span>Best for: Active recall testing</span>
+                    </div>
+                  </div>
+                  <div v-if="blurModeEnabled" class="field">
+                    <label>Blur Intensity</label>
+                    <div class="range-control">
+                      <input type="range" min="4" max="18" step="1" v-model.number="blurIntensity" class="input">
+                      <span class="inline-setting-pill">{{ blurIntensity }}px</span>
+                    </div>
+                    <small class="field-hint">Hold <kbd>Space</kbd>, hover, or long-press to peek temporarily</small>
+                  </div>
+                </div>
+              </div>
+            </section>
 
-  <section class="sheet-section">
-    <button class="sheet-toggle" @click="toggleSection('chaining')" type="button">
-      <span class="st-left">
-        <span class="st-ico"><i class="bi bi-link-45deg"></i></span>
-        <span class="st-txt">
-          <span class="st-title">Chaining</span>
-          <span class="st-sub">{{ chainingMethodDescription }}</span>
-        </span>
-      </span>
-      <div class="st-right-group">
-        <button class="toggle-chip" :class="{ active: chainingEnabled }"
-          @click="setChainingEnabled(!chainingEnabled)" type="button">
-          {{ chainingEnabled ? 'On' : 'Off' }}
-        </button>
-        <span class="st-chev" :class="{ open: sectionOpen.chaining }"><i class="bi bi-chevron-down"></i></span>
-      </div>
-    </button>
-    <div class="sheet-content" v-show="sectionOpen.chaining">
-      <div class="field-stack">
-        <div class="field">
-          <div class="technique-description">
-            <i class="bi bi-info-circle-fill"></i>
-            <span>{{ chainingMethod === 'cumulative' ? 'Build longer runs by adding one ayah at a time.' : 'Strengthen transitions between neighbouring ayahs.' }}</span>
-          </div>
-          <div class="technique-best">
-            <i class="bi bi-check-circle-fill"></i>
-            <span>Best for: Building long passages</span>
-          </div>
-        </div>
-        <div v-if="chainingEnabled" class="field">
-          <label>Method</label>
-          <div class="radio-group">
-            <label class="radio">
-              <input type="radio" value="linking" v-model="chainingMethod" @change="setChainingMethod('linking')">
-              Linking
-            </label>
-            <label class="radio">
-              <input type="radio" value="cumulative" v-model="chainingMethod" @change="setChainingMethod('cumulative')">
-              Cumulative
-            </label>
-          </div>
-          <small class="field-hint">{{ chainingMethod === 'linking' ? 'Practice ayahs individually, then in pairs.' : 'Start with first ayah, then add one more each time.' }}</small>
-        </div>
-        <div v-if="chainingEnabled" class="field">
-          <label>Repeats per step</label>
-          <div class="range-control">
-            <input type="range" min="1" max="5" step="1" :value="chainingRepetitions"
-              @input="setChainingRepetitions(Number($event.target.value))" class="input">
-            <span class="inline-setting-pill">{{ chainingRepetitions }}</span>
-          </div>
-          <small class="field-hint">Number of times to repeat each chaining step</small>
-        </div>
-        <div v-if="chainingEnabled" class="technique-preview-block">
-          <i class="bi bi-eye"></i>
-          <span>{{ chainingMethodPreview }}</span>
-        </div>
-      </div>
-    </div>
-  </section>
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('chaining')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-link-45deg"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">Chaining</span>
+                    <span class="st-sub">{{ chainingMethodDescription }}</span>
+                  </span>
+                </span>
+                <div class="st-right-group">
+                  <button class="toggle-chip" :class="{ active: chainingEnabled }"
+                    @click="setChainingEnabled(!chainingEnabled)" type="button">
+                    {{ chainingEnabled ? 'On' : 'Off' }}
+                  </button>
+                  <span class="st-chev" :class="{ open: sectionOpen.chaining }"><i
+                      class="bi bi-chevron-down"></i></span>
+                </div>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.chaining">
+                <div class="field-stack">
+                  <div class="field">
+                    <div class="technique-description">
+                      <i class="bi bi-info-circle-fill"></i>
+                      <span>{{ chainingMethod === 'cumulative' ? 'Build longer runs by adding one ayah at a time.' :
+                        'Strengthen transitions between neighbouring ayahs.' }}</span>
+                    </div>
+                    <div class="technique-best">
+                      <i class="bi bi-check-circle-fill"></i>
+                      <span>Best for: Building long passages</span>
+                    </div>
+                  </div>
+                  <div v-if="chainingEnabled" class="field">
+                    <label>Method</label>
+                    <div class="radio-group">
+                      <label class="radio">
+                        <input type="radio" value="linking" v-model="chainingMethod"
+                          @change="setChainingMethod('linking')">
+                        Linking
+                      </label>
+                      <label class="radio">
+                        <input type="radio" value="cumulative" v-model="chainingMethod"
+                          @change="setChainingMethod('cumulative')">
+                        Cumulative
+                      </label>
+                    </div>
+                    <small class="field-hint">{{ chainingMethod === 'linking' ? 'Practice ayahs individually, then in pairs.' : 'Start with first ayah, then add one more each time.' }}</small>
+                  </div>
+                  <div v-if="chainingEnabled" class="field">
+                    <label>Repeats per step</label>
+                    <div class="range-control">
+                      <input type="range" min="1" max="5" step="1" :value="chainingRepetitions"
+                        @input="setChainingRepetitions(Number($event.target.value))" class="input">
+                      <span class="inline-setting-pill">{{ chainingRepetitions }}</span>
+                    </div>
+                    <small class="field-hint">Number of times to repeat each chaining step</small>
+                  </div>
+                  <div v-if="chainingEnabled" class="technique-preview-block">
+                    <i class="bi bi-eye"></i>
+                    <span>{{ chainingMethodPreview }}</span>
+                  </div>
+                </div>
+              </div>
+            </section>
 
-  <section class="sheet-section">
-    <button class="sheet-toggle" @click="toggleSection('anchor_mode')" type="button">
-      <span class="st-left">
-        <span class="st-ico"><i class="bi bi-pin-angle-fill"></i></span>
-        <span class="st-txt">
-          <span class="st-title">Anchor Mode</span>
-          <span class="st-sub">Mental hooks using key words</span>
-        </span>
-      </span>
-      <div class="st-right-group">
-        <button class="toggle-chip" :class="{ active: anchorModeEnabled }"
-          @click="toggleAnchorMode" type="button">
-          {{ anchorModeEnabled ? 'On' : 'Off' }}
-        </button>
-        <span class="st-chev" :class="{ open: sectionOpen.anchor_mode }"><i class="bi bi-chevron-down"></i></span>
-      </div>
-    </button>
-    <div class="sheet-content" v-show="sectionOpen.anchor_mode">
-      <div class="field-stack">
-        <div class="field">
-          <div class="technique-description">
-            <i class="bi bi-info-circle-fill"></i>
-            <span>Highlights key words as memory anchors to help recall the entire ayah.</span>
-          </div>
-          <div class="technique-best">
-            <i class="bi bi-check-circle-fill"></i>
-            <span>Best for: Memorising key vocabulary</span>
-          </div>
-        </div>
-        <div v-if="anchorModeEnabled" class="field">
-          <label>Anchor points per ayah</label>
-          <select v-model.number="anchorCount" @change="onAnchorCountChange" class="select">
-            <option :value="1">1 anchor (center word)</option>
-            <option :value="2">2 anchors (first + last)</option>
-          </select>
-          <small class="field-hint">{{ anchorModeDescription }}</small>
-        </div>
-      </div>
-    </div>
-  </section>
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('anchor_mode')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-pin-angle-fill"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">Anchor Mode</span>
+                    <span class="st-sub">Mental hooks using key words</span>
+                  </span>
+                </span>
+                <div class="st-right-group">
+                  <button class="toggle-chip" :class="{ active: anchorModeEnabled }" @click="toggleAnchorMode"
+                    type="button">
+                    {{ anchorModeEnabled ? 'On' : 'Off' }}
+                  </button>
+                  <span class="st-chev" :class="{ open: sectionOpen.anchor_mode }"><i
+                      class="bi bi-chevron-down"></i></span>
+                </div>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.anchor_mode">
+                <div class="field-stack">
+                  <div class="field">
+                    <div class="technique-description">
+                      <i class="bi bi-info-circle-fill"></i>
+                      <span>Highlights key words as memory anchors to help recall the entire ayah.</span>
+                    </div>
+                    <div class="technique-best">
+                      <i class="bi bi-check-circle-fill"></i>
+                      <span>Best for: Memorising key vocabulary</span>
+                    </div>
+                  </div>
+                  <div v-if="anchorModeEnabled" class="field">
+                    <label>Anchor points per ayah</label>
+                    <select v-model.number="anchorCount" @change="onAnchorCountChange" class="select">
+                      <option :value="1">1 anchor (center word)</option>
+                      <option :value="2">2 anchors (first + last)</option>
+                    </select>
+                    <small class="field-hint">{{ anchorModeDescription }}</small>
+                  </div>
+                </div>
+              </div>
+            </section>
 
-  <!-- Quick Presets -->
-  <section class="sheet-section">
-    <button class="sheet-toggle" @click="toggleSection('presets')" type="button">
-      <span class="st-left">
-        <span class="st-ico"><i class="bi bi-magic"></i></span>
-        <span class="st-txt">
-          <span class="st-title">Quick Presets</span>
-          <span class="st-sub">One-click technique combinations</span>
-        </span>
-      </span>
-      <span class="st-chev" :class="{ open: sectionOpen.presets }"><i class="bi bi-chevron-down"></i></span>
-    </button>
-    <div class="sheet-content" v-show="sectionOpen.presets">
-      <div class="field-stack">
-        <div class="field">
-          <div class="presets-grid">
-            <button class="preset-btn" @click="applyPreset('chain')">
-              <i class="bi bi-link-45deg"></i> Chain + Anchors
-            </button>
-            <button class="preset-btn" @click="applyPreset('blur')">
-              <i class="bi bi-cloud-haze2"></i> Pure Recall
-            </button>
-            <button class="preset-btn" @click="applyPreset('focus')">
-              <i class="bi bi-bullseye"></i> Deep Focus
-            </button>
+            <!-- Quick Presets -->
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('presets')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-magic"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">Quick Presets</span>
+                    <span class="st-sub">One-click technique combinations</span>
+                  </span>
+                </span>
+                <span class="st-chev" :class="{ open: sectionOpen.presets }"><i class="bi bi-chevron-down"></i></span>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.presets">
+                <div class="field-stack">
+                  <div class="field">
+                    <div class="presets-grid">
+                      <button class="preset-btn" @click="applyPreset('chain')">
+                        <i class="bi bi-link-45deg"></i> Chain + Anchors
+                      </button>
+                      <button class="preset-btn" @click="applyPreset('blur')">
+                        <i class="bi bi-cloud-haze2"></i> Pure Recall
+                      </button>
+                      <button class="preset-btn" @click="applyPreset('focus')">
+                        <i class="bi bi-bullseye"></i> Deep Focus
+                      </button>
+                    </div>
+                    <small class="field-hint">Quickly apply recommended technique combinations based on your
+                      goal</small>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
-          <small class="field-hint">Quickly apply recommended technique combinations based on your goal</small>
-        </div>
-      </div>
-    </div>
-  </section>
-</div>
 
           <!-- SAVED TAB -->
           <div v-else-if="tab === 'saved'" class="sheet">
@@ -670,117 +803,111 @@
             </div>
           </div>
 
-          <!-- SETTINGS TAB - Cleaner with bigger text and Start Session footer -->
-        <div v-else-if="tab === 'settings'" class="sheet">
-          
-          <!-- Display Settings Section -->
-          <section class="sheet-section">
-            <button class="sheet-toggle" @click="toggleSection('display_settings')" type="button">
-              <span class="st-left">
-                <span class="st-ico"><i class="bi bi-display"></i></span>
-                <span class="st-txt">
-                  <span class="st-title">Display</span>
-                  <span class="st-sub">Customize how the Quran appears</span>
+          <!-- SETTINGS TAB - Same layout as Techniques tab -->
+          <div v-else-if="tab === 'settings'" class="sheet">
+
+            <!-- Display Settings Section -->
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('display_settings')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-display"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">Display</span>
+                    <span class="st-sub">Customize how the Quran appears</span>
+                  </span>
                 </span>
-              </span>
-              <span class="st-chev" :class="{ open: sectionOpen.display_settings }"><i class="bi bi-chevron-down"></i></span>
-            </button>
-            <div class="sheet-content" v-show="sectionOpen.display_settings">
-              
-              <!-- Tajweed -->
-              <div class="setting-item">
-                <div class="setting-info">
-                  <div class="setting-label">Tajweed</div>
-                  <div class="setting-description">Recitation color rules (Idgham, Ikhfa, Madd, etc.)</div>
-                </div>
-                <button class="toggle-chip" :class="{ active: tajweedEnabled }" @click="toggleTajweed">
-                  {{ tajweedEnabled ? 'On' : 'Off' }}
-                </button>
-              </div>
+                <span class="st-chev" :class="{ open: sectionOpen.display_settings }"><i
+                    class="bi bi-chevron-down"></i></span>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.display_settings">
 
-              <!-- Font Size -->
-              <div class="setting-item setting-item-range">
-                <div class="setting-info">
-                  <div class="setting-label">Font size</div>
-                  <div class="setting-description">Adjust the Arabic text size for better readability</div>
+                <!-- Tajweed -->
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <div class="setting-label">Tajweed</div>
+                    <div class="setting-description">Recitation color rules (Idgham, Ikhfa, Madd, etc.)</div>
+                  </div>
                 </div>
-                <div class="range-control-compact">
-                  <span class="range-value-badge">{{ defaultFontSize }}%</span>
-                  <input type="range" min="80" max="200" step="5" v-model.number="defaultFontSize"
-                    @input="updateDefaultFontSize" class="input range-slider">
+
+                <!-- Font Size -->
+                <div class="setting-item setting-item-range">
+                  <div class="setting-info">
+                    <div class="setting-label">Font size</div>
+                    <div class="setting-description">Adjust the Arabic text size for better readability</div>
+                  </div>
+                  <div class="range-control-compact">
+                    <span class="range-value-badge">{{ defaultFontSize }}%</span>
+                    <input type="range" min="80" max="200" step="5" v-model.number="defaultFontSize"
+                      @input="updateDefaultFontSize" class="input range-slider">
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
+            </section>
 
-          <!-- Reading Aids Section -->
-          <section class="sheet-section">
-            <button class="sheet-toggle" @click="toggleSection('reading_settings')" type="button">
-              <span class="st-left">
-                <span class="st-ico"><i class="bi bi-book-half"></i></span>
-                <span class="st-txt">
-                  <span class="st-title">Reading Aids</span>
-                  <span class="st-sub">Translations and word helpers</span>
+            <!-- Reading Aids Section -->
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('reading_settings')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-book-half"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">Reading Aids</span>
+                    <span class="st-sub">Translations and word helpers</span>
+                  </span>
                 </span>
-              </span>
-              <span class="st-chev" :class="{ open: sectionOpen.reading_settings }"><i class="bi bi-chevron-down"></i></span>
-            </button>
-            <div class="sheet-content" v-show="sectionOpen.reading_settings">
-              
-              <!-- Translation -->
-              <div class="setting-item">
-                <div class="setting-info">
-                  <div class="setting-label">Translation</div>
-                  <div class="setting-description">English meaning of each verse</div>
-                </div>
-                <button class="toggle-chip" :class="{ active: showTranslation }" @click="toggleReadingOption('translation')">
-                  {{ showTranslation ? 'On' : 'Off' }}
-                </button>
-              </div>
+                <span class="st-chev" :class="{ open: sectionOpen.reading_settings }"><i
+                    class="bi bi-chevron-down"></i></span>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.reading_settings">
 
-              <!-- Transliteration -->
-              <div class="setting-item">
-                <div class="setting-info">
-                  <div class="setting-label">Transliteration</div>
-                  <div class="setting-description">Latin script pronunciation aid</div>
+                <!-- Translation -->
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <div class="setting-label">Translation</div>
+                    <div class="setting-description">English meaning of each verse</div>
+                  </div>
+                  <button class="toggle-chip" :class="{ active: showTranslation }"
+                    @click="toggleReadingOption('translation')">
+                    {{ showTranslation ? 'On' : 'Off' }}
+                  </button>
                 </div>
-                <button class="toggle-chip" :class="{ active: showTransliteration }" @click="toggleReadingOption('transliteration')">
-                  {{ showTransliteration ? 'On' : 'Off' }}
-                </button>
-              </div>
 
-              <!-- Word by Word -->
-              <div class="setting-item">
-                <div class="setting-info">
-                  <div class="setting-label">Word by word</div>
-                  <div class="setting-description">Individual word chips with meanings</div>
+                <!-- Transliteration -->
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <div class="setting-label">Transliteration</div>
+                    <div class="setting-description">Latin script pronunciation aid</div>
+                  </div>
+                  <button class="toggle-chip" :class="{ active: showTransliteration }"
+                    @click="toggleReadingOption('transliteration')">
+                    {{ showTransliteration ? 'On' : 'Off' }}
+                  </button>
                 </div>
-                <button class="toggle-chip" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')">
-                  {{ showWordByWord ? 'On' : 'Off' }}
-                </button>
-              </div>
 
-              <!-- Word Audio -->
-              <div class="setting-item">
-                <div class="setting-info">
-                  <div class="setting-label">Word audio</div>
-                  <div class="setting-description">Audio playback with word highlighting</div>
+                <!-- Word by Word -->
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <div class="setting-label">Word by word</div>
+                    <div class="setting-description">Individual word chips with meanings</div>
+                  </div>
+                  <button class="toggle-chip" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')">
+                    {{ showWordByWord ? 'On' : 'Off' }}
+                  </button>
                 </div>
-                <button class="toggle-chip" :class="{ active: wordByWordAudioEnabled }" @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
-                  {{ wordByWordAudioEnabled ? 'On' : 'Off' }}
-                </button>
-              </div>
-            </div>
-          </section>
 
-          <!-- Start Session Footer - ADD THIS -->
-          <div class="settings-start-footer">
-            <button class="settings-start-btn-full" @click="startSessionAndClose">
-              <i class="bi bi-play-fill"></i>
-              <span>Start Session</span>
-            </button>
+                <!-- Word Audio -->
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <div class="setting-label">Word audio</div>
+                    <div class="setting-description">Audio playback with word highlighting</div>
+                  </div>
+                  <button class="toggle-chip" :class="{ active: wordByWordAudioEnabled }"
+                    @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
+                    {{ wordByWordAudioEnabled ? 'On' : 'Off' }}
+                  </button>
+                </div>
+              </div>
+            </section>
           </div>
-        </div>
         </div>
 
         <div class="tools-footer" :class="{ 'settings-footer': tab === 'settings' }">
@@ -830,29 +957,95 @@
       </div>
     </div>
 
-    <!-- Save Session Name Modal - Add after your existing modals -->
-    <div class="modal-overlay" v-if="showSaveNameModal" @click.self="showSaveNameModal = false">
-      <div class="modal-content save-name-modal">
+    <!-- Save Session Name Modal - Clean & Updated Version -->
+    <div class="modal-overlay" v-if="showSaveNameModal" @click.self="closeSaveModal">
+      <div class="modal-content save-name-modal" role="dialog" aria-modal="true" aria-labelledby="saveModalTitle">
         <div class="modal-header">
-          <h2><i class="bi bi-save"></i> Save Session</h2>
-          <button class="btn-icon" @click="showSaveNameModal = false"><i class="bi bi-x-lg"></i></button>
+          <div class="modal-header-icon">
+            <i class="bi bi-bookmark-plus-fill"></i>
+          </div>
+          <div class="modal-header-text">
+            <h2 id="saveModalTitle">Save Memorisation Session</h2>
+            <p>Name your session to easily find and resume it later</p>
+          </div>
+          <button class="modal-close-btn" @click="closeSaveModal" aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+          </button>
         </div>
+
         <div class="modal-body">
-          <p class="save-modal-desc">Give your session a name to easily find it later</p>
-          <div class="save-name-input-group">
-            <label>Session Name</label>
-            <input type="text" v-model="saveSessionName" class="save-name-input" placeholder="e.g., Al-Fatihah Focus"
-              @keyup.enter="confirmSaveSession" autofocus />
+          <!-- Session Preview Card -->
+          <div class="session-preview-card">
+            <div class="preview-surah">
+              <i class="bi bi-book"></i>
+              <span>{{ currentChapter?.name_simple || 'No surah selected' }}</span>
+            </div>
+            <div class="preview-range">
+              <i class="bi bi-text-paragraph"></i>
+              <span>Ayahs {{ rangeStart }} – {{ rangeEnd }}</span>
+            </div>
+            <div class="preview-stats">
+              <span class="preview-stat">
+                <i class="bi bi-files"></i>
+                {{ rangeEnd - rangeStart + 1 }} verses
+              </span>
+              <span class="preview-stat">
+                <i class="bi bi-mic"></i>
+                {{ getReciterName() }}
+              </span>
+            </div>
           </div>
-          <div class="save-preview-info">
-            <i class="bi bi-info-circle"></i>
-            <span>{{ currentChapter?.name_simple || 'Surah' }} · {{ rangeStart }}-{{ rangeEnd }}</span>
+
+          <!-- Name Input Field -->
+          <div class="name-input-group" :class="{ 'has-error': nameError }">
+            <label for="sessionName">
+              <i class="bi bi-pencil-square"></i>
+              Session Name
+            </label>
+            <input id="sessionName" type="text" v-model="saveSessionName" class="name-input"
+              :class="{ 'error': nameError }" placeholder="e.g., Al-Fatihah Focus, Evening Review, Week 1 Progress"
+              @keyup.enter="confirmSaveSession" @input="clearNameError" autofocus maxlength="50" />
+            <div class="input-hint">
+              <span class="char-count">{{ saveSessionName.length }}/50</span>
+              <span class="hint-text">Give it a memorable name</span>
+            </div>
+            <div v-if="nameError" class="error-message">
+              <i class="bi bi-exclamation-circle-fill"></i>
+              {{ nameError }}
+            </div>
+          </div>
+
+          <!-- Quick Name Suggestions -->
+          <div class="quick-suggestions">
+            <span class="suggestions-label">Quick suggestions:</span>
+            <div class="suggestion-chips">
+              <button v-for="suggestion in nameSuggestions" :key="suggestion" class="suggestion-chip"
+                @click="saveSessionName = suggestion" type="button">
+                {{ suggestion }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Session Info Note -->
+          <div class="info-note">
+            <i class="bi bi-info-circle-fill"></i>
+            <div class="info-text">
+              <strong>Saved with current settings:</strong>
+              <span>{{ chainingEnabled ? `${chainingMethod} chaining (${chainingRepetitions}x)` : 'Standard mode'
+              }}</span>
+              <span>{{ tajweedEnabled ? '· Tajweed enabled' : '' }}</span>
+            </div>
           </div>
         </div>
+
         <div class="modal-footer">
-          <button class="btn-secondary" @click="showSaveNameModal = false">Cancel</button>
-          <button class="btn-primary" @click="confirmSaveSession">
-            <i class="bi bi-save"></i> Save Session
+          <button class="btn-secondary" @click="closeSaveModal">
+            <i class="bi bi-x-lg"></i>
+            Cancel
+          </button>
+          <button class="btn-primary" @click="confirmSaveSession" :disabled="!isValidSessionName">
+            <i class="bi bi-save"></i>
+            Save Session
           </button>
         </div>
       </div>
@@ -1029,6 +1222,23 @@
             </button>
           </div>
 
+          <div class="player-loop-controls" aria-label="Loop count">
+            <span class="player-loop-label">Loop</span>
+            <div class="player-loop-group" role="group" aria-label="Playback loop count">
+              <button
+                v-for="option in loopCountOptions"
+                :key="`loop-${option.value}`"
+                class="player-loop-chip"
+                :class="{ active: selectedLoopCount === option.value }"
+                type="button"
+                @click="setLoopCount(option.value)"
+                :title="option.label"
+              >
+                {{ option.shortLabel }}
+              </button>
+            </div>
+          </div>
+
           <div class="player-progress-wrap">
             <span class="player-time">{{ formatTime(currentTime) }}</span>
             <div class="player-progress-bg" @click="seek" ref="progress">
@@ -1175,12 +1385,42 @@ function createAdvancedState() {
 }
 
 export default {
+  name: "SessionSetupTab",
   name: 'TelawaApp',
+  name: "SessionSetup",
   props: {
     auth: { type: Object, default: () => ({ check: false, id: null }) }
   },
   data() {
     return {
+      nameError: '',
+      nameSuggestions: [
+        'Morning Review',
+        'Weekly Target',
+        'Quick Revision',
+        'Deep Memorisation'
+      ],
+      // Existing data
+      selectedReciter: "mishary",
+      
+      // Feature 1: Repetitions
+      repetitionsPerStep: 5,
+      selectedLoopCount: 5,
+      
+      // Existing techniques
+      techniques: {
+        focus: false,
+        blur: false,
+        chaining: false,
+        anchor: false
+      },
+      
+      // Existing auto-advance
+      autoAdvance: true,
+      
+      // Feature 2: Gap between verses
+      gapBetweenVerses: "1x", // Options: 'none', '1x', '3s', '5s', 'custom'
+      customGapSeconds: 2,
       showCompatibilityModal: false,
       anchorModeEnabled: false,
       anchorCount: 2,
@@ -1219,6 +1459,7 @@ export default {
       wordHighlightFrame: null,
       wordHighlightTimestamps: [],
       wordHighlightLoading: false,
+      wordHighlightRequestId: 0,
       currentPhraseIndex: -1,
       statsTick: Date.now(),
       sessionStartedAt: 0,
@@ -1380,10 +1621,17 @@ export default {
       restoredAudioState: null,
       loadVersesTimer: null,
       workspaceSyncTimer: null,
+      toolsReturnFocusEl: null,
       segmentPlaybackTimer: null,
       segmentEndTime: 0,
       touchStartX: 0,
       touchStartY: 0,
+      hoverPeekVerseKey: null,
+      touchPeekVerseKey: null,
+      longPressPeekTimer: null,
+      longPressPeekTriggered: false,
+      blurPeekHoldingSpace: false,
+      suppressNextVerseClick: false,
 
       // Word sequence
       wordSequence: null,
@@ -1428,6 +1676,9 @@ export default {
       audioTimeUpdate: null,
       audioEnded: null,
       audioError: null,
+      audioPlaying: null,
+      audioRateChange: null,
+      audioLoadStart: null,
       lastAudioDebug: null,
 
       // AlQuran
@@ -1450,16 +1701,17 @@ export default {
   },
 
   computed: {
-    tajweedWordAudioConflict() {
-      return this.tajweedEnabled && this.wordByWordAudioEnabled
+    actualGapDelay() {
+      if (this.gapBetweenVerses === "none") return 0;
+      if (this.gapBetweenVerses === "3s") return 3;
+      if (this.gapBetweenVerses === "5s") return 5;
+      if (this.gapBetweenVerses === "custom") return this.customGapSeconds;
+      return "dynamic"; // For '1x' - duration based on verse length
     },
-    
-    tajweedWarningMessage() {
-      if (this.tajweedEnabled && this.wordByWordAudioEnabled) {
-        return '⚠️ Tajweed and Word Audio both enabled. Performance may be affected.'
-      }
-      return ''
+    isValidSessionName() {
+      return this.saveSessionName && this.saveSessionName.trim().length > 0 && this.saveSessionName.trim().length <= 50
     },
+
     anchorModeDescription() {
       if (!this.anchorModeEnabled) return 'Anchor mode off · use key words as memory hooks'
       const anchors = { 1: 'first/last word', 2: 'key word pairs', 3: 'complete structure' }
@@ -1622,6 +1874,15 @@ export default {
         return `block ${pos}/${all} · ${repeatSuffix}`
       }
       return repeatSuffix
+    },
+    loopCountOptions() {
+      return [
+        { value: 1, shortLabel: '1x', label: 'Play once' },
+        { value: 3, shortLabel: '3x', label: 'Repeat 3 times' },
+        { value: 5, shortLabel: '5x', label: 'Repeat 5 times' },
+        { value: 10, shortLabel: '10x', label: 'Repeat 10 times' },
+        { value: 'infinite', shortLabel: 'Inf', label: 'Infinite loop' }
+      ]
     },
     chainingNextStepLabel() {
       if (!this.chainingEnabled) return ''
@@ -2189,6 +2450,7 @@ export default {
     window.addEventListener('offline', this.handleOffline)
     window.addEventListener('beforeunload', this.persistAllState)
     window.addEventListener('keydown', this.handleGlobalKeydown)
+    window.addEventListener('keyup', this.handleGlobalKeyup)
     window.addEventListener('scroll', this.handleWindowScroll, { passive: true })
     document.addEventListener('click', this.handleClickOutside)
     this.statsInterval = window.setInterval(() => {
@@ -2204,7 +2466,11 @@ export default {
     window.removeEventListener('offline', this.handleOffline)
     window.removeEventListener('beforeunload', this.persistAllState)
     window.removeEventListener('keydown', this.handleGlobalKeydown)
+    window.removeEventListener('keyup', this.handleGlobalKeyup)
     window.removeEventListener('scroll', this.handleWindowScroll)
+    this.syncBodyScrollLock(false)
+    this.clearTouchPeek()
+    this.blurPeekHoldingSpace = false
     if (this.bannerTimer) clearTimeout(this.bannerTimer)
     if (this.loadVersesTimer) clearTimeout(this.loadVersesTimer)
     if (this.workspaceSyncTimer) clearTimeout(this.workspaceSyncTimer)
@@ -2220,22 +2486,19 @@ export default {
 
   watch: {
     theme: 'persistUiState',
-    showTools: 'persistUiState',
-    tab(newVal, oldVal) {
-
-      if (!['tools', 'techniques', 'saved', 'settings'].includes(newVal)) {
-        this.tab = 'tools'
-      }
-      if (newVal === 'techniques') {
-        console.log('Techniques tab activated')
-      }
+    showTools(newVal) {
+      this.syncBodyScrollLock(newVal)
       this.persistUiState()
-      this.persistCentralSessionState()
+    },
+    '$route'() {
+      if (this.showTools) {
+        this.closeToolsPanel()
+      }
     },
     tab(newVal) {
-      console.log('Tab changed to:', newVal)
       if (!['tools', 'techniques', 'saved', 'settings'].includes(newVal)) {
         this.tab = 'tools'
+        return
       }
       this.persistUiState()
       this.persistCentralSessionState()
@@ -2368,6 +2631,135 @@ export default {
   },
 
   methods: {
+    syncBodyScrollLock(locked) {
+      if (typeof document === 'undefined') return
+      document.body.classList.toggle('tools-panel-open', !!locked)
+      document.body.style.overflow = locked ? 'hidden' : ''
+    },
+
+    focusToolsPanel() {
+      this.$nextTick(() => {
+        const panel = this.$refs.toolsPanel
+        if (!panel) return
+        panel.scrollTop = 0
+        panel.focus({ preventScroll: true })
+      })
+    },
+
+    restoreToolsFocus() {
+      const fallback = document.querySelector('[aria-controls="memorisationToolsPanel"]')
+      const target = this.toolsReturnFocusEl && typeof this.toolsReturnFocusEl.focus === 'function'
+        ? this.toolsReturnFocusEl
+        : fallback
+      this.toolsReturnFocusEl = null
+      if (target && typeof target.focus === 'function') {
+        target.focus({ preventScroll: true })
+      }
+    },
+
+    getGapDurationForVerse(verseDurationInSeconds) {
+      if (this.gapBetweenVerses === "1x") {
+        return verseDurationInSeconds;
+      }
+      return this.actualGapDelay;
+    },
+    getCurrentPlaybackGapSeconds() {
+      if (this.gapBetweenVerses === '1x') {
+        const fullDuration = Math.max(0, Number(this.duration || this.audioElement?.duration || 0))
+        const speedFactor = Math.max(0.25, Number(this.speed || this.audioElement?.playbackRate || 1))
+        return fullDuration > 0 ? fullDuration / speedFactor : 0
+      }
+      return Math.max(0, Number(this.actualGapDelay || 0))
+    },
+    
+    // Example method showing how to use repetitions in playback
+    playVerseWithRepetitions(verseIndex, verseDuration) {
+      let currentRepetition = 0;
+      const repeatVerse = () => {
+        if (currentRepetition < this.repetitionsPerStep) {
+          // Play the verse
+          this.playVerse(verseIndex);
+          currentRepetition++;
+          
+          // After verse finishes, apply gap delay
+          const gapDelay = this.getGapDurationForVerse(verseDuration);
+          
+          setTimeout(() => {
+            repeatVerse();
+          }, (verseDuration + gapDelay) * 1000);
+        } else {
+          // Move to next verse
+          this.nextVerse();
+        }
+      };
+      
+      repeatVerse();
+    },
+    closeSaveModal() {
+      this.showSaveNameModal = false
+      this.saveSessionName = ''
+      this.nameError = ''
+      this.showTools = false // Ensure tools panel closes
+    },
+
+    clearNameError() {
+      if (this.nameError) this.nameError = ''
+    },
+
+    getReciterName() {
+      const reciter = this.reciters.find(r => r.id === this.reciterId)
+      return reciter ? reciter.name : 'Alafasy'
+    },
+
+    confirmSaveSession() {
+      const trimmedName = this.saveSessionName.trim()
+
+      if (!trimmedName) {
+        this.nameError = 'Please enter a session name'
+        return
+      }
+
+      if (trimmedName.length > 50) {
+        this.nameError = 'Session name must be 50 characters or less'
+        return
+      }
+
+      // Check for duplicate names
+      const duplicate = this.savedSessions.some(s => s.name.toLowerCase() === trimmedName.toLowerCase())
+      if (duplicate) {
+        this.nameError = 'A session with this name already exists'
+        return
+      }
+
+      const session = {
+        id: Date.now().toString(),
+        name: trimmedName,
+        savedAt: new Date().toISOString(),
+        config: {
+          chapterId: this.chapterId,
+          chapterName: this.currentChapter?.name_simple,
+          rangeStart: this.rangeStart,
+          rangeEnd: this.rangeEnd,
+          reciterId: this.reciterId,
+          speed: this.speed,
+          playMode: this.playMode,
+          chainingEnabled: this.chainingEnabled,
+          chainingMethod: this.chainingMethod,
+          chainingRepetitions: this.chainingRepetitions,
+          tajweedEnabled: this.tajweedEnabled,
+          showTranslation: this.showTranslation,
+          showTransliteration: this.showTransliteration,
+          showWordByWord: this.showWordByWord
+        }
+      }
+
+      this.savedSessions.unshift(session)
+      if (this.savedSessions.length > 20) this.savedSessions = this.savedSessions.slice(0, 20)
+      this.persistSavedSessions()
+
+      this.showBanner(`✓ Session "${session.name}" saved`, 'success', 2000)
+      this.closeSaveModal()
+    },
     addToggleRipple(event) {
       const button = event.currentTarget;
       const ripple = document.createElement('span');
@@ -2375,16 +2767,16 @@ export default {
       const size = Math.max(rect.width, rect.height);
       const x = event.clientX - rect.left - size / 2;
       const y = event.clientY - rect.top - size / 2;
-      
+
       ripple.style.width = ripple.style.height = `${size}px`;
       ripple.style.left = `${x}px`;
       ripple.style.top = `${y}px`;
       ripple.classList.add('toggle-chip-ripple');
-      
+
       button.appendChild(ripple);
       setTimeout(() => ripple.remove(), 400);
     },
-    
+
     // Update your toggle methods to include ripple
     toggleFocusMode(event) {
       this.addToggleRipple(event);
@@ -2525,7 +2917,11 @@ export default {
           this.highlightAnchorsForCard(card)
         })
       })
+
+      
     },
+
+    
 
     highlightAnchorsForCard(card) {
       if (!this.anchorModeEnabled) return
@@ -2697,8 +3093,20 @@ export default {
       })
     },
     startSessionAndClose() {
+      // Validate session can start
+      if (!this.canStartSession) {
+        this.showTools = true
+        this.showBanner('Please select a valid surah and ayah range first', 'info', 3600)
+        return
+      }
+      
+      // Close panel and start session
       this.closeToolsPanel()
-      this.startSessionWithCountdown()
+      
+      // Small delay to allow panel to close before starting
+      setTimeout(() => {
+        this.startSessionWithCountdown()
+      }, 100)
     },
     // Update handlePrimaryAction:
     handlePrimaryAction() {
@@ -2858,32 +3266,14 @@ export default {
     getDisplayArabic(verse) {
       if (!verse || !verse.arabic) return ''
 
-      // Debug logging
-      if (this.tajweedEnabled) {
-        console.log('Tajweed enabled for verse:', verse.key, 'Has tajweed data:', !!verse.arabic_tajweed)
+      // Word-aware rendering supports both plain and tajweed-marked Arabic.
+      if (this.wordByWordAudioEnabled || this.tajweedEnabled) {
+        return this.splitArabicIntoWords(verse)
       }
 
-      // If Tajweed is enabled AND we have Tajweed data
-      if (this.tajweedEnabled && verse.arabic_tajweed) {
-        const tajweedHtml = this.normalizeTajweedMarkup(verse.arabic_tajweed)
-        
-        // If word-by-word audio is enabled, wrap words in Tajweed HTML
-        if (this.wordByWordAudioEnabled) {
-          return this.wrapTajweedWithWordHighlighting(verse, tajweedHtml)
-        }
-        
-        return tajweedHtml
-      }
-
-  // Fallback to plain Arabic (with word wrapping if audio enabled)
-  const arabicText = this.stripTajweedMarkup(verse.arabic || '')
-  
-  if (this.wordByWordAudioEnabled) {
-    return this.splitArabicIntoWords(verse)
-  }
-  
-  return arabicText
-},
+      // Fallback to plain Arabic
+      return this.stripTajweedMarkup(verse.arabic || '')
+    },
 
     // Fix banner positioning - update CSS
     toggleKeyboardShortcuts() {
@@ -3097,6 +3487,10 @@ export default {
       if (activeNumber === null || verseNumber === null) return false
       return verseNumber > activeNumber
     },
+    isVersePeekRevealed(verseKey) {
+      if (!this.blurModeEnabled || !this.isVerseBlurred(verseKey)) return false
+      return this.blurPeekHoldingSpace || this.hoverPeekVerseKey === verseKey || this.touchPeekVerseKey === verseKey
+    },
 
     focusLinkedAyah(verseKey, options = {}) {
       if (!verseKey) return null
@@ -3105,28 +3499,55 @@ export default {
 
     openToolsPanel(options = {}) {
       const { verseKey = null, mode = this.currentMode, scroll = false } = options
+      this.toolsReturnFocusEl = document.activeElement instanceof HTMLElement ? document.activeElement : null
       this.currentMode = mode
       this.tab = 'tools'
       this.syncSettingsDraft()
-      if (verseKey) this.focusLinkedAyah(verseKey, { mode, scroll })
+
+      if (verseKey) {
+        this.focusLinkedAyah(verseKey, { mode, scroll })
+      }
+
       this.showPlannerModal = false
       this.showConfirmModal = false
       this.showResumeModal = false
-      this.showTools = true  // Ensure this is true
+      this.showTools = true
       this.persistUiState()
       this.$nextTick(() => {
-        if (this.$refs.toolsPanel) this.$refs.toolsPanel.focus({ preventScroll: true })
+        const panelBody = this.$refs.toolsBody
+        if (panelBody) panelBody.scrollTop = 0
+        this.focusToolsPanel()
       })
     },
 
     closeToolsPanel() {
+      if (!this.showTools) return
       this.showTools = false
       this.persistUiState()
+      this.restoreToolsFocus()
     },
 
     openAdvancedControls() {
       // Keep power features accessible, but behind a tertiary surface.
       this.openToolsPanel()
+    },
+    setLoopCount(value) {
+      const nextValue = value === 'infinite' ? 'infinite' : Math.max(1, Number(value || 1))
+      this.selectedLoopCount = nextValue
+      if (nextValue !== 'infinite') {
+        this.repetitionsPerStep = nextValue
+      }
+      if (this.hasVerses && !this.chainingEnabled) {
+        this.applyChainingQueueChange(this.currentMode, { restart: true })
+      } else {
+        this.persistUiState()
+        this.persistCentralSessionState()
+      }
+      this.showBanner(
+        nextValue === 'infinite' ? 'Infinite loop enabled for the current ayah' : `Loop count set to ${nextValue}x`,
+        'info',
+        1200
+      )
     },
     isReviewPriorityAyah(verseKey) {
       if (!verseKey) return false
@@ -3139,17 +3560,47 @@ export default {
       const ayah = this.mutqinState?.ayahs?.[verseKey]
       return ayah?.status === 'weak'
     },
-    onVerseTouchStart(event) {
+    onVersePeekEnter(verseKey) {
+      if (!this.blurModeEnabled || !this.isVerseBlurred(verseKey)) return
+      this.hoverPeekVerseKey = verseKey
+    },
+    onVersePeekLeave(verseKey) {
+      if (this.hoverPeekVerseKey === verseKey) this.hoverPeekVerseKey = null
+    },
+    clearTouchPeek() {
+      if (this.longPressPeekTimer) {
+        clearTimeout(this.longPressPeekTimer)
+        this.longPressPeekTimer = null
+      }
+      this.longPressPeekTriggered = false
+      this.touchPeekVerseKey = null
+    },
+    onVerseTouchStart(event, verseKey = null) {
       const touch = event?.changedTouches?.[0]
       if (!touch) return
       this.touchStartX = Number(touch.clientX || 0)
       this.touchStartY = Number(touch.clientY || 0)
+      this.clearTouchPeek()
+      if (!this.blurModeEnabled || !this.isVerseBlurred(verseKey)) return
+      this.longPressPeekTimer = window.setTimeout(() => {
+        this.longPressPeekTriggered = true
+        this.touchPeekVerseKey = verseKey
+      }, 320)
     },
-    onVerseTouchEnd(event) {
+    onVerseTouchEnd(event, verseKey = null) {
       const touch = event?.changedTouches?.[0]
       if (!touch) return
       const dx = Number(touch.clientX || 0) - Number(this.touchStartX || 0)
       const dy = Number(touch.clientY || 0) - Number(this.touchStartY || 0)
+      const longPressTriggered = this.longPressPeekTriggered
+      this.clearTouchPeek()
+      if (longPressTriggered) {
+        this.suppressNextVerseClick = true
+        window.setTimeout(() => {
+          this.suppressNextVerseClick = false
+        }, 260)
+        return
+      }
       if (Math.abs(dx) < 42 || Math.abs(dx) < Math.abs(dy)) return
       if (dx < 0) this.next()
       else this.prev()
@@ -3162,6 +3613,10 @@ export default {
 
     onVerseCardClick(verse) {
       if (!verse?.key) return
+      if (this.suppressNextVerseClick) {
+        this.suppressNextVerseClick = false
+        return
+      }
       const wasActive = this.effectiveActiveVerseKey === verse.key
       this.focusLinkedAyah(verse.key)
       // If the user clicks the active ayah card, treat it as an intent to play/pause.
@@ -3514,6 +3969,14 @@ export default {
       if (!this.appReady || this.isEditableElement(event.target)) return
 
       if (event.key === 'Escape') {
+        this.blurPeekHoldingSpace = false
+        this.clearTouchPeek()
+        this.hoverPeekVerseKey = null
+        if (this.showTools) {
+          event.preventDefault()
+          this.closeToolsPanel()
+          return
+        }
         if (this.showConfirmModal) {
           event.preventDefault()
           this.closeConfirmModal()
@@ -3527,6 +3990,11 @@ export default {
       }
 
       if (event.key === ' ' || event.code === 'Space') {
+        if (this.blurModeEnabled) {
+          event.preventDefault()
+          this.blurPeekHoldingSpace = true
+          return
+        }
         event.preventDefault()
         if (this.audioElement?.src) this.togglePlay()
         return
@@ -3593,6 +4061,11 @@ export default {
           this.showBanner('Session saved with Ctrl+S', 'success', 1500)
         }
         return
+      }
+    },
+    handleGlobalKeyup(event) {
+      if (event.key === ' ' || event.code === 'Space') {
+        this.blurPeekHoldingSpace = false
       }
     },
 
@@ -3884,8 +4357,9 @@ export default {
       this.currentTime = currentTime
       this.centralSession.audio.speed = safeSpeed
       this.centralSession.audio.currentTime = currentTime
-      if (this.isPlaying && this.wordByWordAudioEnabled && this.activeVerseRef) {
-        this.startWordHighlighting(this.activeVerseRef)
+      if (this.wordByWordAudioEnabled && this.activeVerseRef) {
+        this.syncWordHighlightFromAudio(this.activeVerseRef)
+        if (this.isPlaying) this.queueWordHighlightFrame(this.activeVerseRef)
       }
       this.persistUiState()
       this.persistCentralSessionState()
@@ -3893,15 +4367,16 @@ export default {
     },
 
     setActiveTab(tabName) {
-      console.log('Setting active tab to:', tabName)
-      // Explicitly allow 'techniques' as a valid tab
+      // Validate tab name
       const validTabs = ['tools', 'techniques', 'saved', 'settings']
-      if (validTabs.includes(tabName)) {
-        this.tab = tabName
-      } else {
+      if (!validTabs.includes(tabName)) {
+        console.warn(`Invalid tab: ${tabName}, defaulting to tools`)
         this.tab = 'tools'
+      } else {
+        this.tab = tabName
       }
 
+      // Force re-render if needed
       if (this.tab === 'settings') {
         this.syncSettingsDraft()
       }
@@ -3909,12 +4384,20 @@ export default {
         this.loadSavedSessions()
       }
 
-      // Force Vue to re-render
-      this.$forceUpdate()
-
+      // Store and persist
       this.centralSession.activeTab = this.tab
       this.persistCentralSessionState()
-      this.$nextTick(() => this.scrollToWorkspaceMain())
+      
+      // Force Vue to update
+      this.$forceUpdate()
+      
+      // Scroll to top of panel content
+      this.$nextTick(() => {
+        const panelBody = this.$refs.toolsBody
+        if (panelBody) {
+          panelBody.scrollTop = 0
+        }
+      })
     },
 
     scrollToWorkspaceMain() {
@@ -4006,22 +4489,13 @@ export default {
     // Alternative: Direct mode toggle with confirmation
     toggleTajweed() {
       this.tajweedEnabled = !this.tajweedEnabled
-      
-      // If enabling Tajweed and word audio is on, show a warning
-      if (this.tajweedEnabled && this.wordByWordAudioEnabled) {
-        this.showBanner(
-          'Tajweed colors enabled. Word audio highlighting works but may affect performance.',
-          'info',
-          3000
-        )
-      }
-      
+
       this.persistUiState()
       this.persistCentralSessionState()
-      
+
       // Force re-render
       this.$forceUpdate()
-      
+
       this.showBanner(
         this.tajweedEnabled ? 'Tajweed colors enabled' : 'Tajweed colors disabled',
         'info',
@@ -4117,28 +4591,7 @@ export default {
         this.fontDropdownOpen = false
       }
     },
-    toggleTajweed() {
-      this.tajweedEnabled = !this.tajweedEnabled
-      
-      // Clear cache for current config to force reload
-      const currentConfig = this.buildSessionConfig(this.currentMode)
-      const cacheKey = this.getVerseCacheKey(this.currentMode, currentConfig)
-      delete this.verseDataCache[cacheKey]
-      localStorage.removeItem(`telawa.verseCache.${cacheKey}`)
-      
-      // Force reload verses
-      this.loadVerses(this.currentMode)
-      
-      this.persistUiState()
-      this.persistCentralSessionState()
-      
-      this.showBanner(
-        this.tajweedEnabled ? 'Tajweed colors enabled' : 'Tajweed colors disabled',
-        'info',
-        1500
-      )
-    },
-    
+
     adjustVersesPerDay(change) {
       const newValue = this.plannerConfig.versesPerDay + change
       if (newValue >= 1 && newValue <= this.plannerConfig.totalVersesInSurah) {
@@ -4415,24 +4868,20 @@ export default {
     },
 
     getDisplayArabic(verse) {
-      if (!verse || !verse.arabic) return ''
+      if (!verse?.arabic) return ''
+      if (this.wordByWordAudioEnabled) return this.splitArabicIntoWords(verse)
+      if (this.tajweedEnabled && verse.arabic_tajweed) return this.normalizeTajweedMarkup(verse.arabic_tajweed)
+      return this.stripTajweedMarkup(verse.arabic)
+    },
 
-      if (!this.isDataReady) {
-        return this.stripTajweedMarkup(verse.arabic || verse.arabic_tajweed || '')
-      }
-
-      if (this.wordByWordAudioEnabled) {
-        return this.splitArabicIntoWords(verse)
-      }
-
-      if (this.tajweedEnabled) {
-        if (verse.arabic_tajweed) {
-          return this.normalizeTajweedMarkup(verse.arabic_tajweed)
-        }
-        return this.stripTajweedMarkup(verse.arabic || verse.arabic_tajweed || '')
-      }
-
-      return this.stripTajweedMarkup(verse.arabic || verse.arabic_tajweed || '')
+    escapeHtml(str) {
+      if (!str) return ''
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
     },
 
     wrapTajweedWithWordHighlighting(verse, tajweedHtml) {
@@ -4444,58 +4893,117 @@ export default {
       const tempDiv = document.createElement('div')
       tempDiv.innerHTML = tajweedHtml
 
-      // Get all text nodes that aren't already wrapped
-      const walker = document.createTreeWalker(
-        tempDiv,
-        NodeFilter.SHOW_TEXT,
-        {
-          acceptNode: function(node) {
-            // Skip if inside a tajweed span (preserve coloring)
-            if (node.parentElement && node.parentElement.classList && 
-                node.parentElement.classList.contains('tajweed-mark')) {
-              return NodeFilter.FILTER_SKIP
-            }
-            return NodeFilter.FILTER_ACCEPT
+      // Get all text nodes that contain Arabic text and aren't inside tajweed spans
+      const textNodes = []
+      const getAllTextNodes = (node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const parent = node.parentElement
+          // Check if parent has tajweed class
+          const isTajweedSpan = parent && parent.classList &&
+            (parent.classList.contains('tajweed-mark') ||
+              parent.className.includes('tajweed'))
+
+          if (!isTajweedSpan && node.textContent && /[\u0600-\u06FF]/.test(node.textContent)) {
+            textNodes.push(node)
+          }
+        } else if (node.nodeType === Node.ELEMENT_NODE && node.childNodes) {
+          // Don't traverse into existing word elements
+          if (!node.classList || !node.classList.contains('wbw-word')) {
+            node.childNodes.forEach(child => getAllTextNodes(child))
           }
         }
-      )
-
-      const textNodes = []
-      while (walker.nextNode()) {
-        textNodes.push(walker.currentNode)
       }
+
+      getAllTextNodes(tempDiv)
 
       // Process each text node to wrap individual words
       textNodes.forEach(textNode => {
-        let text = textNode.textContent
+        const text = textNode.textContent
+        if (!text.trim()) return
+
         let wrappedHtml = ''
-        let lastIndex = 0
-        
+        let currentWordIndex = 0
+
         // Split by Arabic words (preserving spaces)
         const words = text.split(/(\s+)/)
-        
+
         words.forEach((word, idx) => {
           if (word.trim()) {
             // Find matching word from verse.words
-            const wordIndex = verse.words.findIndex(w => w.ar === word || word.includes(w.ar))
-            const actualIndex = wordIndex >= 0 ? wordIndex : idx
-            
-            wrappedHtml += `<word class="wbw-word" data-word-index="${actualIndex}" data-verse-key="${verse.key}">${word}</word>`
+            let wordIndex = -1
+            for (let i = 0; i < verse.words.length; i++) {
+              const verseWord = verse.words[i].ar
+              if (verseWord === word || word.includes(verseWord) || verseWord.includes(word)) {
+                wordIndex = i
+                break
+              }
+            }
+
+            if (wordIndex === -1 && currentWordIndex < verse.words.length) {
+              wordIndex = currentWordIndex
+              currentWordIndex++
+            }
+
+            const actualIndex = wordIndex >= 0 ? wordIndex : idx % verse.words.length
+
+            // Create word span with proper attributes
+            wrappedHtml += `<word class="wbw-word" data-word-index="${actualIndex}" data-verse-key="${verse.key}" data-word="${this.escapeHtml(word)}">${word}</word>`
           } else {
             wrappedHtml += word // Preserve spaces
           }
         })
-        
-        // Replace the text node with wrapped HTML
-        const span = document.createElement('span')
-        span.innerHTML = wrappedHtml
-        textNode.parentNode.replaceChild(span, textNode)
-        
-        // Move children to preserve DOM structure
-        while (span.firstChild) {
-          textNode.parentNode.insertBefore(span.firstChild, span)
+
+        // Create a span with the wrapped content
+        const wrapperSpan = document.createElement('span')
+        wrapperSpan.innerHTML = wrappedHtml
+
+        // Replace the text node with the new wrapper
+        if (textNode.parentNode) {
+          textNode.parentNode.replaceChild(wrapperSpan, textNode)
+
+          // Move all children out of wrapperSpan to preserve parent structure
+          while (wrapperSpan.firstChild) {
+            textNode.parentNode.insertBefore(wrapperSpan.firstChild, wrapperSpan)
+          }
+          textNode.parentNode.removeChild(wrapperSpan)
         }
-        textNode.parentNode.removeChild(span)
+      })
+
+      // Also wrap any standalone tajweed spans that contain text
+      const tajweedSpans = tempDiv.querySelectorAll('span.tajweed-mark')
+      tajweedSpans.forEach((span, idx) => {
+        // Only process if it has text content and isn't already wrapped
+        if (span.textContent && span.textContent.trim() && !span.querySelector('.wbw-word')) {
+          const text = span.textContent
+          const words = text.split(/(\s+)/)
+          let wrappedHtml = ''
+          let wordCounter = 0
+
+          words.forEach((word) => {
+            if (word.trim()) {
+              let wordIndex = -1
+              for (let i = 0; i < verse.words.length; i++) {
+                if (verse.words[i].ar === word || word.includes(verse.words[i].ar)) {
+                  wordIndex = i
+                  break
+                }
+              }
+              if (wordIndex === -1 && wordCounter < verse.words.length) {
+                wordIndex = wordCounter
+                wordCounter++
+              }
+
+              // Preserve original span classes
+              const spanClasses = Array.from(span.classList).join(' ')
+              wrappedHtml += `<word class="wbw-word ${spanClasses}" data-word-index="${wordIndex}" data-verse-key="${verse.key}">${word}</word>`
+            } else {
+              wrappedHtml += word
+            }
+          })
+
+          // Replace the span content
+          span.innerHTML = wrappedHtml
+        }
       })
 
       return tempDiv.innerHTML
@@ -4614,27 +5122,72 @@ export default {
       return highlightedHtml
     },
 
+    escapeRegex(str) {
+      return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    },
+
     splitArabicIntoWords(verse) {
       if (!verse || !verse.arabic) return ''
 
       // Get words from the verse object or tokenize
       let words = []
       if (verse.words && verse.words.length) {
-        words = verse.words.map(w => w.ar || '').filter(Boolean)
+        words = verse.words
       } else {
-        words = tokenizeArabicText(verse.arabic)
+        const arabicWords = tokenizeArabicText(verse.arabic)
+        words = arabicWords.map((w, idx) => ({
+          ar: w,
+          en: '',
+          transliteration: '',
+          audio: null
+        }))
       }
 
       if (!words.length) return this.stripTajweedMarkup(verse.arabic || verse.arabic_tajweed || '')
 
       let html = ''
+
+      // If tajweed is enabled and we have tajweed text, we need to be careful
+      if (this.tajweedEnabled && verse.arabic_tajweed) {
+        // For tajweed mode, we need to preserve the tajweed markup while adding word boundaries
+        const tajweedText = verse.arabic_tajweed
+        let result = this.normalizeTajweedMarkup(tajweedText)
+
+        // Wrap each word with word tags while preserving tajweed spans
+        words.forEach((word, idx) => {
+          const wordText = typeof word === 'string' ? word : word.ar
+          if (!wordText) return
+
+          // Create a pattern that matches this word with possible tajweed spans inside
+          const escapedWord = this.escapeRegex(wordText)
+          const pattern = new RegExp(`((?:<span[^>]*class="[^"]*tajweed[^"]*"[^>]*>)?)(${escapedWord})((?:<\\/span>)?)`, 'g')
+
+          result = result.replace(pattern, (match, openTag, wordContent, closeTag) => {
+            const wordAudio = this.wordByWordAudioEnabled && word.audio ?
+              `<button class="word-audio-btn" data-word-index="${idx}" data-word-audio="${this.escapeHtml(word.audio)}" @click.stop="playWordAudio('${this.escapeHtml(word.audio)}')"><i class="bi bi-volume-up"></i></button>` : ''
+
+            const tooltip = this.wordTooltip(word)
+            return `<word class="wbw-word" data-word-index="${idx}" data-verse-key="${verse.key}" data-tooltip="${this.escapeHtml(tooltip)}" title="${this.escapeHtml(tooltip)}">${openTag}${wordContent}${closeTag}${wordAudio}</word>`
+          })
+        })
+
+        return result
+      }
+
+      // Regular mode (without tajweed)
       words.forEach((word, idx) => {
-        const escapedWord = escapeHtml(word)
+        const wordText = typeof word === 'string' ? word : word.ar
+        const escapedWord = this.escapeHtml(wordText)
         const isActive = this.currentHighlightedVerseKey === verse.key && this.currentWordIndex === idx
-        const activeClass = isActive ? ' highlighted phrase-highlighted' : ''
+        const activeClass = isActive ? ' highlighted' : ''
         const weakClass = this.isWeakAyah(verse.key) ? ' weak-word' : ''
         const masteredClass = this.isMasteredAyah(verse.key) ? ' mastered-word' : ''
-        html += `<word class="wbw-word${activeClass}${weakClass}${masteredClass}" data-word-index="${idx}" data-verse-key="${verse.key}" title="Word ${idx + 1}">${escapedWord}</word> `
+        const tooltip = this.wordTooltip(word)
+
+        const wordAudio = this.wordByWordAudioEnabled && word.audio ?
+          `<button class="word-audio-btn" data-word-index="${idx}" data-word-audio="${this.escapeHtml(word.audio)}" @click.stop="playWordAudio('${this.escapeHtml(word.audio)}')"><i class="bi bi-volume-up"></i></button>` : ''
+
+        html += `<word class="wbw-word${activeClass}${weakClass}${masteredClass}" data-word-index="${idx}" data-verse-key="${verse.key}" data-tooltip="${this.escapeHtml(tooltip)}" title="${this.escapeHtml(tooltip)}">${escapedWord}${wordAudio}</word> `
       })
 
       return html
@@ -4741,39 +5294,12 @@ export default {
       return baseDuration
     },
 
-    async startWordHighlighting(verse) {
-      if (this.wordHighlightLoading) return
-      if (!verse || !verse.key) return
-
-      // Allow highlighting even when tajweed is enabled
-      if (!this.wordByWordAudioEnabled) {
-        return
-      }
-
-      this.stopWordHighlighting()
-      this.wordHighlightLoading = true
-      this.currentHighlightedVerseKey = verse.key
-      this.currentWordIndex = -1
-      this.currentPhraseIndex = -1
-
-      // Get word timings regardless of tajweed setting
-      const duration = Number(this.audioElement?.duration) || null
-      const timestamps = await this.getWordTimings(verse, duration)
-      this.wordHighlightLoading = false
-
-      if (!timestamps || !timestamps.length) return
-      this.wordHighlightTimestamps = timestamps
-
-      const updateHighlight = () => {
-        if (!this.audioElement || this.audioElement.paused || this.audioElement.ended) return
-        this.syncWordHighlightFromAudio(verse)
-        this.wordHighlightFrame = window.requestAnimationFrame(updateHighlight)
-      }
-
-      this.wordHighlightHandler = updateHighlight
-      updateHighlight()
+    async startWordHighlighting(verse, options = {}) {
+      if (!verse?.key || !this.wordByWordAudioEnabled) return
+      const timestamps = await this.ensureWordHighlightTrack(verse, options)
+      if (!timestamps.length) return
+      this.queueWordHighlightFrame(verse)
     },
-
     wordTooltip(word) {
       const ar = String(word?.ar || '').trim()
       const en = String(word?.en || '').trim()
@@ -4787,14 +5313,81 @@ export default {
       this.currentPhraseIndex = this.currentWordIndex
     },
 
+    findWordTimingIndex(currentTime, timestamps = this.wordHighlightTimestamps) {
+      if (!Array.isArray(timestamps) || !timestamps.length) return -1
+      const time = Math.max(0, Number(currentTime || 0))
+      const epsilon = 0.045
+      let low = 0
+      let high = timestamps.length - 1
+
+      while (low <= high) {
+        const mid = Math.floor((low + high) / 2)
+        const item = timestamps[mid]
+        if (time < Number(item.start || 0) - epsilon) {
+          high = mid - 1
+        } else if (time > Number(item.end || 0) + epsilon) {
+          low = mid + 1
+        } else {
+          return Number(item.index)
+        }
+      }
+
+      if (time >= Number(timestamps[timestamps.length - 1]?.start || 0) - epsilon) {
+        return Number(timestamps[timestamps.length - 1]?.index ?? -1)
+      }
+
+      return -1
+    },
+
+    queueWordHighlightFrame(verse = this.activeVerseRef) {
+      if (this.wordHighlightFrame) window.cancelAnimationFrame(this.wordHighlightFrame)
+      this.wordHighlightFrame = null
+
+      if (!verse?.key || !this.audioElement || this.audioElement.paused || this.audioElement.ended) return
+
+      const tick = () => {
+        if (!this.audioElement || this.audioElement.paused || this.audioElement.ended) {
+          this.wordHighlightFrame = null
+          return
+        }
+        this.syncWordHighlightFromAudio(verse)
+        this.wordHighlightFrame = window.requestAnimationFrame(tick)
+      }
+
+      this.wordHighlightFrame = window.requestAnimationFrame(tick)
+    },
+
+    async ensureWordHighlightTrack(verse, options = {}) {
+      const { force = false } = options
+      if (!verse?.key || !this.wordByWordAudioEnabled) return []
+      if (!force && this.currentHighlightedVerseKey === verse.key && this.wordHighlightTimestamps?.length) {
+        return this.wordHighlightTimestamps
+      }
+
+      const requestId = ++this.wordHighlightRequestId
+      this.wordHighlightLoading = true
+      this.currentHighlightedVerseKey = verse.key
+      this.currentWordIndex = -1
+      this.currentPhraseIndex = -1
+
+      const duration = Number(this.audioElement?.duration)
+      const timestamps = await this.getWordTimings(verse, Number.isFinite(duration) && duration > 0 ? duration : null)
+      if (requestId !== this.wordHighlightRequestId) return []
+
+      this.wordHighlightLoading = false
+      this.wordHighlightTimestamps = Array.isArray(timestamps) ? timestamps : []
+      this.syncWordHighlightFromAudio(verse)
+      return this.wordHighlightTimestamps
+    },
+
     syncWordHighlightFromAudio(verse = this.activeVerseRef) {
       if (!verse || !verse.key || this.currentHighlightedVerseKey !== verse.key || !this.wordHighlightTimestamps?.length || !this.audioElement) return
 
       const currentTime = Number(this.audioElement.currentTime || 0)
-      const active = this.wordHighlightTimestamps.find(item => currentTime >= item.start && currentTime <= item.end)
-      const activeIndex = active ? active.index : -1
-
-      this.updateWordHighlight(verse.key, activeIndex)
+      const activeIndex = this.findWordTimingIndex(currentTime, this.wordHighlightTimestamps)
+      if (this.currentWordIndex !== activeIndex || this.currentHighlightedVerseKey !== verse.key) {
+        this.updateWordHighlight(verse.key, activeIndex)
+      }
     },
 
     restoreWordScroll(verseKey) {
@@ -4823,6 +5416,7 @@ export default {
     },
 
     stopWordHighlighting() {
+      this.wordHighlightRequestId += 1
       if (this.wordHighlightFrame) window.cancelAnimationFrame(this.wordHighlightFrame)
       this.wordHighlightFrame = null
       this.wordHighlightHandler = null
@@ -4844,6 +5438,9 @@ export default {
       this.audioElement.removeEventListener('seeking', this.audioSeeking)
       this.audioElement.removeEventListener('seeked', this.audioSeeked)
       this.audioElement.removeEventListener('pause', this.audioPaused)
+      this.audioElement.removeEventListener('playing', this.audioPlaying)
+      this.audioElement.removeEventListener('ratechange', this.audioRateChange)
+      this.audioElement.removeEventListener('loadstart', this.audioLoadStart)
 
       this.audioTimeUpdate = () => {
         this.currentTime = this.audioElement.currentTime
@@ -4859,7 +5456,7 @@ export default {
         if (this.wordByWordAudioEnabled) {
           const verse = this.activeVerseRef
           if (verse && verse.key) {
-            if (this.currentHighlightedVerseKey !== verse.key && !this.wordHighlightLoading) {
+            if ((!this.wordHighlightTimestamps?.length || this.currentHighlightedVerseKey !== verse.key) && !this.wordHighlightLoading) {
               this.startWordHighlighting(verse)
             } else if (!this.wordHighlightLoading) {
               this.syncWordHighlightFromAudio(verse)
@@ -4883,35 +5480,70 @@ export default {
           this.flowListenPlays += 1
           this.persistUiState()
         }
+        const gapSeconds = this.getCurrentPlaybackGapSeconds()
+        const gapDelayMs = Math.max(0, gapSeconds * 1000)
         if (this.playMode === 'auto') {
+          if (!this.chainingEnabled && this.selectedLoopCount === 'infinite' && this.activeQueueEntry) {
+            window.setTimeout(() => {
+              const entry = this.activeQueueEntry
+              this.advanceLocked = false
+              if (entry) {
+                this.playQueueEntry(entry, { force: true, queueIndex: this.queueIndex })
+              }
+            }, gapDelayMs)
+            return
+          }
           window.setTimeout(() => {
             this.advanceLocked = false
             this.next()
-          }, Math.max(0, Number(this.delay || 0)) * 1000)
+          }, gapDelayMs)
         } else {
           this.advanceLocked = false
         }
       }
 
       this.audioSeeking = () => {
-        // Prevent stale highlight when the user scrubs.
-        this.currentWordIndex = -1
-        this.updateWordHighlight(this.currentHighlightedVerseKey, -1)
+        if (this.wordHighlightFrame) window.cancelAnimationFrame(this.wordHighlightFrame)
+        this.wordHighlightFrame = null
+        if (this.currentHighlightedVerseKey) this.updateWordHighlight(this.currentHighlightedVerseKey, -1)
       }
 
       this.audioSeeked = () => {
         const verse = this.activeVerseRef
         if (!verse) return
-        if (this.wordByWordAudioEnabled && !this.audioElement?.paused) {
-          this.startWordHighlighting(verse)
+        if (this.wordByWordAudioEnabled) {
+          this.ensureWordHighlightTrack(verse).then(() => {
+            this.syncWordHighlightFromAudio(verse)
+            if (!this.audioElement?.paused) this.queueWordHighlightFrame(verse)
+          })
         }
       }
 
       this.audioPaused = () => {
-        // Ensure state is consistent even if pause is triggered outside our toggle handler.
         this.isPlaying = false
         if (this.wordHighlightFrame) window.cancelAnimationFrame(this.wordHighlightFrame)
         this.wordHighlightFrame = null
+      }
+
+      this.audioPlaying = () => {
+        this.isPlaying = true
+        const verse = this.activeVerseRef
+        if (verse && this.wordByWordAudioEnabled) {
+          this.startWordHighlighting(verse)
+        }
+      }
+
+      this.audioRateChange = () => {
+        this.centralSession.audio.speed = Number(this.audioElement?.playbackRate || this.speed || 1)
+        const verse = this.activeVerseRef
+        if (verse && this.wordByWordAudioEnabled && this.wordHighlightTimestamps?.length) {
+          this.syncWordHighlightFromAudio(verse)
+          if (!this.audioElement?.paused) this.queueWordHighlightFrame(verse)
+        }
+      }
+
+      this.audioLoadStart = () => {
+        this.stopWordHighlighting()
       }
 
       this.audioError = (e) => {
@@ -4928,6 +5560,9 @@ export default {
       this.audioElement.addEventListener('seeking', this.audioSeeking)
       this.audioElement.addEventListener('seeked', this.audioSeeked)
       this.audioElement.addEventListener('pause', this.audioPaused)
+      this.audioElement.addEventListener('playing', this.audioPlaying)
+      this.audioElement.addEventListener('ratechange', this.audioRateChange)
+      this.audioElement.addEventListener('loadstart', this.audioLoadStart)
     },
 
     async playVerse(verse, options = {}) {
@@ -5016,14 +5651,9 @@ export default {
 
           try {
             await this.audioElement.play()
-            this.isPlaying = true
             this.markPlaybackStart()
             this.addActivityEvent({ ts: Date.now(), type: 'play', verseKey: verse.key })
             this.recomputeAnalytics()
-
-            if (this.wordByWordAudioEnabled) {
-              this.startWordHighlighting(verse)
-            }
             this.playRequestLocked = false
             resolve()
           } catch (err) {
@@ -5087,10 +5717,6 @@ export default {
         this.audioElement.play()
           .then(() => {
             this.isPlaying = true
-            const verse = this.activeVerseRef
-            if (verse && this.wordByWordAudioEnabled) {
-              this.startWordHighlighting(verse)
-            }
           })
           .catch(err => {
             console.error('Failed to play:', err)
@@ -5361,10 +5987,11 @@ export default {
       const q = []
       const safePreviousQueueIndex = Math.max(0, Number(config.queueIndex || 0))
 
-      // Get chaining settings from component state
-      const repetitions = Math.max(1, Math.min(5, Number(this.chainingRepetitions || 1)))
       const chainingEnabled = this.chainingEnabled
       const chainingMethod = this.chainingMethod
+      const repetitions = chainingEnabled
+        ? Math.max(1, Math.min(5, Number(this.chainingRepetitions || 1)))
+        : Math.max(1, Math.min(50, Number(this.repetitionsPerStep || 1)))
 
       console.log('[buildQueue] Settings:', {
         chainingEnabled,
@@ -5510,6 +6137,10 @@ export default {
       this.chainingMethod = nextMethod
       this.applyChainingQueueChange(this.currentMode, { restart: true })
     },
+
+    escapeHtml(str) { return String(str || '').replace(/[&<>]/g, function (m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m] }) },
+    escapeRegex(str) { return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') },
+    wordTooltip(word) { return `${word.ar || ''} - ${word.en || ''}`.trim() || 'Word' },
 
     setChainingRepetitions(value) {
       this.chainingRepetitions = Math.max(1, Math.min(5, Number(value || 1)))
@@ -6128,6 +6759,18 @@ export default {
               ? state.chainingMethod
               : this.chainingMethod
             this.chainingRepetitions = Math.max(1, Math.min(5, Number(state.chainingRepetitions || this.chainingRepetitions || 1)))
+            this.selectedLoopCount = state.selectedLoopCount === 'infinite'
+              ? 'infinite'
+              : [1, 3, 5, 10].includes(Number(state.selectedLoopCount))
+                ? Number(state.selectedLoopCount)
+                : this.selectedLoopCount
+            this.repetitionsPerStep = this.selectedLoopCount === 'infinite'
+              ? 10
+              : Math.max(1, Math.min(50, Number(state.repetitionsPerStep || this.selectedLoopCount || this.repetitionsPerStep || 5)))
+            this.gapBetweenVerses = ['none', '1x', '3s', '5s', 'custom'].includes(state.gapBetweenVerses)
+              ? state.gapBetweenVerses
+              : this.gapBetweenVerses
+            this.customGapSeconds = Math.max(0.5, Math.min(10, Number(state.customGapSeconds || this.customGapSeconds || 2)))
             this.defaultFontSize = Number(state.defaultFontSize ?? this.defaultFontSize ?? 100)
 
             // Anchor Mode settings
@@ -6187,6 +6830,10 @@ export default {
           chainingEnabled: this.chainingEnabled,
           chainingMethod: this.chainingMethod,
           chainingRepetitions: this.chainingRepetitions,
+          repetitionsPerStep: this.repetitionsPerStep,
+          selectedLoopCount: this.selectedLoopCount,
+          gapBetweenVerses: this.gapBetweenVerses,
+          customGapSeconds: this.customGapSeconds,
           fontScale: this.fontScale,
           uiScale: this.uiScale,
           enScale: this.enScale,
@@ -6528,15 +7175,17 @@ export default {
 
     resetControls() {
       this.openConfirmModal({
-        title: 'Reset session?',
-        message: 'This will clear the current mode settings and player progress for this flow.',
+        title: 'Reset Session Controls?',
+        message: 'This will reset all session settings to defaults. Your progress will not be lost.',
         confirmLabel: 'Reset',
-        tone: 'danger',
+        cancelLabel: 'Cancel',
+        tone: 'warning',
         action: 'reset-session'
       })
     },
 
     performResetControls() {
+      // Reset all session settings
       this.rangeStart = 1
       this.rangeEnd = 7
       this.speed = 1
@@ -6546,9 +7195,19 @@ export default {
       this.chainingRepetitions = 1
       this.playMode = 'auto'
       this.order = 'seq'
+      this.focusModeEnabled = false
+      this.blurModeEnabled = false
+      this.anchorModeEnabled = false
+      
+      // Apply changes
       this.applySpeed()
       this.rebuildQueue()
       this.persistAllState()
+      
+      // Show feedback and keep panel open if needed
+      this.showBanner('Session controls reset to defaults', 'success', 2000)
+      
+      // Don't close panel automatically - let user decide
     },
 
     adjustRange() {
@@ -6618,18 +7277,343 @@ export default {
       this.nextQuizCard()
     },
 
-    playWordAudio(url, key = '') {
+    playWordAudio(url) {
       if (!url) return
-      this.activeWordAudio = key
-      const a = new Audio(url)
-      a.addEventListener('ended', () => { if (this.activeWordAudio === key) this.activeWordAudio = '' })
-      a.play().catch(() => { this.activeWordAudio = '' })
-    }
+      new Audio(url).play().catch(() => { })
+    },
   }
 }
 </script>
 
 <style>
+/* Range control styling - consistent with other sections */
+.range-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.technique-range {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--border);
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.technique-range:focus {
+  outline: none;
+}
+
+.technique-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.technique-range::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+/* Field header with value pill */
+.field-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.field-header label {
+  margin-bottom: 0;
+  font-weight: 600;
+}
+
+.range-value-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  padding: 4px 12px;
+  background: var(--accent-light);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* Slider markers */
+.slider-markers {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 0 4px;
+}
+
+.slider-markers span {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* Gap options as radio cards */
+.gap-options {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 8px;
+}
+
+.gap-options .radio {
+  flex-direction: column;
+  text-align: center;
+  gap: 4px;
+  padding: 10px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gap-options .radio.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.gap-options .radio.active .option-label,
+.gap-options .radio.active .option-desc {
+  color: white;
+}
+
+.gap-options .radio input {
+  display: none;
+}
+
+.option-label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.option-desc {
+  display: block;
+  font-size: 0.65rem;
+  opacity: 0.7;
+}
+
+/* Custom gap control */
+.custom-gap-control {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.inline-setting-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+  padding: 6px 12px;
+  background: var(--accent-light);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.mt-2 {
+  margin-top: 12px;
+}
+/* Fix offcanvas positioning - add to your existing styles */
+.tools {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(var(--tools-width, 440px), 92vw);
+  background: linear-gradient(180deg, rgba(255, 250, 243, 0.98), rgba(247, 240, 231, 0.96));
+  border-left: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.15);
+  will-change: transform;
+}
+
+.tools.open {
+  transform: translateX(0);
+}
+
+/* Fix backdrop */
+.tools-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  animation: fadeIn 0.2s ease;
+}
+
+/* Fix tools header spacing */
+.tools-top {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  background: inherit;
+  flex-shrink: 0;
+}
+
+/* Fix tools body scrolling */
+.tools-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fix tools footer */
+.tools-footer {
+  position: relative;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  background: inherit;
+  flex-shrink: 0;
+}
+
+/* Fix tab buttons */
+.tools-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 14px;
+  padding: 6px;
+}
+
+.tools-tabs button {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tools-tabs button.active {
+  background: var(--surface-strong);
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.tools-tabs button:hover:not(.active) {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text);
+}
+
+/* Fix button styles */
+.tools-btn {
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tools-btn-soft {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text);
+}
+
+.tools-btn-soft:hover {
+  background: rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.tools-btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: white;
+  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
+}
+
+.tools-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.4);
+}
+
+/* Fix close button */
+.tools-x {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.tools-x:hover {
+  background: var(--accent-light);
+  transform: rotate(90deg);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .tools {
+    width: 100vw;
+    max-width: 100vw;
+  }
+  
+  .tools-tabs button span {
+    display: none;
+  }
+  
+  .tools-tabs button i {
+    font-size: 1.2rem;
+  }
+  
+  .tools-tabs button {
+    padding: 12px;
+  }
+  
+  .tools-body {
+    padding: 16px;
+  }
+}
+
+/* Animation for backdrop */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
 :root {
   --bg: #f3eee6;
   --surface: rgba(255, 250, 243, 0.88);
@@ -6691,6 +7675,943 @@ export default {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+.session-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.setting-section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  font-weight: 500;
+  color: #374151;
+}
+
+.section-header i {
+  font-size: 18px;
+  color: #6b7280;
+}
+
+.section-content {
+  padding: 20px;
+}
+
+/* Slider styles */
+.slider-wrapper {
+  width: 100%;
+}
+
+.form-range {
+  width: 100%;
+  height: 4px;
+  padding: 0;
+  background: #e5e7eb;
+  border-radius: 4px;
+  -webkit-appearance: none;
+}
+
+.form-range:focus {
+  outline: none;
+}
+
+.form-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #2c7a4d;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.form-range::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 0 4px;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.repetition-value {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.repetition-value strong {
+  color: #2c7a4d;
+  font-weight: 600;
+}
+
+/* Select styles */
+.form-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #374151;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #2c7a4d;
+  box-shadow: 0 0 0 2px rgba(44, 122, 77, 0.1);
+}
+
+/* Input group */
+.input-group {
+  display: flex;
+  align-items: stretch;
+}
+
+.form-control {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  font-size: 14px;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #2c7a4d;
+}
+
+.input-group-text {
+  padding: 8px 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Hint */
+.setting-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.setting-hint i {
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.mt-2 {
+  margin-top: 12px;
+}
+
+.session-setup-tab {
+  padding: 20px;
+  max-width: 600px;
+}
+
+.setting-group {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.section-label {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 12px;
+  display: block;
+  color: #333;
+}
+
+/* Feature 1: Repetitions Control */
+.repetition-control {
+  margin-top: 8px;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.repetition-slider {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: #ddd;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.repetition-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #2c7a4d;
+  cursor: pointer;
+}
+
+.slider-value {
+  min-width: 60px;
+  text-align: center;
+}
+
+.slider-value .value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c7a4d;
+}
+
+.slider-value .unit {
+  font-size: 14px;
+  color: #666;
+  margin-left: 4px;
+}
+
+/* Techniques Grid */
+.techniques-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
+}
+
+.technique-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+/* Feature 2: Audio Settings */
+.audio-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.setting-item label {
+  font-size: 14px;
+  color: #555;
+  min-width: 120px;
+}
+
+.setting-item select,
+.setting-item input[type="number"] {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.setting-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.setting-hint {
+  font-size: 12px;
+  color: #888;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .setting-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .setting-item label {
+    min-width: auto;
+  }
+}
+
+.session-setup {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Setting Card */
+.setting-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.card-header {
+  padding: 20px 20px 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.card-icon {
+  font-size: 24px;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.card-content {
+  padding: 16px 20px 20px 20px;
+}
+
+/* Repetitions Control */
+.repetition-control {
+  width: 100%;
+}
+
+.repetition-stats {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.repetition-value {
+  font-size: 48px;
+  font-weight: 700;
+  color: #2c7a4d;
+  line-height: 1;
+}
+
+.repetition-unit {
+  font-size: 14px;
+  color: #666;
+  margin-left: 8px;
+}
+
+.repetition-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, #2c7a4d 0%, #2c7a4d 0%, #e5e7eb 0%, #e5e7eb 100%);
+  outline: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.repetition-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #2c7a4d;
+  box-shadow: 0 2px 6px rgba(44, 122, 77, 0.3);
+  cursor: pointer;
+  border: 2px solid white;
+}
+
+.repetition-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.repetition-markers {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 0 4px;
+}
+
+.repetition-markers span {
+  font-size: 11px;
+  color: #999;
+}
+
+.setting-hint {
+  font-size: 13px;
+  color: #888;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f9fafb;
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+.hint-icon {
+  font-size: 14px;
+}
+
+/* Gap Options */
+.gap-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.gap-option {
+  background: #f9fafb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gap-option:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
+}
+
+.gap-option.active {
+  background: #2c7a4d;
+  border-color: #2c7a4d;
+  color: white;
+}
+
+.option-label {
+  display: block;
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.option-desc {
+  display: block;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.gap-option.active .option-label,
+.gap-option.active .option-desc {
+  color: white;
+}
+
+/* Custom Gap */
+.custom-gap {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.custom-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #e5e7eb;
+  outline: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.custom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #2c7a4d;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.custom-gap-value {
+  text-align: center;
+  margin-top: 12px;
+}
+
+.custom-gap-value .value {
+  font-size: 28px;
+  font-weight: 600;
+  color: #2c7a4d;
+}
+
+.custom-gap-value .unit {
+  font-size: 14px;
+  color: #666;
+  margin-left: 6px;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .session-setup {
+    padding: 16px;
+  }
+  
+  .gap-options {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .repetition-value {
+    font-size: 40px;
+  }
+}
+
+/* Enhanced Save Modal Styles */
+.save-name-modal {
+  max-width: 520px;
+  width: 100%;
+  animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px 24px 20px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--surface), var(--surface-strong));
+}
+
+.modal-header-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modal-header-icon i {
+  font-size: 1.5rem;
+  color: white;
+}
+
+.modal-header-text {
+  flex: 1;
+}
+
+.modal-header-text h2 {
+  margin: 0 0 4px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.modal-header-text p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.modal-close-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.modal-close-btn:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+  transform: rotate(90deg);
+}
+
+/* Session Preview Card */
+.session-preview-card {
+  background: linear-gradient(135deg, var(--accent-light), var(--accent-wash));
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.preview-surah,
+.preview-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--surface);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.preview-surah i,
+.preview-range i {
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+
+.preview-stats {
+  display: flex;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.preview-stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.preview-stat i {
+  font-size: 0.7rem;
+  color: var(--accent);
+}
+
+/* Name Input Group */
+.name-input-group {
+  margin-bottom: 20px;
+}
+
+.name-input-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.name-input-group label i {
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+
+.name-input {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  font-size: 0.95rem;
+  color: var(--text);
+  transition: all 0.2s;
+}
+
+.name-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.name-input.error {
+  border-color: #dc3545;
+}
+
+.input-hint {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.char-count {
+  font-family: monospace;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(220, 53, 69, 0.1);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  color: #dc3545;
+}
+
+.error-message i {
+  font-size: 0.8rem;
+}
+
+/* Quick Suggestions */
+.quick-suggestions {
+  margin-bottom: 20px;
+}
+
+.suggestions-label {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.suggestion-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.suggestion-chip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.75rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.suggestion-chip:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+/* Info Note */
+.info-note {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(46, 125, 50, 0.08);
+  border-radius: 12px;
+  border: 1px solid rgba(46, 125, 50, 0.12);
+}
+
+.info-note i {
+  color: #2e7d32;
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.info-text {
+  flex: 1;
+}
+
+.info-text strong {
+  display: block;
+  font-size: 0.7rem;
+  color: #2e7d32;
+  margin-bottom: 4px;
+}
+
+.info-text span {
+  display: inline-block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-right: 8px;
+}
+
+/* Modal Footer */
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.btn-secondary,
+.btn-primary {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btn-secondary {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.btn-secondary:hover {
+  background: var(--accent-light);
+  border-color: var(--accent);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border: none;
+  color: white;
+  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .session-preview-card {
+  background: rgba(208, 160, 107, 0.1);
+}
+
+[data-theme="dark"] .info-note {
+  background: rgba(76, 175, 80, 0.1);
+  border-color: rgba(76, 175, 80, 0.2);
+}
+
+[data-theme="dark"] .info-note i {
+  color: #81c784;
+}
+
+[data-theme="dark"] .info-text strong {
+  color: #81c784;
+}
+
+/* Responsive */
+@media (max-width: 560px) {
+  .session-preview-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .preview-stats {
+    margin-left: 0;
+    justify-content: space-between;
+  }
+  
+  .modal-header {
+    padding: 20px;
+  }
+  
+  .modal-footer {
+    padding: 16px 20px;
+    flex-direction: column;
+  }
+  
+  .suggestion-chips {
+    justify-content: center;
+  }
+}
+
+.wbw-word {
+  display: inline-block;
+  position: relative;
+  margin: 0 2px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.wbw-word .word-audio-btn {
+  position: absolute;
+  top: -12px;
+  right: -8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 10px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.wbw-word:hover .word-audio-btn {
+  opacity: 1;
+}
+
+.wbw-word.highlighted {
+  background: var(--accent);
+  color: white;
+}
+
+/* Combined Tajweed + Word Highlighting */
+.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word {
+  display: inline-block;
+  transition: all 0.15s ease;
+  border-radius: 4px;
+  padding: 0 2px;
+  cursor: pointer;
+}
+
+.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
+  background: var(--accent);
+  color: white !important;
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
+}
+
+.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {
+  background: var(--accent-light);
+  cursor: pointer;
+}
+
+/* Preserve tajweed colors inside highlighted words but make them visible */
+.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*="tajweed-"],
+.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {
+  color: inherit !important;
+  background: transparent !important;
 }
 
 /* Field header for toggle chips - matching Techniques tab */
@@ -6829,23 +8750,23 @@ export default {
     gap: 12px;
     padding: 14px 0;
   }
-  
+
   .setting-item .toggle-chip {
     align-self: flex-start;
   }
-  
+
   .setting-label {
     font-size: 0.95rem;
   }
-  
+
   .setting-description {
     font-size: 0.75rem;
   }
-  
+
   .range-control-compact {
     gap: 12px;
   }
-  
+
   .range-value-badge {
     min-width: 55px;
     padding: 5px 10px;
@@ -6905,7 +8826,7 @@ export default {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .field-inline .toggle-chip {
     align-self: flex-start;
   }
@@ -7189,24 +9110,24 @@ export default {
   .settings-row {
     padding: 14px 16px;
   }
-  
+
   .settings-row-label {
     font-size: 0.85rem;
   }
-  
+
   .settings-row-desc {
     font-size: 0.65rem;
     margin-left: 30px;
   }
-  
+
   .settings-range-control {
     margin-left: 30px;
   }
-  
+
   .settings-footer-actions {
     padding: 12px 16px;
   }
-  
+
   .settings-reset-btn,
   .settings-start-btn {
     padding: 10px 14px;
@@ -9927,18 +11848,22 @@ export default {
   /* Changed from auto/padding */
   right: 0;
   bottom: 0;
+  height: 100dvh;
   width: min(var(--tools-width), 92vw);
   background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));
   border-left: 1px solid var(--border);
   backdrop-filter: blur(14px);
   transform: translateX(100%);
-  transition: transform 0.25s ease;
+  transition: transform 0.25s ease, visibility 0.25s ease;
   z-index: 60;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
   box-shadow: var(--shadow-lg);
   isolation: isolate;
+  visibility: hidden;
+  pointer-events: none;
+  overscroll-behavior: contain;
 }
 
 /* Adjust tools-top padding to account for no navbar offset */
@@ -9951,9 +11876,12 @@ export default {
 /* Ensure tools body scrolls correctly */
 .tools-body {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 20px 20px calc(var(--tools-footer-h) + 26px);
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 body.has-navbar .tools {
@@ -9967,6 +11895,8 @@ body.has-navbar .tools-top {
 
 .tools.open {
   transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .tools-backdrop {
@@ -9974,6 +11904,14 @@ body.has-navbar .tools-top {
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 59;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.tools-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* Replace the existing blur mode CSS with this */
@@ -9994,6 +11932,15 @@ body.has-navbar .tools-top {
 .main.blur-mode-active .verse-card.active .verse-arabic,
 .main.blur-mode-active .verse-card.active .verse-aid {
   filter: none;
+  opacity: 1;
+}
+
+.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic,
+.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-aid,
+.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic .tajweed-mark,
+.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic word,
+.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic .wbw-word {
+  filter: none !important;
   opacity: 1;
 }
 
@@ -11214,7 +13161,7 @@ html {
   color: var(--text-muted);
 }
 
-.toggle-switch.active + .toggle-switch-label {
+.toggle-switch.active+.toggle-switch-label {
   color: var(--accent);
 }
 
@@ -11658,18 +13605,22 @@ html {
   top: 0;
   right: 0;
   bottom: 0;
+  height: 100dvh;
   width: min(var(--tools-width), 92vw);
   background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));
   border-left: 1px solid var(--border);
   backdrop-filter: blur(14px);
   transform: translateX(100%);
-  transition: transform 0.25s ease;
+  transition: transform 0.25s ease, visibility 0.25s ease;
   z-index: 60;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
   box-shadow: var(--shadow-lg);
   isolation: isolate;
+  visibility: hidden;
+  pointer-events: none;
+  overscroll-behavior: contain;
 }
 
 .tools-backdrop {
@@ -11678,10 +13629,13 @@ html {
   background: rgba(15, 12, 8, 0.35);
   backdrop-filter: blur(1px);
   z-index: 59;
+  touch-action: none;
 }
 
 .tools.open {
   transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .tools-top {
@@ -11763,9 +13717,12 @@ html {
 
 .tools-body {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 20px 20px calc(var(--tools-footer-h) + 26px);
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Compact mode (default) to reduce cognitive load */
@@ -12206,11 +14163,9 @@ html {
 
 /* Tools footer */
 .tools-footer {
-  position: absolute;
-  left: 0;
-  right: 0;
+  position: sticky;
   bottom: 0;
-  height: var(--tools-footer-h);
+  min-height: var(--tools-footer-h);
   padding: 12px 16px 14px;
   border-top: 1px solid var(--border);
   background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));
@@ -12218,6 +14173,7 @@ html {
   gap: 10px;
   justify-content: space-between;
   align-items: center;
+  z-index: 1;
 }
 
 .tools-btn {
@@ -13317,7 +15273,7 @@ html {
 
 .player-main {
   display: grid;
-  grid-template-columns: minmax(150px, 1.1fr) auto minmax(180px, 1fr) auto auto;
+  grid-template-columns: minmax(150px, 1.1fr) auto minmax(200px, 0.95fr) minmax(180px, 1fr) auto;
   align-items: center;
   gap: clamp(10px, 1.6vw, 20px);
   min-width: 0;
@@ -13354,6 +15310,51 @@ html {
   align-items: center;
   gap: 8px;
   flex: 0 0 auto;
+}
+
+.player-loop-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.player-loop-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.player-loop-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  overflow-x: auto;
+}
+
+.player-loop-chip {
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.player-loop-chip.active {
+  background: var(--accent);
+  color: #fff;
 }
 
 .sheet-fade-enter-active,
@@ -15364,7 +17365,7 @@ body>.navbar+.app .main.container {
   }
 
   .player-main {
-    grid-template-columns: minmax(92px, 0.8fr) auto minmax(72px, 1fr) auto;
+    grid-template-columns: minmax(88px, 0.75fr) auto minmax(0, 1fr) minmax(0, 1fr) auto;
     align-items: center;
     gap: 8px;
   }
@@ -15399,6 +17400,18 @@ body>.navbar+.app .main.container {
     order: 0;
     min-width: 0;
     gap: 6px;
+  }
+
+  .player-loop-controls {
+    order: 3;
+    width: 100%;
+    grid-column: 1 / -2;
+    justify-content: space-between;
+  }
+
+  .player-loop-group {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .player-speed-controls {
@@ -15588,7 +17601,7 @@ body>.navbar+.app .main.container {
   }
 
   .player-main {
-    grid-template-columns: minmax(132px, 0.9fr) auto minmax(150px, 1fr) auto auto;
+    grid-template-columns: minmax(132px, 0.9fr) auto minmax(160px, 0.9fr) minmax(150px, 1fr) auto;
     gap: 12px;
   }
 
