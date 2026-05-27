@@ -23870,6 +23870,7 @@ function createAdvancedState() {
       tab: 'tools',
       showTools: false,
       focusModeEnabled: false,
+      focusDimPercent: 54,
       blurModeEnabled: false,
       blurIntensity: 10,
       chainingEnabled: true,
@@ -24178,11 +24179,48 @@ function createAdvancedState() {
       var playModeLabel = this.playMode === 'manual' ? 'manual advance' : 'auto advance';
       return "".concat(repeatCount, "x repeats, ").concat(playModeLabel, ", ").concat(this.chainingEnabled ? "".concat(this.chainingMethod, " chaining") : 'plain sequence');
     },
+    activePracticeTechniques: function activePracticeTechniques() {
+      var items = [];
+      if (this.focusModeEnabled) {
+        items.push({
+          key: 'focus',
+          icon: 'bi bi-bullseye',
+          label: 'Focus Mode',
+          description: 'Non-active verses are softened so the current ayah stays central.'
+        });
+      }
+      if (this.blurModeEnabled) {
+        items.push({
+          key: 'blur',
+          icon: 'bi bi-cloud-haze2',
+          label: 'Blur Mode',
+          description: "Upcoming verses are hidden with ".concat(this.blurIntensity, "px blur for active recall.")
+        });
+      }
+      if (this.chainingEnabled) {
+        items.push({
+          key: 'chaining',
+          icon: 'bi bi-link-45deg',
+          label: this.chainingMethod === 'cumulative' ? 'Cumulative Chaining' : 'Linking Chaining',
+          description: "".concat(this.chainingRepetitions, " repeat").concat(this.chainingRepetitions === 1 ? '' : 's', " per chaining step.")
+        });
+      }
+      if (this.anchorModeEnabled) {
+        items.push({
+          key: 'anchor',
+          icon: 'bi bi-pin-angle-fill',
+          label: 'Anchor Mode',
+          description: this.anchorModeDescription
+        });
+      }
+      return items;
+    },
     appStyleVars: function appStyleVars() {
       return {
         '--ui-scale': this.uiScale,
         '--en-scale': this.enScale,
-        '--recall-blur': "".concat(this.blurIntensity, "px")
+        '--recall-blur': "".concat(this.blurIntensity, "px"),
+        '--focus-dim-opacity': "".concat(Math.max(0.25, Math.min(0.85, Number(this.focusDimPercent || 54) / 100)))
       };
     },
     chainingMethodDescription: function chainingMethodDescription() {
@@ -26702,6 +26740,15 @@ function createAdvancedState() {
     // Force re-render
     this.$forceUpdate();
     this.showBanner(this.tajweedEnabled ? 'Tajweed colors enabled' : 'Tajweed colors disabled', 'info', 1500);
+  }), "cycleQuranFontPill", function cycleQuranFontPill() {
+    var _this26 = this;
+    var options = this.quranFontOptions || [];
+    if (!options.length) return;
+    var currentIndex = Math.max(0, options.findIndex(function (f) {
+      return f.value === _this26.quranFont;
+    }));
+    var next = options[(currentIndex + 1) % options.length];
+    this.selectFont(next.value);
   }), "performToggleMode", function performToggleMode() {
     var newMode = this.currentMode === 'beginner' ? 'advanced' : 'beginner';
     this.currentMode = newMode;
@@ -26714,35 +26761,35 @@ function createAdvancedState() {
     this.persistUiState();
     this.$forceUpdate();
   }), "setupWordClickHandler", function setupWordClickHandler() {
-    var _this26 = this;
+    var _this27 = this;
     document.addEventListener('click', function (e) {
       var wordElement = e.target.closest('.wbw-word');
-      if (wordElement && _this26.wordByWordAudioEnabled) {
+      if (wordElement && _this27.wordByWordAudioEnabled) {
         var verseKey = wordElement.dataset.verseKey;
         var wordIndex = parseInt(wordElement.dataset.wordIndex);
         var wordAudio = wordElement.dataset.wordAudio;
         if (wordAudio) {
-          _this26.playWordAudio(wordAudio);
+          _this27.playWordAudio(wordAudio);
         } else {
           // Find verse and play from this word position
-          var verse = _this26.verses.find(function (v) {
+          var verse = _this27.verses.find(function (v) {
             return v.key === verseKey;
           });
           if (verse && verse.audio) {
-            _this26.playVerse(verse);
+            _this27.playVerse(verse);
           }
         }
       }
     });
   }), "getRemainingTimeDetails", function getRemainingTimeDetails() {
-    var _this27 = this;
+    var _this28 = this;
     var remainingItems = (this.queue || []).slice(this.queueIndex);
     if (!remainingItems.length) return null;
     var reviewTimePerAyah = 5;
     var totalAudioSeconds = 0;
     var totalReviewSeconds = 0;
     remainingItems.forEach(function (item, index) {
-      totalAudioSeconds += _this27.getQueueItemAudioSeconds(item, index === 0);
+      totalAudioSeconds += _this28.getQueueItemAudioSeconds(item, index === 0);
       totalReviewSeconds += reviewTimePerAyah;
     });
     var totalSeconds = totalAudioSeconds + totalReviewSeconds;
@@ -26766,13 +26813,13 @@ function createAdvancedState() {
     this.quranFont = fontValue;
     this.fontDropdownOpen = false;
     this.persistUiState();
-  }), "getCurrentFontLabel", function getCurrentFontLabel() {
-    var _this28 = this;
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "getCurrentFontLabel", function getCurrentFontLabel() {
+    var _this29 = this;
     var font = this.quranFontOptions.find(function (f) {
-      return f.value === _this28.quranFont;
+      return f.value === _this29.quranFont;
     });
     return font ? font.label : 'Font';
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "getFontIcon", function getFontIcon(fontValue) {
+  }), "getFontIcon", function getFontIcon(fontValue) {
     var font = this.quranFontOptions.find(function (f) {
       return f.value === fontValue;
     });
@@ -26828,14 +26875,14 @@ function createAdvancedState() {
     var newSize = Math.max(this.minFontSize, currentSize - this.fontSizeStep);
     this.verseFontSizes = _objectSpread(_objectSpread({}, this.verseFontSizes), {}, _defineProperty({}, verseKey, newSize));
     this.persistVerseFontSizes();
-  }), "resetVerseFont", function resetVerseFont(verseKey, event) {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "resetVerseFont", function resetVerseFont(verseKey, event) {
     event.stopPropagation();
     var _this$verseFontSizes = this.verseFontSizes,
       _ = _this$verseFontSizes[verseKey],
       rest = _objectWithoutProperties(_this$verseFontSizes, [verseKey].map(_toPropertyKey));
     this.verseFontSizes = rest;
     this.persistVerseFontSizes();
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "persistVerseFontSizes", function persistVerseFontSizes() {
+  }), "persistVerseFontSizes", function persistVerseFontSizes() {
     try {
       localStorage.setItem('telawa.verseFontSizes', JSON.stringify(this.verseFontSizes));
     } catch (e) {
@@ -26873,26 +26920,26 @@ function createAdvancedState() {
     var verseNumber = parseInt(verseParts[1]);
     return Math.abs(verseNumber - targetNumber) === 1;
   }), "downloadOfflineVerses", function downloadOfflineVerses() {
-    var _this29 = this;
+    var _this30 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5() {
-      var _this29$currentChapte, _this29$verses$, surahId, surahName, found, storageKey, offlineData, catalogKey, catalog, entry, filtered, _t;
+      var _this30$currentChapte, _this30$verses$, surahId, surahName, found, storageKey, offlineData, catalogKey, catalog, entry, filtered, _t;
       return _regenerator().w(function (_context5) {
         while (1) switch (_context5.p = _context5.n) {
           case 0:
-            if (!(!_this29.verses || !_this29.verses.length)) {
+            if (!(!_this30.verses || !_this30.verses.length)) {
               _context5.n = 1;
               break;
             }
-            _this29.showBanner('Load a surah first before downloading', 'info', 3000);
-            _this29.showTools = true;
+            _this30.showBanner('Load a surah first before downloading', 'info', 3000);
+            _this30.showTools = true;
             return _context5.a(2);
           case 1:
             _context5.p = 1;
-            surahId = _this29.chapterId;
-            surahName = (_this29$currentChapte = _this29.currentChapter) === null || _this29$currentChapte === void 0 ? void 0 : _this29$currentChapte.name_simple;
-            if (!surahId && (_this29$verses$ = _this29.verses[0]) !== null && _this29$verses$ !== void 0 && _this29$verses$.key) {
-              surahId = parseInt(_this29.verses[0].key.split(':')[0]);
-              found = _this29.chapters.find(function (c) {
+            surahId = _this30.chapterId;
+            surahName = (_this30$currentChapte = _this30.currentChapter) === null || _this30$currentChapte === void 0 ? void 0 : _this30$currentChapte.name_simple;
+            if (!surahId && (_this30$verses$ = _this30.verses[0]) !== null && _this30$verses$ !== void 0 && _this30$verses$.key) {
+              surahId = parseInt(_this30.verses[0].key.split(':')[0]);
+              found = _this30.chapters.find(function (c) {
                 return c.id === surahId;
               });
               surahName = (found === null || found === void 0 ? void 0 : found.name_simple) || 'Selected surah';
@@ -26901,21 +26948,21 @@ function createAdvancedState() {
               _context5.n = 2;
               break;
             }
-            _this29.showBanner('Could not identify surah', 'error', 3000);
+            _this30.showBanner('Could not identify surah', 'error', 3000);
             return _context5.a(2);
           case 2:
-            storageKey = "offline_surah_".concat(surahId, "_").concat(_this29.rangeStart, "_").concat(_this29.rangeEnd);
+            storageKey = "offline_surah_".concat(surahId, "_").concat(_this30.rangeStart, "_").concat(_this30.rangeEnd);
             offlineData = {
               metadata: {
                 surah: surahName,
                 surahId: surahId,
-                rangeStart: _this29.rangeStart,
-                rangeEnd: _this29.rangeEnd,
-                reciterId: _this29.reciterId,
+                rangeStart: _this30.rangeStart,
+                rangeEnd: _this30.rangeEnd,
+                reciterId: _this30.reciterId,
                 downloadedAt: new Date().toISOString(),
-                totalVerses: _this29.verses.length
+                totalVerses: _this30.verses.length
               },
-              verses: _this29.verses
+              verses: _this30.verses
             };
             localStorage.setItem(storageKey, JSON.stringify(offlineData));
 
@@ -26931,8 +26978,8 @@ function createAdvancedState() {
               id: storageKey,
               surah: surahName,
               surahId: surahId,
-              range: "".concat(_this29.rangeStart, "-").concat(_this29.rangeEnd),
-              count: _this29.verses.length,
+              range: "".concat(_this30.rangeStart, "-").concat(_this30.rangeEnd),
+              count: _this30.verses.length,
               date: new Date().toLocaleDateString()
             };
             filtered = catalog.filter(function (c) {
@@ -26940,15 +26987,15 @@ function createAdvancedState() {
             });
             filtered.push(entry);
             localStorage.setItem(catalogKey, JSON.stringify(filtered));
-            _this29.offlineSurahs = filtered;
-            _this29.showBanner("Saved ".concat(_this29.verses.length, " verses from ").concat(surahName, " for offline reading."), 'success', 3000);
+            _this30.offlineSurahs = filtered;
+            _this30.showBanner("Saved ".concat(_this30.verses.length, " verses from ").concat(surahName, " for offline reading."), 'success', 3000);
             _context5.n = 4;
             break;
           case 3:
             _context5.p = 3;
             _t = _context5.v;
             console.error('Download failed:', _t);
-            _this29.showBanner('Failed to download verses', 'error', 3000);
+            _this30.showBanner('Failed to download verses', 'error', 3000);
           case 4:
             return _context5.a(2);
         }
@@ -27008,22 +27055,22 @@ function createAdvancedState() {
     this.pendingDeleteId = '';
     this.showBanner('Offline surah removed', 'info', 2000);
   }), "downloadVerseAudio", function downloadVerseAudio(verse) {
-    var _this30 = this;
+    var _this31 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6() {
       var audioUrl, filename, downloadUrl, anchor;
       return _regenerator().w(function (_context6) {
         while (1) switch (_context6.n) {
           case 0:
-            audioUrl = _this30.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
+            audioUrl = _this31.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
             if (audioUrl) {
               _context6.n = 1;
               break;
             }
-            _this30.showBanner('Audio not available for this ayah', 'info', 2200);
+            _this31.showBanner('Audio not available for this ayah', 'info', 2200);
             return _context6.a(2);
           case 1:
             try {
-              filename = "surah-".concat(_this30.chapterId, "-ayah-").concat(verse.number, ".mp3");
+              filename = "surah-".concat(_this31.chapterId, "-ayah-").concat(verse.number, ".mp3");
               downloadUrl = "/memorisation/audio-download?url=".concat(encodeURIComponent(audioUrl), "&filename=").concat(encodeURIComponent(filename));
               anchor = document.createElement('a');
               anchor.href = downloadUrl;
@@ -27031,22 +27078,22 @@ function createAdvancedState() {
               document.body.appendChild(anchor);
               anchor.click();
               anchor.remove();
-              _this30.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
+              _this31.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
             } catch (error) {
               console.error('Verse download failed:', error);
-              _this30.showBanner('Failed to download ayah audio', 'error', 2600);
+              _this31.showBanner('Failed to download ayah audio', 'error', 2600);
             }
           case 2:
             return _context6.a(2);
         }
       }, _callee6);
     }))();
-  }), "getDisplayArabic", function getDisplayArabic(verse) {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "getDisplayArabic", function getDisplayArabic(verse) {
     if (!(verse !== null && verse !== void 0 && verse.arabic)) return '';
     if (this.wordByWordAudioEnabled) return this.splitArabicIntoWords(verse);
     if (this.tajweedEnabled && verse.arabic_tajweed) return this.normalizeTajweedMarkup(verse.arabic_tajweed);
     return this.stripTajweedMarkup(verse.arabic);
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "escapeHtml", function escapeHtml(str) {
+  }), "escapeHtml", function escapeHtml(str) {
     if (!str) return '';
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }), "buildWordTokenHtml", function buildWordTokenHtml(verse, word, idx, innerHtml) {
@@ -27067,36 +27114,36 @@ function createAdvancedState() {
     clone.innerHTML = innerHtml;
     return clone.outerHTML;
   }), "extractTajweedCharUnits", function extractTajweedCharUnits(node) {
-    var _this31 = this;
+    var _this32 = this;
     if (!node) return [];
     if (node.nodeType === Node.TEXT_NODE) {
       return Array.from(node.textContent || '').map(function (_char) {
         return {
           text: _char,
-          html: _this31.escapeHtml(_char)
+          html: _this32.escapeHtml(_char)
         };
       });
     }
     if (node.nodeType !== Node.ELEMENT_NODE) return [];
     var childUnits = Array.from(node.childNodes).flatMap(function (child) {
-      return _this31.extractTajweedCharUnits(child);
+      return _this32.extractTajweedCharUnits(child);
     });
     if (node.tagName === 'SPAN') {
       return childUnits.map(function (unit) {
         return {
           text: unit.text,
-          html: _this31.wrapHtmlWithElement(node, unit.html)
+          html: _this32.wrapHtmlWithElement(node, unit.html)
         };
       });
     }
     return childUnits;
   }), "buildTajweedWordTokens", function buildTajweedWordTokens(verse, tajweedHtml) {
-    var _this32 = this;
+    var _this33 = this;
     if (!tajweedHtml) return '';
     var tempDiv = document.createElement('div');
     tempDiv.innerHTML = tajweedHtml;
     var units = Array.from(tempDiv.childNodes).flatMap(function (node) {
-      return _this32.extractTajweedCharUnits(node);
+      return _this33.extractTajweedCharUnits(node);
     });
     var words = Array.isArray(verse.words) && verse.words.length ? verse.words : tokenizeArabicText(verse.arabic || '').map(function (ar) {
       return {
@@ -27134,7 +27181,7 @@ function createAdvancedState() {
         innerHtml += unit.html;
         collected += 1;
       }
-      html += _this32.buildWordTokenHtml(verse, word, idx, innerHtml);
+      html += _this33.buildWordTokenHtml(verse, word, idx, innerHtml);
     });
     while (cursor < units.length) {
       html += units[cursor].html;
@@ -27214,10 +27261,10 @@ function createAdvancedState() {
       return "data-tajweed=\"".concat(cleanMeta, "\">");
     }).replace(/<\/span><\/span>/g, '</span>').replace(/(?:class=|data-tajweed=)&quot;[^&]*&quot;/g, '');
     return normalized;
-  }), "stripTajweedMarkup", function stripTajweedMarkup(text) {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "stripTajweedMarkup", function stripTajweedMarkup(text) {
     if (!text) return '';
     return String(text).replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/<\s*\/?\s*tajweed[^>]*>/gi, '').replace(/<[^>]*>/g, '').replace(/\[(?:[a-z]|\/)[^\]]*\]/gi, '').trim();
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "getHighlightedArabic", function getHighlightedArabic(verse) {
+  }), "getHighlightedArabic", function getHighlightedArabic(verse) {
     if (!verse || !verse.arabic) return '';
     if (!this.wordByWordAudioEnabled) return verse.arabic;
     var highlightedHtml = this.splitArabicIntoWords(verse.arabic, verse.key);
@@ -27225,7 +27272,7 @@ function createAdvancedState() {
   }), "escapeRegex", function escapeRegex(str) {
     return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }), "splitArabicIntoWords", function splitArabicIntoWords(verse) {
-    var _this33 = this;
+    var _this34 = this;
     if (!verse || !verse.arabic) return '';
 
     // Get words from the verse object or tokenize
@@ -27254,12 +27301,12 @@ function createAdvancedState() {
     // Regular mode (without tajweed)
     words.forEach(function (word, idx) {
       var wordText = typeof word === 'string' ? word : word.ar;
-      html += "".concat(_this33.buildWordTokenHtml(verse, word, idx, _this33.escapeHtml(wordText)), " ");
+      html += "".concat(_this34.buildWordTokenHtml(verse, word, idx, _this34.escapeHtml(wordText)), " ");
     });
     return html;
   }), "getWordTimings", function getWordTimings(verse) {
     var _arguments2 = arguments,
-      _this34 = this;
+      _this35 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7() {
       var actualDuration, sourceWords, arabicText, safeDuration, cacheKey, cleanedWords, weightedUnits, totalUnits, timestamps, currentTime;
       return _regenerator().w(function (_context7) {
@@ -27298,16 +27345,16 @@ function createAdvancedState() {
             } else if (verse.duration && Number(verse.duration) > 0) {
               safeDuration = Number(verse.duration);
             } else {
-              safeDuration = _this34.estimateVerseDuration(verse);
+              safeDuration = _this35.estimateVerseDuration(verse);
             }
 
             // Keep timestamps in media-time because audioElement.currentTime is also media-time.
-            cacheKey = "".concat(verse.key, "_").concat(_this34.reciterId, "_").concat(Math.round(safeDuration * 10));
-            if (!_this34.wordTimestampsMap.has(cacheKey)) {
+            cacheKey = "".concat(verse.key, "_").concat(_this35.reciterId, "_").concat(Math.round(safeDuration * 10));
+            if (!_this35.wordTimestampsMap.has(cacheKey)) {
               _context7.n = 3;
               break;
             }
-            return _context7.a(2, _this34.wordTimestampsMap.get(cacheKey));
+            return _context7.a(2, _this35.wordTimestampsMap.get(cacheKey));
           case 3:
             // Build a normalized timing track so highlight end time always matches audio end time.
             cleanedWords = sourceWords.map(function (word) {
@@ -27333,13 +27380,13 @@ function createAdvancedState() {
               });
               currentTime += wordDuration;
             });
-            _this34.wordTimestampsMap.set(cacheKey, timestamps);
+            _this35.wordTimestampsMap.set(cacheKey, timestamps);
             return _context7.a(2, timestamps);
         }
       }, _callee7);
     }))();
   }), "calculateWordTimings", function calculateWordTimings(verse) {
-    var _this35 = this;
+    var _this36 = this;
     var audioDuration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     return new Promise(function (resolve) {
       if (!verse.words || verse.words.length === 0) {
@@ -27347,7 +27394,7 @@ function createAdvancedState() {
         return;
       }
       var wordCount = verse.words.length;
-      var totalDuration = audioDuration || _this35.estimateVerseDuration(verse);
+      var totalDuration = audioDuration || _this36.estimateVerseDuration(verse);
       var durationPerWord = totalDuration / wordCount;
       var timestamps = [];
       var currentTime = 0;
@@ -27369,21 +27416,21 @@ function createAdvancedState() {
     return baseDuration;
   }), "startWordHighlighting", function startWordHighlighting(verse) {
     var _arguments3 = arguments,
-      _this36 = this;
+      _this37 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee8() {
       var options, timestamps;
       return _regenerator().w(function (_context8) {
         while (1) switch (_context8.n) {
           case 0:
             options = _arguments3.length > 1 && _arguments3[1] !== undefined ? _arguments3[1] : {};
-            if (!(!(verse !== null && verse !== void 0 && verse.key) || !_this36.wordByWordAudioEnabled)) {
+            if (!(!(verse !== null && verse !== void 0 && verse.key) || !_this37.wordByWordAudioEnabled)) {
               _context8.n = 1;
               break;
             }
             return _context8.a(2);
           case 1:
             _context8.n = 2;
-            return _this36.ensureWordHighlightTrack(verse, options);
+            return _this37.ensureWordHighlightTrack(verse, options);
           case 2:
             timestamps = _context8.v;
             if (timestamps.length) {
@@ -27392,7 +27439,7 @@ function createAdvancedState() {
             }
             return _context8.a(2);
           case 3:
-            _this36.queueWordHighlightFrame(verse);
+            _this37.queueWordHighlightFrame(verse);
           case 4:
             return _context8.a(2);
         }
@@ -27409,7 +27456,7 @@ function createAdvancedState() {
     this.currentPhraseIndex = this.currentWordIndex;
     this.applyWordHighlightClasses(verseKey, this.currentWordIndex);
     this.$forceUpdate();
-  }), "applyWordHighlightClasses", function applyWordHighlightClasses(verseKey, activeIndex) {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "applyWordHighlightClasses", function applyWordHighlightClasses(verseKey, activeIndex) {
     document.querySelectorAll('.verse-arabic .wbw-word.highlighted, .verse-arabic word.highlighted, .word-item.highlighted, .wbw-word.phrase-highlighted, .word-item.phrase-highlighted').forEach(function (node) {
       node.classList.remove('highlighted');
       node.classList.remove('phrase-highlighted');
@@ -27430,7 +27477,7 @@ function createAdvancedState() {
         node.classList.remove('phrase-highlighted');
       }
     });
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "findWordTimingIndex", function findWordTimingIndex(currentTime) {
+  }), "findWordTimingIndex", function findWordTimingIndex(currentTime) {
     var _timestamps;
     var timestamps = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.wordHighlightTimestamps;
     if (!Array.isArray(timestamps) || !timestamps.length) return -1;
@@ -27455,64 +27502,64 @@ function createAdvancedState() {
     }
     return -1;
   }), "queueWordHighlightFrame", function queueWordHighlightFrame() {
-    var _this37 = this;
+    var _this38 = this;
     var verse = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.activeVerseRef;
     if (this.wordHighlightFrame) window.cancelAnimationFrame(this.wordHighlightFrame);
     this.wordHighlightFrame = null;
     if (!(verse !== null && verse !== void 0 && verse.key) || !this.audioElement || this.audioElement.paused || this.audioElement.ended) return;
     var _tick = function tick() {
-      if (!_this37.audioElement || _this37.audioElement.paused || _this37.audioElement.ended) {
-        _this37.wordHighlightFrame = null;
+      if (!_this38.audioElement || _this38.audioElement.paused || _this38.audioElement.ended) {
+        _this38.wordHighlightFrame = null;
         return;
       }
-      _this37.syncWordHighlightFromAudio(verse);
-      _this37.wordHighlightFrame = window.requestAnimationFrame(_tick);
+      _this38.syncWordHighlightFromAudio(verse);
+      _this38.wordHighlightFrame = window.requestAnimationFrame(_tick);
     };
     this.wordHighlightFrame = window.requestAnimationFrame(_tick);
   }), "ensureWordHighlightTrack", function ensureWordHighlightTrack(verse) {
     var _arguments4 = arguments,
-      _this38 = this;
+      _this39 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee9() {
-      var _this38$wordHighlight, _this38$audioElement;
+      var _this39$wordHighlight, _this39$audioElement;
       var options, _options$force, force, requestId, duration, timestamps;
       return _regenerator().w(function (_context9) {
         while (1) switch (_context9.n) {
           case 0:
             options = _arguments4.length > 1 && _arguments4[1] !== undefined ? _arguments4[1] : {};
             _options$force = options.force, force = _options$force === void 0 ? false : _options$force;
-            if (!(!(verse !== null && verse !== void 0 && verse.key) || !_this38.wordByWordAudioEnabled)) {
+            if (!(!(verse !== null && verse !== void 0 && verse.key) || !_this39.wordByWordAudioEnabled)) {
               _context9.n = 1;
               break;
             }
             return _context9.a(2, []);
           case 1:
-            if (!(!force && _this38.currentHighlightedVerseKey === verse.key && (_this38$wordHighlight = _this38.wordHighlightTimestamps) !== null && _this38$wordHighlight !== void 0 && _this38$wordHighlight.length)) {
+            if (!(!force && _this39.currentHighlightedVerseKey === verse.key && (_this39$wordHighlight = _this39.wordHighlightTimestamps) !== null && _this39$wordHighlight !== void 0 && _this39$wordHighlight.length)) {
               _context9.n = 2;
               break;
             }
-            return _context9.a(2, _this38.wordHighlightTimestamps);
+            return _context9.a(2, _this39.wordHighlightTimestamps);
           case 2:
-            requestId = ++_this38.wordHighlightRequestId;
-            _this38.wordHighlightLoading = true;
-            _this38.currentHighlightedVerseKey = verse.key;
-            _this38.currentWordIndex = -1;
-            _this38.currentPhraseIndex = -1;
-            duration = Number((_this38$audioElement = _this38.audioElement) === null || _this38$audioElement === void 0 ? void 0 : _this38$audioElement.duration);
+            requestId = ++_this39.wordHighlightRequestId;
+            _this39.wordHighlightLoading = true;
+            _this39.currentHighlightedVerseKey = verse.key;
+            _this39.currentWordIndex = -1;
+            _this39.currentPhraseIndex = -1;
+            duration = Number((_this39$audioElement = _this39.audioElement) === null || _this39$audioElement === void 0 ? void 0 : _this39$audioElement.duration);
             _context9.n = 3;
-            return _this38.getWordTimings(verse, Number.isFinite(duration) && duration > 0 ? duration : null);
+            return _this39.getWordTimings(verse, Number.isFinite(duration) && duration > 0 ? duration : null);
           case 3:
             timestamps = _context9.v;
-            if (!(requestId !== _this38.wordHighlightRequestId)) {
+            if (!(requestId !== _this39.wordHighlightRequestId)) {
               _context9.n = 4;
               break;
             }
             return _context9.a(2, []);
           case 4:
-            _this38.wordHighlightLoading = false;
-            _this38.wordHighlightTimestamps = Array.isArray(timestamps) ? timestamps : [];
-            _this38.syncWordHighlightFromAudio(verse);
-            _this38.$forceUpdate();
-            return _context9.a(2, _this38.wordHighlightTimestamps);
+            _this39.wordHighlightLoading = false;
+            _this39.wordHighlightTimestamps = Array.isArray(timestamps) ? timestamps : [];
+            _this39.syncWordHighlightFromAudio(verse);
+            _this39.$forceUpdate();
+            return _context9.a(2, _this39.wordHighlightTimestamps);
         }
       }, _callee9);
     }))();
@@ -27526,12 +27573,12 @@ function createAdvancedState() {
       this.updateWordHighlight(verse.key, activeIndex);
     }
   }), "restoreWordScroll", function restoreWordScroll(verseKey) {
-    var _this39 = this;
+    var _this40 = this;
     this.$nextTick(function () {
       if (!verseKey) return;
       var verseCard = document.querySelector(".verse-card[data-verse-key=\"".concat(verseKey, "\"]"));
       var wordsWrap = verseCard === null || verseCard === void 0 ? void 0 : verseCard.querySelector('.verse-words');
-      var remembered = _this39.verseScrollMemory[verseKey];
+      var remembered = _this40.verseScrollMemory[verseKey];
       if (!wordsWrap || !remembered) return;
       wordsWrap.scrollTop = Number(remembered.top || 0);
       wordsWrap.scrollLeft = Number(remembered.left || 0);
@@ -27558,7 +27605,7 @@ function createAdvancedState() {
     this.wordHighlightTimestamps = [];
     this.$forceUpdate();
   }), "initAudio", function initAudio() {
-    var _this40 = this;
+    var _this41 = this;
     this.audioElement = this.$refs.audio;
     if (!this.audioElement) return;
     this.audioElement.removeEventListener('timeupdate', this.audioTimeUpdate);
@@ -27571,112 +27618,112 @@ function createAdvancedState() {
     this.audioElement.removeEventListener('ratechange', this.audioRateChange);
     this.audioElement.removeEventListener('loadstart', this.audioLoadStart);
     this.audioTimeUpdate = function () {
-      _this40.currentTime = _this40.audioElement.currentTime;
-      _this40.duration = _this40.audioElement.duration;
-      _this40.centralSession.audio.currentTime = Number(_this40.currentTime || 0);
-      _this40.centralSession.audio.speed = Number(_this40.speed || 1);
-      if (_this40.segmentEndTime > 0 && Number(_this40.currentTime || 0) >= _this40.segmentEndTime - 0.04) {
-        _this40.handleSegmentBoundary();
+      _this41.currentTime = _this41.audioElement.currentTime;
+      _this41.duration = _this41.audioElement.duration;
+      _this41.centralSession.audio.currentTime = Number(_this41.currentTime || 0);
+      _this41.centralSession.audio.speed = Number(_this41.speed || 1);
+      if (_this41.segmentEndTime > 0 && Number(_this41.currentTime || 0) >= _this41.segmentEndTime - 0.04) {
+        _this41.handleSegmentBoundary();
         return;
       }
-      if (_this40.wordByWordAudioEnabled) {
-        var _verse = _this40.activeVerseRef;
+      if (_this41.wordByWordAudioEnabled) {
+        var _verse = _this41.activeVerseRef;
         if (_verse && _verse.key) {
-          var _this40$wordHighlight;
-          if ((!((_this40$wordHighlight = _this40.wordHighlightTimestamps) !== null && _this40$wordHighlight !== void 0 && _this40$wordHighlight.length) || _this40.currentHighlightedVerseKey !== _verse.key) && !_this40.wordHighlightLoading) {
-            _this40.startWordHighlighting(_verse);
-          } else if (!_this40.wordHighlightLoading) {
-            _this40.syncWordHighlightFromAudio(_verse);
+          var _this41$wordHighlight;
+          if ((!((_this41$wordHighlight = _this41.wordHighlightTimestamps) !== null && _this41$wordHighlight !== void 0 && _this41$wordHighlight.length) || _this41.currentHighlightedVerseKey !== _verse.key) && !_this41.wordHighlightLoading) {
+            _this41.startWordHighlighting(_verse);
+          } else if (!_this41.wordHighlightLoading) {
+            _this41.syncWordHighlightFromAudio(_verse);
           }
         }
       }
 
       // Waveform - separate from word highlighting (works even if word-by-word is off)
-      var verse = _this40.activeVerseRef;
-      if (verse && verse.key !== _this40.currentWaveVerseKey) {
-        _this40.currentWaveVerseKey = verse.key;
+      var verse = _this41.activeVerseRef;
+      if (verse && verse.key !== _this41.currentWaveVerseKey) {
+        _this41.currentWaveVerseKey = verse.key;
       }
     };
     this.audioEnded = function () {
-      if (_this40.advanceLocked) return;
-      _this40.advanceLocked = true;
-      _this40.isPlaying = false;
-      _this40.stopWordHighlighting();
-      if (_this40.guidedUiStep === 'learn') {
-        _this40.flowListenPlays += 1;
-        _this40.persistUiState();
+      if (_this41.advanceLocked) return;
+      _this41.advanceLocked = true;
+      _this41.isPlaying = false;
+      _this41.stopWordHighlighting();
+      if (_this41.guidedUiStep === 'learn') {
+        _this41.flowListenPlays += 1;
+        _this41.persistUiState();
       }
-      var gapSeconds = _this40.getCurrentPlaybackGapSeconds();
+      var gapSeconds = _this41.getCurrentPlaybackGapSeconds();
       var gapDelayMs = Math.max(0, gapSeconds * 1000);
-      if (_this40.playMode === 'auto') {
-        if (!_this40.chainingEnabled && _this40.selectedLoopCount === 'infinite' && _this40.activeQueueEntry) {
+      if (_this41.playMode === 'auto') {
+        if (!_this41.chainingEnabled && _this41.selectedLoopCount === 'infinite' && _this41.activeQueueEntry) {
           window.setTimeout(function () {
-            var entry = _this40.activeQueueEntry;
-            _this40.advanceLocked = false;
+            var entry = _this41.activeQueueEntry;
+            _this41.advanceLocked = false;
             if (entry) {
-              _this40.playQueueEntry(entry, {
+              _this41.playQueueEntry(entry, {
                 force: true,
-                queueIndex: _this40.queueIndex
+                queueIndex: _this41.queueIndex
               });
             }
           }, gapDelayMs);
           return;
         }
         window.setTimeout(function () {
-          _this40.advanceLocked = false;
-          _this40.next();
+          _this41.advanceLocked = false;
+          _this41.next();
         }, gapDelayMs);
       } else {
-        _this40.advanceLocked = false;
+        _this41.advanceLocked = false;
       }
     };
     this.audioSeeking = function () {
-      if (_this40.wordHighlightFrame) window.cancelAnimationFrame(_this40.wordHighlightFrame);
-      _this40.wordHighlightFrame = null;
-      if (_this40.currentHighlightedVerseKey) _this40.updateWordHighlight(_this40.currentHighlightedVerseKey, -1);
+      if (_this41.wordHighlightFrame) window.cancelAnimationFrame(_this41.wordHighlightFrame);
+      _this41.wordHighlightFrame = null;
+      if (_this41.currentHighlightedVerseKey) _this41.updateWordHighlight(_this41.currentHighlightedVerseKey, -1);
     };
     this.audioSeeked = function () {
-      var verse = _this40.activeVerseRef;
+      var verse = _this41.activeVerseRef;
       if (!verse) return;
-      if (_this40.wordByWordAudioEnabled) {
-        _this40.ensureWordHighlightTrack(verse).then(function () {
-          var _this40$audioElement;
-          _this40.syncWordHighlightFromAudio(verse);
-          if (!((_this40$audioElement = _this40.audioElement) !== null && _this40$audioElement !== void 0 && _this40$audioElement.paused)) _this40.queueWordHighlightFrame(verse);
+      if (_this41.wordByWordAudioEnabled) {
+        _this41.ensureWordHighlightTrack(verse).then(function () {
+          var _this41$audioElement;
+          _this41.syncWordHighlightFromAudio(verse);
+          if (!((_this41$audioElement = _this41.audioElement) !== null && _this41$audioElement !== void 0 && _this41$audioElement.paused)) _this41.queueWordHighlightFrame(verse);
         });
       }
     };
     this.audioPaused = function () {
-      _this40.isPlaying = false;
-      if (_this40.wordHighlightFrame) window.cancelAnimationFrame(_this40.wordHighlightFrame);
-      _this40.wordHighlightFrame = null;
+      _this41.isPlaying = false;
+      if (_this41.wordHighlightFrame) window.cancelAnimationFrame(_this41.wordHighlightFrame);
+      _this41.wordHighlightFrame = null;
     };
     this.audioPlaying = function () {
-      _this40.isPlaying = true;
-      var verse = _this40.activeVerseRef;
-      if (verse && _this40.wordByWordAudioEnabled) {
-        _this40.startWordHighlighting(verse);
+      _this41.isPlaying = true;
+      var verse = _this41.activeVerseRef;
+      if (verse && _this41.wordByWordAudioEnabled) {
+        _this41.startWordHighlighting(verse);
       }
     };
     this.audioRateChange = function () {
-      var _this40$audioElement2, _this40$wordHighlight2;
-      _this40.centralSession.audio.speed = Number(((_this40$audioElement2 = _this40.audioElement) === null || _this40$audioElement2 === void 0 ? void 0 : _this40$audioElement2.playbackRate) || _this40.speed || 1);
-      var verse = _this40.activeVerseRef;
-      if (verse && _this40.wordByWordAudioEnabled && (_this40$wordHighlight2 = _this40.wordHighlightTimestamps) !== null && _this40$wordHighlight2 !== void 0 && _this40$wordHighlight2.length) {
-        var _this40$audioElement3;
-        _this40.syncWordHighlightFromAudio(verse);
-        if (!((_this40$audioElement3 = _this40.audioElement) !== null && _this40$audioElement3 !== void 0 && _this40$audioElement3.paused)) _this40.queueWordHighlightFrame(verse);
+      var _this41$audioElement2, _this41$wordHighlight2;
+      _this41.centralSession.audio.speed = Number(((_this41$audioElement2 = _this41.audioElement) === null || _this41$audioElement2 === void 0 ? void 0 : _this41$audioElement2.playbackRate) || _this41.speed || 1);
+      var verse = _this41.activeVerseRef;
+      if (verse && _this41.wordByWordAudioEnabled && (_this41$wordHighlight2 = _this41.wordHighlightTimestamps) !== null && _this41$wordHighlight2 !== void 0 && _this41$wordHighlight2.length) {
+        var _this41$audioElement3;
+        _this41.syncWordHighlightFromAudio(verse);
+        if (!((_this41$audioElement3 = _this41.audioElement) !== null && _this41$audioElement3 !== void 0 && _this41$audioElement3.paused)) _this41.queueWordHighlightFrame(verse);
       }
     };
     this.audioLoadStart = function () {
-      _this40.stopWordHighlighting();
+      _this41.stopWordHighlighting();
     };
     this.audioError = function (e) {
       console.error('Audio error:', e);
-      _this40.isPlaying = false;
-      _this40.sessionErrorCount += 1;
-      _this40.stopWordHighlighting();
-      _this40.showBanner('Audio playback error', 'error', 3000);
+      _this41.isPlaying = false;
+      _this41.sessionErrorCount += 1;
+      _this41.stopWordHighlighting();
+      _this41.showBanner('Audio playback error', 'error', 3000);
     };
     this.audioElement.addEventListener('timeupdate', this.audioTimeUpdate);
     this.audioElement.addEventListener('ended', this.audioEnded);
@@ -27687,88 +27734,88 @@ function createAdvancedState() {
     this.audioElement.addEventListener('playing', this.audioPlaying);
     this.audioElement.addEventListener('ratechange', this.audioRateChange);
     this.audioElement.addEventListener('loadstart', this.audioLoadStart);
-  }), "playVerse", function playVerse(verse) {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "playVerse", function playVerse(verse) {
     var _arguments5 = arguments,
-      _this41 = this;
+      _this42 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee10() {
-      var _this41$audioElement;
+      var _this42$audioElement;
       var options, audioUrl, currentSrc, isSameSource;
       return _regenerator().w(function (_context10) {
         while (1) switch (_context10.n) {
           case 0:
             options = _arguments5.length > 1 && _arguments5[1] !== undefined ? _arguments5[1] : {};
-            if (!(_this41.playRequestLocked && !options.force)) {
+            if (!(_this42.playRequestLocked && !options.force)) {
               _context10.n = 1;
               break;
             }
             return _context10.a(2);
           case 1:
-            _this41.playRequestLocked = true;
-            if (_this41.segmentPlaybackTimer) {
-              clearTimeout(_this41.segmentPlaybackTimer);
-              _this41.segmentPlaybackTimer = null;
+            _this42.playRequestLocked = true;
+            if (_this42.segmentPlaybackTimer) {
+              clearTimeout(_this42.segmentPlaybackTimer);
+              _this42.segmentPlaybackTimer = null;
             }
-            _this41.segmentEndTime = 0;
+            _this42.segmentEndTime = 0;
             if (verse) {
               _context10.n = 2;
               break;
             }
             console.error('No verse provided');
-            _this41.playRequestLocked = false;
+            _this42.playRequestLocked = false;
             return _context10.a(2);
           case 2:
             if (verse.audio) {
               _context10.n = 3;
               break;
             }
-            _this41.showBanner("Audio not available for verse ".concat(verse.number), 'info', 2000);
-            _this41.playRequestLocked = false;
+            _this42.showBanner("Audio not available for verse ".concat(verse.number), 'info', 2000);
+            _this42.playRequestLocked = false;
             return _context10.a(2);
           case 3:
-            audioUrl = _this41.normalizeAudioUrl(verse.audio);
-            currentSrc = (_this41$audioElement = _this41.audioElement) !== null && _this41$audioElement !== void 0 && _this41$audioElement.currentSrc ? _this41.normalizeAudioUrl(_this41.audioElement.currentSrc) : '';
+            audioUrl = _this42.normalizeAudioUrl(verse.audio);
+            currentSrc = (_this42$audioElement = _this42.audioElement) !== null && _this42$audioElement !== void 0 && _this42$audioElement.currentSrc ? _this42.normalizeAudioUrl(_this42.audioElement.currentSrc) : '';
             isSameSource = !!currentSrc && currentSrc === audioUrl; // Toggle if same verse is playing
-            if (!(!options.force && _this41.activeKey === verse.key && isSameSource)) {
+            if (!(!options.force && _this42.activeKey === verse.key && isSameSource)) {
               _context10.n = 4;
               break;
             }
-            _this41.togglePlay();
-            _this41.playRequestLocked = false;
+            _this42.togglePlay();
+            _this42.playRequestLocked = false;
             return _context10.a(2);
           case 4:
             // Stop current playback and highlighting
-            _this41.stopWordHighlighting();
-            if (_this41.audioElement) {
+            _this42.stopWordHighlighting();
+            if (_this42.audioElement) {
               try {
-                _this41.audioElement.pause();
+                _this42.audioElement.pause();
               } catch (e) {
                 console.warn('Error pausing audio:', e);
               }
             }
-            _this41.setActiveVerse(verse.key, {
+            _this42.setActiveVerse(verse.key, {
               scroll: false,
               queueIndex: Number.isFinite(options.queueIndex) ? Number(options.queueIndex) : undefined
             });
-            if (_this41.audioElement) {
+            if (_this42.audioElement) {
               _context10.n = 6;
               break;
             }
-            _this41.audioElement = _this41.$refs.audio;
-            if (_this41.audioElement) {
+            _this42.audioElement = _this42.$refs.audio;
+            if (_this42.audioElement) {
               _context10.n = 5;
               break;
             }
-            _this41.showBanner('Audio system not ready', 'error', 3000);
-            _this41.playRequestLocked = false;
+            _this42.showBanner('Audio system not ready', 'error', 3000);
+            _this42.playRequestLocked = false;
             return _context10.a(2);
           case 5:
-            _this41.initAudio();
+            _this42.initAudio();
           case 6:
             if (!isSameSource) {
-              _this41.audioElement.src = audioUrl;
-              _this41.audioElement.load();
+              _this42.audioElement.src = audioUrl;
+              _this42.audioElement.load();
             }
-            _this41.playerVisible = true;
+            _this42.playerVisible = true;
             return _context10.a(2, new Promise(function (resolve, reject) {
               var timeout = setTimeout(function () {
                 reject(new Error('Audio load timeout'));
@@ -27780,49 +27827,49 @@ function createAdvancedState() {
                     while (1) switch (_context0.p = _context0.n) {
                       case 0:
                         clearTimeout(timeout);
-                        _this41.audioElement.playbackRate = _this41.speed;
+                        _this42.audioElement.playbackRate = _this42.speed;
                         segment = options.segment || null;
                         segmentTotal = Math.max(1, Number((segment === null || segment === void 0 ? void 0 : segment.sequenceTotal) || (segment === null || segment === void 0 ? void 0 : segment.total) || 1));
                         segmentIndex = Math.max(0, Math.min(segmentTotal - 1, Number((segment === null || segment === void 0 ? void 0 : segment.index) || 0)));
                         segmentEnd = 0;
-                        if (segment && Number.isFinite(_this41.audioElement.duration) && _this41.audioElement.duration > 0 && segmentTotal > 1) {
-                          duration = Number(_this41.audioElement.duration || 0);
+                        if (segment && Number.isFinite(_this42.audioElement.duration) && _this42.audioElement.duration > 0 && segmentTotal > 1) {
+                          duration = Number(_this42.audioElement.duration || 0);
                           segmentStart = Math.max(0, duration * (segmentIndex / segmentTotal));
                           segmentEnd = Math.min(duration, duration * ((segmentIndex + 1) / segmentTotal));
-                          _this41.segmentEndTime = segmentEnd;
-                          _this41.audioElement.currentTime = segmentStart;
+                          _this42.segmentEndTime = segmentEnd;
+                          _this42.audioElement.currentTime = segmentStart;
                         }
                         _context0.p = 1;
                         _context0.n = 2;
-                        return _this41.audioElement.play();
+                        return _this42.audioElement.play();
                       case 2:
-                        _this41.markPlaybackStart();
-                        _this41.addActivityEvent({
+                        _this42.markPlaybackStart();
+                        _this42.addActivityEvent({
                           ts: Date.now(),
                           type: 'play',
                           verseKey: verse.key
                         });
-                        _this41.recomputeAnalytics();
-                        if (_this41.wordByWordAudioEnabled) {
-                          _this41.ensureWordHighlightTrack(verse, {
+                        _this42.recomputeAnalytics();
+                        if (_this42.wordByWordAudioEnabled) {
+                          _this42.ensureWordHighlightTrack(verse, {
                             force: true
                           }).then(function () {
-                            var _this41$audioElement2;
-                            _this41.syncWordHighlightFromAudio(verse);
-                            if (!((_this41$audioElement2 = _this41.audioElement) !== null && _this41$audioElement2 !== void 0 && _this41$audioElement2.paused)) _this41.queueWordHighlightFrame(verse);
+                            var _this42$audioElement2;
+                            _this42.syncWordHighlightFromAudio(verse);
+                            if (!((_this42$audioElement2 = _this42.audioElement) !== null && _this42$audioElement2 !== void 0 && _this42$audioElement2.paused)) _this42.queueWordHighlightFrame(verse);
                           })["catch"](function (err) {
                             console.warn('Word highlight bootstrap failed:', err);
                           });
                         }
-                        _this41.playRequestLocked = false;
+                        _this42.playRequestLocked = false;
                         resolve();
                         _context0.n = 4;
                         break;
                       case 3:
                         _context0.p = 3;
                         _t2 = _context0.v;
-                        _this41.isPlaying = false;
-                        _this41.playRequestLocked = false;
+                        _this42.isPlaying = false;
+                        _this42.playRequestLocked = false;
                         reject(_t2);
                       case 4:
                         return _context0.a(2);
@@ -27841,7 +27888,7 @@ function createAdvancedState() {
                         _context1.n = 1;
                         return startPlayback();
                       case 1:
-                        _this41.audioElement.removeEventListener('canplay', _canPlayHandler);
+                        _this42.audioElement.removeEventListener('canplay', _canPlayHandler);
                       case 2:
                         return _context1.a(2);
                     }
@@ -27853,29 +27900,29 @@ function createAdvancedState() {
               }();
               var _errorHandler = function errorHandler(err) {
                 clearTimeout(timeout);
-                _this41.isPlaying = false;
-                _this41.playRequestLocked = false;
+                _this42.isPlaying = false;
+                _this42.playRequestLocked = false;
                 reject(err);
-                _this41.audioElement.removeEventListener('error', _errorHandler);
+                _this42.audioElement.removeEventListener('error', _errorHandler);
               };
-              _this41.audioElement.addEventListener('error', _errorHandler, {
+              _this42.audioElement.addEventListener('error', _errorHandler, {
                 once: true
               });
-              if (isSameSource && _this41.audioElement.readyState >= 2) {
+              if (isSameSource && _this42.audioElement.readyState >= 2) {
                 startPlayback();
               } else {
-                _this41.audioElement.addEventListener('canplay', _canPlayHandler);
+                _this42.audioElement.addEventListener('canplay', _canPlayHandler);
               }
             })["catch"](function (err) {
               console.error('playVerse failed:', err);
-              _this41.isPlaying = false;
-              _this41.playRequestLocked = false;
-              _this41.showBanner('Failed to play audio', 'error', 3000);
+              _this42.isPlaying = false;
+              _this42.playRequestLocked = false;
+              _this42.showBanner('Failed to play audio', 'error', 3000);
             }));
         }
       }, _callee10);
     }))();
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "playQueueEntry", function playQueueEntry(entry) {
+  }), "playQueueEntry", function playQueueEntry(entry) {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     if (!entry) return Promise.resolve();
     var verse = entry.verse || entry;
@@ -27898,26 +27945,26 @@ function createAdvancedState() {
     this.isPlaying = false;
   }), "togglePlay", function togglePlay() {
     var _this$audioElement7,
-      _this42 = this;
+      _this43 = this;
     if (!((_this$audioElement7 = this.audioElement) !== null && _this$audioElement7 !== void 0 && _this$audioElement7.src)) return;
     if (this.audioElement.paused) {
       this.audioElement.play().then(function () {
-        _this42.isPlaying = true;
-        var verse = _this42.activeVerseRef;
-        if (verse && _this42.wordByWordAudioEnabled) {
-          _this42.ensureWordHighlightTrack(verse, {
+        _this43.isPlaying = true;
+        var verse = _this43.activeVerseRef;
+        if (verse && _this43.wordByWordAudioEnabled) {
+          _this43.ensureWordHighlightTrack(verse, {
             force: true
           }).then(function () {
-            var _this42$audioElement;
-            _this42.syncWordHighlightFromAudio(verse);
-            if (!((_this42$audioElement = _this42.audioElement) !== null && _this42$audioElement !== void 0 && _this42$audioElement.paused)) _this42.queueWordHighlightFrame(verse);
+            var _this43$audioElement;
+            _this43.syncWordHighlightFromAudio(verse);
+            if (!((_this43$audioElement = _this43.audioElement) !== null && _this43$audioElement !== void 0 && _this43$audioElement.paused)) _this43.queueWordHighlightFrame(verse);
           })["catch"](function (err) {
             console.warn('Word highlight resume failed:', err);
           });
         }
       })["catch"](function (err) {
         console.error('Failed to play:', err);
-        _this42.showBanner('Playback failed', 'error', 2000);
+        _this43.showBanner('Playback failed', 'error', 2000);
       });
     } else {
       this.audioElement.pause();
@@ -27926,7 +27973,7 @@ function createAdvancedState() {
   }), "applySpeed", function applySpeed() {
     if (this.audioElement) this.audioElement.playbackRate = this.speed;
   }), "next", function next() {
-    var _this43 = this;
+    var _this44 = this;
     if (this.advanceLocked) return;
     this.advanceLocked = true;
     if (this.canNext) {
@@ -27944,7 +27991,7 @@ function createAdvancedState() {
           queueIndex: this.queueIndex
         });
         this.$nextTick(function () {
-          return _this43.$forceUpdate();
+          return _this44.$forceUpdate();
         });
       }
       var v = this.queue[this.queueIndex];
@@ -27953,7 +28000,7 @@ function createAdvancedState() {
           force: true,
           queueIndex: this.queueIndex
         })["finally"](function () {
-          _this43.advanceLocked = false;
+          _this44.advanceLocked = false;
         });
       } else {
         this.advanceLocked = false;
@@ -27964,7 +28011,7 @@ function createAdvancedState() {
     this.handleSessionComplete();
   }), "prev", function prev() {
     var _entry$verse2,
-      _this44 = this;
+      _this45 = this;
     if (!this.canPrev) return;
     if (this.advanceLocked) return;
     this.advanceLocked = true;
@@ -27982,7 +28029,7 @@ function createAdvancedState() {
         queueIndex: this.queueIndex
       });
       this.$nextTick(function () {
-        return _this44.$forceUpdate();
+        return _this45.$forceUpdate();
       });
     }
     var v = this.queue[this.queueIndex];
@@ -27991,7 +28038,7 @@ function createAdvancedState() {
         force: true,
         queueIndex: this.queueIndex
       })["finally"](function () {
-        _this44.advanceLocked = false;
+        _this45.advanceLocked = false;
       });
     } else {
       this.advanceLocked = false;
@@ -28016,14 +28063,14 @@ function createAdvancedState() {
     this.persistAudioState();
   }), "loadVerses", function loadVerses() {
     var _arguments6 = arguments,
-      _this45 = this;
+      _this46 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee11() {
       var mode, target, chapterId, rangeStart, rangeEnd, reciterId, requestId, targetConfig, _cached$verses, _audioRes$data, _translationRes$data, _translitRes$data, _arabicRes$data, _tajweedRes$data, cached, _yield$Promise$all, _yield$Promise$all2, audioRes, translationRes, translitRes, arabicRes, tajweedRes, audioSurah, translationSurah, translitSurah, arabicSurah, tajweedEdition, audioAyahs, arabicByNumber, translationByNumber, translitByNumber, tajweedByNumber, start, end, mappedVerses, _t3;
       return _regenerator().w(function (_context11) {
         while (1) switch (_context11.p = _context11.n) {
           case 0:
-            mode = _arguments6.length > 0 && _arguments6[0] !== undefined ? _arguments6[0] : _this45.currentMode;
-            target = mode === 'beginner' ? _this45.beginner : _this45.advanced;
+            mode = _arguments6.length > 0 && _arguments6[0] !== undefined ? _arguments6[0] : _this46.currentMode;
+            target = mode === 'beginner' ? _this46.beginner : _this46.advanced;
             chapterId = Number(target.chapterId || 0);
             if (chapterId) {
               _context11.n = 1;
@@ -28034,26 +28081,26 @@ function createAdvancedState() {
             rangeStart = Number(target.rangeStart || 1);
             rangeEnd = Number(target.rangeEnd || rangeStart || 1);
             reciterId = target.reciterId || DEFAULT_ALQURAN_RECITER;
-            requestId = ++_this45.verseRequestId;
-            targetConfig = _this45.buildSessionConfig(mode);
-            _this45.isDataReady = false;
+            requestId = ++_this46.verseRequestId;
+            targetConfig = _this46.buildSessionConfig(mode);
+            _this46.isDataReady = false;
             _context11.p = 2;
-            cached = _this45.getCachedVerses(mode, targetConfig);
+            cached = _this46.getCachedVerses(mode, targetConfig);
             if (!(cached !== null && cached !== void 0 && (_cached$verses = cached.verses) !== null && _cached$verses !== void 0 && _cached$verses.length)) {
               _context11.n = 3;
               break;
             }
             if (mode === 'beginner') {
-              _this45.beginner.verses = cached.verses;
-              _this45.beginner.loadedConfig = cached.loadedConfig;
+              _this46.beginner.verses = cached.verses;
+              _this46.beginner.loadedConfig = cached.loadedConfig;
             } else {
-              _this45.advanced.verses = cached.verses;
-              _this45.advanced.loadedConfig = cached.loadedConfig;
+              _this46.advanced.verses = cached.verses;
+              _this46.advanced.loadedConfig = cached.loadedConfig;
             }
-            _this45.buildQueue(mode);
-            _this45.syncActiveVerseState(mode);
-            _this45.syncMutqinAyahs(cached.verses);
-            _this45.isDataReady = true;
+            _this46.buildQueue(mode);
+            _this46.syncActiveVerseState(mode);
+            _this46.syncMutqinAyahs(cached.verses);
+            _this46.isDataReady = true;
             return _context11.a(2);
           case 3:
             _context11.n = 4;
@@ -28066,7 +28113,7 @@ function createAdvancedState() {
             translitRes = _yield$Promise$all2[2];
             arabicRes = _yield$Promise$all2[3];
             tajweedRes = _yield$Promise$all2[4];
-            if (!(requestId !== _this45.verseRequestId)) {
+            if (!(requestId !== _this46.verseRequestId)) {
               _context11.n = 5;
               break;
             }
@@ -28104,8 +28151,8 @@ function createAdvancedState() {
               var tajweed = tajweedByNumber.get(ayah.numberInSurah) || '';
 
               // Remove Basmala from Arabic text
-              arabic = _this45.removeBasmala(arabic);
-              tajweed = _this45.removeBasmala(tajweed);
+              arabic = _this46.removeBasmala(arabic);
+              tajweed = _this46.removeBasmala(tajweed);
               var transliteration = translitByNumber.get(ayah.numberInSurah) || '';
               var translation = translationByNumber.get(ayah.numberInSurah) || '';
               var arabicWords = tokenizeArabicText(arabic);
@@ -28117,9 +28164,9 @@ function createAdvancedState() {
                 chapterId: chapterId,
                 arabic: arabic,
                 arabic_tajweed: tajweed,
-                translation: _this45.cleanTranslationText(translation),
+                translation: _this46.cleanTranslationText(translation),
                 transliteration: transliteration,
-                audio: _this45.normalizeAudioUrl(ayah.audio || ((_ayah$audioSecondary = ayah.audioSecondary) === null || _ayah$audioSecondary === void 0 ? void 0 : _ayah$audioSecondary[0]) || ''),
+                audio: _this46.normalizeAudioUrl(ayah.audio || ((_ayah$audioSecondary = ayah.audioSecondary) === null || _ayah$audioSecondary === void 0 ? void 0 : _ayah$audioSecondary[0]) || ''),
                 words: arabicWords.map(function (word, index) {
                   return {
                     ar: word,
@@ -28131,44 +28178,44 @@ function createAdvancedState() {
               };
             });
             if (mode === 'beginner') {
-              _this45.beginner.verses = mappedVerses;
-              _this45.beginner.loadedConfig = {
+              _this46.beginner.verses = mappedVerses;
+              _this46.beginner.loadedConfig = {
                 chapterId: chapterId,
                 rangeStart: start,
                 rangeEnd: end,
                 reciterId: reciterId,
-                showWordByWord: _this45.showWordByWord,
-                tajweedEnabled: _this45.tajweedEnabled
+                showWordByWord: _this46.showWordByWord,
+                tajweedEnabled: _this46.tajweedEnabled
               };
             } else {
-              _this45.advanced.verses = mappedVerses;
-              _this45.advanced.loadedConfig = {
+              _this46.advanced.verses = mappedVerses;
+              _this46.advanced.loadedConfig = {
                 chapterId: chapterId,
                 rangeStart: start,
                 rangeEnd: end,
                 reciterId: reciterId,
-                showWordByWord: _this45.showWordByWord,
-                tajweedEnabled: _this45.tajweedEnabled
+                showWordByWord: _this46.showWordByWord,
+                tajweedEnabled: _this46.tajweedEnabled
               };
             }
-            _this45.syncMutqinAyahs(mappedVerses);
-            _this45.setCachedVerses(mode, targetConfig, {
+            _this46.syncMutqinAyahs(mappedVerses);
+            _this46.setCachedVerses(mode, targetConfig, {
               verses: mappedVerses,
-              loadedConfig: mode === 'beginner' ? _this45.beginner.loadedConfig : _this45.advanced.loadedConfig
+              loadedConfig: mode === 'beginner' ? _this46.beginner.loadedConfig : _this46.advanced.loadedConfig
             });
-            _this45.buildQueue(mode);
-            _this45.syncActiveVerseState(mode);
+            _this46.buildQueue(mode);
+            _this46.syncActiveVerseState(mode);
 
             // Set ready after data loads
-            _this45.isDataReady = true;
+            _this46.isDataReady = true;
             _context11.n = 7;
             break;
           case 6:
             _context11.p = 6;
             _t3 = _context11.v;
             console.error('Error loading verses:', _t3);
-            _this45.showBanner('Failed to load verses', 'error', 3000);
-            _this45.isDataReady = true;
+            _this46.showBanner('Failed to load verses', 'error', 3000);
+            _this46.isDataReady = true;
           case 7:
             return _context11.a(2);
         }
@@ -28183,7 +28230,7 @@ function createAdvancedState() {
     cleaned = cleaned.replace(/\[\d+\]/g, '');
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
     return cleaned;
-  }), "buildQueue", function buildQueue() {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "buildQueue", function buildQueue() {
     var _previousEntry$verse;
     var mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.currentMode;
     var config = mode === 'beginner' ? this.beginner : this.advanced;
@@ -28332,7 +28379,7 @@ function createAdvancedState() {
       this.advanced.queueIndex = previousQueueIndex;
     }
     this.syncActiveVerseState(mode, previousActiveKey);
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "estimateQueueDuration", function estimateQueueDuration(queue) {
+  }), "estimateQueueDuration", function estimateQueueDuration(queue) {
     var avgVerseDuration = 45;
     return Math.ceil(queue.length * avgVerseDuration / 60);
   }), "rebuildQueue", function rebuildQueue() {
@@ -28343,6 +28390,10 @@ function createAdvancedState() {
     this.applyChainingQueueChange(this.currentMode, {
       restart: true
     });
+  }), "setAnchorMode", function setAnchorMode(enabled) {
+    var nextEnabled = !!enabled;
+    if (this.anchorModeEnabled === nextEnabled) return;
+    this.toggleAnchorMode();
   }), "setChainingMethod", function setChainingMethod(method) {
     var nextMethod = method === 'cumulative' ? 'cumulative' : 'linking';
     this.chainingEnabled = true;
@@ -28367,7 +28418,7 @@ function createAdvancedState() {
     this.applyChainingQueueChange(this.currentMode, {
       restart: true
     });
-  }), "applyChainingQueueChange", function applyChainingQueueChange() {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "applyChainingQueueChange", function applyChainingQueueChange() {
     var mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.currentMode;
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     if (!this.hasVerses) {
@@ -28412,106 +28463,106 @@ function createAdvancedState() {
     } catch (e) {
       console.error("Failed to persist ".concat(mode, " mode state:"), e);
     }
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "startSession", function startSession() {
-    var _this46 = this;
+  }), "startSession", function startSession() {
+    var _this47 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee12() {
       var config, mode, currentVerses, modeNeedsReload, updatedVerses, builtQueue, sessionState, canonicalIndex, playbackIndex, nextCanonicalIndex, first, chainingStatus;
       return _regenerator().w(function (_context12) {
         while (1) switch (_context12.n) {
           case 0:
-            config = _this46.sessionConfig;
-            mode = config.mode || _this46.currentMode;
+            config = _this47.sessionConfig;
+            mode = config.mode || _this47.currentMode;
             if (!(!config.chapterId || config.chapterId === 0)) {
               _context12.n = 1;
               break;
             }
-            _this46.showTools = true;
-            _this46.showBanner('Please select a surah first', 'info', 3600);
+            _this47.showTools = true;
+            _this47.showBanner('Please select a surah first', 'info', 3600);
             return _context12.a(2);
           case 1:
-            if (_this46.validateSettings()) {
+            if (_this47.validateSettings()) {
               _context12.n = 2;
               break;
             }
             return _context12.a(2);
           case 2:
-            _this46.applySessionConfig(config);
-            _this46.persistModeState(mode);
-            _this46.persistUiState();
-            _this46.sessionCompleted = false;
-            _this46.sessionStartedAt = Date.now();
-            _this46.sessionErrorCount = 0;
-            _this46.statsTick = Date.now();
-            currentVerses = mode === 'beginner' ? _this46.beginner.verses : _this46.advanced.verses;
-            modeNeedsReload = !currentVerses || !currentVerses.length || !_this46.modeDataMatchesConfig(mode, config);
+            _this47.applySessionConfig(config);
+            _this47.persistModeState(mode);
+            _this47.persistUiState();
+            _this47.sessionCompleted = false;
+            _this47.sessionStartedAt = Date.now();
+            _this47.sessionErrorCount = 0;
+            _this47.statsTick = Date.now();
+            currentVerses = mode === 'beginner' ? _this47.beginner.verses : _this47.advanced.verses;
+            modeNeedsReload = !currentVerses || !currentVerses.length || !_this47.modeDataMatchesConfig(mode, config);
             if (!modeNeedsReload) {
               _context12.n = 3;
               break;
             }
             _context12.n = 3;
-            return _this46.loadVerses(mode);
+            return _this47.loadVerses(mode);
           case 3:
-            updatedVerses = mode === 'beginner' ? _this46.beginner.verses : _this46.advanced.verses;
+            updatedVerses = mode === 'beginner' ? _this47.beginner.verses : _this47.advanced.verses;
             if (!(!updatedVerses || updatedVerses.length === 0)) {
               _context12.n = 4;
               break;
             }
-            _this46.showBanner('No verses loaded. Check your network connection.', 'error');
+            _this47.showBanner('No verses loaded. Check your network connection.', 'error');
             return _context12.a(2);
           case 4:
-            if (!_this46.audioElement) {
-              _this46.initAudio();
+            if (!_this47.audioElement) {
+              _this47.initAudio();
             }
 
             // Rebuild queue with current chaining settings
             console.log('[startSession] Building queue with settings:', {
-              enabled: _this46.chainingEnabled,
-              method: _this46.chainingMethod,
-              repetitions: _this46.chainingRepetitions
+              enabled: _this47.chainingEnabled,
+              method: _this47.chainingMethod,
+              repetitions: _this47.chainingRepetitions
             });
-            _this46.buildQueue(mode);
-            builtQueue = mode === 'beginner' ? _this46.beginner.queue : _this46.advanced.queue;
+            _this47.buildQueue(mode);
+            builtQueue = mode === 'beginner' ? _this47.beginner.queue : _this47.advanced.queue;
             if (!(!builtQueue || builtQueue.length === 0)) {
               _context12.n = 5;
               break;
             }
-            _this46.showBanner('Nothing to play. Check the selected range.', 'error');
+            _this47.showBanner('Nothing to play. Check the selected range.', 'error');
             return _context12.a(2);
           case 5:
-            _this46.syncMutqinAyahs(updatedVerses);
-            sessionState = _this46.syncMutqinSession(builtQueue, mode);
+            _this47.syncMutqinAyahs(updatedVerses);
+            sessionState = _this47.syncMutqinSession(builtQueue, mode);
             canonicalIndex = Math.max(0, Number((sessionState === null || sessionState === void 0 ? void 0 : sessionState.current_index) || 0));
             playbackIndex = canonicalIndex > 0 ? Math.min(canonicalIndex - 1, builtQueue.length - 1) : 0;
-            _this46.queueIndex = playbackIndex;
-            _this46.getModeStore(mode).queueIndex = playbackIndex;
+            _this47.queueIndex = playbackIndex;
+            _this47.getModeStore(mode).queueIndex = playbackIndex;
             nextCanonicalIndex = canonicalIndex > 0 ? canonicalIndex : 1;
-            (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this46.mutqinState, nextCanonicalIndex);
+            (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this47.mutqinState, nextCanonicalIndex);
             first = builtQueue[playbackIndex];
             if (!(first && first.verse)) {
               _context12.n = 7;
               break;
             }
-            _this46.setActiveVerse(first.verse.key, {
+            _this47.setActiveVerse(first.verse.key, {
               mode: mode,
               queueIndex: playbackIndex,
               scroll: false
             });
             _context12.n = 6;
-            return _this46.$nextTick();
+            return _this47.$nextTick();
           case 6:
-            if (_this46.audioElement) {
-              _this46.audioElement.playbackRate = _this46.speed;
+            if (_this47.audioElement) {
+              _this47.audioElement.playbackRate = _this47.speed;
             }
             _context12.n = 7;
-            return _this46.playQueueEntry(first, {
+            return _this47.playQueueEntry(first, {
               force: true,
               queueIndex: playbackIndex
             });
           case 7:
-            _this46.showTools = false;
-            _this46.flowStep = 'learn';
-            chainingStatus = _this46.chainingEnabled ? "".concat(_this46.chainingMethod, " chaining (").concat(_this46.chainingRepetitions, "x)") : 'no chaining';
-            _this46.showBanner("Session started with ".concat(builtQueue.length, " guided repetitions using ").concat(chainingStatus), 'success', 3000);
+            _this47.showTools = false;
+            _this47.flowStep = 'learn';
+            chainingStatus = _this47.chainingEnabled ? "".concat(_this47.chainingMethod, " chaining (").concat(_this47.chainingRepetitions, "x)") : 'no chaining';
+            _this47.showBanner("Session started with ".concat(builtQueue.length, " guided repetitions using ").concat(chainingStatus), 'success', 3000);
           case 8:
             return _context12.a(2);
         }
@@ -28542,7 +28593,7 @@ function createAdvancedState() {
     var arabicLength = String(verse.arabic || verse.text || '').replace(/[^ء-ي]/g, '').length || 80;
     return Math.max(5, Math.min(45, arabicLength * 0.12)) / speedFactor;
   }), "showBanner", function showBanner(message) {
-    var _this47 = this;
+    var _this48 = this;
     var kind = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'info';
     var ttlMs = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 3500;
     var action = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
@@ -28555,7 +28606,7 @@ function createAdvancedState() {
       actionLabel: (action === null || action === void 0 ? void 0 : action.label) || ''
     };
     this.bannerTimer = setTimeout(function () {
-      if (_this47.banner && Date.now() - _this47.banner.at >= ttlMs) _this47.banner = null;
+      if (_this48.banner && Date.now() - _this48.banner.at >= ttlMs) _this48.banner = null;
     }, ttlMs + 50);
   }), "runBannerAction", function runBannerAction() {
     var _this$banner;
@@ -28573,7 +28624,7 @@ function createAdvancedState() {
     if (!Array.isArray(verses) || !verses.length) return;
     (0,_composables_useAyahState__WEBPACK_IMPORTED_MODULE_3__.seedAyahs)(this.mutqinState, verses);
   }), "syncMutqinSession", function syncMutqinSession() {
-    var _this48 = this;
+    var _this49 = this;
     var queue = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.queue;
     var mode = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.currentMode;
     var playbackQueue = (queue || []).map(function (item) {
@@ -28602,18 +28653,18 @@ function createAdvancedState() {
     var planner = (0,_composables_useDailyPlanner__WEBPACK_IMPORTED_MODULE_5__.createDailyPlan)(this.mutqinState, uniqueVerses, {
       repetitions: 1,
       audioDurations: uniqueVerses.reduce(function (map, verse) {
-        map[verse.key] = Number(verse.duration || _this48.duration || 0);
+        map[verse.key] = Number(verse.duration || _this49.duration || 0);
         return map;
       }, {}),
       reviewSeconds: 18
     });
     var plannerQueue = uniqueVerses.slice(0, 1).map(function (verse) {
-      var _this48$currentChapte;
+      var _this49$currentChapte;
       return {
         phase: 'Planner',
         ayahId: verse.key,
         verse: verse,
-        prompt: "".concat(((_this48$currentChapte = _this48.currentChapter) === null || _this48$currentChapte === void 0 ? void 0 : _this48$currentChapte.name_simple) || 'Session', " ayahs ").concat(_this48.rangeStart, "-").concat(_this48.rangeEnd)
+        prompt: "".concat(((_this49$currentChapte = _this49.currentChapter) === null || _this49$currentChapte === void 0 ? void 0 : _this49$currentChapte.name_simple) || 'Session', " ayahs ").concat(_this49.rangeStart, "-").concat(_this49.rangeEnd)
       };
     });
     var recallQueue = uniqueVerses.map(function (verse) {
@@ -28651,7 +28702,7 @@ function createAdvancedState() {
         ETA: planner.ETA
       }
     });
-  }), "getMutqinAyah", function getMutqinAyah(id) {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "getMutqinAyah", function getMutqinAyah(id) {
     var _this$mutqinState$aya2;
     return ((_this$mutqinState$aya2 = this.mutqinState.ayahs) === null || _this$mutqinState$aya2 === void 0 ? void 0 : _this$mutqinState$aya2[id]) || null;
   }), "takrarLabel", function takrarLabel(id) {
@@ -28660,7 +28711,7 @@ function createAdvancedState() {
     var step = (0,_composables_useTakrarLadder__WEBPACK_IMPORTED_MODULE_6__.getTakrarStep)(ayah);
     var target = typeof step === 'number' ? "".concat(ayah.repetition_count, "/").concat(step) : step;
     return "Session progress: ".concat(target);
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "retentionLabel", function retentionLabel(id) {
+  }), "retentionLabel", function retentionLabel(id) {
     var ayah = this.getMutqinAyah(id);
     if (!ayah) return 'Review: due soon';
     return "Review: ".concat(ayah.next_review || 'today');
@@ -28765,13 +28816,13 @@ function createAdvancedState() {
     }
     chaining.lastSuccessfulAyahKey = verse.key;
     chaining.index = currentIndex + 1;
-  }), "handleOnline", function handleOnline() {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "handleOnline", function handleOnline() {
     this.networkOnline = true;
     this.showBanner('Back online. Live APIs are available again.', 'success', 2400);
   }), "handleOffline", function handleOffline() {
     this.networkOnline = false;
     this.showBanner('Offline mode active. Reading falls back to cached ranges.', 'info', 3200);
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "markPlaybackStart", function markPlaybackStart() {
+  }), "markPlaybackStart", function markPlaybackStart() {
     this.playbackStartedAt = Date.now();
   }), "flushPlaybackTime", function flushPlaybackTime() {
     if (!this.playbackStartedAt) return;
@@ -28865,7 +28916,7 @@ function createAdvancedState() {
     this.$forceUpdate();
     // Show feedback
     this.showBanner("Font size: ".concat(this.defaultFontSize, "%"), 'info', 600);
-  }), "toggleReadingOption", function toggleReadingOption(kind) {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "toggleReadingOption", function toggleReadingOption(kind) {
     if (kind === 'translation') {
       this.showTranslation = !this.showTranslation;
       this.persistUiState();
@@ -28885,7 +28936,7 @@ function createAdvancedState() {
   }), "setScriptMode", function setScriptMode(mode) {
     this.script = mode;
     this.scheduleLoadVerses(this.currentMode);
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "setQuranFont", function setQuranFont(font) {
+  }), "setQuranFont", function setQuranFont(font) {
     this.quranFont = font;
     this.script = 'uthmani';
     this.fontPickerOpen = false;
@@ -28899,11 +28950,11 @@ function createAdvancedState() {
     document.documentElement.setAttribute('data-theme', this.theme);
     this.persistUiState();
   }), "toggleSection", function toggleSection(key) {
-    var _this49 = this;
+    var _this50 = this;
     var nextValue = !this.sectionOpen[key];
     Object.keys(this.sectionOpen).forEach(function (sectionKey) {
       if (['session_tools', 'live_stats'].includes(sectionKey)) {
-        _this49.sectionOpen[sectionKey] = false;
+        _this50.sectionOpen[sectionKey] = false;
       }
     });
     this.sectionOpen[key] = nextValue;
@@ -29040,8 +29091,8 @@ function createAdvancedState() {
     } catch (e) {
       console.error(e);
     }
-  }), "restoreSessionState", function restoreSessionState() {
-    var _this50 = this;
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "restoreSessionState", function restoreSessionState() {
+    var _this51 = this;
     ;
     ['beginner', 'advanced'].forEach(function (mode) {
       var saved = localStorage.getItem(SESSION_STORAGE_KEYS[mode]);
@@ -29049,14 +29100,14 @@ function createAdvancedState() {
       try {
         var state = JSON.parse(saved);
         if (Date.now() - state.timestamp < 24 * 60 * 60 * 1000) {
-          var target = mode === 'beginner' ? _this50.beginner : _this50.advanced;
+          var target = mode === 'beginner' ? _this51.beginner : _this51.advanced;
           var restoredKey = state.activeVerseKey || state.activeKey || null;
           target.activeKey = restoredKey;
           target.queueIndex = Number(state.queueIndex || 0);
-          if (mode === _this50.currentMode) {
-            _this50.activeVerseKey = restoredKey;
-            _this50.activeKey = restoredKey;
-            _this50.queueIndex = target.queueIndex;
+          if (mode === _this51.currentMode) {
+            _this51.activeVerseKey = restoredKey;
+            _this51.activeKey = restoredKey;
+            _this51.queueIndex = target.queueIndex;
           }
         }
       } catch (e) {
@@ -29078,7 +29129,7 @@ function createAdvancedState() {
       console.error('Failed to persist audio state:', e);
     }
     this.persistContinueSession();
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "persistAllState", function persistAllState() {
+  }), "persistAllState", function persistAllState() {
     this.persistUiState();
     this.persistSessionState();
     this.persistCentralSessionState();
@@ -29089,7 +29140,7 @@ function createAdvancedState() {
     this.persistSm2();
     (0,_composables_useMutqinPersistence__WEBPACK_IMPORTED_MODULE_2__.saveMutqinState)(this.mutqinState);
   }), "loadChapters", function loadChapters() {
-    var _this51 = this;
+    var _this52 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee13() {
       var _res$data, res, _t4;
       return _regenerator().w(function (_context13) {
@@ -29104,13 +29155,13 @@ function createAdvancedState() {
             });
           case 1:
             res = _context13.v;
-            _this51.chapters = ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.chapters) || [];
-            if (!_this51.chapterId) {
+            _this52.chapters = ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.chapters) || [];
+            if (!_this52.chapterId) {
               _context13.n = 2;
               break;
             }
             _context13.n = 2;
-            return _this51.loadChapter();
+            return _this52.loadChapter();
           case 2:
             _context13.n = 4;
             break;
@@ -29118,7 +29169,7 @@ function createAdvancedState() {
             _context13.p = 3;
             _t4 = _context13.v;
             console.error('Failed to load chapters:', _t4);
-            _this51.showBanner('Failed to load surah list', 'error', 3000);
+            _this52.showBanner('Failed to load surah list', 'error', 3000);
           case 4:
             return _context13.a(2);
         }
@@ -29126,45 +29177,45 @@ function createAdvancedState() {
     }))();
   }), "loadChapter", function loadChapter() {
     var _arguments7 = arguments,
-      _this52 = this;
+      _this53 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee14() {
-      var _this52$currentChapte;
+      var _this53$currentChapte;
       var mode, target, chapterId, max;
       return _regenerator().w(function (_context14) {
         while (1) switch (_context14.n) {
           case 0:
-            mode = _arguments7.length > 0 && _arguments7[0] !== undefined ? _arguments7[0] : _this52.currentMode;
-            target = mode === 'beginner' ? _this52.beginner : _this52.advanced;
+            mode = _arguments7.length > 0 && _arguments7[0] !== undefined ? _arguments7[0] : _this53.currentMode;
+            target = mode === 'beginner' ? _this53.beginner : _this53.advanced;
             chapterId = Number(target.chapterId || 0);
             if (chapterId) {
               _context14.n = 1;
               break;
             }
-            _this52.currentChapter = null;
+            _this53.currentChapter = null;
             return _context14.a(2);
           case 1:
-            _this52.currentChapter = _this52.chapters.find(function (c) {
+            _this53.currentChapter = _this53.chapters.find(function (c) {
               return c.id === chapterId;
             });
-            max = ((_this52$currentChapte = _this52.currentChapter) === null || _this52$currentChapte === void 0 ? void 0 : _this52$currentChapte.verses_count) || 286;
+            max = ((_this53$currentChapte = _this53.currentChapter) === null || _this53$currentChapte === void 0 ? void 0 : _this53$currentChapte.verses_count) || 286;
             if (mode === 'beginner') {
-              _this52.beginner.rangeEnd = Math.min(_this52.beginner.rangeEnd, max);
-              _this52.beginner.rangeStart = Math.max(1, _this52.beginner.rangeStart);
+              _this53.beginner.rangeEnd = Math.min(_this53.beginner.rangeEnd, max);
+              _this53.beginner.rangeStart = Math.max(1, _this53.beginner.rangeStart);
             } else {
-              _this52.advanced.rangeEnd = Math.min(_this52.advanced.rangeEnd, max);
-              _this52.advanced.rangeStart = Math.max(1, _this52.advanced.rangeStart);
+              _this53.advanced.rangeEnd = Math.min(_this53.advanced.rangeEnd, max);
+              _this53.advanced.rangeStart = Math.max(1, _this53.advanced.rangeStart);
             }
             _context14.n = 2;
-            return _this52.loadVerses(mode);
+            return _this53.loadVerses(mode);
           case 2:
             return _context14.a(2);
         }
       }, _callee14);
     }))();
   }), "loadReciters", function loadReciters() {
-    var _this53 = this;
+    var _this54 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee15() {
-      var _res$data2, res, list, allow, available, filtered, _this53$reciters$, _t5;
+      var _res$data2, res, list, allow, available, filtered, _this54$reciters$, _t5;
       return _regenerator().w(function (_context15) {
         while (1) switch (_context15.p = _context15.n) {
           case 0:
@@ -29215,7 +29266,7 @@ function createAdvancedState() {
                 name: entry.label
               };
             });
-            _this53.reciters = filtered.length ? filtered : list.filter(function (edition) {
+            _this54.reciters = filtered.length ? filtered : list.filter(function (edition) {
               return edition.format === 'audio';
             }).map(function (edition) {
               return {
@@ -29223,10 +29274,10 @@ function createAdvancedState() {
                 name: edition.englishName || edition.name || edition.identifier
               };
             });
-            if (!_this53.reciters.some(function (reciter) {
-              return reciter.id === _this53.reciterId;
+            if (!_this54.reciters.some(function (reciter) {
+              return reciter.id === _this54.reciterId;
             })) {
-              _this53.reciterId = ((_this53$reciters$ = _this53.reciters[0]) === null || _this53$reciters$ === void 0 ? void 0 : _this53$reciters$.id) || DEFAULT_ALQURAN_RECITER;
+              _this54.reciterId = ((_this54$reciters$ = _this54.reciters[0]) === null || _this54$reciters$ === void 0 ? void 0 : _this54$reciters$.id) || DEFAULT_ALQURAN_RECITER;
             }
             _context15.n = 4;
             break;
@@ -29263,7 +29314,7 @@ function createAdvancedState() {
     } catch (_unused10) {
       this.events = [];
     }
-  }), "loadPlanner", function loadPlanner() {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "loadPlanner", function loadPlanner() {
     try {
       this.plannerState = JSON.parse(localStorage.getItem('telawa.planner') || 'null');
     } catch (_unused11) {
@@ -29285,7 +29336,7 @@ function createAdvancedState() {
     } catch (_unused12) {
       this.todayPlan = null;
     }
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "persistPlanner", function persistPlanner() {
+  }), "persistPlanner", function persistPlanner() {
     try {
       localStorage.setItem('telawa.planner', JSON.stringify(this.plannerState));
     } catch (e) {
@@ -29341,7 +29392,7 @@ function createAdvancedState() {
     } catch (_unused17) {
       return [];
     }
-  }), "recomputeAnalytics", function recomputeAnalytics() {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "recomputeAnalytics", function recomputeAnalytics() {
     var _this$mutqinState10, _this$mutqinState11;
     var events = this.readActivityEvents();
     var now = Date.now();
@@ -29416,7 +29467,7 @@ function createAdvancedState() {
   }), "estimateKeysSeconds", function estimateKeysSeconds() {
     var keys = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
     return keys.length * 10;
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "migrateLocalStorage", function migrateLocalStorage() {
+  }), "migrateLocalStorage", function migrateLocalStorage() {
     var key = 'telawa.schemaVersion';
     if (!localStorage.getItem(key)) localStorage.setItem(key, '2');
     if (localStorage.getItem(key) === '1') {
@@ -29507,7 +29558,7 @@ function createAdvancedState() {
     this.applyWorkspaceControls({
       reason: 'reciter'
     });
-  }), "startQuiz", function startQuiz() {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "startQuiz", function startQuiz() {
     if (!this.verses.length) {
       this.showBanner('No verses to quiz on', 'info', 3000);
       return;
@@ -29530,7 +29581,7 @@ function createAdvancedState() {
     }
     this.quizCard = this.quizQueue[this.quizIndex];
     this.quizRevealed = false;
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "submitQuiz", function submitQuiz() {
+  }), "submitQuiz", function submitQuiz() {
     var quality = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 4;
     if (quality >= 4) this.quizScore++;else this.quizMistakes.push("Ayah ".concat(this.quizCard.number));
     this.quizIndex++;
@@ -29873,528 +29924,501 @@ var _hoisted_28 = {
 };
 var _hoisted_29 = {
   key: 1,
+  "class": "workspace-shell-active-pill"
+};
+var _hoisted_30 = {
+  key: 2,
   "class": "workspace-shell-chaining",
   "aria-label": "Chaining status"
 };
-var _hoisted_30 = {
+var _hoisted_31 = {
   "class": "workspace-shell-chain-pill shadow-md"
 };
-var _hoisted_31 = {
+var _hoisted_32 = {
   "class": "workspace-shell-chain-pill workspace-shell-chain-pill-soft shadow-md"
 };
-var _hoisted_32 = {
+var _hoisted_33 = {
   "class": "workspace-quick-controls",
   "aria-label": "Quick reading controls"
 };
-var _hoisted_33 = {
+var _hoisted_34 = {
   id: "memorisationWorkspaceMain",
   ref: "workspaceMain",
   "class": "workspace-main",
   "aria-label": "Memorisation workspace"
 };
-var _hoisted_34 = {
+var _hoisted_35 = {
   "class": "verses-grid"
 };
-var _hoisted_35 = ["data-verse-key", "onClick", "onMouseenter", "onMouseleave", "onTouchstartPassive", "onTouchendPassive", "onKeydown"];
-var _hoisted_36 = {
+var _hoisted_36 = ["data-verse-key", "onClick", "onMouseenter", "onMouseleave", "onTouchstartPassive", "onTouchendPassive", "onKeydown"];
+var _hoisted_37 = {
   "class": "verse-header"
 };
-var _hoisted_37 = {
+var _hoisted_38 = {
   "class": "verse-badges"
 };
-var _hoisted_38 = {
+var _hoisted_39 = {
   "class": "verse-number"
 };
-var _hoisted_39 = {
+var _hoisted_40 = {
   key: 0,
   "class": "verse-status-badge verse-status-badge-review"
 };
-var _hoisted_40 = {
+var _hoisted_41 = {
   key: 1,
   "class": "verse-status-badge"
 };
-var _hoisted_41 = {
+var _hoisted_42 = {
   "class": "verse-actions"
 };
-var _hoisted_42 = ["onClick", "title"];
-var _hoisted_43 = ["onClick", "disabled"];
-var _hoisted_44 = {
+var _hoisted_43 = ["onClick", "title"];
+var _hoisted_44 = ["onClick", "disabled"];
+var _hoisted_45 = {
   key: 0,
   "class": "verse-preview-label"
 };
-var _hoisted_45 = ["innerHTML"];
-var _hoisted_46 = {
+var _hoisted_46 = ["innerHTML"];
+var _hoisted_47 = {
   key: 1,
   "class": "verse-transliteration verse-aid"
 };
-var _hoisted_47 = {
+var _hoisted_48 = {
   key: 2,
   "class": "verse-translation verse-aid"
 };
-var _hoisted_48 = ["onScroll"];
-var _hoisted_49 = ["title", "data-tooltip", "onClick"];
-var _hoisted_50 = {
+var _hoisted_49 = ["onScroll"];
+var _hoisted_50 = ["title", "data-tooltip", "onClick"];
+var _hoisted_51 = {
   "class": "word-arabic",
   dir: "rtl"
 };
-var _hoisted_51 = {
+var _hoisted_52 = {
   "class": "word-meaning"
 };
-var _hoisted_52 = ["onClick"];
-var _hoisted_53 = ["aria-hidden"];
-var _hoisted_54 = {
+var _hoisted_53 = ["onClick"];
+var _hoisted_54 = ["aria-hidden"];
+var _hoisted_55 = {
   "class": "tools-top"
 };
-var _hoisted_55 = {
+var _hoisted_56 = {
   "class": "tools-topbar"
 };
-var _hoisted_56 = {
+var _hoisted_57 = {
   "class": "tools-tabs",
   role: "tablist",
   "aria-label": "Controls tabs"
 };
-var _hoisted_57 = {
+var _hoisted_58 = {
   ref: "toolsBody",
   "class": "tools-body compact"
 };
-var _hoisted_58 = {
+var _hoisted_59 = {
   key: 0,
   "class": "sheet"
 };
-var _hoisted_59 = {
-  "class": "sheet-section sheet-section-intro"
-};
 var _hoisted_60 = {
-  "class": "session-quickstart-card"
+  "class": "sheet-section sheet-section-compact"
 };
 var _hoisted_61 = {
-  "class": "session-quickstart-actions"
-};
-var _hoisted_62 = {
-  "class": "sheet-section"
-};
-var _hoisted_63 = {
   "class": "sheet-content"
 };
-var _hoisted_64 = {
-  "class": "field-stack"
+var _hoisted_62 = {
+  "class": "field-stack field-stack-compact"
 };
-var _hoisted_65 = {
+var _hoisted_63 = {
   "class": "field"
 };
-var _hoisted_66 = ["value"];
-var _hoisted_67 = ["value"];
+var _hoisted_64 = ["value"];
+var _hoisted_65 = ["value"];
+var _hoisted_66 = {
+  "class": "field"
+};
+var _hoisted_67 = {
+  "class": "range range-single"
+};
 var _hoisted_68 = {
   "class": "field"
 };
-var _hoisted_69 = {
-  "class": "range range-single"
-};
+var _hoisted_69 = ["value"];
 var _hoisted_70 = {
   "class": "field"
 };
-var _hoisted_71 = ["value"];
+var _hoisted_71 = {
+  "class": "field-header"
+};
 var _hoisted_72 = {
-  "class": "sheet-section"
+  "class": "range-value-pill"
 };
 var _hoisted_73 = {
-  "class": "sheet-content"
+  "class": "range-control"
 };
 var _hoisted_74 = {
-  "class": "field-stack"
+  "class": "field-hint"
 };
 var _hoisted_75 = {
-  "class": "field"
+  "class": "sheet-section sheet-section-compact"
 };
 var _hoisted_76 = {
-  "class": "radio-group radio-group-tight"
+  "class": "sheet-content"
 };
-var _hoisted_77 = ["value", "checked", "onChange"];
+var _hoisted_77 = {
+  "class": "field-stack field-stack-compact"
+};
 var _hoisted_78 = {
   "class": "field"
 };
 var _hoisted_79 = {
   "class": "radio-group radio-group-tight"
 };
-var _hoisted_80 = {
-  "class": "radio"
-};
+var _hoisted_80 = ["value", "checked", "onChange"];
 var _hoisted_81 = {
-  "class": "radio"
+  "class": "field"
 };
 var _hoisted_82 = {
-  "class": "sheet-section"
+  "class": "radio-group radio-group-tight"
 };
 var _hoisted_83 = {
-  "class": "sheet-content"
+  "class": "radio"
 };
 var _hoisted_84 = {
-  "class": "field-stack"
+  "class": "radio"
 };
 var _hoisted_85 = {
-  "class": "field"
-};
-var _hoisted_86 = {
-  "class": "field-header"
-};
-var _hoisted_87 = {
-  "class": "range-value-pill"
-};
-var _hoisted_88 = {
-  "class": "range-control"
-};
-var _hoisted_89 = {
-  "class": "field-hint"
-};
-var _hoisted_90 = {
-  "class": "sheet-section"
-};
-var _hoisted_91 = {
-  "class": "sheet-content"
-};
-var _hoisted_92 = {
-  "class": "field-stack"
-};
-var _hoisted_93 = {
-  "class": "field"
-};
-var _hoisted_94 = {
-  "class": "radio-group radio-group-tight gap-options"
-};
-var _hoisted_95 = {
-  key: 0,
-  "class": "custom-gap-control mt-2"
-};
-var _hoisted_96 = {
-  "class": "range-control"
-};
-var _hoisted_97 = {
-  "class": "inline-setting-pill"
-};
-var _hoisted_98 = {
   "class": "sheet"
 };
-var _hoisted_99 = {
-  "class": "sheet-section sheet-section-intro"
+var _hoisted_86 = {
+  key: 0,
+  "class": "sheet-section active-techniques-section"
 };
-var _hoisted_100 = {
-  "class": "session-quickstart-card"
+var _hoisted_87 = {
+  "class": "active-techniques-header"
 };
-var _hoisted_101 = {
-  "class": "presets-grid presets-grid-wide"
+var _hoisted_88 = {
+  "class": "active-techniques-count"
 };
-var _hoisted_102 = {
+var _hoisted_89 = {
+  "class": "active-techniques-grid"
+};
+var _hoisted_90 = {
+  "class": "active-technique-icon"
+};
+var _hoisted_91 = {
+  "class": "active-technique-copy"
+};
+var _hoisted_92 = {
   "class": "sheet-section"
 };
-var _hoisted_103 = {
+var _hoisted_93 = {
   "class": "st-right-group"
 };
-var _hoisted_104 = {
+var _hoisted_94 = ["checked"];
+var _hoisted_95 = {
   "class": "sheet-content"
 };
-var _hoisted_105 = {
-  "class": "sheet-section"
-};
-var _hoisted_106 = {
-  "class": "st-right-group"
-};
-var _hoisted_107 = {
-  "class": "sheet-content"
-};
-var _hoisted_108 = {
+var _hoisted_96 = {
   "class": "field-stack"
 };
-var _hoisted_109 = {
+var _hoisted_97 = {
   key: 0,
   "class": "field"
 };
-var _hoisted_110 = {
+var _hoisted_98 = {
   "class": "range-control"
 };
-var _hoisted_111 = {
+var _hoisted_99 = {
   "class": "inline-setting-pill"
 };
-var _hoisted_112 = {
+var _hoisted_100 = {
   "class": "sheet-section"
 };
-var _hoisted_113 = {
-  "class": "st-left"
-};
-var _hoisted_114 = {
-  "class": "st-txt"
-};
-var _hoisted_115 = {
-  "class": "st-sub"
-};
-var _hoisted_116 = {
+var _hoisted_101 = {
   "class": "st-right-group"
 };
-var _hoisted_117 = {
+var _hoisted_102 = ["checked"];
+var _hoisted_103 = {
   "class": "sheet-content"
 };
-var _hoisted_118 = {
+var _hoisted_104 = {
   "class": "field-stack"
 };
-var _hoisted_119 = {
-  "class": "field"
-};
-var _hoisted_120 = {
-  "class": "technique-description"
-};
-var _hoisted_121 = {
+var _hoisted_105 = {
   key: 0,
   "class": "field"
 };
-var _hoisted_122 = {
+var _hoisted_106 = {
+  "class": "range-control"
+};
+var _hoisted_107 = {
+  "class": "inline-setting-pill"
+};
+var _hoisted_108 = {
+  "class": "sheet-section"
+};
+var _hoisted_109 = {
+  "class": "st-left"
+};
+var _hoisted_110 = {
+  "class": "st-txt"
+};
+var _hoisted_111 = {
+  "class": "st-sub"
+};
+var _hoisted_112 = {
+  "class": "st-right-group"
+};
+var _hoisted_113 = ["checked"];
+var _hoisted_114 = {
+  "class": "sheet-content"
+};
+var _hoisted_115 = {
+  "class": "field-stack"
+};
+var _hoisted_116 = {
+  "class": "field"
+};
+var _hoisted_117 = {
+  "class": "technique-description"
+};
+var _hoisted_118 = {
+  key: 0,
+  "class": "field"
+};
+var _hoisted_119 = {
   "class": "radio-group"
 };
-var _hoisted_123 = {
+var _hoisted_120 = {
   "class": "radio"
 };
-var _hoisted_124 = {
+var _hoisted_121 = {
   "class": "radio"
 };
-var _hoisted_125 = {
+var _hoisted_122 = {
   "class": "field-hint"
 };
-var _hoisted_126 = {
+var _hoisted_123 = {
   key: 1,
   "class": "field"
 };
-var _hoisted_127 = {
+var _hoisted_124 = {
   "class": "range-control"
 };
-var _hoisted_128 = ["value"];
-var _hoisted_129 = {
+var _hoisted_125 = ["value"];
+var _hoisted_126 = {
   "class": "inline-setting-pill"
 };
-var _hoisted_130 = {
+var _hoisted_127 = {
   key: 2,
   "class": "technique-preview-block"
 };
-var _hoisted_131 = {
+var _hoisted_128 = {
   "class": "sheet-section"
 };
-var _hoisted_132 = {
+var _hoisted_129 = {
   "class": "st-right-group"
 };
-var _hoisted_133 = {
+var _hoisted_130 = ["checked"];
+var _hoisted_131 = {
   "class": "sheet-content"
 };
-var _hoisted_134 = {
+var _hoisted_132 = {
   "class": "field-stack"
 };
-var _hoisted_135 = {
+var _hoisted_133 = {
   key: 0,
   "class": "field"
 };
-var _hoisted_136 = {
+var _hoisted_134 = {
   "class": "field-hint"
 };
-var _hoisted_137 = {
-  "class": "sheet-section"
-};
-var _hoisted_138 = {
-  "class": "sheet-content"
-};
-var _hoisted_139 = {
-  "class": "field-stack"
-};
-var _hoisted_140 = {
-  "class": "field"
-};
-var _hoisted_141 = {
-  "class": "presets-grid"
-};
-var _hoisted_142 = {
+var _hoisted_135 = {
   "class": "sheet"
 };
-var _hoisted_143 = {
+var _hoisted_136 = {
   "class": "saved-sessions-container"
 };
-var _hoisted_144 = {
+var _hoisted_137 = {
   key: 0,
   "class": "empty-state"
 };
-var _hoisted_145 = {
+var _hoisted_138 = {
   key: 1,
   "class": "sessions-list"
 };
-var _hoisted_146 = ["onClick"];
-var _hoisted_147 = {
+var _hoisted_139 = ["onClick"];
+var _hoisted_140 = {
   "class": "session-name"
 };
-var _hoisted_148 = {
+var _hoisted_141 = {
   "class": "session-details"
 };
-var _hoisted_149 = ["onClick"];
-var _hoisted_150 = {
+var _hoisted_142 = ["onClick"];
+var _hoisted_143 = {
   key: 2,
   "class": "save-section"
 };
-var _hoisted_151 = {
+var _hoisted_144 = {
   "class": "current-info"
 };
-var _hoisted_152 = {
+var _hoisted_145 = {
   "class": "sheet"
 };
-var _hoisted_153 = {
+var _hoisted_146 = {
   "class": "sheet-section"
 };
-var _hoisted_154 = {
+var _hoisted_147 = {
   "class": "sheet-content"
 };
-var _hoisted_155 = {
+var _hoisted_148 = {
   "class": "setting-item setting-item-range"
 };
-var _hoisted_156 = {
+var _hoisted_149 = {
   "class": "range-control-compact"
 };
-var _hoisted_157 = {
+var _hoisted_150 = {
   "class": "range-value-badge"
 };
-var _hoisted_158 = {
+var _hoisted_151 = {
   "class": "sheet-section"
 };
-var _hoisted_159 = {
+var _hoisted_152 = {
   "class": "sheet-content"
 };
-var _hoisted_160 = {
+var _hoisted_153 = {
   "class": "setting-item"
 };
-var _hoisted_161 = {
+var _hoisted_154 = {
   "class": "setting-item"
 };
-var _hoisted_162 = {
+var _hoisted_155 = {
   "class": "setting-item"
 };
-var _hoisted_163 = {
+var _hoisted_156 = {
   "class": "setting-item"
 };
-var _hoisted_164 = {
+var _hoisted_157 = {
   key: 2,
   "class": "main container"
 };
-var _hoisted_165 = {
+var _hoisted_158 = {
   "class": "modal-content save-name-modal",
   role: "dialog",
   "aria-modal": "true",
   "aria-labelledby": "saveModalTitle"
 };
-var _hoisted_166 = {
+var _hoisted_159 = {
   "class": "modal-header"
 };
-var _hoisted_167 = {
+var _hoisted_160 = {
   "class": "modal-body"
 };
-var _hoisted_168 = {
+var _hoisted_161 = {
   "class": "session-preview-card"
 };
-var _hoisted_169 = {
+var _hoisted_162 = {
   "class": "preview-surah"
 };
-var _hoisted_170 = {
+var _hoisted_163 = {
   "class": "preview-range"
 };
-var _hoisted_171 = {
+var _hoisted_164 = {
   "class": "preview-stats"
 };
-var _hoisted_172 = {
+var _hoisted_165 = {
   "class": "preview-stat"
 };
-var _hoisted_173 = {
+var _hoisted_166 = {
   "class": "preview-stat"
 };
-var _hoisted_174 = {
+var _hoisted_167 = {
   "class": "input-hint"
 };
-var _hoisted_175 = {
+var _hoisted_168 = {
   "class": "char-count"
 };
-var _hoisted_176 = {
+var _hoisted_169 = {
   key: 0,
   "class": "error-message"
 };
-var _hoisted_177 = {
+var _hoisted_170 = {
   "class": "quick-suggestions"
 };
-var _hoisted_178 = {
+var _hoisted_171 = {
   "class": "suggestion-chips"
 };
-var _hoisted_179 = ["onClick"];
-var _hoisted_180 = {
+var _hoisted_172 = ["onClick"];
+var _hoisted_173 = {
   "class": "info-note"
 };
-var _hoisted_181 = {
+var _hoisted_174 = {
   "class": "info-text"
 };
-var _hoisted_182 = {
+var _hoisted_175 = {
   "class": "modal-footer"
 };
-var _hoisted_183 = ["disabled"];
-var _hoisted_184 = {
+var _hoisted_176 = ["disabled"];
+var _hoisted_177 = {
   "class": "modal-content confirm-modal",
   role: "dialog",
   "aria-modal": "true"
 };
-var _hoisted_185 = {
+var _hoisted_178 = {
   "class": "modal-header"
 };
-var _hoisted_186 = {
+var _hoisted_179 = {
   "class": "modal-body"
 };
-var _hoisted_187 = {
+var _hoisted_180 = {
   "class": "confirm-copy"
 };
-var _hoisted_188 = {
+var _hoisted_181 = {
   "class": "modal-footer"
 };
-var _hoisted_189 = {
+var _hoisted_182 = {
   key: 5,
   "class": "countdown-overlay"
 };
-var _hoisted_190 = {
+var _hoisted_183 = {
   "class": "countdown-modal"
 };
-var _hoisted_191 = {
+var _hoisted_184 = {
   "class": "countdown-number"
 };
-var _hoisted_192 = {
+var _hoisted_185 = {
   "class": "player-main"
 };
-var _hoisted_193 = {
+var _hoisted_186 = {
   "class": "player-info"
 };
-var _hoisted_194 = {
+var _hoisted_187 = {
   "class": "player-chapter"
 };
-var _hoisted_195 = {
+var _hoisted_188 = {
   "class": "player-verse"
 };
-var _hoisted_196 = ["title"];
-var _hoisted_197 = {
+var _hoisted_189 = ["title"];
+var _hoisted_190 = {
   "class": "player-controls"
 };
-var _hoisted_198 = {
+var _hoisted_191 = {
   "class": "player-loop-controls",
   "aria-label": "Loop count"
 };
-var _hoisted_199 = {
+var _hoisted_192 = {
   "class": "player-loop-group",
   role: "group",
   "aria-label": "Playback loop count"
 };
-var _hoisted_200 = ["onClick", "title"];
-var _hoisted_201 = {
+var _hoisted_193 = ["onClick", "title"];
+var _hoisted_194 = {
   "class": "player-progress-wrap"
 };
-var _hoisted_202 = {
+var _hoisted_195 = {
   "class": "player-time"
 };
-var _hoisted_203 = {
+var _hoisted_196 = {
   "class": "player-time"
 };
-var _hoisted_204 = {
+var _hoisted_197 = {
   ref: "audio",
   style: {
     "display": "none"
@@ -30421,7 +30445,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $data.banner = null;
     }),
     "aria-label": "Dismiss"
-  }, _toConsumableArray(_cache[101] || (_cache[101] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[91] || (_cache[91] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */)])))])], 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Main Content "), $data.appReady && $options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 1,
@@ -30432,21 +30456,21 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       'flow-practice': $options.guidedUiStep === 'practice',
       'flow-recall': $options.guidedUiStep === 'recall'
     }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [!$options.hasVerses && !$options.currentConfig.chapterId ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [$data.hasContinueSession ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [_cache[102] || (_cache[102] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [!$options.hasVerses && !$options.currentConfig.chapterId ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [$data.hasContinueSession ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [_cache[92] || (_cache[92] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "continue-session-kicker"
   }, "Continue where you left off", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.continueSessionLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.continueSessionMeta), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-primary continue-session-btn",
     onClick: _cache[2] || (_cache[2] = function () {
       return $options.continueLastSession && $options.continueLastSession.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[103] || (_cache[103] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[93] || (_cache[93] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-fill"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Continue Session ", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-ghost continue-session-dismiss",
     onClick: _cache[3] || (_cache[3] = function () {
       return $options.confirmDiscardContinueSession && $options.confirmDiscardContinueSession.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[104] || (_cache[104] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[94] || (_cache[94] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */)])))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-primary setup-primary",
@@ -30457,11 +30481,11 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.openToolsPanel();
     }),
     title: "Open controls"
-  }, _toConsumableArray(_cache[105] || (_cache[105] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[95] || (_cache[95] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Open Session Controls ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_9), _cache[106] || (_cache[106] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Open Session Controls ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_9), _cache[96] || (_cache[96] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
     "class": "offcanvas-launcher-copy"
-  }, " Session setup lives in the offcanvas. ", -1 /* CACHED */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true),  false ? (0) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Grid "), !$data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_17, _toConsumableArray(_cache[113] || (_cache[113] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, " Session setup lives in the offcanvas. ", -1 /* CACHED */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true),  false ? (0) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Grid "), !$data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_17, _toConsumableArray(_cache[103] || (_cache[103] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-hourglass-split"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Loading...", -1 /* CACHED */)])))) : $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_18, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["workspace-shell", {
@@ -30474,7 +30498,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.toggleFullScreen && $options.toggleFullScreen.apply($options, arguments);
     }),
     title: "Full screen mode"
-  }, _toConsumableArray(_cache[114] || (_cache[114] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[104] || (_cache[104] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrows-fullscreen"
   }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "action-icon-btn",
@@ -30482,7 +30506,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.toggleKeyboardShortcuts && $options.toggleKeyboardShortcuts.apply($options, arguments);
     }),
     title: "Keyboard shortcuts"
-  }, _toConsumableArray(_cache[115] || (_cache[115] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[105] || (_cache[105] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-keyboard"
   }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "action-btn action-btn-secondary",
@@ -30491,7 +30515,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.openAdvancedControls && $options.openAdvancedControls.apply($options, arguments);
     }),
     title: "Open session controls"
-  }, _toConsumableArray(_cache[116] || (_cache[116] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[106] || (_cache[106] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Controls", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "action-btn action-btn-primary",
@@ -30508,20 +30532,22 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[16] || (_cache[16] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
       return $data.showKeyboardShortcuts = false;
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [_cache[118] || (_cache[118] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [_cache[108] || (_cache[108] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-keyboard"
   }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Keyboard Shortcuts")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "shortcuts-modal-close",
     onClick: _cache[15] || (_cache[15] = function ($event) {
       return $data.showKeyboardShortcuts = false;
     })
-  }, _toConsumableArray(_cache[117] || (_cache[117] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[107] || (_cache[107] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), _cache[119] || (_cache[119] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"shortcuts-modal-body\"><div class=\"shortcuts-grid\"><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Navigation</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↑</kbd></div><span>Previous verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↓</kbd></div><span>Next verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>←</kbd> / <kbd>J</kbd></div><span>Previous in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>→</kbd> / <kbd>K</kbd></div><span>Next in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Home</kbd></div><span>First verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>End</kbd></div><span>Last verse</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Playback</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Hold</kbd> <kbd>Space</kbd></div><span>Peek blurred upcoming ayahs</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Enter</kbd></div><span>Play current verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>P</kbd></div><span>Play / Pause audio</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Session</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Ctrl</kbd> + <kbd>S</kbd></div><span>Save session</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Esc</kbd></div><span>Close modals</span></div></div></div></div>", 1))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + " of " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "% complete", 1 /* TEXT */), $options.etaLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_28, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), !$data.mainCardCollapsed && $data.chainingEnabled && $options.hasSessionFeedback ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_29, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_30, [_cache[120] || (_cache[120] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)])))]), _cache[109] || (_cache[109] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"shortcuts-modal-body\"><div class=\"shortcuts-grid\"><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Navigation</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↑</kbd></div><span>Previous verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↓</kbd></div><span>Next verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>←</kbd> / <kbd>J</kbd></div><span>Previous in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>→</kbd> / <kbd>K</kbd></div><span>Next in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Home</kbd></div><span>First verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>End</kbd></div><span>Last verse</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Playback</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Hold</kbd> <kbd>Space</kbd></div><span>Peek blurred upcoming ayahs</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Enter</kbd></div><span>Play current verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>P</kbd></div><span>Play / Pause audio</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Session</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Ctrl</kbd> + <kbd>S</kbd></div><span>Save session</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Esc</kbd></div><span>Close modals</span></div></div></div></div>", 1))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + " of " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "% complete", 1 /* TEXT */), $options.etaLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_28, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.activePracticeTechniques.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_29, [_cache[110] || (_cache[110] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-stars"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activePracticeTechniques.length) + " active method" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activePracticeTechniques.length === 1 ? '' : 's'), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), !$data.mainCardCollapsed && $data.chainingEnabled && $options.hasSessionFeedback ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_30, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_31, [_cache[111] || (_cache[111] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-link-45deg"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions) + "x ", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_31, [_cache[121] || (_cache[121] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions) + "x ", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_32, [_cache[112] || (_cache[112] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-diagram-3"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingProgressLabel), 1 /* TEXT */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.mainCardCollapsed]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_32, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingProgressLabel), 1 /* TEXT */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.mainCardCollapsed]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_33, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
       active: $data.showTranslation
     }]),
@@ -30561,7 +30587,13 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.toggleTajweed && $options.toggleTajweed.apply($options, arguments);
     }),
     type: "button"
-  }, "Tajweed", 2 /* CLASS */)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.mainCardCollapsed]])], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("main", _hoisted_33, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_34, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.verses, function (verse) {
+  }, "Tajweed", 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "toolbar-chip",
+    onClick: _cache[22] || (_cache[22] = function () {
+      return $options.cycleQuranFontPill && $options.cycleQuranFontPill.apply($options, arguments);
+    }),
+    type: "button"
+  }, "Font: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getCurrentFontLabel()), 1 /* TEXT */)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.mainCardCollapsed]])], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("main", _hoisted_34, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_35, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.verses, function (verse) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: verse.key,
       "data-verse-key": verse.key,
@@ -30588,13 +30620,13 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       onTouchendPassive: function onTouchendPassive($event) {
         return $options.onVerseTouchEnd($event, verse.key);
       },
-      onTouchcancelPassive: _cache[22] || (_cache[22] = function () {
+      onTouchcancelPassive: _cache[23] || (_cache[23] = function () {
         return $options.clearTouchPeek && $options.clearTouchPeek.apply($options, arguments);
       }),
       onKeydown: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)((0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
         return $options.onVerseCardClick(verse);
       }, ["prevent"]), ["enter"])
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_36, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_37, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_38, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.number), 1 /* TEXT */), $options.isReviewPriorityAyah(verse.key) ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_39, "Review Due")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.effectiveActiveVerseKey === verse.key ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_40, "Active Ayah")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_41, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Small play button next to play pill "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_37, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_38, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_39, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.number), 1 /* TEXT */), $options.isReviewPriorityAyah(verse.key) ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_40, "Review Due")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.effectiveActiveVerseKey === verse.key ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_41, "Active Ayah")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_42, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Small play button next to play pill "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "verse-small-play-btn",
       onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
         return $options.playVerse(verse);
@@ -30602,16 +30634,16 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       title: $options.hasSessionFeedback ? $data.activeVerseKey === verse.key && $data.isPlaying ? 'Pause' : 'Play current ayah' : 'Preview this ayah (does not start a session)'
     }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.activeVerseKey === verse.key && $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
-    }, null, 2 /* CLASS */)], 8 /* PROPS */, _hoisted_42), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Download button for every verse "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, 2 /* CLASS */)], 8 /* PROPS */, _hoisted_43), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Download button for every verse "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "verse-download-btn",
       onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
         return $options.downloadVerseAudio(verse);
       }, ["stop"]),
       disabled: !verse.audio,
       title: "Download audio for offline listening"
-    }, _toConsumableArray(_cache[122] || (_cache[122] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[113] || (_cache[113] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-download"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_43), !$options.hasSessionFeedback ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_44, "Preview")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), verse.arabic && $data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_44), !$options.hasSessionFeedback ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_45, "Preview")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), verse.arabic && $data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: 0,
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["verse-arabic verse-arabic-primary", {
         'tajweed-enabled': $data.tajweedEnabled,
@@ -30626,9 +30658,9 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         'font-family': $options.quranFontFamily,
         'font-size': $options.getVerseFontSize(verse.key) / 100 + 'rem'
       })
-    }, null, 14 /* CLASS, STYLE, PROPS */, _hoisted_45)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Keep in-workspace aids available, but visually quieter "), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_46, [_cache[123] || (_cache[123] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    }, null, 14 /* CLASS, STYLE, PROPS */, _hoisted_46)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Keep in-workspace aids available, but visually quieter "), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_47, [_cache[114] || (_cache[114] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
       "class": "verse-aid-title"
-    }, "Transliteration", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_47, [_cache[124] || (_cache[124] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    }, "Transliteration", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_48, [_cache[115] || (_cache[115] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
       "class": "verse-aid-title"
     }, "Translation", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.translation), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showWordByWord && verse.words && verse.words.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: 3,
@@ -30649,21 +30681,21 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
           return $options.revealWordHint(word);
         }, ["stop"])
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_50, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.ar), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_51, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.en), 1 /* TEXT */), word.audio && $data.wordByWordAudioEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_51, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.ar), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_52, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.en), 1 /* TEXT */), word.audio && $data.wordByWordAudioEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
         key: 0,
         "class": "word-audio-btn",
         onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
           return $options.playWordAudio(word.audio);
         }, ["stop"])
-      }, _toConsumableArray(_cache[125] || (_cache[125] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[116] || (_cache[116] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-volume-up"
-      }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_52)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 10 /* CLASS, PROPS */, _hoisted_49);
-    }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_48)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 42 /* CLASS, PROPS, NEED_HYDRATION */, _hoisted_35);
+      }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_53)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 10 /* CLASS, PROPS */, _hoisted_50);
+    }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_49)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 42 /* CLASS, PROPS, NEED_HYDRATION */, _hoisted_36);
   }), 128 /* KEYED_FRAGMENT */))])], 512 /* NEED_PATCH */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Advanced Controls Drawer "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["tools-backdrop", {
       open: $data.showTools
     }]),
-    onClick: _cache[23] || (_cache[23] = function () {
+    onClick: _cache[24] || (_cache[24] = function () {
       return $options.closeToolsPanel && $options.closeToolsPanel.apply($options, arguments);
     }),
     "aria-hidden": "true"
@@ -30673,99 +30705,87 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["tools offcanvas-section", {
       'open': $data.showTools
     }]),
-    onClick: _cache[83] || (_cache[83] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"])),
+    onClick: _cache[73] || (_cache[73] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"])),
     role: "dialog",
     "aria-modal": "true",
     "aria-labelledby": "memorisationToolsTitle",
     "aria-hidden": $data.showTools ? 'false' : 'true',
     tabindex: "-1",
-    onKeydown: _cache[84] || (_cache[84] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)((0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onKeydown: _cache[74] || (_cache[74] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)((0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.closeToolsPanel && $options.closeToolsPanel.apply($options, arguments);
     }, ["prevent"]), ["esc"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_54, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_55, [_cache[127] || (_cache[127] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_55, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_56, [_cache[118] || (_cache[118] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     id: "memorisationToolsTitle",
     "class": "tools-title"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("b", null, "Controls")])], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-x",
-    onClick: _cache[24] || (_cache[24] = function () {
+    onClick: _cache[25] || (_cache[25] = function () {
       return $options.closeToolsPanel && $options.closeToolsPanel.apply($options, arguments);
     }),
     "aria-label": "Close panel"
-  }, _toConsumableArray(_cache[126] || (_cache[126] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[117] || (_cache[117] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_56, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_57, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
       active: $data.tab === 'tools'
     }),
-    onClick: _cache[25] || (_cache[25] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
+    onClick: _cache[26] || (_cache[26] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
       return $options.setActiveTab('tools');
     }, ["prevent"])),
     title: "Session tools",
     type: "button"
-  }, _toConsumableArray(_cache[128] || (_cache[128] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[119] || (_cache[119] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Session ", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
       active: $data.tab === 'techniques'
     }),
-    onClick: _cache[26] || (_cache[26] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
+    onClick: _cache[27] || (_cache[27] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
       return $options.setActiveTab('techniques');
     }, ["prevent"])),
     title: "Practice presets",
     type: "button"
-  }, _toConsumableArray(_cache[129] || (_cache[129] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[120] || (_cache[120] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-stars"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Practice ", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
       active: $data.tab === 'saved'
     }),
-    onClick: _cache[27] || (_cache[27] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
+    onClick: _cache[28] || (_cache[28] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
       return $options.setActiveTab('saved');
     }, ["prevent"])),
     title: "Saved sessions",
     type: "button"
-  }, _toConsumableArray(_cache[130] || (_cache[130] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[121] || (_cache[121] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-clock-history"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Saved ", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button :class=\"{ active: tab === 'settings' }\" @click.prevent=\"setActiveTab('settings')\" type=\"button\">\n              <i class=\"bi bi-gear\"></i> Settings\n            </button> ")])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_57, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" TOOLS TAB "), $data.tab === 'tools' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_58, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_59, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_60, [_cache[132] || (_cache[132] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h1", {
-    "class": "st-title"
-  }, "Quick start"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
-    "class": "session-quickstart-copy"
-  }, "Pick a surah, keep the range tight, then start with the recommended practice stack.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_61, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "preset-btn preset-btn-primary",
-    type: "button btn-md",
-    onClick: _cache[28] || (_cache[28] = function () {
-      return $options.applyRecommendedSetup && $options.applyRecommendedSetup.apply($options, arguments);
-    })
-  }, _toConsumableArray(_cache[131] || (_cache[131] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-magic"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Use Recommended Setup ", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.setupSummary), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_62, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Saved ", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button :class=\"{ active: tab === 'settings' }\" @click.prevent=\"setActiveTab('settings')\" type=\"button\">\n              <i class=\"bi bi-gear\"></i> Settings\n            </button> ")])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_58, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" TOOLS TAB "), $data.tab === 'tools' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_59, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_60, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
     onClick: _cache[29] || (_cache[29] = function ($event) {
       return $options.toggleSection('advanced_setup');
     }),
     type: "button"
-  }, [_cache[134] || (_cache[134] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Session Setup</span><span class=\"st-sub\">Choose what you memorise</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[123] || (_cache[123] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Session Setup</span><span class=\"st-sub\">Choose what you memorise</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_setup
     }])
-  }, _toConsumableArray(_cache[133] || (_cache[133] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[122] || (_cache[122] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_63, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_64, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_65, [_cache[136] || (_cache[136] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_61, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_62, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_63, [_cache[125] || (_cache[125] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     value: $options.chapterId,
     onChange: _cache[30] || (_cache[30] = function () {
       return $options.onChapterChange && $options.onChapterChange.apply($options, arguments);
     }),
     "class": "select"
-  }, [_cache[135] || (_cache[135] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+  }, [_cache[124] || (_cache[124] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: 0
   }, "Choose a surah...", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (c) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: c.id,
       value: c.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_67);
-  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_66), _cache[137] || (_cache[137] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_65);
+  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_64), _cache[126] || (_cache[126] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Pick the surah you want to work on.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_68, [_cache[139] || (_cache[139] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verse range", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_69, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Pick the surah you want to work on.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_66, [_cache[128] || (_cache[128] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verse range", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_67, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
     "onUpdate:modelValue": _cache[31] || (_cache[31] = function ($event) {
@@ -30777,7 +30797,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     min: "1"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeStart, void 0, {
     number: true
-  }]]), _cache[138] || (_cache[138] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }]]), _cache[127] || (_cache[127] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
     "onUpdate:modelValue": _cache[33] || (_cache[33] = function ($event) {
@@ -30789,9 +30809,9 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     min: "1"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeEnd, void 0, {
     number: true
-  }]])]), _cache[140] || (_cache[140] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }]])]), _cache[129] || (_cache[129] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Keep ranges small for focused memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_70, [_cache[141] || (_cache[141] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }, "Keep ranges small for focused memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_68, [_cache[130] || (_cache[130] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     "onUpdate:modelValue": _cache[35] || (_cache[35] = function ($event) {
       return $options.reciterId = $event;
     }),
@@ -30803,22 +30823,35 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: r.id,
       value: r.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_71);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]]), _cache[142] || (_cache[142] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_69);
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]]), _cache[131] || (_cache[131] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Changes the audio voice for the session.", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_72, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Changes the audio voice for the session.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_70, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_71, [_cache[132] || (_cache[132] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repetitions", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_72, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.repetitionsPerStep) + "x", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_73, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "range",
+    "onUpdate:modelValue": _cache[37] || (_cache[37] = function ($event) {
+      return $data.repetitionsPerStep = $event;
+    }),
+    min: "1",
+    max: "50",
+    step: "1",
+    "class": "input technique-range"
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.repetitionsPerStep, void 0, {
+    number: true
+  }]])]), _cache[133] || (_cache[133] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "slider-markers"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "1x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "12x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "25x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "37x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "50x")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_74, "Repeat each verse " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.repetitionsPerStep) + " time" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.repetitionsPerStep === 1 ? '' : 's') + " before moving on.", 1 /* TEXT */)])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_75, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[37] || (_cache[37] = function ($event) {
+    onClick: _cache[38] || (_cache[38] = function ($event) {
       return $options.toggleSection('advanced_playback');
     }),
     type: "button"
-  }, [_cache[144] || (_cache[144] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Audio</span><span class=\"st-sub\">Playback settings</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[135] || (_cache[135] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Audio</span><span class=\"st-sub\">Playback settings</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_playback
     }])
-  }, _toConsumableArray(_cache[143] || (_cache[143] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[134] || (_cache[134] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_73, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_74, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_75, [_cache[145] || (_cache[145] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_76, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.speedOptions, function (option) {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_76, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_77, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_78, [_cache[136] || (_cache[136] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_79, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.speedOptions, function (option) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("label", {
       "class": "radio",
       key: "tool-speed-".concat(option)
@@ -30829,368 +30862,249 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       onChange: function onChange($event) {
         return $options.setPlaybackSpeed(option);
       }
-    }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_77), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(option) + "x ", 1 /* TEXT */)]);
-  }), 128 /* KEYED_FRAGMENT */))]), _cache[146] || (_cache[146] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_80), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(option) + "x ", 1 /* TEXT */)]);
+  }), 128 /* KEYED_FRAGMENT */))]), _cache[137] || (_cache[137] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Use slower speed for early memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_78, [_cache[149] || (_cache[149] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_79, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_80, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Use slower speed for early memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_81, [_cache[140] || (_cache[140] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_82, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_83, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "auto",
-    "onUpdate:modelValue": _cache[38] || (_cache[38] = function ($event) {
-      return $options.playMode = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[147] || (_cache[147] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_81, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "radio",
-    value: "manual",
     "onUpdate:modelValue": _cache[39] || (_cache[39] = function ($event) {
       return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[148] || (_cache[148] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No", -1 /* CACHED */))])]), _cache[150] || (_cache[150] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[138] || (_cache[138] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_84, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "manual",
+    "onUpdate:modelValue": _cache[40] || (_cache[40] = function ($event) {
+      return $options.playMode = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[139] || (_cache[139] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No", -1 /* CACHED */))])]), _cache[141] || (_cache[141] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Auto moves to the next queue item when audio ends.", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_playback]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Repetitions "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_82, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "sheet-toggle",
-    onClick: _cache[40] || (_cache[40] = function ($event) {
-      return $options.toggleSection('repetitions');
-    }),
-    type: "button"
-  }, [_cache[152] || (_cache[152] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-arrow-repeat\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Repetitions</span><span class=\"st-sub\">Repeat each verse before moving on</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
-      open: $data.sectionOpen.repetitions
-    }])
-  }, _toConsumableArray(_cache[151] || (_cache[151] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_83, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_84, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_85, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_86, [_cache[153] || (_cache[153] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repeat count", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_87, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.repetitionsPerStep) + "x", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_88, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "range",
-    "onUpdate:modelValue": _cache[41] || (_cache[41] = function ($event) {
-      return $data.repetitionsPerStep = $event;
-    }),
-    min: "1",
-    max: "50",
-    step: "1",
-    "class": "input technique-range"
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.repetitionsPerStep, void 0, {
-    number: true
-  }]])]), _cache[154] || (_cache[154] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "slider-markers"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "1x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "12x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "25x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "37x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "50x")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_89, "Each verse will be repeated " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.repetitionsPerStep) + " time" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.repetitionsPerStep === 1 ? '' : 's') + " before advancing", 1 /* TEXT */)])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.repetitions]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Gap between verses "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_90, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "sheet-toggle",
-    onClick: _cache[42] || (_cache[42] = function ($event) {
-      return $options.toggleSection('gap_between');
-    }),
-    type: "button"
-  }, [_cache[156] || (_cache[156] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-pause-circle\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Gap between verses</span><span class=\"st-sub\">Pause after reciter finishes</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
-      open: $data.sectionOpen.gap_between
-    }])
-  }, _toConsumableArray(_cache[155] || (_cache[155] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_91, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_92, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_93, [_cache[167] || (_cache[167] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Pause duration", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_94, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["radio", {
-      active: $data.gapBetweenVerses === 'none'
-    }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "radio",
-    value: "none",
-    "onUpdate:modelValue": _cache[43] || (_cache[43] = function ($event) {
-      return $data.gapBetweenVerses = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.gapBetweenVerses]]), _cache[157] || (_cache[157] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "option-label"
-  }, "None", -1 /* CACHED */)), _cache[158] || (_cache[158] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "option-desc"
-  }, "No pause", -1 /* CACHED */))], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["radio", {
-      active: $data.gapBetweenVerses === '1x'
-    }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "radio",
-    value: "1x",
-    "onUpdate:modelValue": _cache[44] || (_cache[44] = function ($event) {
-      return $data.gapBetweenVerses = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.gapBetweenVerses]]), _cache[159] || (_cache[159] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "option-label"
-  }, "1x", -1 /* CACHED */)), _cache[160] || (_cache[160] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "option-desc"
-  }, "Verse duration", -1 /* CACHED */))], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["radio", {
-      active: $data.gapBetweenVerses === '3s'
-    }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "radio",
-    value: "3s",
-    "onUpdate:modelValue": _cache[45] || (_cache[45] = function ($event) {
-      return $data.gapBetweenVerses = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.gapBetweenVerses]]), _cache[161] || (_cache[161] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "option-label"
-  }, "3s", -1 /* CACHED */)), _cache[162] || (_cache[162] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "option-desc"
-  }, "Seconds", -1 /* CACHED */))], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["radio", {
-      active: $data.gapBetweenVerses === '5s'
-    }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "radio",
-    value: "5s",
-    "onUpdate:modelValue": _cache[46] || (_cache[46] = function ($event) {
-      return $data.gapBetweenVerses = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.gapBetweenVerses]]), _cache[163] || (_cache[163] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "option-label"
-  }, "5s", -1 /* CACHED */)), _cache[164] || (_cache[164] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "option-desc"
-  }, "Seconds", -1 /* CACHED */))], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["radio", {
-      active: $data.gapBetweenVerses === 'custom'
-    }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "radio",
-    value: "custom",
-    "onUpdate:modelValue": _cache[47] || (_cache[47] = function ($event) {
-      return $data.gapBetweenVerses = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.gapBetweenVerses]]), _cache[165] || (_cache[165] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "option-label"
-  }, "Custom", -1 /* CACHED */)), _cache[166] || (_cache[166] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "option-desc"
-  }, "Set your own", -1 /* CACHED */))], 2 /* CLASS */)]), $data.gapBetweenVerses === 'custom' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_95, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_96, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "range",
-    "onUpdate:modelValue": _cache[48] || (_cache[48] = function ($event) {
-      return $data.customGapSeconds = $event;
-    }),
-    min: "0.5",
-    max: "10",
-    step: "0.5",
-    "class": "input technique-range"
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.customGapSeconds, void 0, {
-    number: true
-  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_97, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.customGapSeconds) + "s", 1 /* TEXT */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), _cache[168] || (_cache[168] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "setting-hint"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-info-circle"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Pause after reciter finishes, allowing you to repeat back into the silence")], -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.gap_between]])])])) : $data.tab === 'techniques' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+  }, "Auto moves to the next queue item when audio ends.", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_playback]])])])) : $data.tab === 'techniques' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 1
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" TECHNIQUES TAB "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_98, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_99, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_100, [_cache[172] || (_cache[172] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" TECHNIQUES TAB "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_85, [$options.activePracticeTechniques.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_86, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_87, [_cache[142] || (_cache[142] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "st-title"
-  }, "Practice styles"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
-    "class": "session-quickstart-copy"
-  }, "Start with one preset. Only open advanced technique controls if you already know why you need them.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_101, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "preset-btn",
-    onClick: _cache[49] || (_cache[49] = function ($event) {
-      return $options.applyPreset('guided');
-    })
-  }, _toConsumableArray(_cache[169] || (_cache[169] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-play-circle"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Guided Start ", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "preset-btn",
-    onClick: _cache[50] || (_cache[50] = function ($event) {
-      return $options.applyPreset('chain');
-    })
-  }, _toConsumableArray(_cache[170] || (_cache[170] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-link-45deg"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Build Connections ", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "preset-btn",
-    onClick: _cache[51] || (_cache[51] = function ($event) {
-      return $options.applyPreset('blur');
-    })
-  }, _toConsumableArray(_cache[171] || (_cache[171] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-cloud-haze2"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Pure Recall ", -1 /* CACHED */)])))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_102, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Active methods"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "st-sub"
+  }, "A quick view of the techniques shaping this session.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_88, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activePracticeTechniques.length), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_89, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.activePracticeTechniques, function (item) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+      key: item.key,
+      "class": "active-technique-card"
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_90, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(item.icon)
+    }, null, 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_91, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.label), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.description), 1 /* TEXT */)])]);
+  }), 128 /* KEYED_FRAGMENT */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_92, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[53] || (_cache[53] = function ($event) {
+    onClick: _cache[43] || (_cache[43] = function ($event) {
       return $options.toggleSection('focus_mode');
     }),
     type: "button"
-  }, [_cache[175] || (_cache[175] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-bullseye\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Focus Mode</span><span class=\"st-sub\">Reduce distractions around the active ayah</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_103, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-switch", {
+  }, [_cache[145] || (_cache[145] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-bullseye\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Focus Mode</span><span class=\"st-sub\">Reduce distractions around the active ayah</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_93, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "mode-radio-group",
+    onClick: _cache[42] || (_cache[42] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["mode-radio", {
       active: $data.focusModeEnabled
-    }]),
-    onClick: _cache[52] || (_cache[52] = function ($event) {
-      return $data.focusModeEnabled = !$data.focusModeEnabled;
+    }])
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    name: "focus-mode-state",
+    "aria-label": "Use focus mode",
+    checked: $data.focusModeEnabled,
+    onChange: _cache[41] || (_cache[41] = function ($event) {
+      return $data.focusModeEnabled = true;
     })
-  }, _toConsumableArray(_cache[173] || (_cache[173] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "toggle-switch-knob"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_94), _cache[143] || (_cache[143] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "mode-radio-dot",
+    "aria-hidden": "true"
+  }, null, -1 /* CACHED */))], 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.focus_mode
     }])
-  }, _toConsumableArray(_cache[174] || (_cache[174] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[144] || (_cache[144] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_104, _toConsumableArray(_cache[176] || (_cache[176] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"field-stack\"><div class=\"field\"><div class=\"technique-description\"><i class=\"bi bi-info-circle-fill\"></i><span>Focus Mode dims all non-active verses, helping you concentrate on the current ayah without distractions.</span></div><div class=\"technique-best\"><i class=\"bi bi-check-circle-fill\"></i><span>Best for: Deep memorisation sessions</span></div></div></div>", 1)])), 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.focus_mode]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_105, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_95, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_96, [_cache[148] || (_cache[148] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"field\"><div class=\"technique-description\"><i class=\"bi bi-info-circle-fill\"></i><span>Focus Mode dims all non-active verses, helping you concentrate on the current ayah without distractions.</span></div><div class=\"technique-best\"><i class=\"bi bi-check-circle-fill\"></i><span>Best for: Deep memorisation sessions</span></div></div>", 1)), $data.focusModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_97, [_cache[146] || (_cache[146] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Focus strength", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_98, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "range",
+    min: "30",
+    max: "75",
+    step: "5",
+    "onUpdate:modelValue": _cache[44] || (_cache[44] = function ($event) {
+      return $data.focusDimPercent = $event;
+    }),
+    "class": "input"
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.focusDimPercent, void 0, {
+    number: true
+  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_99, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.focusDimPercent) + "%", 1 /* TEXT */)]), _cache[147] || (_cache[147] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    "class": "field-hint"
+  }, "Higher values dim non-active verses more aggressively.", -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.focus_mode]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_100, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[55] || (_cache[55] = function ($event) {
+    onClick: _cache[47] || (_cache[47] = function ($event) {
       return $options.toggleSection('blur_mode');
     }),
     type: "button"
-  }, [_cache[178] || (_cache[178] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-cloud-haze2\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Blur Mode</span><span class=\"st-sub\">Progressive concealment for active recall</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_106, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip", {
+  }, [_cache[151] || (_cache[151] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-cloud-haze2\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Blur Mode</span><span class=\"st-sub\">Progressive concealment for active recall</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_101, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "mode-radio-group",
+    onClick: _cache[46] || (_cache[46] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["mode-radio", {
       active: $data.blurModeEnabled
-    }]),
-    onClick: _cache[54] || (_cache[54] = function ($event) {
-      return $data.blurModeEnabled = !$data.blurModeEnabled;
-    }),
-    type: "button"
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.blurModeEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    }])
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    name: "blur-mode-state",
+    "aria-label": "Use blur mode",
+    checked: $data.blurModeEnabled,
+    onChange: _cache[45] || (_cache[45] = function ($event) {
+      return $data.blurModeEnabled = true;
+    })
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_102), _cache[149] || (_cache[149] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "mode-radio-dot",
+    "aria-hidden": "true"
+  }, null, -1 /* CACHED */))], 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.blur_mode
     }])
-  }, _toConsumableArray(_cache[177] || (_cache[177] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[150] || (_cache[150] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_107, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_108, [_cache[181] || (_cache[181] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"field\"><div class=\"technique-description\"><i class=\"bi bi-info-circle-fill\"></i><span>Blurs upcoming verses, requiring you to recall them before revealing.</span></div><div class=\"technique-best\"><i class=\"bi bi-check-circle-fill\"></i><span>Best for: Active recall testing</span></div></div>", 1)), $data.blurModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_109, [_cache[179] || (_cache[179] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Blur Intensity", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_110, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_103, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_104, [_cache[154] || (_cache[154] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"field\"><div class=\"technique-description\"><i class=\"bi bi-info-circle-fill\"></i><span>Blurs upcoming verses, requiring you to recall them before revealing.</span></div><div class=\"technique-best\"><i class=\"bi bi-check-circle-fill\"></i><span>Best for: Active recall testing</span></div></div>", 1)), $data.blurModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_105, [_cache[152] || (_cache[152] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Blur Intensity", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_106, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     min: "4",
     max: "18",
     step: "1",
-    "onUpdate:modelValue": _cache[56] || (_cache[56] = function ($event) {
+    "onUpdate:modelValue": _cache[48] || (_cache[48] = function ($event) {
       return $data.blurIntensity = $event;
     }),
     "class": "input"
   }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.blurIntensity, void 0, {
     number: true
-  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_111, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.blurIntensity) + "px", 1 /* TEXT */)]), _cache[180] || (_cache[180] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_107, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.blurIntensity) + "px", 1 /* TEXT */)]), _cache[153] || (_cache[153] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Hold "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("kbd", null, "Space"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(", hover, or long-press to peek temporarily")], -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.blur_mode]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_112, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Hold "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("kbd", null, "Space"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(", hover, or long-press to peek temporarily")], -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.blur_mode]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_108, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[58] || (_cache[58] = function ($event) {
+    onClick: _cache[51] || (_cache[51] = function ($event) {
       return $options.toggleSection('chaining');
     }),
     type: "button"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_113, [_cache[183] || (_cache[183] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_109, [_cache[156] || (_cache[156] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "st-ico"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-link-45deg"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_114, [_cache[182] || (_cache[182] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_110, [_cache[155] || (_cache[155] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "st-title"
-  }, "Chaining", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_115, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodDescription), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_116, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip", {
+  }, "Chaining", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_111, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodDescription), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_112, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "mode-radio-group",
+    onClick: _cache[50] || (_cache[50] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["mode-radio", {
       active: $data.chainingEnabled
-    }]),
-    onClick: _cache[57] || (_cache[57] = function ($event) {
-      return $options.setChainingEnabled(!$data.chainingEnabled);
-    }),
-    type: "button"
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    }])
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    name: "chaining-state",
+    "aria-label": "Use chaining",
+    checked: $data.chainingEnabled,
+    onChange: _cache[49] || (_cache[49] = function ($event) {
+      return $options.setChainingEnabled(true);
+    })
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_113), _cache[157] || (_cache[157] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "mode-radio-dot",
+    "aria-hidden": "true"
+  }, null, -1 /* CACHED */))], 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.chaining
     }])
-  }, _toConsumableArray(_cache[184] || (_cache[184] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[158] || (_cache[158] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_117, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_118, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_119, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_120, [_cache[185] || (_cache[185] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_114, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_115, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_116, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_117, [_cache[159] || (_cache[159] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-info-circle-fill"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'cumulative' ? 'Build longer runs by adding one ayah at a time.' : 'Strengthen transitions between neighbouring ayahs.'), 1 /* TEXT */)]), _cache[186] || (_cache[186] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'cumulative' ? 'Build longer runs by adding one ayah at a time.' : 'Strengthen transitions between neighbouring ayahs.'), 1 /* TEXT */)]), _cache[160] || (_cache[160] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "technique-best"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-check-circle-fill"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Best for: Building long passages")], -1 /* CACHED */))]), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_121, [_cache[189] || (_cache[189] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Method", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_122, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_123, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Best for: Building long passages")], -1 /* CACHED */))]), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_118, [_cache[163] || (_cache[163] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Method", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_119, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_120, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "linking",
-    "onUpdate:modelValue": _cache[59] || (_cache[59] = function ($event) {
+    "onUpdate:modelValue": _cache[52] || (_cache[52] = function ($event) {
       return $data.chainingMethod = $event;
     }),
-    onChange: _cache[60] || (_cache[60] = function ($event) {
+    onChange: _cache[53] || (_cache[53] = function ($event) {
       return $options.setChainingMethod('linking');
     })
-  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.chainingMethod]]), _cache[187] || (_cache[187] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Linking ", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_124, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.chainingMethod]]), _cache[161] || (_cache[161] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Linking ", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_121, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "cumulative",
-    "onUpdate:modelValue": _cache[61] || (_cache[61] = function ($event) {
+    "onUpdate:modelValue": _cache[54] || (_cache[54] = function ($event) {
       return $data.chainingMethod = $event;
     }),
-    onChange: _cache[62] || (_cache[62] = function ($event) {
+    onChange: _cache[55] || (_cache[55] = function ($event) {
       return $options.setChainingMethod('cumulative');
     })
-  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.chainingMethod]]), _cache[188] || (_cache[188] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Cumulative ", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_125, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'linking' ? 'Practice ayahs individually, then in pairs.' : 'Start with first ayah, then add one more each time.'), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_126, [_cache[190] || (_cache[190] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repeats per step", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_127, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.chainingMethod]]), _cache[162] || (_cache[162] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Cumulative ", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_122, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'linking' ? 'Practice ayahs individually, then in pairs.' : 'Start with first ayah, then add one more each time.'), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_123, [_cache[164] || (_cache[164] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repeats per step", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_124, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     min: "1",
     max: "5",
     step: "1",
     value: $data.chainingRepetitions,
-    onInput: _cache[63] || (_cache[63] = function ($event) {
+    onInput: _cache[56] || (_cache[56] = function ($event) {
       return $options.setChainingRepetitions(Number($event.target.value));
     }),
     "class": "input"
-  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_128), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_129, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions), 1 /* TEXT */)]), _cache[191] || (_cache[191] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_125), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_126, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions), 1 /* TEXT */)]), _cache[165] || (_cache[165] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Number of times to repeat each chaining step", -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_130, [_cache[192] || (_cache[192] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, "Number of times to repeat each chaining step", -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_127, [_cache[166] || (_cache[166] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-eye"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodPreview), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.chaining]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_131, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodPreview), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.chaining]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_128, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[65] || (_cache[65] = function ($event) {
+    onClick: _cache[59] || (_cache[59] = function ($event) {
       return $options.toggleSection('anchor_mode');
     }),
     type: "button"
-  }, [_cache[194] || (_cache[194] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-pin-angle-fill\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Anchor Mode</span><span class=\"st-sub\">Mental hooks using key words</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_132, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip", {
+  }, [_cache[169] || (_cache[169] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-pin-angle-fill\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Anchor Mode</span><span class=\"st-sub\">Mental hooks using key words</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_129, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "mode-radio-group",
+    onClick: _cache[58] || (_cache[58] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["mode-radio", {
       active: $data.anchorModeEnabled
-    }]),
-    onClick: _cache[64] || (_cache[64] = function () {
-      return $options.toggleAnchorMode && $options.toggleAnchorMode.apply($options, arguments);
-    }),
-    type: "button"
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.anchorModeEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    }])
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    name: "anchor-mode-state",
+    "aria-label": "Use anchor mode",
+    checked: $data.anchorModeEnabled,
+    onChange: _cache[57] || (_cache[57] = function ($event) {
+      return $options.setAnchorMode(true);
+    })
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_130), _cache[167] || (_cache[167] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "mode-radio-dot",
+    "aria-hidden": "true"
+  }, null, -1 /* CACHED */))], 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.anchor_mode
     }])
-  }, _toConsumableArray(_cache[193] || (_cache[193] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[168] || (_cache[168] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_133, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_134, [_cache[197] || (_cache[197] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"field\"><div class=\"technique-description\"><i class=\"bi bi-info-circle-fill\"></i><span>Highlights key words as memory anchors to help recall the entire ayah.</span></div><div class=\"technique-best\"><i class=\"bi bi-check-circle-fill\"></i><span>Best for: Memorising key vocabulary</span></div></div>", 1)), $data.anchorModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_135, [_cache[196] || (_cache[196] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Anchor points per ayah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[66] || (_cache[66] = function ($event) {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_131, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_132, [_cache[172] || (_cache[172] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"field\"><div class=\"technique-description\"><i class=\"bi bi-info-circle-fill\"></i><span>Highlights key words as memory anchors to help recall the entire ayah.</span></div><div class=\"technique-best\"><i class=\"bi bi-check-circle-fill\"></i><span>Best for: Memorising key vocabulary</span></div></div>", 1)), $data.anchorModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_133, [_cache[171] || (_cache[171] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Anchor points per ayah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[60] || (_cache[60] = function ($event) {
       return $data.anchorCount = $event;
     }),
-    onChange: _cache[67] || (_cache[67] = function () {
+    onChange: _cache[61] || (_cache[61] = function () {
       return $options.onAnchorCountChange && $options.onAnchorCountChange.apply($options, arguments);
     }),
     "class": "select"
-  }, _toConsumableArray(_cache[195] || (_cache[195] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+  }, _toConsumableArray(_cache[170] || (_cache[170] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: 1
   }, "1 anchor (center word)", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: 2
   }, "2 anchors (first + last)", -1 /* CACHED */)])), 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.anchorCount, void 0, {
     number: true
-  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_136, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.anchorModeDescription), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.anchor_mode]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quick Presets "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_137, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "sheet-toggle",
-    onClick: _cache[68] || (_cache[68] = function ($event) {
-      return $options.toggleSection('presets');
-    }),
-    type: "button"
-  }, [_cache[199] || (_cache[199] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-magic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Advanced Technique Tuning</span><span class=\"st-sub\">Optional fine-tuning after you have a stable routine</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
-      open: $data.sectionOpen.presets
-    }])
-  }, _toConsumableArray(_cache[198] || (_cache[198] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_138, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_139, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_140, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_141, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "preset-btn",
-    onClick: _cache[69] || (_cache[69] = function ($event) {
-      return $options.applyPreset('chain');
-    })
-  }, _toConsumableArray(_cache[200] || (_cache[200] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-link-45deg"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Chain + Anchors ", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "preset-btn",
-    onClick: _cache[70] || (_cache[70] = function ($event) {
-      return $options.applyPreset('blur');
-    })
-  }, _toConsumableArray(_cache[201] || (_cache[201] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-cloud-haze2"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Pure Recall ", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "preset-btn",
-    onClick: _cache[71] || (_cache[71] = function ($event) {
-      return $options.applyPreset('focus');
-    })
-  }, _toConsumableArray(_cache[202] || (_cache[202] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-bullseye"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Deep Focus ", -1 /* CACHED */)])))]), _cache[203] || (_cache[203] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
-    "class": "field-hint"
-  }, "Use these only when you want deliberate variation, not for first-session setup.", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.presets]])])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : $data.tab === 'saved' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_134, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.anchorModeDescription), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.anchor_mode]])])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : $data.tab === 'saved' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 2
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" SAVED TAB "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_142, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_143, [_cache[213] || (_cache[213] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" SAVED TAB "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_135, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_136, [_cache[182] || (_cache[182] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "saved-header"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-bookmark-check"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Saved Sessions")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Your memorisation sessions, ready to resume")], -1 /* CACHED */)), $data.savedSessions.length === 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_144, _toConsumableArray(_cache[204] || (_cache[204] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Saved Sessions")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Your memorisation sessions, ready to resume")], -1 /* CACHED */)), $data.savedSessions.length === 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_137, _toConsumableArray(_cache[173] || (_cache[173] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-journal-bookmark"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "No saved sessions yet", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Save your current session to get started", -1 /* CACHED */)])))) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_145, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.savedSessions, function (session) {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "No saved sessions yet", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Save your current session to get started", -1 /* CACHED */)])))) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_138, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.savedSessions, function (session) {
     var _session$config, _session$config2, _session$config3, _session$config4;
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: session.id,
@@ -31200,47 +31114,47 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       onClick: function onClick($event) {
         return $options.loadSavedSession(session.id);
       }
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_147, [_cache[205] || (_cache[205] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_140, [_cache[174] || (_cache[174] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-bookmark-fill"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(session.name), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_148, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[206] || (_cache[206] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(session.name), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_141, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[175] || (_cache[175] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-book"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_session$config = session.config) === null || _session$config === void 0 ? void 0 : _session$config.chapterName) || "Surah\n                        ".concat((_session$config2 = session.config) === null || _session$config2 === void 0 ? void 0 : _session$config2.chapterId)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[207] || (_cache[207] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_session$config = session.config) === null || _session$config === void 0 ? void 0 : _session$config.chapterName) || "Surah\n                        ".concat((_session$config2 = session.config) === null || _session$config2 === void 0 ? void 0 : _session$config2.chapterId)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[176] || (_cache[176] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-text-paragraph"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_session$config3 = session.config) === null || _session$config3 === void 0 ? void 0 : _session$config3.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_session$config4 = session.config) === null || _session$config4 === void 0 ? void 0 : _session$config4.rangeEnd), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[208] || (_cache[208] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_session$config3 = session.config) === null || _session$config3 === void 0 ? void 0 : _session$config3.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_session$config4 = session.config) === null || _session$config4 === void 0 ? void 0 : _session$config4.rangeEnd), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[177] || (_cache[177] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-clock"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatDate(session.savedAt)), 1 /* TEXT */)])])], 8 /* PROPS */, _hoisted_146), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatDate(session.savedAt)), 1 /* TEXT */)])])], 8 /* PROPS */, _hoisted_139), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "delete-btn",
       onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
         return $options.deleteSavedSession(session.id);
       }, ["stop"]),
       title: "Delete session"
-    }, _toConsumableArray(_cache[209] || (_cache[209] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[178] || (_cache[178] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-trash3"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_149)]);
-  }), 128 /* KEYED_FRAGMENT */))])), $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_150, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_151, [_cache[211] || (_cache[211] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_142)]);
+  }), 128 /* KEYED_FRAGMENT */))])), $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_143, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_144, [_cache[180] || (_cache[180] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-circle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[210] || (_cache[210] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Current Session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter = $data.currentChapter) === null || _$data$currentChapter === void 0 ? void 0 : _$data$currentChapter.name_simple) || 'No surah') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[179] || (_cache[179] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Current Session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter = $data.currentChapter) === null || _$data$currentChapter === void 0 ? void 0 : _$data$currentChapter.name_simple) || 'No surah') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "save-btn",
-    onClick: _cache[72] || (_cache[72] = function ($event) {
+    onClick: _cache[62] || (_cache[62] = function ($event) {
       return $options.saveCurrentSessionWithName();
     })
-  }, _toConsumableArray(_cache[212] || (_cache[212] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[181] || (_cache[181] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-save"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Save ", -1 /* CACHED */)])))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : $data.tab === 'settings' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 3
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" SETTINGS TAB - Same layout as Techniques tab "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_152, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Display Settings Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_153, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" SETTINGS TAB - Same layout as Techniques tab "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_145, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Display Settings Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_146, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[73] || (_cache[73] = function ($event) {
+    onClick: _cache[63] || (_cache[63] = function ($event) {
       return $options.toggleSection('display_settings');
     }),
     type: "button"
-  }, [_cache[215] || (_cache[215] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-display\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Display</span><span class=\"st-sub\">Customize how the Quran appears</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[184] || (_cache[184] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-display\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Display</span><span class=\"st-sub\">Customize how the Quran appears</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.display_settings
     }])
-  }, _toConsumableArray(_cache[214] || (_cache[214] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[183] || (_cache[183] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_154, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Tajweed "), _cache[217] || (_cache[217] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_147, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Tajweed "), _cache[186] || (_cache[186] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-item"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-info"
@@ -31248,39 +31162,39 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": "setting-label"
   }, "Tajweed"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-description"
-  }, "Recitation color rules (Idgham, Ikhfa, Madd, etc.)")])], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Font Size "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_155, [_cache[216] || (_cache[216] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Recitation color rules (Idgham, Ikhfa, Madd, etc.)")])], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Font Size "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_148, [_cache[185] || (_cache[185] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-info"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-label"
   }, "Font size"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-description"
-  }, "Adjust the Arabic text size for better readability")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_156, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_157, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.defaultFontSize) + "%", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Adjust the Arabic text size for better readability")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_149, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_150, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.defaultFontSize) + "%", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     min: "80",
     max: "200",
     step: "5",
-    "onUpdate:modelValue": _cache[74] || (_cache[74] = function ($event) {
+    "onUpdate:modelValue": _cache[64] || (_cache[64] = function ($event) {
       return $data.defaultFontSize = $event;
     }),
-    onInput: _cache[75] || (_cache[75] = function () {
+    onInput: _cache[65] || (_cache[65] = function () {
       return $options.updateDefaultFontSize && $options.updateDefaultFontSize.apply($options, arguments);
     }),
     "class": "input range-slider"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.defaultFontSize, void 0, {
     number: true
-  }]])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.display_settings]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Reading Aids Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_158, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }]])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.display_settings]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Reading Aids Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_151, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[76] || (_cache[76] = function ($event) {
+    onClick: _cache[66] || (_cache[66] = function ($event) {
       return $options.toggleSection('reading_settings');
     }),
     type: "button"
-  }, [_cache[219] || (_cache[219] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book-half\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Reading Aids</span><span class=\"st-sub\">Translations and word helpers</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[188] || (_cache[188] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book-half\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Reading Aids</span><span class=\"st-sub\">Translations and word helpers</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.reading_settings
     }])
-  }, _toConsumableArray(_cache[218] || (_cache[218] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[187] || (_cache[187] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_159, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Translation "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_160, [_cache[220] || (_cache[220] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_152, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Translation "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_153, [_cache[189] || (_cache[189] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-info"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-label"
@@ -31290,10 +31204,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip", {
       active: $data.showTranslation
     }]),
-    onClick: _cache[77] || (_cache[77] = function ($event) {
+    onClick: _cache[67] || (_cache[67] = function ($event) {
       return $options.toggleReadingOption('translation');
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showTranslation ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Transliteration "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_161, [_cache[221] || (_cache[221] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showTranslation ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Transliteration "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_154, [_cache[190] || (_cache[190] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-info"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-label"
@@ -31303,10 +31217,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip", {
       active: $data.showTransliteration
     }]),
-    onClick: _cache[78] || (_cache[78] = function ($event) {
+    onClick: _cache[68] || (_cache[68] = function ($event) {
       return $options.toggleReadingOption('transliteration');
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showTransliteration ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Word by Word "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_162, [_cache[222] || (_cache[222] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showTransliteration ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Word by Word "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_155, [_cache[191] || (_cache[191] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-info"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-label"
@@ -31316,10 +31230,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip", {
       active: $data.showWordByWord
     }]),
-    onClick: _cache[79] || (_cache[79] = function ($event) {
+    onClick: _cache[69] || (_cache[69] = function ($event) {
       return $options.toggleReadingOption('wbw');
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showWordByWord ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Word Audio "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_163, [_cache[223] || (_cache[223] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showWordByWord ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Word Audio "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_156, [_cache[192] || (_cache[192] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-info"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-label"
@@ -31329,7 +31243,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip", {
       active: $data.wordByWordAudioEnabled
     }]),
-    onClick: _cache[80] || (_cache[80] = function ($event) {
+    onClick: _cache[70] || (_cache[70] = function ($event) {
       return $data.wordByWordAudioEnabled = !$data.wordByWordAudioEnabled;
     })
   }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.wordByWordAudioEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.reading_settings]])])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
@@ -31338,81 +31252,81 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     }])
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-btn tools-btn-ghost tools-btn-soft",
-    onClick: _cache[81] || (_cache[81] = function () {
+    onClick: _cache[71] || (_cache[71] = function () {
       return $options.resetControls && $options.resetControls.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[224] || (_cache[224] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[193] || (_cache[193] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-counterclockwise"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Reset", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-btn tools-btn-primary tools-btn-soft",
-    onClick: _cache[82] || (_cache[82] = function () {
+    onClick: _cache[72] || (_cache[72] = function () {
       return $options.startSessionAndClose && $options.startSessionAndClose.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[225] || (_cache[225] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[194] || (_cache[194] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-fill"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Start Session", -1 /* CACHED */)])))], 2 /* CLASS */)], 42 /* CLASS, PROPS, NEED_HYDRATION */, _hoisted_53)], 2 /* CLASS */)) : $data.appReady && !$options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_164, _toConsumableArray(_cache[226] || (_cache[226] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"login-hero\"><div class=\"login-card\"><div class=\"login-icon\"><i class=\"bi bi-book-half\"></i></div><h1>Welcome to Mutqin</h1><p class=\"login-subtitle\">Your personal Quran memorisation companion</p><div class=\"login-features\"><div class=\"feature\"><i class=\"bi bi-cloud-check\"></i><span>Sync across devices</span></div><div class=\"feature\"><i class=\"bi bi-graph-up\"></i><span>Track your progress</span></div><div class=\"feature\"><i class=\"bi bi-calendar-check\"></i><span>Never lose your place</span></div></div><a href=\"/login\" class=\"login-btn\" style=\"text-decoration:none;\"><i class=\"bi bi-box-arrow-in-right\"></i><span>Sign in to continue</span></a><p class=\"login-note\"> Your sessions, progress, and resume history sync after login </p></div></div>", 1)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Save Session Name Modal - Clean & Updated Version "), $data.showSaveNameModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Start Session", -1 /* CACHED */)])))], 2 /* CLASS */)], 42 /* CLASS, PROPS, NEED_HYDRATION */, _hoisted_54)], 2 /* CLASS */)) : $data.appReady && !$options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_157, _toConsumableArray(_cache[195] || (_cache[195] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"login-hero\"><div class=\"login-card\"><div class=\"login-icon\"><i class=\"bi bi-book-half\"></i></div><h1>Welcome to Mutqin</h1><p class=\"login-subtitle\">Your personal Quran memorisation companion</p><div class=\"login-features\"><div class=\"feature\"><i class=\"bi bi-cloud-check\"></i><span>Sync across devices</span></div><div class=\"feature\"><i class=\"bi bi-graph-up\"></i><span>Track your progress</span></div><div class=\"feature\"><i class=\"bi bi-calendar-check\"></i><span>Never lose your place</span></div></div><a href=\"/login\" class=\"login-btn\" style=\"text-decoration:none;\"><i class=\"bi bi-box-arrow-in-right\"></i><span>Sign in to continue</span></a><p class=\"login-note\"> Your sessions, progress, and resume history sync after login </p></div></div>", 1)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Save Session Name Modal - Clean & Updated Version "), $data.showSaveNameModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 3,
     "class": "modal-overlay",
-    onClick: _cache[91] || (_cache[91] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onClick: _cache[81] || (_cache[81] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.closeSaveModal && $options.closeSaveModal.apply($options, arguments);
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_165, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_166, [_cache[228] || (_cache[228] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_158, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_159, [_cache[197] || (_cache[197] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "modal-header-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-bookmark-plus-fill"
-  })], -1 /* CACHED */)), _cache[229] || (_cache[229] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  })], -1 /* CACHED */)), _cache[198] || (_cache[198] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "modal-header-text"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", {
     id: "saveModalTitle"
   }, "Save Memorisation Session"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Name your session to easily find and resume it later")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "modal-close-btn",
-    onClick: _cache[85] || (_cache[85] = function () {
+    onClick: _cache[75] || (_cache[75] = function () {
       return $options.closeSaveModal && $options.closeSaveModal.apply($options, arguments);
     }),
     "aria-label": "Close"
-  }, _toConsumableArray(_cache[227] || (_cache[227] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[196] || (_cache[196] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_167, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Session Preview Card "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_168, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_169, [_cache[230] || (_cache[230] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_160, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Session Preview Card "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_161, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_162, [_cache[199] || (_cache[199] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-book"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter2 = $data.currentChapter) === null || _$data$currentChapter2 === void 0 ? void 0 : _$data$currentChapter2.name_simple) || 'No surah selected'), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_170, [_cache[231] || (_cache[231] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter2 = $data.currentChapter) === null || _$data$currentChapter2 === void 0 ? void 0 : _$data$currentChapter2.name_simple) || 'No surah selected'), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_163, [_cache[200] || (_cache[200] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-text-paragraph"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Ayahs " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeStart) + " – " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_171, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_172, [_cache[232] || (_cache[232] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Ayahs " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeStart) + " – " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_164, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_165, [_cache[201] || (_cache[201] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-files"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd - $options.rangeStart + 1) + " verses ", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_173, [_cache[233] || (_cache[233] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd - $options.rangeStart + 1) + " verses ", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_166, [_cache[202] || (_cache[202] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-mic"
   }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getReciterName()), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Name Input Field "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["name-input-group", {
       'has-error': $data.nameError
     }])
-  }, [_cache[236] || (_cache[236] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+  }, [_cache[205] || (_cache[205] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
     "for": "sessionName"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-pencil-square"
   }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Session Name ")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     id: "sessionName",
     type: "text",
-    "onUpdate:modelValue": _cache[86] || (_cache[86] = function ($event) {
+    "onUpdate:modelValue": _cache[76] || (_cache[76] = function ($event) {
       return $data.saveSessionName = $event;
     }),
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["name-input", {
       'error': $data.nameError
     }]),
     placeholder: "e.g., Al-Fatihah Focus, Evening Review, Week 1 Progress",
-    onKeyup: _cache[87] || (_cache[87] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)(function () {
+    onKeyup: _cache[77] || (_cache[77] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)(function () {
       return $options.confirmSaveSession && $options.confirmSaveSession.apply($options, arguments);
     }, ["enter"])),
-    onInput: _cache[88] || (_cache[88] = function () {
+    onInput: _cache[78] || (_cache[78] = function () {
       return $options.clearNameError && $options.clearNameError.apply($options, arguments);
     }),
     autofocus: "",
     maxlength: "50"
-  }, null, 34 /* CLASS, NEED_HYDRATION */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.saveSessionName]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_174, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_175, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.saveSessionName.length) + "/50", 1 /* TEXT */), _cache[234] || (_cache[234] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, 34 /* CLASS, NEED_HYDRATION */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.saveSessionName]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_167, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_168, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.saveSessionName.length) + "/50", 1 /* TEXT */), _cache[203] || (_cache[203] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "hint-text"
-  }, "Give it a memorable name", -1 /* CACHED */))]), $data.nameError ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_176, [_cache[235] || (_cache[235] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, "Give it a memorable name", -1 /* CACHED */))]), $data.nameError ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_169, [_cache[204] || (_cache[204] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-exclamation-circle-fill"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.nameError), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quick Name Suggestions "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_177, [_cache[237] || (_cache[237] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.nameError), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quick Name Suggestions "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_170, [_cache[206] || (_cache[206] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "suggestions-label"
-  }, "Quick suggestions:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_178, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.nameSuggestions, function (suggestion) {
+  }, "Quick suggestions:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_171, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.nameSuggestions, function (suggestion) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
       key: suggestion,
       "class": "suggestion-chip",
@@ -31420,50 +31334,50 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         return $data.saveSessionName = suggestion;
       },
       type: "button"
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(suggestion), 9 /* TEXT, PROPS */, _hoisted_179);
-  }), 128 /* KEYED_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Session Info Note "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_180, [_cache[239] || (_cache[239] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(suggestion), 9 /* TEXT, PROPS */, _hoisted_172);
+  }), 128 /* KEYED_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Session Info Note "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_173, [_cache[208] || (_cache[208] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-info-circle-fill"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_181, [_cache[238] || (_cache[238] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Saved with current settings:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingEnabled ? "".concat($data.chainingMethod, " chaining (").concat($data.chainingRepetitions, "x)") : 'Standard mode'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.tajweedEnabled ? '· Tajweed enabled' : ''), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_182, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_174, [_cache[207] || (_cache[207] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Saved with current settings:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingEnabled ? "".concat($data.chainingMethod, " chaining (").concat($data.chainingRepetitions, "x)") : 'Standard mode'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.tajweedEnabled ? '· Tajweed enabled' : ''), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_175, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary",
-    onClick: _cache[89] || (_cache[89] = function () {
+    onClick: _cache[79] || (_cache[79] = function () {
       return $options.closeSaveModal && $options.closeSaveModal.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[240] || (_cache[240] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[209] || (_cache[209] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Cancel ", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-primary",
-    onClick: _cache[90] || (_cache[90] = function () {
+    onClick: _cache[80] || (_cache[80] = function () {
       return $options.confirmSaveSession && $options.confirmSaveSession.apply($options, arguments);
     }),
     disabled: !$options.isValidSessionName
-  }, _toConsumableArray(_cache[241] || (_cache[241] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[210] || (_cache[210] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-save"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Save Session ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_183)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showConfirmModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Save Session ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_176)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showConfirmModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 4,
     "class": "modal-overlay",
-    onClick: _cache[95] || (_cache[95] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onClick: _cache[85] || (_cache[85] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_184, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_185, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_177, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_178, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-icon",
-    onClick: _cache[92] || (_cache[92] = function () {
+    onClick: _cache[82] || (_cache[82] = function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[242] || (_cache[242] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[211] || (_cache[211] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_186, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_187, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.message), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_188, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_179, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_180, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.message), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_181, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary",
-    onClick: _cache[93] || (_cache[93] = function () {
+    onClick: _cache[83] || (_cache[83] = function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     })
   }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.cancelLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["btn-primary", {
       'btn-danger': $data.confirmModal.tone === 'danger'
     }]),
-    onClick: _cache[94] || (_cache[94] = function () {
+    onClick: _cache[84] || (_cache[84] = function () {
       return $options.runConfirmAction && $options.runConfirmAction.apply($options, arguments);
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.confirmLabel), 3 /* TEXT, CLASS */)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showCountdownOverlay ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_189, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_190, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_191, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.countdownValue), 1 /* TEXT */), _cache[243] || (_cache[243] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.confirmLabel), 3 /* TEXT, CLASS */)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showCountdownOverlay ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_182, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_183, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_184, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.countdownValue), 1 /* TEXT */), _cache[212] || (_cache[212] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "countdown-text"
   }, "Prepare yourself", -1 /* CACHED */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Global Audio Player - Updated with Speed Controls "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(vue__WEBPACK_IMPORTED_MODULE_0__.Transition, {
     name: "slide-up"
@@ -31475,21 +31389,21 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["player-bar", {
           collapsed: $data.playerCollapsed
         }])
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_192, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_193, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_194, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter3 = $data.currentChapter) === null || _$data$currentChapter3 === void 0 ? void 0 : _$data$currentChapter3.name_simple) || 'Quran'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_195, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activeAyahLabel) + " ", 1 /* TEXT */), $options.etaLabel && $data.isPlaying ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_185, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_186, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_187, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter3 = $data.currentChapter) === null || _$data$currentChapter3 === void 0 ? void 0 : _$data$currentChapter3.name_simple) || 'Quran'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_188, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activeAyahLabel) + " ", 1 /* TEXT */), $options.etaLabel && $data.isPlaying ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
         key: 0,
         "class": "player-eta",
         title: $options.getEtaTooltip()
-      }, " • " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel) + " remaining ", 9 /* TEXT, PROPS */, _hoisted_196)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_197, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      }, " • " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel) + " remaining ", 9 /* TEXT, PROPS */, _hoisted_189)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_190, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[96] || (_cache[96] = function () {
+        onClick: _cache[86] || (_cache[86] = function () {
           return $options.prev && $options.prev.apply($options, arguments);
         }),
         title: "Previous"
-      }, _toConsumableArray(_cache[244] || (_cache[244] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[213] || (_cache[213] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-skip-start-fill"
       }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn player-play",
-        onClick: _cache[97] || (_cache[97] = function () {
+        onClick: _cache[87] || (_cache[87] = function () {
           return $options.togglePlay && $options.togglePlay.apply($options, arguments);
         }),
         title: "Play/Pause"
@@ -31497,15 +31411,15 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
       }, null, 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[98] || (_cache[98] = function () {
+        onClick: _cache[88] || (_cache[88] = function () {
           return $options.next && $options.next.apply($options, arguments);
         }),
         title: "Next"
-      }, _toConsumableArray(_cache[245] || (_cache[245] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[214] || (_cache[214] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-skip-end-fill"
-      }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_198, [_cache[246] || (_cache[246] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+      }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_191, [_cache[215] || (_cache[215] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
         "class": "player-loop-label"
-      }, "Loop", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_199, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.loopCountOptions, function (option) {
+      }, "Loop", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_192, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.loopCountOptions, function (option) {
         return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
           key: "loop-".concat(option.value),
           "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["player-loop-chip", {
@@ -31516,10 +31430,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
             return $options.setLoopCount(option.value);
           },
           title: option.label
-        }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(option.shortLabel), 11 /* TEXT, CLASS, PROPS */, _hoisted_200);
-      }), 128 /* KEYED_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_201, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_202, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+        }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(option.shortLabel), 11 /* TEXT, CLASS, PROPS */, _hoisted_193);
+      }), 128 /* KEYED_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_194, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_195, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
         "class": "player-progress-bg",
-        onClick: _cache[99] || (_cache[99] = function () {
+        onClick: _cache[89] || (_cache[89] = function () {
           return _ctx.seek && _ctx.seek.apply(_ctx, arguments);
         }),
         ref: "progress"
@@ -31528,18 +31442,18 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
           width: $data.currentTime / ($data.duration || 1) * 100 + '%'
         })
-      }, null, 4 /* STYLE */)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_203, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.duration)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      }, null, 4 /* STYLE */)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_196, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.duration)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[100] || (_cache[100] = function ($event) {
+        onClick: _cache[90] || (_cache[90] = function ($event) {
           return $data.playerVisible = false;
         }),
         title: "Close player"
-      }, _toConsumableArray(_cache[247] || (_cache[247] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[216] || (_cache[216] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-x-lg"
       }, null, -1 /* CACHED */)])))])], 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)];
     }),
     _: 1 /* STABLE */
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio System "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_204, null, 512 /* NEED_PATCH */)], 12 /* STYLE, PROPS */, _hoisted_1);
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio System "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_197, null, 512 /* NEED_PATCH */)], 12 /* STYLE, PROPS */, _hoisted_1);
 }
 
 /***/ }),
@@ -39003,7 +38917,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n/* Range control styling - consistent with other sections */\n.range-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin-top: 8px;\n}\n.technique-range {\n  flex: 1;\n  height: 5px;\n  border-radius: 3px;\n  background: var(--border);\n  -webkit-appearance: none;\n  cursor: pointer;\n}\n.technique-range:focus {\n  outline: none;\n}\n.technique-range::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 18px;\n  height: 18px;\n  border-radius: 50%;\n  background: var(--accent);\n  cursor: pointer;\n  border: 2px solid var(--surface);\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);\n}\n.technique-range::-webkit-slider-thumb:hover {\n  transform: scale(1.15);\n}\n\n/* Field header with value pill */\n.field-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  margin-bottom: 8px;\n}\n.field-header label {\n  margin-bottom: 0;\n  font-weight: 600;\n}\n.range-value-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 52px;\n  padding: 4px 12px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n\n/* Slider markers */\n.slider-markers {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  padding: 0 4px;\n}\n.slider-markers span {\n  font-size: 10px;\n  color: var(--text-muted);\n}\n\n/* Gap options as radio cards */\n.gap-options {\n  display: grid !important;\n  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));\n  gap: 8px;\n}\n.gap-options .radio {\n  flex-direction: column;\n  text-align: center;\n  gap: 4px;\n  padding: 10px 8px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.gap-options .radio.active {\n  background: var(--accent);\n  border-color: var(--accent);\n  color: white;\n}\n.gap-options .radio.active .option-label,\n.gap-options .radio.active .option-desc {\n  color: white;\n}\n.gap-options .radio input {\n  display: none;\n}\n.option-label {\n  display: block;\n  font-weight: 600;\n  font-size: 0.85rem;\n}\n.option-desc {\n  display: block;\n  font-size: 0.65rem;\n  opacity: 0.7;\n}\n\n/* Custom gap control */\n.custom-gap-control {\n  margin-top: 16px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n}\n.inline-setting-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 60px;\n  padding: 6px 12px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.mt-2 {\n  margin-top: 12px;\n}\n/* Fix offcanvas positioning - add to your existing styles */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  width: min(var(--tools-width, 440px), 92vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.98), rgba(247, 240, 231, 0.96));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(16px);\n  transform: translateX(100%);\n  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);\n  z-index: 1000;\n  display: flex;\n  flex-direction: column;\n  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.15);\n  will-change: transform;\n}\n.tools.open {\n  transform: translateX(0);\n}\n\n/* Fix backdrop */\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.5);\n  backdrop-filter: blur(4px);\n  z-index: 999;\n  animation: fadeIn 0.2s ease;\n}\n\n/* Fix tools header spacing */\n.tools-top {\n  padding: 20px 20px 16px;\n  border-bottom: 1px solid var(--border);\n  background: inherit;\n  flex-shrink: 0;\n}\n\n/* Fix tools body scrolling */\n.tools-body {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px;\n  scroll-behavior: smooth;\n  -webkit-overflow-scrolling: touch;\n}\n\n/* Fix tools footer */\n.tools-footer {\n  position: relative;\n  padding: 16px 20px;\n  border-top: 1px solid var(--border);\n  background: inherit;\n  flex-shrink: 0;\n}\n\n/* Fix tab buttons */\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 16px;\n  background: rgba(0, 0, 0, 0.04);\n  border-radius: 14px;\n  padding: 6px;\n}\n.tools-tabs button {\n  flex: 1;\n  padding: 10px 12px;\n  border-radius: 10px;\n  background: transparent;\n  border: none;\n  font-size: 0.85rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.tools-tabs button.active {\n  background: var(--surface-strong);\n  color: var(--text);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.tools-tabs button:hover:not(.active) {\n  background: rgba(0, 0, 0, 0.04);\n  color: var(--text);\n}\n\n/* Fix button styles */\n.tools-btn {\n  padding: 12px 20px;\n  border-radius: 12px;\n  font-weight: 600;\n  font-size: 0.9rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  border: none;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.tools-btn-soft {\n  background: rgba(0, 0, 0, 0.05);\n  color: var(--text);\n}\n.tools-btn-soft:hover {\n  background: rgba(0, 0, 0, 0.08);\n  transform: translateY(-1px);\n}\n.tools-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.tools-btn-primary:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.4);\n}\n\n/* Fix close button */\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n}\n.tools-x:hover {\n  background: var(--accent-light);\n  transform: rotate(90deg);\n}\n\n/* Mobile optimizations */\n@media (max-width: 768px) {\n.tools {\n    width: 100vw;\n    max-width: 100vw;\n}\n.tools-tabs button span {\n    display: none;\n}\n.tools-tabs button i {\n    font-size: 1.2rem;\n}\n.tools-tabs button {\n    padding: 12px;\n}\n.tools-body {\n    padding: 16px;\n}\n}\n\n/* Animation for backdrop */\n@keyframes fadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n:root {\n  --bg: #f3eee6;\n  --surface: rgba(255, 250, 243, 0.88);\n  --surface-strong: rgba(255, 255, 255, 0.92);\n  --border: rgba(78, 58, 38, 0.10);\n  --text: #1f1a17;\n  --text-muted: #6c6258;\n  --accent: #9a6738;\n  --accent-strong: #6e4726;\n  --accent-soft: #d8c1a8;\n  --accent-light: rgba(154, 103, 56, 0.10);\n  --accent-wash: rgba(228, 211, 194, 0.42);\n  --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);\n  --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);\n  --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);\n  --radius: 16px;\n  --navbar-offset: 56px;\n  --tools-width: 440px;\n  --tools-footer-h: 78px;\n  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;\n  --font-ui: \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n[data-theme=\"dark\"] {\n  --bg: #14110f;\n  --surface: rgba(31, 27, 24, 0.92);\n  --surface-strong: rgba(43, 37, 32, 0.96);\n  --border: rgba(255, 236, 216, 0.16);\n  --text: #f7ebdf;\n  --text-muted: #d1c2b3;\n  --accent: #d0a06b;\n  --accent-strong: #efc18d;\n  --accent-soft: #5f4530;\n  --accent-light: rgba(208, 160, 107, 0.14);\n  --accent-wash: rgba(208, 160, 107, 0.08);\n  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);\n  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);\n  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);\n}\n[data-theme=\"sepia\"] {\n  --bg: #efe2cb;\n  --surface: rgba(250, 241, 227, 0.88);\n  --surface-strong: rgba(255, 248, 237, 0.94);\n  --text: #352516;\n  --text-muted: #75624f;\n  --accent: #b8824e;\n  --accent-strong: #8f6033;\n  --accent-soft: #dcc3a6;\n  --accent-light: rgba(184, 130, 78, 0.12);\n  --accent-wash: rgba(221, 194, 162, 0.35);\n}\n[v-cloak] {\n  display: none !important;\n}\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\n.session-setup {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n}\n.setting-section {\n  background: #fff;\n  border: 1px solid #e5e7eb;\n  border-radius: 12px;\n  overflow: hidden;\n}\n.section-header {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 16px 20px;\n  background: #f9fafb;\n  border-bottom: 1px solid #e5e7eb;\n  font-weight: 500;\n  color: #374151;\n}\n.section-header i {\n  font-size: 18px;\n  color: #6b7280;\n}\n.section-content {\n  padding: 20px;\n}\n\n/* Slider styles */\n.slider-wrapper {\n  width: 100%;\n}\n.form-range {\n  width: 100%;\n  height: 4px;\n  padding: 0;\n  background: #e5e7eb;\n  border-radius: 4px;\n  -webkit-appearance: none;\n}\n.form-range:focus {\n  outline: none;\n}\n.form-range::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 16px;\n  height: 16px;\n  background: #2c7a4d;\n  border-radius: 50%;\n  cursor: pointer;\n  border: none;\n  box-shadow: 0 1px 3px rgba(0,0,0,0.1);\n}\n.form-range::-webkit-slider-thumb:hover {\n  transform: scale(1.15);\n}\n.slider-labels {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  padding: 0 4px;\n  font-size: 11px;\n  color: #9ca3af;\n}\n.repetition-value {\n  margin-top: 12px;\n  font-size: 13px;\n  color: #6b7280;\n}\n.repetition-value strong {\n  color: #2c7a4d;\n  font-weight: 600;\n}\n\n/* Select styles */\n.form-select {\n  width: 100%;\n  padding: 8px 12px;\n  border: 1px solid #e5e7eb;\n  border-radius: 8px;\n  font-size: 14px;\n  color: #374151;\n  background-color: #fff;\n  cursor: pointer;\n}\n.form-select:focus {\n  outline: none;\n  border-color: #2c7a4d;\n  box-shadow: 0 0 0 2px rgba(44, 122, 77, 0.1);\n}\n\n/* Input group */\n.input-group {\n  display: flex;\n  align-items: stretch;\n}\n.form-control {\n  flex: 1;\n  padding: 8px 12px;\n  border: 1px solid #e5e7eb;\n  border-right: none;\n  border-radius: 8px 0 0 8px;\n  font-size: 14px;\n}\n.form-control:focus {\n  outline: none;\n  border-color: #2c7a4d;\n}\n.input-group-text {\n  padding: 8px 12px;\n  background: #f9fafb;\n  border: 1px solid #e5e7eb;\n  border-left: none;\n  border-radius: 0 8px 8px 0;\n  font-size: 14px;\n  color: #6b7280;\n}\n\n/* Hint */\n.setting-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  margin-top: 12px;\n  padding: 10px 12px;\n  background: #f9fafb;\n  border-radius: 8px;\n  font-size: 12px;\n  color: #6b7280;\n}\n.setting-hint i {\n  font-size: 14px;\n  color: #9ca3af;\n}\n.mt-2 {\n  margin-top: 12px;\n}\n.session-setup-tab {\n  padding: 20px;\n  max-width: 600px;\n}\n.setting-group {\n  margin-bottom: 24px;\n  padding: 16px;\n  background: #f5f5f5;\n  border-radius: 8px;\n}\n.section-label {\n  font-weight: 600;\n  font-size: 14px;\n  margin-bottom: 12px;\n  display: block;\n  color: #333;\n}\n\n/* Feature 1: Repetitions Control */\n.repetition-control {\n  margin-top: 8px;\n}\n.slider-container {\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  margin-bottom: 8px;\n}\n.repetition-slider {\n  flex: 1;\n  height: 4px;\n  border-radius: 2px;\n  background: #ddd;\n  outline: none;\n  -webkit-appearance: none;\n}\n.repetition-slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 16px;\n  height: 16px;\n  border-radius: 50%;\n  background: #2c7a4d;\n  cursor: pointer;\n}\n.slider-value {\n  min-width: 60px;\n  text-align: center;\n}\n.slider-value .value {\n  font-size: 18px;\n  font-weight: 600;\n  color: #2c7a4d;\n}\n.slider-value .unit {\n  font-size: 14px;\n  color: #666;\n  margin-left: 4px;\n}\n\n/* Techniques Grid */\n.techniques-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));\n  gap: 12px;\n}\n.technique-checkbox {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  cursor: pointer;\n}\n\n/* Feature 2: Audio Settings */\n.audio-settings {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.setting-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.setting-item label {\n  font-size: 14px;\n  color: #555;\n  min-width: 120px;\n}\n.setting-item select,\n.setting-item input[type=\"number\"] {\n  padding: 6px 12px;\n  border: 1px solid #ddd;\n  border-radius: 4px;\n  font-size: 14px;\n}\n.setting-item input[type=\"checkbox\"] {\n  width: 18px;\n  height: 18px;\n  cursor: pointer;\n}\n.setting-hint {\n  font-size: 12px;\n  color: #888;\n  margin-top: 8px;\n  font-style: italic;\n}\n\n/* Responsive */\n@media (max-width: 480px) {\n.setting-item {\n    flex-direction: column;\n    align-items: flex-start;\n}\n.setting-item label {\n    min-width: auto;\n}\n}\n.session-setup {\n  padding: 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  max-width: 500px;\n  margin: 0 auto;\n}\n\n/* Setting Card */\n.setting-card {\n  background: white;\n  border-radius: 20px;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);\n  overflow: hidden;\n  transition: all 0.2s ease;\n}\n.card-header {\n  padding: 20px 20px 0 20px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.card-icon {\n  font-size: 24px;\n}\n.card-title {\n  font-size: 18px;\n  font-weight: 600;\n  color: #1a1a1a;\n  margin: 0;\n}\n.card-content {\n  padding: 16px 20px 20px 20px;\n}\n\n/* Repetitions Control */\n.repetition-control {\n  width: 100%;\n}\n.repetition-stats {\n  text-align: center;\n  margin-bottom: 20px;\n}\n.repetition-value {\n  font-size: 48px;\n  font-weight: 700;\n  color: #2c7a4d;\n  line-height: 1;\n}\n.repetition-unit {\n  font-size: 14px;\n  color: #666;\n  margin-left: 8px;\n}\n.repetition-slider {\n  width: 100%;\n  height: 6px;\n  border-radius: 3px;\n  background: linear-gradient(to right, #2c7a4d 0%, #2c7a4d 0%, #e5e7eb 0%, #e5e7eb 100%);\n  outline: none;\n  -webkit-appearance: none;\n  cursor: pointer;\n}\n.repetition-slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 20px;\n  height: 20px;\n  border-radius: 50%;\n  background: #2c7a4d;\n  box-shadow: 0 2px 6px rgba(44, 122, 77, 0.3);\n  cursor: pointer;\n  border: 2px solid white;\n}\n.repetition-slider::-webkit-slider-thumb:hover {\n  transform: scale(1.15);\n}\n.repetition-markers {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  padding: 0 4px;\n}\n.repetition-markers span {\n  font-size: 11px;\n  color: #999;\n}\n.setting-hint {\n  font-size: 13px;\n  color: #888;\n  margin-top: 16px;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  background: #f9fafb;\n  padding: 10px 12px;\n  border-radius: 12px;\n}\n.hint-icon {\n  font-size: 14px;\n}\n\n/* Gap Options */\n.gap-options {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));\n  gap: 10px;\n  margin-bottom: 20px;\n}\n.gap-option {\n  background: #f9fafb;\n  border: 1.5px solid #e5e7eb;\n  border-radius: 12px;\n  padding: 12px 8px;\n  text-align: center;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.gap-option:hover {\n  background: #f3f4f6;\n  border-color: #d1d5db;\n  transform: translateY(-1px);\n}\n.gap-option.active {\n  background: #2c7a4d;\n  border-color: #2c7a4d;\n  color: white;\n}\n.option-label {\n  display: block;\n  font-weight: 600;\n  font-size: 15px;\n  margin-bottom: 4px;\n}\n.option-desc {\n  display: block;\n  font-size: 11px;\n  opacity: 0.7;\n}\n.gap-option.active .option-label,\n.gap-option.active .option-desc {\n  color: white;\n}\n\n/* Custom Gap */\n.custom-gap {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid #e5e7eb;\n}\n.custom-slider {\n  width: 100%;\n  height: 6px;\n  border-radius: 3px;\n  background: #e5e7eb;\n  outline: none;\n  -webkit-appearance: none;\n  cursor: pointer;\n}\n.custom-slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 18px;\n  height: 18px;\n  border-radius: 50%;\n  background: #2c7a4d;\n  cursor: pointer;\n  border: 2px solid white;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);\n}\n.custom-gap-value {\n  text-align: center;\n  margin-top: 12px;\n}\n.custom-gap-value .value {\n  font-size: 28px;\n  font-weight: 600;\n  color: #2c7a4d;\n}\n.custom-gap-value .unit {\n  font-size: 14px;\n  color: #666;\n  margin-left: 6px;\n}\n\n/* Responsive */\n@media (max-width: 480px) {\n.session-setup {\n    padding: 16px;\n}\n.gap-options {\n    grid-template-columns: repeat(3, 1fr);\n}\n.repetition-value {\n    font-size: 40px;\n}\n}\n\n/* Enhanced Save Modal Styles */\n.save-name-modal {\n  max-width: 520px;\n  width: 100%;\n  animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.modal-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 16px;\n  padding: 24px 24px 20px;\n  border-bottom: 1px solid var(--border);\n  background: linear-gradient(135deg, var(--surface), var(--surface-strong));\n}\n.modal-header-icon {\n  width: 48px;\n  height: 48px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-radius: 14px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.modal-header-icon i {\n  font-size: 1.5rem;\n  color: white;\n}\n.modal-header-text {\n  flex: 1;\n}\n.modal-header-text h2 {\n  margin: 0 0 4px 0;\n  font-size: 1.2rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.modal-header-text p {\n  margin: 0;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.modal-close-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n  flex-shrink: 0;\n}\n.modal-close-btn:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n  transform: rotate(90deg);\n}\n\n/* Session Preview Card */\n.session-preview-card {\n  background: linear-gradient(135deg, var(--accent-light), var(--accent-wash));\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  margin-bottom: 24px;\n  display: flex;\n  flex-wrap: wrap;\n  align-items: center;\n  gap: 16px;\n}\n.preview-surah,\n.preview-range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  background: var(--surface);\n  border-radius: 10px;\n  font-size: 0.85rem;\n  font-weight: 500;\n  color: var(--text);\n}\n.preview-surah i,\n.preview-range i {\n  color: var(--accent);\n  font-size: 0.9rem;\n}\n.preview-stats {\n  display: flex;\n  gap: 12px;\n  margin-left: auto;\n}\n.preview-stat {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.preview-stat i {\n  font-size: 0.7rem;\n  color: var(--accent);\n}\n\n/* Name Input Group */\n.name-input-group {\n  margin-bottom: 20px;\n}\n.name-input-group label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.name-input-group label i {\n  color: var(--accent);\n  font-size: 0.9rem;\n}\n.name-input {\n  width: 100%;\n  padding: 14px 16px;\n  border-radius: 12px;\n  border: 2px solid var(--border);\n  background: var(--surface);\n  font-size: 0.95rem;\n  color: var(--text);\n  transition: all 0.2s;\n}\n.name-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 3px var(--accent-light);\n}\n.name-input.error {\n  border-color: #dc3545;\n}\n.input-hint {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 6px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.char-count {\n  font-family: monospace;\n}\n.error-message {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  margin-top: 8px;\n  padding: 8px 12px;\n  background: rgba(220, 53, 69, 0.1);\n  border-radius: 8px;\n  font-size: 0.75rem;\n  color: #dc3545;\n}\n.error-message i {\n  font-size: 0.8rem;\n}\n\n/* Quick Suggestions */\n.quick-suggestions {\n  margin-bottom: 20px;\n}\n.suggestions-label {\n  display: block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-bottom: 10px;\n  font-weight: 500;\n}\n.suggestion-chips {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.suggestion-chip {\n  padding: 6px 14px;\n  border-radius: 20px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.75rem;\n  color: var(--text);\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.suggestion-chip:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n  transform: translateY(-1px);\n}\n\n/* Info Note */\n.info-note {\n  display: flex;\n  gap: 10px;\n  padding: 12px 14px;\n  background: rgba(46, 125, 50, 0.08);\n  border-radius: 12px;\n  border: 1px solid rgba(46, 125, 50, 0.12);\n}\n.info-note i {\n  color: #2e7d32;\n  font-size: 1rem;\n  flex-shrink: 0;\n  margin-top: 2px;\n}\n.info-text {\n  flex: 1;\n}\n.info-text strong {\n  display: block;\n  font-size: 0.7rem;\n  color: #2e7d32;\n  margin-bottom: 4px;\n}\n.info-text span {\n  display: inline-block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-right: 8px;\n}\n\n/* Modal Footer */\n.modal-footer {\n  display: flex;\n  gap: 12px;\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.btn-secondary,\n.btn-primary {\n  flex: 1;\n  padding: 12px 16px;\n  border-radius: 12px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.btn-secondary {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  color: var(--text);\n}\n.btn-secondary:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.4);\n}\n.btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n  transform: none;\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .session-preview-card {\n  background: rgba(208, 160, 107, 0.1);\n}\n[data-theme=\"dark\"] .info-note {\n  background: rgba(76, 175, 80, 0.1);\n  border-color: rgba(76, 175, 80, 0.2);\n}\n[data-theme=\"dark\"] .info-note i {\n  color: #81c784;\n}\n[data-theme=\"dark\"] .info-text strong {\n  color: #81c784;\n}\n\n/* Responsive */\n@media (max-width: 560px) {\n.session-preview-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.preview-stats {\n    margin-left: 0;\n    justify-content: space-between;\n}\n.modal-header {\n    padding: 20px;\n}\n.modal-footer {\n    padding: 16px 20px;\n    flex-direction: column;\n}\n.suggestion-chips {\n    justify-content: center;\n}\n}\n.wbw-word {\n  display: inline-block;\n  position: relative;\n  margin: 0 2px;\n  padding: 2px 4px;\n  border-radius: 6px;\n  transition: all 0.15s ease;\n}\n.wbw-word .word-audio-btn {\n  position: absolute;\n  top: -12px;\n  right: -8px;\n  width: 18px;\n  height: 18px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  color: white;\n  font-size: 10px;\n  opacity: 0;\n  transition: opacity 0.2s;\n}\n.wbw-word:hover .word-audio-btn {\n  opacity: 1;\n}\n.wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n}\n\n/* Combined Tajweed + Word Highlighting */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {\n  background: var(--accent);\n  color: white !important;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n\n/* Preserve tajweed colors inside highlighted words but make them visible */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*=\"tajweed-\"],\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {\n  color: inherit !important;\n  background: transparent !important;\n}\n\n/* Field header for toggle chips - matching Techniques tab */\n.field-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  margin-bottom: 6px;\n}\n.field-header label {\n  margin-bottom: 0;\n}\n\n/* Range value pill */\n.range-value-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 52px;\n  padding: 4px 10px;\n  background: var(--accent-light);\n  border-radius: 8px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n\n/* Ensure consistent styling with Techniques tab */\n.sheet-content .field {\n  margin-bottom: 16px;\n}\n.sheet-content .field:last-child {\n  margin-bottom: 0;\n}\n\n/* Setting items - matching Techniques tab style */\n.setting-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 20px;\n  padding: 16px 0;\n  border-bottom: 1px solid var(--border);\n}\n.setting-item:last-child {\n  border-bottom: none;\n}\n.setting-item-range {\n  flex-direction: column;\n  align-items: stretch;\n  gap: 14px;\n}\n.setting-info {\n  flex: 1;\n}\n.setting-label {\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 6px;\n}\n.setting-description {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n\n/* Range control compact */\n.range-control-compact {\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  width: 100%;\n}\n.range-value-badge {\n  min-width: 60px;\n  padding: 6px 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--accent);\n  text-align: center;\n}\n.range-slider {\n  flex: 1;\n  height: 5px;\n  border-radius: 3px;\n  background: var(--border);\n  -webkit-appearance: none;\n}\n.range-slider:focus {\n  outline: none;\n}\n.range-slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 18px;\n  height: 18px;\n  border-radius: 50%;\n  background: var(--accent);\n  cursor: pointer;\n  border: 2px solid var(--surface);\n  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n}\n.range-slider::-webkit-slider-thumb:hover {\n  transform: scale(1.1);\n}\n\n/* Larger toggle chips for settings */\n.setting-item .toggle-chip {\n  min-height: 38px;\n  min-width: 80px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  letter-spacing: 0.5px;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.setting-item {\n    flex-direction: column;\n    align-items: stretch;\n    gap: 12px;\n    padding: 14px 0;\n}\n.setting-item .toggle-chip {\n    align-self: flex-start;\n}\n.setting-label {\n    font-size: 0.95rem;\n}\n.setting-description {\n    font-size: 0.75rem;\n}\n.range-control-compact {\n    gap: 12px;\n}\n.range-value-badge {\n    min-width: 55px;\n    padding: 5px 10px;\n    font-size: 0.8rem;\n}\n}\n\n/* Inline field for toggle chips */\n.field-inline {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  flex-wrap: wrap;\n}\n.field-label-group {\n  flex: 1;\n  min-width: 0;\n}\n.field-label-group label {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 2px;\n}\n.field-label-group label i {\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.field-label-group small {\n  display: block;\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n\n/* Range control */\n.range-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.range-control .input {\n  flex: 1;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.field-inline {\n    flex-direction: column;\n    align-items: stretch;\n}\n.field-inline .toggle-chip {\n    align-self: flex-start;\n}\n}\n\n/* Settings Container */\n.settings-container {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n  padding-bottom: 20px;\n}\n\n/* Settings Group */\n.settings-group {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 20px;\n  overflow: hidden;\n}\n.settings-group-header {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 16px 20px;\n  background: var(--surface-strong);\n  border-bottom: 1px solid var(--border);\n  font-weight: 600;\n  font-size: 0.85rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--accent);\n}\n.settings-group-header i {\n  font-size: 1rem;\n}\n\n/* Settings Stack */\n.settings-stack {\n  display: flex;\n  flex-direction: column;\n}\n\n/* Settings Row */\n.settings-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px 20px;\n  border-bottom: 1px solid var(--border);\n  transition: background 0.2s ease;\n}\n.settings-row:last-child {\n  border-bottom: none;\n}\n.settings-row:hover {\n  background: var(--accent-light);\n}\n.settings-row-info {\n  flex: 1;\n}\n.settings-row-label {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  font-weight: 600;\n  font-size: 0.9rem;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.settings-row-label i {\n  font-size: 1rem;\n  color: var(--accent);\n  width: 20px;\n}\n.settings-row-desc {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-left: 30px;\n}\n\n/* Range Row */\n.settings-row-range {\n  flex-direction: column;\n  align-items: stretch;\n  gap: 12px;\n}\n.settings-range-control {\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  margin-left: 30px;\n}\n.range-value {\n  min-width: 50px;\n  padding: 4px 8px;\n  background: var(--accent-light);\n  border-radius: 8px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--accent);\n  text-align: center;\n}\n.settings-range-input {\n  flex: 1;\n  height: 4px;\n  border-radius: 2px;\n  background: var(--border);\n  -webkit-appearance: none;\n}\n.settings-range-input:focus {\n  outline: none;\n}\n.settings-range-input::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 16px;\n  height: 16px;\n  border-radius: 50%;\n  background: var(--accent);\n  cursor: pointer;\n  border: none;\n}\n\n/* Toggle Button */\n.settings-toggle-btn {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  background: none;\n  border: none;\n  cursor: pointer;\n  padding: 0;\n}\n.toggle-status {\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  min-width: 32px;\n  text-align: right;\n}\n.settings-toggle-btn.active .toggle-status {\n  color: var(--accent);\n}\n.toggle-slider {\n  position: relative;\n  width: 44px;\n  height: 24px;\n  background: var(--border);\n  border-radius: 24px;\n  transition: all 0.2s ease;\n}\n.toggle-slider::before {\n  content: '';\n  position: absolute;\n  top: 2px;\n  left: 2px;\n  width: 20px;\n  height: 20px;\n  background: white;\n  border-radius: 50%;\n  transition: transform 0.2s ease;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);\n}\n.settings-toggle-btn.active .toggle-slider {\n  background: var(--accent);\n}\n.settings-toggle-btn.active .toggle-slider::before {\n  transform: translateX(20px);\n}\n\n/* Warning Notice */\n.settings-notice-warning {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 12px 16px;\n  background: rgba(255, 152, 0, 0.1);\n  border: 1px solid rgba(255, 152, 0, 0.2);\n  border-radius: 12px;\n  font-size: 0.7rem;\n  color: #e6a017;\n}\n.settings-notice-warning i {\n  font-size: 1rem;\n  flex-shrink: 0;\n}\n\n/* Settings Footer Actions */\n.settings-footer-actions {\n  display: flex;\n  gap: 12px;\n  padding: 16px 20px;\n  margin-top: 8px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.settings-reset-btn,\n.settings-start-btn {\n  flex: 1;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  padding: 12px 16px;\n  border-radius: 14px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  border: none;\n}\n.settings-reset-btn {\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n}\n.settings-reset-btn:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n  transform: translateY(-1px);\n}\n.settings-start-btn {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.25);\n}\n.settings-start-btn:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.35);\n}\n.settings-start-btn:active,\n.settings-reset-btn:active {\n  transform: translateY(0);\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .settings-group {\n  background: var(--surface-strong);\n}\n[data-theme=\"dark\"] .settings-row:hover {\n  background: rgba(208, 160, 107, 0.08);\n}\n[data-theme=\"dark\"] .toggle-slider::before {\n  background: var(--surface);\n}\n[data-theme=\"dark\"] .settings-reset-btn {\n  background: var(--surface);\n}\n\n/* Mobile responsive */\n@media (max-width: 640px) {\n.settings-row {\n    padding: 14px 16px;\n}\n.settings-row-label {\n    font-size: 0.85rem;\n}\n.settings-row-desc {\n    font-size: 0.65rem;\n    margin-left: 30px;\n}\n.settings-range-control {\n    margin-left: 30px;\n}\n.settings-footer-actions {\n    padding: 12px 16px;\n}\n.settings-reset-btn,\n  .settings-start-btn {\n    padding: 10px 14px;\n    font-size: 0.8rem;\n}\n}\n\n/* Technique description styling */\n.technique-description {\n  display: flex;\n  align-items: flex-start;\n  gap: 10px;\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  margin-bottom: 12px;\n}\n.technique-description i {\n  color: var(--accent);\n  font-size: 1rem;\n  margin-top: 2px;\n  flex-shrink: 0;\n}\n.technique-description span {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n.technique-best {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: rgba(46, 125, 50, 0.08);\n  border-radius: 10px;\n  border: 1px solid rgba(46, 125, 50, 0.15);\n}\n.technique-best i {\n  color: #2e7d32;\n  font-size: 0.8rem;\n  flex-shrink: 0;\n}\n.technique-best span {\n  font-size: 0.7rem;\n  color: #2e7d32;\n  font-weight: 500;\n}\n.technique-preview-block {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 12px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  margin-top: 8px;\n}\n.technique-preview-block i {\n  color: var(--accent);\n  font-size: 0.9rem;\n  flex-shrink: 0;\n}\n.technique-preview-block span {\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .technique-description {\n  background: rgba(208, 160, 107, 0.1);\n}\n[data-theme=\"dark\"] .technique-best {\n  background: rgba(76, 175, 80, 0.1);\n  border-color: rgba(76, 175, 80, 0.2);\n}\n[data-theme=\"dark\"] .technique-best span {\n  color: #81c784;\n}\n[data-theme=\"dark\"] .technique-preview-block {\n  background: var(--surface-strong);\n}\n.techniques-header {\n  margin-bottom: 24px;\n  padding-bottom: 16px;\n  border-bottom: 1px solid var(--border);\n}\n.techniques-header h3 {\n  margin: 0 0 6px 0;\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.techniques-header p {\n  margin: 0 0 12px 0;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.compatibility-info-btn {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  padding: 6px 12px;\n  border-radius: 20px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  color: var(--accent);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.technique-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  margin-bottom: 16px;\n  transition: all 0.2s ease;\n}\n.technique-card-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 14px;\n  margin-bottom: 12px;\n}\n.technique-icon {\n  width: 44px;\n  height: 44px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.technique-icon i {\n  font-size: 1.3rem;\n  color: var(--accent);\n}\n.technique-info {\n  flex: 1;\n  min-width: 0;\n}\n.technique-info h4 {\n  margin: 0 0 4px 0;\n  font-size: 0.95rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.technique-info p {\n  margin: 0;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n.technique-toggle {\n  flex-shrink: 0;\n  min-width: 70px;\n  min-height: 36px;\n}\n.technique-controls {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.control-group {\n  margin-bottom: 14px;\n}\n.control-group label {\n  display: block;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.range-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.technique-range {\n  flex: 1;\n  padding: 0;\n}\n.value-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 48px;\n  padding: 4px 8px;\n  background: var(--accent-light);\n  border-radius: 8px;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.technique-select {\n  width: 100%;\n  padding: 8px 12px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.8rem;\n  color: var(--text);\n}\n.technique-preview {\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.technique-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: rgba(154, 103, 56, 0.08);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.technique-hint kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.65rem;\n  font-weight: 600;\n}\n.presets-section {\n  margin-top: 24px;\n  padding-top: 20px;\n  border-top: 1px solid var(--border);\n}\n.presets-section h4 {\n  margin: 0 0 12px 0;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.presets-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));\n  gap: 10px;\n}\n.preset-btn {\n  padding: 10px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.preset-btn:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n  transform: translateY(-1px);\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n  overflow-x: auto;\n  -webkit-overflow-scrolling: touch;\n}\n.tools-tabs button {\n  flex: 1;\n  padding: 8px 12px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.8rem;\n  cursor: pointer;\n  color: var(--text-muted);\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: all 0.2s ease;\n  white-space: nowrap;\n}\n.tools-tabs button.active {\n  background: var(--surface-strong);\n  color: var(--text);\n  box-shadow: var(--shadow-sm);\n}\n.tools-tabs button i {\n  font-size: 0.9rem;\n}\n\n/* Expanded offcanvas width */\n.tools {\n  --tools-width: 520px;\n  width: min(var(--tools-width), 92vw);\n}\n\n/* Techniques Tab Styles */\n.techniques-header {\n  margin-bottom: 24px;\n  padding-bottom: 16px;\n  border-bottom: 1px solid var(--border);\n}\n.techniques-header h3 {\n  margin: 0 0 6px 0;\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.techniques-header p {\n  margin: 0 0 12px 0;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.compatibility-info-btn {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  padding: 6px 12px;\n  border-radius: 20px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  color: var(--accent);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.compatibility-info-btn:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.techniques-list-expanded {\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  margin-bottom: 24px;\n}\n.technique-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  transition: all 0.2s ease;\n}\n.technique-card:hover {\n  border-color: var(--accent);\n  box-shadow: var(--shadow-sm);\n}\n.technique-card-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 14px;\n  margin-bottom: 12px;\n}\n.technique-icon {\n  width: 44px;\n  height: 44px;\n  background: linear-gradient(135deg, var(--accent-light), var(--accent-wash));\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.technique-icon i {\n  font-size: 1.3rem;\n  color: var(--accent);\n}\n.technique-info {\n  flex: 1;\n  min-width: 0;\n}\n.technique-info h4 {\n  margin: 0 0 4px 0;\n  font-size: 0.95rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.technique-info p {\n  margin: 0;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n.technique-toggle {\n  flex-shrink: 0;\n  min-width: 70px;\n  min-height: 36px;\n}\n.technique-controls {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.control-group {\n  margin-bottom: 14px;\n}\n.control-group label {\n  display: block;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.range-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.technique-range {\n  flex: 1;\n  padding: 0;\n}\n.value-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 48px;\n  padding: 4px 8px;\n  background: var(--accent-light);\n  border-radius: 8px;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.technique-select {\n  width: 100%;\n  padding: 8px 12px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.8rem;\n  color: var(--text);\n}\n.technique-preview {\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.technique-preview i {\n  color: var(--accent);\n  font-size: 0.8rem;\n}\n.technique-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  margin-top: 12px;\n  background: rgba(154, 103, 56, 0.08);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.technique-hint kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.65rem;\n  font-weight: 600;\n}\n.technique-benefits {\n  margin-top: 12px;\n  padding-top: 10px;\n  border-top: 1px solid var(--border);\n}\n.technique-benefits small {\n  font-size: 0.65rem;\n  color: var(--accent);\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.technique-benefits small i {\n  font-size: 0.6rem;\n}\n\n/* Presets Section */\n.presets-section {\n  margin-top: 24px;\n  padding-top: 20px;\n  border-top: 1px solid var(--border);\n}\n.presets-section h4 {\n  margin: 0 0 12px 0;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.presets-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));\n  gap: 10px;\n}\n.preset-btn {\n  padding: 10px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.preset-btn:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n  transform: translateY(-1px);\n}\n.preset-btn i {\n  font-size: 0.8rem;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.tools {\n    --tools-width: 100vw;\n}\n.technique-card-header {\n    flex-wrap: wrap;\n}\n.technique-toggle {\n    width: 100%;\n}\n.presets-grid {\n    grid-template-columns: 1fr;\n}\n}\n.conflict-badge {\n  margin-top: 6px;\n  padding: 2px 8px;\n  background: #fee2e2;\n  color: #dc2626;\n  border-radius: 20px;\n  font-size: 0.65rem;\n  font-weight: 500;\n  display: inline-block;\n}\n[data-theme=\"dark\"] .conflict-badge {\n  background: rgba(220, 38, 38, 0.15);\n  color: #f87171;\n}\n.technique-conflict-warning {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  margin-top: 6px;\n  padding: 4px 8px;\n  background: rgba(220, 53, 69, 0.1);\n  border-radius: 8px;\n  font-size: 0.65rem;\n  color: #c62828;\n  border: 1px solid rgba(220, 53, 69, 0.2);\n  animation: warningPulse 1s ease-in-out;\n}\n.technique-conflict-warning i {\n  font-size: 0.7rem;\n}\n@keyframes warningPulse {\n0%,\n  100% {\n    opacity: 0.7;\n}\n50% {\n    opacity: 1;\n    background: rgba(220, 53, 69, 0.2);\n}\n}\n\n/* Dark mode */\n[data-theme=\"dark\"] .technique-conflict-warning {\n  background: rgba(229, 57, 53, 0.15);\n  color: #ef9a9a;\n}\n\n/* Hint button in sheet toggle */\n.st-right-group {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.st-hint-btn {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--accent);\n  transition: all 0.2s ease;\n}\n.st-hint-btn:hover {\n  background: var(--accent-light);\n  transform: scale(1.05);\n}\n.st-hint-btn i {\n  font-size: 0.9rem;\n}\n\n/* Compatibility Modal */\n.compatibility-modal {\n  max-width: 560px;\n  width: 100%;\n}\n.compatibility-intro {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n  margin-bottom: 20px;\n  line-height: 1.4;\n}\n.compatibility-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n  margin-bottom: 20px;\n}\n.compatibility-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 14px 16px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  transition: all 0.2s ease;\n}\n.compatibility-row:hover {\n  border-color: var(--accent);\n  background: var(--accent-light);\n}\n.combo-icons {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  min-width: 70px;\n  font-size: 1.1rem;\n  color: var(--accent);\n}\n.combo-icons i {\n  font-size: 1rem;\n}\n.combo-icons .bi-plus-lg {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.combo-text {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.combo-text strong {\n  font-size: 0.85rem;\n  color: var(--text);\n}\n.combo-text span {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.combo-badge {\n  padding: 4px 10px;\n  border-radius: 20px;\n  font-size: 0.7rem;\n  font-weight: 600;\n  white-space: nowrap;\n}\n.combo-badge.success {\n  background: rgba(46, 125, 50, 0.12);\n  color: #2e7d32;\n  border: 1px solid rgba(46, 125, 50, 0.2);\n}\n.combo-badge.alone {\n  background: rgba(154, 103, 56, 0.12);\n  color: var(--accent);\n  border: 1px solid rgba(154, 103, 56, 0.2);\n}\n.compatibility-note {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 12px 14px;\n  background: rgba(220, 53, 69, 0.08);\n  border-radius: 12px;\n  font-size: 0.75rem;\n  color: #c62828;\n  border: 1px solid rgba(220, 53, 69, 0.15);\n}\n.compatibility-note i {\n  font-size: 1rem;\n  flex-shrink: 0;\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .compatibility-row {\n  background: var(--surface-strong);\n}\n[data-theme=\"dark\"] .compatibility-row:hover {\n  background: rgba(208, 160, 107, 0.1);\n}\n[data-theme=\"dark\"] .combo-badge.success {\n  background: rgba(76, 175, 80, 0.15);\n  color: #81c784;\n}\n[data-theme=\"dark\"] .compatibility-note {\n  background: rgba(229, 57, 53, 0.12);\n  color: #ef9a9a;\n}\n\n/* Responsive */\n@media (max-width: 560px) {\n.compatibility-row {\n    flex-wrap: wrap;\n    gap: 10px;\n}\n.combo-badge {\n    margin-left: auto;\n}\n.combo-icons {\n    min-width: 55px;\n}\n}\n.segmented-control-compact button {\n  font-size: 0.7rem;\n  padding: 6px 8px;\n}\n.save-name-modal {\n  max-width: 420px;\n  width: 100%;\n}\n.save-modal-desc {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n  margin-bottom: 20px;\n  line-height: 1.4;\n}\n.save-name-input-group {\n  margin-bottom: 16px;\n}\n.save-name-input-group label {\n  display: block;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.save-name-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  color: var(--text);\n  transition: all 0.2s;\n}\n.save-name-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 3px var(--accent-light);\n}\n.save-preview-info {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-top: 8px;\n}\n.save-preview-info i {\n  color: var(--accent);\n  font-size: 0.9rem;\n}\n.technique-desc-hint {\n  display: block;\n  font-size: 0.65rem;\n  color: var(--accent);\n  margin-top: 4px;\n  font-weight: 500;\n}\n.technique-example-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  margin-top: 8px;\n  background: rgba(154, 103, 56, 0.08);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n}\n.technique-example-hint i {\n  color: var(--accent);\n  font-size: 0.8rem;\n  flex-shrink: 0;\n}\n.technique-example-hint strong {\n  color: var(--accent);\n}\n\n/* Anchor Mode Styles - Enhanced */\n.verse-arabic .wbw-word.anchor-highlight,\n.verse-arabic word.anchor-highlight,\n.word-item.anchor-highlight {\n  position: relative;\n  background: linear-gradient(135deg, rgba(255, 193, 7, 0.3), rgba(255, 152, 0, 0.4));\n  border-bottom: 3px solid #ff9800;\n  border-radius: 8px;\n  transform: scale(1.02);\n  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);\n  cursor: pointer;\n  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.2);\n}\n\n/* Animation for newly highlighted anchors */\n.anchor-pulse {\n  animation: anchorPulse 0.6s ease-out;\n}\n@keyframes anchorPulse {\n0% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7);\n}\n50% {\n    transform: scale(1.08);\n    box-shadow: 0 0 0 8px rgba(255, 152, 0, 0);\n}\n100% {\n    transform: scale(1.02);\n    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0);\n}\n}\n.verse-arabic .wbw-word.anchor-highlight:hover,\n.verse-arabic word.anchor-highlight:hover,\n.word-item.anchor-highlight:hover {\n  background: rgba(255, 152, 0, 0.6);\n  transform: scale(1.08);\n  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);\n}\n\n/* Tooltip for anchors */\n.anchor-highlight::after {\n  content: \"🔗 Memory Anchor\";\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: #333;\n  color: white;\n  padding: 4px 8px;\n  border-radius: 6px;\n  font-size: 0.7rem;\n  white-space: nowrap;\n  z-index: 100;\n  opacity: 0;\n  pointer-events: none;\n  transition: opacity 0.2s;\n}\n.anchor-highlight:hover::after {\n  opacity: 1;\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .anchor-highlight {\n  background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 152, 0, 0.3));\n  border-bottom-color: #ffb74d;\n}\n[data-theme=\"dark\"] .anchor-highlight:hover {\n  background: rgba(255, 152, 0, 0.4);\n}\n.main.blur-mode-active .verse-card.blur-upcoming .anchor-highlight {\n  filter: blur(calc(var(--recall-blur, 10px) - 4px));\n}\n.technique-select {\n  padding: 8px 12px;\n  border-radius: 10px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  font-size: 0.8rem;\n}\n.verse-small-play-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: white;\n  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);\n}\n.verse-small-play-btn i {\n  font-size: 0.8rem;\n}\n.verse-small-play-btn:hover {\n  transform: scale(1.05);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--accent);\n}\n\n/* Add to your style section */\n.countdown-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.85);\n  backdrop-filter: blur(12px);\n  z-index: 99999;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.countdown-modal {\n  text-align: center;\n}\n.countdown-number {\n  font-size: 8rem;\n  font-weight: 800;\n  color: var(--accent);\n  animation: pulse 1s ease infinite;\n}\n.countdown-text {\n  font-size: 1.5rem;\n  color: white;\n  margin-top: 20px;\n}\n@keyframes pulse {\n0%,\n  100% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.1);\n}\n}\n@media (max-width: 640px) {\n.countdown-number {\n    font-size: 5rem;\n}\n.countdown-text {\n    font-size: 1.2rem;\n}\n}\n\n/* Add these styles if missing */\n.technique-peek-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  margin-top: 8px;\n  border-radius: 10px;\n  background: rgba(154, 103, 56, 0.08);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.technique-peek-hint i {\n  color: var(--accent);\n  font-size: 0.8rem;\n  flex-shrink: 0;\n}\n.technique-peek-hint kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.65rem;\n  font-weight: 600;\n  color: var(--accent);\n  display: inline-block;\n}\n\n/* Add to style section */\n.countdown-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.85);\n  backdrop-filter: blur(12px);\n  z-index: 10000;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  animation: fadeIn 0.3s ease;\n}\n.countdown-modal {\n  text-align: center;\n  animation: scaleIn 0.4s cubic-bezier(0.34, 1.2, 0.64, 1);\n}\n.countdown-number {\n  font-size: 8rem;\n  font-weight: 800;\n  color: var(--accent);\n  text-shadow: 0 0 30px rgba(154, 103, 56, 0.5);\n  animation: pulse 1s ease infinite;\n  font-family: monospace;\n}\n.countdown-text {\n  font-size: 1.5rem;\n  color: white;\n  margin-top: 20px;\n  font-weight: 500;\n  letter-spacing: 2px;\n}\n.countdown-hint {\n  font-size: 0.85rem;\n  color: rgba(255, 255, 255, 0.6);\n  margin-top: 12px;\n}\n@keyframes fadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n@keyframes scaleIn {\nfrom {\n    opacity: 0;\n    transform: scale(0.8);\n}\nto {\n    opacity: 1;\n    transform: scale(1);\n}\n}\n@keyframes pulse {\n0%,\n  100% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.1);\n}\n}\n@media (max-width: 640px) {\n.countdown-number {\n    font-size: 5rem;\n}\n.countdown-text {\n    font-size: 1.2rem;\n}\n}\n\n\n/* Mobile */\n@media (max-width: 768px) {\n.wavemark-bars {\n    height: 30px;\n    gap: 1.5px;\n}\n.wavemark-playhead::before {\n    width: 8px;\n    height: 8px;\n    top: -5px;\n    left: -3px;\n}\n}\n.waveform-canvas {\n  width: 100%;\n  height: 60px;\n  display: block;\n  border-radius: 8px;\n  cursor: pointer;\n}\n\n/* Settings notice */\n.settings-notice {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 14px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  margin-bottom: 20px;\n  font-size: 0.75rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.settings-notice i {\n  font-size: 0.9rem;\n}\n\n/* Login Hero Section */\n.login-hero {\n  min-height: calc(100vh - 100px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  padding: 40px 20px;\n}\n.login-card {\n  max-width: 480px;\n  width: 100%;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  border-radius: 32px;\n  padding: 48px 40px;\n  text-align: center;\n  box-shadow: var(--shadow-lg);\n  animation: loginFadeIn 0.5s ease-out;\n}\n.login-icon {\n  width: 80px;\n  height: 80px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  margin: 0 auto 24px;\n  box-shadow: 0 8px 24px rgba(154, 103, 56, 0.25);\n}\n.login-icon i {\n  font-size: 2.5rem;\n  color: white;\n}\n.login-card h1 {\n  font-size: 1.8rem;\n  font-weight: 700;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.login-subtitle {\n  font-size: 0.95rem;\n  color: var(--text-muted);\n  margin-bottom: 32px;\n}\n.login-features {\n  display: flex;\n  justify-content: center;\n  gap: 24px;\n  margin-bottom: 40px;\n  flex-wrap: wrap;\n}\n.feature {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 8px;\n}\n.feature i {\n  font-size: 1.5rem;\n  color: var(--accent);\n  background: var(--accent-light);\n  width: 48px;\n  height: 48px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 24px;\n  transition: all 0.2s ease;\n}\n.feature span {\n  font-size: 0.75rem;\n  font-weight: 500;\n  color: var(--text-muted);\n}\n.login-btn {\n  width: 100%;\n  padding: 14px 24px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 60px;\n  font-size: 1rem;\n  font-weight: 600;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  transition: all 0.2s ease;\n  margin-bottom: 20px;\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.login-btn:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 24px rgba(154, 103, 56, 0.4);\n}\n.login-btn:active {\n  transform: translateY(0);\n}\n.login-note {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin: 0;\n  line-height: 1.4;\n}\n@keyframes loginFadeIn {\nfrom {\n    opacity: 0;\n    transform: translateY(20px);\n}\nto {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n/* Responsive */\n@media (max-width: 520px) {\n.login-card {\n    padding: 32px 24px;\n}\n.login-icon {\n    width: 64px;\n    height: 64px;\n}\n.login-icon i {\n    font-size: 2rem;\n}\n.login-card h1 {\n    font-size: 1.5rem;\n}\n.login-features {\n    gap: 16px;\n}\n.feature i {\n    width: 40px;\n    height: 40px;\n    font-size: 1.2rem;\n}\n.feature span {\n    font-size: 0.7rem;\n}\n}\n\n/* Save Name Modal Styles */\n.save-name-modal {\n  max-width: 420px;\n  width: 100%;\n}\n.save-modal-desc {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n  margin-bottom: 20px;\n  line-height: 1.4;\n}\n.save-name-input-group {\n  margin-bottom: 16px;\n}\n.save-name-input-group label {\n  display: block;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.save-name-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  color: var(--text);\n  transition: all 0.2s;\n}\n.save-name-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 3px var(--accent-light);\n}\n.save-preview-info {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-top: 8px;\n}\n.save-preview-info i {\n  color: var(--accent);\n  font-size: 0.9rem;\n}\n\n/* Fix saved tab layout */\n.saved-sessions-container {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  padding: 16px;\n  box-shadow: var(--shadow-sm);\n}\n.saved-header {\n  margin-bottom: 16px;\n  padding-bottom: 12px;\n  border-bottom: 1px solid var(--border);\n}\n.saved-header h3 {\n  margin: 0 0 4px 0;\n  font-size: 0.9rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.saved-header p {\n  margin: 0;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.sessions-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  margin-bottom: 16px;\n  max-height: 320px;\n  overflow-y: auto;\n}\n.session-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  transition: all 0.2s ease;\n  overflow: hidden;\n}\n.session-info {\n  flex: 1;\n  min-width: 0;\n  padding: 10px 12px;\n  cursor: pointer;\n}\n.session-info:hover {\n  background: var(--accent-light);\n}\n.session-name {\n  font-weight: 600;\n  font-size: 0.8rem;\n  color: var(--text);\n  margin-bottom: 4px;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.session-name i {\n  color: var(--accent);\n  font-size: 0.7rem;\n}\n.session-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n  font-size: 0.6rem;\n  color: var(--text-muted);\n}\n.session-meta span {\n  display: inline-flex;\n  align-items: center;\n  gap: 3px;\n}\n.delete-btn {\n  width: 36px;\n  height: 36px;\n  margin-right: 8px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: #dc3545;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.delete-btn:hover {\n  background: #dc3545;\n  color: white;\n  border-color: #dc3545;\n}\n.save-section {\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.current-info {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 1;\n  min-width: 0;\n  padding: 8px 10px;\n  background: var(--accent-light);\n  border-radius: 10px;\n}\n.current-info i {\n  font-size: 1rem;\n  color: var(--accent);\n  flex-shrink: 0;\n}\n.current-info div {\n  display: flex;\n  flex-direction: column;\n  min-width: 0;\n}\n.current-info strong {\n  font-size: 0.75rem;\n  color: var(--text);\n}\n.current-info small {\n  font-size: 0.6rem;\n  color: var(--text-muted);\n}\n.save-btn {\n  padding: 8px 16px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 10px;\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  gap: 5px;\n  transition: all 0.2s;\n  flex-shrink: 0;\n}\n.save-btn:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.save-btn:active {\n  transform: translateY(0);\n}\n\n/* Saved Tab Styles - Clean Version */\n.saved-header {\n  margin-bottom: 24px;\n  padding-bottom: 16px;\n  border-bottom: 1px solid var(--border);\n}\n.saved-header h3 {\n  margin: 0 0 6px 0;\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.saved-header p {\n  margin: 0;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.empty-state {\n  text-align: center;\n  padding: 48px 24px;\n  color: var(--text-muted);\n}\n.empty-state i {\n  font-size: 3rem;\n  margin-bottom: 12px;\n  opacity: 0.4;\n}\n.empty-state p {\n  margin-bottom: 4px;\n  font-weight: 500;\n  color: var(--text);\n}\n.empty-state span {\n  font-size: 0.7rem;\n}\n.sessions-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  margin-bottom: 24px;\n  max-height: 320px;\n  overflow-y: auto;\n}\n.session-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 12px 14px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.session-item:hover {\n  border-color: var(--accent);\n  background: var(--accent-light);\n  transform: translateX(2px);\n}\n.session-info {\n  flex: 1;\n  min-width: 0;\n}\n.session-name {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-weight: 600;\n  font-size: 0.85rem;\n  color: var(--text);\n  margin-bottom: 6px;\n}\n.session-name i {\n  color: var(--accent);\n  font-size: 0.8rem;\n}\n.session-details {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.session-details span {\n  display: inline-flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.session-details i {\n  font-size: 0.6rem;\n}\n.delete-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: #dc3545;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.delete-btn:hover {\n  background: #dc3545;\n  color: white;\n  border-color: #dc3545;\n}\n.save-section {\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.current-info {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex: 1;\n  min-width: 0;\n}\n.current-info i {\n  font-size: 1.2rem;\n  color: var(--accent);\n  flex-shrink: 0;\n}\n.current-info div {\n  display: flex;\n  flex-direction: column;\n  min-width: 0;\n}\n.current-info strong {\n  font-size: 0.8rem;\n  color: var(--text);\n}\n.current-info small {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.save-btn {\n  padding: 8px 16px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 10px;\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  transition: all 0.2s;\n  flex-shrink: 0;\n}\n.save-btn:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.action-icon {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 52px;\n  height: 42px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  font-size: 1.2rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: rgba(0, 0, 0, 0.78);\n}\n.action-icon:hover {\n  transform: translateY(-2px);\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n\n/* Add to your style section */\n.tools-tabs button {\n  flex: 1;\n  padding: 8px 12px;\n  font-size: 0.8rem;\n}\n.saved-sessions-container {\n  padding: 16px;\n}\n.saved-session-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 12px;\n  margin-bottom: 12px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.saved-session-card:hover {\n  border-color: var(--accent);\n  transform: translateX(4px);\n  box-shadow: var(--shadow-sm);\n}\n.saved-session-header {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin-bottom: 8px;\n}\n.session-icon {\n  width: 36px;\n  height: 36px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--accent);\n}\n.session-details {\n  flex: 1;\n}\n.session-title {\n  font-weight: 600;\n  font-size: 0.85rem;\n  color: var(--text);\n}\n.session-range {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.session-delete-btn-icon {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: #dc3545;\n  transition: all 0.2s;\n}\n.session-delete-btn-icon:hover {\n  background: #dc3545;\n  color: white;\n  border-color: #dc3545;\n}\n.session-footer {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  padding-left: 48px;\n}\n.session-resume-hint {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  color: var(--accent);\n}\n.save-current-session-panel {\n  margin-top: 20px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.save-session-btn-full {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 12px;\n  cursor: pointer;\n  font-weight: 600;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.save-session-btn-full:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.empty-saved-state {\n  text-align: center;\n  padding: 48px 24px;\n  color: var(--text-muted);\n}\n.empty-saved-state i {\n  font-size: 3rem;\n  margin-bottom: 12px;\n  opacity: 0.5;\n}\n\n/* Action Buttons Group - Perfect Alignment */\n.action-buttons-group {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.action-icon-btn {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  width: 42px;\n  height: 42px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  font-size: 1.1rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n  flex-shrink: 0;\n}\n.action-icon-btn:hover {\n  transform: translateY(-1px);\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n.action-icon-btn:active {\n  transform: translateY(0);\n}\n.action-btn {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  height: 42px;\n  padding: 0 18px;\n  border-radius: 12px;\n  font-weight: 600;\n  font-size: 0.85rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  border: none;\n  white-space: nowrap;\n  flex-shrink: 0;\n}\n.action-btn-secondary {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  border: 1px solid var(--border);\n  color: var(--text);\n  box-shadow: var(--shadow-sm);\n}\n.action-btn-secondary:hover {\n  transform: translateY(-1px);\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n.action-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.25);\n  border: none;\n}\n.action-btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.35);\n}\n.action-btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n  transform: none;\n}\n.action-btn-secondary:active,\n.action-icon-btn:active {\n  transform: translateY(0);\n}\n\n/* Responsive adjustments */\n@media (max-width: 640px) {\n.action-buttons-group {\n    gap: 6px;\n}\n.action-icon-btn {\n    width: 38px;\n    height: 38px;\n    font-size: 1rem;\n}\n.action-btn {\n    height: 38px;\n    padding: 0 14px;\n    font-size: 0.8rem;\n}\n.action-btn span {\n    display: inline-block;\n}\n}\n@media (max-width: 480px) {\n.action-btn span {\n    display: none;\n}\n.action-btn {\n    width: 42px;\n    padding: 0;\n}\n.action-btn i {\n    font-size: 1.1rem;\n    margin: 0;\n}\n}\n\n/* Keyboard Shortcuts Modal - Larger & Cleaner */\n.keyboard-shortcuts-modal {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.6);\n  backdrop-filter: blur(8px);\n  z-index: 1000;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  animation: modalFadeIn 0.2s ease;\n}\n.shortcuts-modal {\n  background: var(--surface-strong);\n  border-radius: 24px;\n  width: min(520px, 90vw);\n  max-width: 520px;\n  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.3);\n  border: 1px solid var(--border);\n  animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n  overflow: hidden;\n}\n.shortcuts-modal-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 20px 24px;\n  background: linear-gradient(135deg, var(--surface), var(--surface-strong));\n  border-bottom: 1px solid var(--border);\n}\n.shortcuts-modal-header h3 {\n  margin: 0;\n  font-size: 1.2rem;\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  color: var(--text);\n  font-weight: 600;\n}\n.shortcuts-modal-header h3 i {\n  font-size: 1.3rem;\n  color: var(--accent);\n}\n.shortcuts-modal-close {\n  width: 36px;\n  height: 36px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n  color: var(--text-muted);\n}\n.shortcuts-modal-close:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n  transform: rotate(90deg);\n}\n.shortcuts-modal-body {\n  padding: 24px;\n  max-height: none;\n  overflow-y: visible;\n}\n.shortcuts-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));\n  gap: 24px;\n}\n.shortcut-card {\n  background: var(--surface);\n  border-radius: 16px;\n  padding: 16px;\n  border: 1px solid var(--border);\n}\n.shortcut-card-title {\n  font-size: 0.75rem;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--accent);\n  padding-bottom: 12px;\n  margin-bottom: 12px;\n  border-bottom: 2px solid var(--accent-light);\n}\n.shortcut-row {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 0;\n  border-bottom: 1px solid var(--border);\n}\n.shortcut-row:last-child {\n  border-bottom: none;\n}\n.shortcut-keys {\n  display: flex;\n  gap: 6px;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.shortcut-keys kbd {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border: 1px solid var(--border);\n  border-radius: 8px;\n  padding: 4px 10px;\n  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;\n  font-size: 0.7rem;\n  font-weight: 700;\n  color: var(--accent);\n  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);\n  letter-spacing: 0.5px;\n}\n.shortcut-row span {\n  color: var(--text-muted);\n  font-size: 0.85rem;\n  font-weight: 500;\n}\n@keyframes modalFadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n@keyframes modalSlideUp {\nfrom {\n    opacity: 0;\n    transform: translateY(30px) scale(0.95);\n}\nto {\n    opacity: 1;\n    transform: translateY(0) scale(1);\n}\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.action-buttons-group {\n    width: 100%;\n    gap: 8px;\n}\n.action-icon {\n    min-width: 44px;\n    height: 40px;\n}\n.action-btn {\n    min-width: 0;\n    flex: 1;\n    padding: 0 12px;\n    height: 40px;\n    font-size: 0.8rem;\n}\n.action-btn span {\n    display: inline;\n}\n.shortcuts-modal {\n    width: 95vw;\n\n    margin: 16px;\n}\n.shortcuts-modal-header {\n    padding: 16px 20px;\n}\n.shortcuts-modal-header h3 {\n    font-size: 1rem;\n}\n.shortcuts-modal-body {\n    padding: 16px;\n}\n.shortcuts-grid {\n    grid-template-columns: 1fr;\n    gap: 16px;\n}\n.shortcut-card {\n    padding: 12px;\n}\n.shortcut-row {\n    padding: 8px 0;\n}\n.shortcut-keys kbd {\n    padding: 3px 8px;\n    font-size: 0.65rem;\n}\n.shortcut-row span {\n    font-size: 0.8rem;\n}\n}\n@media (max-width: 480px) {\n.action-btn span {\n    display: none;\n}\n.action-btn {\n    min-width: 44px;\n    padding: 0;\n}\n.action-btn i {\n    font-size: 1.1rem;\n    margin: 0;\n}\n}\n\n/* Keyboard Shortcuts Dropdown - Compact */\n.shortcuts-panel.compact {\n  background: var(--surface-strong);\n  border-radius: 14px;\n  width: 280px;\n  box-shadow: var(--shadow-lg);\n  border: 1px solid var(--border);\n  animation: slideUp 0.2s ease;\n  overflow: hidden;\n}\n.shortcuts-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 14px;\n  border-bottom: 1px solid var(--border);\n  background: var(--surface);\n}\n.shortcuts-header h3 {\n  margin: 0;\n  font-size: 0.85rem;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--text);\n}\n.shortcuts-header h3 i {\n  font-size: 0.9rem;\n}\n.shortcuts-close {\n  width: 26px;\n  height: 26px;\n  border-radius: 6px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 18px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.15s;\n  color: var(--text-muted);\n}\n.shortcuts-close:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.shortcuts-list {\n  padding: 8px 6px;\n  max-height: 400px;\n  overflow-y: auto;\n}\n.shortcut-item {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 6px 10px;\n  border-radius: 6px;\n  font-size: 0.75rem;\n}\n.shortcut-item:hover {\n  background: var(--accent-light);\n}\n.shortcut-item kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--accent);\n  box-shadow: 0 1px 0 var(--border);\n}\n.shortcut-item span {\n  color: var(--text-muted);\n  font-size: 0.75rem;\n}\n@keyframes fadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n@keyframes slideUp {\nfrom {\n    opacity: 0;\n    transform: translateY(10px);\n}\nto {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n/* Saved Sessions Styles */\n.saved-sessions-list {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n  max-height: 300px;\n  overflow-y: auto;\n}\n.saved-session-item {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 10px 12px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 10px;\n  transition: all 0.2s ease;\n}\n.saved-session-item:hover {\n  border-color: var(--accent);\n  background: var(--surface-strong);\n}\n.session-info {\n  flex: 1;\n  min-width: 0;\n}\n.session-name {\n  font-weight: 600;\n  font-size: 0.85rem;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.session-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.session-meta span {\n  display: inline-flex;\n  align-items: center;\n  gap: 3px;\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.session-actions {\n  display: flex;\n  gap: 6px;\n  flex-shrink: 0;\n}\n.session-load-btn,\n.session-delete-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  transition: all 0.2s ease;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.session-load-btn {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.session-load-btn:hover {\n  background: var(--accent-strong);\n  transform: scale(1.05);\n}\n.session-delete-btn {\n  background: rgba(220, 53, 69, 0.1);\n  color: #dc3545;\n}\n.session-delete-btn:hover {\n  background: #dc3545;\n  color: white;\n}\n.save-current-session {\n  margin-top: 12px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n}\n.save-session-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.save-session-info {\n  flex: 1;\n}\n.save-session-info strong {\n  display: block;\n  font-size: 0.8rem;\n  color: var(--text);\n  margin-bottom: 2px;\n}\n.save-session-info small {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.save-session-btn {\n  padding: 6px 14px;\n  border-radius: 8px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  gap: 5px;\n  transition: all 0.2s ease;\n}\n.save-session-btn:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\n.verse-download-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.82);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--accent);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.verse-download-btn:hover:not(:disabled) {\n  transform: scale(1.05);\n  border-color: var(--accent);\n  background: rgba(255, 255, 255, 0.96);\n}\n.verse-download-btn:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n\n/* Add to your style section */\n.main.tools-open {\n  overflow: hidden;\n}\n\n/* Fix tools panel positioning - ensure it goes from very top */\n.tools {\n  position: fixed;\n  top: 0;\n  /* Changed from auto/padding */\n  right: 0;\n  bottom: 0;\n  height: 100dvh;\n  width: min(var(--tools-width), 92vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease, visibility 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n  visibility: hidden;\n  pointer-events: none;\n  overscroll-behavior: contain;\n}\n\n/* Adjust tools-top padding to account for no navbar offset */\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n  padding-top: calc(18px + env(safe-area-inset-top, 0px));\n}\n\n/* Ensure tools body scrolls correctly */\n.tools-body {\n  flex: 1;\n  min-height: 0;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n  overscroll-behavior: contain;\n  -webkit-overflow-scrolling: touch;\n}\nbody.has-navbar .tools {\n  top: 0;\n  /* Still 0, but adjust internal spacing */\n}\nbody.has-navbar .tools-top {\n  padding-top: calc(18px + var(--navbar-height, 0px));\n}\n.tools.open {\n  transform: translateX(0);\n  visibility: visible;\n  pointer-events: auto;\n}\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.5);\n  z-index: 59;\n  opacity: 0;\n  pointer-events: none;\n  transition: opacity 0.2s ease;\n}\n.tools-backdrop.open {\n  opacity: 1;\n  pointer-events: auto;\n}\n\n/* Replace the existing blur mode CSS with this */\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-aid {\n  filter: blur(var(--recall-blur, 10px));\n  opacity: 0.7;\n  transition: filter 0.3s ease, opacity 0.3s ease;\n}\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .tajweed-mark,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic word,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .wbw-word {\n  filter: blur(var(--recall-blur, 10px));\n}\n\n/* Keep active verse clear */\n.main.blur-mode-active .verse-card.active .verse-arabic,\n.main.blur-mode-active .verse-card.active .verse-aid {\n  filter: none;\n  opacity: 1;\n}\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic,\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-aid,\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic .tajweed-mark,\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic word,\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic .wbw-word {\n  filter: none !important;\n  opacity: 1;\n}\n\n/* Force tajweed spans to display properly */\n.verse-arabic.tajweed-enabled span[class*=\"tajweed-\"] {\n  display: inline !important;\n}\n\n/* Ensure proper line height for tajweed text */\n.verse-arabic.tajweed-enabled {\n  line-height: 2.2 !important;\n  font-family: var(--font-ar);\n}\n\n/* Make tajweed colors visible */\n.verse-arabic.tajweed-enabled .tajweed-ham_wasl,\n.verse-arabic.tajweed-enabled .tajweed-slnt {\n  color: #7e8a97;\n}\n.verse-arabic.tajweed-enabled .tajweed-ghn,\n.verse-arabic.tajweed-enabled .tajweed-idgh_ghn,\n.verse-arabic.tajweed-enabled .tajweed-iqlb {\n  color: #2e9d62;\n  background: rgba(46, 157, 98, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,\n.verse-arabic.tajweed-enabled .tajweed-ikhf,\n.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw {\n  color: #9b59b6;\n  background: rgba(155, 89, 182, 0.10);\n}\n.verse-arabic {\n  --verse-font-percent: 100;\n  --verse-font-size: clamp(2rem, calc(var(--verse-font-percent, 120) * 0.02rem), 3.8rem);\n  font-family: var(--font-ar);\n  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));\n  line-height: 2;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n\n/* Force re-render when font changes */\n.verse-arabic.tajweed-enabled,\n.verse-arabic:not(.tajweed-enabled) {\n  transition: font-size 0.1s ease;\n}\n@keyframes wordHighlightPulse {\n0% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.03);\n}\n100% {\n    transform: scale(1.02);\n}\n}\n\n/* Combined Tajweed + Word Highlighting */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n\n/* Preserve tajweed colors inside highlighted words but make them visible */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {\n  color: inherit !important;\n  background: transparent !important;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*=\"tajweed-\"] {\n  color: white !important;\n  background: transparent !important;\n}\n\n/* Mode Button Styling */\n.mode-btn {\n  background: var(--surface);\n  border: 1px solid var(--accent);\n  color: var(--accent);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mode-btn i:first-child {\n  font-size: 0.85rem;\n}\n.mode-btn .bi-chevron-down {\n  font-size: 0.7rem;\n  transition: transform 0.2s;\n}\n.mode-btn:hover .bi-chevron-down {\n  transform: translateY(2px);\n}\n.mode-btn:hover {\n  background: var(--accent-light);\n}\n\n/* Make all buttons consistent */\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn:disabled,\n.rail-btn-ghost:disabled,\n.rail-btn-primary:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n  pointer-events: none;\n  transform: none;\n  box-shadow: none;\n}\n.rail-btn-resume {\n  background: rgba(255, 255, 255, 0.92);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.rail-btn-resume:hover {\n  background: var(--accent-light);\n  transform: translateY(-1px);\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\nbody {\n  font-family: var(--font-ui);\n  background: var(--bg);\n  color: var(--text);\n}\nhtml {\n  background: var(--bg);\n}\n.app {\n  min-height: 100vh;\n  font-size: calc(16px * var(--ui-scale, 1));\n  animation: appFade 260ms ease-out;\n}\n.verse-arabic {\n  min-height: 60px;\n}\n\n/* Session Rail */\n.session-rail {\n  background: var(--surface);\n  border-radius: 20px;\n  margin-bottom: 20px;\n  padding: 12px 16px 14px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.session-rail-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 10px;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.session-rail-copy {\n  flex: 1;\n  min-width: 0;\n}\n.session-rail-headline {\n  display: flex;\n  align-items: baseline;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.session-rail-pills {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  margin-top: 6px;\n}\n.session-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 4px;\n  padding: 5px 9px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n  font-size: 0.71rem;\n  white-space: nowrap;\n}\n.session-pill strong {\n  color: var(--text);\n  font-weight: 700;\n}\n.session-pill-focus {\n  max-width: min(280px, 100%);\n}\n.session-pill-focus strong {\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.session-rail-kicker {\n  font-size: 0.7rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.session-rail-meta {\n  font-size: 0.72rem;\n  color: var(--text-muted);\n  margin-top: 2px;\n}\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\n.session-rail-subnote {\n  margin-top: 10px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n}\n\n/* Mode Indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 10px;\n  padding: 6px 14px;\n  margin: 8px 0 12px 0;\n  background: var(--accent-light);\n  border-radius: 40px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n.mode-switch-btn {\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 4px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.mode-switch-btn:hover {\n  background: rgba(154, 103, 56, 0.2);\n  transform: rotate(180deg);\n}\n.progress-bar-wide {\n  margin-top: 10px;\n  height: 6px;\n  position: relative;\n  overflow: visible;\n}\n.progress-label {\n  position: absolute;\n  top: -24px;\n  right: 0;\n  font-size: 0.72rem;\n  font-weight: 700;\n  color: var(--accent);\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.session-rail-top {\n    flex-direction: column;\n    align-items: stretch;\n}\n.session-rail-actions {\n    justify-content: stretch;\n    width: 100%;\n    flex-wrap: wrap;\n}\n.rail-btn {\n    flex: 1;\n    justify-content: center;\n}\n}\n.verse-arabic-loading {\n  min-height: 60px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--text-muted);\n  animation: pulse 1s infinite;\n}\n@keyframes pulse {\n0%,\n  100% {\n    opacity: 0.3;\n}\n50% {\n    opacity: 0.6;\n}\n}\n\n/* Ensure HTML content is styled properly before Vue mounts */\n.verse-arabic word,\n.verse-arabic .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n}\n\n/* Prevent raw HTML showing */\n.verse-arabic:empty {\n  display: none;\n}\n\n/* Tajweed styles */\n.verse-arabic.tajweed-enabled [class*=\"tajweed\"] {\n  display: inline;\n}\n\n/* Color rules for tajweed - adjust based on what API returns */\n.verse-arabic [class*=\"ghunnah\"],\n.verse-arabic [class*=\"Ghunnah\"] {\n  color: #2ecc71;\n}\n.verse-arabic [class*=\"madd\"],\n.verse-arabic [class*=\"Madd\"] {\n  color: #e74c3c;\n}\n.verse-arabic [class*=\"qalqalah\"],\n.verse-arabic [class*=\"Qalqalah\"] {\n  color: #f39c12;\n}\n.verse-arabic [class*=\"ikhfa\"],\n.verse-arabic [class*=\"Ikhfa\"] {\n  color: #9b59b6;\n}\n.verse-arabic [class*=\"idgham\"],\n.verse-arabic [class*=\"Idgham\"] {\n  color: #3498db;\n}\n\n/* Word by Word styles */\n.wbw-word {\n  display: inline-block;\n  padding: 5px 8px;\n  margin: 2px 3px;\n  border-radius: 8px;\n  transition: all 0.2s ease;\n  cursor: pointer;\n  font-size: 1.05rem;\n  background: rgba(154, 103, 56, 0.05);\n}\n.wbw-word:hover {\n  background: var(--accent-light);\n  transform: scale(1.02);\n}\n.wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n  animation: pop 180ms ease-out;\n}\n.verse-arabic.verse-weak .wbw-word.weak-word {\n  background: #fff3bf;\n  color: #5f4b00;\n}\n.verse-arabic.verse-mastered .wbw-word.mastered-word {\n  background: #d3f9d8;\n  color: #1f6f31;\n}\n@keyframes pop {\nfrom {\n    transform: scale(1.01);\n}\nto {\n    transform: scale(1.05);\n}\n}\n\n/* Word highlighting styles */\n.verse-arabic word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n.rail-stat strong,\n.player-eta {\n  cursor: help;\n  border-bottom: 1px dotted var(--text-muted);\n}\n\n/* Optional: Show detailed breakdown on hover */\n.rail-stat:hover strong::after {\n  content: attr(title);\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: var(--surface-strong);\n  color: var(--text);\n  padding: 4px 8px;\n  border-radius: 8px;\n  font-size: 0.7rem;\n  white-space: nowrap;\n  z-index: 100;\n  box-shadow: var(--shadow-sm);\n  border: 1px solid var(--border);\n}\n\n/* Minimized Session Rail */\n.session-rail-mini {\n  position: sticky;\n  top: 12px;\n  z-index: 18;\n  padding: 10px;\n  padding-top: 8px;\n  margin-bottom: 20px;\n  background: var(--surface);\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-sm);\n  overflow: hidden;\n  transition: all 0.2s ease;\n}\n.session-rail-mini:hover {\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent-soft);\n}\n.rail-mini-content {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 8px 12px 8px 16px;\n}\n.rail-mini-info {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  flex: 1;\n}\n.rail-mini-icon {\n  width: 32px;\n  height: 32px;\n  background: var(--accent-light);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.rail-mini-icon i {\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.rail-mini-details {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-mini-surah {\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.rail-mini-progress {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.rail-mini-stats {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.mini-stat-item {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.mini-stat-item i {\n  font-size: 0.7rem;\n  color: var(--accent);\n}\n.rail-mini-actions {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mini-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n}\n.mini-btn:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n}\n.mini-btn:first-child {\n  background: var(--accent);\n  border-color: var(--accent);\n  color: white;\n}\n.mini-btn:first-child:hover {\n  transform: scale(1.05);\n  background: var(--accent-strong);\n}\n.rail-mini-progress {\n  height: 2px;\n  background: var(--border);\n}\n.progress-fill-mini {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.rail-mini-stats {\n    display: none;\n}\n.rail-mini-content {\n    padding: 6px 10px 6px 12px;\n}\n.rail-mini-surah {\n    font-size: 0.75rem;\n}\n}\n\n/* Font Dropdown */\n.font-dropdown {\n  position: relative;\n}\n.font-dropdown-trigger {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 999px;\n  font-size: 0.75rem;\n  cursor: pointer;\n  transition: all 0.2s;\n  color: var(--text);\n}\n.font-dropdown-trigger:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.font-dropdown-trigger .bi-chevron-down {\n  transition: transform 0.2s;\n  font-size: 0.7rem;\n}\n.font-dropdown-trigger .bi-chevron-down.rotated {\n  transform: rotate(180deg);\n}\n.font-dropdown-menu {\n  position: absolute;\n  top: calc(100% + 8px);\n  right: 0;\n  min-width: 200px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  box-shadow: var(--shadow-lg);\n  overflow: hidden;\n  z-index: 100;\n  backdrop-filter: blur(12px);\n}\n.font-option {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  width: 100%;\n  padding: 10px 14px;\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  font-size: 0.8rem;\n  text-align: left;\n  transition: all 0.15s;\n  color: var(--text);\n}\n.font-option:hover {\n  background: var(--accent-light);\n}\n.font-option.active {\n  background: var(--accent);\n  color: white;\n}\n.font-option .check-icon {\n  margin-left: auto;\n  font-size: 0.8rem;\n}\n\n/* Dropdown Animation */\n.dropdown-fade-enter-active,\n.dropdown-fade-leave-active {\n  transition: all 0.2s ease;\n}\n.dropdown-fade-enter-from,\n.dropdown-fade-leave-to {\n  opacity: 0;\n  transform: translateY(-8px);\n}\n\n/* Tajweed styles for AlQuran quran-tajweed edition */\n.verse-arabic.tajweed-enabled {\n  line-height: 2;\n  white-space: normal;\n  overflow-wrap: anywhere;\n}\n.verse-arabic.tajweed-enabled .tajweed-mark {\n  display: inline;\n  border-radius: 0.2em;\n  padding: 0 0.03em;\n}\n.verse-arabic.tajweed-enabled .tajweed-ham_wasl,\n.verse-arabic.tajweed-enabled .tajweed-slnt {\n  color: #7e8a97;\n}\n.verse-arabic.tajweed-enabled .tajweed-ghn,\n.verse-arabic.tajweed-enabled .tajweed-idgh_ghn,\n.verse-arabic.tajweed-enabled .tajweed-iqlb {\n  color: #2e9d62;\n  background: rgba(46, 157, 98, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,\n.verse-arabic.tajweed-enabled .tajweed-ikhf,\n.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw {\n  color: #9b59b6;\n  background: rgba(155, 89, 182, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-qlq,\n.verse-arabic.tajweed-enabled .tajweed-lqlq {\n  color: #d98824;\n  background: rgba(217, 136, 36, 0.12);\n}\n.verse-arabic.tajweed-enabled .tajweed-madda_normal,\n.verse-arabic.tajweed-enabled .tajweed-madda_permissible,\n.verse-arabic.tajweed-enabled .tajweed-madda_necessary,\n.verse-arabic.tajweed-enabled .tajweed-madda_obligatory,\n.verse-arabic.tajweed-enabled .tajweed-madda_pbligatory {\n  color: #d55245;\n  background: rgba(213, 82, 69, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_mus,\n.verse-arabic.tajweed-enabled .tajweed-idghm_shfw,\n.verse-arabic.tajweed-enabled .tajweed-idgh_shfw,\n.verse-arabic.tajweed-enabled .tajweed-ghn+.tajweed-mark {\n  color: #2b7bbb;\n  background: rgba(43, 123, 187, 0.10);\n}\n\n/* Toolbar chip active state for tajweed */\n.toolbar-chip.active {\n  background: var(--accent);\n  color: white;\n}\n.verse-play-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: white;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.verse-play-btn i {\n  font-size: 0.9rem;\n}\n.verse-play-btn:hover {\n  transform: scale(1.05);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--accent);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.verse-play-btn:active {\n  transform: scale(0.98);\n}\n.verse-preview-label {\n  margin-left: 10px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n  font-weight: 650;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n}\n.resume-details {\n  margin-top: 10px;\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.72);\n  padding: 10px 12px;\n}\n.resume-details summary {\n  cursor: pointer;\n  list-style: none;\n  font-weight: 650;\n  color: var(--text);\n}\n.resume-details summary::-webkit-details-marker {\n  display: none;\n}\n.verse-download-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.82);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--accent);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.verse-download-btn:hover:not(:disabled) {\n  transform: scale(1.05);\n  border-color: var(--accent);\n  background: rgba(255, 255, 255, 0.96);\n}\n.verse-download-btn:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n.speed-label {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-right: 4px;\n}\n.speed-controls {\n  display: flex;\n  gap: 4px;\n}\n.speed-btn {\n  padding: 4px 8px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.speed-btn.active {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.streak-motivation {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border-radius: 40px;\n  font-size: 0.75rem;\n}\n.streak-badge {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-weight: 500;\n}\n.motivation-message {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--text-muted);\n  font-size: 0.7rem;\n}\n.pa-note {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n  margin-top: 4px;\n  display: block;\n}\n\n/* Active tab indicator with pulse effect */\n.tools-tabs button.active-tab {\n  position: relative;\n  animation: tabPulse 0.22s ease-out;\n}\n@keyframes tabPulse {\n0% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 var(--accent);\n}\n50% {\n    transform: scale(1.012);\n    box-shadow: 0 0 0 3px var(--accent-light);\n}\n100% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n.quick-tools {\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.78);\n}\n.quick-tools-grid {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n  padding: 12px 14px;\n}\n.quick-tool {\n  border: 1px solid rgba(154, 103, 56, 0.10);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.82);\n  padding: 10px;\n  display: grid;\n  gap: 8px;\n  min-width: 0;\n}\n.quick-tool-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 8px;\n}\n.quick-tool-label {\n  font-size: 0.74rem;\n  font-weight: 750;\n  color: var(--text);\n}\n.quick-tool-value {\n  font-size: 0.74rem;\n  font-weight: 650;\n  color: var(--text-muted);\n}\n.quick-tool-body {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.quick-tool-body.disabled {\n  opacity: 0.55;\n}\n.quick-tool-body-muted {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n}\n.quick-range {\n  flex: 1 1 auto;\n  min-width: 0;\n}\n.toggle-chip {\n  min-height: 32px;\n  min-width: 68px;\n  padding: 6px 14px;\n  border-radius: 40px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);\n  border: 1px solid var(--border);\n  background: var(--surface);\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n  position: relative;\n  overflow: hidden;\n}\n\n/* Improved Toggle Buttons - Consistent with modern UI */\n.toggle-chip {\n  min-height: 32px;\n  min-width: 68px;\n  padding: 6px 14px;\n  border-radius: 40px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);\n  border: 1px solid var(--border);\n  background: var(--surface);\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n  position: relative;\n  overflow: hidden;\n}\n.toggle-chip::before {\n  content: '';\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  width: 0;\n  height: 0;\n  border-radius: 50%;\n  background: rgba(154, 103, 56, 0.2);\n  transform: translate(-50%, -50%);\n  transition: width 0.4s, height 0.4s;\n}\n.toggle-chip:active::before {\n  width: 100px;\n  height: 100px;\n}\n.toggle-chip:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-sm);\n}\n.toggle-chip.active {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.toggle-chip.active:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.4);\n  filter: brightness(1.05);\n}\n.toggle-chip:active {\n  transform: translateY(0);\n}\n\n/* Compact toggle for headers */\n.st-right-group {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.st-right-group .toggle-chip {\n  min-height: 32px;\n  min-width: 68px;\n  padding: 4px 12px;\n  font-size: 0.75rem;\n}\n\n/* Switch-style alternative (optional) */\n.toggle-switch {\n  position: relative;\n  display: inline-flex;\n  align-items: center;\n  cursor: pointer;\n  min-width: 52px;\n  height: 30px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 30px;\n  transition: all 0.2s ease;\n}\n.toggle-switch.active {\n  background: var(--accent);\n  border-color: transparent;\n}\n.toggle-switch-knob {\n  position: absolute;\n  left: 2px;\n  width: 24px;\n  height: 24px;\n  background: white;\n  border-radius: 50%;\n  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);\n}\n.toggle-switch.active .toggle-switch-knob {\n  transform: translateX(22px);\n}\n.toggle-switch-label {\n  margin-left: 60px;\n  font-size: 0.75rem;\n  font-weight: 500;\n  color: var(--text-muted);\n}\n.toggle-switch.active+.toggle-switch-label {\n  color: var(--accent);\n}\n\n/* Technique toggle specific */\n.technique-toggle {\n  min-height: 32px;\n  min-width: 72px;\n  font-weight: 600;\n  letter-spacing: 0.5px;\n}\n\n/* Settings toggle */\n.settings-toggle {\n  min-height: 36px;\n  min-width: 72px;\n  font-weight: 600;\n}\n\n/* Ripple effect animation */\n@keyframes ripple {\nto {\n    transform: scale(4);\n    opacity: 0;\n}\n}\n.toggle-chip-ripple {\n  position: absolute;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.5);\n  transform: scale(0);\n  animation: ripple 0.4s linear;\n  pointer-events: none;\n}\n\n/* Toggle switch animation and visual feedback */\n.switch {\n  transition: all 0.2s ease;\n}\n.switch:active {\n  transform: scale(0.98);\n}\n.switch-ui {\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n  animation: switchPulse 0.3s ease-out;\n}\n@keyframes switchPulse {\n0% {\n    box-shadow: 0 0 0 0 rgba(139, 94, 60, 0.4);\n}\n50% {\n    box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.2);\n}\n100% {\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Field hint styling */\n.field-hint {\n  font-size: calc(0.7rem * var(--en-scale, 1));\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.26;\n  display: block;\n}\n\n/* Verse Arabic styling */\n.verse-arabic {\n  --verse-font-percent: 100;\n  --verse-font-size: clamp(1.5rem, calc(var(--verse-font-percent, 150) * 0.0175rem), 3.25rem);\n  font-family: var(--font-ar);\n  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n.verse-arabic word {\n  display: inline-block;\n  font-size: 1em;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-card {\n  background: var(--surface);\n  border-radius: 20px;\n  padding: 26px;\n  transition: all 0.2s ease;\n  border: 1px solid var(--border);\n  position: relative;\n  direction: ltr;\n  overflow: hidden;\n  width: 100%;\n}\n.verse-card::before {\n  content: \"\";\n  position: absolute;\n  inset: 0;\n  pointer-events: none;\n  background:\n    linear-gradient(180deg, rgba(184, 130, 78, 0.03), transparent 22%),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.05), transparent 28%);\n}\n.verse-card.active {\n  border-color: var(--accent);\n  background: linear-gradient(145deg, rgba(184, 130, 78, 0.14), rgba(154, 103, 56, 0.04));\n  box-shadow: 0 0 0 1px var(--accent), 0 14px 32px rgba(154, 103, 56, 0.18);\n  transform: translateY(-1px);\n  transition: all 0.2s ease;\n}\n.main.focus-mode-active .verse-card:not(.active) {\n  opacity: 0.54;\n  filter: saturate(0.72);\n}\n.main.focus-mode-active .workspace-fab-live,\n.main.focus-mode-active .verse-card:not(.active) .verse-aid {\n  opacity: 0.38;\n}\n\n\n\n/* Removed: \"For serious huffadh training\" badge */\n.verse-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 16px;\n}\n.verse-badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-number {\n  font-size: 0.78rem;\n  padding: 6px 12px;\n  background: var(--accent);\n  border-radius: 999px;\n  color: #fff;\n  font-weight: 700;\n  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.24);\n}\n.verse-status-badge,\n.verse-status-subtle {\n  border-radius: 999px;\n  padding: 5px 10px;\n  font-size: 0.68rem;\n  font-weight: 600;\n}\n.verse-status-badge {\n  background: var(--accent-light);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.verse-status-subtle {\n  background: var(--bg-elevated);\n  color: var(--text-muted);\n}\n.verse-ref {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex-shrink: 0;\n}\n\n/* Font controls */\n.verse-font-controls {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  padding: 2px 6px;\n  margin-right: 8px;\n}\n.verse-font-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 12px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 10px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.verse-font-btn:hover {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n}\n.verse-font-size-indicator {\n  font-size: 10px;\n  min-width: 35px;\n  text-align: center;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n\n/* Session rail */\n.session-rail {\n  position: sticky;\n  top: 14px;\n  z-index: 18;\n  margin-bottom: 18px;\n  padding: 12px 14px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-md);\n  animation: railIn 280ms ease-out;\n}\n.session-rail-top {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  gap: 12px;\n  align-items: center;\n}\n.session-rail-kicker {\n  font-size: 10px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  margin-top: 2px;\n  font-size: 14px;\n  font-weight: 450;\n}\n.session-rail-meta {\n  margin-top: 2px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.session-rail-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 8px;\n  margin-top: 10px;\n}\n.rail-stat {\n  padding: 8px 10px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-stat span {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n}\n.rail-stat strong {\n  font-size: 0.78rem;\n  font-weight: 500;\n}\n.rail-btn {\n  height: 34px;\n  padding: 0 12px;\n  border-radius: 13px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  color: var(--text);\n  font-size: 12px;\n  font-weight: 450;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.rail-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);\n}\n.progress-bar {\n  flex: 1;\n  height: 4px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-wide {\n  margin-top: 10px;\n}\n.progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s;\n}\n\n/* Mode indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  margin: 8px 0 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n\n/* Reading toolbar */\n.reading-toolbar {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  margin-bottom: 16px;\n  padding: 12px 14px;\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.reading-toolbar-group {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  align-items: flex-start;\n}\n.toolbar-chip {\n  border: 0;\n  border-radius: 999px;\n  padding: 8px 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  font-size: 0.75rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: var(--shadow-sm);\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.toolbar-chip i,\n.rail-btn i,\n.tools-tabs button i,\n.st-ico i {\n  font-size: 0.9rem;\n  line-height: 1;\n}\n.toolbar-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.toolbar-chip:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n\n/* Tools panel */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  height: 100dvh;\n  width: min(var(--tools-width), 92vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease, visibility 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n  visibility: hidden;\n  pointer-events: none;\n  overscroll-behavior: contain;\n}\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(15, 12, 8, 0.35);\n  backdrop-filter: blur(1px);\n  z-index: 59;\n  touch-action: none;\n}\n.tools.open {\n  transform: translateX(0);\n  visibility: visible;\n  pointer-events: auto;\n}\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n}\n.tools-topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.tools-title {\n  font-size: 1rem;\n  font-weight: 700;\n  letter-spacing: -0.2px;\n  color: var(--text);\n}\n.tools-context {\n  margin-top: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 600;\n}\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n  color: rgba(0, 0, 0, 0.7);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n  overflow-x: auto;\n  -webkit-overflow-scrolling: touch;\n  width: 100%;\n}\n.tools-tabs button {\n  flex: 1 1 0;\n  padding: 7px 10px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.82rem;\n  cursor: pointer;\n  color: rgba(0, 0, 0, 0.55);\n  font-weight: 450;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: background 140ms ease, color 140ms ease, transform 140ms ease, box-shadow 160ms ease;\n  white-space: nowrap;\n}\n.tools-tabs button.active {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));\n  box-shadow: var(--shadow-sm);\n  color: rgba(0, 0, 0, 0.85);\n}\n.tools-body {\n  flex: 1;\n  min-height: 0;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n  overscroll-behavior: contain;\n  -webkit-overflow-scrolling: touch;\n}\n\n/* Compact mode (default) to reduce cognitive load */\n.tools-body.compact .st-sub,\n.tools-body.compact .field-hint,\n.tools-body.compact .analytics-help,\n.tools-body.compact .stat-help {\n  display: block !important;\n}\n.tools-body.compact .sheet {\n  gap: 12px;\n}\n.tools-body.compact .sheet-section {\n  padding: 0;\n  border-radius: 16px;\n}\n.tools-body.compact .sheet-toggle {\n  padding: 12px 14px;\n}\n.tools-body.compact .sheet-content {\n  padding: 12px 14px 14px;\n}\n.tools-body.compact .field-stack {\n  gap: 12px;\n}\n.tools-body.compact .field label {\n  margin-bottom: 6px;\n}\n.sheet {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.sheet-section {\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border-radius: 18px;\n  padding: 0;\n  overflow: hidden;\n  box-shadow: var(--shadow-sm);\n  animation: riseSoft 260ms ease-out;\n}\n.sheet-toggle {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border: none;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease;\n}\n.st-left {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.st-ico {\n  width: 24px;\n  height: 24px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));\n  border: 1px solid rgba(139, 94, 60, 0.18);\n  flex: 0 0 auto;\n  font-size: 11px;\n  font-weight: 600;\n  color: var(--accent);\n}\n.st-txt {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 2px;\n  min-width: 0;\n}\n.st-title {\n  font-weight: 450;\n  letter-spacing: -0.2px;\n  color: var(--text);\n  font-size: 0.82rem;\n  white-space: nowrap;\n}\n.st-sub {\n  font-size: 0.66rem;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.st-chev {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  display: grid;\n  place-items: center;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  color: rgba(0, 0, 0, 0.65);\n  transition: transform 0.15s ease;\n  box-shadow: var(--shadow-sm);\n}\n.st-chev.open {\n  transform: rotate(180deg);\n}\n.sheet-content {\n  padding: 12px 12px 14px;\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field-stack {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  min-width: 0;\n}\n.field label {\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n}\n.field-hint {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.35;\n  display: block;\n}\n.select,\n.input {\n  width: 100%;\n  min-width: 0;\n  padding: 11px 12px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--text);\n  font-size: 0.8rem;\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n.range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.range-single {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n  align-items: center;\n}\n.range span {\n  color: rgba(0, 0, 0, 0.35);\n  font-weight: 450;\n  font-size: 11px;\n}\n.radio-group {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.radio {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 0.85rem;\n  color: var(--text);\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  transition: all 0.2s ease;\n}\n.radio:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-sm);\n}\n.radio input {\n  margin: 0;\n}\n.switch {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 11px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  cursor: pointer;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  transition: all 0.2s ease;\n}\n.switch input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.switch-ui {\n  width: 44px;\n  height: 26px;\n  border-radius: 999px;\n  background: rgba(0, 0, 0, 0.12);\n  position: relative;\n  flex: 0 0 auto;\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  content: \"\";\n  position: absolute;\n  top: 3px;\n  left: 3px;\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  background: white;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n}\n.switch input:checked+.switch-ui::after {\n  transform: translateX(18px);\n}\n.switch-text {\n  font-size: 0.74rem;\n  color: rgba(0, 0, 0, 0.72);\n  font-weight: 400;\n}\n.tools-techniques-section {\n  border-color: rgba(139, 94, 60, 0.16);\n  box-shadow: none;\n}\n.techniques-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.technique-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 13px;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.78);\n  box-shadow: 0 10px 24px rgba(63, 39, 18, 0.055);\n}\n.technique-row-stacked {\n  align-items: stretch;\n  flex-direction: column;\n}\n.technique-row-main,\n.technique-control {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.technique-copy {\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  gap: 3px;\n}\n.technique-copy label {\n  margin: 0;\n  color: var(--text);\n  font-family: inherit;\n  font-size: 0.86rem;\n  font-weight: 560;\n  white-space: nowrap;\n}\n.technique-copy small,\n.technique-control span {\n  color: var(--text-muted);\n  font-family: inherit;\n  font-size: 0.73rem;\n  font-weight: 400;\n  line-height: 1.45;\n}\n.technique-toggle {\n  flex: 0 0 86px;\n  min-height: 40px;\n  border-radius: 12px;\n  font-family: inherit;\n  font-size: 0.82rem;\n  font-weight: 560;\n  border-width: 1px;\n}\n.technique-control {\n  padding-top: 12px;\n  border-top: 1px solid rgba(154, 103, 56, 0.10);\n}\n.technique-range {\n  flex: 1 1 auto;\n  min-width: 96px;\n  padding: 0;\n  box-shadow: none;\n}\n.segmented-control {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 6px;\n  padding: 5px;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 14px;\n  background: rgba(98, 73, 49, 0.045);\n}\n.segmented-control button {\n  min-width: 0;\n  min-height: 42px;\n  padding: 9px 10px;\n  border: 1px solid transparent;\n  border-radius: 10px;\n  background: transparent;\n  color: var(--text-muted);\n  font-family: inherit;\n  font-size: 0.8rem;\n  font-weight: 560;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n}\n.segmented-control button.active {\n  background: #fffaf4;\n  color: var(--accent-strong);\n  border-color: rgba(154, 103, 56, 0.20);\n  box-shadow: 0 8px 18px rgba(63, 39, 18, 0.09);\n}\n.technique-preview {\n  padding: 10px 12px;\n  border-radius: 12px;\n  background: rgba(154, 103, 56, 0.07);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: rgba(98, 73, 49, 0.92);\n  font-family: inherit;\n  font-size: 0.74rem;\n  font-weight: 430;\n  line-height: 1.45;\n}\n\n/* Start button */\n.start-btn {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  border-radius: 12px;\n  color: white;\n  font-size: 1rem;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  margin-top: 20px;\n  transition: all 0.2s ease;\n}\n.start-btn:hover:not(:disabled) {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);\n}\n.start-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n\n/* Tools footer */\n.tools-footer {\n  position: sticky;\n  bottom: 0;\n  min-height: var(--tools-footer-h);\n  padding: 12px 16px 14px;\n  border-top: 1px solid var(--border);\n  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));\n  display: flex;\n  gap: 10px;\n  justify-content: space-between;\n  align-items: center;\n  z-index: 1;\n}\n.tools-btn {\n  flex: 1;\n  min-height: 44px;\n  padding: 10px 10px;\n  border-radius: 15px;\n  font-weight: 500;\n  border: 1px solid rgba(0, 0, 0, 0.1);\n  cursor: pointer;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  line-height: 1;\n}\n.tools-btn-soft {\n  color: var(--text-muted);\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.42));\n  box-shadow: none;\n}\n.tools-btn-soft:hover {\n  color: var(--text);\n  border-color: var(--accent-soft);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.6));\n}\n.tools-btn-primary {\n  color: #fff;\n  border-color: rgba(0, 0, 0, 0.08);\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  box-shadow: var(--shadow-sm);\n}\n.tools-btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n.tools-btn:active:not(:disabled),\n.fab-btn:active:not(:disabled),\n.toggle-chip:active:not(:disabled),\n.sheet-toggle:active:not(:disabled) {\n  transform: translateY(0);\n}\n.tools-btn:hover:not(:disabled),\n.fab-btn:hover:not(:disabled),\n.toggle-chip:hover:not(:disabled),\n.sheet-toggle:hover:not(:disabled) {\n  filter: brightness(1.02);\n}\n.tools-btn-primary:disabled {\n  opacity: 0.55;\n  cursor: not-allowed;\n  box-shadow: none;\n}\n.tools-btn-start {\n  flex: 1.6;\n}\n\n/* Hero section */\n.hero-card {\n  margin-bottom: 16px;\n  padding: 18px 18px 16px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 236, 226, 0.92));\n  box-shadow: var(--shadow-md);\n  display: grid;\n  gap: 14px;\n  animation: riseSoft 260ms ease-out;\n}\n.hero-kicker {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  color: var(--accent);\n}\n.hero-title {\n  margin-top: 6px;\n  font-size: 1.24rem;\n  font-weight: 500;\n  letter-spacing: -0.03em;\n}\n.hero-sub {\n  margin-top: 8px;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  max-width: 56ch;\n}\n.hero-flow {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n}\n.hero-step {\n  padding: 10px 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.62);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.74rem;\n}\n.hero-step span {\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  display: grid;\n  place-items: center;\n  background: var(--accent-light);\n  color: var(--accent);\n  font-size: 11px;\n}\n.hero-step strong {\n  font-weight: 500;\n}\n.hero-points {\n  display: grid;\n  gap: 8px;\n}\n.hero-point {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.hero-point i {\n  color: var(--accent);\n}\n.hero-actions,\n.empty-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cta {\n  flex: 1;\n  padding: 10px 10px;\n  border-radius: 14px;\n  font-weight: 450;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 11px;\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.cta-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);\n}\n.cta-ghost {\n  background: rgba(255, 255, 255, 0.58);\n  box-shadow: var(--shadow-sm);\n}\n\n/* Empty state */\n.empty {\n  padding: 40px 0;\n}\n.empty-card {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: var(--radius);\n  padding: 32px;\n  text-align: center;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-md);\n}\n.empty-icon {\n  font-family: var(--font-ar);\n  font-size: 2.2rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.empty-card h3 {\n  font-weight: 450;\n  margin-bottom: 6px;\n  font-size: 1rem;\n}\n.empty-card p {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  margin-bottom: 16px;\n}\n\n/* Verses grid */\n.workspace {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr);\n  gap: 14px;\n  align-items: start;\n  margin-top: 14px;\n}\n.workspace-main {\n  min-width: 0;\n}\n.workspace-shell {\n  width: 80%;\n  margin: 0 auto 18px;\n}\n.workspace-shell {\n  display: grid;\n  gap: 6px;\n  padding: 10px 12px;\n  border-radius: 20px;\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background:\n    linear-gradient(160deg, rgba(255, 251, 245, 0.98), rgba(255, 255, 255, 0.9)),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.09), transparent 28%);\n  box-shadow: 0 14px 28px rgba(63, 39, 18, 0.07);\n  position: relative;\n}\n.workspace-shell.collapsed {\n  gap: 8px;\n  padding: 12px 14px;\n}\n.workspace-shell-head {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  gap: 16px;\n  align-items: flex-start;\n}\n.workspace-shell-copy {\n  display: grid;\n  gap: 3px;\n  min-width: 0;\n}\n.workspace-shell-kicker {\n  display: inline-flex;\n  width: -moz-fit-content;\n  width: fit-content;\n  padding: 3px 7px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.1);\n  color: var(--accent-strong);\n  font-size: 0.68rem;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 0.06em;\n}\n.workspace-shell-kicker-review {\n  background: rgba(183, 28, 28, 0.12);\n  color: #9f1f1f;\n}\n.workspace-shell-title-row {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  flex-wrap: wrap;\n}\n.workspace-shell-copy h1 {\n  margin: 0;\n  color: var(--text);\n  font-size: clamp(1rem, 1.5vw, 1.25rem);\n  line-height: 1.08;\n  font-weight: 650;\n}\n.workspace-shell-phase {\n  display: inline-flex;\n  align-items: center;\n  min-height: 28px;\n  padding: 5px 10px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.88);\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  color: var(--accent-strong);\n  font-size: 0.73rem;\n  font-weight: 650;\n}\n.workspace-shell-phase-review {\n  border-color: rgba(183, 28, 28, 0.24);\n  color: #9f1f1f;\n  background: rgba(183, 28, 28, 0.09);\n}\n.workspace-shell-copy h2 {\n  margin: 0;\n  color: var(--text);\n  font-size: 1rem;\n  line-height: 1.15;\n  font-weight: 600;\n}\n.workspace-shell-copy p {\n  margin: 0;\n  color: var(--text-muted);\n  max-width: 58ch;\n  font-size: 0.8rem;\n  line-height: 1.35;\n}\n.workspace-shell-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.workspace-shell-meta span {\n  display: inline-flex;\n  align-items: center;\n  min-height: 28px;\n  padding: 5px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.15);\n  background: rgba(255, 255, 255, 0.86);\n  color: rgba(48, 42, 35, 0.86);\n  font-size: 0.76rem;\n  font-weight: 600;\n}\n.workspace-shell-meta-review {\n  border-color: rgba(183, 28, 28, 0.24) !important;\n  color: #9f1f1f !important;\n  background: rgba(183, 28, 28, 0.08) !important;\n}\n.resume-feedback-bars,\n.session-feedback-bars {\n  display: grid;\n  gap: 6px;\n  margin-top: 8px;\n}\n.session-feedback-panel {\n  margin-top: 8px;\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.72);\n  padding: 8px 10px;\n}\n.session-feedback-panel summary {\n  list-style: none;\n  cursor: pointer;\n  display: grid;\n  gap: 2px;\n  color: var(--text);\n  font-weight: 650;\n}\n.session-feedback-panel summary::-webkit-details-marker {\n  display: none;\n}\n.session-feedback-panel summary small {\n  color: var(--text-muted);\n  font-weight: 500;\n  font-size: 0.74rem;\n}\n.resume-feedback-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.resume-progress-repetition {\n  background: linear-gradient(90deg, #f2c94c, #e3a008);\n}\n.resume-progress-retention {\n  background: linear-gradient(90deg, #e57373, #c62828);\n}\n.pill-status-mastered {\n  border-color: rgba(46, 125, 50, 0.22);\n  background: rgba(76, 175, 80, 0.08);\n  color: #2e7d32;\n}\n.pill-status-weak {\n  border-color: rgba(245, 158, 11, 0.22);\n  background: rgba(245, 158, 11, 0.1);\n  color: #8a5a00;\n}\n.pill-status-repeat {\n  border-color: rgba(198, 40, 40, 0.22);\n  background: rgba(229, 57, 53, 0.08);\n  color: #9f1f1f;\n}\n.workspace-shell-chaining {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  align-items: center;\n}\n.workspace-shell-chain-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  min-height: 28px;\n  padding: 5px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background: rgba(255, 255, 255, 0.86);\n  color: rgba(48, 42, 35, 0.86);\n  font-size: 0.72rem;\n  font-weight: 650;\n}\n.workspace-shell-chain-pill i {\n  color: var(--accent-strong);\n}\n.workspace-shell-chain-pill-soft {\n  background: rgba(154, 103, 56, 0.09);\n  border-color: rgba(154, 103, 56, 0.14);\n  color: var(--accent-strong);\n}\n.workspace-shell-actions {\n  display: grid;\n  grid-template-columns: repeat(2, auto);\n  gap: 8px;\n  align-items: start;\n}\n.main-nav-btn,\n.main-card-primary {\n  min-height: 42px;\n  border-radius: 14px;\n  font-weight: 600;\n  font-size: 0.84rem;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  padding: 8px 12px;\n}\n.main-nav-btn {\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background: rgba(255, 255, 255, 0.82);\n  color: var(--text);\n}\n.main-card-primary {\n  border: 0;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  box-shadow: 0 12px 24px rgba(154, 103, 56, 0.18);\n}\n.main-nav-btn:disabled,\n.main-card-primary:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n  box-shadow: none;\n}\n.workspace-fab {\n  position: sticky;\n  top: 14px;\n  z-index: 25;\n  display: flex;\n  min-width: 0;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 8px 10px;\n  margin: 8px 0 6px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.06);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.58));\n  box-shadow: 0 16px 38px rgba(63, 39, 18, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.38);\n  backdrop-filter: blur(10px);\n  animation: cardSoftIn 220ms cubic-bezier(0.16, 1, 0.3, 1);\n  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;\n}\n.workspace-fab:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 20px 44px rgba(63, 39, 18, 0.18), 0 0 0 1px rgba(154, 103, 56, 0.18);\n  border-color: rgba(154, 103, 56, 0.2);\n}\n@keyframes cardSoftIn {\nfrom {\n    transform: translateY(6px);\n    opacity: 0.9;\n}\nto {\n    transform: translateY(0);\n    opacity: 1;\n}\n}\n.workspace-fab-meta {\n  min-width: 0;\n  flex: 1 1 auto;\n  display: grid;\n  gap: 4px;\n}\n.workspace-fab-kicker {\n  display: inline-flex;\n  align-items: center;\n  width: -moz-fit-content;\n  width: fit-content;\n  padding: 4px 8px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.10);\n  color: var(--accent-strong);\n  font-size: 0.68rem;\n  font-weight: 650;\n  letter-spacing: 0.06em;\n  text-transform: uppercase;\n}\n.workspace-fab-title {\n  font-weight: 650;\n  color: var(--text);\n  letter-spacing: -0.2px;\n  font-size: 0.92rem;\n  line-height: 1.15;\n}\n.workspace-fab-sub {\n  margin-top: 3px;\n  font-size: 0.74rem;\n  color: var(--text-muted);\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  align-items: center;\n  line-height: 1.2;\n}\n.workspace-fab-sub span {\n  display: inline-flex;\n  align-items: center;\n  max-width: 100%;\n  padding: 6px 10px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.18);\n  background: rgba(255, 255, 255, 0.86);\n  box-shadow: 0 8px 18px rgba(63, 39, 18, 0.06);\n  color: rgba(48, 42, 35, 0.82);\n  font-weight: 600;\n}\n.workspace-fab-live {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 5px;\n}\n.workspace-fab-live-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  max-width: 100%;\n  min-height: 38px;\n  padding: 8px 12px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.11);\n  border: 1px solid rgba(154, 103, 56, 0.20);\n  color: var(--accent-strong);\n  font-size: 0.82rem;\n  font-weight: 750;\n  box-shadow: 0 10px 20px rgba(63, 39, 18, 0.08);\n}\n.workspace-fab-live-pill i {\n  display: inline-grid;\n  place-items: center;\n  width: 22px;\n  height: 22px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.14);\n}\n.workspace-fab-live-pill-primary {\n  background: linear-gradient(180deg, rgba(154, 103, 56, 0.16), rgba(154, 103, 56, 0.09));\n  border-color: rgba(154, 103, 56, 0.28);\n}\n.workspace-fab-live-pill-mode {\n  background: rgba(255, 255, 255, 0.86);\n}\n.workspace-fab-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n  line-height: 1.26;\n  max-width: 60ch;\n  overflow-wrap: anywhere;\n}\n.workspace-fab-chip {\n  display: inline-flex;\n  align-items: center;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(46, 125, 50, 0.18);\n  background: rgba(46, 125, 50, 0.10);\n  color: rgba(46, 125, 50, 0.95);\n  font-weight: 650;\n  font-size: 0.72rem;\n}\n.workspace-fab-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex: 0 0 auto;\n}\n.fab-btn {\n  min-height: 40px;\n  padding: 8px 11px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.76);\n  box-shadow: var(--shadow-sm);\n  font-weight: 600;\n  font-size: 0.84rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  white-space: nowrap;\n  cursor: pointer;\n  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 140ms ease;\n}\n.fab-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  border-color: transparent;\n  box-shadow: 0 14px 28px rgba(154, 103, 56, 0.22);\n}\n.fab-btn-soft {\n  color: rgba(0, 0, 0, 0.78);\n}\n.fab-btn-ghost {\n  color: rgba(0, 0, 0, 0.78);\n}\n.verses-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n  margin-top: 0;\n}\n.verse-arabic-primary {\n  /* Primary focus: Quran dominates; aids are quieter. */\n  font-size: clamp(2.1rem, 2.75vw, 3.05rem);\n  line-height: 2.25;\n  letter-spacing: 0.01em;\n}\n.verse-aid {\n  opacity: 0.82;\n  filter: saturate(0.78);\n  margin-top: 0.4rem;\n  font-size: 0.93em;\n}\n.verse-aid-title {\n  margin-bottom: 4px;\n  color: var(--accent-strong);\n  font-size: 0.66rem;\n  font-weight: 650;\n  font-style: normal;\n  text-transform: uppercase;\n  letter-spacing: 0.04em;\n}\n.inline-setting-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.input-compact {\n  flex: 0 0 140px;\n}\n.inline-setting-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-height: 30px;\n  min-width: 58px;\n  padding: 0 10px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.08);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: var(--accent-strong);\n  font-size: 0.72rem;\n  font-family: inherit;\n  font-weight: 460;\n}\n.settings-section {\n  padding: 18px;\n  border-radius: 18px;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  background: #fffdf9;\n  box-shadow: 0 18px 42px rgba(40, 28, 16, 0.08);\n}\n.settings-heading {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  align-items: start;\n  gap: 16px;\n  padding-bottom: 16px;\n  margin-bottom: 16px;\n  border-bottom: 1px solid rgba(28, 24, 20, 0.07);\n}\n.settings-heading-copy {\n  min-width: 0;\n  display: grid;\n  gap: 6px;\n}\n.settings-heading-copy h3 {\n  margin: 0;\n  color: #1f1d1a;\n  font-size: 1.12rem;\n  font-weight: 560;\n  line-height: 1.15;\n}\n.settings-heading-copy p {\n  margin: 0;\n  color: #6d655d;\n  font-size: 0.78rem;\n  line-height: 1.45;\n}\n.settings-status {\n  min-height: 30px;\n  padding: 0 11px;\n  border-radius: 999px;\n  background: #f7f2eb;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  color: #614326;\n  font-size: 0.64rem;\n  font-weight: 520;\n  letter-spacing: 0.04em;\n  text-transform: uppercase;\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n}\n.settings-status-dot {\n  width: 7px;\n  height: 7px;\n  border-radius: 999px;\n  background: #2f9f68;\n  box-shadow: 0 0 0 4px rgba(47, 159, 104, 0.12);\n}\n.settings-panels {\n  display: grid;\n  gap: 16px;\n}\n.settings-group {\n  display: grid;\n  gap: 10px;\n}\n.settings-group-title {\n  color: #725233;\n  font-size: 0.64rem;\n  font-weight: 560;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n}\n.settings-card-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 10px;\n}\n.settings-display-grid {\n  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);\n}\n.settings-card {\n  min-width: 0;\n  border-radius: 14px;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  background: linear-gradient(180deg, #ffffff, #fbf8f3);\n  box-shadow: 0 8px 18px rgba(40, 28, 16, 0.045);\n}\n.settings-card-toggle {\n  min-height: 126px;\n  padding: 14px;\n  display: grid;\n  align-content: space-between;\n  gap: 14px;\n}\n.settings-card-range {\n  min-height: 126px;\n  padding: 14px;\n  display: grid;\n  gap: 14px;\n}\n.settings-row-copy {\n  min-width: 0;\n  display: grid;\n  gap: 6px;\n}\n.settings-row-copy label {\n  color: #211f1c;\n  font-size: 0.86rem;\n  font-weight: 540;\n  display: inline-flex;\n  align-items: center;\n  gap: 9px;\n  min-width: 0;\n}\n.settings-row-copy small {\n  color: #6f675f;\n  font-size: 0.7rem;\n  line-height: 1.4;\n}\n.settings-icon {\n  width: 32px;\n  height: 32px;\n  border-radius: 10px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  background: #f7f1ea;\n  border: 1px solid rgba(154, 103, 56, 0.13);\n  color: #8c5b2e;\n  flex: 0 0 auto;\n}\n.settings-toggle {\n  width: 100%;\n  min-height: 40px;\n  padding: 7px 14px;\n  border-radius: 10px;\n  font-size: 0.78rem;\n  font-weight: 540;\n  box-shadow: none;\n  border-width: 1px;\n}\n.settings-range-wrap {\n  width: 100%;\n  min-width: 0;\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  align-items: center;\n  gap: 12px;\n}\n.settings-range {\n  min-width: 0;\n  width: 100%;\n  padding: 0;\n  box-shadow: none;\n}\n.settings-apply-section {\n  padding: 12px;\n  border-radius: 14px;\n  background: #f8f2ea;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  display: grid;\n  gap: 8px;\n}\n.settings-apply-primary {\n  width: 100%;\n  min-height: 48px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  background: #8d5a2c;\n  color: #fff;\n  font-size: 0.92rem;\n  font-weight: 560;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  cursor: pointer;\n  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;\n}\n.settings-apply-primary:hover {\n  transform: translateY(-1px);\n  background: #7b4b22;\n  box-shadow: 0 10px 20px rgba(123, 75, 34, 0.24);\n}\n.settings-apply-section small {\n  color: #6f675f;\n  font-size: 0.7rem;\n}\n.tools-footer.settings-footer {\n  background: transparent;\n  border-top: none;\n  box-shadow: none;\n  pointer-events: none;\n}\n.tools-footer.settings-footer .tools-btn {\n  visibility: hidden;\n}\n.offline-list {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n  margin-bottom: 16px;\n}\n.offline-item {\n  background: var(--bg-elevated);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  transition: all 0.2s ease;\n}\n.offline-item:hover {\n  border-color: var(--accent);\n  background: var(--surface);\n}\n.oi-info {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.oi-name {\n  font-weight: 600;\n  font-size: 1rem;\n}\n.oi-meta {\n  font-size: 0.8rem;\n  opacity: 0.7;\n}\n.oi-date {\n  font-size: 0.7rem;\n  opacity: 0.5;\n}\n.oi-actions {\n  display: flex;\n  gap: 8px;\n}\n.oi-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.oi-load:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.oi-delete:hover {\n  background: #ff4d4d;\n  color: white;\n  border-color: #ff4d4d;\n}\n.empty-mini {\n  text-align: center;\n  padding: 32px 16px;\n  background: var(--bg-elevated);\n  border-radius: 20px;\n  border: 1px dashed var(--border);\n}\n.offline-note {\n  margin-top: 24px;\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  display: flex;\n  gap: 10px;\n  font-size: 0.75rem;\n  line-height: 1.4;\n  color: var(--accent);\n}\n\n/* Floating Player */\n.player-bar {\n  position: fixed;\n  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);\n  left: 50%;\n  transform: translateX(-50%);\n  width: min(calc(100vw - 32px), 960px);\n  max-width: 960px;\n  background: rgba(255, 255, 255, 0.98);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 24px;\n  box-shadow: 0 20px 40px rgba(63, 39, 18, 0.12);\n  z-index: 1000;\n  padding: 12px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  /* Avoid iOS Safari compositing artifacts (black bands) from backdrop-filter on fixed elements. */\n  backdrop-filter: none;\n  -webkit-backdrop-filter: none;\n  transition: transform 0.22s ease, opacity 0.22s ease, padding 0.22s ease;\n}\n.player-bar.collapsed {\n  transform: translateX(-50%);\n  opacity: 0.98;\n}\n.player-main {\n  display: grid;\n  grid-template-columns: minmax(150px, 1.1fr) auto minmax(200px, 0.95fr) minmax(180px, 1fr) auto;\n  align-items: center;\n  gap: clamp(10px, 1.6vw, 20px);\n  min-width: 0;\n}\n.player-info {\n  min-width: 0;\n}\n.player-chapter {\n  font-weight: 700;\n  font-size: 0.9rem;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-verse {\n  font-size: 0.75rem;\n  opacity: 0.7;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-eta {\n  color: var(--accent);\n  font-weight: 500;\n  opacity: 1;\n}\n.player-controls {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n}\n.player-loop-controls {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.player-loop-label {\n  font-size: 0.72rem;\n  font-weight: 700;\n  color: var(--text-muted);\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n}\n.player-loop-group {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  padding: 4px;\n  border: 1px solid var(--border);\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.9);\n  overflow-x: auto;\n}\n.player-loop-chip {\n  border: none;\n  border-radius: 999px;\n  background: transparent;\n  color: var(--text-muted);\n  min-height: 34px;\n  padding: 0 12px;\n  font-size: 0.76rem;\n  font-weight: 700;\n  white-space: nowrap;\n  cursor: pointer;\n  transition: background 0.2s ease, color 0.2s ease;\n}\n.player-loop-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.sheet-fade-enter-active,\n.sheet-fade-leave-active {\n  transition: opacity 0.2s ease, transform 0.2s ease;\n}\n.sheet-fade-enter-from,\n.sheet-fade-leave-to {\n  opacity: 0;\n  transform: translateY(8px);\n}\n.player-btn {\n  width: 44px;\n  height: 44px;\n  border-radius: 12px;\n  border: none;\n  background: none;\n  color: var(--text);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.2rem;\n  transition: all 0.2s ease;\n  flex: 0 0 auto;\n}\n.player-btn:hover {\n  background: rgba(154, 103, 56, 0.08);\n}\n.player-play {\n  background: var(--accent);\n  color: white;\n  width: 52px;\n  height: 52px;\n  border-radius: 16px;\n  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.3);\n}\n.player-play:hover {\n  background: rgba(255, 255, 255, 0.88);\n  color: var(--accent);\n  transform: scale(1.05);\n}\n.player-progress-wrap {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  min-width: 0;\n}\n.player-time {\n  font-size: 0.75rem;\n  font-variant-numeric: tabular-nums;\n  opacity: 0.7;\n  min-width: 40px;\n}\n.player-progress-bg {\n  flex: 1;\n  height: 6px;\n  background: var(--bg-elevated);\n  border-radius: 3px;\n  position: relative;\n  cursor: pointer;\n}\n.player-progress-fill {\n  position: absolute;\n  left: 0;\n  top: 0;\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.1s linear;\n}\n\n/* Animations */\n.slide-up-enter-active,\n.slide-up-leave-active {\n  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.slide-up-enter-from,\n.slide-up-leave-to {\n  transform: translate(-50%, 100px);\n  opacity: 0;\n}\n.verse-translation {\n  font-size: calc(0.94rem * var(--en-scale, 1));\n  color: var(--text);\n  line-height: 1.55;\n  padding-top: 10px;\n  margin-top: 8px;\n  border-top: 1px solid var(--border);\n  display: block;\n  opacity: 0.92;\n}\n.verse-transliteration {\n  font-size: calc(0.98rem * var(--en-scale, 1));\n  color: var(--text);\n  font-style: italic;\n  margin-top: 8px;\n  padding-top: 8px;\n  border-top: 1px solid var(--border);\n  line-height: 1.5;\n  opacity: 0.98;\n}\n.verse-words {\n  display: flex;\n  flex-wrap: nowrap;\n  gap: 8px;\n  direction: rtl;\n  margin-top: 12px;\n  padding-top: 10px;\n  border-top: 1px solid var(--border);\n  overflow-x: auto;\n  overflow-y: hidden;\n  -webkit-overflow-scrolling: touch;\n  scroll-snap-type: x proximity;\n  padding-bottom: 8px;\n}\n.word-item {\n  position: relative;\n  background: var(--accent-light);\n  padding: 6px 12px;\n  border-radius: 20px;\n  display: inline-flex;\n  flex-direction: row-reverse;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.75rem;\n  flex: 0 0 auto;\n  scroll-snap-align: center;\n  cursor: help;\n  min-height: 36px;\n}\n.word-item:hover::after,\n.word-item:focus::after {\n  content: attr(data-tooltip);\n  position: absolute;\n  left: 50%;\n  bottom: calc(100% + 8px);\n  transform: translateX(-50%);\n  z-index: 5;\n  width: -moz-max-content;\n  width: max-content;\n  max-width: 220px;\n  padding: 6px 8px;\n  border-radius: 9px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n  color: var(--text);\n  direction: ltr;\n  text-align: center;\n  font-size: 0.72rem;\n  line-height: 1.25;\n}\n.word-arabic {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n}\n.word-meaning {\n  color: var(--text-muted);\n  font-size: calc(0.82rem * var(--en-scale, 1));\n}\n.word-audio-btn {\n  background: none;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 0 4px;\n}\n.field-switch {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.reading-aid-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 8px;\n}\n.tools,\n.tools-body,\n.sheet-content {\n  overflow-x: hidden;\n}\n.live-stats-grid {\n  display: grid;\n  gap: 10px;\n}\n.live-stat-card {\n  min-height: 72px;\n  padding: 14px 16px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 252, 247, 0.9);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.live-stat-label {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  font-weight: 500;\n}\n.live-stat-card strong {\n  color: var(--text);\n  font-size: 1rem;\n  font-weight: 600;\n}\n.resume-copy {\n  margin-bottom: 8px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(251, 245, 238, 0.96));\n  border-radius: 18px;\n  box-shadow: 0 24px 72px rgba(31, 24, 17, 0.22);\n}\n.modal-header h2 {\n  font-size: 1.05rem;\n  font-weight: 600;\n}\n.resume-modal {\n  background: linear-gradient(180deg, rgba(255, 251, 245, 0.99), rgba(248, 241, 233, 0.97));\n}\n.resume-modal .modal-header,\n.resume-modal .modal-body,\n.resume-modal .modal-footer {\n  padding-top: 18px;\n  padding-bottom: 18px;\n}\n.resume-grid .pill,\n.resume-modal .pill {\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid rgba(184, 130, 78, 0.16);\n}\n.wbw-word.highlighted,\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.03);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.24);\n}\n.wbw-word.phrase-highlighted {\n  box-shadow: 0 0 0 2px rgba(184, 130, 78, 0.18);\n}\n.word-item.highlighted,\n.word-item.phrase-highlighted {\n  background: rgba(184, 130, 78, 0.2);\n}\n\n/* Quiz overlay */\n.quiz-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 80;\n  background: rgba(0, 0, 0, 0.35);\n  backdrop-filter: blur(6px);\n  display: grid;\n  place-items: center;\n  padding: 18px;\n}\n.quiz-card {\n  width: min(680px, 100%);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba, rgba(250, 245, 239, 0.95));\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 22px;\n  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);\n  overflow: hidden;\n}\n.quiz-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 18px 22px 14px;\n  border-bottom: 1px solid rgba(0, 0, 0, 0.08);\n}\n.quiz-title {\n  font-weight: 500;\n  font-size: 1.05rem;\n}\n.quiz-subtitle {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.quiz-close {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.7);\n  cursor: pointer;\n  font-size: 24px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.quiz-progress {\n  padding: 14px 22px 0;\n}\n.quiz-progress-bar {\n  height: 4px;\n  background: var(--border);\n  border-radius: 2px;\n  overflow: hidden;\n}\n.quiz-progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n.quiz-stats {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.quiz-body {\n  padding: 18px 22px 22px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.quiz-question {\n  font-weight: 600;\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.quiz-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.4rem;\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  padding: 16px;\n  background: var(--accent-light);\n  border-radius: 16px;\n}\n.quiz-reveal-btn {\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n}\n.quiz-answer {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.quiz-translation {\n  font-size: 0.9rem;\n  line-height: 1.6;\n  color: var(--text);\n  margin-bottom: 16px;\n}\n.quiz-grade-buttons {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.grade-btn {\n  flex: 1;\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.grade-btn.primary {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.quiz-options {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.quiz-option {\n  padding: 12px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  text-align: left;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.quiz-option:hover {\n  background: var(--accent-light);\n  transform: translateX(4px);\n}\n.quiz-summary {\n  padding: 22px;\n  text-align: center;\n}\n.quiz-summary-icon {\n  font-size: 3rem;\n  margin-bottom: 16px;\n}\n.quiz-summary-stats {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin: 20px 0;\n}\n.quiz-summary-stats .stat {\n  padding: 16px;\n  background: var(--surface);\n  border-radius: 16px;\n}\n.stat-label {\n  display: block;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.stat-value {\n  display: block;\n  font-size: 1.5rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.quiz-summary-mistakes {\n  margin: 20px 0;\n}\n.mistake-tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 8px;\n  justify-content: center;\n}\n.mistake-tag {\n  padding: 6px 12px;\n  background: rgba(190, 73, 73, 0.1);\n  border-radius: 20px;\n  font-size: 0.8rem;\n  color: #c0392b;\n}\n.quiz-actions {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n}\n.btn-outline {\n  padding: 10px 24px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n.btn-primary {\n  padding: 10px 24px;\n  border-radius: 12px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n\n/* Fix banner positioning */\n.banner {\n  position: fixed;\n  top: 80px;\n  left: 50%;\n  transform: translateX(-50%);\n  z-index: 1000;\n  min-width: min(560px, calc(100vw - 32px));\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px 14px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: var(--surface-strong);\n  box-shadow: var(--shadow-lg);\n  font-weight: 450;\n  animation: riseSoft 220ms ease-out;\n}\n.navbar {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  z-index: 100;\n  /* Higher than tools? Lower? Tools should be 60, navbar 100 */\n  background: var(--surface-strong);\n}\n\n/* Ensure main content doesn't go under navbar */\n.main.container {\n  padding-top: 80px;\n  /* Adjust to match navbar height + spacing */\n}\n\n/* Mobile adjustment */\n@media (max-width: 768px) {\n.banner {\n    top: calc(env(safe-area-inset-top, 0px) + 60px);\n    width: calc(100% - 32px);\n    min-width: auto;\n}\n.main.container {\n    padding-top: 70px;\n}\n}\n.banner-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.banner-action {\n  border: 0;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  padding: 9px 12px;\n  font-size: 0.78rem;\n  font-weight: 500;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n}\n.banner-x {\n  width: 36px;\n  height: 36px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n}\n\n/* Add this to your \\3c style> */\n.main.container {\n  padding-top: 20px;\n}\n\n/* If you have a navbar, add this */\n.app>.navbar+.main.container,\nbody>.navbar+.app .main.container {\n  padding-top: 80px;\n}\n\n/* Animations */\n@keyframes appFade {\n0% {\n    opacity: 0;\n    transform: translateY(4px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes railIn {\n0% {\n    opacity: 0;\n    transform: translateY(-8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes riseSoft {\n0% {\n    opacity: 0;\n    transform: translateY(8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n\n/* Responsive */\n@media (max-width: 768px) {\n.main {\n    padding: 16px 16px 100px;\n}\n.main.tools-open {\n    padding-right: 16px;\n}\n.tools {\n    left: 0;\n    right: 0;\n    width: 100%;\n}\n.session-rail-stats {\n    grid-template-columns: 1fr 1fr;\n}\n.hero-flow {\n    grid-template-columns: 1fr 1fr;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 8px);\n    justify-content: center;\n}\n.verse-font-controls {\n    gap: 2px;\n    padding: 2px 4px;\n}\n.verse-font-btn {\n    width: 20px;\n    height: 20px;\n}\n.verse-font-size-indicator {\n    min-width: 30px;\n    font-size: 9px;\n}\n}\n@media (max-width: 640px) {\n.quiz-grade-buttons {\n    flex-direction: column;\n}\n.quiz-actions {\n    flex-direction: column;\n}\n.hero-actions,\n  .empty-actions {\n    flex-direction: column;\n}\n.cta {\n    width: 100%;\n}\n}\n\n/* Dark theme overrides */\n[data-theme=\"dark\"] .tools {\n  color: var(--text);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(12, 11, 10, 0.96));\n  border-left-color: var(--border);\n}\n[data-theme=\"dark\"] .sheet-section {\n  border-color: var(--border);\n  background: var(--surface);\n}\n[data-theme=\"dark\"] .tools-top,\n[data-theme=\"dark\"] .tools-footer {\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.92));\n}\n[data-theme=\"dark\"] .tools-footer {\n  background: linear-gradient(to top, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.86), rgba(18, 15, 13, 0));\n}\n[data-theme=\"dark\"] .tools-tabs {\n  background: rgba(255, 255, 255, 0.035);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .tools-tabs button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-tabs button.active {\n  color: var(--text);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .tools-title,\n[data-theme=\"dark\"] .st-title,\n[data-theme=\"dark\"] .technique-copy label,\n[data-theme=\"dark\"] .settings-heading-copy h3,\n[data-theme=\"dark\"] .settings-row-copy label {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .tools-context,\n[data-theme=\"dark\"] .st-sub,\n[data-theme=\"dark\"] .technique-copy small,\n[data-theme=\"dark\"] .technique-control span,\n[data-theme=\"dark\"] .settings-heading-copy p,\n[data-theme=\"dark\"] .settings-row-copy small {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-x,\n[data-theme=\"dark\"] .st-chev,\n[data-theme=\"dark\"] .sheet-toggle,\n[data-theme=\"dark\"] .technique-row,\n[data-theme=\"dark\"] .radio,\n[data-theme=\"dark\"] .toggle-chip,\n[data-theme=\"dark\"] .segmented-control,\n[data-theme=\"dark\"] .technique-preview {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .sheet-toggle {\n  background: rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .st-ico {\n  color: var(--accent-strong);\n  border-color: rgba(239, 193, 141, 0.22);\n  background: rgba(239, 193, 141, 0.10);\n}\n[data-theme=\"dark\"] .segmented-control button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .segmented-control button.active,\n[data-theme=\"dark\"] .toggle-chip.active {\n  color: white;\n  border-color: rgba(239, 193, 141, 0.42);\n  background: rgba(239, 193, 141, 0.12);\n}\n[data-theme=\"dark\"] .tools-btn-soft {\n  color: var(--text-muted);\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .select,\n[data-theme=\"dark\"] .input {\n  color: var(--text);\n  border-color: var(--border);\n  background: rgba(255, 255, 255, 0.045);\n}\n[data-theme=\"dark\"] .switch {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n}\n[data-theme=\"dark\"] .verse-translation {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .verse-transliteration,\n[data-theme=\"dark\"] .workspace-fab-copy,\n[data-theme=\"dark\"] .workspace-fab-sub,\n[data-theme=\"dark\"] .settings-row-copy small,\n[data-theme=\"dark\"] .field-hint {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .workspace-fab,\n[data-theme=\"dark\"] .workspace-fab-sub span,\n[data-theme=\"dark\"] .workspace-fab-live-pill,\n[data-theme=\"dark\"] .settings-card,\n[data-theme=\"dark\"] .word-item:hover::after,\n[data-theme=\"dark\"] .word-item:focus::after {\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .workspace-fab {\n  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.46), 0 0 0 1px rgba(255, 236, 216, 0.12);\n}\n[data-theme=\"dark\"] .workspace-fab:hover {\n  box-shadow: 0 26px 64px rgba(0, 0, 0, 0.54), 0 0 0 1px rgba(239, 193, 141, 0.20);\n}\n[data-theme=\"dark\"] .settings-section {\n  background: rgba(24, 21, 19, 0.96);\n  border-color: var(--border);\n  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .settings-status {\n  background: rgba(255, 255, 255, 0.05);\n  border-color: rgba(255, 236, 216, 0.12);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .settings-icon {\n  background: rgba(255, 255, 255, 0.04);\n  border-color: rgba(255, 236, 216, 0.12);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .settings-card {\n  background: var(--surface-strong);\n  border-color: rgba(255, 236, 216, 0.10);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .settings-toggle {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 236, 216, 0.14);\n  color: var(--text);\n}\n[data-theme=\"dark\"] .settings-toggle.active {\n  background: rgba(239, 193, 141, 0.13);\n  border-color: rgba(239, 193, 141, 0.42);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .quiz-card {\n  background: rgba(18, 18, 18, 0.92);\n  border-color: rgba(255, 255, 255, 0.10);\n}\n\n/* Sepia theme overrides */\n[data-theme=\"sepia\"] .verse-translation {\n  color: #7a684a;\n}\n\n/* Planner & Analytics UI */\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(12, 10, 8, 0.62);\n  backdrop-filter: blur(8px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 9999;\n  padding: 20px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 250, 243, 0.92));\n  border-radius: 20px;\n  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42);\n  border: 1px solid rgba(255, 255, 255, 0.55);\n  display: flex;\n  flex-direction: column;\n  max-height: 90vh;\n  overflow: hidden;\n  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.resume-modal {\n  width: min(760px, 96vw);\n}\n.resume-modal .modal-header h2 {\n  font-size: clamp(1.25rem, 2.3vw, 1.75rem);\n}\n.resume-saved-at {\n  display: inline-block;\n  margin-top: 4px;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n}\n.resume-grid {\n  margin-top: 12px;\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 10px;\n}\n.resume-grid .pill {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 12px 14px;\n}\n@keyframes modalIn {\nfrom {\n    transform: translateY(10px);\n    opacity: 0.6;\n}\nto {\n    transform: translateY(0);\n    opacity: 1;\n}\n}\n@keyframes modalFadeIn {\nfrom {\n    opacity: 0;\n    transform: translateY(20px) scale(0.95);\n}\nto {\n    opacity: 1;\n    transform: translateY(0) scale(1);\n}\n}\n.modal-header {\n  padding: 20px 24px;\n  border-bottom: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 1.25rem;\n  font-weight: 700;\n}\n.modal-body {\n  padding: 24px;\n  overflow-y: auto;\n}\n.modal-footer {\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--bg-elevated);\n}\n.confirm-modal {\n  max-width: 460px;\n  width: 100%;\n}\n.confirm-copy {\n  color: var(--text-muted);\n  line-height: 1.65;\n}\n.btn-danger {\n  background: #b55041;\n}\n.tools-btn-danger {\n  opacity: 0.82;\n}\n.btn-icon {\n  background: none;\n  border: none;\n  font-size: 1.2rem;\n  color: var(--text-muted);\n  cursor: pointer;\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.btn-icon:hover {\n  background: var(--border);\n  color: var(--text);\n}\n.planner-modal {\n  max-width: 500px;\n  width: 100%;\n}\n.planner-field {\n  margin-bottom: 24px;\n}\n.planner-field label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.planner-select,\n.planner-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.planner-select:focus,\n.planner-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 2px var(--accent-light);\n}\n.verses-per-day-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.quantity-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.quantity-btn:hover:not(:disabled) {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.quantity-btn:disabled {\n  opacity: 0.4;\n  cursor: not-allowed;\n}\n.planner-stats-grid {\n  display: grid;\n  grid-template-columns: repeat(2, 1fr);\n  gap: 12px;\n  margin: 24px 0;\n}\n.planner-stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  transition: all 0.2s;\n}\n.progress-info {\n  display: flex;\n  justify-content: space-between;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.progress-bar-track {\n  height: 6px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-fill {\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.3s ease;\n}\n.modal-footer {\n  display: flex;\n  gap: 12px;\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.btn-secondary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.btn-secondary:hover {\n  background: var(--border);\n}\n.btn-primary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.9rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.btn-primary:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.field-hint {\n  display: block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 6px;\n}\n.pa-lbl {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.analytics-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin-top: 20px;\n}\n.analytics-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.78rem * var(--en-scale, 1));\n  line-height: 1.4;\n}\n.stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 20px;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  transition: transform 0.2s;\n}\n.stat-delta {\n  display: inline-flex;\n  align-items: center;\n  margin-left: 10px;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  font-size: 0.7rem;\n  color: var(--accent-strong);\n  font-weight: 700;\n  vertical-align: middle;\n}\n.stat-card:hover {\n  transform: translateY(-2px);\n  border-color: var(--accent);\n}\n.stat-card i {\n  font-size: 1.8rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.stat-value {\n  font-size: 1.5rem;\n  font-weight: 700;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.stat-label {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n}\n.stat-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.72rem * var(--en-scale, 1));\n  line-height: 1.35;\n}\n.mini-trend {\n  position: relative;\n  width: 80px;\n  height: 24px;\n  margin-top: 10px;\n}\n.mini-trend span {\n  position: absolute;\n  width: 8px;\n  border-radius: 999px;\n  background: linear-gradient(180deg, var(--accent), var(--accent-soft));\n  opacity: 0.9;\n}\n\n/* Home Dashboard UI */\n.home-dashboard {\n  max-width: 800px;\n  margin: 40px auto;\n  padding: 0 20px;\n  animation: modalFadeIn 0.4s ease-out;\n}\n.dashboard-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-end;\n  margin-bottom: 40px;\n  flex-wrap: wrap;\n  gap: 20px;\n}\n.welcome-text {\n  max-width: 500px;\n}\n.header-stats {\n  display: flex;\n  gap: 16px;\n  background: var(--surface);\n  padding: 12px 20px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.mini-stat {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.9rem;\n}\n.mini-stat strong {\n  color: var(--text);\n  font-size: 1rem;\n}\n.dashboard-actions {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));\n  gap: 20px;\n  margin-bottom: 40px;\n}\n.home-dashboard-minimal {\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  min-height: 160px;\n}\n.offcanvas {\n  position: fixed;\n  top: 0;\n  right: 0;\n  width: 380px;\n  height: 100%;\n  background: #fff;\n  z-index: 1000;\n  transform: translateX(100%);\n  transition: transform 0.3s ease;\n  display: flex;\n  flex-direction: column;\n  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);\n}\n.offcanvas-launcher-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.offcanvas-launcher-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-start-card {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto auto;\n  align-items: center;\n  gap: 18px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.setup-start-copy {\n  min-width: 0;\n}\n.setup-kicker {\n  display: inline-flex;\n  margin-bottom: 6px;\n  color: var(--accent);\n  font-size: 0.72rem;\n  font-weight: 800;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n}\n.setup-start-copy h2 {\n  margin: 0 0 6px;\n  color: var(--text);\n  font-size: clamp(1.2rem, 2vw, 1.65rem);\n  line-height: 1.1;\n}\n.setup-start-copy p {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-review-hint {\n  margin-top: 10px;\n  padding: 10px 12px;\n  border-radius: 12px;\n  background: rgba(184, 130, 78, 0.10);\n  border: 1px solid rgba(184, 130, 78, 0.18);\n  color: var(--accent);\n  font-weight: 700;\n}\n.setup-mode-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(112px, 1fr));\n  gap: 10px;\n}\n.setup-mode-card {\n  min-height: 86px;\n  padding: 12px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: var(--surface);\n  color: var(--text);\n  cursor: pointer;\n  display: grid;\n  justify-items: center;\n  align-content: center;\n  gap: 4px;\n  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;\n}\n.setup-mode-card:hover,\n.setup-mode-card.active {\n  border-color: var(--accent);\n  box-shadow: var(--shadow-sm);\n  transform: translateY(-1px);\n}\n.setup-mode-card i {\n  color: var(--accent);\n  font-size: 1.2rem;\n}\n.setup-mode-card span {\n  font-weight: 800;\n}\n.setup-mode-card small {\n  color: var(--text-muted);\n  font-size: 0.78rem;\n}\n.setup-primary {\n  min-height: 48px;\n  white-space: nowrap;\n}\n.setup-optional-panel,\n.session-tools-panel {\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.68);\n}\n.setup-optional-panel summary,\n.session-tools-panel summary {\n  cursor: pointer;\n  list-style: none;\n  padding: 12px 14px;\n  font-weight: 700;\n  color: var(--text);\n}\n.setup-optional-panel summary::-webkit-details-marker,\n.session-tools-panel summary::-webkit-details-marker {\n  display: none;\n}\n.setup-optional-grid,\n.session-tools-grid {\n  display: grid;\n  gap: 12px;\n  padding: 0 14px 14px;\n}\n.setup-optional-grid {\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.session-tools-grid {\n  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));\n}\n.field-inline-toggle {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.toggle-chip {\n  min-height: 42px;\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  background: var(--surface);\n  color: var(--text);\n  font-family: inherit;\n  font-weight: 540;\n}\n.toggle-chip.active {\n  border-color: var(--accent);\n  color: white;\n}\n.continue-session-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 16px 18px;\n  margin-bottom: 18px;\n  border: 1px solid var(--accent-soft);\n  border-radius: 18px;\n  background: linear-gradient(135deg, var(--surface), var(--accent-light));\n  box-shadow: var(--shadow-sm);\n  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;\n}\n.continue-session-card:hover {\n  transform: translateY(-2px);\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent);\n}\n.continue-session-copy {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.continue-session-actions {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.continue-session-kicker {\n  font-size: 0.72rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--accent);\n}\n.continue-session-copy small {\n  color: var(--text-muted);\n}\n.continue-session-btn {\n  min-height: 44px;\n  white-space: nowrap;\n}\n.continue-session-dismiss {\n  min-width: 44px;\n  padding-inline: 0;\n  justify-content: center;\n}\n.resume-action {\n  background: linear-gradient(145deg, rgba(154, 103, 56, 0.12), rgba(255, 255, 255, 0.94));\n  border-color: var(--accent-soft);\n}\n.resume-action .action-icon {\n  background: rgba(154, 103, 56, 0.15);\n  color: var(--accent);\n}\n.resume-action .action-arrow {\n  color: var(--accent);\n}\n.action-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n  display: flex;\n  flex-direction: column;\n  position: relative;\n  overflow: hidden;\n}\n.action-card:hover {\n  transform: translateY(-4px);\n  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);\n  border-color: var(--accent);\n}\n.action-card.primary-action {\n  background: linear-gradient(145deg, var(--accent), var(--accent-dark));\n  color: white;\n  border: none;\n}\n.action-card.primary-action .action-icon {\n  background: rgba(255, 255, 255, 0.2);\n  color: white;\n}\n.action-card.primary-action h3,\n.action-card.primary-action p,\n.action-card.primary-action .action-arrow {\n  color: white;\n}\n.action-icon {\n  width: 48px;\n  height: 48px;\n  background: var(--bg-body);\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.5rem;\n  color: var(--accent);\n  margin-bottom: 20px;\n}\n.action-content h3 {\n  font-size: 1.15rem;\n  margin: 0 0 8px 0;\n  color: var(--text);\n}\n.action-content p {\n  font-size: 0.9rem;\n  color: var(--text-muted);\n  margin: 0;\n  line-height: 1.4;\n}\n.action-arrow {\n  position: absolute;\n  bottom: 24px;\n  right: 24px;\n  font-size: 1.2rem;\n  color: var(--accent);\n  opacity: 0;\n  transform: translateX(-10px);\n  transition: all 0.2s ease;\n}\n.action-card:hover .action-arrow {\n  opacity: 1;\n  transform: translateX(0);\n}\n.dashboard-recent {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n}\n.recent-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.recent-header h3 {\n  margin: 0;\n  font-size: 1.1rem;\n}\n.btn-ghost {\n  background: none;\n  border: none;\n  color: var(--accent);\n  font-weight: 500;\n  cursor: pointer;\n  padding: 6px 12px;\n  border-radius: 8px;\n  transition: background 0.2s;\n}\n.btn-ghost:hover {\n  background: var(--accent-light);\n}\n.recent-stats {\n  display: flex;\n  gap: 32px;\n  flex-wrap: wrap;\n}\n.r-stat {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.r-stat span {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.r-stat strong {\n  font-size: 1.4rem;\n  color: var(--text);\n}\n@media (max-width: 768px) {\n.quick-tools-grid {\n    grid-template-columns: 1fr;\n    gap: 8px;\n    padding: 12px;\n}\n.workspace-shell {\n    width: 100%;\n    margin-bottom: 14px;\n}\n.workspace-shell {\n    padding: 14px;\n}\n.workspace-shell-head {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 12px;\n}\n.workspace-shell-actions {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n}\n.workspace-shell-title-row {\n    align-items: flex-start;\n}\n.workspace-shell-phase {\n    min-height: 26px;\n}\n.workspace-shell-meta {\n    gap: 6px;\n}\n.workspace-shell-chaining {\n    gap: 6px;\n}\n.resume-feedback-row {\n    font-size: 0.74rem;\n}\n.resume-grid {\n    grid-template-columns: 1fr;\n}\n.workspace-fab {\n    top: 8px;\n    display: grid;\n    grid-template-columns: minmax(0, 1fr);\n    gap: 8px;\n    padding: 9px;\n    margin: 8px 0 6px;\n    border-radius: 14px;\n}\n.workspace-fab-meta {\n    min-width: 0;\n}\n.workspace-fab-kicker {\n    font-size: 0.64rem;\n}\n.workspace-fab-title {\n    font-size: 0.9rem;\n}\n.workspace-fab-sub {\n    font-size: 0.72rem;\n    gap: 5px;\n}\n.workspace-fab-sub span {\n    flex: 1 1 auto;\n    justify-content: center;\n    min-width: min(128px, 100%);\n}\n.workspace-fab-copy {\n    font-size: 0.78rem;\n}\n.workspace-fab-live {\n    gap: 6px;\n}\n.workspace-fab-live-pill {\n    flex: 1 1 0;\n    min-width: 0;\n    justify-content: center;\n}\n.workspace-fab-actions {\n    display: grid;\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n    gap: 8px;\n    width: 100%;\n}\n.fab-btn {\n    width: 100%;\n    min-width: 0;\n    justify-content: center;\n    padding: 8px 10px;\n    font-size: 0.82rem;\n    min-height: 44px;\n}\n.main-nav-btn,\n  .main-card-primary {\n    width: 100%;\n    min-height: 44px;\n}\n.settings-heading {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 10px;\n    padding-bottom: 12px;\n    margin-bottom: 14px;\n}\n.settings-status {\n    justify-self: start;\n}\n.settings-card-grid,\n  .settings-display-grid {\n    grid-template-columns: minmax(0, 1fr);\n}\n.settings-card-toggle,\n  .settings-card-range {\n    min-height: 0;\n    padding: 13px;\n    gap: 12px;\n}\n.settings-toggle {\n    min-height: 38px;\n}\n.settings-range-wrap {\n    gap: 10px;\n}\n.settings-apply-section {\n    padding: 12px;\n}\n.settings-apply-primary {\n    min-height: 46px;\n    border-radius: 12px;\n    font-size: 0.88rem;\n}\n.setup-start-card {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n    padding: 16px;\n}\n.setup-mode-grid {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.setup-primary {\n    width: 100%;\n    justify-content: center;\n}\n.continue-session-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.dashboard-actions {\n    grid-template-columns: 1fr;\n    gap: 14px;\n    margin-bottom: 20px;\n}\n.offcanvas-launcher-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.action-card {\n    padding: 18px;\n}\n.action-icon {\n    margin-bottom: 14px;\n}\n.continue-session-btn,\n  .btn-primary,\n  .btn-secondary,\n  .tools-btn,\n  .player-btn,\n  .toolbar-chip,\n  .toggle-chip {\n    min-height: 44px;\n}\n.settings-toggle {\n    min-height: 34px;\n}\n.inline-setting-row {\n    align-items: stretch;\n}\n.input-compact,\n  .inline-setting-pill {\n    width: 100%;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.technique-row,\n  .technique-row-main,\n  .technique-control {\n    align-items: stretch;\n    flex-direction: column;\n}\n.technique-toggle,\n  .segmented-control {\n    width: 100%;\n}\n.player-bar {\n    width: calc(100% - 24px);\n    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);\n    padding: 12px 14px;\n}\n.player-bar.collapsed {\n    transform: translateX(-50%);\n}\n.player-main {\n    grid-template-columns: minmax(88px, 0.75fr) auto minmax(0, 1fr) minmax(0, 1fr) auto;\n    align-items: center;\n    gap: 8px;\n}\n.player-info {\n    flex: 0 1 120px;\n    min-width: 0;\n}\n.player-chapter {\n    font-size: 0.78rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-verse {\n    font-size: 0.72rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-controls {\n    justify-content: center;\n    gap: 4px;\n}\n.player-progress-wrap {\n    order: 0;\n    min-width: 0;\n    gap: 6px;\n}\n.player-loop-controls {\n    order: 3;\n    width: 100%;\n    grid-column: 1 / -2;\n    justify-content: space-between;\n}\n.player-loop-group {\n    width: 100%;\n    justify-content: space-between;\n}\n.player-speed-controls {\n    display: none;\n}\n.analytics-grid {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n}\n.session-rail-actions {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.rail-btn {\n    flex: initial;\n    width: 100%;\n    justify-content: center;\n}\n.rail-btn-primary {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.toolbar-chip {\n    flex: initial;\n    width: 100%;\n}\n.font-dropdown {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 4px);\n    justify-content: center;\n    min-width: 0;\n}\n.font-dropdown {\n    width: 100%;\n}\n.font-dropdown-trigger {\n    width: 100%;\n    justify-content: space-between;\n}\n.verse-card {\n    padding: 16px;\n    border-radius: 18px;\n}\n.verse-header {\n    flex-direction: column;\n    align-items: stretch;\n    gap: 12px;\n}\n.verse-badges,\n  .verse-actions {\n    flex-wrap: wrap;\n}\n.verse-actions {\n    justify-content: space-between;\n}\n.verse-font-controls {\n    margin-right: 0;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.modal-content,\n  .confirm-modal,\n  .planner-modal {\n    width: 100%;\n    max-width: 100%;\n    border-radius: 18px;\n}\n.modal-header,\n  .modal-body,\n  .modal-footer {\n    padding-left: 16px;\n    padding-right: 16px;\n}\n.planner-stats-grid {\n    grid-template-columns: 1fr;\n}\n.tools {\n    width: 100vw;\n    max-width: 100vw;\n}\n.tools-top,\n  .tools-body,\n  .tools-footer {\n    padding-left: 14px;\n    padding-right: 14px;\n}\n.tools-tabs {\n    overflow-x: hidden;\n    display: grid;\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n    gap: 8px;\n}\n.tools-tabs button {\n    width: 100%;\n    min-width: 0;\n}\n.reading-aid-grid,\n  .session-tools-grid {\n    grid-template-columns: 1fr;\n}\n.verse-card,\n  .tools,\n  .sheet,\n  .sheet-content {\n    overflow-x: hidden;\n}\n}\n@media (min-width: 769px) and (max-width: 1024px) {\n.dashboard-actions {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n}\n.session-rail-actions {\n    flex-wrap: wrap;\n}\n.reading-toolbar {\n    align-items: flex-start;\n}\n.reading-toolbar-group:first-child {\n    flex: 1 1 100%;\n}\n.toolbar-chip {\n    flex: 0 1 auto;\n}\n.player-bar {\n    width: calc(100vw - 40px);\n}\n.player-main {\n    grid-template-columns: minmax(132px, 0.9fr) auto minmax(160px, 0.9fr) minmax(150px, 1fr) auto;\n    gap: 12px;\n}\n.player-progress-wrap {\n    min-width: 0;\n}\n}\n@media (max-width: 480px) {\n.verse-header {\n    flex-wrap: wrap;\n}\n.verse-badges {\n    flex-wrap: wrap;\n}\n.verse-actions {\n    margin-top: 8px;\n    width: 100%;\n    justify-content: flex-start;\n}\n.session-pill {\n    white-space: normal;\n    text-align: center;\n    justify-content: center;\n}\n.rail-btn,\n  .toolbar-chip {\n    flex: 1 1 100%;\n}\n.player-time {\n    min-width: auto;\n    font-size: 0.7rem;\n}\n.player-progress-wrap {\n    gap: 8px;\n}\n.verse-number,\n  .verse-status-badge,\n  .verse-status-subtle {\n    width: 100%;\n    justify-content: center;\n    text-align: center;\n}\n}\n.verse-status-badge-review {\n  border-color: rgba(183, 28, 28, 0.24);\n  color: #9f1f1f;\n  background: rgba(183, 28, 28, 0.08);\n}\n.verse-card.feedback-mastered {\n  border-left: 4px solid #43a047;\n}\n.verse-card.feedback-weak {\n  border-left: 4px solid #e3a008;\n}\n.verse-card.feedback-repeat {\n  border-left: 4px solid #c62828;\n}\n.main.flow-recall .verse-card.active .verse-arabic {\n  color: transparent;\n  text-shadow: 0 0 22px rgba(232, 237, 247, 0.55);\n}\n.main.flow-practice .verse-card.active .verse-arabic {\n  opacity: 0.45;\n}\n.main.flow-recall .verse-card.active .verse-arabic .tajweed-mark,\n.main.flow-recall .verse-card.active .verse-arabic word,\n.main.flow-recall .verse-card.active .verse-arabic .wbw-word {\n  color: transparent !important;\n  background: transparent !important;\n  box-shadow: none !important;\n}\n.workspace-quick-controls {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n  padding: 0 10px 10px;\n}\n.session-quickstart-card {\n  display: flex;\n  gap: 16px;\n  justify-content: space-between;\n  align-items: center;\n  padding: 16px;\n  border-radius: 18px;\n  background: rgba(17, 24, 39, 0.04);\n  border: 1px solid rgba(17, 24, 39, 0.08);\n}\n.session-quickstart-copy {\n  margin: 6px 0 0;\n  color: #5f6b7a;\n}\n.session-quickstart-actions {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-end;\n  gap: 8px;\n}\n.preset-btn-primary {\n  background: #0f766e;\n  color: #fff;\n}\n.presets-grid-wide {\n  width: 100%;\n}\n@media (max-width: 768px) {\n.session-quickstart-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.session-quickstart-actions {\n    align-items: stretch;\n}\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n/* Range control styling - consistent with other sections */\n.range-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin-top: 8px;\n}\n.technique-range {\n  flex: 1;\n  height: 5px;\n  border-radius: 3px;\n  background: var(--border);\n  -webkit-appearance: none;\n  cursor: pointer;\n}\n.technique-range:focus {\n  outline: none;\n}\n.technique-range::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 18px;\n  height: 18px;\n  border-radius: 50%;\n  background: var(--accent);\n  cursor: pointer;\n  border: 2px solid var(--surface);\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);\n}\n.technique-range::-webkit-slider-thumb:hover {\n  transform: scale(1.15);\n}\n\n/* Field header with value pill */\n.field-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  margin-bottom: 8px;\n}\n.field-header label {\n  margin-bottom: 0;\n  font-weight: 600;\n}\n.range-value-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 52px;\n  padding: 4px 12px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n\n/* Slider markers */\n.slider-markers {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  padding: 0 4px;\n}\n.slider-markers span {\n  font-size: 10px;\n  color: var(--text-muted);\n}\n\n/* Gap options as radio cards */\n.gap-options {\n  display: grid !important;\n  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));\n  gap: 8px;\n}\n.gap-options .radio {\n  flex-direction: column;\n  text-align: center;\n  gap: 4px;\n  padding: 10px 8px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.gap-options .radio.active {\n  background: var(--accent);\n  border-color: var(--accent);\n  color: white;\n}\n.gap-options .radio.active .option-label,\n.gap-options .radio.active .option-desc {\n  color: white;\n}\n.gap-options .radio input {\n  display: none;\n}\n.option-label {\n  display: block;\n  font-weight: 600;\n  font-size: 0.85rem;\n}\n.option-desc {\n  display: block;\n  font-size: 0.65rem;\n  opacity: 0.7;\n}\n\n/* Custom gap control */\n.custom-gap-control {\n  margin-top: 16px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n}\n.inline-setting-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 60px;\n  padding: 6px 12px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.mt-2 {\n  margin-top: 12px;\n}\n/* Fix offcanvas positioning - add to your existing styles */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  width: min(var(--tools-width, 440px), 92vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.98), rgba(247, 240, 231, 0.96));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(16px);\n  transform: translateX(100%);\n  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);\n  z-index: 1000;\n  display: flex;\n  flex-direction: column;\n  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.15);\n  will-change: transform;\n}\n.tools.open {\n  transform: translateX(0);\n}\n\n/* Fix backdrop */\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.5);\n  backdrop-filter: blur(4px);\n  z-index: 999;\n  animation: fadeIn 0.2s ease;\n}\n\n/* Fix tools header spacing */\n.tools-top {\n  padding: 20px 20px 16px;\n  border-bottom: 1px solid var(--border);\n  background: inherit;\n  flex-shrink: 0;\n}\n\n/* Fix tools body scrolling */\n.tools-body {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px;\n  scroll-behavior: smooth;\n  -webkit-overflow-scrolling: touch;\n}\n\n/* Fix tools footer */\n.tools-footer {\n  position: relative;\n  padding: 16px 20px;\n  border-top: 1px solid var(--border);\n  background: inherit;\n  flex-shrink: 0;\n}\n\n/* Fix tab buttons */\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 16px;\n  background: rgba(0, 0, 0, 0.04);\n  border-radius: 14px;\n  padding: 6px;\n}\n.tools-tabs button {\n  flex: 1;\n  padding: 10px 12px;\n  border-radius: 10px;\n  background: transparent;\n  border: none;\n  font-size: 0.85rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.tools-tabs button.active {\n  background: var(--surface-strong);\n  color: var(--text);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.tools-tabs button:hover:not(.active) {\n  background: rgba(0, 0, 0, 0.04);\n  color: var(--text);\n}\n\n/* Fix button styles */\n.tools-btn {\n  padding: 12px 20px;\n  border-radius: 12px;\n  font-weight: 600;\n  font-size: 0.9rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  border: none;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.tools-btn-soft {\n  background: rgba(0, 0, 0, 0.05);\n  color: var(--text);\n}\n.tools-btn-soft:hover {\n  background: rgba(0, 0, 0, 0.08);\n  transform: translateY(-1px);\n}\n.tools-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.tools-btn-primary:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.4);\n}\n\n/* Fix close button */\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n}\n.tools-x:hover {\n  background: var(--accent-light);\n  transform: rotate(90deg);\n}\n\n/* Mobile optimizations */\n@media (max-width: 768px) {\n.tools {\n    width: 100vw;\n    max-width: 100vw;\n}\n.tools-tabs button span {\n    display: none;\n}\n.tools-tabs button i {\n    font-size: 1.2rem;\n}\n.tools-tabs button {\n    padding: 12px;\n}\n.tools-body {\n    padding: 16px;\n}\n}\n\n/* Animation for backdrop */\n@keyframes fadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n:root {\n  --bg: #f3eee6;\n  --surface: rgba(255, 250, 243, 0.88);\n  --surface-strong: rgba(255, 255, 255, 0.92);\n  --border: rgba(78, 58, 38, 0.10);\n  --text: #1f1a17;\n  --text-muted: #6c6258;\n  --accent: #9a6738;\n  --accent-strong: #6e4726;\n  --accent-soft: #d8c1a8;\n  --accent-light: rgba(154, 103, 56, 0.10);\n  --accent-wash: rgba(228, 211, 194, 0.42);\n  --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);\n  --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);\n  --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);\n  --radius: 16px;\n  --navbar-offset: 56px;\n  --tools-width: 440px;\n  --tools-footer-h: 78px;\n  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;\n  --font-ui: \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n[data-theme=\"dark\"] {\n  --bg: #14110f;\n  --surface: rgba(31, 27, 24, 0.92);\n  --surface-strong: rgba(43, 37, 32, 0.96);\n  --border: rgba(255, 236, 216, 0.16);\n  --text: #f7ebdf;\n  --text-muted: #d1c2b3;\n  --accent: #d0a06b;\n  --accent-strong: #efc18d;\n  --accent-soft: #5f4530;\n  --accent-light: rgba(208, 160, 107, 0.14);\n  --accent-wash: rgba(208, 160, 107, 0.08);\n  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);\n  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);\n  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);\n}\n[data-theme=\"sepia\"] {\n  --bg: #efe2cb;\n  --surface: rgba(250, 241, 227, 0.88);\n  --surface-strong: rgba(255, 248, 237, 0.94);\n  --text: #352516;\n  --text-muted: #75624f;\n  --accent: #b8824e;\n  --accent-strong: #8f6033;\n  --accent-soft: #dcc3a6;\n  --accent-light: rgba(184, 130, 78, 0.12);\n  --accent-wash: rgba(221, 194, 162, 0.35);\n}\n[v-cloak] {\n  display: none !important;\n}\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\n.session-setup {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n}\n.setting-section {\n  background: #fff;\n  border: 1px solid #e5e7eb;\n  border-radius: 12px;\n  overflow: hidden;\n}\n.section-header {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 16px 20px;\n  background: #f9fafb;\n  border-bottom: 1px solid #e5e7eb;\n  font-weight: 500;\n  color: #374151;\n}\n.section-header i {\n  font-size: 18px;\n  color: #6b7280;\n}\n.section-content {\n  padding: 20px;\n}\n\n/* Slider styles */\n.slider-wrapper {\n  width: 100%;\n}\n.form-range {\n  width: 100%;\n  height: 4px;\n  padding: 0;\n  background: #e5e7eb;\n  border-radius: 4px;\n  -webkit-appearance: none;\n}\n.form-range:focus {\n  outline: none;\n}\n.form-range::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 16px;\n  height: 16px;\n  background: #2c7a4d;\n  border-radius: 50%;\n  cursor: pointer;\n  border: none;\n  box-shadow: 0 1px 3px rgba(0,0,0,0.1);\n}\n.form-range::-webkit-slider-thumb:hover {\n  transform: scale(1.15);\n}\n.slider-labels {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  padding: 0 4px;\n  font-size: 11px;\n  color: #9ca3af;\n}\n.repetition-value {\n  margin-top: 12px;\n  font-size: 13px;\n  color: #6b7280;\n}\n.repetition-value strong {\n  color: #2c7a4d;\n  font-weight: 600;\n}\n\n/* Select styles */\n.form-select {\n  width: 100%;\n  padding: 8px 12px;\n  border: 1px solid #e5e7eb;\n  border-radius: 8px;\n  font-size: 14px;\n  color: #374151;\n  background-color: #fff;\n  cursor: pointer;\n}\n.form-select:focus {\n  outline: none;\n  border-color: #2c7a4d;\n  box-shadow: 0 0 0 2px rgba(44, 122, 77, 0.1);\n}\n\n/* Input group */\n.input-group {\n  display: flex;\n  align-items: stretch;\n}\n.form-control {\n  flex: 1;\n  padding: 8px 12px;\n  border: 1px solid #e5e7eb;\n  border-right: none;\n  border-radius: 8px 0 0 8px;\n  font-size: 14px;\n}\n.form-control:focus {\n  outline: none;\n  border-color: #2c7a4d;\n}\n.input-group-text {\n  padding: 8px 12px;\n  background: #f9fafb;\n  border: 1px solid #e5e7eb;\n  border-left: none;\n  border-radius: 0 8px 8px 0;\n  font-size: 14px;\n  color: #6b7280;\n}\n\n/* Hint */\n.setting-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  margin-top: 12px;\n  padding: 10px 12px;\n  background: #f9fafb;\n  border-radius: 8px;\n  font-size: 12px;\n  color: #6b7280;\n}\n.setting-hint i {\n  font-size: 14px;\n  color: #9ca3af;\n}\n.mt-2 {\n  margin-top: 12px;\n}\n.session-setup-tab {\n  padding: 20px;\n  max-width: 600px;\n}\n.setting-group {\n  margin-bottom: 24px;\n  padding: 16px;\n  background: #f5f5f5;\n  border-radius: 8px;\n}\n.section-label {\n  font-weight: 600;\n  font-size: 14px;\n  margin-bottom: 12px;\n  display: block;\n  color: #333;\n}\n\n/* Feature 1: Repetitions Control */\n.repetition-control {\n  margin-top: 8px;\n}\n.slider-container {\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  margin-bottom: 8px;\n}\n.repetition-slider {\n  flex: 1;\n  height: 4px;\n  border-radius: 2px;\n  background: #ddd;\n  outline: none;\n  -webkit-appearance: none;\n}\n.repetition-slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 16px;\n  height: 16px;\n  border-radius: 50%;\n  background: #2c7a4d;\n  cursor: pointer;\n}\n.slider-value {\n  min-width: 60px;\n  text-align: center;\n}\n.slider-value .value {\n  font-size: 18px;\n  font-weight: 600;\n  color: #2c7a4d;\n}\n.slider-value .unit {\n  font-size: 14px;\n  color: #666;\n  margin-left: 4px;\n}\n\n/* Techniques Grid */\n.techniques-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));\n  gap: 12px;\n}\n.technique-checkbox {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  cursor: pointer;\n}\n\n/* Feature 2: Audio Settings */\n.audio-settings {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.setting-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.setting-item label {\n  font-size: 14px;\n  color: #555;\n  min-width: 120px;\n}\n.setting-item select,\n.setting-item input[type=\"number\"] {\n  padding: 6px 12px;\n  border: 1px solid #ddd;\n  border-radius: 4px;\n  font-size: 14px;\n}\n.setting-item input[type=\"checkbox\"] {\n  width: 18px;\n  height: 18px;\n  cursor: pointer;\n}\n.setting-hint {\n  font-size: 12px;\n  color: #888;\n  margin-top: 8px;\n  font-style: italic;\n}\n\n/* Responsive */\n@media (max-width: 480px) {\n.setting-item {\n    flex-direction: column;\n    align-items: flex-start;\n}\n.setting-item label {\n    min-width: auto;\n}\n}\n.session-setup {\n  padding: 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  max-width: 500px;\n  margin: 0 auto;\n}\n\n/* Setting Card */\n.setting-card {\n  background: white;\n  border-radius: 20px;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);\n  overflow: hidden;\n  transition: all 0.2s ease;\n}\n.card-header {\n  padding: 20px 20px 0 20px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.card-icon {\n  font-size: 24px;\n}\n.card-title {\n  font-size: 18px;\n  font-weight: 600;\n  color: #1a1a1a;\n  margin: 0;\n}\n.card-content {\n  padding: 16px 20px 20px 20px;\n}\n\n/* Repetitions Control */\n.repetition-control {\n  width: 100%;\n}\n.repetition-stats {\n  text-align: center;\n  margin-bottom: 20px;\n}\n.repetition-value {\n  font-size: 48px;\n  font-weight: 700;\n  color: #2c7a4d;\n  line-height: 1;\n}\n.repetition-unit {\n  font-size: 14px;\n  color: #666;\n  margin-left: 8px;\n}\n.repetition-slider {\n  width: 100%;\n  height: 6px;\n  border-radius: 3px;\n  background: linear-gradient(to right, #2c7a4d 0%, #2c7a4d 0%, #e5e7eb 0%, #e5e7eb 100%);\n  outline: none;\n  -webkit-appearance: none;\n  cursor: pointer;\n}\n.repetition-slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 20px;\n  height: 20px;\n  border-radius: 50%;\n  background: #2c7a4d;\n  box-shadow: 0 2px 6px rgba(44, 122, 77, 0.3);\n  cursor: pointer;\n  border: 2px solid white;\n}\n.repetition-slider::-webkit-slider-thumb:hover {\n  transform: scale(1.15);\n}\n.repetition-markers {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  padding: 0 4px;\n}\n.repetition-markers span {\n  font-size: 11px;\n  color: #999;\n}\n.setting-hint {\n  font-size: 13px;\n  color: #888;\n  margin-top: 16px;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  background: #f9fafb;\n  padding: 10px 12px;\n  border-radius: 12px;\n}\n.hint-icon {\n  font-size: 14px;\n}\n\n/* Gap Options */\n.gap-options {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));\n  gap: 10px;\n  margin-bottom: 20px;\n}\n.gap-option {\n  background: #f9fafb;\n  border: 1.5px solid #e5e7eb;\n  border-radius: 12px;\n  padding: 12px 8px;\n  text-align: center;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.gap-option:hover {\n  background: #f3f4f6;\n  border-color: #d1d5db;\n  transform: translateY(-1px);\n}\n.gap-option.active {\n  background: #2c7a4d;\n  border-color: #2c7a4d;\n  color: white;\n}\n.option-label {\n  display: block;\n  font-weight: 600;\n  font-size: 15px;\n  margin-bottom: 4px;\n}\n.option-desc {\n  display: block;\n  font-size: 11px;\n  opacity: 0.7;\n}\n.gap-option.active .option-label,\n.gap-option.active .option-desc {\n  color: white;\n}\n\n/* Custom Gap */\n.custom-gap {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid #e5e7eb;\n}\n.custom-slider {\n  width: 100%;\n  height: 6px;\n  border-radius: 3px;\n  background: #e5e7eb;\n  outline: none;\n  -webkit-appearance: none;\n  cursor: pointer;\n}\n.custom-slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 18px;\n  height: 18px;\n  border-radius: 50%;\n  background: #2c7a4d;\n  cursor: pointer;\n  border: 2px solid white;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);\n}\n.custom-gap-value {\n  text-align: center;\n  margin-top: 12px;\n}\n.custom-gap-value .value {\n  font-size: 28px;\n  font-weight: 600;\n  color: #2c7a4d;\n}\n.custom-gap-value .unit {\n  font-size: 14px;\n  color: #666;\n  margin-left: 6px;\n}\n\n/* Responsive */\n@media (max-width: 480px) {\n.session-setup {\n    padding: 16px;\n}\n.gap-options {\n    grid-template-columns: repeat(3, 1fr);\n}\n.repetition-value {\n    font-size: 40px;\n}\n}\n\n/* Enhanced Save Modal Styles */\n.save-name-modal {\n  max-width: 520px;\n  width: 100%;\n  animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.modal-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 16px;\n  padding: 24px 24px 20px;\n  border-bottom: 1px solid var(--border);\n  background: linear-gradient(135deg, var(--surface), var(--surface-strong));\n}\n.modal-header-icon {\n  width: 48px;\n  height: 48px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-radius: 14px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.modal-header-icon i {\n  font-size: 1.5rem;\n  color: white;\n}\n.modal-header-text {\n  flex: 1;\n}\n.modal-header-text h2 {\n  margin: 0 0 4px 0;\n  font-size: 1.2rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.modal-header-text p {\n  margin: 0;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.modal-close-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n  flex-shrink: 0;\n}\n.modal-close-btn:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n  transform: rotate(90deg);\n}\n\n/* Session Preview Card */\n.session-preview-card {\n  background: linear-gradient(135deg, var(--accent-light), var(--accent-wash));\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  margin-bottom: 24px;\n  display: flex;\n  flex-wrap: wrap;\n  align-items: center;\n  gap: 16px;\n}\n.preview-surah,\n.preview-range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  background: var(--surface);\n  border-radius: 10px;\n  font-size: 0.85rem;\n  font-weight: 500;\n  color: var(--text);\n}\n.preview-surah i,\n.preview-range i {\n  color: var(--accent);\n  font-size: 0.9rem;\n}\n.preview-stats {\n  display: flex;\n  gap: 12px;\n  margin-left: auto;\n}\n.preview-stat {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.preview-stat i {\n  font-size: 0.7rem;\n  color: var(--accent);\n}\n\n/* Name Input Group */\n.name-input-group {\n  margin-bottom: 20px;\n}\n.name-input-group label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.name-input-group label i {\n  color: var(--accent);\n  font-size: 0.9rem;\n}\n.name-input {\n  width: 100%;\n  padding: 14px 16px;\n  border-radius: 12px;\n  border: 2px solid var(--border);\n  background: var(--surface);\n  font-size: 0.95rem;\n  color: var(--text);\n  transition: all 0.2s;\n}\n.name-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 3px var(--accent-light);\n}\n.name-input.error {\n  border-color: #dc3545;\n}\n.input-hint {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 6px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.char-count {\n  font-family: monospace;\n}\n.error-message {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  margin-top: 8px;\n  padding: 8px 12px;\n  background: rgba(220, 53, 69, 0.1);\n  border-radius: 8px;\n  font-size: 0.75rem;\n  color: #dc3545;\n}\n.error-message i {\n  font-size: 0.8rem;\n}\n\n/* Quick Suggestions */\n.quick-suggestions {\n  margin-bottom: 20px;\n}\n.suggestions-label {\n  display: block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-bottom: 10px;\n  font-weight: 500;\n}\n.suggestion-chips {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.suggestion-chip {\n  padding: 6px 14px;\n  border-radius: 20px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.75rem;\n  color: var(--text);\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.suggestion-chip:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n  transform: translateY(-1px);\n}\n\n/* Info Note */\n.info-note {\n  display: flex;\n  gap: 10px;\n  padding: 12px 14px;\n  background: rgba(46, 125, 50, 0.08);\n  border-radius: 12px;\n  border: 1px solid rgba(46, 125, 50, 0.12);\n}\n.info-note i {\n  color: #2e7d32;\n  font-size: 1rem;\n  flex-shrink: 0;\n  margin-top: 2px;\n}\n.info-text {\n  flex: 1;\n}\n.info-text strong {\n  display: block;\n  font-size: 0.7rem;\n  color: #2e7d32;\n  margin-bottom: 4px;\n}\n.info-text span {\n  display: inline-block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-right: 8px;\n}\n\n/* Modal Footer */\n.modal-footer {\n  display: flex;\n  gap: 12px;\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.btn-secondary,\n.btn-primary {\n  flex: 1;\n  padding: 12px 16px;\n  border-radius: 12px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.btn-secondary {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  color: var(--text);\n}\n.btn-secondary:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.4);\n}\n.btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n  transform: none;\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .session-preview-card {\n  background: rgba(208, 160, 107, 0.1);\n}\n[data-theme=\"dark\"] .info-note {\n  background: rgba(76, 175, 80, 0.1);\n  border-color: rgba(76, 175, 80, 0.2);\n}\n[data-theme=\"dark\"] .info-note i {\n  color: #81c784;\n}\n[data-theme=\"dark\"] .info-text strong {\n  color: #81c784;\n}\n\n/* Responsive */\n@media (max-width: 560px) {\n.session-preview-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.preview-stats {\n    margin-left: 0;\n    justify-content: space-between;\n}\n.modal-header {\n    padding: 20px;\n}\n.modal-footer {\n    padding: 16px 20px;\n    flex-direction: column;\n}\n.suggestion-chips {\n    justify-content: center;\n}\n}\n.wbw-word {\n  display: inline-block;\n  position: relative;\n  margin: 0 2px;\n  padding: 2px 4px;\n  border-radius: 6px;\n  transition: all 0.15s ease;\n}\n.wbw-word .word-audio-btn {\n  position: absolute;\n  top: -12px;\n  right: -8px;\n  width: 18px;\n  height: 18px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  color: white;\n  font-size: 10px;\n  opacity: 0;\n  transition: opacity 0.2s;\n}\n.wbw-word:hover .word-audio-btn {\n  opacity: 1;\n}\n.wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n}\n\n/* Combined Tajweed + Word Highlighting */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {\n  background: var(--accent);\n  color: white !important;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n\n/* Preserve tajweed colors inside highlighted words but make them visible */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*=\"tajweed-\"],\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {\n  color: inherit !important;\n  background: transparent !important;\n}\n\n/* Field header for toggle chips - matching Techniques tab */\n.field-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  margin-bottom: 6px;\n}\n.field-header label {\n  margin-bottom: 0;\n}\n\n/* Range value pill */\n.range-value-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 52px;\n  padding: 4px 10px;\n  background: var(--accent-light);\n  border-radius: 8px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n\n/* Setting items - matching Techniques tab style */\n.setting-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 20px;\n  padding: 16px 0;\n  border-bottom: 1px solid var(--border);\n}\n.setting-item:last-child {\n  border-bottom: none;\n}\n.setting-item-range {\n  flex-direction: column;\n  align-items: stretch;\n  gap: 14px;\n}\n.setting-info {\n  flex: 1;\n}\n.setting-label {\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 6px;\n}\n.setting-description {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n\n/* Range control compact */\n.range-control-compact {\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  width: 100%;\n}\n.range-value-badge {\n  min-width: 60px;\n  padding: 6px 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--accent);\n  text-align: center;\n}\n.range-slider {\n  flex: 1;\n  height: 5px;\n  border-radius: 3px;\n  background: var(--border);\n  -webkit-appearance: none;\n}\n.range-slider:focus {\n  outline: none;\n}\n.range-slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 18px;\n  height: 18px;\n  border-radius: 50%;\n  background: var(--accent);\n  cursor: pointer;\n  border: 2px solid var(--surface);\n  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n}\n.range-slider::-webkit-slider-thumb:hover {\n  transform: scale(1.1);\n}\n\n/* Larger toggle chips for settings */\n.setting-item .toggle-chip {\n  min-height: 38px;\n  min-width: 80px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  letter-spacing: 0.5px;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.setting-item {\n    flex-direction: column;\n    align-items: stretch;\n    gap: 12px;\n    padding: 14px 0;\n}\n.setting-item .toggle-chip {\n    align-self: flex-start;\n}\n.setting-label {\n    font-size: 0.95rem;\n}\n.setting-description {\n    font-size: 0.75rem;\n}\n.range-control-compact {\n    gap: 12px;\n}\n.range-value-badge {\n    min-width: 55px;\n    padding: 5px 10px;\n    font-size: 0.8rem;\n}\n}\n\n/* Inline field for toggle chips */\n.field-inline {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  flex-wrap: wrap;\n}\n.field-label-group {\n  flex: 1;\n  min-width: 0;\n}\n.field-label-group label {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 2px;\n}\n.field-label-group label i {\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.field-label-group small {\n  display: block;\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n\n/* Range control */\n.range-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.range-control .input {\n  flex: 1;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.field-inline {\n    flex-direction: column;\n    align-items: stretch;\n}\n.field-inline .toggle-chip {\n    align-self: flex-start;\n}\n}\n\n/* Settings Container */\n.settings-container {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n  padding-bottom: 20px;\n}\n\n/* Settings Group */\n.settings-group {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 20px;\n  overflow: hidden;\n}\n.settings-group-header {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 16px 20px;\n  background: var(--surface-strong);\n  border-bottom: 1px solid var(--border);\n  font-weight: 600;\n  font-size: 0.85rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--accent);\n}\n.settings-group-header i {\n  font-size: 1rem;\n}\n\n/* Settings Stack */\n.settings-stack {\n  display: flex;\n  flex-direction: column;\n}\n\n/* Settings Row */\n.settings-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px 20px;\n  border-bottom: 1px solid var(--border);\n  transition: background 0.2s ease;\n}\n.settings-row:last-child {\n  border-bottom: none;\n}\n.settings-row:hover {\n  background: var(--accent-light);\n}\n.settings-row-info {\n  flex: 1;\n}\n.settings-row-label {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  font-weight: 600;\n  font-size: 0.9rem;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.settings-row-label i {\n  font-size: 1rem;\n  color: var(--accent);\n  width: 20px;\n}\n.settings-row-desc {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-left: 30px;\n}\n\n/* Range Row */\n.settings-row-range {\n  flex-direction: column;\n  align-items: stretch;\n  gap: 12px;\n}\n.settings-range-control {\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  margin-left: 30px;\n}\n.range-value {\n  min-width: 50px;\n  padding: 4px 8px;\n  background: var(--accent-light);\n  border-radius: 8px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--accent);\n  text-align: center;\n}\n.settings-range-input {\n  flex: 1;\n  height: 4px;\n  border-radius: 2px;\n  background: var(--border);\n  -webkit-appearance: none;\n}\n.settings-range-input:focus {\n  outline: none;\n}\n.settings-range-input::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 16px;\n  height: 16px;\n  border-radius: 50%;\n  background: var(--accent);\n  cursor: pointer;\n  border: none;\n}\n\n/* Toggle Button */\n.settings-toggle-btn {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  background: none;\n  border: none;\n  cursor: pointer;\n  padding: 0;\n}\n.toggle-status {\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  min-width: 32px;\n  text-align: right;\n}\n.settings-toggle-btn.active .toggle-status {\n  color: var(--accent);\n}\n.toggle-slider {\n  position: relative;\n  width: 44px;\n  height: 24px;\n  background: var(--border);\n  border-radius: 24px;\n  transition: all 0.2s ease;\n}\n.toggle-slider::before {\n  content: '';\n  position: absolute;\n  top: 2px;\n  left: 2px;\n  width: 20px;\n  height: 20px;\n  background: white;\n  border-radius: 50%;\n  transition: transform 0.2s ease;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);\n}\n.settings-toggle-btn.active .toggle-slider {\n  background: var(--accent);\n}\n.settings-toggle-btn.active .toggle-slider::before {\n  transform: translateX(20px);\n}\n\n/* Warning Notice */\n.settings-notice-warning {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 12px 16px;\n  background: rgba(255, 152, 0, 0.1);\n  border: 1px solid rgba(255, 152, 0, 0.2);\n  border-radius: 12px;\n  font-size: 0.7rem;\n  color: #e6a017;\n}\n.settings-notice-warning i {\n  font-size: 1rem;\n  flex-shrink: 0;\n}\n\n/* Settings Footer Actions */\n.settings-footer-actions {\n  display: flex;\n  gap: 12px;\n  padding: 16px 20px;\n  margin-top: 8px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.settings-reset-btn,\n.settings-start-btn {\n  flex: 1;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  padding: 12px 16px;\n  border-radius: 14px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  border: none;\n}\n.settings-reset-btn {\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n}\n.settings-reset-btn:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n  transform: translateY(-1px);\n}\n.settings-start-btn {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.25);\n}\n.settings-start-btn:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.35);\n}\n.settings-start-btn:active,\n.settings-reset-btn:active {\n  transform: translateY(0);\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .settings-group {\n  background: var(--surface-strong);\n}\n[data-theme=\"dark\"] .settings-row:hover {\n  background: rgba(208, 160, 107, 0.08);\n}\n[data-theme=\"dark\"] .toggle-slider::before {\n  background: var(--surface);\n}\n[data-theme=\"dark\"] .settings-reset-btn {\n  background: var(--surface);\n}\n\n/* Mobile responsive */\n@media (max-width: 640px) {\n.settings-row {\n    padding: 14px 16px;\n}\n.settings-row-label {\n    font-size: 0.85rem;\n}\n.settings-row-desc {\n    font-size: 0.65rem;\n    margin-left: 30px;\n}\n.settings-range-control {\n    margin-left: 30px;\n}\n.settings-footer-actions {\n    padding: 12px 16px;\n}\n.settings-reset-btn,\n  .settings-start-btn {\n    padding: 10px 14px;\n    font-size: 0.8rem;\n}\n}\n\n/* Technique description styling */\n.technique-description {\n  display: flex;\n  align-items: flex-start;\n  gap: 10px;\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  margin-bottom: 12px;\n}\n.technique-description i {\n  color: var(--accent);\n  font-size: 1rem;\n  margin-top: 2px;\n  flex-shrink: 0;\n}\n.technique-description span {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n.technique-best {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: rgba(46, 125, 50, 0.08);\n  border-radius: 10px;\n  border: 1px solid rgba(46, 125, 50, 0.15);\n}\n.technique-best i {\n  color: #2e7d32;\n  font-size: 0.8rem;\n  flex-shrink: 0;\n}\n.technique-best span {\n  font-size: 0.7rem;\n  color: #2e7d32;\n  font-weight: 500;\n}\n.technique-preview-block {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 12px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  margin-top: 8px;\n}\n.technique-preview-block i {\n  color: var(--accent);\n  font-size: 0.9rem;\n  flex-shrink: 0;\n}\n.technique-preview-block span {\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .technique-description {\n  background: rgba(208, 160, 107, 0.1);\n}\n[data-theme=\"dark\"] .technique-best {\n  background: rgba(76, 175, 80, 0.1);\n  border-color: rgba(76, 175, 80, 0.2);\n}\n[data-theme=\"dark\"] .technique-best span {\n  color: #81c784;\n}\n[data-theme=\"dark\"] .technique-preview-block {\n  background: var(--surface-strong);\n}\n.techniques-header {\n  margin-bottom: 24px;\n  padding-bottom: 16px;\n  border-bottom: 1px solid var(--border);\n}\n.techniques-header h3 {\n  margin: 0 0 6px 0;\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.techniques-header p {\n  margin: 0 0 12px 0;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.compatibility-info-btn {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  padding: 6px 12px;\n  border-radius: 20px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  color: var(--accent);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.technique-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  margin-bottom: 16px;\n  transition: all 0.2s ease;\n}\n.technique-card-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 14px;\n  margin-bottom: 12px;\n}\n.technique-icon {\n  width: 44px;\n  height: 44px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.technique-icon i {\n  font-size: 1.3rem;\n  color: var(--accent);\n}\n.technique-info {\n  flex: 1;\n  min-width: 0;\n}\n.technique-info h4 {\n  margin: 0 0 4px 0;\n  font-size: 0.95rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.technique-info p {\n  margin: 0;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n.technique-toggle {\n  flex-shrink: 0;\n  min-width: 70px;\n  min-height: 36px;\n}\n.technique-controls {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.control-group {\n  margin-bottom: 14px;\n}\n.control-group label {\n  display: block;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.range-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.technique-range {\n  flex: 1;\n  padding: 0;\n}\n.value-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 48px;\n  padding: 4px 8px;\n  background: var(--accent-light);\n  border-radius: 8px;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.technique-select {\n  width: 100%;\n  padding: 8px 12px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.8rem;\n  color: var(--text);\n}\n.technique-preview {\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.technique-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: rgba(154, 103, 56, 0.08);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.technique-hint kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.65rem;\n  font-weight: 600;\n}\n.presets-section {\n  margin-top: 24px;\n  padding-top: 20px;\n  border-top: 1px solid var(--border);\n}\n.presets-section h4 {\n  margin: 0 0 12px 0;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.presets-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));\n  gap: 10px;\n}\n.preset-btn {\n  padding: 10px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.preset-btn:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n  transform: translateY(-1px);\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n  overflow-x: auto;\n  -webkit-overflow-scrolling: touch;\n}\n.tools-tabs button {\n  flex: 1;\n  padding: 8px 12px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.8rem;\n  cursor: pointer;\n  color: var(--text-muted);\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: all 0.2s ease;\n  white-space: nowrap;\n}\n.tools-tabs button.active {\n  background: var(--surface-strong);\n  color: var(--text);\n  box-shadow: var(--shadow-sm);\n}\n.tools-tabs button i {\n  font-size: 0.9rem;\n}\n\n/* Expanded offcanvas width */\n.tools {\n  --tools-width: 520px;\n  width: min(var(--tools-width), 92vw);\n}\n\n/* Techniques Tab Styles */\n.techniques-header {\n  margin-bottom: 24px;\n  padding-bottom: 16px;\n  border-bottom: 1px solid var(--border);\n}\n.techniques-header h3 {\n  margin: 0 0 6px 0;\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.techniques-header p {\n  margin: 0 0 12px 0;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.compatibility-info-btn {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  padding: 6px 12px;\n  border-radius: 20px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  color: var(--accent);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.compatibility-info-btn:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.techniques-list-expanded {\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  margin-bottom: 24px;\n}\n.technique-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  transition: all 0.2s ease;\n}\n.technique-card:hover {\n  border-color: var(--accent);\n  box-shadow: var(--shadow-sm);\n}\n.technique-card-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 14px;\n  margin-bottom: 12px;\n}\n.technique-icon {\n  width: 44px;\n  height: 44px;\n  background: linear-gradient(135deg, var(--accent-light), var(--accent-wash));\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.technique-icon i {\n  font-size: 1.3rem;\n  color: var(--accent);\n}\n.technique-info {\n  flex: 1;\n  min-width: 0;\n}\n.technique-info h4 {\n  margin: 0 0 4px 0;\n  font-size: 0.95rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.technique-info p {\n  margin: 0;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n.technique-toggle {\n  flex-shrink: 0;\n  min-width: 70px;\n  min-height: 36px;\n}\n.technique-controls {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.control-group {\n  margin-bottom: 14px;\n}\n.control-group label {\n  display: block;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.range-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.technique-range {\n  flex: 1;\n  padding: 0;\n}\n.value-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 48px;\n  padding: 4px 8px;\n  background: var(--accent-light);\n  border-radius: 8px;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.technique-select {\n  width: 100%;\n  padding: 8px 12px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.8rem;\n  color: var(--text);\n}\n.technique-preview {\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.technique-preview i {\n  color: var(--accent);\n  font-size: 0.8rem;\n}\n.technique-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  margin-top: 12px;\n  background: rgba(154, 103, 56, 0.08);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.technique-hint kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.65rem;\n  font-weight: 600;\n}\n.technique-benefits {\n  margin-top: 12px;\n  padding-top: 10px;\n  border-top: 1px solid var(--border);\n}\n.technique-benefits small {\n  font-size: 0.65rem;\n  color: var(--accent);\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.technique-benefits small i {\n  font-size: 0.6rem;\n}\n\n/* Presets Section */\n.presets-section {\n  margin-top: 24px;\n  padding-top: 20px;\n  border-top: 1px solid var(--border);\n}\n.presets-section h4 {\n  margin: 0 0 12px 0;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.presets-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));\n  gap: 10px;\n}\n.preset-btn {\n  padding: 10px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.preset-btn:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n  transform: translateY(-1px);\n}\n.preset-btn i {\n  font-size: 0.8rem;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.tools {\n    --tools-width: 100vw;\n}\n.technique-card-header {\n    flex-wrap: wrap;\n}\n.technique-toggle {\n    width: 100%;\n}\n.presets-grid {\n    grid-template-columns: 1fr;\n}\n}\n.conflict-badge {\n  margin-top: 6px;\n  padding: 2px 8px;\n  background: #fee2e2;\n  color: #dc2626;\n  border-radius: 20px;\n  font-size: 0.65rem;\n  font-weight: 500;\n  display: inline-block;\n}\n[data-theme=\"dark\"] .conflict-badge {\n  background: rgba(220, 38, 38, 0.15);\n  color: #f87171;\n}\n.technique-conflict-warning {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  margin-top: 6px;\n  padding: 4px 8px;\n  background: rgba(220, 53, 69, 0.1);\n  border-radius: 8px;\n  font-size: 0.65rem;\n  color: #c62828;\n  border: 1px solid rgba(220, 53, 69, 0.2);\n  animation: warningPulse 1s ease-in-out;\n}\n.technique-conflict-warning i {\n  font-size: 0.7rem;\n}\n@keyframes warningPulse {\n0%,\n  100% {\n    opacity: 0.7;\n}\n50% {\n    opacity: 1;\n    background: rgba(220, 53, 69, 0.2);\n}\n}\n\n/* Dark mode */\n[data-theme=\"dark\"] .technique-conflict-warning {\n  background: rgba(229, 57, 53, 0.15);\n  color: #ef9a9a;\n}\n\n/* Hint button in sheet toggle */\n.st-right-group {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.st-hint-btn {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--accent);\n  transition: all 0.2s ease;\n}\n.st-hint-btn:hover {\n  background: var(--accent-light);\n  transform: scale(1.05);\n}\n.st-hint-btn i {\n  font-size: 0.9rem;\n}\n\n/* Compatibility Modal */\n.compatibility-modal {\n  max-width: 560px;\n  width: 100%;\n}\n.compatibility-intro {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n  margin-bottom: 20px;\n  line-height: 1.4;\n}\n.compatibility-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n  margin-bottom: 20px;\n}\n.compatibility-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 14px 16px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  transition: all 0.2s ease;\n}\n.compatibility-row:hover {\n  border-color: var(--accent);\n  background: var(--accent-light);\n}\n.combo-icons {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  min-width: 70px;\n  font-size: 1.1rem;\n  color: var(--accent);\n}\n.combo-icons i {\n  font-size: 1rem;\n}\n.combo-icons .bi-plus-lg {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.combo-text {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.combo-text strong {\n  font-size: 0.85rem;\n  color: var(--text);\n}\n.combo-text span {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.combo-badge {\n  padding: 4px 10px;\n  border-radius: 20px;\n  font-size: 0.7rem;\n  font-weight: 600;\n  white-space: nowrap;\n}\n.combo-badge.success {\n  background: rgba(46, 125, 50, 0.12);\n  color: #2e7d32;\n  border: 1px solid rgba(46, 125, 50, 0.2);\n}\n.combo-badge.alone {\n  background: rgba(154, 103, 56, 0.12);\n  color: var(--accent);\n  border: 1px solid rgba(154, 103, 56, 0.2);\n}\n.compatibility-note {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 12px 14px;\n  background: rgba(220, 53, 69, 0.08);\n  border-radius: 12px;\n  font-size: 0.75rem;\n  color: #c62828;\n  border: 1px solid rgba(220, 53, 69, 0.15);\n}\n.compatibility-note i {\n  font-size: 1rem;\n  flex-shrink: 0;\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .compatibility-row {\n  background: var(--surface-strong);\n}\n[data-theme=\"dark\"] .compatibility-row:hover {\n  background: rgba(208, 160, 107, 0.1);\n}\n[data-theme=\"dark\"] .combo-badge.success {\n  background: rgba(76, 175, 80, 0.15);\n  color: #81c784;\n}\n[data-theme=\"dark\"] .compatibility-note {\n  background: rgba(229, 57, 53, 0.12);\n  color: #ef9a9a;\n}\n\n/* Responsive */\n@media (max-width: 560px) {\n.compatibility-row {\n    flex-wrap: wrap;\n    gap: 10px;\n}\n.combo-badge {\n    margin-left: auto;\n}\n.combo-icons {\n    min-width: 55px;\n}\n}\n.segmented-control-compact button {\n  font-size: 0.7rem;\n  padding: 6px 8px;\n}\n.save-name-modal {\n  max-width: 420px;\n  width: 100%;\n}\n.save-modal-desc {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n  margin-bottom: 20px;\n  line-height: 1.4;\n}\n.save-name-input-group {\n  margin-bottom: 16px;\n}\n.save-name-input-group label {\n  display: block;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.save-name-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  color: var(--text);\n  transition: all 0.2s;\n}\n.save-name-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 3px var(--accent-light);\n}\n.save-preview-info {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-top: 8px;\n}\n.save-preview-info i {\n  color: var(--accent);\n  font-size: 0.9rem;\n}\n.technique-desc-hint {\n  display: block;\n  font-size: 0.65rem;\n  color: var(--accent);\n  margin-top: 4px;\n  font-weight: 500;\n}\n.technique-example-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  margin-top: 8px;\n  background: rgba(154, 103, 56, 0.08);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n}\n.technique-example-hint i {\n  color: var(--accent);\n  font-size: 0.8rem;\n  flex-shrink: 0;\n}\n.technique-example-hint strong {\n  color: var(--accent);\n}\n\n/* Anchor Mode Styles - Enhanced */\n.verse-arabic .wbw-word.anchor-highlight,\n.verse-arabic word.anchor-highlight,\n.word-item.anchor-highlight {\n  position: relative;\n  background: linear-gradient(135deg, rgba(255, 193, 7, 0.3), rgba(255, 152, 0, 0.4));\n  border-bottom: 3px solid #ff9800;\n  border-radius: 8px;\n  transform: scale(1.02);\n  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);\n  cursor: pointer;\n  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.2);\n}\n\n/* Animation for newly highlighted anchors */\n.anchor-pulse {\n  animation: anchorPulse 0.6s ease-out;\n}\n@keyframes anchorPulse {\n0% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7);\n}\n50% {\n    transform: scale(1.08);\n    box-shadow: 0 0 0 8px rgba(255, 152, 0, 0);\n}\n100% {\n    transform: scale(1.02);\n    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0);\n}\n}\n.verse-arabic .wbw-word.anchor-highlight:hover,\n.verse-arabic word.anchor-highlight:hover,\n.word-item.anchor-highlight:hover {\n  background: rgba(255, 152, 0, 0.6);\n  transform: scale(1.08);\n  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);\n}\n\n/* Tooltip for anchors */\n.anchor-highlight::after {\n  content: \"🔗 Memory Anchor\";\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: #333;\n  color: white;\n  padding: 4px 8px;\n  border-radius: 6px;\n  font-size: 0.7rem;\n  white-space: nowrap;\n  z-index: 100;\n  opacity: 0;\n  pointer-events: none;\n  transition: opacity 0.2s;\n}\n.anchor-highlight:hover::after {\n  opacity: 1;\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .anchor-highlight {\n  background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 152, 0, 0.3));\n  border-bottom-color: #ffb74d;\n}\n[data-theme=\"dark\"] .anchor-highlight:hover {\n  background: rgba(255, 152, 0, 0.4);\n}\n.main.blur-mode-active .verse-card.blur-upcoming .anchor-highlight {\n  filter: blur(calc(var(--recall-blur, 10px) - 4px));\n}\n.technique-select {\n  padding: 8px 12px;\n  border-radius: 10px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  font-size: 0.8rem;\n}\n.verse-small-play-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: white;\n  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);\n}\n.verse-small-play-btn i {\n  font-size: 0.8rem;\n}\n.verse-small-play-btn:hover {\n  transform: scale(1.05);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--accent);\n}\n\n/* Add to your style section */\n.countdown-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.85);\n  backdrop-filter: blur(12px);\n  z-index: 99999;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.countdown-modal {\n  text-align: center;\n}\n.countdown-number {\n  font-size: 8rem;\n  font-weight: 800;\n  color: var(--accent);\n  animation: pulse 1s ease infinite;\n}\n.countdown-text {\n  font-size: 1.5rem;\n  color: white;\n  margin-top: 20px;\n}\n@keyframes pulse {\n0%,\n  100% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.1);\n}\n}\n@media (max-width: 640px) {\n.countdown-number {\n    font-size: 5rem;\n}\n.countdown-text {\n    font-size: 1.2rem;\n}\n}\n\n/* Add these styles if missing */\n.technique-peek-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  margin-top: 8px;\n  border-radius: 10px;\n  background: rgba(154, 103, 56, 0.08);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.technique-peek-hint i {\n  color: var(--accent);\n  font-size: 0.8rem;\n  flex-shrink: 0;\n}\n.technique-peek-hint kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.65rem;\n  font-weight: 600;\n  color: var(--accent);\n  display: inline-block;\n}\n\n/* Add to style section */\n.countdown-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.85);\n  backdrop-filter: blur(12px);\n  z-index: 10000;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  animation: fadeIn 0.3s ease;\n}\n.countdown-modal {\n  text-align: center;\n  animation: scaleIn 0.4s cubic-bezier(0.34, 1.2, 0.64, 1);\n}\n.countdown-number {\n  font-size: 8rem;\n  font-weight: 800;\n  color: var(--accent);\n  text-shadow: 0 0 30px rgba(154, 103, 56, 0.5);\n  animation: pulse 1s ease infinite;\n  font-family: monospace;\n}\n.countdown-text {\n  font-size: 1.5rem;\n  color: white;\n  margin-top: 20px;\n  font-weight: 500;\n  letter-spacing: 2px;\n}\n.countdown-hint {\n  font-size: 0.85rem;\n  color: rgba(255, 255, 255, 0.6);\n  margin-top: 12px;\n}\n@keyframes fadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n@keyframes scaleIn {\nfrom {\n    opacity: 0;\n    transform: scale(0.8);\n}\nto {\n    opacity: 1;\n    transform: scale(1);\n}\n}\n@keyframes pulse {\n0%,\n  100% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.1);\n}\n}\n@media (max-width: 640px) {\n.countdown-number {\n    font-size: 5rem;\n}\n.countdown-text {\n    font-size: 1.2rem;\n}\n}\n\n\n/* Mobile */\n@media (max-width: 768px) {\n.wavemark-bars {\n    height: 30px;\n    gap: 1.5px;\n}\n.wavemark-playhead::before {\n    width: 8px;\n    height: 8px;\n    top: -5px;\n    left: -3px;\n}\n}\n.waveform-canvas {\n  width: 100%;\n  height: 60px;\n  display: block;\n  border-radius: 8px;\n  cursor: pointer;\n}\n\n/* Settings notice */\n.settings-notice {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 14px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  margin-bottom: 20px;\n  font-size: 0.75rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.settings-notice i {\n  font-size: 0.9rem;\n}\n\n/* Login Hero Section */\n.login-hero {\n  min-height: calc(100vh - 100px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  padding: 40px 20px;\n}\n.login-card {\n  max-width: 480px;\n  width: 100%;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  border-radius: 32px;\n  padding: 48px 40px;\n  text-align: center;\n  box-shadow: var(--shadow-lg);\n  animation: loginFadeIn 0.5s ease-out;\n}\n.login-icon {\n  width: 80px;\n  height: 80px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  margin: 0 auto 24px;\n  box-shadow: 0 8px 24px rgba(154, 103, 56, 0.25);\n}\n.login-icon i {\n  font-size: 2.5rem;\n  color: white;\n}\n.login-card h1 {\n  font-size: 1.8rem;\n  font-weight: 700;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.login-subtitle {\n  font-size: 0.95rem;\n  color: var(--text-muted);\n  margin-bottom: 32px;\n}\n.login-features {\n  display: flex;\n  justify-content: center;\n  gap: 24px;\n  margin-bottom: 40px;\n  flex-wrap: wrap;\n}\n.feature {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 8px;\n}\n.feature i {\n  font-size: 1.5rem;\n  color: var(--accent);\n  background: var(--accent-light);\n  width: 48px;\n  height: 48px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 24px;\n  transition: all 0.2s ease;\n}\n.feature span {\n  font-size: 0.75rem;\n  font-weight: 500;\n  color: var(--text-muted);\n}\n.login-btn {\n  width: 100%;\n  padding: 14px 24px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 60px;\n  font-size: 1rem;\n  font-weight: 600;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  transition: all 0.2s ease;\n  margin-bottom: 20px;\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.login-btn:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 24px rgba(154, 103, 56, 0.4);\n}\n.login-btn:active {\n  transform: translateY(0);\n}\n.login-note {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin: 0;\n  line-height: 1.4;\n}\n@keyframes loginFadeIn {\nfrom {\n    opacity: 0;\n    transform: translateY(20px);\n}\nto {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n/* Responsive */\n@media (max-width: 520px) {\n.login-card {\n    padding: 32px 24px;\n}\n.login-icon {\n    width: 64px;\n    height: 64px;\n}\n.login-icon i {\n    font-size: 2rem;\n}\n.login-card h1 {\n    font-size: 1.5rem;\n}\n.login-features {\n    gap: 16px;\n}\n.feature i {\n    width: 40px;\n    height: 40px;\n    font-size: 1.2rem;\n}\n.feature span {\n    font-size: 0.7rem;\n}\n}\n\n/* Save Name Modal Styles */\n.save-name-modal {\n  max-width: 420px;\n  width: 100%;\n}\n.save-modal-desc {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n  margin-bottom: 20px;\n  line-height: 1.4;\n}\n.save-name-input-group {\n  margin-bottom: 16px;\n}\n.save-name-input-group label {\n  display: block;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.save-name-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  color: var(--text);\n  transition: all 0.2s;\n}\n.save-name-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 3px var(--accent-light);\n}\n.save-preview-info {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-top: 8px;\n}\n.save-preview-info i {\n  color: var(--accent);\n  font-size: 0.9rem;\n}\n\n/* Fix saved tab layout */\n.saved-sessions-container {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  padding: 16px;\n  box-shadow: var(--shadow-sm);\n}\n.saved-header {\n  margin-bottom: 16px;\n  padding-bottom: 12px;\n  border-bottom: 1px solid var(--border);\n}\n.saved-header h3 {\n  margin: 0 0 4px 0;\n  font-size: 0.9rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.saved-header p {\n  margin: 0;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.sessions-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  margin-bottom: 16px;\n  max-height: 320px;\n  overflow-y: auto;\n}\n.session-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  transition: all 0.2s ease;\n  overflow: hidden;\n}\n.session-info {\n  flex: 1;\n  min-width: 0;\n  padding: 10px 12px;\n  cursor: pointer;\n}\n.session-info:hover {\n  background: var(--accent-light);\n}\n.session-name {\n  font-weight: 600;\n  font-size: 0.8rem;\n  color: var(--text);\n  margin-bottom: 4px;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.session-name i {\n  color: var(--accent);\n  font-size: 0.7rem;\n}\n.session-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n  font-size: 0.6rem;\n  color: var(--text-muted);\n}\n.session-meta span {\n  display: inline-flex;\n  align-items: center;\n  gap: 3px;\n}\n.delete-btn {\n  width: 36px;\n  height: 36px;\n  margin-right: 8px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: #dc3545;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.delete-btn:hover {\n  background: #dc3545;\n  color: white;\n  border-color: #dc3545;\n}\n.save-section {\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.current-info {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 1;\n  min-width: 0;\n  padding: 8px 10px;\n  background: var(--accent-light);\n  border-radius: 10px;\n}\n.current-info i {\n  font-size: 1rem;\n  color: var(--accent);\n  flex-shrink: 0;\n}\n.current-info div {\n  display: flex;\n  flex-direction: column;\n  min-width: 0;\n}\n.current-info strong {\n  font-size: 0.75rem;\n  color: var(--text);\n}\n.current-info small {\n  font-size: 0.6rem;\n  color: var(--text-muted);\n}\n.save-btn {\n  padding: 8px 16px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 10px;\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  gap: 5px;\n  transition: all 0.2s;\n  flex-shrink: 0;\n}\n.save-btn:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.save-btn:active {\n  transform: translateY(0);\n}\n\n/* Saved Tab Styles - Clean Version */\n.saved-header {\n  margin-bottom: 24px;\n  padding-bottom: 16px;\n  border-bottom: 1px solid var(--border);\n}\n.saved-header h3 {\n  margin: 0 0 6px 0;\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.saved-header p {\n  margin: 0;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.empty-state {\n  text-align: center;\n  padding: 48px 24px;\n  color: var(--text-muted);\n}\n.empty-state i {\n  font-size: 3rem;\n  margin-bottom: 12px;\n  opacity: 0.4;\n}\n.empty-state p {\n  margin-bottom: 4px;\n  font-weight: 500;\n  color: var(--text);\n}\n.empty-state span {\n  font-size: 0.7rem;\n}\n.sessions-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  margin-bottom: 24px;\n  max-height: 320px;\n  overflow-y: auto;\n}\n.session-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 12px 14px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.session-item:hover {\n  border-color: var(--accent);\n  background: var(--accent-light);\n  transform: translateX(2px);\n}\n.session-info {\n  flex: 1;\n  min-width: 0;\n}\n.session-name {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-weight: 600;\n  font-size: 0.85rem;\n  color: var(--text);\n  margin-bottom: 6px;\n}\n.session-name i {\n  color: var(--accent);\n  font-size: 0.8rem;\n}\n.session-details {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.session-details span {\n  display: inline-flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.session-details i {\n  font-size: 0.6rem;\n}\n.delete-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: #dc3545;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.delete-btn:hover {\n  background: #dc3545;\n  color: white;\n  border-color: #dc3545;\n}\n.save-section {\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.current-info {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex: 1;\n  min-width: 0;\n}\n.current-info i {\n  font-size: 1.2rem;\n  color: var(--accent);\n  flex-shrink: 0;\n}\n.current-info div {\n  display: flex;\n  flex-direction: column;\n  min-width: 0;\n}\n.current-info strong {\n  font-size: 0.8rem;\n  color: var(--text);\n}\n.current-info small {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.save-btn {\n  padding: 8px 16px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 10px;\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  transition: all 0.2s;\n  flex-shrink: 0;\n}\n.save-btn:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.action-icon {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 52px;\n  height: 42px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  font-size: 1.2rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: rgba(0, 0, 0, 0.78);\n}\n.action-icon:hover {\n  transform: translateY(-2px);\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n\n/* Add to your style section */\n.tools-tabs button {\n  flex: 1;\n  padding: 8px 12px;\n  font-size: 0.8rem;\n}\n.saved-sessions-container {\n  padding: 16px;\n}\n.saved-session-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 12px;\n  margin-bottom: 12px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.saved-session-card:hover {\n  border-color: var(--accent);\n  transform: translateX(4px);\n  box-shadow: var(--shadow-sm);\n}\n.saved-session-header {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin-bottom: 8px;\n}\n.session-icon {\n  width: 36px;\n  height: 36px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--accent);\n}\n.session-details {\n  flex: 1;\n}\n.session-title {\n  font-weight: 600;\n  font-size: 0.85rem;\n  color: var(--text);\n}\n.session-range {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.session-delete-btn-icon {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: #dc3545;\n  transition: all 0.2s;\n}\n.session-delete-btn-icon:hover {\n  background: #dc3545;\n  color: white;\n  border-color: #dc3545;\n}\n.session-footer {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  padding-left: 48px;\n}\n.session-resume-hint {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  color: var(--accent);\n}\n.save-current-session-panel {\n  margin-top: 20px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.save-session-btn-full {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 12px;\n  cursor: pointer;\n  font-weight: 600;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.save-session-btn-full:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.empty-saved-state {\n  text-align: center;\n  padding: 48px 24px;\n  color: var(--text-muted);\n}\n.empty-saved-state i {\n  font-size: 3rem;\n  margin-bottom: 12px;\n  opacity: 0.5;\n}\n\n/* Action Buttons Group - Perfect Alignment */\n.action-buttons-group {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.action-icon-btn {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  width: 42px;\n  height: 42px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  font-size: 1.1rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n  flex-shrink: 0;\n}\n.action-icon-btn:hover {\n  transform: translateY(-1px);\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n.action-icon-btn:active {\n  transform: translateY(0);\n}\n.action-btn {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  height: 42px;\n  padding: 0 18px;\n  border-radius: 12px;\n  font-weight: 600;\n  font-size: 0.85rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  border: none;\n  white-space: nowrap;\n  flex-shrink: 0;\n}\n.action-btn-secondary {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  border: 1px solid var(--border);\n  color: var(--text);\n  box-shadow: var(--shadow-sm);\n}\n.action-btn-secondary:hover {\n  transform: translateY(-1px);\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n.action-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.25);\n  border: none;\n}\n.action-btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.35);\n}\n.action-btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n  transform: none;\n}\n.action-btn-secondary:active,\n.action-icon-btn:active {\n  transform: translateY(0);\n}\n\n/* Responsive adjustments */\n@media (max-width: 640px) {\n.action-buttons-group {\n    gap: 6px;\n}\n.action-icon-btn {\n    width: 38px;\n    height: 38px;\n    font-size: 1rem;\n}\n.action-btn {\n    height: 38px;\n    padding: 0 14px;\n    font-size: 0.8rem;\n}\n.action-btn span {\n    display: inline-block;\n}\n}\n@media (max-width: 480px) {\n.action-btn span {\n    display: none;\n}\n.action-btn {\n    width: 42px;\n    padding: 0;\n}\n.action-btn i {\n    font-size: 1.1rem;\n    margin: 0;\n}\n}\n\n/* Keyboard Shortcuts Modal - Larger & Cleaner */\n.keyboard-shortcuts-modal {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.6);\n  backdrop-filter: blur(8px);\n  z-index: 1000;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  animation: modalFadeIn 0.2s ease;\n}\n.shortcuts-modal {\n  background: var(--surface-strong);\n  border-radius: 24px;\n  width: min(520px, 90vw);\n  max-width: 520px;\n  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.3);\n  border: 1px solid var(--border);\n  animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n  overflow: hidden;\n}\n.shortcuts-modal-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 20px 24px;\n  background: linear-gradient(135deg, var(--surface), var(--surface-strong));\n  border-bottom: 1px solid var(--border);\n}\n.shortcuts-modal-header h3 {\n  margin: 0;\n  font-size: 1.2rem;\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  color: var(--text);\n  font-weight: 600;\n}\n.shortcuts-modal-header h3 i {\n  font-size: 1.3rem;\n  color: var(--accent);\n}\n.shortcuts-modal-close {\n  width: 36px;\n  height: 36px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n  color: var(--text-muted);\n}\n.shortcuts-modal-close:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n  transform: rotate(90deg);\n}\n.shortcuts-modal-body {\n  padding: 24px;\n  max-height: none;\n  overflow-y: visible;\n}\n.shortcuts-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));\n  gap: 24px;\n}\n.shortcut-card {\n  background: var(--surface);\n  border-radius: 16px;\n  padding: 16px;\n  border: 1px solid var(--border);\n}\n.shortcut-card-title {\n  font-size: 0.75rem;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--accent);\n  padding-bottom: 12px;\n  margin-bottom: 12px;\n  border-bottom: 2px solid var(--accent-light);\n}\n.shortcut-row {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 0;\n  border-bottom: 1px solid var(--border);\n}\n.shortcut-row:last-child {\n  border-bottom: none;\n}\n.shortcut-keys {\n  display: flex;\n  gap: 6px;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.shortcut-keys kbd {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border: 1px solid var(--border);\n  border-radius: 8px;\n  padding: 4px 10px;\n  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;\n  font-size: 0.7rem;\n  font-weight: 700;\n  color: var(--accent);\n  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);\n  letter-spacing: 0.5px;\n}\n.shortcut-row span {\n  color: var(--text-muted);\n  font-size: 0.85rem;\n  font-weight: 500;\n}\n@keyframes modalFadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n@keyframes modalSlideUp {\nfrom {\n    opacity: 0;\n    transform: translateY(30px) scale(0.95);\n}\nto {\n    opacity: 1;\n    transform: translateY(0) scale(1);\n}\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.action-buttons-group {\n    width: 100%;\n    gap: 8px;\n}\n.action-icon {\n    min-width: 44px;\n    height: 40px;\n}\n.action-btn {\n    min-width: 0;\n    flex: 1;\n    padding: 0 12px;\n    height: 40px;\n    font-size: 0.8rem;\n}\n.action-btn span {\n    display: inline;\n}\n.shortcuts-modal {\n    width: 95vw;\n\n    margin: 16px;\n}\n.shortcuts-modal-header {\n    padding: 16px 20px;\n}\n.shortcuts-modal-header h3 {\n    font-size: 1rem;\n}\n.shortcuts-modal-body {\n    padding: 16px;\n}\n.shortcuts-grid {\n    grid-template-columns: 1fr;\n    gap: 16px;\n}\n.shortcut-card {\n    padding: 12px;\n}\n.shortcut-row {\n    padding: 8px 0;\n}\n.shortcut-keys kbd {\n    padding: 3px 8px;\n    font-size: 0.65rem;\n}\n.shortcut-row span {\n    font-size: 0.8rem;\n}\n}\n@media (max-width: 480px) {\n.action-btn span {\n    display: none;\n}\n.action-btn {\n    min-width: 44px;\n    padding: 0;\n}\n.action-btn i {\n    font-size: 1.1rem;\n    margin: 0;\n}\n}\n\n/* Keyboard Shortcuts Dropdown - Compact */\n.shortcuts-panel.compact {\n  background: var(--surface-strong);\n  border-radius: 14px;\n  width: 280px;\n  box-shadow: var(--shadow-lg);\n  border: 1px solid var(--border);\n  animation: slideUp 0.2s ease;\n  overflow: hidden;\n}\n.shortcuts-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 14px;\n  border-bottom: 1px solid var(--border);\n  background: var(--surface);\n}\n.shortcuts-header h3 {\n  margin: 0;\n  font-size: 0.85rem;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--text);\n}\n.shortcuts-header h3 i {\n  font-size: 0.9rem;\n}\n.shortcuts-close {\n  width: 26px;\n  height: 26px;\n  border-radius: 6px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 18px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.15s;\n  color: var(--text-muted);\n}\n.shortcuts-close:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.shortcuts-list {\n  padding: 8px 6px;\n  max-height: 400px;\n  overflow-y: auto;\n}\n.shortcut-item {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 6px 10px;\n  border-radius: 6px;\n  font-size: 0.75rem;\n}\n.shortcut-item:hover {\n  background: var(--accent-light);\n}\n.shortcut-item kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--accent);\n  box-shadow: 0 1px 0 var(--border);\n}\n.shortcut-item span {\n  color: var(--text-muted);\n  font-size: 0.75rem;\n}\n@keyframes fadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n@keyframes slideUp {\nfrom {\n    opacity: 0;\n    transform: translateY(10px);\n}\nto {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n/* Saved Sessions Styles */\n.saved-sessions-list {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n  max-height: 300px;\n  overflow-y: auto;\n}\n.saved-session-item {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 10px 12px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 10px;\n  transition: all 0.2s ease;\n}\n.saved-session-item:hover {\n  border-color: var(--accent);\n  background: var(--surface-strong);\n}\n.session-info {\n  flex: 1;\n  min-width: 0;\n}\n.session-name {\n  font-weight: 600;\n  font-size: 0.85rem;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.session-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.session-meta span {\n  display: inline-flex;\n  align-items: center;\n  gap: 3px;\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.session-actions {\n  display: flex;\n  gap: 6px;\n  flex-shrink: 0;\n}\n.session-load-btn,\n.session-delete-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  transition: all 0.2s ease;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.session-load-btn {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.session-load-btn:hover {\n  background: var(--accent-strong);\n  transform: scale(1.05);\n}\n.session-delete-btn {\n  background: rgba(220, 53, 69, 0.1);\n  color: #dc3545;\n}\n.session-delete-btn:hover {\n  background: #dc3545;\n  color: white;\n}\n.save-current-session {\n  margin-top: 12px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n}\n.save-session-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.save-session-info {\n  flex: 1;\n}\n.save-session-info strong {\n  display: block;\n  font-size: 0.8rem;\n  color: var(--text);\n  margin-bottom: 2px;\n}\n.save-session-info small {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.save-session-btn {\n  padding: 6px 14px;\n  border-radius: 8px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  gap: 5px;\n  transition: all 0.2s ease;\n}\n.save-session-btn:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\n.verse-download-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.82);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--accent);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.verse-download-btn:hover:not(:disabled) {\n  transform: scale(1.05);\n  border-color: var(--accent);\n  background: rgba(255, 255, 255, 0.96);\n}\n.verse-download-btn:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n\n/* Add to your style section */\n.main.tools-open {\n  overflow: hidden;\n}\n\n/* Fix tools panel positioning - ensure it goes from very top */\n.tools {\n  position: fixed;\n  top: 0;\n  /* Changed from auto/padding */\n  right: 0;\n  bottom: 0;\n  height: 100dvh;\n  width: min(var(--tools-width), 92vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease, visibility 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n  visibility: hidden;\n  pointer-events: none;\n  overscroll-behavior: contain;\n}\n\n/* Adjust tools-top padding to account for no navbar offset */\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n  padding-top: calc(18px + env(safe-area-inset-top, 0px));\n}\n\n/* Ensure tools body scrolls correctly */\n.tools-body {\n  flex: 1;\n  min-height: 0;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n  overscroll-behavior: contain;\n  -webkit-overflow-scrolling: touch;\n}\nbody.has-navbar .tools {\n  top: 0;\n  /* Still 0, but adjust internal spacing */\n}\nbody.has-navbar .tools-top {\n  padding-top: calc(18px + var(--navbar-height, 0px));\n}\n.tools.open {\n  transform: translateX(0);\n  visibility: visible;\n  pointer-events: auto;\n}\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.5);\n  z-index: 59;\n  opacity: 0;\n  pointer-events: none;\n  transition: opacity 0.2s ease;\n}\n.tools-backdrop.open {\n  opacity: 1;\n  pointer-events: auto;\n}\n\n/* Replace the existing blur mode CSS with this */\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-aid {\n  filter: blur(var(--recall-blur, 10px));\n  opacity: 0.7;\n  transition: filter 0.3s ease, opacity 0.3s ease;\n}\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .tajweed-mark,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic word,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .wbw-word {\n  filter: blur(var(--recall-blur, 10px));\n}\n\n/* Keep active verse clear */\n.main.blur-mode-active .verse-card.active .verse-arabic,\n.main.blur-mode-active .verse-card.active .verse-aid {\n  filter: none;\n  opacity: 1;\n}\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic,\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-aid,\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic .tajweed-mark,\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic word,\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic .wbw-word {\n  filter: none !important;\n  opacity: 1;\n}\n\n/* Force tajweed spans to display properly */\n.verse-arabic.tajweed-enabled span[class*=\"tajweed-\"] {\n  display: inline !important;\n}\n\n/* Ensure proper line height for tajweed text */\n.verse-arabic.tajweed-enabled {\n  line-height: 2.2 !important;\n  font-family: var(--font-ar);\n}\n\n/* Make tajweed colors visible */\n.verse-arabic.tajweed-enabled .tajweed-ham_wasl,\n.verse-arabic.tajweed-enabled .tajweed-slnt {\n  color: #7e8a97;\n}\n.verse-arabic.tajweed-enabled .tajweed-ghn,\n.verse-arabic.tajweed-enabled .tajweed-idgh_ghn,\n.verse-arabic.tajweed-enabled .tajweed-iqlb {\n  color: #2e9d62;\n  background: rgba(46, 157, 98, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,\n.verse-arabic.tajweed-enabled .tajweed-ikhf,\n.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw {\n  color: #9b59b6;\n  background: rgba(155, 89, 182, 0.10);\n}\n.verse-arabic {\n  --verse-font-percent: 100;\n  --verse-font-size: clamp(2rem, calc(var(--verse-font-percent, 120) * 0.02rem), 3.8rem);\n  font-family: var(--font-ar);\n  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));\n  line-height: 2;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n\n/* Force re-render when font changes */\n.verse-arabic.tajweed-enabled,\n.verse-arabic:not(.tajweed-enabled) {\n  transition: font-size 0.1s ease;\n}\n@keyframes wordHighlightPulse {\n0% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.03);\n}\n100% {\n    transform: scale(1.02);\n}\n}\n\n/* Combined Tajweed + Word Highlighting */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n\n/* Preserve tajweed colors inside highlighted words but make them visible */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {\n  color: inherit !important;\n  background: transparent !important;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*=\"tajweed-\"] {\n  color: white !important;\n  background: transparent !important;\n}\n\n/* Mode Button Styling */\n.mode-btn {\n  background: var(--surface);\n  border: 1px solid var(--accent);\n  color: var(--accent);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mode-btn i:first-child {\n  font-size: 0.85rem;\n}\n.mode-btn .bi-chevron-down {\n  font-size: 0.7rem;\n  transition: transform 0.2s;\n}\n.mode-btn:hover .bi-chevron-down {\n  transform: translateY(2px);\n}\n.mode-btn:hover {\n  background: var(--accent-light);\n}\n\n/* Make all buttons consistent */\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn:disabled,\n.rail-btn-ghost:disabled,\n.rail-btn-primary:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n  pointer-events: none;\n  transform: none;\n  box-shadow: none;\n}\n.rail-btn-resume {\n  background: rgba(255, 255, 255, 0.92);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.rail-btn-resume:hover {\n  background: var(--accent-light);\n  transform: translateY(-1px);\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\nbody {\n  font-family: var(--font-ui);\n  background: var(--bg);\n  color: var(--text);\n}\nhtml {\n  background: var(--bg);\n}\n.app {\n  min-height: 100vh;\n  font-size: calc(16px * var(--ui-scale, 1));\n  animation: appFade 260ms ease-out;\n}\n.verse-arabic {\n  min-height: 60px;\n}\n\n/* Session Rail */\n.session-rail {\n  background: var(--surface);\n  border-radius: 20px;\n  margin-bottom: 20px;\n  padding: 12px 16px 14px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.session-rail-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 10px;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.session-rail-copy {\n  flex: 1;\n  min-width: 0;\n}\n.session-rail-headline {\n  display: flex;\n  align-items: baseline;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.session-rail-pills {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  margin-top: 6px;\n}\n.session-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 4px;\n  padding: 5px 9px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n  font-size: 0.71rem;\n  white-space: nowrap;\n}\n.session-pill strong {\n  color: var(--text);\n  font-weight: 700;\n}\n.session-pill-focus {\n  max-width: min(280px, 100%);\n}\n.session-pill-focus strong {\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.session-rail-kicker {\n  font-size: 0.7rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.session-rail-meta {\n  font-size: 0.72rem;\n  color: var(--text-muted);\n  margin-top: 2px;\n}\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\n.session-rail-subnote {\n  margin-top: 10px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n}\n\n/* Mode Indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 10px;\n  padding: 6px 14px;\n  margin: 8px 0 12px 0;\n  background: var(--accent-light);\n  border-radius: 40px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n.mode-switch-btn {\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 4px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.mode-switch-btn:hover {\n  background: rgba(154, 103, 56, 0.2);\n  transform: rotate(180deg);\n}\n.progress-bar-wide {\n  margin-top: 10px;\n  height: 6px;\n  position: relative;\n  overflow: visible;\n}\n.progress-label {\n  position: absolute;\n  top: -24px;\n  right: 0;\n  font-size: 0.72rem;\n  font-weight: 700;\n  color: var(--accent);\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.session-rail-top {\n    flex-direction: column;\n    align-items: stretch;\n}\n.session-rail-actions {\n    justify-content: stretch;\n    width: 100%;\n    flex-wrap: wrap;\n}\n.rail-btn {\n    flex: 1;\n    justify-content: center;\n}\n}\n.verse-arabic-loading {\n  min-height: 60px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--text-muted);\n  animation: pulse 1s infinite;\n}\n@keyframes pulse {\n0%,\n  100% {\n    opacity: 0.3;\n}\n50% {\n    opacity: 0.6;\n}\n}\n\n/* Ensure HTML content is styled properly before Vue mounts */\n.verse-arabic word,\n.verse-arabic .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n}\n\n/* Prevent raw HTML showing */\n.verse-arabic:empty {\n  display: none;\n}\n\n/* Tajweed styles */\n.verse-arabic.tajweed-enabled [class*=\"tajweed\"] {\n  display: inline;\n}\n\n/* Color rules for tajweed - adjust based on what API returns */\n.verse-arabic [class*=\"ghunnah\"],\n.verse-arabic [class*=\"Ghunnah\"] {\n  color: #2ecc71;\n}\n.verse-arabic [class*=\"madd\"],\n.verse-arabic [class*=\"Madd\"] {\n  color: #e74c3c;\n}\n.verse-arabic [class*=\"qalqalah\"],\n.verse-arabic [class*=\"Qalqalah\"] {\n  color: #f39c12;\n}\n.verse-arabic [class*=\"ikhfa\"],\n.verse-arabic [class*=\"Ikhfa\"] {\n  color: #9b59b6;\n}\n.verse-arabic [class*=\"idgham\"],\n.verse-arabic [class*=\"Idgham\"] {\n  color: #3498db;\n}\n\n/* Word by Word styles */\n.wbw-word {\n  display: inline-block;\n  padding: 5px 8px;\n  margin: 2px 3px;\n  border-radius: 8px;\n  transition: all 0.2s ease;\n  cursor: pointer;\n  font-size: 1.05rem;\n  background: rgba(154, 103, 56, 0.05);\n}\n.wbw-word:hover {\n  background: var(--accent-light);\n  transform: scale(1.02);\n}\n.wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n  animation: pop 180ms ease-out;\n}\n.verse-arabic.verse-weak .wbw-word.weak-word {\n  background: #fff3bf;\n  color: #5f4b00;\n}\n.verse-arabic.verse-mastered .wbw-word.mastered-word {\n  background: #d3f9d8;\n  color: #1f6f31;\n}\n@keyframes pop {\nfrom {\n    transform: scale(1.01);\n}\nto {\n    transform: scale(1.05);\n}\n}\n\n/* Word highlighting styles */\n.verse-arabic word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n.rail-stat strong,\n.player-eta {\n  cursor: help;\n  border-bottom: 1px dotted var(--text-muted);\n}\n\n/* Optional: Show detailed breakdown on hover */\n.rail-stat:hover strong::after {\n  content: attr(title);\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: var(--surface-strong);\n  color: var(--text);\n  padding: 4px 8px;\n  border-radius: 8px;\n  font-size: 0.7rem;\n  white-space: nowrap;\n  z-index: 100;\n  box-shadow: var(--shadow-sm);\n  border: 1px solid var(--border);\n}\n\n/* Minimized Session Rail */\n.session-rail-mini {\n  position: sticky;\n  top: 12px;\n  z-index: 18;\n  padding: 10px;\n  padding-top: 8px;\n  margin-bottom: 20px;\n  background: var(--surface);\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-sm);\n  overflow: hidden;\n  transition: all 0.2s ease;\n}\n.session-rail-mini:hover {\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent-soft);\n}\n.rail-mini-content {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 8px 12px 8px 16px;\n}\n.rail-mini-info {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  flex: 1;\n}\n.rail-mini-icon {\n  width: 32px;\n  height: 32px;\n  background: var(--accent-light);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.rail-mini-icon i {\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.rail-mini-details {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-mini-surah {\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.rail-mini-progress {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.rail-mini-stats {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.mini-stat-item {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.mini-stat-item i {\n  font-size: 0.7rem;\n  color: var(--accent);\n}\n.rail-mini-actions {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mini-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n}\n.mini-btn:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n}\n.mini-btn:first-child {\n  background: var(--accent);\n  border-color: var(--accent);\n  color: white;\n}\n.mini-btn:first-child:hover {\n  transform: scale(1.05);\n  background: var(--accent-strong);\n}\n.rail-mini-progress {\n  height: 2px;\n  background: var(--border);\n}\n.progress-fill-mini {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.rail-mini-stats {\n    display: none;\n}\n.rail-mini-content {\n    padding: 6px 10px 6px 12px;\n}\n.rail-mini-surah {\n    font-size: 0.75rem;\n}\n}\n\n/* Font Dropdown */\n.font-dropdown {\n  position: relative;\n}\n.font-dropdown-trigger {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 999px;\n  font-size: 0.75rem;\n  cursor: pointer;\n  transition: all 0.2s;\n  color: var(--text);\n}\n.font-dropdown-trigger:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.font-dropdown-trigger .bi-chevron-down {\n  transition: transform 0.2s;\n  font-size: 0.7rem;\n}\n.font-dropdown-trigger .bi-chevron-down.rotated {\n  transform: rotate(180deg);\n}\n.font-dropdown-menu {\n  position: absolute;\n  top: calc(100% + 8px);\n  right: 0;\n  min-width: 200px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  box-shadow: var(--shadow-lg);\n  overflow: hidden;\n  z-index: 100;\n  backdrop-filter: blur(12px);\n}\n.font-option {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  width: 100%;\n  padding: 10px 14px;\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  font-size: 0.8rem;\n  text-align: left;\n  transition: all 0.15s;\n  color: var(--text);\n}\n.font-option:hover {\n  background: var(--accent-light);\n}\n.font-option.active {\n  background: var(--accent);\n  color: white;\n}\n.font-option .check-icon {\n  margin-left: auto;\n  font-size: 0.8rem;\n}\n\n/* Dropdown Animation */\n.dropdown-fade-enter-active,\n.dropdown-fade-leave-active {\n  transition: all 0.2s ease;\n}\n.dropdown-fade-enter-from,\n.dropdown-fade-leave-to {\n  opacity: 0;\n  transform: translateY(-8px);\n}\n\n/* Tajweed styles for AlQuran quran-tajweed edition */\n.verse-arabic.tajweed-enabled {\n  line-height: 2;\n  white-space: normal;\n  overflow-wrap: anywhere;\n}\n.verse-arabic.tajweed-enabled .tajweed-mark {\n  display: inline;\n  border-radius: 0.2em;\n  padding: 0 0.03em;\n}\n.verse-arabic.tajweed-enabled .tajweed-ham_wasl,\n.verse-arabic.tajweed-enabled .tajweed-slnt {\n  color: #7e8a97;\n}\n.verse-arabic.tajweed-enabled .tajweed-ghn,\n.verse-arabic.tajweed-enabled .tajweed-idgh_ghn,\n.verse-arabic.tajweed-enabled .tajweed-iqlb {\n  color: #2e9d62;\n  background: rgba(46, 157, 98, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,\n.verse-arabic.tajweed-enabled .tajweed-ikhf,\n.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw {\n  color: #9b59b6;\n  background: rgba(155, 89, 182, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-qlq,\n.verse-arabic.tajweed-enabled .tajweed-lqlq {\n  color: #d98824;\n  background: rgba(217, 136, 36, 0.12);\n}\n.verse-arabic.tajweed-enabled .tajweed-madda_normal,\n.verse-arabic.tajweed-enabled .tajweed-madda_permissible,\n.verse-arabic.tajweed-enabled .tajweed-madda_necessary,\n.verse-arabic.tajweed-enabled .tajweed-madda_obligatory,\n.verse-arabic.tajweed-enabled .tajweed-madda_pbligatory {\n  color: #d55245;\n  background: rgba(213, 82, 69, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_mus,\n.verse-arabic.tajweed-enabled .tajweed-idghm_shfw,\n.verse-arabic.tajweed-enabled .tajweed-idgh_shfw,\n.verse-arabic.tajweed-enabled .tajweed-ghn+.tajweed-mark {\n  color: #2b7bbb;\n  background: rgba(43, 123, 187, 0.10);\n}\n\n/* Toolbar chip active state for tajweed */\n.toolbar-chip.active {\n  background: var(--accent);\n  color: white;\n}\n.verse-play-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: white;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.verse-play-btn i {\n  font-size: 0.9rem;\n}\n.verse-play-btn:hover {\n  transform: scale(1.05);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--accent);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.verse-play-btn:active {\n  transform: scale(0.98);\n}\n.verse-preview-label {\n  margin-left: 10px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n  font-weight: 650;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n}\n.resume-details {\n  margin-top: 10px;\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.72);\n  padding: 10px 12px;\n}\n.resume-details summary {\n  cursor: pointer;\n  list-style: none;\n  font-weight: 650;\n  color: var(--text);\n}\n.resume-details summary::-webkit-details-marker {\n  display: none;\n}\n.verse-download-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.82);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--accent);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.verse-download-btn:hover:not(:disabled) {\n  transform: scale(1.05);\n  border-color: var(--accent);\n  background: rgba(255, 255, 255, 0.96);\n}\n.verse-download-btn:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n.speed-label {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-right: 4px;\n}\n.speed-controls {\n  display: flex;\n  gap: 4px;\n}\n.speed-btn {\n  padding: 4px 8px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.speed-btn.active {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.streak-motivation {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border-radius: 40px;\n  font-size: 0.75rem;\n}\n.streak-badge {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-weight: 500;\n}\n.motivation-message {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--text-muted);\n  font-size: 0.7rem;\n}\n.pa-note {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n  margin-top: 4px;\n  display: block;\n}\n\n/* Active tab indicator with pulse effect */\n.tools-tabs button.active-tab {\n  position: relative;\n  animation: tabPulse 0.22s ease-out;\n}\n@keyframes tabPulse {\n0% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 var(--accent);\n}\n50% {\n    transform: scale(1.012);\n    box-shadow: 0 0 0 3px var(--accent-light);\n}\n100% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n.quick-tools {\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.78);\n}\n.quick-tools-grid {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n  padding: 12px 14px;\n}\n.quick-tool {\n  border: 1px solid rgba(154, 103, 56, 0.10);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.82);\n  padding: 10px;\n  display: grid;\n  gap: 8px;\n  min-width: 0;\n}\n.quick-tool-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 8px;\n}\n.quick-tool-label {\n  font-size: 0.74rem;\n  font-weight: 750;\n  color: var(--text);\n}\n.quick-tool-value {\n  font-size: 0.74rem;\n  font-weight: 650;\n  color: var(--text-muted);\n}\n.quick-tool-body {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.quick-tool-body.disabled {\n  opacity: 0.55;\n}\n.quick-tool-body-muted {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n}\n.quick-range {\n  flex: 1 1 auto;\n  min-width: 0;\n}\n.toggle-chip {\n  min-height: 32px;\n  min-width: 68px;\n  padding: 6px 14px;\n  border-radius: 40px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);\n  border: 1px solid var(--border);\n  background: var(--surface);\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n  position: relative;\n  overflow: hidden;\n}\n\n/* Improved Toggle Buttons - Consistent with modern UI */\n.toggle-chip {\n  min-height: 32px;\n  min-width: 68px;\n  padding: 6px 14px;\n  border-radius: 40px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);\n  border: 1px solid var(--border);\n  background: var(--surface);\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n  position: relative;\n  overflow: hidden;\n}\n.toggle-chip::before {\n  content: '';\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  width: 0;\n  height: 0;\n  border-radius: 50%;\n  background: rgba(154, 103, 56, 0.2);\n  transform: translate(-50%, -50%);\n  transition: width 0.4s, height 0.4s;\n}\n.toggle-chip:active::before {\n  width: 100px;\n  height: 100px;\n}\n.toggle-chip:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-sm);\n}\n.toggle-chip.active {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.toggle-chip.active:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.4);\n  filter: brightness(1.05);\n}\n.toggle-chip:active {\n  transform: translateY(0);\n}\n.mode-radio-group {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex-wrap: wrap;\n  justify-content: flex-end;\n}\n.mode-radio {\n  position: relative;\n  display: inline-grid;\n  place-items: center;\n  width: 24px;\n  height: 24px;\n  padding: 0;\n  border-radius: 50%;\n  border: 1px solid rgba(154, 103, 56, 0.24);\n  background: rgba(255, 250, 243, 0.95);\n  cursor: pointer;\n  transition: all 0.18s ease;\n}\n.mode-radio input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.mode-radio-dot {\n  width: 11px;\n  height: 11px;\n  border-radius: 50%;\n  border: 1.5px solid rgba(154, 103, 56, 0.52);\n  background: rgba(255, 255, 255, 0.9);\n  position: relative;\n  flex: 0 0 auto;\n  transition: all 0.18s ease;\n}\n.mode-radio-dot::after {\n  content: \"\";\n  position: absolute;\n  inset: 2px;\n  border-radius: 50%;\n  background: transparent;\n  transition: background 0.18s ease;\n}\n.mode-radio.active {\n  border-color: rgba(154, 103, 56, 0.38);\n  background: rgba(248, 236, 222, 0.95);\n}\n.mode-radio.active .mode-radio-dot {\n  border-color: rgba(154, 103, 56, 0.86);\n}\n.mode-radio.active .mode-radio-dot::after {\n  background: rgba(154, 103, 56, 0.86);\n}\n.mode-radio:hover {\n  border-color: rgba(154, 103, 56, 0.3);\n  background: rgba(252, 244, 235, 0.95);\n}\n.workspace-shell-active-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 5px;\n  padding: 4px 10px;\n  border-radius: 999px;\n  background: rgba(58, 167, 109, 0.16);\n  border: 1px solid rgba(58, 167, 109, 0.28);\n  color: #1f6b45;\n  font-size: 0.72rem;\n  font-weight: 700;\n}\n.active-techniques-section {\n  padding: 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(58, 167, 109, 0.1);\n  background: linear-gradient(180deg, rgba(245, 252, 247, 0.82), rgba(241, 249, 243, 0.72));\n  box-shadow: none;\n}\n.active-techniques-header {\n  margin-bottom: 10px;\n  padding: 0 0 2px;\n  display: flex;\n  align-items: flex-start;\n  justify-content: space-between;\n  gap: 10px;\n}\n.active-techniques-count {\n  min-width: 24px;\n  height: 24px;\n  padding: 0 8px;\n  border-radius: 999px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  background: rgba(58, 167, 109, 0.08);\n  color: rgba(31, 107, 69, 0.75);\n  font-size: 0.72rem;\n  font-weight: 700;\n}\n.active-techniques-grid {\n  display: grid;\n  gap: 8px;\n}\n.active-technique-card {\n  display: flex;\n  align-items: flex-start;\n  gap: 10px;\n  padding: 9px 10px;\n  border-radius: 10px;\n  border: 1px solid rgba(58, 167, 109, 0.08);\n  background: rgba(250, 253, 250, 0.92);\n  box-shadow: none;\n}\n.active-technique-icon {\n  width: 28px;\n  height: 28px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  color: rgba(47, 140, 90, 0.82);\n  background: rgba(58, 167, 109, 0.08);\n  flex: 0 0 auto;\n}\n.active-technique-copy {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n  min-width: 0;\n  padding-top: 0;\n}\n.active-technique-copy strong {\n  font-size: 0.78rem;\n  color: rgba(31, 107, 69, 0.9);\n  font-weight: 700;\n}\n.active-technique-copy span {\n  font-size: 0.69rem;\n  line-height: 1.35;\n  color: rgba(31, 107, 69, 0.68);\n}\n\n/* Compact toggle for headers */\n.st-right-group {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.st-right-group .toggle-chip {\n  min-height: 32px;\n  min-width: 68px;\n  padding: 4px 12px;\n  font-size: 0.75rem;\n}\n\n/* Switch-style alternative (optional) */\n.toggle-switch {\n  position: relative;\n  display: inline-flex;\n  align-items: center;\n  cursor: pointer;\n  min-width: 52px;\n  height: 30px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 30px;\n  transition: all 0.2s ease;\n}\n.toggle-switch.active {\n  background: var(--accent);\n  border-color: transparent;\n}\n.toggle-switch-knob {\n  position: absolute;\n  left: 2px;\n  width: 24px;\n  height: 24px;\n  background: white;\n  border-radius: 50%;\n  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);\n}\n.toggle-switch.active .toggle-switch-knob {\n  transform: translateX(22px);\n}\n.toggle-switch-label {\n  margin-left: 60px;\n  font-size: 0.75rem;\n  font-weight: 500;\n  color: var(--text-muted);\n}\n.toggle-switch.active+.toggle-switch-label {\n  color: var(--accent);\n}\n\n/* Technique toggle specific */\n.technique-toggle {\n  min-height: 32px;\n  min-width: 72px;\n  font-weight: 600;\n  letter-spacing: 0.5px;\n}\n\n/* Settings toggle */\n.settings-toggle {\n  min-height: 36px;\n  min-width: 72px;\n  font-weight: 600;\n}\n\n/* Ripple effect animation */\n@keyframes ripple {\nto {\n    transform: scale(4);\n    opacity: 0;\n}\n}\n.toggle-chip-ripple {\n  position: absolute;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.5);\n  transform: scale(0);\n  animation: ripple 0.4s linear;\n  pointer-events: none;\n}\n\n/* Toggle switch animation and visual feedback */\n.switch {\n  transition: all 0.2s ease;\n}\n.switch:active {\n  transform: scale(0.98);\n}\n.switch-ui {\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n  animation: switchPulse 0.3s ease-out;\n}\n@keyframes switchPulse {\n0% {\n    box-shadow: 0 0 0 0 rgba(139, 94, 60, 0.4);\n}\n50% {\n    box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.2);\n}\n100% {\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Field hint styling */\n.field-hint {\n  font-size: calc(0.7rem * var(--en-scale, 1));\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.26;\n  display: block;\n}\n\n/* Verse Arabic styling */\n.verse-arabic {\n  --verse-font-percent: 100;\n  --verse-font-size: clamp(1.5rem, calc(var(--verse-font-percent, 150) * 0.0175rem), 3.25rem);\n  font-family: var(--font-ar);\n  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n.verse-arabic word {\n  display: inline-block;\n  font-size: 1em;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-card {\n  background: var(--surface);\n  border-radius: 20px;\n  padding: 26px;\n  transition: all 0.2s ease;\n  border: 1px solid var(--border);\n  position: relative;\n  direction: ltr;\n  overflow: hidden;\n  width: 100%;\n}\n.verse-card::before {\n  content: \"\";\n  position: absolute;\n  inset: 0;\n  pointer-events: none;\n  background:\n    linear-gradient(180deg, rgba(184, 130, 78, 0.03), transparent 22%),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.05), transparent 28%);\n}\n.verse-card.active {\n  border-color: var(--accent);\n  background: linear-gradient(145deg, rgba(184, 130, 78, 0.14), rgba(154, 103, 56, 0.04));\n  box-shadow: 0 0 0 1px var(--accent), 0 14px 32px rgba(154, 103, 56, 0.18);\n  transform: translateY(-1px);\n  transition: all 0.2s ease;\n}\n.main.focus-mode-active .verse-card:not(.active) {\n  opacity: 0.54;\n  filter: saturate(0.72);\n}\n.main.focus-mode-active .workspace-fab-live,\n.main.focus-mode-active .verse-card:not(.active) .verse-aid {\n  opacity: 0.38;\n}\n\n\n\n/* Removed: \"For serious huffadh training\" badge */\n.verse-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 16px;\n}\n.verse-badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-number {\n  font-size: 0.78rem;\n  padding: 6px 12px;\n  background: var(--accent);\n  border-radius: 999px;\n  color: #fff;\n  font-weight: 700;\n  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.24);\n}\n.verse-status-badge,\n.verse-status-subtle {\n  border-radius: 999px;\n  padding: 5px 10px;\n  font-size: 0.68rem;\n  font-weight: 600;\n}\n.verse-status-badge {\n  background: var(--accent-light);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.verse-status-subtle {\n  background: var(--bg-elevated);\n  color: var(--text-muted);\n}\n.verse-ref {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex-shrink: 0;\n}\n\n/* Font controls */\n.verse-font-controls {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  padding: 2px 6px;\n  margin-right: 8px;\n}\n.verse-font-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 12px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 10px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.verse-font-btn:hover {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n}\n.verse-font-size-indicator {\n  font-size: 10px;\n  min-width: 35px;\n  text-align: center;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n\n/* Session rail */\n.session-rail {\n  position: sticky;\n  top: 14px;\n  z-index: 18;\n  margin-bottom: 18px;\n  padding: 12px 14px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-md);\n  animation: railIn 280ms ease-out;\n}\n.session-rail-top {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  gap: 12px;\n  align-items: center;\n}\n.session-rail-kicker {\n  font-size: 10px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  margin-top: 2px;\n  font-size: 14px;\n  font-weight: 450;\n}\n.session-rail-meta {\n  margin-top: 2px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.session-rail-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 8px;\n  margin-top: 10px;\n}\n.rail-stat {\n  padding: 8px 10px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-stat span {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n}\n.rail-stat strong {\n  font-size: 0.78rem;\n  font-weight: 500;\n}\n.rail-btn {\n  height: 34px;\n  padding: 0 12px;\n  border-radius: 13px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  color: var(--text);\n  font-size: 12px;\n  font-weight: 450;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.rail-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);\n}\n.progress-bar {\n  flex: 1;\n  height: 4px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-wide {\n  margin-top: 10px;\n}\n.progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s;\n}\n\n/* Mode indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  margin: 8px 0 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n\n/* Reading toolbar */\n.reading-toolbar {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  margin-bottom: 16px;\n  padding: 12px 14px;\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.reading-toolbar-group {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  align-items: flex-start;\n}\n.toolbar-chip {\n  border: 0;\n  border-radius: 999px;\n  padding: 8px 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  font-size: 0.75rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: var(--shadow-sm);\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.toolbar-chip i,\n.rail-btn i,\n.tools-tabs button i,\n.st-ico i {\n  font-size: 0.9rem;\n  line-height: 1;\n}\n.toolbar-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.toolbar-chip:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n\n/* Tools panel */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  height: 100dvh;\n  width: min(var(--tools-width), 92vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease, visibility 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n  visibility: hidden;\n  pointer-events: none;\n  overscroll-behavior: contain;\n}\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(15, 12, 8, 0.35);\n  backdrop-filter: blur(1px);\n  z-index: 59;\n  touch-action: none;\n}\n.tools.open {\n  transform: translateX(0);\n  visibility: visible;\n  pointer-events: auto;\n}\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n}\n.tools-topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.tools-title {\n  font-size: 1rem;\n  font-weight: 700;\n  letter-spacing: -0.2px;\n  color: var(--text);\n}\n.tools-context {\n  margin-top: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 600;\n}\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n  color: rgba(0, 0, 0, 0.7);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n  overflow-x: auto;\n  -webkit-overflow-scrolling: touch;\n  width: 100%;\n}\n.tools-tabs button {\n  flex: 1 1 0;\n  padding: 7px 10px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.82rem;\n  cursor: pointer;\n  color: rgba(0, 0, 0, 0.55);\n  font-weight: 450;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: background 140ms ease, color 140ms ease, transform 140ms ease, box-shadow 160ms ease;\n  white-space: nowrap;\n}\n.tools-tabs button.active {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));\n  box-shadow: var(--shadow-sm);\n  color: rgba(0, 0, 0, 0.85);\n}\n.tools-body {\n  flex: 1;\n  min-height: 0;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n  overscroll-behavior: contain;\n  -webkit-overflow-scrolling: touch;\n}\n\n/* Compact mode (default) to reduce cognitive load */\n.tools-body.compact .st-sub,\n.tools-body.compact .field-hint,\n.tools-body.compact .analytics-help,\n.tools-body.compact .stat-help {\n  display: block !important;\n}\n.tools-body.compact .sheet {\n  gap: 8px;\n}\n.tools-body.compact .sheet-section {\n  padding: 0;\n  border-radius: 14px;\n}\n.tools-body.compact .sheet-toggle {\n  padding: 10px 12px;\n}\n.tools-body.compact .sheet-content {\n  padding: 8px 12px 10px;\n}\n.tools-body.compact .field-stack {\n  gap: 12px;\n}\n.tools-body.compact .field label {\n  margin-bottom: 6px;\n}\n.tools-body.compact .sheet-section-compact {\n  border-radius: 14px;\n}\n.tools-body.compact .sheet-section-compact .sheet-toggle {\n  padding: 11px 13px;\n}\n.tools-body.compact .sheet-section-compact .sheet-content {\n  padding: 8px 13px 13px;\n}\n.tools-body.compact .field-stack-compact {\n  gap: 10px;\n}\n.tools-body.compact .field-stack-compact .field {\n  gap: 6px;\n}\n.tools-body.compact .field-stack-compact .field label {\n  margin-bottom: 0;\n}\n.tools-body.compact .field-stack-compact .select,\n.tools-body.compact .field-stack-compact .input {\n  padding: 10px 12px;\n}\n.tools-body.compact .field-stack-compact .field-hint {\n  margin-top: 1px;\n}\n.tools-body.compact .field-stack-compact .slider-markers {\n  margin-top: 2px;\n}\n.sheet {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.sheet-section {\n  padding: 0;\n  overflow: hidden;\n  animation: riseSoft 260ms ease-out;\n}\n.sheet-toggle {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border: none;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease;\n}\n.st-left {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.st-ico {\n  width: 24px;\n  height: 24px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));\n  border: 1px solid rgba(139, 94, 60, 0.18);\n  flex: 0 0 auto;\n  font-size: 11px;\n  font-weight: 600;\n  color: var(--accent);\n}\n.st-txt {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 2px;\n  min-width: 0;\n}\n.st-title {\n  font-weight: 450;\n  letter-spacing: -0.2px;\n  color: var(--text);\n  font-size: 0.82rem;\n  white-space: nowrap;\n}\n.st-sub {\n  font-size: 0.66rem;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.st-chev {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  display: grid;\n  place-items: center;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  color: rgba(0, 0, 0, 0.65);\n  transition: transform 0.15s ease;\n  box-shadow: var(--shadow-sm);\n}\n.st-chev.open {\n  transform: rotate(180deg);\n}\n.sheet-content {\n  padding: 12px 12px 14px;\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field-stack {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  min-width: 0;\n}\n.field label {\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n}\n.field-hint {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.35;\n  display: block;\n}\n.select,\n.input {\n  width: 100%;\n  min-width: 0;\n  padding: 11px 12px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--text);\n  font-size: 0.8rem;\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n.range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.range-single {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n  align-items: center;\n}\n.range span {\n  color: rgba(0, 0, 0, 0.35);\n  font-weight: 450;\n  font-size: 11px;\n}\n.radio-group {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.radio {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 0.85rem;\n  color: var(--text);\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  transition: all 0.2s ease;\n}\n.radio:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-sm);\n}\n.radio input {\n  margin: 0;\n}\n.switch {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 11px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  cursor: pointer;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  transition: all 0.2s ease;\n}\n.switch input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.switch-ui {\n  width: 44px;\n  height: 26px;\n  border-radius: 999px;\n  background: rgba(0, 0, 0, 0.12);\n  position: relative;\n  flex: 0 0 auto;\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  content: \"\";\n  position: absolute;\n  top: 3px;\n  left: 3px;\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  background: white;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n}\n.switch input:checked+.switch-ui::after {\n  transform: translateX(18px);\n}\n.switch-text {\n  font-size: 0.74rem;\n  color: rgba(0, 0, 0, 0.72);\n  font-weight: 400;\n}\n.tools-techniques-section {\n  border-color: rgba(139, 94, 60, 0.16);\n  box-shadow: none;\n}\n.techniques-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.technique-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 13px;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.78);\n  box-shadow: 0 10px 24px rgba(63, 39, 18, 0.055);\n}\n.technique-row-stacked {\n  align-items: stretch;\n  flex-direction: column;\n}\n.technique-row-main,\n.technique-control {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.technique-copy {\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  gap: 3px;\n}\n.technique-copy label {\n  margin: 0;\n  color: var(--text);\n  font-family: inherit;\n  font-size: 0.86rem;\n  font-weight: 560;\n  white-space: nowrap;\n}\n.technique-copy small,\n.technique-control span {\n  color: var(--text-muted);\n  font-family: inherit;\n  font-size: 0.73rem;\n  font-weight: 400;\n  line-height: 1.45;\n}\n.technique-toggle {\n  flex: 0 0 86px;\n  min-height: 40px;\n  border-radius: 12px;\n  font-family: inherit;\n  font-size: 0.82rem;\n  font-weight: 560;\n  border-width: 1px;\n}\n.technique-control {\n  padding-top: 12px;\n  border-top: 1px solid rgba(154, 103, 56, 0.10);\n}\n.technique-range {\n  flex: 1 1 auto;\n  min-width: 96px;\n  padding: 0;\n  box-shadow: none;\n}\n.segmented-control {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 6px;\n  padding: 5px;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 14px;\n  background: rgba(98, 73, 49, 0.045);\n}\n.segmented-control button {\n  min-width: 0;\n  min-height: 42px;\n  padding: 9px 10px;\n  border: 1px solid transparent;\n  border-radius: 10px;\n  background: transparent;\n  color: var(--text-muted);\n  font-family: inherit;\n  font-size: 0.8rem;\n  font-weight: 560;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n}\n.segmented-control button.active {\n  background: #fffaf4;\n  color: var(--accent-strong);\n  border-color: rgba(154, 103, 56, 0.20);\n  box-shadow: 0 8px 18px rgba(63, 39, 18, 0.09);\n}\n.technique-preview {\n  padding: 10px 12px;\n  border-radius: 12px;\n  background: rgba(154, 103, 56, 0.07);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: rgba(98, 73, 49, 0.92);\n  font-family: inherit;\n  font-size: 0.74rem;\n  font-weight: 430;\n  line-height: 1.45;\n}\n\n/* Start button */\n.start-btn {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  border-radius: 12px;\n  color: white;\n  font-size: 1rem;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  margin-top: 20px;\n  transition: all 0.2s ease;\n}\n.start-btn:hover:not(:disabled) {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);\n}\n.start-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n\n/* Tools footer */\n.tools-footer {\n  position: sticky;\n  bottom: 0;\n  min-height: var(--tools-footer-h);\n  padding: 12px 16px 14px;\n  border-top: 1px solid var(--border);\n  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));\n  display: flex;\n  gap: 10px;\n  justify-content: space-between;\n  align-items: center;\n  z-index: 1;\n}\n.tools-btn {\n  flex: 1;\n  min-height: 44px;\n  padding: 10px 10px;\n  border-radius: 15px;\n  font-weight: 500;\n  border: 1px solid rgba(0, 0, 0, 0.1);\n  cursor: pointer;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  line-height: 1;\n}\n.tools-btn-soft {\n  color: var(--text-muted);\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.42));\n  box-shadow: none;\n}\n.tools-btn-soft:hover {\n  color: var(--text);\n  border-color: var(--accent-soft);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.6));\n}\n.tools-btn-primary {\n  color: #fff;\n  border-color: rgba(0, 0, 0, 0.08);\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  box-shadow: var(--shadow-sm);\n}\n.tools-btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n.tools-btn:active:not(:disabled),\n.fab-btn:active:not(:disabled),\n.toggle-chip:active:not(:disabled),\n.sheet-toggle:active:not(:disabled) {\n  transform: translateY(0);\n}\n.tools-btn:hover:not(:disabled),\n.fab-btn:hover:not(:disabled),\n.toggle-chip:hover:not(:disabled),\n.sheet-toggle:hover:not(:disabled) {\n  filter: brightness(1.02);\n}\n.tools-btn-primary:disabled {\n  opacity: 0.55;\n  cursor: not-allowed;\n  box-shadow: none;\n}\n.tools-btn-start {\n  flex: 1.6;\n}\n\n/* Hero section */\n.hero-card {\n  margin-bottom: 16px;\n  padding: 18px 18px 16px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 236, 226, 0.92));\n  box-shadow: var(--shadow-md);\n  display: grid;\n  gap: 14px;\n  animation: riseSoft 260ms ease-out;\n}\n.hero-kicker {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  color: var(--accent);\n}\n.hero-title {\n  margin-top: 6px;\n  font-size: 1.24rem;\n  font-weight: 500;\n  letter-spacing: -0.03em;\n}\n.hero-sub {\n  margin-top: 8px;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  max-width: 56ch;\n}\n.hero-flow {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n}\n.hero-step {\n  padding: 10px 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.62);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.74rem;\n}\n.hero-step span {\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  display: grid;\n  place-items: center;\n  background: var(--accent-light);\n  color: var(--accent);\n  font-size: 11px;\n}\n.hero-step strong {\n  font-weight: 500;\n}\n.hero-points {\n  display: grid;\n  gap: 8px;\n}\n.hero-point {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.hero-point i {\n  color: var(--accent);\n}\n.hero-actions,\n.empty-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cta {\n  flex: 1;\n  padding: 10px 10px;\n  border-radius: 14px;\n  font-weight: 450;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 11px;\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.cta-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);\n}\n.cta-ghost {\n  background: rgba(255, 255, 255, 0.58);\n  box-shadow: var(--shadow-sm);\n}\n\n/* Empty state */\n.empty {\n  padding: 40px 0;\n}\n.empty-card {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: var(--radius);\n  padding: 32px;\n  text-align: center;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-md);\n}\n.empty-icon {\n  font-family: var(--font-ar);\n  font-size: 2.2rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.empty-card h3 {\n  font-weight: 450;\n  margin-bottom: 6px;\n  font-size: 1rem;\n}\n.empty-card p {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  margin-bottom: 16px;\n}\n\n/* Verses grid */\n.workspace {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr);\n  gap: 14px;\n  align-items: start;\n  margin-top: 14px;\n}\n.workspace-main {\n  min-width: 0;\n}\n.workspace-shell {\n  width: 80%;\n  margin: 0 auto 18px;\n}\n.workspace-shell {\n  display: grid;\n  gap: 6px;\n  padding: 10px 12px;\n  border-radius: 20px;\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background:\n    linear-gradient(160deg, rgba(255, 251, 245, 0.98), rgba(255, 255, 255, 0.9)),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.09), transparent 28%);\n  box-shadow: 0 14px 28px rgba(63, 39, 18, 0.07);\n  position: relative;\n}\n.workspace-shell.collapsed {\n  gap: 8px;\n  padding: 12px 14px;\n}\n.workspace-shell-head {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  gap: 16px;\n  align-items: flex-start;\n}\n.workspace-shell-copy {\n  display: grid;\n  gap: 3px;\n  min-width: 0;\n}\n.workspace-shell-kicker {\n  display: inline-flex;\n  width: -moz-fit-content;\n  width: fit-content;\n  padding: 3px 7px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.1);\n  color: var(--accent-strong);\n  font-size: 0.68rem;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 0.06em;\n}\n.workspace-shell-kicker-review {\n  background: rgba(183, 28, 28, 0.12);\n  color: #9f1f1f;\n}\n.workspace-shell-title-row {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  flex-wrap: wrap;\n}\n.workspace-shell-copy h1 {\n  margin: 0;\n  color: var(--text);\n  font-size: clamp(1rem, 1.5vw, 1.25rem);\n  line-height: 1.08;\n  font-weight: 650;\n}\n.workspace-shell-phase {\n  display: inline-flex;\n  align-items: center;\n  min-height: 28px;\n  padding: 5px 10px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.88);\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  color: var(--accent-strong);\n  font-size: 0.73rem;\n  font-weight: 650;\n}\n.workspace-shell-phase-review {\n  border-color: rgba(183, 28, 28, 0.24);\n  color: #9f1f1f;\n  background: rgba(183, 28, 28, 0.09);\n}\n.workspace-shell-copy h2 {\n  margin: 0;\n  color: var(--text);\n  font-size: 1rem;\n  line-height: 1.15;\n  font-weight: 600;\n}\n.workspace-shell-copy p {\n  margin: 0;\n  color: var(--text-muted);\n  max-width: 58ch;\n  font-size: 0.8rem;\n  line-height: 1.35;\n}\n.workspace-shell-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.workspace-shell-meta span {\n  display: inline-flex;\n  align-items: center;\n  min-height: 28px;\n  padding: 5px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.15);\n  background: rgba(255, 255, 255, 0.86);\n  color: rgba(48, 42, 35, 0.86);\n  font-size: 0.76rem;\n  font-weight: 600;\n}\n.workspace-shell-meta-review {\n  border-color: rgba(183, 28, 28, 0.24) !important;\n  color: #9f1f1f !important;\n  background: rgba(183, 28, 28, 0.08) !important;\n}\n.resume-feedback-bars,\n.session-feedback-bars {\n  display: grid;\n  gap: 6px;\n  margin-top: 8px;\n}\n.session-feedback-panel {\n  margin-top: 8px;\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.72);\n  padding: 8px 10px;\n}\n.session-feedback-panel summary {\n  list-style: none;\n  cursor: pointer;\n  display: grid;\n  gap: 2px;\n  color: var(--text);\n  font-weight: 650;\n}\n.session-feedback-panel summary::-webkit-details-marker {\n  display: none;\n}\n.session-feedback-panel summary small {\n  color: var(--text-muted);\n  font-weight: 500;\n  font-size: 0.74rem;\n}\n.resume-feedback-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.resume-progress-repetition {\n  background: linear-gradient(90deg, #f2c94c, #e3a008);\n}\n.resume-progress-retention {\n  background: linear-gradient(90deg, #e57373, #c62828);\n}\n.pill-status-mastered {\n  border-color: rgba(46, 125, 50, 0.22);\n  background: rgba(76, 175, 80, 0.08);\n  color: #2e7d32;\n}\n.pill-status-weak {\n  border-color: rgba(245, 158, 11, 0.22);\n  background: rgba(245, 158, 11, 0.1);\n  color: #8a5a00;\n}\n.pill-status-repeat {\n  border-color: rgba(198, 40, 40, 0.22);\n  background: rgba(229, 57, 53, 0.08);\n  color: #9f1f1f;\n}\n.workspace-shell-chaining {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  align-items: center;\n}\n.workspace-shell-chain-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  min-height: 28px;\n  padding: 5px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background: rgba(255, 255, 255, 0.86);\n  color: rgba(48, 42, 35, 0.86);\n  font-size: 0.72rem;\n  font-weight: 650;\n}\n.workspace-shell-chain-pill i {\n  color: var(--accent-strong);\n}\n.workspace-shell-chain-pill-soft {\n  background: rgba(154, 103, 56, 0.09);\n  border-color: rgba(154, 103, 56, 0.14);\n  color: var(--accent-strong);\n}\n.workspace-shell-actions {\n  display: grid;\n  grid-template-columns: repeat(2, auto);\n  gap: 8px;\n  align-items: start;\n}\n.main-nav-btn,\n.main-card-primary {\n  min-height: 42px;\n  border-radius: 14px;\n  font-weight: 600;\n  font-size: 0.84rem;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  padding: 8px 12px;\n}\n.main-nav-btn {\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background: rgba(255, 255, 255, 0.82);\n  color: var(--text);\n}\n.main-card-primary {\n  border: 0;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  box-shadow: 0 12px 24px rgba(154, 103, 56, 0.18);\n}\n.main-nav-btn:disabled,\n.main-card-primary:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n  box-shadow: none;\n}\n.workspace-fab {\n  position: sticky;\n  top: 14px;\n  z-index: 25;\n  display: flex;\n  min-width: 0;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 8px 10px;\n  margin: 8px 0 6px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.06);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.58));\n  box-shadow: 0 16px 38px rgba(63, 39, 18, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.38);\n  backdrop-filter: blur(10px);\n  animation: cardSoftIn 220ms cubic-bezier(0.16, 1, 0.3, 1);\n  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;\n}\n.workspace-fab:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 20px 44px rgba(63, 39, 18, 0.18), 0 0 0 1px rgba(154, 103, 56, 0.18);\n  border-color: rgba(154, 103, 56, 0.2);\n}\n@keyframes cardSoftIn {\nfrom {\n    transform: translateY(6px);\n    opacity: 0.9;\n}\nto {\n    transform: translateY(0);\n    opacity: 1;\n}\n}\n.workspace-fab-meta {\n  min-width: 0;\n  flex: 1 1 auto;\n  display: grid;\n  gap: 4px;\n}\n.workspace-fab-kicker {\n  display: inline-flex;\n  align-items: center;\n  width: -moz-fit-content;\n  width: fit-content;\n  padding: 4px 8px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.10);\n  color: var(--accent-strong);\n  font-size: 0.68rem;\n  font-weight: 650;\n  letter-spacing: 0.06em;\n  text-transform: uppercase;\n}\n.workspace-fab-title {\n  font-weight: 650;\n  color: var(--text);\n  letter-spacing: -0.2px;\n  font-size: 0.92rem;\n  line-height: 1.15;\n}\n.workspace-fab-sub {\n  margin-top: 3px;\n  font-size: 0.74rem;\n  color: var(--text-muted);\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  align-items: center;\n  line-height: 1.2;\n}\n.workspace-fab-sub span {\n  display: inline-flex;\n  align-items: center;\n  max-width: 100%;\n  padding: 6px 10px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.18);\n  background: rgba(255, 255, 255, 0.86);\n  box-shadow: 0 8px 18px rgba(63, 39, 18, 0.06);\n  color: rgba(48, 42, 35, 0.82);\n  font-weight: 600;\n}\n.workspace-fab-live {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 5px;\n}\n.workspace-fab-live-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  max-width: 100%;\n  min-height: 38px;\n  padding: 8px 12px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.11);\n  border: 1px solid rgba(154, 103, 56, 0.20);\n  color: var(--accent-strong);\n  font-size: 0.82rem;\n  font-weight: 750;\n  box-shadow: 0 10px 20px rgba(63, 39, 18, 0.08);\n}\n.workspace-fab-live-pill i {\n  display: inline-grid;\n  place-items: center;\n  width: 22px;\n  height: 22px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.14);\n}\n.workspace-fab-live-pill-primary {\n  background: linear-gradient(180deg, rgba(154, 103, 56, 0.16), rgba(154, 103, 56, 0.09));\n  border-color: rgba(154, 103, 56, 0.28);\n}\n.workspace-fab-live-pill-mode {\n  background: rgba(255, 255, 255, 0.86);\n}\n.workspace-fab-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n  line-height: 1.26;\n  max-width: 60ch;\n  overflow-wrap: anywhere;\n}\n.workspace-fab-chip {\n  display: inline-flex;\n  align-items: center;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(46, 125, 50, 0.18);\n  background: rgba(46, 125, 50, 0.10);\n  color: rgba(46, 125, 50, 0.95);\n  font-weight: 650;\n  font-size: 0.72rem;\n}\n.workspace-fab-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex: 0 0 auto;\n}\n.fab-btn {\n  min-height: 40px;\n  padding: 8px 11px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.76);\n  box-shadow: var(--shadow-sm);\n  font-weight: 600;\n  font-size: 0.84rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  white-space: nowrap;\n  cursor: pointer;\n  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 140ms ease;\n}\n.fab-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  border-color: transparent;\n  box-shadow: 0 14px 28px rgba(154, 103, 56, 0.22);\n}\n.fab-btn-soft {\n  color: rgba(0, 0, 0, 0.78);\n}\n.fab-btn-ghost {\n  color: rgba(0, 0, 0, 0.78);\n}\n.verses-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n  margin-top: 0;\n}\n.verse-arabic-primary {\n  /* Primary focus: Quran dominates; aids are quieter. */\n  font-size: clamp(2.1rem, 2.75vw, 3.05rem);\n  line-height: 2.25;\n  letter-spacing: 0.01em;\n}\n.verse-aid {\n  opacity: 0.82;\n  filter: saturate(0.78);\n  margin-top: 0.4rem;\n  font-size: 0.93em;\n}\n.verse-aid-title {\n  margin-bottom: 4px;\n  color: var(--accent-strong);\n  font-size: 0.66rem;\n  font-weight: 650;\n  font-style: normal;\n  text-transform: uppercase;\n  letter-spacing: 0.04em;\n}\n.inline-setting-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.input-compact {\n  flex: 0 0 140px;\n}\n.inline-setting-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-height: 30px;\n  min-width: 58px;\n  padding: 0 10px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.08);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: var(--accent-strong);\n  font-size: 0.72rem;\n  font-family: inherit;\n  font-weight: 460;\n}\n.settings-section {\n  padding: 18px;\n  border-radius: 18px;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  background: #fffdf9;\n  box-shadow: 0 18px 42px rgba(40, 28, 16, 0.08);\n}\n.settings-heading {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  align-items: start;\n  gap: 16px;\n  padding-bottom: 16px;\n  margin-bottom: 16px;\n  border-bottom: 1px solid rgba(28, 24, 20, 0.07);\n}\n.settings-heading-copy {\n  min-width: 0;\n  display: grid;\n  gap: 6px;\n}\n.settings-heading-copy h3 {\n  margin: 0;\n  color: #1f1d1a;\n  font-size: 1.12rem;\n  font-weight: 560;\n  line-height: 1.15;\n}\n.settings-heading-copy p {\n  margin: 0;\n  color: #6d655d;\n  font-size: 0.78rem;\n  line-height: 1.45;\n}\n.settings-status {\n  min-height: 30px;\n  padding: 0 11px;\n  border-radius: 999px;\n  background: #f7f2eb;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  color: #614326;\n  font-size: 0.64rem;\n  font-weight: 520;\n  letter-spacing: 0.04em;\n  text-transform: uppercase;\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n}\n.settings-status-dot {\n  width: 7px;\n  height: 7px;\n  border-radius: 999px;\n  background: #2f9f68;\n  box-shadow: 0 0 0 4px rgba(47, 159, 104, 0.12);\n}\n.settings-panels {\n  display: grid;\n  gap: 16px;\n}\n.settings-group {\n  display: grid;\n  gap: 10px;\n}\n.settings-group-title {\n  color: #725233;\n  font-size: 0.64rem;\n  font-weight: 560;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n}\n.settings-card-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 10px;\n}\n.settings-display-grid {\n  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);\n}\n.settings-card {\n  min-width: 0;\n  border-radius: 14px;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  background: linear-gradient(180deg, #ffffff, #fbf8f3);\n  box-shadow: 0 8px 18px rgba(40, 28, 16, 0.045);\n}\n.settings-card-toggle {\n  min-height: 126px;\n  padding: 14px;\n  display: grid;\n  align-content: space-between;\n  gap: 14px;\n}\n.settings-card-range {\n  min-height: 126px;\n  padding: 14px;\n  display: grid;\n  gap: 14px;\n}\n.settings-row-copy {\n  min-width: 0;\n  display: grid;\n  gap: 6px;\n}\n.settings-row-copy label {\n  color: #211f1c;\n  font-size: 0.86rem;\n  font-weight: 540;\n  display: inline-flex;\n  align-items: center;\n  gap: 9px;\n  min-width: 0;\n}\n.settings-row-copy small {\n  color: #6f675f;\n  font-size: 0.7rem;\n  line-height: 1.4;\n}\n.settings-icon {\n  width: 32px;\n  height: 32px;\n  border-radius: 10px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  background: #f7f1ea;\n  border: 1px solid rgba(154, 103, 56, 0.13);\n  color: #8c5b2e;\n  flex: 0 0 auto;\n}\n.settings-toggle {\n  width: 100%;\n  min-height: 40px;\n  padding: 7px 14px;\n  border-radius: 10px;\n  font-size: 0.78rem;\n  font-weight: 540;\n  box-shadow: none;\n  border-width: 1px;\n}\n.settings-range-wrap {\n  width: 100%;\n  min-width: 0;\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  align-items: center;\n  gap: 12px;\n}\n.settings-range {\n  min-width: 0;\n  width: 100%;\n  padding: 0;\n  box-shadow: none;\n}\n.settings-apply-section {\n  padding: 12px;\n  border-radius: 14px;\n  background: #f8f2ea;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  display: grid;\n  gap: 8px;\n}\n.settings-apply-primary {\n  width: 100%;\n  min-height: 48px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  background: #8d5a2c;\n  color: #fff;\n  font-size: 0.92rem;\n  font-weight: 560;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  cursor: pointer;\n  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;\n}\n.settings-apply-primary:hover {\n  transform: translateY(-1px);\n  background: #7b4b22;\n  box-shadow: 0 10px 20px rgba(123, 75, 34, 0.24);\n}\n.settings-apply-section small {\n  color: #6f675f;\n  font-size: 0.7rem;\n}\n.tools-footer.settings-footer {\n  background: transparent;\n  border-top: none;\n  box-shadow: none;\n  pointer-events: none;\n}\n.tools-footer.settings-footer .tools-btn {\n  visibility: hidden;\n}\n.offline-list {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n  margin-bottom: 16px;\n}\n.offline-item {\n  background: var(--bg-elevated);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  transition: all 0.2s ease;\n}\n.offline-item:hover {\n  border-color: var(--accent);\n  background: var(--surface);\n}\n.oi-info {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.oi-name {\n  font-weight: 600;\n  font-size: 1rem;\n}\n.oi-meta {\n  font-size: 0.8rem;\n  opacity: 0.7;\n}\n.oi-date {\n  font-size: 0.7rem;\n  opacity: 0.5;\n}\n.oi-actions {\n  display: flex;\n  gap: 8px;\n}\n.oi-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.oi-load:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.oi-delete:hover {\n  background: #ff4d4d;\n  color: white;\n  border-color: #ff4d4d;\n}\n.empty-mini {\n  text-align: center;\n  padding: 32px 16px;\n  background: var(--bg-elevated);\n  border-radius: 20px;\n  border: 1px dashed var(--border);\n}\n.offline-note {\n  margin-top: 24px;\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  display: flex;\n  gap: 10px;\n  font-size: 0.75rem;\n  line-height: 1.4;\n  color: var(--accent);\n}\n\n/* Floating Player */\n.player-bar {\n  position: fixed;\n  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);\n  left: 50%;\n  transform: translateX(-50%);\n  width: min(calc(100vw - 32px), 960px);\n  max-width: 960px;\n  background: rgba(255, 255, 255, 0.98);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 24px;\n  box-shadow: 0 20px 40px rgba(63, 39, 18, 0.12);\n  z-index: 1000;\n  padding: 12px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  /* Avoid iOS Safari compositing artifacts (black bands) from backdrop-filter on fixed elements. */\n  backdrop-filter: none;\n  -webkit-backdrop-filter: none;\n  transition: transform 0.22s ease, opacity 0.22s ease, padding 0.22s ease;\n}\n.player-bar.collapsed {\n  transform: translateX(-50%);\n  opacity: 0.98;\n}\n.player-main {\n  display: grid;\n  grid-template-columns: minmax(150px, 1.1fr) auto minmax(200px, 0.95fr) minmax(180px, 1fr) auto;\n  align-items: center;\n  gap: clamp(10px, 1.6vw, 20px);\n  min-width: 0;\n}\n.player-info {\n  min-width: 0;\n}\n.player-chapter {\n  font-weight: 700;\n  font-size: 0.9rem;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-verse {\n  font-size: 0.75rem;\n  opacity: 0.7;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-eta {\n  color: var(--accent);\n  font-weight: 500;\n  opacity: 1;\n}\n.player-controls {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n}\n.player-loop-controls {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.player-loop-label {\n  font-size: 0.72rem;\n  font-weight: 700;\n  color: var(--text-muted);\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n}\n.player-loop-group {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  padding: 4px;\n  border: 1px solid var(--border);\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.9);\n  overflow-x: auto;\n}\n.player-loop-chip {\n  border: none;\n  border-radius: 999px;\n  background: transparent;\n  color: var(--text-muted);\n  min-height: 34px;\n  padding: 0 12px;\n  font-size: 0.76rem;\n  font-weight: 700;\n  white-space: nowrap;\n  cursor: pointer;\n  transition: background 0.2s ease, color 0.2s ease;\n}\n.player-loop-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.sheet-fade-enter-active,\n.sheet-fade-leave-active {\n  transition: opacity 0.2s ease, transform 0.2s ease;\n}\n.sheet-fade-enter-from,\n.sheet-fade-leave-to {\n  opacity: 0;\n  transform: translateY(8px);\n}\n.player-btn {\n  width: 44px;\n  height: 44px;\n  border-radius: 12px;\n  border: none;\n  background: none;\n  color: var(--text);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.2rem;\n  transition: all 0.2s ease;\n  flex: 0 0 auto;\n}\n.player-btn:hover {\n  background: rgba(154, 103, 56, 0.08);\n}\n.player-play {\n  background: var(--accent);\n  color: white;\n  width: 52px;\n  height: 52px;\n  border-radius: 16px;\n  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.3);\n}\n.player-play:hover {\n  background: rgba(255, 255, 255, 0.88);\n  color: var(--accent);\n  transform: scale(1.05);\n}\n.player-progress-wrap {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  min-width: 0;\n}\n.player-time {\n  font-size: 0.75rem;\n  font-variant-numeric: tabular-nums;\n  opacity: 0.7;\n  min-width: 40px;\n}\n.player-progress-bg {\n  flex: 1;\n  height: 6px;\n  background: var(--bg-elevated);\n  border-radius: 3px;\n  position: relative;\n  cursor: pointer;\n}\n.player-progress-fill {\n  position: absolute;\n  left: 0;\n  top: 0;\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.1s linear;\n}\n\n/* Animations */\n.slide-up-enter-active,\n.slide-up-leave-active {\n  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.slide-up-enter-from,\n.slide-up-leave-to {\n  transform: translate(-50%, 100px);\n  opacity: 0;\n}\n.verse-translation {\n  font-size: calc(0.94rem * var(--en-scale, 1));\n  color: var(--text);\n  line-height: 1.55;\n  padding-top: 10px;\n  margin-top: 8px;\n  border-top: 1px solid var(--border);\n  display: block;\n  opacity: 0.92;\n}\n.verse-transliteration {\n  font-size: calc(0.98rem * var(--en-scale, 1));\n  color: var(--text);\n  font-style: italic;\n  margin-top: 8px;\n  padding-top: 8px;\n  border-top: 1px solid var(--border);\n  line-height: 1.5;\n  opacity: 0.98;\n}\n.verse-words {\n  display: flex;\n  flex-wrap: nowrap;\n  gap: 8px;\n  direction: rtl;\n  margin-top: 12px;\n  padding-top: 10px;\n  border-top: 1px solid var(--border);\n  overflow-x: auto;\n  overflow-y: hidden;\n  -webkit-overflow-scrolling: touch;\n  scroll-snap-type: x proximity;\n  padding-bottom: 8px;\n}\n.word-item {\n  position: relative;\n  background: var(--accent-light);\n  padding: 6px 12px;\n  border-radius: 20px;\n  display: inline-flex;\n  flex-direction: row-reverse;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.75rem;\n  flex: 0 0 auto;\n  scroll-snap-align: center;\n  cursor: help;\n  min-height: 36px;\n}\n.word-item:hover::after,\n.word-item:focus::after {\n  content: attr(data-tooltip);\n  position: absolute;\n  left: 50%;\n  bottom: calc(100% + 8px);\n  transform: translateX(-50%);\n  z-index: 5;\n  width: -moz-max-content;\n  width: max-content;\n  max-width: 220px;\n  padding: 6px 8px;\n  border-radius: 9px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n  color: var(--text);\n  direction: ltr;\n  text-align: center;\n  font-size: 0.72rem;\n  line-height: 1.25;\n}\n.word-arabic {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n}\n.word-meaning {\n  color: var(--text-muted);\n  font-size: calc(0.82rem * var(--en-scale, 1));\n}\n.word-audio-btn {\n  background: none;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 0 4px;\n}\n.field-switch {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.reading-aid-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 8px;\n}\n.tools,\n.tools-body,\n.sheet-content {\n  overflow-x: hidden;\n}\n.live-stats-grid {\n  display: grid;\n  gap: 10px;\n}\n.live-stat-card {\n  min-height: 72px;\n  padding: 14px 16px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 252, 247, 0.9);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.live-stat-label {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  font-weight: 500;\n}\n.live-stat-card strong {\n  color: var(--text);\n  font-size: 1rem;\n  font-weight: 600;\n}\n.resume-copy {\n  margin-bottom: 8px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(251, 245, 238, 0.96));\n  border-radius: 18px;\n  box-shadow: 0 24px 72px rgba(31, 24, 17, 0.22);\n}\n.modal-header h2 {\n  font-size: 1.05rem;\n  font-weight: 600;\n}\n.resume-modal {\n  background: linear-gradient(180deg, rgba(255, 251, 245, 0.99), rgba(248, 241, 233, 0.97));\n}\n.resume-modal .modal-header,\n.resume-modal .modal-body,\n.resume-modal .modal-footer {\n  padding-top: 18px;\n  padding-bottom: 18px;\n}\n.resume-grid .pill,\n.resume-modal .pill {\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid rgba(184, 130, 78, 0.16);\n}\n.wbw-word.highlighted,\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.03);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.24);\n}\n.wbw-word.phrase-highlighted {\n  box-shadow: 0 0 0 2px rgba(184, 130, 78, 0.18);\n}\n.word-item.highlighted,\n.word-item.phrase-highlighted {\n  background: rgba(184, 130, 78, 0.2);\n}\n\n/* Quiz overlay */\n.quiz-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 80;\n  background: rgba(0, 0, 0, 0.35);\n  backdrop-filter: blur(6px);\n  display: grid;\n  place-items: center;\n  padding: 18px;\n}\n.quiz-card {\n  width: min(680px, 100%);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba, rgba(250, 245, 239, 0.95));\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 22px;\n  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);\n  overflow: hidden;\n}\n.quiz-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 18px 22px 14px;\n  border-bottom: 1px solid rgba(0, 0, 0, 0.08);\n}\n.quiz-title {\n  font-weight: 500;\n  font-size: 1.05rem;\n}\n.quiz-subtitle {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.quiz-close {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.7);\n  cursor: pointer;\n  font-size: 24px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.quiz-progress {\n  padding: 14px 22px 0;\n}\n.quiz-progress-bar {\n  height: 4px;\n  background: var(--border);\n  border-radius: 2px;\n  overflow: hidden;\n}\n.quiz-progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n.quiz-stats {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.quiz-body {\n  padding: 18px 22px 22px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.quiz-question {\n  font-weight: 600;\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.quiz-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.4rem;\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  padding: 16px;\n  background: var(--accent-light);\n  border-radius: 16px;\n}\n.quiz-reveal-btn {\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n}\n.quiz-answer {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.quiz-translation {\n  font-size: 0.9rem;\n  line-height: 1.6;\n  color: var(--text);\n  margin-bottom: 16px;\n}\n.quiz-grade-buttons {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.grade-btn {\n  flex: 1;\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.grade-btn.primary {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.quiz-options {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.quiz-option {\n  padding: 12px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  text-align: left;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.quiz-option:hover {\n  background: var(--accent-light);\n  transform: translateX(4px);\n}\n.quiz-summary {\n  padding: 22px;\n  text-align: center;\n}\n.quiz-summary-icon {\n  font-size: 3rem;\n  margin-bottom: 16px;\n}\n.quiz-summary-stats {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin: 20px 0;\n}\n.quiz-summary-stats .stat {\n  padding: 16px;\n  background: var(--surface);\n  border-radius: 16px;\n}\n.stat-label {\n  display: block;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.stat-value {\n  display: block;\n  font-size: 1.5rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.quiz-summary-mistakes {\n  margin: 20px 0;\n}\n.mistake-tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 8px;\n  justify-content: center;\n}\n.mistake-tag {\n  padding: 6px 12px;\n  background: rgba(190, 73, 73, 0.1);\n  border-radius: 20px;\n  font-size: 0.8rem;\n  color: #c0392b;\n}\n.quiz-actions {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n}\n.btn-outline {\n  padding: 10px 24px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n.btn-primary {\n  padding: 10px 24px;\n  border-radius: 12px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n\n/* Fix banner positioning */\n.banner {\n  position: fixed;\n  top: 80px;\n  left: 50%;\n  transform: translateX(-50%);\n  z-index: 1000;\n  min-width: min(560px, calc(100vw - 32px));\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px 14px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: var(--surface-strong);\n  box-shadow: var(--shadow-lg);\n  font-weight: 450;\n  animation: riseSoft 220ms ease-out;\n}\n.navbar {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  z-index: 100;\n  /* Higher than tools? Lower? Tools should be 60, navbar 100 */\n  background: var(--surface-strong);\n}\n\n/* Ensure main content doesn't go under navbar */\n.main.container {\n  padding-top: 80px;\n  /* Adjust to match navbar height + spacing */\n}\n\n/* Mobile adjustment */\n@media (max-width: 768px) {\n.banner {\n    top: calc(env(safe-area-inset-top, 0px) + 60px);\n    width: calc(100% - 32px);\n    min-width: auto;\n}\n.main.container {\n    padding-top: 70px;\n}\n}\n.banner-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.banner-action {\n  border: 0;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  padding: 9px 12px;\n  font-size: 0.78rem;\n  font-weight: 500;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n}\n.banner-x {\n  width: 36px;\n  height: 36px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n}\n\n/* Add this to your \\3c style> */\n.main.container {\n  padding-top: 20px;\n}\n\n/* If you have a navbar, add this */\n.app>.navbar+.main.container,\nbody>.navbar+.app .main.container {\n  padding-top: 80px;\n}\n\n/* Animations */\n@keyframes appFade {\n0% {\n    opacity: 0;\n    transform: translateY(4px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes railIn {\n0% {\n    opacity: 0;\n    transform: translateY(-8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes riseSoft {\n0% {\n    opacity: 0;\n    transform: translateY(8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n\n/* Responsive */\n@media (max-width: 768px) {\n.main {\n    padding: 16px 16px 100px;\n}\n.main.tools-open {\n    padding-right: 16px;\n}\n.tools {\n    left: 0;\n    right: 0;\n    width: 100%;\n}\n.session-rail-stats {\n    grid-template-columns: 1fr 1fr;\n}\n.hero-flow {\n    grid-template-columns: 1fr 1fr;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 8px);\n    justify-content: center;\n}\n.verse-font-controls {\n    gap: 2px;\n    padding: 2px 4px;\n}\n.verse-font-btn {\n    width: 20px;\n    height: 20px;\n}\n.verse-font-size-indicator {\n    min-width: 30px;\n    font-size: 9px;\n}\n}\n@media (max-width: 640px) {\n.quiz-grade-buttons {\n    flex-direction: column;\n}\n.quiz-actions {\n    flex-direction: column;\n}\n.hero-actions,\n  .empty-actions {\n    flex-direction: column;\n}\n.cta {\n    width: 100%;\n}\n}\n\n/* Dark theme overrides */\n[data-theme=\"dark\"] .tools {\n  color: var(--text);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(12, 11, 10, 0.96));\n  border-left-color: var(--border);\n}\n[data-theme=\"dark\"] .sheet-section {\n  border-color: var(--border);\n  background: var(--surface);\n}\n[data-theme=\"dark\"] .tools-top,\n[data-theme=\"dark\"] .tools-footer {\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.92));\n}\n[data-theme=\"dark\"] .tools-footer {\n  background: linear-gradient(to top, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.86), rgba(18, 15, 13, 0));\n}\n[data-theme=\"dark\"] .tools-tabs {\n  background: rgba(255, 255, 255, 0.035);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .tools-tabs button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-tabs button.active {\n  color: var(--text);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .tools-title,\n[data-theme=\"dark\"] .st-title,\n[data-theme=\"dark\"] .technique-copy label,\n[data-theme=\"dark\"] .settings-heading-copy h3,\n[data-theme=\"dark\"] .settings-row-copy label {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .tools-context,\n[data-theme=\"dark\"] .st-sub,\n[data-theme=\"dark\"] .technique-copy small,\n[data-theme=\"dark\"] .technique-control span,\n[data-theme=\"dark\"] .settings-heading-copy p,\n[data-theme=\"dark\"] .settings-row-copy small {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-x,\n[data-theme=\"dark\"] .st-chev,\n[data-theme=\"dark\"] .sheet-toggle,\n[data-theme=\"dark\"] .technique-row,\n[data-theme=\"dark\"] .radio,\n[data-theme=\"dark\"] .toggle-chip,\n[data-theme=\"dark\"] .segmented-control,\n[data-theme=\"dark\"] .technique-preview {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .sheet-toggle {\n  background: rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .st-ico {\n  color: var(--accent-strong);\n  border-color: rgba(239, 193, 141, 0.22);\n  background: rgba(239, 193, 141, 0.10);\n}\n[data-theme=\"dark\"] .segmented-control button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .segmented-control button.active,\n[data-theme=\"dark\"] .toggle-chip.active {\n  color: white;\n  border-color: rgba(239, 193, 141, 0.42);\n  background: rgba(239, 193, 141, 0.12);\n}\n[data-theme=\"dark\"] .tools-btn-soft {\n  color: var(--text-muted);\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .select,\n[data-theme=\"dark\"] .input {\n  color: var(--text);\n  border-color: var(--border);\n  background: rgba(255, 255, 255, 0.045);\n}\n[data-theme=\"dark\"] .switch {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n}\n[data-theme=\"dark\"] .verse-translation {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .verse-transliteration,\n[data-theme=\"dark\"] .workspace-fab-copy,\n[data-theme=\"dark\"] .workspace-fab-sub,\n[data-theme=\"dark\"] .settings-row-copy small,\n[data-theme=\"dark\"] .field-hint {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .workspace-fab,\n[data-theme=\"dark\"] .workspace-fab-sub span,\n[data-theme=\"dark\"] .workspace-fab-live-pill,\n[data-theme=\"dark\"] .settings-card,\n[data-theme=\"dark\"] .word-item:hover::after,\n[data-theme=\"dark\"] .word-item:focus::after {\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .workspace-fab {\n  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.46), 0 0 0 1px rgba(255, 236, 216, 0.12);\n}\n[data-theme=\"dark\"] .workspace-fab:hover {\n  box-shadow: 0 26px 64px rgba(0, 0, 0, 0.54), 0 0 0 1px rgba(239, 193, 141, 0.20);\n}\n[data-theme=\"dark\"] .settings-section {\n  background: rgba(24, 21, 19, 0.96);\n  border-color: var(--border);\n  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .settings-status {\n  background: rgba(255, 255, 255, 0.05);\n  border-color: rgba(255, 236, 216, 0.12);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .settings-icon {\n  background: rgba(255, 255, 255, 0.04);\n  border-color: rgba(255, 236, 216, 0.12);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .settings-card {\n  background: var(--surface-strong);\n  border-color: rgba(255, 236, 216, 0.10);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .settings-toggle {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 236, 216, 0.14);\n  color: var(--text);\n}\n[data-theme=\"dark\"] .settings-toggle.active {\n  background: rgba(239, 193, 141, 0.13);\n  border-color: rgba(239, 193, 141, 0.42);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .quiz-card {\n  background: rgba(18, 18, 18, 0.92);\n  border-color: rgba(255, 255, 255, 0.10);\n}\n\n/* Sepia theme overrides */\n[data-theme=\"sepia\"] .verse-translation {\n  color: #7a684a;\n}\n\n/* Planner & Analytics UI */\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(12, 10, 8, 0.62);\n  backdrop-filter: blur(8px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 9999;\n  padding: 20px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 250, 243, 0.92));\n  border-radius: 20px;\n  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42);\n  border: 1px solid rgba(255, 255, 255, 0.55);\n  display: flex;\n  flex-direction: column;\n  max-height: 90vh;\n  overflow: hidden;\n  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.resume-modal {\n  width: min(760px, 96vw);\n}\n.resume-modal .modal-header h2 {\n  font-size: clamp(1.25rem, 2.3vw, 1.75rem);\n}\n.resume-saved-at {\n  display: inline-block;\n  margin-top: 4px;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n}\n.resume-grid {\n  margin-top: 12px;\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 10px;\n}\n.resume-grid .pill {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 12px 14px;\n}\n@keyframes modalIn {\nfrom {\n    transform: translateY(10px);\n    opacity: 0.6;\n}\nto {\n    transform: translateY(0);\n    opacity: 1;\n}\n}\n@keyframes modalFadeIn {\nfrom {\n    opacity: 0;\n    transform: translateY(20px) scale(0.95);\n}\nto {\n    opacity: 1;\n    transform: translateY(0) scale(1);\n}\n}\n.modal-header {\n  padding: 20px 24px;\n  border-bottom: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 1.25rem;\n  font-weight: 700;\n}\n.modal-body {\n  padding: 24px;\n  overflow-y: auto;\n}\n.modal-footer {\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--bg-elevated);\n}\n.confirm-modal {\n  max-width: 460px;\n  width: 100%;\n}\n.confirm-copy {\n  color: var(--text-muted);\n  line-height: 1.65;\n}\n.btn-danger {\n  background: #b55041;\n}\n.tools-btn-danger {\n  opacity: 0.82;\n}\n.btn-icon {\n  background: none;\n  border: none;\n  font-size: 1.2rem;\n  color: var(--text-muted);\n  cursor: pointer;\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.btn-icon:hover {\n  background: var(--border);\n  color: var(--text);\n}\n.planner-modal {\n  max-width: 500px;\n  width: 100%;\n}\n.planner-field {\n  margin-bottom: 24px;\n}\n.planner-field label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.planner-select,\n.planner-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.planner-select:focus,\n.planner-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 2px var(--accent-light);\n}\n.verses-per-day-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.quantity-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.quantity-btn:hover:not(:disabled) {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.quantity-btn:disabled {\n  opacity: 0.4;\n  cursor: not-allowed;\n}\n.planner-stats-grid {\n  display: grid;\n  grid-template-columns: repeat(2, 1fr);\n  gap: 12px;\n  margin: 24px 0;\n}\n.planner-stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  transition: all 0.2s;\n}\n.progress-info {\n  display: flex;\n  justify-content: space-between;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.progress-bar-track {\n  height: 6px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-fill {\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.3s ease;\n}\n.modal-footer {\n  display: flex;\n  gap: 12px;\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.btn-secondary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.btn-secondary:hover {\n  background: var(--border);\n}\n.btn-primary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.9rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.btn-primary:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.field-hint {\n  display: block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 6px;\n}\n.pa-lbl {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.analytics-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin-top: 20px;\n}\n.analytics-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.78rem * var(--en-scale, 1));\n  line-height: 1.4;\n}\n.stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 20px;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  transition: transform 0.2s;\n}\n.stat-delta {\n  display: inline-flex;\n  align-items: center;\n  margin-left: 10px;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  font-size: 0.7rem;\n  color: var(--accent-strong);\n  font-weight: 700;\n  vertical-align: middle;\n}\n.stat-card:hover {\n  transform: translateY(-2px);\n  border-color: var(--accent);\n}\n.stat-card i {\n  font-size: 1.8rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.stat-value {\n  font-size: 1.5rem;\n  font-weight: 700;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.stat-label {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n}\n.stat-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.72rem * var(--en-scale, 1));\n  line-height: 1.35;\n}\n.mini-trend {\n  position: relative;\n  width: 80px;\n  height: 24px;\n  margin-top: 10px;\n}\n.mini-trend span {\n  position: absolute;\n  width: 8px;\n  border-radius: 999px;\n  background: linear-gradient(180deg, var(--accent), var(--accent-soft));\n  opacity: 0.9;\n}\n\n/* Home Dashboard UI */\n.home-dashboard {\n  max-width: 800px;\n  margin: 40px auto;\n  padding: 0 20px;\n  animation: modalFadeIn 0.4s ease-out;\n}\n.dashboard-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-end;\n  margin-bottom: 40px;\n  flex-wrap: wrap;\n  gap: 20px;\n}\n.welcome-text {\n  max-width: 500px;\n}\n.header-stats {\n  display: flex;\n  gap: 16px;\n  background: var(--surface);\n  padding: 12px 20px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.mini-stat {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.9rem;\n}\n.mini-stat strong {\n  color: var(--text);\n  font-size: 1rem;\n}\n.dashboard-actions {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));\n  gap: 20px;\n  margin-bottom: 40px;\n}\n.home-dashboard-minimal {\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  min-height: 160px;\n}\n.offcanvas {\n  position: fixed;\n  top: 0;\n  right: 0;\n  width: 380px;\n  height: 100%;\n  background: #fff;\n  z-index: 1000;\n  transform: translateX(100%);\n  transition: transform 0.3s ease;\n  display: flex;\n  flex-direction: column;\n  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);\n}\n.offcanvas-launcher-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.offcanvas-launcher-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-start-card {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto auto;\n  align-items: center;\n  gap: 18px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.setup-start-copy {\n  min-width: 0;\n}\n.setup-kicker {\n  display: inline-flex;\n  margin-bottom: 6px;\n  color: var(--accent);\n  font-size: 0.72rem;\n  font-weight: 800;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n}\n.setup-start-copy h2 {\n  margin: 0 0 6px;\n  color: var(--text);\n  font-size: clamp(1.2rem, 2vw, 1.65rem);\n  line-height: 1.1;\n}\n.setup-start-copy p {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-review-hint {\n  margin-top: 10px;\n  padding: 10px 12px;\n  border-radius: 12px;\n  background: rgba(184, 130, 78, 0.10);\n  border: 1px solid rgba(184, 130, 78, 0.18);\n  color: var(--accent);\n  font-weight: 700;\n}\n.setup-mode-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(112px, 1fr));\n  gap: 10px;\n}\n.setup-mode-card {\n  min-height: 86px;\n  padding: 12px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: var(--surface);\n  color: var(--text);\n  cursor: pointer;\n  display: grid;\n  justify-items: center;\n  align-content: center;\n  gap: 4px;\n  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;\n}\n.setup-mode-card:hover,\n.setup-mode-card.active {\n  border-color: var(--accent);\n  box-shadow: var(--shadow-sm);\n  transform: translateY(-1px);\n}\n.setup-mode-card i {\n  color: var(--accent);\n  font-size: 1.2rem;\n}\n.setup-mode-card span {\n  font-weight: 800;\n}\n.setup-mode-card small {\n  color: var(--text-muted);\n  font-size: 0.78rem;\n}\n.setup-primary {\n  min-height: 48px;\n  white-space: nowrap;\n}\n.setup-optional-panel,\n.session-tools-panel {\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.68);\n}\n.setup-optional-panel summary,\n.session-tools-panel summary {\n  cursor: pointer;\n  list-style: none;\n  padding: 12px 14px;\n  font-weight: 700;\n  color: var(--text);\n}\n.setup-optional-panel summary::-webkit-details-marker,\n.session-tools-panel summary::-webkit-details-marker {\n  display: none;\n}\n.setup-optional-grid,\n.session-tools-grid {\n  display: grid;\n  gap: 12px;\n  padding: 0 14px 14px;\n}\n.setup-optional-grid {\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.session-tools-grid {\n  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));\n}\n.field-inline-toggle {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.toggle-chip {\n  min-height: 42px;\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  background: var(--surface);\n  color: var(--text);\n  font-family: inherit;\n  font-weight: 540;\n}\n.toggle-chip.active {\n  border-color: var(--accent);\n  color: white;\n}\n.continue-session-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 16px 18px;\n  margin-bottom: 18px;\n  border: 1px solid var(--accent-soft);\n  border-radius: 18px;\n  background: linear-gradient(135deg, var(--surface), var(--accent-light));\n  box-shadow: var(--shadow-sm);\n  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;\n}\n.continue-session-card:hover {\n  transform: translateY(-2px);\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent);\n}\n.continue-session-copy {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.continue-session-actions {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.continue-session-kicker {\n  font-size: 0.72rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--accent);\n}\n.continue-session-copy small {\n  color: var(--text-muted);\n}\n.continue-session-btn {\n  min-height: 44px;\n  white-space: nowrap;\n}\n.continue-session-dismiss {\n  min-width: 44px;\n  padding-inline: 0;\n  justify-content: center;\n}\n.resume-action {\n  background: linear-gradient(145deg, rgba(154, 103, 56, 0.12), rgba(255, 255, 255, 0.94));\n  border-color: var(--accent-soft);\n}\n.resume-action .action-icon {\n  background: rgba(154, 103, 56, 0.15);\n  color: var(--accent);\n}\n.resume-action .action-arrow {\n  color: var(--accent);\n}\n.action-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n  display: flex;\n  flex-direction: column;\n  position: relative;\n  overflow: hidden;\n}\n.action-card:hover {\n  transform: translateY(-4px);\n  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);\n  border-color: var(--accent);\n}\n.action-card.primary-action {\n  background: linear-gradient(145deg, var(--accent), var(--accent-dark));\n  color: white;\n  border: none;\n}\n.action-card.primary-action .action-icon {\n  background: rgba(255, 255, 255, 0.2);\n  color: white;\n}\n.action-card.primary-action h3,\n.action-card.primary-action p,\n.action-card.primary-action .action-arrow {\n  color: white;\n}\n.action-icon {\n  width: 48px;\n  height: 48px;\n  background: var(--bg-body);\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.5rem;\n  color: var(--accent);\n  margin-bottom: 20px;\n}\n.action-content h3 {\n  font-size: 1.15rem;\n  margin: 0 0 8px 0;\n  color: var(--text);\n}\n.action-content p {\n  font-size: 0.9rem;\n  color: var(--text-muted);\n  margin: 0;\n  line-height: 1.4;\n}\n.action-arrow {\n  position: absolute;\n  bottom: 24px;\n  right: 24px;\n  font-size: 1.2rem;\n  color: var(--accent);\n  opacity: 0;\n  transform: translateX(-10px);\n  transition: all 0.2s ease;\n}\n.action-card:hover .action-arrow {\n  opacity: 1;\n  transform: translateX(0);\n}\n.dashboard-recent {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n}\n.recent-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.recent-header h3 {\n  margin: 0;\n  font-size: 1.1rem;\n}\n.btn-ghost {\n  background: none;\n  border: none;\n  color: var(--accent);\n  font-weight: 500;\n  cursor: pointer;\n  padding: 6px 12px;\n  border-radius: 8px;\n  transition: background 0.2s;\n}\n.btn-ghost:hover {\n  background: var(--accent-light);\n}\n.recent-stats {\n  display: flex;\n  gap: 32px;\n  flex-wrap: wrap;\n}\n.r-stat {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.r-stat span {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.r-stat strong {\n  font-size: 1.4rem;\n  color: var(--text);\n}\n@media (max-width: 768px) {\n.quick-tools-grid {\n    grid-template-columns: 1fr;\n    gap: 8px;\n    padding: 12px;\n}\n.workspace-shell {\n    width: 100%;\n    margin-bottom: 14px;\n}\n.workspace-shell {\n    padding: 14px;\n}\n.workspace-shell-head {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 12px;\n}\n.workspace-shell-actions {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n}\n.workspace-shell-title-row {\n    align-items: flex-start;\n}\n.workspace-shell-phase {\n    min-height: 26px;\n}\n.workspace-shell-meta {\n    gap: 6px;\n}\n.workspace-shell-chaining {\n    gap: 6px;\n}\n.resume-feedback-row {\n    font-size: 0.74rem;\n}\n.resume-grid {\n    grid-template-columns: 1fr;\n}\n.workspace-fab {\n    top: 8px;\n    display: grid;\n    grid-template-columns: minmax(0, 1fr);\n    gap: 8px;\n    padding: 9px;\n    margin: 8px 0 6px;\n    border-radius: 14px;\n}\n.workspace-fab-meta {\n    min-width: 0;\n}\n.workspace-fab-kicker {\n    font-size: 0.64rem;\n}\n.workspace-fab-title {\n    font-size: 0.9rem;\n}\n.workspace-fab-sub {\n    font-size: 0.72rem;\n    gap: 5px;\n}\n.workspace-fab-sub span {\n    flex: 1 1 auto;\n    justify-content: center;\n    min-width: min(128px, 100%);\n}\n.workspace-fab-copy {\n    font-size: 0.78rem;\n}\n.workspace-fab-live {\n    gap: 6px;\n}\n.workspace-fab-live-pill {\n    flex: 1 1 0;\n    min-width: 0;\n    justify-content: center;\n}\n.workspace-fab-actions {\n    display: grid;\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n    gap: 8px;\n    width: 100%;\n}\n.fab-btn {\n    width: 100%;\n    min-width: 0;\n    justify-content: center;\n    padding: 8px 10px;\n    font-size: 0.82rem;\n    min-height: 44px;\n}\n.main-nav-btn,\n  .main-card-primary {\n    width: 100%;\n    min-height: 44px;\n}\n.settings-heading {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 10px;\n    padding-bottom: 12px;\n    margin-bottom: 14px;\n}\n.settings-status {\n    justify-self: start;\n}\n.settings-card-grid,\n  .settings-display-grid {\n    grid-template-columns: minmax(0, 1fr);\n}\n.settings-card-toggle,\n  .settings-card-range {\n    min-height: 0;\n    padding: 13px;\n    gap: 12px;\n}\n.settings-toggle {\n    min-height: 38px;\n}\n.settings-range-wrap {\n    gap: 10px;\n}\n.settings-apply-section {\n    padding: 12px;\n}\n.settings-apply-primary {\n    min-height: 46px;\n    border-radius: 12px;\n    font-size: 0.88rem;\n}\n.setup-start-card {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n    padding: 16px;\n}\n.setup-mode-grid {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.setup-primary {\n    width: 100%;\n    justify-content: center;\n}\n.continue-session-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.dashboard-actions {\n    grid-template-columns: 1fr;\n    gap: 14px;\n    margin-bottom: 20px;\n}\n.offcanvas-launcher-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.action-card {\n    padding: 18px;\n}\n.action-icon {\n    margin-bottom: 14px;\n}\n.continue-session-btn,\n  .btn-primary,\n  .btn-secondary,\n  .tools-btn,\n  .player-btn,\n  .toolbar-chip,\n  .toggle-chip {\n    min-height: 44px;\n}\n.settings-toggle {\n    min-height: 34px;\n}\n.inline-setting-row {\n    align-items: stretch;\n}\n.input-compact,\n  .inline-setting-pill {\n    width: 100%;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.technique-row,\n  .technique-row-main,\n  .technique-control {\n    align-items: stretch;\n    flex-direction: column;\n}\n.technique-toggle,\n  .segmented-control {\n    width: 100%;\n}\n.player-bar {\n    width: calc(100% - 24px);\n    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);\n    padding: 12px 14px;\n}\n.player-bar.collapsed {\n    transform: translateX(-50%);\n}\n.player-main {\n    grid-template-columns: minmax(88px, 0.75fr) auto minmax(0, 1fr) minmax(0, 1fr) auto;\n    align-items: center;\n    gap: 8px;\n}\n.player-info {\n    flex: 0 1 120px;\n    min-width: 0;\n}\n.player-chapter {\n    font-size: 0.78rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-verse {\n    font-size: 0.72rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-controls {\n    justify-content: center;\n    gap: 4px;\n}\n.player-progress-wrap {\n    order: 0;\n    min-width: 0;\n    gap: 6px;\n}\n.player-loop-controls {\n    order: 3;\n    width: 100%;\n    grid-column: 1 / -2;\n    justify-content: space-between;\n}\n.player-loop-group {\n    width: 100%;\n    justify-content: space-between;\n}\n.player-speed-controls {\n    display: none;\n}\n.analytics-grid {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n}\n.session-rail-actions {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.rail-btn {\n    flex: initial;\n    width: 100%;\n    justify-content: center;\n}\n.rail-btn-primary {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.toolbar-chip {\n    flex: initial;\n    width: 100%;\n}\n.font-dropdown {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 4px);\n    justify-content: center;\n    min-width: 0;\n}\n.font-dropdown {\n    width: 100%;\n}\n.font-dropdown-trigger {\n    width: 100%;\n    justify-content: space-between;\n}\n.verse-card {\n    padding: 16px;\n    border-radius: 18px;\n}\n.verse-header {\n    flex-direction: column;\n    align-items: stretch;\n    gap: 12px;\n}\n.verse-badges,\n  .verse-actions {\n    flex-wrap: wrap;\n}\n.verse-actions {\n    justify-content: space-between;\n}\n.verse-font-controls {\n    margin-right: 0;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.modal-content,\n  .confirm-modal,\n  .planner-modal {\n    width: 100%;\n    max-width: 100%;\n    border-radius: 18px;\n}\n.modal-header,\n  .modal-body,\n  .modal-footer {\n    padding-left: 16px;\n    padding-right: 16px;\n}\n.planner-stats-grid {\n    grid-template-columns: 1fr;\n}\n.tools {\n    width: 100vw;\n    max-width: 100vw;\n}\n.tools-top,\n  .tools-body,\n  .tools-footer {\n    padding-left: 14px;\n    padding-right: 14px;\n}\n.tools-tabs {\n    overflow-x: hidden;\n    display: grid;\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n    gap: 8px;\n}\n.tools-tabs button {\n    width: 100%;\n    min-width: 0;\n}\n.reading-aid-grid,\n  .session-tools-grid {\n    grid-template-columns: 1fr;\n}\n.verse-card,\n  .tools,\n  .sheet,\n  .sheet-content {\n    overflow-x: hidden;\n}\n}\n@media (min-width: 769px) and (max-width: 1024px) {\n.dashboard-actions {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n}\n.session-rail-actions {\n    flex-wrap: wrap;\n}\n.reading-toolbar {\n    align-items: flex-start;\n}\n.reading-toolbar-group:first-child {\n    flex: 1 1 100%;\n}\n.toolbar-chip {\n    flex: 0 1 auto;\n}\n.player-bar {\n    width: calc(100vw - 40px);\n}\n.player-main {\n    grid-template-columns: minmax(132px, 0.9fr) auto minmax(160px, 0.9fr) minmax(150px, 1fr) auto;\n    gap: 12px;\n}\n.player-progress-wrap {\n    min-width: 0;\n}\n}\n@media (max-width: 480px) {\n.verse-header {\n    flex-wrap: wrap;\n}\n.verse-badges {\n    flex-wrap: wrap;\n}\n.verse-actions {\n    margin-top: 8px;\n    width: 100%;\n    justify-content: flex-start;\n}\n.session-pill {\n    white-space: normal;\n    text-align: center;\n    justify-content: center;\n}\n.rail-btn,\n  .toolbar-chip {\n    flex: 1 1 100%;\n}\n.player-time {\n    min-width: auto;\n    font-size: 0.7rem;\n}\n.player-progress-wrap {\n    gap: 8px;\n}\n.verse-number,\n  .verse-status-badge,\n  .verse-status-subtle {\n    width: 100%;\n    justify-content: center;\n    text-align: center;\n}\n}\n.verse-status-badge-review {\n  border-color: rgba(183, 28, 28, 0.24);\n  color: #9f1f1f;\n  background: rgba(183, 28, 28, 0.08);\n}\n.verse-card.feedback-mastered {\n  border-left: 4px solid #43a047;\n}\n.verse-card.feedback-weak {\n  border-left: 4px solid #e3a008;\n}\n.verse-card.feedback-repeat {\n  border-left: 4px solid #c62828;\n}\n.main.flow-recall .verse-card.active .verse-arabic {\n  color: transparent;\n  text-shadow: 0 0 22px rgba(232, 237, 247, 0.55);\n}\n.main.flow-practice .verse-card.active .verse-arabic {\n  opacity: 0.45;\n}\n.main.flow-recall .verse-card.active .verse-arabic .tajweed-mark,\n.main.flow-recall .verse-card.active .verse-arabic word,\n.main.flow-recall .verse-card.active .verse-arabic .wbw-word {\n  color: transparent !important;\n  background: transparent !important;\n  box-shadow: none !important;\n}\n.workspace-quick-controls {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n  padding: 0 10px 10px;\n}\n.session-quickstart-card {\n  display: flex;\n  gap: 16px;\n  justify-content: space-between;\n  align-items: center;\n  padding: 16px;\n  border-radius: 18px;\n  background: rgba(17, 24, 39, 0.04);\n  border: 1px solid rgba(17, 24, 39, 0.08);\n}\n.session-quickstart-copy {\n  margin: 6px 0 0;\n  color: #5f6b7a;\n}\n.session-quickstart-actions {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-end;\n  gap: 8px;\n}\n.preset-btn-primary {\n  background: #0f766e;\n  color: #fff;\n}\n.presets-grid-wide {\n  width: 100%;\n}\n@media (max-width: 768px) {\n.session-quickstart-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.session-quickstart-actions {\n    align-items: stretch;\n}\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 

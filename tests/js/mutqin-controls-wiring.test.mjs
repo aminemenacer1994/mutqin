@@ -29,13 +29,19 @@ includesAll('session setup controls', [
 ])
 
 includesAll('technique controls', [
-  /focusModeEnabled = !focusModeEnabled/,
-  /blurModeEnabled = !blurModeEnabled/,
+  /name="focus-mode-state" aria-label="Use focus mode" :checked="focusModeEnabled" @change="focusModeEnabled = true"/,
+  /name="blur-mode-state" aria-label="Use blur mode" :checked="blurModeEnabled" @change="blurModeEnabled = true"/,
   /v-model\.number="blurIntensity"/,
-  /@click="setChainingEnabled\(!chainingEnabled\)"/,
+  /name="chaining-state" aria-label="Use chaining" :checked="chainingEnabled" @change="setChainingEnabled\(true\)"/,
+  /name="anchor-mode-state" aria-label="Use anchor mode" :checked="anchorModeEnabled" @change="setAnchorMode\(true\)"/,
+  /v-model\.number="focusDimPercent"/,
+  /cycleQuranFontPill\(\)/,
   /@change="setChainingMethod\('linking'\)"/,
   /@change="setChainingMethod\('cumulative'\)"/,
   /@input="setChainingRepetitions\(Number\(\$event\.target\.value\)\)"/,
+  /activePracticeTechniques\(\)/,
+  /active-techniques-count/,
+  /setAnchorMode\(enabled\)/,
   /phase: 'Linking'/,
   /phase: 'Cumulative'/
 ])

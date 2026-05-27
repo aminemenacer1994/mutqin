@@ -205,6 +205,9 @@
               <span>Ayah {{ currentPosition }} of {{ totalVerses }}</span>
               <span>{{ progressPercent }}% complete</span>
               <span v-if="etaLabel">{{ etaLabel }}</span>
+              <span v-if="activePracticeTechniques.length" class="workspace-shell-active-pill">
+                <i class="bi bi-stars"></i> {{ activePracticeTechniques.length }} active method{{ activePracticeTechniques.length === 1 ? '' : 's' }}
+              </span>
 
               <div v-if="!mainCardCollapsed && chainingEnabled && hasSessionFeedback" class="workspace-shell-chaining"
                 aria-label="Chaining status">
@@ -218,16 +221,14 @@
               </div>
             </hr>
             </div>
-            
             <div v-show="!mainCardCollapsed" class="workspace-quick-controls" aria-label="Quick reading controls">
               <button class="toolbar-chip" :class="{ active: showTranslation }" @click="toggleReadingOption('translation')" type="button">Translation</button>
               <button class="toolbar-chip" :class="{ active: showTransliteration }" @click="toggleReadingOption('transliteration')" type="button">Transliteration</button>
               <button class="toolbar-chip" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')" type="button">Word by word</button>
               <button class="toolbar-chip" :class="{ active: wordByWordAudioEnabled }" @click="toggleWordAudio()" type="button">Word audio</button>
               <button class="toolbar-chip" :class="{ active: tajweedEnabled }" @click="toggleTajweed" type="button">Tajweed</button>
+              <button class="toolbar-chip" @click="cycleQuranFontPill" type="button">Font: {{ getCurrentFontLabel() }}</button>
             </div>
-
-
           </section>
 
           <main id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
@@ -360,21 +361,7 @@
         <div ref="toolsBody" class="tools-body compact">
           <!-- TOOLS TAB -->
           <div v-if="tab === 'tools'" class="sheet">
-            <section class="sheet-section sheet-section-intro">
-              <div class="session-quickstart-card">
-                <div>
-                  <h1 class="st-title">Quick start</h1>
-                  <p class="session-quickstart-copy">Pick a surah, keep the range tight, then start with the recommended practice stack.</p>
-                </div>
-                <div class="session-quickstart-actions">
-                  <button class="preset-btn preset-btn-primary" type="button btn-md" @click="applyRecommendedSetup">
-                    <i class="bi bi-magic"></i> Use Recommended Setup
-                  </button>
-                  <small>{{ setupSummary }}</small>
-                </div>
-              </div>
-            </section>
-            <section class="sheet-section">
+            <section class="sheet-section sheet-section-compact">
               <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-book"></i></span>
@@ -387,7 +374,7 @@
                     class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.advanced_setup">
-                <div class="field-stack">
+                <div class="field-stack field-stack-compact">
                   <div class="field">
                     <label>Surah</label>
                     <select :value="chapterId" @change="onChapterChange" class="select">
@@ -412,10 +399,30 @@
                     </select>
                     <small class="field-hint">Changes the audio voice for the session.</small>
                   </div>
+                  <div class="field">
+                    <div class="field-header">
+                      <label>Repetitions</label>
+                      <span class="range-value-pill">{{ repetitionsPerStep }}x</span>
+                    </div>
+                    <div class="range-control">
+                      <input
+                        type="range"
+                        v-model.number="repetitionsPerStep"
+                        min="1"
+                        max="50"
+                        step="1"
+                        class="input technique-range"
+                      />
+                    </div>
+                    <div class="slider-markers">
+                      <span>1x</span><span>12x</span><span>25x</span><span>37x</span><span>50x</span>
+                    </div>
+                    <small class="field-hint">Repeat each verse {{ repetitionsPerStep }} time{{ repetitionsPerStep === 1 ? '' : 's' }} before moving on.</small>
+                  </div>
                 </div>
               </div>
             </section>
-            <section class="sheet-section">
+            <section class="sheet-section sheet-section-compact">
               <button class="sheet-toggle" @click="toggleSection('advanced_playback')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-mic"></i></span>
@@ -428,7 +435,7 @@
                     class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.advanced_playback">
-                <div class="field-stack">
+                <div class="field-stack field-stack-compact">
                   <div class="field">
                     <label>Speed</label>
                     <div class="radio-group radio-group-tight">
@@ -450,133 +457,25 @@
                 </div>
               </div>
             </section>
-            <!-- Repetitions -->
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('repetitions')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-arrow-repeat"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Repetitions</span>
-                    <span class="st-sub">Repeat each verse before moving on</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.repetitions }">
-                  <i class="bi bi-chevron-down"></i>
-                </span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.repetitions">
-                <div class="field-stack">
-                  <div class="field">
-                    <div class="field-header">
-                      <label>Repeat count</label>
-                      <span class="range-value-pill">{{ repetitionsPerStep }}x</span>
-                    </div>
-                    <div class="range-control">
-                      <input 
-                        type="range" 
-                        v-model.number="repetitionsPerStep" 
-                        min="1" 
-                        max="50" 
-                        step="1"
-                        class="input technique-range"
-                      />
-                    </div>
-                    <div class="slider-markers">
-                      <span>1x</span><span>12x</span><span>25x</span><span>37x</span><span>50x</span>
-                    </div>
-                    <small class="field-hint">Each verse will be repeated {{ repetitionsPerStep }} time{{ repetitionsPerStep === 1 ? '' : 's' }} before advancing</small>
-                  </div>
-                </div>
-              </div>
-            </section>
-            <!-- Gap between verses -->
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('gap_between')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-pause-circle"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Gap between verses</span>
-                    <span class="st-sub">Pause after reciter finishes</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.gap_between }">
-                  <i class="bi bi-chevron-down"></i>
-                </span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.gap_between">
-                <div class="field-stack">
-                  <div class="field">
-                    <label>Pause duration</label>
-                    <div class="radio-group radio-group-tight gap-options">
-                      <label class="radio" :class="{ active: gapBetweenVerses === 'none' }">
-                        <input type="radio" value="none" v-model="gapBetweenVerses"> 
-                        <span class="option-label">None</span>
-                        <span class="option-desc">No pause</span>
-                      </label>
-                      <label class="radio" :class="{ active: gapBetweenVerses === '1x' }">
-                        <input type="radio" value="1x" v-model="gapBetweenVerses"> 
-                        <span class="option-label">1x</span>
-                        <span class="option-desc">Verse duration</span>
-                      </label>
-                      <label class="radio" :class="{ active: gapBetweenVerses === '3s' }">
-                        <input type="radio" value="3s" v-model="gapBetweenVerses"> 
-                        <span class="option-label">3s</span>
-                        <span class="option-desc">Seconds</span>
-                      </label>
-                      <label class="radio" :class="{ active: gapBetweenVerses === '5s' }">
-                        <input type="radio" value="5s" v-model="gapBetweenVerses"> 
-                        <span class="option-label">5s</span>
-                        <span class="option-desc">Seconds</span>
-                      </label>
-                      <label class="radio" :class="{ active: gapBetweenVerses === 'custom' }">
-                        <input type="radio" value="custom" v-model="gapBetweenVerses"> 
-                        <span class="option-label">Custom</span>
-                        <span class="option-desc">Set your own</span>
-                      </label>
-                    </div>
-                    
-                    <div v-if="gapBetweenVerses === 'custom'" class="custom-gap-control mt-2">
-                      <div class="range-control">
-                        <input 
-                          type="range" 
-                          v-model.number="customGapSeconds" 
-                          min="0.5" 
-                          max="10" 
-                          step="0.5"
-                          class="input technique-range"
-                        />
-                        <span class="inline-setting-pill">{{ customGapSeconds }}s</span>
-                      </div>
-                    </div>
-                    
-                    <div class="setting-hint">
-                      <i class="bi bi-info-circle"></i>
-                      <span>Pause after reciter finishes, allowing you to repeat back into the silence</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
           </div>
 
           <!-- TECHNIQUES TAB -->
           <div v-else-if="tab === 'techniques'" class="sheet">
-            <section class="sheet-section sheet-section-intro">
-              <div class="session-quickstart-card">
+            <section v-if="activePracticeTechniques.length" class="sheet-section active-techniques-section">
+              <div class="active-techniques-header">
                 <div>
-                  <div class="st-title">Practice styles</div>
-                  <p class="session-quickstart-copy">Start with one preset. Only open advanced technique controls if you already know why you need them.</p>
+                  <div class="st-title">Active methods</div>
+                  <div class="st-sub">A quick view of the techniques shaping this session.</div>
                 </div>
-                <div class="presets-grid presets-grid-wide">
-                  <button class="preset-btn" @click="applyPreset('guided')">
-                    <i class="bi bi-play-circle"></i> Guided Start
-                  </button>
-                  <button class="preset-btn" @click="applyPreset('chain')">
-                    <i class="bi bi-link-45deg"></i> Build Connections
-                  </button>
-                  <button class="preset-btn" @click="applyPreset('blur')">
-                    <i class="bi bi-cloud-haze2"></i> Pure Recall
-                  </button>
+                <div class="active-techniques-count">{{ activePracticeTechniques.length }}</div>
+              </div>
+              <div class="active-techniques-grid">
+                <div v-for="item in activePracticeTechniques" :key="item.key" class="active-technique-card">
+                  <div class="active-technique-icon"><i :class="item.icon"></i></div>
+                  <div class="active-technique-copy">
+                    <strong>{{ item.label }}</strong>
+                    <span>{{ item.description }}</span>
+                  </div>
                 </div>
               </div>
             </section>
@@ -590,9 +489,11 @@
                   </span>
                 </span>
                 <div class="st-right-group">
-                  <div class="toggle-switch" :class="{ active: focusModeEnabled }"
-                    @click="focusModeEnabled = !focusModeEnabled">
-                    <div class="toggle-switch-knob"></div>
+                  <div class="mode-radio-group" @click.stop>
+                    <label class="mode-radio" :class="{ active: focusModeEnabled }">
+                      <input type="radio" name="focus-mode-state" aria-label="Use focus mode" :checked="focusModeEnabled" @change="focusModeEnabled = true">
+                      <span class="mode-radio-dot" aria-hidden="true"></span>
+                    </label>
                   </div>
                   <span class="st-chev" :class="{ open: sectionOpen.focus_mode }">
                     <i class="bi bi-chevron-down"></i>
@@ -612,6 +513,14 @@
                       <span>Best for: Deep memorisation sessions</span>
                     </div>
                   </div>
+                  <div v-if="focusModeEnabled" class="field">
+                    <label>Focus strength</label>
+                    <div class="range-control">
+                      <input type="range" min="30" max="75" step="5" v-model.number="focusDimPercent" class="input">
+                      <span class="inline-setting-pill">{{ focusDimPercent }}%</span>
+                    </div>
+                    <small class="field-hint">Higher values dim non-active verses more aggressively.</small>
+                  </div>
                 </div>
               </div>
             </section>
@@ -626,10 +535,12 @@
                   </span>
                 </span>
                 <div class="st-right-group">
-                  <button class="toggle-chip" :class="{ active: blurModeEnabled }"
-                    @click="blurModeEnabled = !blurModeEnabled" type="button">
-                    {{ blurModeEnabled ? 'On' : 'Off' }}
-                  </button>
+                  <div class="mode-radio-group" @click.stop>
+                    <label class="mode-radio" :class="{ active: blurModeEnabled }">
+                      <input type="radio" name="blur-mode-state" aria-label="Use blur mode" :checked="blurModeEnabled" @change="blurModeEnabled = true">
+                      <span class="mode-radio-dot" aria-hidden="true"></span>
+                    </label>
+                  </div>
                   <span class="st-chev" :class="{ open: sectionOpen.blur_mode }"><i
                       class="bi bi-chevron-down"></i></span>
                 </div>
@@ -668,10 +579,12 @@
                   </span>
                 </span>
                 <div class="st-right-group">
-                  <button class="toggle-chip" :class="{ active: chainingEnabled }"
-                    @click="setChainingEnabled(!chainingEnabled)" type="button">
-                    {{ chainingEnabled ? 'On' : 'Off' }}
-                  </button>
+                  <div class="mode-radio-group" @click.stop>
+                    <label class="mode-radio" :class="{ active: chainingEnabled }">
+                      <input type="radio" name="chaining-state" aria-label="Use chaining" :checked="chainingEnabled" @change="setChainingEnabled(true)">
+                      <span class="mode-radio-dot" aria-hidden="true"></span>
+                    </label>
+                  </div>
                   <span class="st-chev" :class="{ open: sectionOpen.chaining }"><i
                       class="bi bi-chevron-down"></i></span>
                 </div>
@@ -732,10 +645,12 @@
                   </span>
                 </span>
                 <div class="st-right-group">
-                  <button class="toggle-chip" :class="{ active: anchorModeEnabled }" @click="toggleAnchorMode"
-                    type="button">
-                    {{ anchorModeEnabled ? 'On' : 'Off' }}
-                  </button>
+                  <div class="mode-radio-group" @click.stop>
+                    <label class="mode-radio" :class="{ active: anchorModeEnabled }">
+                      <input type="radio" name="anchor-mode-state" aria-label="Use anchor mode" :checked="anchorModeEnabled" @change="setAnchorMode(true)">
+                      <span class="mode-radio-dot" aria-hidden="true"></span>
+                    </label>
+                  </div>
                   <span class="st-chev" :class="{ open: sectionOpen.anchor_mode }"><i
                       class="bi bi-chevron-down"></i></span>
                 </div>
@@ -759,38 +674,6 @@
                       <option :value="2">2 anchors (first + last)</option>
                     </select>
                     <small class="field-hint">{{ anchorModeDescription }}</small>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <!-- Quick Presets -->
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('presets')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-magic"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Advanced Technique Tuning</span>
-                    <span class="st-sub">Optional fine-tuning after you have a stable routine</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.presets }"><i class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.presets">
-                <div class="field-stack">
-                  <div class="field">
-                    <div class="presets-grid">
-                      <button class="preset-btn" @click="applyPreset('chain')">
-                        <i class="bi bi-link-45deg"></i> Chain + Anchors
-                      </button>
-                      <button class="preset-btn" @click="applyPreset('blur')">
-                        <i class="bi bi-cloud-haze2"></i> Pure Recall
-                      </button>
-                      <button class="preset-btn" @click="applyPreset('focus')">
-                        <i class="bi bi-bullseye"></i> Deep Focus
-                      </button>
-                    </div>
-                    <small class="field-hint">Use these only when you want deliberate variation, not for first-session setup.</small>
                   </div>
                 </div>
               </div>
@@ -1382,6 +1265,7 @@ export default {
       tab: 'tools',
       showTools: false,
       focusModeEnabled: false,
+      focusDimPercent: 54,
       blurModeEnabled: false,
       blurIntensity: 10,
       chainingEnabled: true,
@@ -1692,11 +1576,48 @@ export default {
       const playModeLabel = this.playMode === 'manual' ? 'manual advance' : 'auto advance'
       return `${repeatCount}x repeats, ${playModeLabel}, ${this.chainingEnabled ? `${this.chainingMethod} chaining` : 'plain sequence'}`
     },
+    activePracticeTechniques() {
+      const items = []
+      if (this.focusModeEnabled) {
+        items.push({
+          key: 'focus',
+          icon: 'bi bi-bullseye',
+          label: 'Focus Mode',
+          description: 'Non-active verses are softened so the current ayah stays central.'
+        })
+      }
+      if (this.blurModeEnabled) {
+        items.push({
+          key: 'blur',
+          icon: 'bi bi-cloud-haze2',
+          label: 'Blur Mode',
+          description: `Upcoming verses are hidden with ${this.blurIntensity}px blur for active recall.`
+        })
+      }
+      if (this.chainingEnabled) {
+        items.push({
+          key: 'chaining',
+          icon: 'bi bi-link-45deg',
+          label: this.chainingMethod === 'cumulative' ? 'Cumulative Chaining' : 'Linking Chaining',
+          description: `${this.chainingRepetitions} repeat${this.chainingRepetitions === 1 ? '' : 's'} per chaining step.`
+        })
+      }
+      if (this.anchorModeEnabled) {
+        items.push({
+          key: 'anchor',
+          icon: 'bi bi-pin-angle-fill',
+          label: 'Anchor Mode',
+          description: this.anchorModeDescription
+        })
+      }
+      return items
+    },
     appStyleVars() {
       return {
         '--ui-scale': this.uiScale,
         '--en-scale': this.enScale,
-        '--recall-blur': `${this.blurIntensity}px`
+        '--recall-blur': `${this.blurIntensity}px`,
+        '--focus-dim-opacity': `${Math.max(0.25, Math.min(0.85, Number(this.focusDimPercent || 54) / 100))}`
       }
     },
     chainingMethodDescription() {
@@ -4266,6 +4187,13 @@ export default {
         1500
       )
     },
+    cycleQuranFontPill() {
+      const options = this.quranFontOptions || []
+      if (!options.length) return
+      const currentIndex = Math.max(0, options.findIndex(f => f.value === this.quranFont))
+      const next = options[(currentIndex + 1) % options.length]
+      this.selectFont(next.value)
+    },
 
     performToggleMode() {
       const newMode = this.currentMode === 'beginner' ? 'advanced' : 'beginner'
@@ -5888,6 +5816,12 @@ export default {
     setChainingEnabled(enabled) {
       this.chainingEnabled = !!enabled
       this.applyChainingQueueChange(this.currentMode, { restart: true })
+    },
+
+    setAnchorMode(enabled) {
+      const nextEnabled = !!enabled
+      if (this.anchorModeEnabled === nextEnabled) return
+      this.toggleAnchorMode()
     },
 
     setChainingMethod(method) {
@@ -8398,15 +8332,6 @@ export default {
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--accent);
-}
-
-/* Ensure consistent styling with Techniques tab */
-.sheet-content .field {
-  margin-bottom: 16px;
-}
-
-.sheet-content .field:last-child {
-  margin-bottom: 0;
 }
 
 /* Setting items - matching Techniques tab style */
@@ -12865,6 +12790,163 @@ html {
   transform: translateY(0);
 }
 
+.mode-radio-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.mode-radio {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(154, 103, 56, 0.24);
+  background: rgba(255, 250, 243, 0.95);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.mode-radio input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mode-radio-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(154, 103, 56, 0.52);
+  background: rgba(255, 255, 255, 0.9);
+  position: relative;
+  flex: 0 0 auto;
+  transition: all 0.18s ease;
+}
+
+.mode-radio-dot::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: transparent;
+  transition: background 0.18s ease;
+}
+
+.mode-radio.active {
+  border-color: rgba(154, 103, 56, 0.38);
+  background: rgba(248, 236, 222, 0.95);
+}
+
+.mode-radio.active .mode-radio-dot {
+  border-color: rgba(154, 103, 56, 0.86);
+}
+
+.mode-radio.active .mode-radio-dot::after {
+  background: rgba(154, 103, 56, 0.86);
+}
+
+.mode-radio:hover {
+  border-color: rgba(154, 103, 56, 0.3);
+  background: rgba(252, 244, 235, 0.95);
+}
+
+.workspace-shell-active-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(58, 167, 109, 0.16);
+  border: 1px solid rgba(58, 167, 109, 0.28);
+  color: #1f6b45;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.active-techniques-section {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(58, 167, 109, 0.1);
+  background: linear-gradient(180deg, rgba(245, 252, 247, 0.82), rgba(241, 249, 243, 0.72));
+  box-shadow: none;
+}
+
+.active-techniques-header {
+  margin-bottom: 10px;
+  padding: 0 0 2px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.active-techniques-count {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(58, 167, 109, 0.08);
+  color: rgba(31, 107, 69, 0.75);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.active-techniques-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.active-technique-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(58, 167, 109, 0.08);
+  background: rgba(250, 253, 250, 0.92);
+  box-shadow: none;
+}
+
+.active-technique-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: rgba(47, 140, 90, 0.82);
+  background: rgba(58, 167, 109, 0.08);
+  flex: 0 0 auto;
+}
+
+.active-technique-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding-top: 0;
+}
+
+.active-technique-copy strong {
+  font-size: 0.78rem;
+  color: rgba(31, 107, 69, 0.9);
+  font-weight: 700;
+}
+
+.active-technique-copy span {
+  font-size: 0.69rem;
+  line-height: 1.35;
+  color: rgba(31, 107, 69, 0.68);
+}
+
 /* Compact toggle for headers */
 .st-right-group {
   display: flex;
@@ -13493,20 +13575,20 @@ html {
 }
 
 .tools-body.compact .sheet {
-  gap: 12px;
+  gap: 8px;
 }
 
 .tools-body.compact .sheet-section {
   padding: 0;
-  border-radius: 16px;
+  border-radius: 14px;
 }
 
 .tools-body.compact .sheet-toggle {
-  padding: 12px 14px;
+  padding: 10px 12px;
 }
 
 .tools-body.compact .sheet-content {
-  padding: 12px 14px 14px;
+  padding: 8px 12px 10px;
 }
 
 .tools-body.compact .field-stack {
@@ -13517,19 +13599,52 @@ html {
   margin-bottom: 6px;
 }
 
+.tools-body.compact .sheet-section-compact {
+  border-radius: 14px;
+}
+
+.tools-body.compact .sheet-section-compact .sheet-toggle {
+  padding: 11px 13px;
+}
+
+.tools-body.compact .sheet-section-compact .sheet-content {
+  padding: 8px 13px 13px;
+}
+
+.tools-body.compact .field-stack-compact {
+  gap: 10px;
+}
+
+.tools-body.compact .field-stack-compact .field {
+  gap: 6px;
+}
+
+.tools-body.compact .field-stack-compact .field label {
+  margin-bottom: 0;
+}
+
+.tools-body.compact .field-stack-compact .select,
+.tools-body.compact .field-stack-compact .input {
+  padding: 10px 12px;
+}
+
+.tools-body.compact .field-stack-compact .field-hint {
+  margin-top: 1px;
+}
+
+.tools-body.compact .field-stack-compact .slider-markers {
+  margin-top: 2px;
+}
+
 .sheet {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .sheet-section {
-  border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));
-  border-radius: 18px;
   padding: 0;
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
   animation: riseSoft 260ms ease-out;
 }
 
