@@ -13643,6 +13643,9 @@ html {
 }
 
 .sheet-section {
+  border: 1px solid var(--border);
+  background: rgba(255, 252, 248, 0.5);
+  border-radius: 14px;
   padding: 0;
   overflow: hidden;
   animation: riseSoft 260ms ease-out;
