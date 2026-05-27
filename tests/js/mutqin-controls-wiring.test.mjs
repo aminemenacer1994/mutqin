@@ -29,11 +29,15 @@ includesAll('session setup controls', [
 ])
 
 includesAll('technique controls', [
-  /name="focus-mode-state" aria-label="Use focus mode" :checked="focusModeEnabled" @change="focusModeEnabled = true"/,
-  /name="blur-mode-state" aria-label="Use blur mode" :checked="blurModeEnabled" @change="blurModeEnabled = true"/,
+  /name="focus-mode-state" aria-label="Use focus mode" :checked="focusModeEnabled" @change\.prevent="toggleFocusModeRadio"/,
+  /@click\.prevent="toggleFocusModeRadio"/,
+  /name="blur-mode-state" aria-label="Use blur mode" :checked="blurModeEnabled" @change\.prevent="toggleBlurModeRadio"/,
+  /@click\.prevent="toggleBlurModeRadio"/,
   /v-model\.number="blurIntensity"/,
-  /name="chaining-state" aria-label="Use chaining" :checked="chainingEnabled" @change="setChainingEnabled\(true\)"/,
-  /name="anchor-mode-state" aria-label="Use anchor mode" :checked="anchorModeEnabled" @change="setAnchorMode\(true\)"/,
+  /name="chaining-state" aria-label="Use chaining" :checked="chainingEnabled" @change\.prevent="toggleChainingRadio"/,
+  /@click\.prevent="toggleChainingRadio"/,
+  /name="anchor-mode-state" aria-label="Use anchor mode" :checked="anchorModeEnabled" @change\.prevent="toggleAnchorModeRadio"/,
+  /@click\.prevent="toggleAnchorModeRadio"/,
   /v-model\.number="focusDimPercent"/,
   /cycleQuranFontPill\(\)/,
   /@change="setChainingMethod\('linking'\)"/,
@@ -41,6 +45,10 @@ includesAll('technique controls', [
   /@input="setChainingRepetitions\(Number\(\$event\.target\.value\)\)"/,
   /activePracticeTechniques\(\)/,
   /active-techniques-count/,
+  /toggleFocusModeRadio\(\)/,
+  /toggleBlurModeRadio\(\)/,
+  /toggleChainingRadio\(\)/,
+  /toggleAnchorModeRadio\(\)/,
   /setAnchorMode\(enabled\)/,
   /phase: 'Linking'/,
   /phase: 'Cumulative'/

@@ -408,9 +408,9 @@
                     </div>
 
                     <div class="d-flex align-items-center gap-3 ms-auto app-navbar-actions">
-                        <!-- <button id="globalThemeToggle" class="btn app-theme-toggle" type="button" aria-label="Toggle theme">
+                        <button id="globalThemeToggle" class="btn app-theme-toggle" type="button" aria-label="Toggle theme">
                             <i class="bi bi-sun"></i>
-                        </button> -->
+                        </button>
 
                         @auth
                             <div class="dropdown" id="userDropdown">
@@ -463,16 +463,16 @@
     <script>
         // Theme management
         (function() {
-            const themes = ['light', 'dark', 'sepia'];
+            const themes = ['light', 'dark'];
             const themeIcons = {
                 light: 'bi-sun',
-                dark: 'bi-moon-stars',
-                sepia: 'bi-book-half'
+                dark: 'bi-moon-stars'
             };
             
             function setTheme(theme) {
                 document.documentElement.setAttribute('data-theme', theme);
                 localStorage.setItem('mutqin-theme', theme);
+                window.dispatchEvent(new CustomEvent('mutqin:theme-change', { detail: { theme } }));
                 
                 const button = document.getElementById('globalThemeToggle');
                 if (button) {

@@ -490,8 +490,8 @@
                 </span>
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
-                    <label class="mode-radio" :class="{ active: focusModeEnabled }">
-                      <input type="radio" name="focus-mode-state" aria-label="Use focus mode" :checked="focusModeEnabled" @change="focusModeEnabled = true">
+                    <label class="mode-radio" :class="{ active: focusModeEnabled }" @click.prevent="toggleFocusModeRadio">
+                      <input type="radio" name="focus-mode-state" aria-label="Use focus mode" :checked="focusModeEnabled" @change.prevent="toggleFocusModeRadio">
                       <span class="mode-radio-dot" aria-hidden="true"></span>
                     </label>
                   </div>
@@ -536,8 +536,8 @@
                 </span>
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
-                    <label class="mode-radio" :class="{ active: blurModeEnabled }">
-                      <input type="radio" name="blur-mode-state" aria-label="Use blur mode" :checked="blurModeEnabled" @change="blurModeEnabled = true">
+                    <label class="mode-radio" :class="{ active: blurModeEnabled }" @click.prevent="toggleBlurModeRadio">
+                      <input type="radio" name="blur-mode-state" aria-label="Use blur mode" :checked="blurModeEnabled" @change.prevent="toggleBlurModeRadio">
                       <span class="mode-radio-dot" aria-hidden="true"></span>
                     </label>
                   </div>
@@ -580,8 +580,8 @@
                 </span>
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
-                    <label class="mode-radio" :class="{ active: chainingEnabled }">
-                      <input type="radio" name="chaining-state" aria-label="Use chaining" :checked="chainingEnabled" @change="setChainingEnabled(true)">
+                    <label class="mode-radio" :class="{ active: chainingEnabled }" @click.prevent="toggleChainingRadio">
+                      <input type="radio" name="chaining-state" aria-label="Use chaining" :checked="chainingEnabled" @change.prevent="toggleChainingRadio">
                       <span class="mode-radio-dot" aria-hidden="true"></span>
                     </label>
                   </div>
@@ -646,8 +646,8 @@
                 </span>
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
-                    <label class="mode-radio" :class="{ active: anchorModeEnabled }">
-                      <input type="radio" name="anchor-mode-state" aria-label="Use anchor mode" :checked="anchorModeEnabled" @change="setAnchorMode(true)">
+                    <label class="mode-radio" :class="{ active: anchorModeEnabled }" @click.prevent="toggleAnchorModeRadio">
+                      <input type="radio" name="anchor-mode-state" aria-label="Use anchor mode" :checked="anchorModeEnabled" @change.prevent="toggleAnchorModeRadio">
                       <span class="mode-radio-dot" aria-hidden="true"></span>
                     </label>
                   </div>
@@ -2207,6 +2207,17 @@ export default {
   },
 
   async mounted() {
+    this.handleGlobalThemeChange = (event) => {
+      const nextTheme = event?.detail?.theme || document.documentElement.getAttribute('data-theme') || 'light'
+      this.theme = nextTheme
+    }
+    this.handleThemeStorageSync = (event) => {
+      if (event?.key && event.key !== 'mutqin-theme') return
+      const nextTheme = event?.newValue || document.documentElement.getAttribute('data-theme') || 'light'
+      this.theme = nextTheme
+    }
+    window.addEventListener('mutqin:theme-change', this.handleGlobalThemeChange)
+    window.addEventListener('storage', this.handleThemeStorageSync)
     this.watchActiveVerse()
     this.$nextTick(() => {
       const navbar = document.querySelector('.navbar')
@@ -2323,8 +2334,13 @@ export default {
     '$route'() {
       if (this.showTools) {
         this.closeToolsPanel()
-      }
-    },
+    }
+  },
+
+  beforeUnmount() {
+    window.removeEventListener('mutqin:theme-change', this.handleGlobalThemeChange)
+    window.removeEventListener('storage', this.handleThemeStorageSync)
+  },
     tab(newVal) {
       if (!['tools', 'techniques', 'saved', 'settings'].includes(newVal)) {
         this.tab = 'tools'
@@ -5587,7 +5603,7 @@ export default {
               arabic_tajweed: tajweed,
               translation: this.cleanTranslationText(translation),
               transliteration,
-              audio: this.normalizeAudioUrl(ayah.audio || ayah.audioSecondary?.[0] || ''),
+              audio: this.resolveAyahAudioUrl(ayah),
               words: arabicWords.map((word, index) => ({
                 ar: word,
                 en: translationWords[index] || '',
@@ -5817,6 +5833,18 @@ export default {
       this.chainingEnabled = !!enabled
       this.applyChainingQueueChange(this.currentMode, { restart: true })
     },
+    toggleFocusModeRadio() {
+      this.focusModeEnabled = !this.focusModeEnabled
+    },
+    toggleBlurModeRadio() {
+      this.blurModeEnabled = !this.blurModeEnabled
+    },
+    toggleChainingRadio() {
+      this.setChainingEnabled(!this.chainingEnabled)
+    },
+    toggleAnchorModeRadio() {
+      this.setAnchorMode(!this.anchorModeEnabled)
+    },
 
     setAnchorMode(enabled) {
       const nextEnabled = !!enabled
@@ -5994,6 +6022,18 @@ export default {
       if (url.startsWith('/')) return `https://verses.quran.com${url}`
       if (url.includes('mp3')) return `https://verses.quran.com/${url}`
       return url
+    },
+    resolveAyahAudioUrl(ayah = {}) {
+      const direct = typeof ayah.audio === 'string' ? ayah.audio : ''
+      const nested = ayah.audio && typeof ayah.audio === 'object'
+        ? (ayah.audio.url || ayah.audio.audio || ayah.audio.src || '')
+        : ''
+      const secondary = Array.isArray(ayah.audioSecondary) ? ayah.audioSecondary[0] : ''
+      const secondaryUrl = typeof secondary === 'string'
+        ? secondary
+        : (secondary?.url || secondary?.audio || secondary?.src || '')
+      const fallback = ayah.audioUrl || ayah.audio_url || ayah.url || ''
+      return this.normalizeAudioUrl(direct || nested || secondaryUrl || fallback || '')
     },
 
     getQueueItemAudioSeconds(item = {}, allowCurrentProgress = false) {
@@ -6389,7 +6429,7 @@ export default {
     },
 
     cycleTheme() {
-      const themes = ['light', 'sepia', 'dark']
+      const themes = ['light', 'dark']
       const idx = themes.indexOf(this.theme)
       this.theme = themes[(idx + 1) % themes.length]
       document.documentElement.setAttribute('data-theme', this.theme)
@@ -7377,8 +7417,8 @@ export default {
 }
 
 .setting-section {
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -7388,15 +7428,15 @@ export default {
   align-items: center;
   gap: 8px;
   padding: 16px 20px;
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   font-weight: 500;
-  color: #374151;
+  color: var(--text);
 }
 
 .section-header i {
   font-size: 18px;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .section-content {
@@ -7412,7 +7452,7 @@ export default {
   width: 100%;
   height: 4px;
   padding: 0;
-  background: #e5e7eb;
+  background: var(--border);
   border-radius: 4px;
   -webkit-appearance: none;
 }
@@ -7442,13 +7482,13 @@ export default {
   margin-top: 8px;
   padding: 0 4px;
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .repetition-value {
   margin-top: 12px;
   font-size: 13px;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .repetition-value strong {
@@ -7460,11 +7500,11 @@ export default {
 .form-select {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 14px;
-  color: #374151;
-  background-color: #fff;
+  color: var(--text);
+  background-color: var(--surface-strong);
   cursor: pointer;
 }
 
@@ -13694,6 +13734,7 @@ html {
 }
 
 .st-title {
+  padding-top: 5px;
   font-weight: 450;
   letter-spacing: -0.2px;
   color: var(--text);
@@ -16143,6 +16184,208 @@ body>.navbar+.app .main.container {
 [data-theme="dark"] .quiz-card {
   background: rgba(18, 18, 18, 0.92);
   border-color: rgba(255, 255, 255, 0.10);
+}
+
+[data-theme="dark"] .hero-card,
+[data-theme="dark"] .empty-card,
+[data-theme="dark"] .continue-session-card,
+[data-theme="dark"] .offcanvas-launcher-card,
+[data-theme="dark"] .setup-start-card,
+[data-theme="dark"] .home-dashboard-card,
+[data-theme="dark"] .saved-header,
+[data-theme="dark"] .save-section,
+[data-theme="dark"] .session-item,
+[data-theme="dark"] .empty-state,
+[data-theme="dark"] .session-quickstart-card {
+  background: linear-gradient(180deg, rgba(34, 29, 26, 0.96), rgba(24, 21, 19, 0.94));
+  border-color: var(--border);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="dark"] .workspace-shell,
+[data-theme="dark"] .session-feedback-panel,
+[data-theme="dark"] .workspace-fab,
+[data-theme="dark"] .verse-card,
+[data-theme="dark"] .verse-arabic,
+[data-theme="dark"] .player-bar,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .shortcuts-modal,
+[data-theme="dark"] .setting-section,
+[data-theme="dark"] .settings-group {
+  background: linear-gradient(180deg, rgba(34, 29, 26, 0.96), rgba(22, 19, 17, 0.94));
+  border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .workspace-shell {
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.34);
+}
+
+[data-theme="dark"] .workspace-shell-meta span,
+[data-theme="dark"] .workspace-shell-chain-pill,
+[data-theme="dark"] .workspace-shell-phase,
+[data-theme="dark"] .toolbar-chip,
+[data-theme="dark"] .action-icon-btn,
+[data-theme="dark"] .main-nav-btn,
+[data-theme="dark"] .player-loop-chip,
+[data-theme="dark"] .word-item,
+[data-theme="dark"] .saved-sessions-container .delete-btn,
+[data-theme="dark"] .font-dropdown-trigger,
+[data-theme="dark"] .font-option,
+[data-theme="dark"] .mode-radio,
+[data-theme="dark"] .active-technique-card,
+[data-theme="dark"] .active-techniques-count {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 236, 216, 0.14);
+  color: var(--text);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .toolbar-chip.active,
+[data-theme="dark"] .workspace-shell-active-pill,
+[data-theme="dark"] .player-loop-chip.active {
+  background: rgba(208, 160, 107, 0.18);
+  border-color: rgba(208, 160, 107, 0.32);
+  color: var(--accent-strong);
+}
+
+[data-theme="dark"] .action-btn.action-btn-secondary,
+[data-theme="dark"] .action-btn.action-btn-secondary span,
+[data-theme="dark"] .action-btn.action-btn-secondary i {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 236, 216, 0.16);
+  color: #f3dfc8;
+}
+
+[data-theme="dark"] .workspace-shell-active-pill {
+  color: #f3dfc8;
+}
+
+[data-theme="dark"] .workspace-shell-copy h1,
+[data-theme="dark"] .workspace-shell-copy h2,
+[data-theme="dark"] .hero-title,
+[data-theme="dark"] .saved-header h3,
+[data-theme="dark"] .session-name,
+[data-theme="dark"] .active-technique-copy strong,
+[data-theme="dark"] .modal-header h2,
+[data-theme="dark"] .shortcut-card-title {
+  color: var(--text);
+}
+
+[data-theme="dark"] .workspace-shell-copy p,
+[data-theme="dark"] .workspace-shell-meta span,
+[data-theme="dark"] .workspace-shell-chain-pill,
+[data-theme="dark"] .hero-sub,
+[data-theme="dark"] .hero-point,
+[data-theme="dark"] .session-details span,
+[data-theme="dark"] .empty-state span,
+[data-theme="dark"] .active-technique-copy span,
+[data-theme="dark"] .confirm-copy,
+[data-theme="dark"] .shortcut-row span,
+[data-theme="dark"] .player-time,
+[data-theme="dark"] .player-loop-label,
+[data-theme="dark"] .offcanvas-launcher-copy {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .saved-sessions-container {
+  background: linear-gradient(180deg, rgba(28, 24, 22, 0.98), rgba(20, 18, 17, 0.96));
+  border-color: rgba(255, 236, 216, 0.12);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34);
+}
+
+[data-theme="dark"] .saved-header,
+[data-theme="dark"] .empty-state,
+[data-theme="dark"] .save-section {
+  background: transparent;
+  border-color: rgba(255, 236, 216, 0.1);
+}
+
+[data-theme="dark"] .current-info {
+  background: rgba(208, 160, 107, 0.12);
+  border: 1px solid rgba(208, 160, 107, 0.16);
+}
+
+[data-theme="dark"] .save-btn {
+  background: linear-gradient(135deg, #d0a06b, #b98654);
+  color: #1a140f;
+}
+
+[data-theme="dark"] .verse-card::before {
+  background:
+    linear-gradient(180deg, rgba(208, 160, 107, 0.04), transparent 22%),
+    radial-gradient(circle at top right, rgba(208, 160, 107, 0.06), transparent 28%);
+}
+
+[data-theme="dark"] .verse-card.active {
+  background: linear-gradient(145deg, rgba(208, 160, 107, 0.12), rgba(255, 255, 255, 0.02));
+  box-shadow: 0 0 0 1px rgba(208, 160, 107, 0.42), 0 16px 34px rgba(0, 0, 0, 0.34);
+}
+
+[data-theme="dark"] .verse-number,
+[data-theme="dark"] .verse-status-badge,
+[data-theme="dark"] .player-chapter,
+[data-theme="dark"] .player-verse,
+[data-theme="dark"] .preview-stat,
+[data-theme="dark"] .preview-surah,
+[data-theme="dark"] .preview-range {
+  color: var(--text);
+}
+
+[data-theme="dark"] .player-progress-bg,
+[data-theme="dark"] .progress-bar-track,
+[data-theme="dark"] .form-range {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .banner,
+[data-theme="dark"] .countdown-modal {
+  background: linear-gradient(180deg, rgba(34, 29, 26, 0.98), rgba(22, 19, 17, 0.96));
+  border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .banner-x,
+[data-theme="dark"] .shortcuts-modal-close,
+[data-theme="dark"] .modal-close-btn,
+[data-theme="dark"] .btn-icon,
+[data-theme="dark"] .verse-small-play-btn,
+[data-theme="dark"] .verse-download-btn,
+[data-theme="dark"] .player-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 236, 216, 0.14);
+  color: var(--text);
+}
+
+[data-theme="dark"] .modal-footer,
+[data-theme="dark"] .shortcuts-header,
+[data-theme="dark"] .section-header {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .mode-radio {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(208, 160, 107, 0.24);
+}
+
+[data-theme="dark"] .mode-radio.active {
+  background: rgba(208, 160, 107, 0.14);
+  border-color: rgba(208, 160, 107, 0.4);
+}
+
+[data-theme="dark"] .mode-radio-dot {
+  background: rgba(12, 11, 10, 0.9);
+  border-color: rgba(208, 160, 107, 0.7);
+}
+
+[data-theme="dark"] .mode-radio.active .mode-radio-dot::after {
+  background: rgba(208, 160, 107, 0.9);
+}
+
+[data-theme="dark"] .active-techniques-section {
+  background: linear-gradient(180deg, rgba(29, 35, 30, 0.92), rgba(20, 25, 22, 0.9));
+  border-color: rgba(108, 167, 126, 0.18);
 }
 
 /* Sepia theme overrides */
