@@ -216,6 +216,15 @@
                   <i class="bi bi-diagram-3"></i>{{ chainingProgressLabel }}
                 </span>
               </div>
+            </hr>
+            </div>
+            
+            <div v-show="!mainCardCollapsed" class="workspace-quick-controls" aria-label="Quick reading controls">
+              <button class="toolbar-chip" :class="{ active: showTranslation }" @click="toggleReadingOption('translation')" type="button">Translation</button>
+              <button class="toolbar-chip" :class="{ active: showTransliteration }" @click="toggleReadingOption('transliteration')" type="button">Transliteration</button>
+              <button class="toolbar-chip" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')" type="button">Word by word</button>
+              <button class="toolbar-chip" :class="{ active: wordByWordAudioEnabled }" @click="toggleWordAudio()" type="button">Word audio</button>
+              <button class="toolbar-chip" :class="{ active: tajweedEnabled }" @click="toggleTajweed" type="button">Tajweed</button>
             </div>
 
 
@@ -335,22 +344,36 @@
               <i class="bi bi-sliders"></i> Session
             </button>
             <button :class="{ active: tab === 'techniques' }" @click.prevent="setActiveTab('techniques')"
-              title="Memorisation techniques" type="button">
-              <i class="bi bi-stars"></i> Techniques
+              title="Practice presets" type="button">
+              <i class="bi bi-stars"></i> Practice
             </button>
             <button :class="{ active: tab === 'saved' }" @click.prevent="setActiveTab('saved')" title="Saved sessions"
               type="button">
               <i class="bi bi-clock-history"></i> Saved
             </button>
-            <button :class="{ active: tab === 'settings' }" @click.prevent="setActiveTab('settings')" type="button">
+            <!-- <button :class="{ active: tab === 'settings' }" @click.prevent="setActiveTab('settings')" type="button">
               <i class="bi bi-gear"></i> Settings
-            </button>
+            </button> -->
           </div>
         </div>
 
         <div ref="toolsBody" class="tools-body compact">
           <!-- TOOLS TAB -->
           <div v-if="tab === 'tools'" class="sheet">
+            <section class="sheet-section sheet-section-intro">
+              <div class="session-quickstart-card">
+                <div>
+                  <h1 class="st-title">Quick start</h1>
+                  <p class="session-quickstart-copy">Pick a surah, keep the range tight, then start with the recommended practice stack.</p>
+                </div>
+                <div class="session-quickstart-actions">
+                  <button class="preset-btn preset-btn-primary" type="button btn-md" @click="applyRecommendedSetup">
+                    <i class="bi bi-magic"></i> Use Recommended Setup
+                  </button>
+                  <small>{{ setupSummary }}</small>
+                </div>
+              </div>
+            </section>
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
                 <span class="st-left">
@@ -538,6 +561,25 @@
 
           <!-- TECHNIQUES TAB -->
           <div v-else-if="tab === 'techniques'" class="sheet">
+            <section class="sheet-section sheet-section-intro">
+              <div class="session-quickstart-card">
+                <div>
+                  <div class="st-title">Practice styles</div>
+                  <p class="session-quickstart-copy">Start with one preset. Only open advanced technique controls if you already know why you need them.</p>
+                </div>
+                <div class="presets-grid presets-grid-wide">
+                  <button class="preset-btn" @click="applyPreset('guided')">
+                    <i class="bi bi-play-circle"></i> Guided Start
+                  </button>
+                  <button class="preset-btn" @click="applyPreset('chain')">
+                    <i class="bi bi-link-45deg"></i> Build Connections
+                  </button>
+                  <button class="preset-btn" @click="applyPreset('blur')">
+                    <i class="bi bi-cloud-haze2"></i> Pure Recall
+                  </button>
+                </div>
+              </div>
+            </section>
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('focus_mode')" type="button">
                 <span class="st-left">
@@ -728,8 +770,8 @@
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-magic"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">Quick Presets</span>
-                    <span class="st-sub">One-click technique combinations</span>
+                    <span class="st-title">Advanced Technique Tuning</span>
+                    <span class="st-sub">Optional fine-tuning after you have a stable routine</span>
                   </span>
                 </span>
                 <span class="st-chev" :class="{ open: sectionOpen.presets }"><i class="bi bi-chevron-down"></i></span>
@@ -748,8 +790,7 @@
                         <i class="bi bi-bullseye"></i> Deep Focus
                       </button>
                     </div>
-                    <small class="field-hint">Quickly apply recommended technique combinations based on your
-                      goal</small>
+                    <small class="field-hint">Use these only when you want deliberate variation, not for first-session setup.</small>
                   </div>
                 </div>
               </div>
@@ -1068,124 +1109,6 @@
       </div>
     </div>
 
-    <!-- Technique Compatibility Modal -->
-    <div class="modal-overlay" v-if="showCompatibilityModal" @click.self="showCompatibilityModal = false">
-      <div class="modal-content compatibility-modal">
-        <div class="modal-header">
-          <h2><i class="bi bi-info-circle-fill"></i> Technique Compatibility</h2>
-          <button class="btn-icon" @click="showCompatibilityModal = false"><i class="bi bi-x-lg"></i></button>
-        </div>
-        <div class="modal-body">
-          <p class="compatibility-intro">These memorisation techniques work well together. Pick combinations based on
-            your goal.</p>
-
-          <div class="compatibility-grid">
-            <!-- Row 1 -->
-            <div class="compatibility-row">
-              <div class="combo-icons">
-                <i class="bi bi-link-45deg"></i>
-                <i class="bi bi-plus-lg"></i>
-                <i class="bi bi-pin-angle-fill"></i>
-              </div>
-              <div class="combo-text">
-                <strong>Chaining + Anchor Mode</strong>
-                <span>Anchors help recall chain links</span>
-              </div>
-              <div class="combo-badge success">✅ Yes</div>
-            </div>
-
-            <!-- Row 2 -->
-            <div class="compatibility-row">
-              <div class="combo-icons">
-                <i class="bi bi-bullseye"></i>
-                <i class="bi bi-plus-lg"></i>
-                <i class="bi bi-pin-angle-fill"></i>
-              </div>
-              <div class="combo-text">
-                <strong>Focus Mode + Anchor Mode</strong>
-                <span>Clean visual focus + mental hooks</span>
-              </div>
-              <div class="combo-badge success">✅ Yes</div>
-            </div>
-
-            <!-- Row 3 -->
-            <div class="compatibility-row">
-              <div class="combo-icons">
-                <i class="bi bi-cloud-haze2"></i>
-              </div>
-              <div class="combo-text">
-                <strong>Blur Mode</strong>
-                <span>Best used alone for pure recall practice</span>
-              </div>
-              <div class="combo-badge alone">⭐ Alone best</div>
-            </div>
-
-            <!-- Row 4 -->
-            <div class="compatibility-row">
-              <div class="combo-icons">
-                <i class="bi bi-link-45deg"></i>
-                <i class="bi bi-plus-lg"></i>
-                <i class="bi bi-bullseye"></i>
-              </div>
-              <div class="combo-text">
-                <strong>Chaining + Focus Mode</strong>
-                <span>Distraction-free progression</span>
-              </div>
-              <div class="combo-badge success">✅ Yes</div>
-            </div>
-
-            <!-- Row 5 -->
-            <div class="compatibility-row">
-              <div class="combo-icons">
-                <i class="bi bi-pin-angle-fill"></i>
-              </div>
-              <div class="combo-text">
-                <strong>Anchor Mode</strong>
-                <span>Can be used with Focus or Chaining</span>
-              </div>
-              <div class="combo-badge success">✅ Yes</div>
-            </div>
-          </div>
-
-          <div class="compatibility-note">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            <span><strong>Note:</strong> Focus Mode and Blur Mode cannot be used together. Blur Mode reduces Chaining
-              effectiveness.</span>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-primary" @click="showCompatibilityModal = false">Got it</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Save Session Name Modal -->
-    <div class="modal-overlay" v-if="showSaveNameModal" @click.self="showSaveNameModal = false">
-      <div class="modal-content save-name-modal">
-        <div class="modal-header">
-          <h2><i class="bi bi-save"></i> Save Session</h2>
-          <button class="btn-icon" @click="showSaveNameModal = false"><i class="bi bi-x-lg"></i></button>
-        </div>
-        <div class="modal-body">
-          <p class="save-modal-desc">Give your session a name to easily find it later</p>
-          <div class="save-name-input-group">
-            <label>Session Name</label>
-            <input type="text" v-model="saveSessionName" class="save-name-input" placeholder="e.g., Al-Fatihah Focus"
-              @keyup.enter="confirmSaveSession" autofocus />
-          </div>
-          <div class="save-preview-info">
-            <i class="bi bi-info-circle"></i>
-            <span>{{ currentChapter?.name_simple || 'Surah' }} · {{ rangeStart }}-{{ rangeEnd }}</span>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-secondary" @click="showSaveNameModal = false">Cancel</button>
-          <button class="btn-primary" @click="confirmSaveSession">
-            <i class="bi bi-save"></i> Save Session
-          </button>
-        </div>
-      </div>
-    </div>
 
 
 
@@ -1385,9 +1308,7 @@ function createAdvancedState() {
 }
 
 export default {
-  name: "SessionSetupTab",
   name: 'TelawaApp',
-  name: "SessionSetup",
   props: {
     auth: { type: Object, default: () => ({ check: false, id: null }) }
   },
@@ -1400,28 +1321,13 @@ export default {
         'Quick Revision',
         'Deep Memorisation'
       ],
-      // Existing data
-      selectedReciter: "mishary",
-      
       // Feature 1: Repetitions
       repetitionsPerStep: 5,
       selectedLoopCount: 5,
-      
-      // Existing techniques
-      techniques: {
-        focus: false,
-        blur: false,
-        chaining: false,
-        anchor: false
-      },
-      
-      // Existing auto-advance
-      autoAdvance: true,
-      
+
       // Feature 2: Gap between verses
       gapBetweenVerses: "1x", // Options: 'none', '1x', '3s', '5s', 'custom'
       customGapSeconds: 2,
-      showCompatibilityModal: false,
       anchorModeEnabled: false,
       anchorCount: 2,
       anchorHighlightObserver: null,
@@ -1565,9 +1471,6 @@ export default {
         defaultFontSize: 100
       },
 
-      //saved session
-      savedSessions: [],
-
       // Quiz state
       quizActive: false,
       quizScore: 0,
@@ -1655,7 +1558,7 @@ export default {
         beginner_audio: true,
         beginner_saved: false,
         advanced_setup: true,
-        advanced_playback: true,
+        advanced_playback: false,
         advanced_practice: false,
         advanced_saved: false,
         session_tools: false,
@@ -1665,11 +1568,13 @@ export default {
         analytics_weak: false,
         memorisation_techniques: false,
         saved_sessions: false,
-        focus_mode: true,
+        focus_mode: false,
         blur_mode: false,
         chaining: false,
         anchor_mode: false,
-        presets: false,
+        presets: true,
+        repetitions: false,
+        gap_between: false,
       },
 
       // Audio event handlers
@@ -1781,7 +1686,11 @@ export default {
       if (!this.hasVerses) return 'Choose a surah and range, then start.'
       if (this.guidedUiStep === 'review') return this.dueCount ? `You have ${this.dueCount} verses to review.` : 'Review what is due.'
       return 'Play the active ayah. Use Tools for translation and word-by-word.'
-      return ''
+    },
+    setupSummary() {
+      const repeatCount = Math.max(1, Number(this.repetitionsPerStep || 1))
+      const playModeLabel = this.playMode === 'manual' ? 'manual advance' : 'auto advance'
+      return `${repeatCount}x repeats, ${playModeLabel}, ${this.chainingEnabled ? `${this.chainingMethod} chaining` : 'plain sequence'}`
     },
     appStyleVars() {
       return {
@@ -2699,7 +2608,6 @@ export default {
       this.showSaveNameModal = false
       this.saveSessionName = ''
       this.nameError = ''
-      this.showTools = false // Ensure tools panel closes
     },
 
     clearNameError() {
@@ -2760,6 +2668,29 @@ export default {
       this.showBanner(`✓ Session "${session.name}" saved`, 'success', 2000)
       this.closeSaveModal()
     },
+    toggleWordAudio() {
+      this.wordByWordAudioEnabled = !this.wordByWordAudioEnabled
+      this.persistUiState()
+      this.showBanner(this.wordByWordAudioEnabled ? 'Word audio enabled' : 'Word audio disabled', 'info', 1000)
+    },
+    applyRecommendedSetup() {
+      this.playMode = 'auto'
+      this.repetitionsPerStep = 5
+      this.gapBetweenVerses = '1x'
+      this.customGapSeconds = 2
+      this.focusModeEnabled = true
+      this.blurModeEnabled = false
+      this.chainingEnabled = true
+      this.chainingMethod = 'linking'
+      this.chainingRepetitions = 1
+      this.anchorModeEnabled = false
+      this.sectionOpen.advanced_setup = true
+      this.sectionOpen.advanced_playback = false
+      this.sectionOpen.repetitions = false
+      this.sectionOpen.gap_between = false
+      this.persistUiState()
+      this.showBanner('Recommended setup applied', 'success', 1500)
+    },
     addToggleRipple(event) {
       const button = event.currentTarget;
       const ripple = document.createElement('span');
@@ -2783,13 +2714,19 @@ export default {
       this.focusModeEnabled = !this.focusModeEnabled;
     },
     applyPreset(type) {
-      // Reset all techniques first
       this.focusModeEnabled = false;
       this.blurModeEnabled = false;
       this.chainingEnabled = false;
       this.anchorModeEnabled = false;
 
       switch (type) {
+        case 'guided':
+          this.focusModeEnabled = true;
+          this.chainingEnabled = true;
+          this.chainingMethod = 'linking';
+          this.chainingRepetitions = 1;
+          this.showBanner('Preset: Guided Start', 'success', 2000);
+          break;
         case 'chain':
           this.chainingEnabled = true;
           this.anchorModeEnabled = true;
@@ -2812,54 +2749,17 @@ export default {
       this.persistUiState();
     },
     enforceMemorisationRules() {
-      // Rule 1: Only one visual reduction mode
       if (this.focusModeEnabled && this.blurModeEnabled) {
         this.blurModeEnabled = false;
       }
-      // Rule 2: Warn on Blur + Chaining
       if (this.blurModeEnabled && this.chainingEnabled) {
-        this.showBanner('💡 Tip: Blur Mode works best alone. Disable Chaining', 'info', 3000);
+        this.chainingEnabled = false;
+        this.showBanner('Blur Mode works best without chaining, so chaining was turned off.', 'info', 2500);
       }
-      // Rule 3: Prevent Fading + Word-by-Word
       if (this.fadingVerseEnabled && this.showWordByWord) {
         this.showWordByWord = false;
         this.showBanner('Fading Mode: Word-by-Word disabled', 'info', 2000);
       }
-    },
-    confirmSaveSession() {
-      if (!this.saveSessionName || this.saveSessionName.trim() === '') {
-        this.showBanner('Session name cannot be empty', 'warning', 1500)
-        return
-      }
-
-      const session = {
-        id: Date.now().toString(),
-        name: this.saveSessionName.trim(),
-        savedAt: new Date().toISOString(),
-        config: {
-          chapterId: this.chapterId,
-          chapterName: this.currentChapter?.name_simple,
-          rangeStart: this.rangeStart,
-          rangeEnd: this.rangeEnd,
-          reciterId: this.reciterId,
-          speed: this.speed,
-          playMode: this.playMode,
-          chainingEnabled: this.chainingEnabled,
-          chainingMethod: this.chainingMethod,
-          chainingRepetitions: this.chainingRepetitions,
-          tajweedEnabled: this.tajweedEnabled,
-          showTranslation: this.showTranslation,
-          showTransliteration: this.showTransliteration,
-          showWordByWord: this.showWordByWord
-        }
-      }
-
-      this.savedSessions.unshift(session)
-      if (this.savedSessions.length > 20) this.savedSessions = this.savedSessions.slice(0, 20)
-      this.persistSavedSessions()
-      this.showBanner(`Session "${session.name}" saved`, 'success', 1500)
-      this.showSaveNameModal = false
-      this.saveSessionName = ''
     },
     removeBasmala(arabicText) {
       if (!arabicText) return ''
@@ -3093,22 +2993,16 @@ export default {
       })
     },
     startSessionAndClose() {
-      // Validate session can start
       if (!this.canStartSession) {
         this.showTools = true
         this.showBanner('Please select a valid surah and ayah range first', 'info', 3600)
         return
       }
-      
-      // Close panel and start session
       this.closeToolsPanel()
-      
-      // Small delay to allow panel to close before starting
       setTimeout(() => {
         this.startSessionWithCountdown()
       }, 100)
     },
-    // Update handlePrimaryAction:
     handlePrimaryAction() {
       if (this.isPlaying) {
         if (this.audioElement) this.audioElement.pause()
@@ -3117,109 +3011,12 @@ export default {
       }
       this.startSessionWithCountdown()
     },
-    // Make sure these methods are in your methods section:
-    showCountdown(callback) {
-      console.log('Countdown started') // Debug log
-      this.showCountdownOverlay = true
-      this.countdownValue = 3
-
-      if (this.countdownInterval) {
-        clearInterval(this.countdownInterval)
-      }
-
-      this.countdownInterval = setInterval(() => {
-        console.log('Countdown:', this.countdownValue) // Debug log
-        this.countdownValue--
-
-        if (this.countdownValue < 0) {
-          clearInterval(this.countdownInterval)
-          this.countdownInterval = null
-          this.showCountdownOverlay = false
-          console.log('Countdown finished, starting session') // Debug log
-          if (callback && typeof callback === 'function') {
-            callback()
-          }
-        }
-      }, 1000)
-    },
-
-    startSessionWithCountdown() {
-      console.log('startSessionWithCountdown called') // Debug log
-      if (!this.canStartSession) {
-        this.showTools = true
-        this.showBanner('Choose a valid surah and ayah range before starting.', 'info', 3600)
-        return
-      }
-
-      this.showCountdown(() => {
-        this.startSession()
-      })
-    },
-
-    startSessionWithCountdown() {
-      if (!this.canStartSession) {
-        this.showTools = true
-        this.showBanner('Choose a valid surah and ayah range before starting.', 'info', 3600)
-        return
-      }
-
-      this.showCountdown(() => {
-        this.startSession()
-      })
-    },
-
-
-
-    // Replace saveCurrentSessionWithName method
     saveCurrentSessionWithName() {
       const defaultName = `${this.currentChapter?.name_simple || 'Session'} ${this.rangeStart}-${this.rangeEnd}`
       this.saveSessionName = defaultName
       this.showSaveNameModal = true
-      this.showTools = false // Close tools panel when modal opens
-    },
-
-    // Add this method to actually save
-    confirmSaveSession() {
-      if (!this.saveSessionName || this.saveSessionName.trim() === '') {
-        this.showBanner('Session name cannot be empty', 'warning', 1500)
-        return
-      }
-
-      const session = {
-        id: Date.now().toString(),
-        name: this.saveSessionName.trim(),
-        savedAt: new Date().toISOString(),
-        config: {
-          chapterId: this.chapterId,
-          chapterName: this.currentChapter?.name_simple,
-          rangeStart: this.rangeStart,
-          rangeEnd: this.rangeEnd,
-          reciterId: this.reciterId,
-          speed: this.speed,
-          playMode: this.playMode,
-          chainingEnabled: this.chainingEnabled,
-          chainingMethod: this.chainingMethod,
-          chainingRepetitions: this.chainingRepetitions,
-          tajweedEnabled: this.tajweedEnabled,
-          showTranslation: this.showTranslation,
-          showTransliteration: this.showTransliteration,
-          showWordByWord: this.showWordByWord
-        }
-      }
-
-      this.savedSessions.unshift(session)
-      if (this.savedSessions.length > 20) this.savedSessions = this.savedSessions.slice(0, 20)
-      this.persistSavedSessions()
-      this.showBanner(`Session "${session.name}" saved`, 'success', 1500)
-      this.showSaveNameModal = false
-      this.saveSessionName = ''
-    },
-    // Update startSessionAndClose:
-    startSessionAndClose() {
       this.closeToolsPanel()
-      this.startSessionWithCountdown()
     },
-    // Add this method if missing
     toggleFullScreen() {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
@@ -3228,39 +3025,6 @@ export default {
       } else {
         document.exitFullscreen()
       }
-    },
-    // Add this method for named saving
-    saveCurrentSessionWithName() {
-      const defaultName = `${this.currentChapter?.name_simple || 'Session'} ${this.rangeStart}-${this.rangeEnd}`
-      const name = prompt('Name this session:', defaultName)
-      if (!name || name.trim() === '') return
-
-      const session = {
-        id: Date.now().toString(),
-        name: name.trim(),
-        savedAt: new Date().toISOString(),
-        config: {
-          chapterId: this.chapterId,
-          chapterName: this.currentChapter?.name_simple,
-          rangeStart: this.rangeStart,
-          rangeEnd: this.rangeEnd,
-          reciterId: this.reciterId,
-          speed: this.speed,
-          playMode: this.playMode,
-          chainingEnabled: this.chainingEnabled,
-          chainingMethod: this.chainingMethod,
-          chainingRepetitions: this.chainingRepetitions,
-          tajweedEnabled: this.tajweedEnabled,
-          showTranslation: this.showTranslation,
-          showTransliteration: this.showTransliteration,
-          showWordByWord: this.showWordByWord
-        }
-      }
-
-      this.savedSessions.unshift(session)
-      if (this.savedSessions.length > 20) this.savedSessions = this.savedSessions.slice(0, 20)
-      this.persistSavedSessions()
-      this.showBanner(`Session "${session.name}" saved`, 'success', 1500)
     },
 
     getDisplayArabic(verse) {
@@ -4884,129 +4648,107 @@ export default {
         .replace(/'/g, '&#39;')
     },
 
-    wrapTajweedWithWordHighlighting(verse, tajweedHtml) {
-      if (!tajweedHtml || !verse.words || !verse.words.length) {
-        return this.splitArabicIntoWords(verse)
+    buildWordTokenHtml(verse, word, idx, innerHtml) {
+      const wordData = typeof word === 'string' ? { ar: word, en: '', audio: null } : (word || {})
+      const isActive = this.currentHighlightedVerseKey === verse.key && this.currentWordIndex === idx
+      const activeClass = isActive ? ' highlighted phrase-highlighted' : ''
+      const weakClass = this.isWeakAyah(verse.key) ? ' weak-word' : ''
+      const masteredClass = this.isMasteredAyah(verse.key) ? ' mastered-word' : ''
+      const tooltip = this.wordTooltip(wordData)
+      const wordAudio = this.wordByWordAudioEnabled && wordData.audio
+        ? `<button class="word-audio-btn" data-word-index="${idx}" data-word-audio="${this.escapeHtml(wordData.audio)}"><i class="bi bi-volume-up"></i></button>`
+        : ''
+
+      return `<word class="wbw-word${activeClass}${weakClass}${masteredClass}" data-word-index="${idx}" data-verse-key="${verse.key}" data-tooltip="${this.escapeHtml(tooltip)}" title="${this.escapeHtml(tooltip)}">${innerHtml}${wordAudio}</word>`
+    },
+
+    wrapHtmlWithElement(node, innerHtml) {
+      const clone = node.cloneNode(false)
+      clone.innerHTML = innerHtml
+      return clone.outerHTML
+    },
+
+    extractTajweedCharUnits(node) {
+      if (!node) return []
+
+      if (node.nodeType === Node.TEXT_NODE) {
+        return Array.from(node.textContent || '').map(char => ({
+          text: char,
+          html: this.escapeHtml(char)
+        }))
       }
 
-      // Create a temporary div to parse the HTML
+      if (node.nodeType !== Node.ELEMENT_NODE) return []
+
+      const childUnits = Array.from(node.childNodes).flatMap(child => this.extractTajweedCharUnits(child))
+      if (node.tagName === 'SPAN') {
+        return childUnits.map(unit => ({
+          text: unit.text,
+          html: this.wrapHtmlWithElement(node, unit.html)
+        }))
+      }
+
+      return childUnits
+    },
+
+    buildTajweedWordTokens(verse, tajweedHtml) {
+      if (!tajweedHtml) return ''
+
       const tempDiv = document.createElement('div')
       tempDiv.innerHTML = tajweedHtml
+      const units = Array.from(tempDiv.childNodes).flatMap(node => this.extractTajweedCharUnits(node))
+      const words = Array.isArray(verse.words) && verse.words.length
+        ? verse.words
+        : tokenizeArabicText(verse.arabic || '').map(ar => ({ ar, en: '', audio: null }))
 
-      // Get all text nodes that contain Arabic text and aren't inside tajweed spans
-      const textNodes = []
-      const getAllTextNodes = (node) => {
-        if (node.nodeType === Node.TEXT_NODE) {
-          const parent = node.parentElement
-          // Check if parent has tajweed class
-          const isTajweedSpan = parent && parent.classList &&
-            (parent.classList.contains('tajweed-mark') ||
-              parent.className.includes('tajweed'))
+      if (!units.length || !words.length) return tajweedHtml
 
-          if (!isTajweedSpan && node.textContent && /[\u0600-\u06FF]/.test(node.textContent)) {
-            textNodes.push(node)
-          }
-        } else if (node.nodeType === Node.ELEMENT_NODE && node.childNodes) {
-          // Don't traverse into existing word elements
-          if (!node.classList || !node.classList.contains('wbw-word')) {
-            node.childNodes.forEach(child => getAllTextNodes(child))
-          }
+      let cursor = 0
+      let html = ''
+
+      const consumeWhitespace = () => {
+        let gap = ''
+        while (cursor < units.length && /^\s$/.test(units[cursor].text || '')) {
+          gap += units[cursor].html
+          cursor += 1
         }
+        return gap
       }
 
-      getAllTextNodes(tempDiv)
+      words.forEach((word, idx) => {
+        html += consumeWhitespace()
 
-      // Process each text node to wrap individual words
-      textNodes.forEach(textNode => {
-        const text = textNode.textContent
-        if (!text.trim()) return
+        const targetChars = Array.from(String(word?.ar || '')).filter(char => !/^\s$/.test(char))
+        if (!targetChars.length) return
 
-        let wrappedHtml = ''
-        let currentWordIndex = 0
+        let innerHtml = ''
+        let collected = 0
 
-        // Split by Arabic words (preserving spaces)
-        const words = text.split(/(\s+)/)
-
-        words.forEach((word, idx) => {
-          if (word.trim()) {
-            // Find matching word from verse.words
-            let wordIndex = -1
-            for (let i = 0; i < verse.words.length; i++) {
-              const verseWord = verse.words[i].ar
-              if (verseWord === word || word.includes(verseWord) || verseWord.includes(word)) {
-                wordIndex = i
-                break
-              }
-            }
-
-            if (wordIndex === -1 && currentWordIndex < verse.words.length) {
-              wordIndex = currentWordIndex
-              currentWordIndex++
-            }
-
-            const actualIndex = wordIndex >= 0 ? wordIndex : idx % verse.words.length
-
-            // Create word span with proper attributes
-            wrappedHtml += `<word class="wbw-word" data-word-index="${actualIndex}" data-verse-key="${verse.key}" data-word="${this.escapeHtml(word)}">${word}</word>`
-          } else {
-            wrappedHtml += word // Preserve spaces
+        while (cursor < units.length && collected < targetChars.length) {
+          const unit = units[cursor]
+          cursor += 1
+          if (/^\s$/.test(unit.text || '')) {
+            innerHtml += unit.html
+            continue
           }
-        })
-
-        // Create a span with the wrapped content
-        const wrapperSpan = document.createElement('span')
-        wrapperSpan.innerHTML = wrappedHtml
-
-        // Replace the text node with the new wrapper
-        if (textNode.parentNode) {
-          textNode.parentNode.replaceChild(wrapperSpan, textNode)
-
-          // Move all children out of wrapperSpan to preserve parent structure
-          while (wrapperSpan.firstChild) {
-            textNode.parentNode.insertBefore(wrapperSpan.firstChild, wrapperSpan)
-          }
-          textNode.parentNode.removeChild(wrapperSpan)
+          innerHtml += unit.html
+          collected += 1
         }
+
+        html += this.buildWordTokenHtml(verse, word, idx, innerHtml)
       })
 
-      // Also wrap any standalone tajweed spans that contain text
-      const tajweedSpans = tempDiv.querySelectorAll('span.tajweed-mark')
-      tajweedSpans.forEach((span, idx) => {
-        // Only process if it has text content and isn't already wrapped
-        if (span.textContent && span.textContent.trim() && !span.querySelector('.wbw-word')) {
-          const text = span.textContent
-          const words = text.split(/(\s+)/)
-          let wrappedHtml = ''
-          let wordCounter = 0
+      while (cursor < units.length) {
+        html += units[cursor].html
+        cursor += 1
+      }
 
-          words.forEach((word) => {
-            if (word.trim()) {
-              let wordIndex = -1
-              for (let i = 0; i < verse.words.length; i++) {
-                if (verse.words[i].ar === word || word.includes(verse.words[i].ar)) {
-                  wordIndex = i
-                  break
-                }
-              }
-              if (wordIndex === -1 && wordCounter < verse.words.length) {
-                wordIndex = wordCounter
-                wordCounter++
-              }
+      return html
+    },
 
-              // Preserve original span classes
-              const spanClasses = Array.from(span.classList).join(' ')
-              wrappedHtml += `<word class="wbw-word ${spanClasses}" data-word-index="${wordIndex}" data-verse-key="${verse.key}">${word}</word>`
-            } else {
-              wrappedHtml += word
-            }
-          })
-
-          // Replace the span content
-          span.innerHTML = wrappedHtml
-        }
-      })
-
-      return tempDiv.innerHTML
+    wrapTajweedWithWordHighlighting(verse, tajweedHtml) {
+      if (!tajweedHtml) return this.splitArabicIntoWords(verse)
+      return this.buildTajweedWordTokens(verse, tajweedHtml)
     },
 
     getTajweedWithWordHighlighting(verse) {
@@ -5149,45 +4891,13 @@ export default {
 
       // If tajweed is enabled and we have tajweed text, we need to be careful
       if (this.tajweedEnabled && verse.arabic_tajweed) {
-        // For tajweed mode, we need to preserve the tajweed markup while adding word boundaries
-        const tajweedText = verse.arabic_tajweed
-        let result = this.normalizeTajweedMarkup(tajweedText)
-
-        // Wrap each word with word tags while preserving tajweed spans
-        words.forEach((word, idx) => {
-          const wordText = typeof word === 'string' ? word : word.ar
-          if (!wordText) return
-
-          // Create a pattern that matches this word with possible tajweed spans inside
-          const escapedWord = this.escapeRegex(wordText)
-          const pattern = new RegExp(`((?:<span[^>]*class="[^"]*tajweed[^"]*"[^>]*>)?)(${escapedWord})((?:<\\/span>)?)`, 'g')
-
-          result = result.replace(pattern, (match, openTag, wordContent, closeTag) => {
-            const wordAudio = this.wordByWordAudioEnabled && word.audio ?
-              `<button class="word-audio-btn" data-word-index="${idx}" data-word-audio="${this.escapeHtml(word.audio)}" @click.stop="playWordAudio('${this.escapeHtml(word.audio)}')"><i class="bi bi-volume-up"></i></button>` : ''
-
-            const tooltip = this.wordTooltip(word)
-            return `<word class="wbw-word" data-word-index="${idx}" data-verse-key="${verse.key}" data-tooltip="${this.escapeHtml(tooltip)}" title="${this.escapeHtml(tooltip)}">${openTag}${wordContent}${closeTag}${wordAudio}</word>`
-          })
-        })
-
-        return result
+        return this.wrapTajweedWithWordHighlighting(verse, this.normalizeTajweedMarkup(verse.arabic_tajweed))
       }
 
       // Regular mode (without tajweed)
       words.forEach((word, idx) => {
         const wordText = typeof word === 'string' ? word : word.ar
-        const escapedWord = this.escapeHtml(wordText)
-        const isActive = this.currentHighlightedVerseKey === verse.key && this.currentWordIndex === idx
-        const activeClass = isActive ? ' highlighted' : ''
-        const weakClass = this.isWeakAyah(verse.key) ? ' weak-word' : ''
-        const masteredClass = this.isMasteredAyah(verse.key) ? ' mastered-word' : ''
-        const tooltip = this.wordTooltip(word)
-
-        const wordAudio = this.wordByWordAudioEnabled && word.audio ?
-          `<button class="word-audio-btn" data-word-index="${idx}" data-word-audio="${this.escapeHtml(word.audio)}" @click.stop="playWordAudio('${this.escapeHtml(word.audio)}')"><i class="bi bi-volume-up"></i></button>` : ''
-
-        html += `<word class="wbw-word${activeClass}${weakClass}${masteredClass}" data-word-index="${idx}" data-verse-key="${verse.key}" data-tooltip="${this.escapeHtml(tooltip)}" title="${this.escapeHtml(tooltip)}">${escapedWord}${wordAudio}</word> `
+        html += `${this.buildWordTokenHtml(verse, word, idx, this.escapeHtml(wordText))} `
       })
 
       return html
@@ -5311,6 +5021,35 @@ export default {
       this.currentHighlightedVerseKey = verseKey || null
       this.currentWordIndex = Number.isFinite(Number(activeIndex)) ? Number(activeIndex) : -1
       this.currentPhraseIndex = this.currentWordIndex
+      this.applyWordHighlightClasses(verseKey, this.currentWordIndex)
+      this.$forceUpdate()
+    },
+
+    applyWordHighlightClasses(verseKey, activeIndex) {
+      document.querySelectorAll('.verse-arabic .wbw-word.highlighted, .verse-arabic word.highlighted, .word-item.highlighted, .wbw-word.phrase-highlighted, .word-item.phrase-highlighted')
+        .forEach(node => {
+          node.classList.remove('highlighted')
+          node.classList.remove('phrase-highlighted')
+        })
+
+      if (!verseKey || activeIndex < 0) return
+
+      const wordSelector = `.verse-arabic [data-verse-key="${verseKey}"][data-word-index="${activeIndex}"]`
+      document.querySelectorAll(wordSelector).forEach(node => {
+        node.classList.add('highlighted')
+        node.classList.add('phrase-highlighted')
+      })
+
+      const verseCard = document.querySelector(`.verse-card[data-verse-key="${verseKey}"]`)
+      verseCard?.querySelectorAll('.word-item').forEach((node, index) => {
+        if (index === activeIndex) {
+          node.classList.add('highlighted')
+          node.classList.add('phrase-highlighted')
+        } else {
+          node.classList.remove('highlighted')
+          node.classList.remove('phrase-highlighted')
+        }
+      })
     },
 
     findWordTimingIndex(currentTime, timestamps = this.wordHighlightTimestamps) {
@@ -5377,6 +5116,7 @@ export default {
       this.wordHighlightLoading = false
       this.wordHighlightTimestamps = Array.isArray(timestamps) ? timestamps : []
       this.syncWordHighlightFromAudio(verse)
+      this.$forceUpdate()
       return this.wordHighlightTimestamps
     },
 
@@ -5421,10 +5161,12 @@ export default {
       this.wordHighlightFrame = null
       this.wordHighlightHandler = null
       this.wordHighlightLoading = false
+      this.applyWordHighlightClasses(null, -1)
       this.currentWordIndex = -1
       this.currentPhraseIndex = -1
       this.currentHighlightedVerseKey = null
       this.wordHighlightTimestamps = []
+      this.$forceUpdate()
     },
 
     // Audio methods
@@ -5654,6 +5396,14 @@ export default {
             this.markPlaybackStart()
             this.addActivityEvent({ ts: Date.now(), type: 'play', verseKey: verse.key })
             this.recomputeAnalytics()
+            if (this.wordByWordAudioEnabled) {
+              this.ensureWordHighlightTrack(verse, { force: true }).then(() => {
+                this.syncWordHighlightFromAudio(verse)
+                if (!this.audioElement?.paused) this.queueWordHighlightFrame(verse)
+              }).catch(err => {
+                console.warn('Word highlight bootstrap failed:', err)
+              })
+            }
             this.playRequestLocked = false
             resolve()
           } catch (err) {
@@ -5717,6 +5467,15 @@ export default {
         this.audioElement.play()
           .then(() => {
             this.isPlaying = true
+            const verse = this.activeVerseRef
+            if (verse && this.wordByWordAudioEnabled) {
+              this.ensureWordHighlightTrack(verse, { force: true }).then(() => {
+                this.syncWordHighlightFromAudio(verse)
+                if (!this.audioElement?.paused) this.queueWordHighlightFrame(verse)
+              }).catch(err => {
+                console.warn('Word highlight resume failed:', err)
+              })
+            }
           })
           .catch(err => {
             console.error('Failed to play:', err)
@@ -17689,5 +17448,55 @@ body>.navbar+.app .main.container {
   color: transparent !important;
   background: transparent !important;
   box-shadow: none !important;
+}
+
+.workspace-quick-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 0 10px 10px;
+}
+
+.session-quickstart-card {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(17, 24, 39, 0.04);
+  border: 1px solid rgba(17, 24, 39, 0.08);
+}
+
+.session-quickstart-copy {
+  margin: 6px 0 0;
+  color: #5f6b7a;
+}
+
+.session-quickstart-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.preset-btn-primary {
+  background: #0f766e;
+  color: #fff;
+}
+
+.presets-grid-wide {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .session-quickstart-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .session-quickstart-actions {
+    align-items: stretch;
+  }
 }
 </style>

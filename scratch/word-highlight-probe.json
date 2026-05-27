@@ -1,0 +1,24 @@
+{
+  "steps": [
+    "register",
+    "memorisation",
+    "wait-verses",
+    "started"
+  ],
+  "snapshot": {
+    "activeKey": "1:1",
+    "currentHighlightedVerseKey": null,
+    "currentWordIndex": -1,
+    "timestamps": 0,
+    "isPlaying": false,
+    "playerVisible": true,
+    "audioSrc": "https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3",
+    "audioTime": null,
+    "readyState": null,
+    "paused": true,
+    "wordByWordAudioEnabled": true,
+    "highlightedCount": 0,
+    "wbwCount": 10,
+    "activeText": "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"
+  }
+}
