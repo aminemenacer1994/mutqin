@@ -110,7 +110,7 @@
               </div>
               <div class="workspace-shell-actions">
                 <div class="action-buttons-group">
-                  <button class="action-btn action-btn-secondary action-btn-exit" type="button" @click="openSessionExitModal"
+                  <button v-if="isSessionLive" class="action-btn action-btn-secondary action-btn-exit" type="button" @click="openSessionExitModal"
                     title="End session">
                     <i class="bi bi-box-arrow-right"></i>
                     <span>End Session</span>
@@ -210,9 +210,6 @@
               <span>Ayah {{ currentPosition }} of {{ totalVerses }}</span>
               <span>{{ progressPercent }}% complete</span>
               <span v-if="etaLabel">{{ etaLabel }}</span>
-              <span v-if="activePracticeTechniques.length" class="workspace-shell-active-pill">
-                <i class="bi bi-stars"></i> {{ activePracticeTechniques.length }} active method{{ activePracticeTechniques.length === 1 ? '' : 's' }}
-              </span>
 
               <div v-if="!mainCardCollapsed && chainingEnabled && hasSessionFeedback" class="workspace-shell-chaining"
                 aria-label="Chaining status">
@@ -232,7 +229,24 @@
               <button class="toolbar-chip" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')" type="button">Word by word</button>
               <button class="toolbar-chip" :class="{ active: wordByWordAudioEnabled }" @click="toggleWordAudio()" type="button">Word audio</button>
               <button class="toolbar-chip" :class="{ active: tajweedEnabled }" @click="toggleTajweed" type="button">Tajweed</button>
-              <button class="toolbar-chip" @click="cycleQuranFontPill" type="button">Font: {{ getCurrentFontLabel() }}</button>
+              <div class="quick-font-controls">
+                <div class="font-dropdown quick-font-dropdown">
+                  <button class="toolbar-chip font-dropdown-trigger" @click.stop="toggleFontDropdown" type="button" title="Change Quran font">
+                    <span>Font: {{ getCurrentFontLabel() }}</span>
+                    <i class="bi bi-chevron-down" :class="{ rotated: fontDropdownOpen }"></i>
+                  </button>
+                  <transition name="dropdown-fade">
+                    <div v-if="fontDropdownOpen" class="font-dropdown-menu quick-font-menu">
+                      <button v-for="font in quranFontOptions" :key="font.value" class="font-option"
+                        :class="{ active: quranFont === font.value }" @click="selectFont(font.value)">
+                        <i class="bi" :class="getFontIcon(font.value)"></i>
+                        <span>{{ font.label }}</span>
+                        <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon"></i>
+                      </button>
+                    </div>
+                  </transition>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -257,6 +271,15 @@
                     <span v-if="effectiveActiveVerseKey === verse.key" class="verse-status-badge">Active Ayah</span>
                   </div>
                   <div class="verse-actions">
+                    <div class="verse-font-inline-controls" @click.stop>
+                      <button class="verse-font-inline-btn" @click="decreaseTextScale($event)" title="Decrease text size">
+                        <i class="bi bi-dash-lg"></i>
+                      </button>
+                      <span class="verse-font-inline-value">{{ getTextScalePercent() }}%</span>
+                      <button class="verse-font-inline-btn" @click="increaseTextScale($event)" title="Increase text size">
+                        <i class="bi bi-plus-lg"></i>
+                      </button>
+                    </div>
                     <!-- Small play button next to play pill -->
                     <button class="verse-small-play-btn" @click.stop="playVerse(verse)"
                       :title="hasSessionFeedback ? (activeVerseKey === verse.key && isPlaying ? 'Pause' : 'Play current ayah') : 'Preview this ayah (does not start a session)'">
@@ -677,12 +700,13 @@
                 <p>No saved sessions yet</p>
                 <span>Save your current session to get started</span>
               </div>
-              <div v-else class="sessions-list">
-                <div v-for="session in savedSessions" :key="session.id" class="session-item">
+                <div v-else class="sessions-list">
+                  <div v-for="session in savedSessions" :key="session.id" class="session-item">
                   <div class="session-info" @click="loadSavedSession(session.id)">
                     <div class="session-name">
                       <i class="bi bi-bookmark-fill"></i>
                       <span>{{ session.name }}</span>
+                      <span v-if="session.archived" class="session-archive-badge">Archived</span>
                     </div>
                     <div class="session-details">
                       <span><i class="bi bi-book"></i> {{ session.config?.chapterName || `Surah
@@ -1046,23 +1070,6 @@
             </button>
           </div>
 
-          <div class="player-loop-controls" aria-label="Loop count">
-            <span class="player-loop-label">Loop</span>
-            <div class="player-loop-group" role="group" aria-label="Playback loop count">
-              <button
-                v-for="option in loopCountOptions"
-                :key="`loop-${option.value}`"
-                class="player-loop-chip"
-                :class="{ active: selectedLoopCount === option.value }"
-                type="button"
-                @click="setLoopCount(option.value)"
-                :title="option.label"
-              >
-                {{ option.shortLabel }}
-              </button>
-            </div>
-          </div>
-
           <div class="player-progress-wrap">
             <span class="player-time">{{ formatTime(currentTime) }}</span>
             <div class="player-progress-bg" @click="seek" ref="progress">
@@ -1373,7 +1380,7 @@ export default {
         showTransliteration: false,
         showWordByWord: false,
         wordByWordAudioEnabled: true,
-        defaultFontSize: 100
+      defaultFontSize: 120
       },
 
       // Quiz state
@@ -1787,6 +1794,11 @@ export default {
     },
     hasSessionFeedback() {
       return Array.isArray(this.queue) && this.queue.length > 0
+    },
+    isSessionLive() {
+      const mutqinActive = !!this.mutqinState?.sessionState?.active
+      const localActive = !!this.sessionStartedAt || !!this.isPlaying || !!this.playerVisible
+      return this.hasSessionFeedback && (mutqinActive || localActive)
     },
     resumeFeedback() {
       const payload = this.continueSessionPayload
@@ -2584,10 +2596,13 @@ export default {
       return reciter ? reciter.name : 'Alafasy'
     },
 
-    buildSessionRecord(name) {
+    buildSessionRecord(name, options = {}) {
+      const { archived = false, autoSaved = false } = options
       return {
         id: Date.now().toString(),
         name,
+        archived: !!archived,
+        autoSaved: !!autoSaved,
         savedAt: new Date().toISOString(),
         config: {
           chapterId: this.chapterId,
@@ -2642,7 +2657,7 @@ export default {
 
     saveCurrentSessionSilently(name = this.buildAutoSaveSessionName()) {
       if (!this.hasVerses) return null
-      const session = this.buildSessionRecord(name)
+      const session = this.buildSessionRecord(name, { archived: true, autoSaved: true })
       this.addSavedSession(session)
       return session
     },
@@ -4504,6 +4519,28 @@ export default {
       return font ? font.label : 'Font'
     },
 
+    increaseTextScale(event) {
+      event.stopPropagation()
+      const nextScale = Math.min(1.2, Math.round((Number(this.fontScale || 1) + 0.05) * 100) / 100)
+      this.fontScale = nextScale
+      this.enScale = nextScale
+      this.persistUiState()
+      this.showBanner(`Text size: ${this.getTextScalePercent()}%`, 'info', 800)
+    },
+
+    decreaseTextScale(event) {
+      event.stopPropagation()
+      const nextScale = Math.max(0.9, Math.round((Number(this.fontScale || 1) - 0.05) * 100) / 100)
+      this.fontScale = nextScale
+      this.enScale = nextScale
+      this.persistUiState()
+      this.showBanner(`Text size: ${this.getTextScalePercent()}%`, 'info', 800)
+    },
+
+    getTextScalePercent() {
+      return Math.round(Number(this.fontScale || 1) * 100)
+    },
+
     getFontIcon(fontValue) {
       const font = this.quranFontOptions.find(f => f.value === fontValue)
       return font ? font.icon : 'bi-text-paragraph'
@@ -4552,7 +4589,7 @@ export default {
     },
 
     getVerseFontSize(verseKey) {
-      const size = this.verseFontSizes[verseKey] || this.defaultFontSize
+      const size = this.verseFontSizes[verseKey] || this.defaultFontSize || 120
       // Ensure size is within bounds
       return Math.max(this.minFontSize, Math.min(this.maxFontSize, size))
     },
@@ -4613,16 +4650,12 @@ export default {
         const savedDefault = localStorage.getItem('telawa.defaultFontSize')
         if (savedDefault) {
           const parsed = Number(JSON.parse(savedDefault))
-          // Migrate old default of 150% down to 100% unless the user has explicitly set per-verse sizes.
-          if (parsed === 150 && (!this.verseFontSizes || Object.keys(this.verseFontSizes).length === 0)) {
-            this.defaultFontSize = 100
-            localStorage.setItem('telawa.defaultFontSize', JSON.stringify(100))
-          } else if (Number.isFinite(parsed) && parsed > 0) {
+          if (Number.isFinite(parsed) && parsed > 0) {
             this.defaultFontSize = parsed
           }
         } else {
-          this.defaultFontSize = 100
-          localStorage.setItem('telawa.defaultFontSize', JSON.stringify(100))
+          this.defaultFontSize = 120
+          localStorage.setItem('telawa.defaultFontSize', JSON.stringify(120))
         }
       } catch (e) {
         console.error('Failed to load font sizes:', e)
@@ -6720,6 +6753,8 @@ export default {
               : this.gapBetweenVerses
             this.customGapSeconds = Math.max(0.5, Math.min(10, Number(state.customGapSeconds || this.customGapSeconds || 2)))
             this.defaultFontSize = Number(state.defaultFontSize ?? this.defaultFontSize ?? 100)
+            this.fontScale = Math.max(0.9, Math.min(1.2, Number(state.fontScale ?? this.fontScale ?? 1)))
+            this.enScale = this.fontScale
 
             // Anchor Mode settings
             this.anchorModeEnabled = state.anchorModeEnabled ?? false
@@ -6733,9 +6768,7 @@ export default {
               wordByWordAudioEnabled: state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled,
               defaultFontSize: Number(state.defaultFontSize ?? this.defaultFontSize ?? 100)
             }
-            this.fontScale = state.fontScale ?? this.fontScale
             this.uiScale = Number(state.uiScale ?? this.uiScale)
-            this.enScale = Number(state.enScale ?? this.enScale)
             this.quranFont = state.quranFont || this.quranFont
             this.script = state.script || this.script
             this.sectionOpen = { ...this.sectionOpen, ...(state.sectionOpen || {}) }
@@ -11788,6 +11821,19 @@ export default {
   color: var(--text-muted);
 }
 
+.session-archive-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(154, 103, 56, 0.08);
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  color: var(--accent-strong);
+  font-size: 0.64rem;
+  font-weight: 700;
+}
+
 .save-session-btn {
   padding: 6px 14px;
   border-radius: 8px;
@@ -13444,6 +13490,10 @@ html {
   direction: ltr;
   overflow: hidden;
   width: 100%;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  isolation: isolate;
 }
 
 .verse-card::before {
@@ -13482,7 +13532,7 @@ html {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
 
 .verse-badges {
@@ -13758,6 +13808,61 @@ html {
 .toolbar-chip:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
+}
+
+.quick-font-controls {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.quick-font-dropdown {
+  position: relative;
+}
+
+.quick-font-menu {
+  right: 0;
+  left: auto;
+  min-width: 220px;
+}
+
+.verse-font-inline-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: var(--shadow-sm);
+}
+
+.verse-font-inline-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(154, 103, 56, 0.08);
+  color: var(--accent-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.verse-font-inline-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(154, 103, 56, 0.14);
+}
+
+.verse-font-inline-value {
+  min-width: 44px;
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text);
 }
 
 /* Tools panel */
@@ -15082,8 +15187,12 @@ html {
 .verse-aid {
   opacity: 0.82;
   filter: saturate(0.78);
-  margin-top: 0.4rem;
+  margin-top: 0;
   font-size: 0.93em;
+  position: relative;
+  z-index: 1;
+  font-family: 'Outfit', sans-serif;
+  direction: ltr;
 }
 
 .verse-aid-title {
@@ -15657,6 +15766,7 @@ html {
   border-top: 1px solid var(--border);
   display: block;
   opacity: 0.92;
+  font-family: 'Outfit', sans-serif;
 }
 
 .verse-transliteration {
@@ -15668,6 +15778,7 @@ html {
   border-top: 1px solid var(--border);
   line-height: 1.5;
   opacity: 0.98;
+  font-family: 'Outfit', sans-serif;
 }
 
 .verse-words {
@@ -15731,6 +15842,7 @@ html {
 .word-meaning {
   color: var(--text-muted);
   font-size: calc(0.82rem * var(--en-scale, 1));
+  font-family: 'Outfit', sans-serif;
 }
 
 .word-audio-btn {
@@ -16516,9 +16628,9 @@ body>.navbar+.app .main.container {
 [data-theme="dark"] .mode-radio,
 [data-theme="dark"] .active-technique-card,
 [data-theme="dark"] .active-techniques-count {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 236, 216, 0.14);
-  color: var(--text);
+  background: rgba(255, 247, 236, 0.12);
+  border-color: rgba(255, 236, 216, 0.18);
+  color: #f4e5d2;
   box-shadow: none;
 }
 
@@ -16536,6 +16648,30 @@ body>.navbar+.app .main.container {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 236, 216, 0.16);
   color: #f3dfc8;
+}
+
+[data-theme="dark"] .continue-session-btn {
+  color: #f8ead8;
+  border-color: rgba(255, 236, 216, 0.18);
+}
+
+[data-theme="dark"] .verse-font-inline-controls {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 236, 216, 0.16);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .verse-font-inline-btn {
+  background: rgba(208, 160, 107, 0.12);
+  color: #f1c792;
+}
+
+[data-theme="dark"] .verse-font-inline-btn:hover {
+  background: rgba(208, 160, 107, 0.2);
+}
+
+[data-theme="dark"] .verse-font-inline-value {
+  color: #f6e6d2;
 }
 
 [data-theme="dark"] .workspace-shell-active-pill {
@@ -17344,6 +17480,7 @@ body>.navbar+.app .main.container {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: nowrap;
 }
 
 .continue-session-kicker {
@@ -17360,6 +17497,8 @@ body>.navbar+.app .main.container {
 .continue-session-btn {
   min-height: 44px;
   white-space: nowrap;
+  flex: 0 0 auto;
+  padding-inline: 18px;
 }
 
 .continue-session-dismiss {
@@ -17727,6 +17866,14 @@ body>.navbar+.app .main.container {
   .toolbar-chip,
   .toggle-chip {
     min-height: 44px;
+  }
+
+  .continue-session-actions {
+    justify-content: space-between;
+  }
+
+  .continue-session-btn {
+    width: auto;
   }
 
   .settings-toggle {
