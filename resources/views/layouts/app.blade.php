@@ -16,6 +16,7 @@
     <style>
         /* Theme Variables */
         :root {
+            color-scheme: light;
             --bg: #fdf9f2;
             --surface: rgba(255, 255, 255, 0.96);
             --surface-strong: #ffffff;
@@ -28,9 +29,20 @@
             --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.04);
             --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
             --shadow-lg: 0 20px 40px -12px rgba(0, 0, 0, 0.1);
+
+            /* Responsive system tokens */
+            --nav-h: 70px;
+            --shell-max: 1400px;
+            --gutter: clamp(14px, 3.6vw, 32px);
+            --gutter-tight: clamp(12px, 3vw, 24px);
+            --radius: clamp(12px, 1.4vw, 16px);
+            --tap: 44px;
+            --text-base: clamp(14px, 0.95vw + 10px, 16px);
+            --text-sm: clamp(12px, 0.65vw + 9px, 14px);
         }
 
         [data-theme="dark"] {
+            color-scheme: dark;
             --bg: #1a1a1a;
             --surface: rgba(30, 30, 30, 0.96);
             --surface-strong: #2a2a2a;
@@ -65,6 +77,10 @@
             background: var(--bg);
             color: var(--text);
             transition: background 0.3s ease, color 0.3s ease;
+            font-size: var(--text-base);
+            text-rendering: geometricPrecision;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         /* App Navbar */
@@ -76,6 +92,7 @@
             position: sticky;
             top: 0;
             z-index: 1000;
+            padding-top: env(safe-area-inset-top, 0px);
         }
 
         [data-theme="dark"] .app-navbar {
@@ -87,9 +104,10 @@
         }
 
         .navbar-shell {
-            max-width: 1400px;
+            max-width: var(--shell-max);
             margin: 0 auto;
-            padding: 16px 32px;
+            padding: 14px var(--gutter);
+            min-height: var(--nav-h);
         }
 
         .navbar-brand {
@@ -109,6 +127,8 @@
             border-radius: 12px;
             color: var(--text);
             transition: all 0.2s ease;
+            min-width: var(--tap);
+            min-height: var(--tap);
         }
 
         .navbar-toggler:hover {
@@ -129,7 +149,7 @@
             padding: 10px 20px;
             border-radius: 12px;
             font-weight: 500;
-            font-size: 15px;
+            font-size: var(--text-sm);
             color: var(--text-muted);
             transition: all 0.2s ease;
             text-decoration: none;
@@ -164,6 +184,8 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s ease;
+            min-width: var(--tap);
+            min-height: var(--tap);
         }
 
         .app-theme-toggle:hover {
@@ -226,6 +248,7 @@
             transform: translateY(-10px);
             transition: all 0.2s ease;
             z-index: 1050;
+            max-width: min(92vw, 340px);
         }
 
         .dropdown-menu.show {
@@ -268,34 +291,36 @@
         }
 
         .shell {
-            max-width: 1400px;
+            max-width: var(--shell-max);
             margin: 0 auto;
-            padding: 0 32px;
+            padding: 0 var(--gutter);
         }
 
         main.shell {
-            min-height: calc(100vh - 70px);
-            padding-top: 32px;
-            padding-bottom: 32px;
+            min-height: calc(100dvh - var(--nav-h));
+            padding-top: clamp(18px, 2.8vw, 32px);
+            padding-bottom: clamp(18px, 2.8vw, 32px);
         }
 
         /* Mobile styles */
         @media (max-width: 992px) {
             .navbar-shell {
-                padding: 12px 20px;
+                padding: 12px var(--gutter-tight);
             }
             
             .navbar-collapse {
                 position: fixed;
-                top: 66px;
-                left: -100%;
+                top: calc(env(safe-area-inset-top, 0px) + var(--nav-h));
+                left: -105%;
                 width: 100%;
-                height: calc(100vh - 66px);
+                height: calc(100dvh - (env(safe-area-inset-top, 0px) + var(--nav-h)));
                 background: var(--surface-strong);
                 transition: left 0.3s ease;
-                padding: 24px;
+                padding: 18px var(--gutter);
                 z-index: 999;
                 overflow-y: auto;
+                overscroll-behavior: contain;
+                -webkit-overflow-scrolling: touch;
             }
             
             .navbar-collapse.show {
@@ -311,6 +336,9 @@
             .nav-link {
                 padding: 14px 20px;
                 font-size: 16px;
+                min-height: var(--tap);
+                display: flex;
+                align-items: center;
             }
             
             .app-navbar-actions {
@@ -340,7 +368,7 @@
 
         @media (max-width: 768px) {
             .shell {
-                padding: 0 20px;
+                padding: 0 var(--gutter-tight);
             }
             
             main.shell {
@@ -378,6 +406,15 @@
             }
         }
 
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+            }
+        }
+
         /* Animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -394,7 +431,14 @@
         <nav class="navbar navbar-expand-lg app-navbar">
             <div class="container-fluid shell navbar-shell">
                 <a class="navbar-brand" href="/">
-                    <img src="/images/logo.png" alt="Mutqin" class="app-navbar-logo">
+                    <img
+                        id="appNavbarLogo"
+                        src="/images/logo.png"
+                        data-logo-light="/images/logo.png"
+                        data-logo-dark="/images/dark_logo.png"
+                        alt="Mutqin"
+                        class="app-navbar-logo"
+                    >
                 </a>
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -478,6 +522,13 @@
                 if (button) {
                     const icon = button.querySelector('i');
                     icon.className = `bi ${themeIcons[theme] || themeIcons.light}`;
+                }
+
+                const logo = document.getElementById('appNavbarLogo');
+                if (logo) {
+                    const lightSrc = logo.getAttribute('data-logo-light') || '/images/logo.png';
+                    const darkSrc = logo.getAttribute('data-logo-dark') || '/images/dark_logo.png';
+                    logo.src = theme === 'dark' ? darkSrc : lightSrc;
                 }
             }
             

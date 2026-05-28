@@ -12,6 +12,7 @@
     <!-- Main Content -->
     <div v-if="appReady && isLoggedIn" class="main container" :class="{
       'tools-open': showTools,
+      'player-visible': playerVisible,
       'focus-mode-active': focusModeEnabled,
       'blur-mode-active': blurModeEnabled,
       'flow-practice': guidedUiStep === 'practice',
@@ -46,6 +47,7 @@
         </section>
 
         <div v-if="false" class="reading-toolbar">
+          <hr class="reading-toolbar-sep" aria-hidden="true" />
           <div class="reading-toolbar-group">
             <button class="toolbar-chip" :class="{ active: showTranslation }"
               title="Show or hide the English translation" @click="toggleReadingOption('translation')">
@@ -110,7 +112,7 @@
               </div>
               <div class="workspace-shell-actions">
                 <div class="action-buttons-group">
-                  <button v-if="isSessionLive" class="action-btn action-btn-secondary action-btn-exit" type="button" @click="openSessionExitModal"
+                  <button v-if="hasSessionStarted" class="action-btn action-btn-secondary action-btn-exit" type="button" @click="openSessionExitModal"
                     title="End session">
                     <i class="bi bi-box-arrow-right"></i>
                     <span>End Session</span>
@@ -311,22 +313,28 @@
                 </div>
 
                 <!-- Keep in-workspace aids available, but visually quieter -->
-                <div v-if="showTransliteration && verse.transliteration" class="verse-transliteration verse-aid">
+                <div v-if="showTransliteration && verse.transliteration" class="verse-aid-block">
+                  <div class="verse-aid-title">Transliteration</div>
+                  <div class="verse-transliteration verse-aid">
                   {{ verse.transliteration }}
+                  </div>
                 </div>
-                <div v-if="showTranslation && verse.translation" class="verse-translation verse-aid">
+                <div v-if="showTranslation && verse.translation" class="verse-aid-block">
+                  <div class="verse-aid-title">Translation</div>
+                  <div class="verse-translation verse-aid">
                   {{ verse.translation }}
+                  </div>
                 </div>
                 <div v-if="showWordByWord && verse.words && verse.words.length" class="verse-words verse-aid"
                   @scroll="onVerseWordsScroll(verse.key, $event)">
                   <div v-for="(word, wi) in verse.words" :key="wi" class="word-item"
                     :class="{ highlighted: currentHighlightedVerseKey === verse.key && currentWordIndex === wi, 'phrase-highlighted': currentHighlightedVerseKey === verse.key && currentPhraseIndex === wi }"
-                    :title="wordTooltip(word)" :data-tooltip="wordTooltip(word)" tabindex="0"
-                    @click.stop="revealWordHint(word)">
+                    tabindex="-1">
                     <span class="word-arabic" dir="rtl">{{ word.ar }}</span>
                     <span class="word-meaning">{{ word.en }}</span>
                     <button v-if="word.audio && wordByWordAudioEnabled" class="word-audio-btn"
-                      @click.stop="playWordAudio(word.audio)">
+                      type="button"
+                      @click.stop="playWordAudio(word.audio, verse, wi)">
                       <i class="bi bi-volume-up"></i>
                     </button>
                   </div>
@@ -710,47 +718,43 @@
                   <div class="session-info" @click="loadSavedSession(session.id)">
                     <div class="session-name">
                       <i class="bi bi-bookmark-fill"></i>
-                      <span>{{ session.name }}</span>
+                      <span>{{ getSessionPrimaryLabel(session) }}</span>
                       <span v-if="session.archived" class="session-archive-badge">Archived</span>
                     </div>
+                    <div v-if="session.name && session.name !== getSessionPrimaryLabel(session)" class="session-subtitle">
+                      {{ session.name }}
+                    </div>
                     <div class="session-details">
-                      <span><i class="bi bi-book"></i> {{ session.config?.chapterName || `Surah
-                        ${session.config?.chapterId}` }}</span>
-                      <span><i class="bi bi-text-paragraph"></i> {{ session.config?.rangeStart }}-{{
-                        session.config?.rangeEnd }}</span>
-                      <span><i class="bi bi-clock"></i> {{ formatDate(session.savedAt) }}</span>
+                      <span><i class="bi bi-clock"></i> Saved {{ formatDate(session.savedAt) }}</span>
                     </div>
                   </div>
                   <div class="session-actions">
                     <div class="session-export-group">
                       <button
-                        class="session-export-btn"
                         type="button"
-                        @click.stop="exportSavedSession(session.id, 'json')"
+                        class="session-export-btn"
                         :disabled="isExportingSession(session.id)"
-                        :title="isExportingSession(session.id) ? 'Exporting session' : 'Export session as JSON'"
+                        @click.stop="exportSavedSession(session.id, 'csv')"
                       >
-                        <i class="bi" :class="isExportingSession(session.id) ? 'bi-arrow-repeat spin' : 'bi-filetype-json'"></i>
-                        <span>JSON</span>
+                        <i class="bi" :class="isExportingSession(session.id, 'csv') ? 'bi-arrow-repeat spin' : 'bi-filetype-csv'"></i>
+                        <span>CSV</span>
                       </button>
                       <button
-                        class="session-export-btn"
                         type="button"
-                        @click.stop="exportSavedSession(session.id, 'pdf')"
+                        class="session-export-btn"
                         :disabled="isExportingSession(session.id)"
-                        :title="isExportingSession(session.id) ? 'Exporting session' : 'Export session as PDF'"
+                        @click.stop="exportSavedSession(session.id, 'pdf')"
                       >
-                        <i class="bi" :class="isExportingSession(session.id) ? 'bi-arrow-repeat spin' : 'bi-filetype-pdf'"></i>
+                        <i class="bi" :class="isExportingSession(session.id, 'pdf') ? 'bi-arrow-repeat spin' : 'bi-filetype-pdf'"></i>
                         <span>PDF</span>
                       </button>
                       <button
-                        class="session-export-btn"
                         type="button"
-                        @click.stop="exportSavedSession(session.id, 'word')"
+                        class="session-export-btn"
                         :disabled="isExportingSession(session.id)"
-                        :title="isExportingSession(session.id) ? 'Exporting session' : 'Export session as Word'"
+                        @click.stop="exportSavedSession(session.id, 'word')"
                       >
-                        <i class="bi" :class="isExportingSession(session.id) ? 'bi-arrow-repeat spin' : 'bi-filetype-doc'"></i>
+                        <i class="bi" :class="isExportingSession(session.id, 'word') ? 'bi-arrow-repeat spin' : 'bi-file-earmark-word'"></i>
                         <span>Word</span>
                       </button>
                     </div>
@@ -797,52 +801,29 @@
                 <span>Save a session and you’ll see a simple summary here.</span>
               </div>
               <div v-else class="stats-panel">
-                <div v-if="savedSessions.length > 1" class="stats-session-picker">
-                  <button
-                    v-for="session in savedSessions"
-                    :key="`stats-${session.id}`"
-                    type="button"
-                    class="stats-session-pill"
-                    :class="{ active: selectedStatsSessionId === session.id }"
-                    @click="selectStatsSession(session.id)"
-                  >
-                    <strong>{{ session.name }}</strong>
-                    <span>{{ session.config?.chapterName || `Surah ${session.config?.chapterId || ''}` }}</span>
-                  </button>
-                </div>
                 <div v-if="selectedStatsSessionRecord" class="stats-detail">
                   <div class="stats-detail-head stats-detail-head-hero">
-                    <div class="session-export-group">
-                      <button
-                        class="session-export-btn"
-                        type="button"
-                        @click="exportSavedSession(selectedStatsSessionRecord.id, 'json')"
-                        :disabled="isExportingSession(selectedStatsSessionRecord.id)"
-                        title="Export session as JSON"
-                      >
-                        <i class="bi" :class="isExportingSession(selectedStatsSessionRecord.id) ? 'bi-arrow-repeat spin' : 'bi-filetype-json'"></i>
-                        <span>{{ isExportingSession(selectedStatsSessionRecord.id) ? 'Exporting session...' : 'JSON' }}</span>
-                      </button>
-                      <button
-                        class="session-export-btn"
-                        type="button"
-                        @click="exportSavedSession(selectedStatsSessionRecord.id, 'pdf')"
-                        :disabled="isExportingSession(selectedStatsSessionRecord.id)"
-                        title="Export session as PDF"
-                      >
-                        <i class="bi" :class="isExportingSession(selectedStatsSessionRecord.id) ? 'bi-arrow-repeat spin' : 'bi-filetype-pdf'"></i>
-                        <span>PDF</span>
-                      </button>
-                      <button
-                        class="session-export-btn"
-                        type="button"
-                        @click="exportSavedSession(selectedStatsSessionRecord.id, 'word')"
-                        :disabled="isExportingSession(selectedStatsSessionRecord.id)"
-                        title="Export session as Word"
-                      >
-                        <i class="bi" :class="isExportingSession(selectedStatsSessionRecord.id) ? 'bi-arrow-repeat spin' : 'bi-filetype-doc'"></i>
-                        <span>Word</span>
-                      </button>
+                    <div>
+                      <h4>{{ getSessionPrimaryLabel(selectedStatsSessionRecord) }}</h4>
+                      <p v-if="selectedStatsSessionRecord.name && selectedStatsSessionRecord.name !== getSessionPrimaryLabel(selectedStatsSessionRecord)">{{ selectedStatsSessionRecord.name }}</p>
+                      <div class="stats-summary">{{ buildStatsSummary(selectedStatsSessionRecord) }}</div>
+                      <div v-if="sortedSavedSessions.length > 1" class="stats-session-select-wrap">
+                        <label class="stats-session-select-label" for="statsSessionSelect">Saved sessions</label>
+                        <select
+                          id="statsSessionSelect"
+                          class="stats-session-select"
+                          :value="selectedStatsSessionRecord.id"
+                          @change="selectStatsSession($event.target.value)"
+                        >
+                          <option
+                            v-for="session in sortedSavedSessions"
+                            :key="`stats-${session.id}`"
+                            :value="session.id"
+                          >
+                            {{ getSessionPrimaryLabel(session) }} · {{ formatDate(session.savedAt) }}
+                          </option>
+                        </select>
+                      </div>
                     </div>
                   </div>
                   <div class="stats-grid stats-grid-hero">
@@ -1153,7 +1134,7 @@
           </label>
         </div>
         <div class="modal-footer">
-          <button class="btn-secondary" @click="closeSessionExitModal">Continue Session</button>
+          <button class="btn-secondary" @click="closeSessionExitModal">Continue</button>
           <button class="btn-secondary" @click="exitSessionAnyway">Exit Anyway</button>
           <button class="btn-primary" @click="confirmSessionExit">{{ sessionExitAutoSave ? 'Save & Exit' : 'End Session' }}</button>
         </div>
@@ -1295,6 +1276,8 @@ function createCentralSessionState() {
     focusModeEnabled: false,
     blurModeEnabled: false,
     blurIntensity: 10,
+    anchorModeEnabled: false,
+    anchorCount: 2,
     chaining: {
       enabled: true,
       method: 'linking',
@@ -1582,6 +1565,7 @@ export default {
       toolsReturnFocusEl: null,
       segmentPlaybackTimer: null,
       segmentEndTime: 0,
+      segmentPlaybackKind: '',
       touchStartX: 0,
       touchStartY: 0,
       hoverPeekVerseKey: null,
@@ -1855,9 +1839,26 @@ export default {
     activeQueueEntry() {
       return this.queue?.[Math.max(0, Number(this.queueIndex || 0))] || null
     },
+    sortedSavedSessions() {
+      return [...this.savedSessions].sort((left, right) => {
+        const leftTs = left?.savedAt ? Date.parse(left.savedAt) : 0
+        const rightTs = right?.savedAt ? Date.parse(right.savedAt) : 0
+        return rightTs - leftTs
+      })
+    },
+    getSessionPrimaryLabel() {
+      return (session = {}) => {
+        const config = session?.config || {}
+        const chapterName = config?.chapterName || (config?.chapterId ? `Surah ${config.chapterId}` : 'Session')
+        const start = Number(config?.rangeStart || 0)
+        const end = Number(config?.rangeEnd || 0)
+        const rangeLabel = start && end ? `Ayahs ${start}\u2013${end}` : (start ? `Ayah ${start}` : '')
+        return rangeLabel ? `${chapterName} \u00b7 ${rangeLabel}` : chapterName
+      }
+    },
     selectedStatsSessionRecord() {
-      if (!this.savedSessions.length) return null
-      return this.savedSessions.find(session => session.id === this.selectedStatsSessionId) || this.savedSessions[0] || null
+      if (!this.sortedSavedSessions.length) return null
+      return this.sortedSavedSessions.find(session => session.id === this.selectedStatsSessionId) || this.sortedSavedSessions[0] || null
     },
     activeExportErrorSessionId() {
       return this.exportSessionState.errorSessionId || ''
@@ -1947,6 +1948,9 @@ export default {
     },
     hasSessionFeedback() {
       return Array.isArray(this.queue) && this.queue.length > 0
+    },
+    hasSessionStarted() {
+      return !!this.sessionStartedAt
     },
     isSessionLive() {
       const mutqinActive = !!this.mutqinState?.sessionState?.active
@@ -2912,6 +2916,7 @@ export default {
     toggleWordAudio() {
       this.wordByWordAudioEnabled = !this.wordByWordAudioEnabled
       this.persistUiState()
+      this.persistCentralSessionState()
       this.showBanner(this.wordByWordAudioEnabled ? 'Word audio enabled' : 'Word audio disabled', 'info', 1000)
     },
     applyRecommendedSetup() {
@@ -2988,6 +2993,7 @@ export default {
 
       this.enforceMemorisationRules();
       this.persistUiState();
+      this.persistCentralSessionState();
     },
     enforceMemorisationRules() {
       if (this.focusModeEnabled && this.blurModeEnabled) {
@@ -3037,6 +3043,7 @@ export default {
       }
 
       this.persistUiState()
+      this.persistCentralSessionState()
     },
 
     // Handle anchor count change dynamically
@@ -3046,6 +3053,8 @@ export default {
         const anchorText = { 1: '1 anchor (center)', 2: '2 anchors (start+end)', 3: '3 anchors (strategic)' }
         this.showBanner(`Anchor Mode: Using ${anchorText[this.anchorCount]}`, 'info', 2000)
       }
+      this.persistUiState()
+      this.persistCentralSessionState()
     },
 
     // Main function to apply anchor highlights to all verses
@@ -3551,8 +3560,6 @@ export default {
         { key: 'time_spent', label: 'Time memorising', value: this.formatTime(stats.time_spent_seconds), icon: 'bi-clock-history' },
         { key: 'repetitions_completed', label: 'Repeats completed', value: `${stats.repetitions_completed}`, icon: 'bi-arrow-repeat' },
         { key: 'sessions_completed', label: 'Runs completed', value: `${stats.sessions_completed}`, icon: 'bi-check2-circle' },
-        { key: 'average_time_per_verse', label: 'Average time per ayah', value: this.formatTime(stats.average_time_per_verse_seconds), icon: 'bi-stopwatch' },
-        { key: 'weak_verses_encountered', label: 'Ayahs you struggled with', value: `${stats.weak_verses_encountered}`, icon: 'bi-fire' }
       ]
     },
 
@@ -3617,17 +3624,40 @@ export default {
       }
     },
 
-    buildSessionExportFilename(session, format = 'json') {
+    buildSessionExportFilename(session, format = 'csv') {
       const safeName = slugifySessionFilePart(session?.name || 'session')
       const stamp = new Date(session?.savedAt || Date.now()).toISOString().slice(0, 10)
       const suffix = `${safeName}_${stamp}_mutqin`
       if (format === 'word') return `${suffix}.doc`
       if (format === 'pdf') return `${suffix}.pdf`
-      return `${suffix}.json`
+      return `${suffix}.csv`
     },
 
-    triggerJsonDownload(filename, payload) {
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    buildSessionExportCsv(payload) {
+      const session = payload?.session || {}
+      const config = session?.config || {}
+      const stats = this.normalizeSessionStats(session?.stats || {}, config)
+      const rows = [
+        ['Session Name', session?.name || ''],
+        ['Surah', config?.chapterName || (config?.chapterId ? `Surah ${config.chapterId}` : '')],
+        ['Ayah Range', (config?.rangeStart && config?.rangeEnd) ? `${config.rangeStart}-${config.rangeEnd}` : ''],
+        ['Saved At', session?.savedAt ? new Date(session.savedAt).toISOString() : ''],
+        ['Exported At', payload?.exportedAt || ''],
+        ['Verses Read', `${stats.verses_read || 0}`],
+        ['Time Spent', this.formatTime(stats.time_spent_seconds)],
+        ['Repetitions Completed', `${stats.repetitions_completed || 0}`],
+        ['Sessions Completed', `${stats.sessions_completed || 0}`],
+        ['Average Time Per Verse', this.formatTime(stats.average_time_per_verse_seconds)],
+        ['Struggled Ayahs', `${stats.weak_verses_encountered || 0}`]
+      ]
+
+      return rows
+        .map(row => row.map(value => `"${String(value || '').replace(/"/g, '""')}"`).join(','))
+        .join('\n')
+    },
+
+    triggerCsvDownload(filename, payload) {
+      const blob = new Blob([this.buildSessionExportCsv(payload)], { type: 'text/csv;charset=utf-8' })
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
       anchor.href = url
@@ -3750,7 +3780,7 @@ export default {
 </html>`
     },
 
-    async exportSavedSession(sessionId, format = 'json') {
+    async exportSavedSession(sessionId, format = 'csv') {
       const session = this.savedSessions.find(item => item.id === sessionId)
       if (!session) return
       const validation = this.validateSessionForExport(session)
@@ -3782,7 +3812,7 @@ export default {
         } else if (format === 'pdf') {
           this.triggerPdfExport(this.buildSessionExportFilename(session, 'pdf'), payload)
         } else {
-          this.triggerJsonDownload(this.buildSessionExportFilename(session, 'json'), payload)
+          this.triggerCsvDownload(this.buildSessionExportFilename(session, 'csv'), payload)
         }
         this.exportSessionState = {
           activeSessionId: '',
@@ -3807,7 +3837,7 @@ export default {
 
     retryFailedExport() {
       if (!this.exportSessionState.errorSessionId) return
-      this.exportSavedSession(this.exportSessionState.errorSessionId, this.exportSessionState.errorFormat || 'json')
+      this.exportSavedSession(this.exportSessionState.errorSessionId, this.exportSessionState.errorFormat || 'csv')
     },
 
     formatDate(dateString) {
@@ -4032,12 +4062,6 @@ export default {
       if (dx < 0) this.next()
       else this.prev()
     },
-    revealWordHint(word) {
-      if (!word) return
-      const hint = this.wordTooltip(word)
-      this.showBanner(hint, 'info', 1200)
-    },
-
     onVerseCardClick(verse) {
       if (!verse?.key) return
       if (this.suppressNextVerseClick) {
@@ -4307,6 +4331,11 @@ export default {
         showTransliteration: this.showTransliteration,
         showWordByWord: this.showWordByWord,
         wordByWordAudioEnabled: this.wordByWordAudioEnabled,
+        focusModeEnabled: this.focusModeEnabled,
+        blurModeEnabled: this.blurModeEnabled,
+        blurIntensity: this.blurIntensity,
+        anchorModeEnabled: this.anchorModeEnabled,
+        anchorCount: this.anchorCount,
         chainingEnabled: this.chainingEnabled,
         chainingMethod: this.chainingMethod,
         chainingRepetitions: this.chainingRepetitions,
@@ -4343,6 +4372,11 @@ export default {
       this.showTransliteration = config.showTransliteration ?? this.showTransliteration
       this.showWordByWord = config.showWordByWord ?? this.showWordByWord
       this.wordByWordAudioEnabled = config.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
+      this.focusModeEnabled = !!config.focusModeEnabled
+      this.blurModeEnabled = !!config.blurModeEnabled
+      this.blurIntensity = Math.max(4, Math.min(18, Number(config.blurIntensity || this.blurIntensity || 10)))
+      this.anchorModeEnabled = !!config.anchorModeEnabled
+      this.anchorCount = Math.max(1, Math.min(3, Number(config.anchorCount || this.anchorCount || 2)))
       this.theme = config.theme || this.theme
       document.documentElement.setAttribute('data-theme', this.theme)
     },
@@ -5028,6 +5062,8 @@ export default {
         this.focusModeEnabled = !!this.centralSession.focusModeEnabled
         this.blurModeEnabled = !!this.centralSession.blurModeEnabled
         this.blurIntensity = Math.max(4, Math.min(18, Number(this.centralSession.blurIntensity || 10)))
+        this.anchorModeEnabled = !!this.centralSession.anchorModeEnabled
+        this.anchorCount = Math.max(1, Math.min(2, Number(this.centralSession.anchorCount || 2)))
         if (!uiChaining) {
           this.chainingEnabled = !!this.centralSession.chaining.enabled
           this.chainingMethod = ['linking', 'cumulative'].includes(this.centralSession.chaining.method) ? this.centralSession.chaining.method : 'linking'
@@ -5050,6 +5086,8 @@ export default {
           focusModeEnabled: !!this.focusModeEnabled,
           blurModeEnabled: !!this.blurModeEnabled,
           blurIntensity: Number(this.blurIntensity || 10),
+          anchorModeEnabled: !!this.anchorModeEnabled,
+          anchorCount: Math.max(1, Math.min(2, Number(this.anchorCount || 2))),
           chaining: {
             ...this.centralSession.chaining,
             enabled: !!this.chainingEnabled,
@@ -5112,20 +5150,19 @@ export default {
     setupWordClickHandler() {
       document.addEventListener('click', (e) => {
         const wordElement = e.target.closest('.wbw-word')
-        if (wordElement && this.wordByWordAudioEnabled) {
+        if (wordElement) {
           const verseKey = wordElement.dataset.verseKey
           const wordIndex = parseInt(wordElement.dataset.wordIndex)
           const wordAudio = wordElement.dataset.wordAudio
 
           if (wordAudio) {
-            this.playWordAudio(wordAudio)
-          } else {
-            // Find verse and play from this word position
-            const verse = this.verses.find(v => v.key === verseKey)
-            if (verse && verse.audio) {
-              this.playVerse(verse)
-            }
+            const verse = this.verses.find(item => item.key === verseKey)
+            this.playWordAudio(wordAudio, verse, wordIndex)
+            return
           }
+
+          const verse = this.verses.find(item => item.key === verseKey)
+          this.playWordAudio('', verse, wordIndex)
         }
       })
     },
@@ -5501,12 +5538,11 @@ export default {
       const activeClass = isActive ? ' highlighted phrase-highlighted' : ''
       const weakClass = this.isWeakAyah(verse.key) ? ' weak-word' : ''
       const masteredClass = this.isMasteredAyah(verse.key) ? ' mastered-word' : ''
-      const tooltip = this.wordTooltip(wordData)
       const wordAudio = this.wordByWordAudioEnabled && wordData.audio
         ? `<button class="word-audio-btn" data-word-index="${idx}" data-word-audio="${this.escapeHtml(wordData.audio)}"><i class="bi bi-volume-up"></i></button>`
         : ''
 
-      return `<word class="wbw-word${activeClass}${weakClass}${masteredClass}" data-word-index="${idx}" data-verse-key="${verse.key}" data-tooltip="${this.escapeHtml(tooltip)}" title="${this.escapeHtml(tooltip)}">${innerHtml}${wordAudio}</word>`
+      return `<word class="wbw-word${activeClass}${weakClass}${masteredClass}" data-word-index="${idx}" data-verse-key="${verse.key}" data-word-audio="${this.escapeHtml(wordData.audio || '')}">${innerHtml}${wordAudio}</word>`
     },
 
     wrapHtmlWithElement(node, innerHtml) {
@@ -5857,13 +5893,6 @@ export default {
       if (!timestamps.length) return
       this.queueWordHighlightFrame(verse)
     },
-    wordTooltip(word) {
-      const ar = String(word?.ar || '').trim()
-      const en = String(word?.en || '').trim()
-      if (ar && en) return `${ar} - ${en}`
-      return ar || en || 'Word'
-    },
-
     updateWordHighlight(verseKey, activeIndex) {
       this.currentHighlightedVerseKey = verseKey || null
       this.currentWordIndex = Number.isFinite(Number(activeIndex)) ? Number(activeIndex) : -1
@@ -6162,6 +6191,7 @@ export default {
         this.segmentPlaybackTimer = null
       }
       this.segmentEndTime = 0
+      this.segmentPlaybackKind = ''
 
       if (!verse) {
         console.error('No verse provided')
@@ -6296,8 +6326,10 @@ export default {
     handleSegmentBoundary() {
       if (!this.segmentEndTime || this.advanceLocked) return
       this.segmentEndTime = 0
+      const playbackKind = this.segmentPlaybackKind
+      this.segmentPlaybackKind = ''
       this.stopWordHighlighting()
-      if (this.playMode === 'auto') {
+      if (playbackKind !== 'word' && this.playMode === 'auto') {
         this.next()
         return
       }
@@ -6413,6 +6445,7 @@ export default {
         this.segmentPlaybackTimer = null
       }
       this.segmentEndTime = 0
+      this.segmentPlaybackKind = ''
       this.advanceLocked = false
       this.playRequestLocked = false
       if (this.audioElement) {
@@ -6738,9 +6771,11 @@ export default {
     },
     toggleFocusModeRadio() {
       this.focusModeEnabled = !this.focusModeEnabled
+      this.persistCentralSessionState()
     },
     toggleBlurModeRadio() {
       this.blurModeEnabled = !this.blurModeEnabled
+      this.persistCentralSessionState()
     },
     toggleChainingRadio() {
       this.setChainingEnabled(!this.chainingEnabled)
@@ -6764,7 +6799,6 @@ export default {
 
     escapeHtml(str) { return String(str || '').replace(/[&<>]/g, function (m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m] }) },
     escapeRegex(str) { return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') },
-    wordTooltip(word) { return `${word.ar || ''} - ${word.en || ''}`.trim() || 'Word' },
 
     setChainingRepetitions(value) {
       this.chainingRepetitions = Math.max(1, Math.min(5, Number(value || 1)))
@@ -7390,6 +7424,9 @@ export default {
             this.showTransliteration = state.showTransliteration ?? this.showTransliteration
             this.showWordByWord = state.showWordByWord ?? this.showWordByWord
             this.wordByWordAudioEnabled = state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
+            this.focusModeEnabled = !!state.focusModeEnabled
+            this.blurModeEnabled = !!state.blurModeEnabled
+            this.blurIntensity = Math.max(4, Math.min(18, Number(state.blurIntensity ?? this.blurIntensity ?? 10)))
             this.chainingEnabled = state.chainingEnabled ?? this.chainingEnabled
             this.chainingMethod = ['linking', 'cumulative'].includes(state.chainingMethod)
               ? state.chainingMethod
@@ -7462,6 +7499,9 @@ export default {
           showTransliteration: this.showTransliteration,
           showWordByWord: this.showWordByWord,
           wordByWordAudioEnabled: this.wordByWordAudioEnabled,
+          focusModeEnabled: this.focusModeEnabled,
+          blurModeEnabled: this.blurModeEnabled,
+          blurIntensity: this.blurIntensity,
           defaultFontSize: this.defaultFontSize,
           chainingEnabled: this.chainingEnabled,
           chainingMethod: this.chainingMethod,
@@ -7924,9 +7964,105 @@ export default {
       this.nextQuizCard()
     },
 
-    playWordAudio(url) {
-      if (!url) return
-      new Audio(url).play().catch(() => { })
+    async playWordAudio(url, verse = null, wordIndex = null) {
+      const directUrl = this.normalizeAudioUrl(typeof url === 'string' ? url : '')
+      const targetVerse = verse?.key ? verse : (this.activeVerseRef || null)
+      const targetIndex = Number.isFinite(Number(wordIndex)) ? Number(wordIndex) : -1
+
+      if (!this.wordByWordAudioEnabled) {
+        this.showBanner('Enable Word audio to preview individual words.', 'info', 1600)
+        return
+      }
+
+      if (!this.audioElement) {
+        this.audioElement = this.$refs.audio
+      }
+
+      if (directUrl) {
+        try {
+          if (this.audioElement) {
+            this.segmentEndTime = 0
+            this.segmentPlaybackKind = ''
+            this.audioElement.pause()
+            this.audioElement.src = directUrl
+            this.audioElement.currentTime = 0
+            this.audioElement.playbackRate = this.speed
+            await this.audioElement.play()
+            this.playerVisible = true
+            this.isPlaying = true
+            this.markPlaybackStart()
+            return
+          }
+        } catch { }
+
+        new Audio(directUrl).play().catch(() => { })
+        return
+      }
+
+      if (!targetVerse?.audio || targetIndex < 0) {
+        this.showBanner('Word audio is not available for this word.', 'info', 1800)
+        return
+      }
+
+      const verseAudioUrl = this.normalizeAudioUrl(targetVerse.audio)
+      if (!verseAudioUrl || !this.audioElement) {
+        this.showBanner('Audio system not ready', 'error', 2200)
+        return
+      }
+
+      const currentSrc = this.audioElement.currentSrc ? this.normalizeAudioUrl(this.audioElement.currentSrc) : ''
+
+      try {
+        this.segmentEndTime = 0
+        this.segmentPlaybackKind = ''
+        this.stopWordHighlighting()
+        this.setActiveVerse(targetVerse.key, { scroll: false })
+        this.playerVisible = true
+
+        if (currentSrc !== verseAudioUrl) {
+          this.audioElement.pause()
+          this.audioElement.src = verseAudioUrl
+          this.audioElement.load()
+          await new Promise((resolve, reject) => {
+            const onLoaded = () => {
+              this.audioElement.removeEventListener('loadedmetadata', onLoaded)
+              this.audioElement.removeEventListener('error', onError)
+              resolve()
+            }
+            const onError = () => {
+              this.audioElement.removeEventListener('loadedmetadata', onLoaded)
+              this.audioElement.removeEventListener('error', onError)
+              reject(new Error('word-audio-load-failed'))
+            }
+            this.audioElement.addEventListener('loadedmetadata', onLoaded, { once: true })
+            this.audioElement.addEventListener('error', onError, { once: true })
+          })
+        }
+
+        const timestamps = await this.ensureWordHighlightTrack(targetVerse, { force: true })
+        const timing = Array.isArray(timestamps) ? timestamps[targetIndex] : null
+        if (!timing) {
+          this.showBanner('Word timing unavailable for this ayah.', 'info', 1800)
+          return
+        }
+
+        const segmentStart = Math.max(0, Number(timing.start || 0))
+        const segmentEnd = Math.max(segmentStart + 0.12, Number(timing.end || timing.start || 0))
+
+        this.segmentPlaybackKind = 'word'
+        this.segmentEndTime = segmentEnd
+        this.audioElement.currentTime = segmentStart
+        this.audioElement.playbackRate = this.speed
+        this.updateWordHighlight(targetVerse.key, targetIndex)
+        await this.audioElement.play()
+        this.isPlaying = true
+        this.markPlaybackStart()
+      } catch (error) {
+        console.error('Word playback failed:', error)
+        this.segmentEndTime = 0
+        this.segmentPlaybackKind = ''
+        this.showBanner('Unable to play this word right now.', 'error', 2200)
+      }
     },
   }
 }
@@ -10930,6 +11066,9 @@ export default {
 
 .countdown-modal {
   text-align: center;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .countdown-number {
@@ -11018,6 +11157,9 @@ export default {
 .countdown-modal {
   text-align: center;
   animation: scaleIn 0.4s cubic-bezier(0.34, 1.2, 0.64, 1);
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .countdown-number {
@@ -11590,26 +11732,25 @@ export default {
 }
 
 .session-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   padding: 12px 14px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .session-item:hover {
   border-color: var(--accent);
   background: var(--accent-light);
-  transform: translateX(2px);
+  transform: translateY(-1px);
 }
 
 .session-info {
   flex: 1;
   min-width: 0;
+  cursor: pointer;
 }
 
 .session-name {
@@ -11620,6 +11761,20 @@ export default {
   font-size: 0.85rem;
   color: var(--text);
   margin-bottom: 6px;
+  min-width: 0;
+}
+
+.session-name span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-subtitle {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
 }
 
 .session-name i {
@@ -12413,6 +12568,10 @@ export default {
   font-size: 0.85rem;
   color: var(--text);
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .session-meta {
@@ -12431,14 +12590,12 @@ export default {
 
 .session-actions {
   display: flex;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.session-export-group {
-  display: inline-flex;
+  gap: 10px;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 10px;
 }
 
 .session-export-btn {
@@ -12552,13 +12709,13 @@ export default {
 }
 
 .stats-summary {
-  margin-top: 8px;
-  padding: 8px 10px;
+  margin-top: 10px;
+  padding: 8px 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: rgba(255, 252, 246, 0.7);
-  font-size: 0.74rem;
-  line-height: 1.35;
+  background: rgba(255, 252, 246, 0.55);
+  font-size: 0.78rem;
+  line-height: 1.32;
   color: var(--text);
 }
 
@@ -12574,6 +12731,59 @@ export default {
   border: 1px solid var(--border);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 248, 242, 0.72));
   box-shadow: var(--shadow-sm);
+}
+
+.stats-session-select-wrap {
+  margin-top: 10px;
+  display: grid;
+  gap: 6px;
+  max-width: 420px;
+}
+
+.stats-session-select-label {
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.9;
+}
+
+.stats-session-select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .stats-session-select {
+  background: rgba(255, 247, 236, 0.08);
+  border-color: rgba(255, 236, 216, 0.14);
+  color: var(--text);
+}
+
+[data-theme="dark"] .stats-summary {
+  background: rgba(255, 247, 236, 0.04);
+  border-color: rgba(255, 236, 216, 0.12);
+}
+
+.session-export-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.session-actions {
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 10px;
 }
 
 .stats-detail-head {
@@ -12620,6 +12830,30 @@ export default {
   .session-export-group {
     justify-content: flex-start;
     flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .session-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .session-actions {
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .session-export-group {
+    flex: 1 1 auto;
+    justify-content: flex-start;
+  }
+
+  .session-export-btn {
+    flex: 1 1 calc(33.333% - 6px);
+    min-width: 86px;
   }
 }
 
@@ -12786,7 +13020,7 @@ export default {
 
 /* Add to your style section */
 .main.tools-open {
-  overflow: hidden;
+  overflow-x: clip;
 }
 
 /* Fix tools panel positioning - ensure it goes from very top */
@@ -13093,9 +13327,10 @@ html {
 }
 
 .app {
-  min-height: 100vh;
+  min-height: 100dvh;
   font-size: calc(16px * var(--ui-scale, 1));
   animation: appFade 260ms ease-out;
+  overflow-x: clip;
 }
 
 .verse-arabic {
@@ -14659,6 +14894,14 @@ html {
   box-shadow: var(--shadow-sm);
 }
 
+.reading-toolbar-sep {
+  width: 100%;
+  height: 1px;
+  border: 0;
+  background: var(--border);
+  opacity: 0.9;
+}
+
 .reading-toolbar-group {
   display: flex;
   gap: 8px;
@@ -15608,7 +15851,7 @@ html {
 }
 
 .workspace-shell {
-  width: 80%;
+  width: min(100%, 980px);
   margin: 0 auto 18px;
 }
 
@@ -16094,13 +16337,13 @@ html {
 }
 
 .verse-aid-title {
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   color: var(--accent-strong);
-  font-size: 0.66rem;
-  font-weight: 650;
+  font-size: 0.8rem;
+  font-weight: 700;
   font-style: normal;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
 }
 
 .inline-setting-row {
@@ -16457,10 +16700,12 @@ html {
   transform: translateX(-50%);
   width: min(calc(100vw - 32px), 960px);
   max-width: 960px;
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(154, 103, 56, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(255, 248, 240, 0.97)),
+    radial-gradient(circle at top, rgba(154, 103, 56, 0.12), transparent 55%);
+  border: 1px solid rgba(154, 103, 56, 0.18);
   border-radius: 24px;
-  box-shadow: 0 20px 40px rgba(63, 39, 18, 0.12);
+  box-shadow: 0 26px 60px rgba(63, 39, 18, 0.18), 0 0 0 1px rgba(154, 103, 56, 0.05);
   z-index: 1000;
   padding: 12px 20px;
   display: flex;
@@ -16491,15 +16736,15 @@ html {
 
 .player-chapter {
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.98rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .player-verse {
-  font-size: 0.75rem;
-  opacity: 0.7;
+  font-size: 0.8rem;
+  opacity: 0.82;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -16667,6 +16912,21 @@ html {
   font-family: 'Outfit', sans-serif;
 }
 
+.verse-aid-block {
+  margin-top: 10px;
+}
+
+.verse-aid-title {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
 .verse-transliteration {
   font-size: calc(0.98rem * var(--en-scale, 1));
   color: var(--text);
@@ -16706,30 +16966,12 @@ html {
   font-size: 0.75rem;
   flex: 0 0 auto;
   scroll-snap-align: center;
-  cursor: help;
+  cursor: default;
   min-height: 36px;
 }
 
-.word-item:hover::after,
-.word-item:focus::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 8px);
-  transform: translateX(-50%);
-  z-index: 5;
-  width: max-content;
-  max-width: 220px;
-  padding: 6px 8px;
-  border-radius: 9px;
-  background: var(--surface-strong);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
-  color: var(--text);
-  direction: ltr;
-  text-align: center;
-  font-size: 0.72rem;
-  line-height: 1.25;
+.wbw-word {
+  position: relative;
 }
 
 .word-arabic {
@@ -17135,8 +17377,9 @@ html {
 
 /* Ensure main content doesn't go under navbar */
 .main.container {
-  padding-top: 80px;
-  /* Adjust to match navbar height + spacing */
+  padding-top: calc(env(safe-area-inset-top, 0px) + 78px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
+  min-height: 100dvh;
 }
 
 /* Mobile adjustment */
@@ -17148,7 +17391,7 @@ html {
   }
 
   .main.container {
-    padding-top: 70px;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 66px);
   }
 }
 
@@ -17181,16 +17424,7 @@ html {
   line-height: 1;
 }
 
-/* Add this to your <style> */
-.main.container {
-  padding-top: 20px;
-}
-
-/* If you have a navbar, add this */
-.app>.navbar+.main.container,
-body>.navbar+.app .main.container {
-  padding-top: 80px;
-}
+/* Main spacing is controlled below in the responsive section. */
 
 /* Animations */
 @keyframes appFade {
@@ -17233,7 +17467,11 @@ body>.navbar+.app .main.container {
 /* Responsive */
 @media (max-width: 768px) {
   .main {
-    padding: 16px 16px 100px;
+    padding: 16px 16px calc(env(safe-area-inset-bottom, 0px) + 116px);
+  }
+
+  .main.player-visible {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 164px);
   }
 
   .main.tools-open {
@@ -17241,9 +17479,32 @@ body>.navbar+.app .main.container {
   }
 
   .tools {
+    /* Mobile: bottom-sheet offcanvas for thumb reach + stability */
     left: 0;
     right: 0;
+    top: auto;
+    bottom: 0;
     width: 100%;
+    height: min(92dvh, 720px);
+    border-left: none;
+    border-top: 1px solid var(--border);
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    transform: translateY(105%);
+    transition: transform 0.26s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.18);
+  }
+
+  .tools.open {
+    transform: translateY(0);
+  }
+
+  .tools-top {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
+  }
+
+  .tools-footer {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
   }
 
   .session-rail-stats {
@@ -17630,6 +17891,17 @@ body>.navbar+.app .main.container {
   box-shadow: none;
 }
 
+[data-theme="dark"] .stats-sessions-container {
+  background: linear-gradient(180deg, rgba(255, 247, 236, 0.05), rgba(255, 247, 236, 0.02));
+  border-color: rgba(255, 236, 216, 0.1);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .stats-summary {
+  background: rgba(255, 247, 236, 0.06);
+  border-color: rgba(255, 236, 216, 0.12);
+}
+
 [data-theme="dark"] .stats-session-pill {
   background: rgba(255, 247, 236, 0.08);
   border-color: rgba(255, 236, 216, 0.12);
@@ -17654,6 +17926,12 @@ body>.navbar+.app .main.container {
 [data-theme="dark"] .save-btn {
   background: linear-gradient(135deg, #d0a06b, #b98654);
   color: #1a140f;
+}
+
+[data-theme="dark"] .session-exit-recap span {
+  background: rgba(255, 247, 236, 0.06);
+  border-color: rgba(255, 236, 216, 0.14);
+  color: var(--text);
 }
 
 [data-theme="dark"] .verse-card::before {
@@ -17683,11 +17961,24 @@ body>.navbar+.app .main.container {
   background: rgba(255, 255, 255, 0.12);
 }
 
-[data-theme="dark"] .banner,
-[data-theme="dark"] .countdown-modal {
+[data-theme="dark"] .banner {
   background: linear-gradient(180deg, rgba(34, 29, 26, 0.98), rgba(22, 19, 17, 0.96));
   border-color: var(--border);
   color: var(--text);
+}
+
+[data-theme="dark"] .countdown-modal {
+  background: transparent;
+  border-color: transparent;
+  color: #fff;
+}
+
+[data-theme="dark"] .player-bar {
+  background:
+    linear-gradient(180deg, rgba(38, 33, 29, 0.98), rgba(24, 20, 18, 0.98)),
+    radial-gradient(circle at top, rgba(208, 160, 107, 0.18), transparent 58%);
+  border-color: rgba(208, 160, 107, 0.24);
+  box-shadow: 0 26px 66px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(208, 160, 107, 0.08);
 }
 
 [data-theme="dark"] .banner-x,
@@ -18831,13 +19122,19 @@ body>.navbar+.app .main.container {
   }
 
   .player-bar {
-    width: calc(100% - 24px);
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
-    padding: 12px 14px;
+    /* Mobile: sticky bottom controls (thumb-friendly, no overlap) */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 18px 18px 0 0;
+    padding: 12px 14px calc(env(safe-area-inset-bottom, 0px) + 12px);
   }
 
   .player-bar.collapsed {
-    transform: translateX(-50%);
+    transform: none;
   }
 
   .player-main {

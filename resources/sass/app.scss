@@ -31,6 +31,17 @@
   --radius: 16px;
   --font-ui: "Avenir Next", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
   --font-ar: "UthmanicHafs", "Amiri", "Noto Naskh Arabic", serif;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 120ms;
+  --dur: 180ms;
+  --dur-slow: 260ms;
+  --ring: 0 0 0 3px var(--accent-light);
 }
 
 html[data-theme="sepia"] {
@@ -63,6 +74,39 @@ body {
   font-family: var(--font-ui);
   background: var(--bg);
   color: var(--text);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  scrollbar-gutter: stable both-edges;
+}
+
+/* Consistent focus and press feedback across the app */
+:where(a, button, input, select, textarea):focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+:where(button, .btn) {
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :where(button, .btn):active {
+    transform: translateY(1px);
+  }
+}
+
+/* Bootstrap Icons alignment consistency */
+.bi {
+  vertical-align: -0.125em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 
 .app-navbar {
