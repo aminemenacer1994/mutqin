@@ -23881,6 +23881,9 @@ function createAdvancedState() {
       flowListenPlays: 0,
       showPlannerModal: false,
       showConfirmModal: false,
+      showSessionExitModal: false,
+      sessionExitAutoSave: true,
+      sessionExitSnapshot: null,
       confirmModal: {
         title: '',
         message: '',
@@ -24580,7 +24583,13 @@ function createAdvancedState() {
     if (!key) return 1;
     var num = parseInt(String(key).split(':')[1]);
     return Math.max(1, num - this.rangeStart + 1);
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_computed, "remainingAyahs", function remainingAyahs() {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_computed, "sessionContextBadge", function sessionContextBadge() {
+    var _this$currentChapter;
+    var chapterName = ((_this$currentChapter = this.currentChapter) === null || _this$currentChapter === void 0 ? void 0 : _this$currentChapter.name_simple) || this.activeChapterName || 'Session';
+    var total = Math.max(1, Number(this.totalVerses || 1));
+    var ayah = Math.max(1, Math.min(total, Number(this.currentPosition || 1)));
+    return "Memorising - ".concat(chapterName, " - Ayah ").concat(ayah, "/").concat(total);
+  }), "remainingAyahs", function remainingAyahs() {
     return Math.max(0, this.totalVerses - this.currentPosition);
   }), "progressPercent", function progressPercent() {
     if (!this.totalVerses) return 0;
@@ -24612,13 +24621,13 @@ function createAdvancedState() {
       day: 'numeric',
       year: 'numeric'
     });
-  }), "plannerCompletionDateFull", function plannerCompletionDateFull() {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_computed, "plannerCompletionDateFull", function plannerCompletionDateFull() {
     var days = this.plannerEstimatedDays;
     if (!days || days === 0) return '—';
     var d = new Date();
     d.setDate(d.getDate() + days);
     return d.toDateString();
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_computed, "isLoggedIn", function isLoggedIn() {
+  }), "isLoggedIn", function isLoggedIn() {
     var _this$auth;
     return !!((_this$auth = this.auth) !== null && _this$auth !== void 0 && _this$auth.check);
   }), "sessionTypeInfo", function sessionTypeInfo() {
@@ -24638,13 +24647,13 @@ function createAdvancedState() {
     return fonts[this.quranFont] || fonts.uthmanic;
   }), "collapsedPlayerTitle", function collapsedPlayerTitle() {
     var _this3 = this,
-      _this$currentChapter,
-      _this$currentChapter2;
+      _this$currentChapter2,
+      _this$currentChapter3;
     var verse = this.verses.find(function (v) {
       return v.key === _this3.activeKey;
     });
-    if (!verse) return ((_this$currentChapter = this.currentChapter) === null || _this$currentChapter === void 0 ? void 0 : _this$currentChapter.name_simple) || 'Now playing';
-    return "".concat(((_this$currentChapter2 = this.currentChapter) === null || _this$currentChapter2 === void 0 ? void 0 : _this$currentChapter2.name_simple) || 'Session', " \xB7 Ayah ").concat(verse.number);
+    if (!verse) return ((_this$currentChapter2 = this.currentChapter) === null || _this$currentChapter2 === void 0 ? void 0 : _this$currentChapter2.name_simple) || 'Now playing';
+    return "".concat(((_this$currentChapter3 = this.currentChapter) === null || _this$currentChapter3 === void 0 ? void 0 : _this$currentChapter3.name_simple) || 'Session', " \xB7 Ayah ").concat(verse.number);
   }), "collapsedPlayerSubtitle", function collapsedPlayerSubtitle() {
     if (!this.activeKey) return "".concat(this.sessionTypeInfo.label, " \xB7 0% complete");
     return "".concat(this.sessionTypeInfo.label, " \xB7 ").concat(this.queueIndex + 1, "/").concat(this.queue.length, " \xB7 ").concat(this.formatTime(this.currentTime), " / ").concat(this.formatTime(this.duration));
@@ -24667,11 +24676,11 @@ function createAdvancedState() {
     if (this.guidedPhaseLabel === 'Recall') return 'Recall the ayah before moving forward.';
     if (this.guidedPhaseLabel === 'Review') return 'Review the verses due now.';
     return 'Continue your session.';
-  }), "activeCardKicker", function activeCardKicker() {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_computed, "activeCardKicker", function activeCardKicker() {
     if (this.guidedUiStep === 'review') return '✨ Time to refresh';
     if (this.isPlaying) return '🌙 Keeping the rhythm steady';
     return '🌿 Begin with Bismillah, keep your heart with the ayah';
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_computed, "activeCardBody", function activeCardBody() {
+  }), "activeCardBody", function activeCardBody() {
     if (this.guidedUiStep === 'review') return this.dueCount ? "You have ".concat(this.dueCount, " ayahs awaiting review. Revisit them gently and keep the chain strong.") : 'Return to this ayah with a calm review before moving ahead.';
     return "".concat(this.currentLearningPrompt, " Keep your tongue, eyes, and heart together on this ayah.");
   }), "plannerKeyboardActive", function plannerKeyboardActive() {
@@ -24720,16 +24729,16 @@ function createAdvancedState() {
     });
     var minutes = Math.max(0, Math.ceil(totalAudioSeconds / 60));
     return "Audio time \u2248 ".concat(minutes, " min");
-  }), "currentChainPhase", function currentChainPhase() {
+  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_computed, "currentChainPhase", function currentChainPhase() {
     return 0;
-  }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_computed, "toolsHeaderTitle", function toolsHeaderTitle() {
+  }), "toolsHeaderTitle", function toolsHeaderTitle() {
     if (this.tab === 'stats') return 'Stats';
     if (this.tab === 'settings') return 'Settings';
     if (this.tab === 'advanced') return 'Advanced session';
     return 'Guided session setup';
   }), "contextLabel", function contextLabel() {
-    var _this$currentChapter3;
-    var surah = ((_this$currentChapter3 = this.currentChapter) === null || _this$currentChapter3 === void 0 ? void 0 : _this$currentChapter3.name_simple) || 'No surah selected';
+    var _this$currentChapter4;
+    var surah = ((_this$currentChapter4 = this.currentChapter) === null || _this$currentChapter4 === void 0 ? void 0 : _this$currentChapter4.name_simple) || 'No surah selected';
     var range = this.chapterId ? "".concat(this.rangeStart, "-").concat(this.rangeEnd) : '';
     return "".concat(surah).concat(range ? " \u2022 ".concat(range) : '', " \u2022 ").concat(this.sessionTypeInfo.label);
   }), "activeVerseIndex", function activeVerseIndex() {
@@ -25094,8 +25103,74 @@ function createAdvancedState() {
       });
       return reciter ? reciter.name : 'Alafasy';
     },
+    buildSessionRecord: function buildSessionRecord(name) {
+      var _this$currentChapter5, _this$audioElement3;
+      return {
+        id: Date.now().toString(),
+        name: name,
+        savedAt: new Date().toISOString(),
+        config: {
+          chapterId: this.chapterId,
+          chapterName: (_this$currentChapter5 = this.currentChapter) === null || _this$currentChapter5 === void 0 ? void 0 : _this$currentChapter5.name_simple,
+          rangeStart: this.rangeStart,
+          rangeEnd: this.rangeEnd,
+          reciterId: this.reciterId,
+          speed: this.speed,
+          playMode: this.playMode,
+          chainingEnabled: this.chainingEnabled,
+          chainingMethod: this.chainingMethod,
+          chainingRepetitions: this.chainingRepetitions,
+          tajweedEnabled: this.tajweedEnabled,
+          showTranslation: this.showTranslation,
+          showTransliteration: this.showTransliteration,
+          showWordByWord: this.showWordByWord,
+          wordByWordAudioEnabled: this.wordByWordAudioEnabled,
+          focusModeEnabled: this.focusModeEnabled,
+          blurModeEnabled: this.blurModeEnabled,
+          blurIntensity: this.blurIntensity,
+          anchorModeEnabled: this.anchorModeEnabled,
+          anchorCount: this.anchorCount,
+          quranFont: this.quranFont,
+          activeVerseKey: this.effectiveActiveVerseKey || this.activeVerseKey || null,
+          queueIndex: Math.max(0, Number(this.queueIndex || 0)),
+          currentTime: Number(this.currentTime || 0),
+          playerVisible: !!this.playerVisible,
+          audioSrc: ((_this$audioElement3 = this.audioElement) === null || _this$audioElement3 === void 0 ? void 0 : _this$audioElement3.currentSrc) || ''
+        }
+      };
+    },
+    addSavedSession: function addSavedSession(session) {
+      this.savedSessions.unshift(session);
+      if (this.savedSessions.length > 20) this.savedSessions = this.savedSessions.slice(0, 20);
+      this.persistSavedSessions();
+      return session;
+    },
+    buildAutoSaveSessionName: function buildAutoSaveSessionName() {
+      var _this$currentChapter6;
+      var chapter = ((_this$currentChapter6 = this.currentChapter) === null || _this$currentChapter6 === void 0 ? void 0 : _this$currentChapter6.name_simple) || 'Session';
+      var ayah = Math.max(1, Number(this.currentPosition || 1));
+      var stamp = new Date().toLocaleTimeString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      var candidate = "".concat(chapter, " ").concat(this.rangeStart, "-").concat(this.rangeEnd, " \xB7 Ayah ").concat(ayah, " \xB7 ").concat(stamp);
+      var suffix = 2;
+      while (this.savedSessions.some(function (session) {
+        return session.name.toLowerCase() === candidate.toLowerCase();
+      })) {
+        candidate = "".concat(chapter, " ").concat(this.rangeStart, "-").concat(this.rangeEnd, " \xB7 Ayah ").concat(ayah, " (").concat(suffix, ")");
+        suffix += 1;
+      }
+      return candidate;
+    },
+    saveCurrentSessionSilently: function saveCurrentSessionSilently() {
+      var name = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.buildAutoSaveSessionName();
+      if (!this.hasVerses) return null;
+      var session = this.buildSessionRecord(name);
+      this.addSavedSession(session);
+      return session;
+    },
     confirmSaveSession: function confirmSaveSession() {
-      var _this$currentChapter4;
       var trimmedName = this.saveSessionName.trim();
       if (!trimmedName) {
         this.nameError = 'Please enter a session name';
@@ -25114,30 +25189,7 @@ function createAdvancedState() {
         this.nameError = 'A session with this name already exists';
         return;
       }
-      var session = {
-        id: Date.now().toString(),
-        name: trimmedName,
-        savedAt: new Date().toISOString(),
-        config: {
-          chapterId: this.chapterId,
-          chapterName: (_this$currentChapter4 = this.currentChapter) === null || _this$currentChapter4 === void 0 ? void 0 : _this$currentChapter4.name_simple,
-          rangeStart: this.rangeStart,
-          rangeEnd: this.rangeEnd,
-          reciterId: this.reciterId,
-          speed: this.speed,
-          playMode: this.playMode,
-          chainingEnabled: this.chainingEnabled,
-          chainingMethod: this.chainingMethod,
-          chainingRepetitions: this.chainingRepetitions,
-          tajweedEnabled: this.tajweedEnabled,
-          showTranslation: this.showTranslation,
-          showTransliteration: this.showTransliteration,
-          showWordByWord: this.showWordByWord
-        }
-      };
-      this.savedSessions.unshift(session);
-      if (this.savedSessions.length > 20) this.savedSessions = this.savedSessions.slice(0, 20);
-      this.persistSavedSessions();
+      var session = this.addSavedSession(this.buildSessionRecord(trimmedName));
       this.showBanner("\u2713 Session \"".concat(session.name, "\" saved"), 'success', 2000);
       this.closeSaveModal();
     },
@@ -25470,8 +25522,8 @@ function createAdvancedState() {
       this.startSessionWithCountdown();
     },
     saveCurrentSessionWithName: function saveCurrentSessionWithName() {
-      var _this$currentChapter5;
-      var defaultName = "".concat(((_this$currentChapter5 = this.currentChapter) === null || _this$currentChapter5 === void 0 ? void 0 : _this$currentChapter5.name_simple) || 'Session', " ").concat(this.rangeStart, "-").concat(this.rangeEnd);
+      var _this$currentChapter7;
+      var defaultName = "".concat(((_this$currentChapter7 = this.currentChapter) === null || _this$currentChapter7 === void 0 ? void 0 : _this$currentChapter7.name_simple) || 'Session', " ").concat(this.rangeStart, "-").concat(this.rangeEnd);
       this.saveSessionName = defaultName;
       this.showSaveNameModal = true;
       this.closeToolsPanel();
@@ -25504,40 +25556,18 @@ function createAdvancedState() {
       this.showKeyboardShortcuts = false;
     },
     saveCurrentSession: function saveCurrentSession() {
-      var _this$currentChapter6, _this$currentChapter7;
+      var _this$currentChapter8;
       if (!this.hasVerses) {
         this.showBanner('No active session to save', 'warning', 2000);
         return;
       }
-      var session = {
-        id: Date.now().toString(),
-        name: "".concat(((_this$currentChapter6 = this.currentChapter) === null || _this$currentChapter6 === void 0 ? void 0 : _this$currentChapter6.name_simple) || 'Session', " ").concat(this.rangeStart, "-").concat(this.rangeEnd),
-        savedAt: new Date().toISOString(),
-        config: {
-          chapterId: this.chapterId,
-          chapterName: (_this$currentChapter7 = this.currentChapter) === null || _this$currentChapter7 === void 0 ? void 0 : _this$currentChapter7.name_simple,
-          rangeStart: this.rangeStart,
-          rangeEnd: this.rangeEnd,
-          reciterId: this.reciterId,
-          speed: this.speed,
-          playMode: this.playMode,
-          chainingEnabled: this.chainingEnabled,
-          chainingMethod: this.chainingMethod,
-          chainingRepetitions: this.chainingRepetitions,
-          tajweedEnabled: this.tajweedEnabled,
-          showTranslation: this.showTranslation,
-          showTransliteration: this.showTransliteration,
-          showWordByWord: this.showWordByWord
-        }
-      };
-      this.savedSessions.unshift(session);
-      if (this.savedSessions.length > 20) this.savedSessions = this.savedSessions.slice(0, 20);
-      this.persistSavedSessions();
+      this.addSavedSession(this.buildSessionRecord("".concat(((_this$currentChapter8 = this.currentChapter) === null || _this$currentChapter8 === void 0 ? void 0 : _this$currentChapter8.name_simple) || 'Session', " ").concat(this.rangeStart, "-").concat(this.rangeEnd)));
       this.showBanner('Session saved', 'success', 1500);
     },
     // Update loadSavedSession method
     loadSavedSession: function loadSavedSession(sessionId) {
-      var _this15 = this;
+      var _session$config$wordB,
+        _this15 = this;
       var session = this.savedSessions.find(function (s) {
         return s.id === sessionId;
       });
@@ -25557,6 +25587,13 @@ function createAdvancedState() {
       this.showTranslation = session.config.showTranslation;
       this.showTransliteration = session.config.showTransliteration;
       this.showWordByWord = session.config.showWordByWord;
+      this.wordByWordAudioEnabled = (_session$config$wordB = session.config.wordByWordAudioEnabled) !== null && _session$config$wordB !== void 0 ? _session$config$wordB : this.wordByWordAudioEnabled;
+      this.focusModeEnabled = !!session.config.focusModeEnabled;
+      this.blurModeEnabled = !!session.config.blurModeEnabled;
+      this.blurIntensity = Number(session.config.blurIntensity || this.blurIntensity || 10);
+      this.anchorModeEnabled = !!session.config.anchorModeEnabled;
+      this.anchorCount = Number(session.config.anchorCount || this.anchorCount || 2);
+      this.quranFont = session.config.quranFont || this.quranFont;
 
       // Load verses and start session
       this.applyWorkspaceControls({
@@ -25564,10 +25601,40 @@ function createAdvancedState() {
       });
       this.showTools = false;
       this.showBanner("Loaded: ".concat(session.name), 'success', 2000);
-
-      // Auto-start session
       this.$nextTick(function () {
-        _this15.startSession();
+        ;
+        _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
+          var restoredIndex;
+          return _regenerator().w(function (_context2) {
+            while (1) switch (_context2.n) {
+              case 0:
+                _context2.n = 1;
+                return _this15.startSession();
+              case 1:
+                if (session.config.activeVerseKey) {
+                  _context2.n = 2;
+                  break;
+                }
+                return _context2.a(2);
+              case 2:
+                restoredIndex = Math.max(0, Number(session.config.queueIndex || 0));
+                _this15.setActiveVerse(session.config.activeVerseKey, {
+                  queueIndex: restoredIndex,
+                  scroll: false
+                });
+                _this15.restoredAudioState = {
+                  src: session.config.audioSrc || '',
+                  currentTime: Number(session.config.currentTime || 0),
+                  playerVisible: !!session.config.playerVisible,
+                  speed: Number(session.config.speed || _this15.speed || 1),
+                  isPlaying: false
+                };
+                _this15.applyRestoredAudioState();
+              case 3:
+                return _context2.a(2);
+            }
+          }, _callee2);
+        }))();
       });
     },
     // Update deleteSavedSession method
@@ -25635,18 +25702,18 @@ function createAdvancedState() {
     },
     downloadVerseAudio: function downloadVerseAudio(verse) {
       var _this16 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
         var audioUrl, filename, downloadUrl, anchor;
-        return _regenerator().w(function (_context2) {
-          while (1) switch (_context2.n) {
+        return _regenerator().w(function (_context3) {
+          while (1) switch (_context3.n) {
             case 0:
               audioUrl = _this16.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
               if (audioUrl) {
-                _context2.n = 1;
+                _context3.n = 1;
                 break;
               }
               _this16.showBanner('Audio not available for this ayah', 'info', 2200);
-              return _context2.a(2);
+              return _context3.a(2);
             case 1:
               try {
                 filename = "surah-".concat(_this16.chapterId, "-ayah-").concat(verse.number, ".mp3");
@@ -25663,9 +25730,9 @@ function createAdvancedState() {
                 _this16.showBanner('Failed to download ayah audio', 'error', 2600);
               }
             case 2:
-              return _context2.a(2);
+              return _context3.a(2);
           }
-        }, _callee2);
+        }, _callee3);
       }))();
     },
     syncSettingsDraft: function syncSettingsDraft() {
@@ -26002,17 +26069,17 @@ function createAdvancedState() {
     applyWorkspaceControls: function applyWorkspaceControls() {
       var _arguments = arguments,
         _this22 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4() {
         var options, mode;
-        return _regenerator().w(function (_context3) {
-          while (1) switch (_context3.n) {
+        return _regenerator().w(function (_context4) {
+          while (1) switch (_context4.n) {
             case 0:
               options = _arguments.length > 0 && _arguments[0] !== undefined ? _arguments[0] : {};
               if (!_this22.isBootstrapping) {
-                _context3.n = 1;
+                _context4.n = 1;
                 break;
               }
-              return _context3.a(2);
+              return _context4.a(2);
             case 1:
               mode = options.mode || _this22.currentMode;
               if (_this22.workspaceSyncTimer) clearTimeout(_this22.workspaceSyncTimer);
@@ -26021,19 +26088,19 @@ function createAdvancedState() {
                 mode: mode,
                 immediate: true
               }));
-              _context3.n = 2;
+              _context4.n = 2;
               return _this22.$nextTick();
             case 2:
-              return _context3.a(2);
+              return _context4.a(2);
           }
-        }, _callee3);
+        }, _callee4);
       }))();
     },
     clampControlRange: function clampControlRange() {
-      var _this$currentChapter8;
+      var _this$currentChapter9;
       var mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.currentMode;
       var store = this.getModeStore(mode);
-      var max = ((_this$currentChapter8 = this.currentChapter) === null || _this$currentChapter8 === void 0 ? void 0 : _this$currentChapter8.verses_count) || 286;
+      var max = ((_this$currentChapter9 = this.currentChapter) === null || _this$currentChapter9 === void 0 ? void 0 : _this$currentChapter9.verses_count) || 286;
       store.rangeStart = Math.max(1, Math.min(Number(store.rangeStart || 1), max));
       store.rangeEnd = Math.max(store.rangeStart, Math.min(Number(store.rangeEnd || store.rangeStart || 1), max));
     },
@@ -26238,6 +26305,11 @@ function createAdvancedState() {
           this.closeConfirmModal();
           return;
         }
+        if (this.showSessionExitModal) {
+          event.preventDefault();
+          this.closeSessionExitModal();
+          return;
+        }
         if (this.showPlannerModal) {
           event.preventDefault();
           this.showPlannerModal = false;
@@ -26245,14 +26317,14 @@ function createAdvancedState() {
         }
       }
       if (event.key === ' ' || event.code === 'Space') {
-        var _this$audioElement3;
+        var _this$audioElement4;
         if (this.blurModeEnabled) {
           event.preventDefault();
           this.blurPeekHoldingSpace = true;
           return;
         }
         event.preventDefault();
-        if ((_this$audioElement3 = this.audioElement) !== null && _this$audioElement3 !== void 0 && _this$audioElement3.src) this.togglePlay();
+        if ((_this$audioElement4 = this.audioElement) !== null && _this$audioElement4 !== void 0 && _this$audioElement4.src) this.togglePlay();
         return;
       }
       if (event.key === 'Enter') {
@@ -26345,7 +26417,7 @@ function createAdvancedState() {
       this.lastScrollY = current;
     },
     buildContinueSessionPayload: function buildContinueSessionPayload() {
-      var _this$mutqinState8, _mutqinSession$queue, _this$verses, _this$audioElement4;
+      var _this$mutqinState8, _mutqinSession$queue, _this$verses, _this$audioElement5;
       var mutqinSession = ((_this$mutqinState8 = this.mutqinState) === null || _this$mutqinState8 === void 0 ? void 0 : _this$mutqinState8.sessionState) || {};
       var mutqinIndex = Math.max(0, Number(mutqinSession.current_index || 0));
       var mutqinItem = (_mutqinSession$queue = mutqinSession.queue) === null || _mutqinSession$queue === void 0 ? void 0 : _mutqinSession$queue[mutqinIndex];
@@ -26364,7 +26436,7 @@ function createAdvancedState() {
         duration: this.duration || 0,
         isPlaying: !!this.isPlaying,
         playerVisible: !!this.playerVisible,
-        audioSrc: ((_this$audioElement4 = this.audioElement) === null || _this$audioElement4 === void 0 ? void 0 : _this$audioElement4.currentSrc) || '',
+        audioSrc: ((_this$audioElement5 = this.audioElement) === null || _this$audioElement5 === void 0 ? void 0 : _this$audioElement5.currentSrc) || '',
         config: this.cloneModeState(source)
       };
     },
@@ -26418,26 +26490,26 @@ function createAdvancedState() {
     },
     continueLastSession: function continueLastSession() {
       var _this23 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4() {
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5() {
         var _payload$config3, _this23$mutqinState$s, _store$queue4, _store$queue5, _payload$config4;
         var payload, target, store, canonicalIndex, canonicalItem, targetKey, restoredQueueIndex, _store$queue, _store$queue2, currentQueueKey, _store$queue3, exactIndex, restoredKey;
-        return _regenerator().w(function (_context4) {
-          while (1) switch (_context4.n) {
+        return _regenerator().w(function (_context5) {
+          while (1) switch (_context5.n) {
             case 0:
               payload = _this23.continueSessionPayload;
               if (payload) {
-                _context4.n = 1;
+                _context5.n = 1;
                 break;
               }
-              return _context4.a(2);
+              return _context5.a(2);
             case 1:
               _this23.hasContinueSession = false;
               if ((_payload$config3 = payload.config) !== null && _payload$config3 !== void 0 && _payload$config3.chapterId) {
-                _context4.n = 2;
+                _context5.n = 2;
                 break;
               }
               _this23.clearContinueSession();
-              return _context4.a(2);
+              return _context5.a(2);
             case 2:
               _this23.currentMode = payload.mode || 'beginner';
               _this23.tab = payload.tab || _this23.currentMode;
@@ -26445,7 +26517,7 @@ function createAdvancedState() {
               _this23[target] = _objectSpread(_objectSpread({}, target === 'beginner' ? createBeginnerState() : createAdvancedState()), _this23.cloneModeState(payload.config || {}));
               // Chaining removed.
               _this23.applySessionConfig(_this23.buildSessionConfig(_this23.currentMode));
-              _context4.n = 3;
+              _context5.n = 3;
               return _this23.loadChapter();
             case 3:
               _this23.buildQueue(_this23.currentMode);
@@ -26498,9 +26570,9 @@ function createAdvancedState() {
                 }
               });
             case 4:
-              return _context4.a(2);
+              return _context5.a(2);
           }
-        }, _callee4);
+        }, _callee5);
       }))();
     },
     restoreAudioState: function restoreAudioState() {
@@ -26536,6 +26608,146 @@ function createAdvancedState() {
         _this24.audioElement.removeEventListener('loadedmetadata', _seekOnLoad);
       };
       this.audioElement.addEventListener('loadedmetadata', _seekOnLoad);
+    },
+    buildSessionExitSnapshot: function buildSessionExitSnapshot() {
+      var _this$audioElement6, _this$audioElement7;
+      return {
+        mode: this.currentMode,
+        tab: this.tab,
+        activeVerseKey: this.effectiveActiveVerseKey || this.activeVerseKey || null,
+        activeKey: this.activeKey || null,
+        queueIndex: Math.max(0, Number(this.queueIndex || 0)),
+        playerVisible: !!this.playerVisible,
+        isPlaying: !!this.isPlaying,
+        currentTime: Number(((_this$audioElement6 = this.audioElement) === null || _this$audioElement6 === void 0 ? void 0 : _this$audioElement6.currentTime) || this.currentTime || 0),
+        speed: Number(this.speed || 1),
+        audioSrc: ((_this$audioElement7 = this.audioElement) === null || _this$audioElement7 === void 0 ? void 0 : _this$audioElement7.currentSrc) || '',
+        blurModeEnabled: !!this.blurModeEnabled,
+        blurIntensity: Number(this.blurIntensity || 10),
+        blurPeekHoldingSpace: !!this.blurPeekHoldingSpace,
+        hoverPeekVerseKey: this.hoverPeekVerseKey || null,
+        touchPeekVerseKey: this.touchPeekVerseKey || null
+      };
+    },
+    openSessionExitModal: function openSessionExitModal() {
+      if (!this.hasVerses && !this.playerVisible) return;
+      this.flushPlaybackTime();
+      this.sessionExitSnapshot = this.buildSessionExitSnapshot();
+      this.sessionExitAutoSave = true;
+      this.showTools = false;
+      this.showConfirmModal = false;
+      this.showResumeModal = false;
+      this.showSessionExitModal = true;
+      if (this.audioElement && !this.audioElement.paused) {
+        this.audioElement.pause();
+      }
+      this.isPlaying = false;
+    },
+    restoreSessionExitSnapshot: function restoreSessionExitSnapshot() {
+      var _this25 = this;
+      var snapshot = this.sessionExitSnapshot;
+      if (!snapshot) return;
+      this.currentMode = snapshot.mode || this.currentMode;
+      this.tab = snapshot.tab || this.tab;
+      this.blurModeEnabled = !!snapshot.blurModeEnabled;
+      this.blurIntensity = Number(snapshot.blurIntensity || this.blurIntensity || 10);
+      this.blurPeekHoldingSpace = !!snapshot.blurPeekHoldingSpace;
+      this.hoverPeekVerseKey = snapshot.hoverPeekVerseKey || null;
+      this.touchPeekVerseKey = snapshot.touchPeekVerseKey || null;
+      if (snapshot.activeVerseKey) {
+        this.setActiveVerse(snapshot.activeVerseKey, {
+          mode: snapshot.mode || this.currentMode,
+          queueIndex: Number(snapshot.queueIndex || 0),
+          scroll: false
+        });
+      }
+      this.playerVisible = !!snapshot.playerVisible;
+      this.currentTime = Number(snapshot.currentTime || 0);
+      this.speed = Number(snapshot.speed || this.speed || 1);
+      this.restoredAudioState = {
+        src: snapshot.audioSrc || '',
+        currentTime: Number(snapshot.currentTime || 0),
+        playerVisible: !!snapshot.playerVisible,
+        speed: Number(snapshot.speed || this.speed || 1),
+        isPlaying: !!snapshot.isPlaying
+      };
+      this.$nextTick(function () {
+        _this25.applyRestoredAudioState();
+      });
+    },
+    closeSessionExitModal: function closeSessionExitModal() {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      var _options$restore = options.restore,
+        restore = _options$restore === void 0 ? true : _options$restore;
+      this.showSessionExitModal = false;
+      if (restore) {
+        this.restoreSessionExitSnapshot();
+      } else {
+        this.sessionExitSnapshot = null;
+      }
+    },
+    clearExitSessionStorage: function clearExitSessionStorage() {
+      try {
+        localStorage.removeItem('telawa.continueSession');
+        localStorage.removeItem('telawa.audioState');
+      } catch (error) {
+        console.error('Failed to clear exit-session storage:', error);
+      }
+      this.hasContinueSession = false;
+      this.continueSessionPayload = null;
+      this.continueSessionLabel = '';
+    },
+    finishSessionCleanup: function finishSessionCleanup() {
+      var _this$verses$, _this$mutqinState0;
+      this.closePlayer();
+      this.clearTouchPeek();
+      this.blurPeekHoldingSpace = false;
+      this.hoverPeekVerseKey = null;
+      this.touchPeekVerseKey = null;
+      this.stopWordHighlighting();
+      var store = this.getModeStore(this.currentMode);
+      var firstKey = ((_this$verses$ = this.verses[0]) === null || _this$verses$ === void 0 ? void 0 : _this$verses$.key) || null;
+      store.queue = [];
+      store.queueIndex = 0;
+      store.activeKey = firstKey;
+      store.sessionActive = false;
+      this.queue = [];
+      this.queueIndex = 0;
+      this.activeVerseKey = null;
+      this.activeKey = firstKey;
+      this.playerVisible = false;
+      this.isPlaying = false;
+      this.currentTime = 0;
+      this.duration = 0;
+      if ((_this$mutqinState0 = this.mutqinState) !== null && _this$mutqinState0 !== void 0 && _this$mutqinState0.sessionState) {
+        this.mutqinState.sessionState.active = false;
+      }
+      this.clearExitSessionStorage();
+      this.persistModeState(this.currentMode);
+      this.persistUiState();
+      this.persistCentralSessionState();
+    },
+    exitSessionAnyway: function exitSessionAnyway() {
+      this.closeSessionExitModal({
+        restore: false
+      });
+      this.finishSessionCleanup();
+      this.showBanner('Session ended. You can start again from the current setup.', 'info', 2200);
+    },
+    confirmSessionExit: function confirmSessionExit() {
+      var recapAyah = Math.max(1, Number(this.currentPosition || 1));
+      var recapTotal = Math.max(1, Number(this.totalVerses || 1));
+      var savedName = '';
+      if (this.sessionExitAutoSave) {
+        var savedSession = this.saveCurrentSessionSilently();
+        savedName = (savedSession === null || savedSession === void 0 ? void 0 : savedSession.name) || '';
+      }
+      this.closeSessionExitModal({
+        restore: false
+      });
+      this.finishSessionCleanup();
+      var recap = savedName ? "Session ended. Auto-saved as \"".concat(savedName, "\".") : "Session ended at ayah ".concat(recapAyah, "/").concat(recapTotal, ".");
+      this.showBanner(recap, 'success', 2600);
     },
     openConfirmModal: function openConfirmModal(options) {
       this.confirmModal = {
@@ -26627,9 +26839,9 @@ function createAdvancedState() {
       localStorage.setItem('telawa.masteredWeekly', JSON.stringify(state));
     } catch (_unused5) {}
   }), "setPlaybackSpeed", function setPlaybackSpeed(newSpeed) {
-    var _this$audioElement5;
+    var _this$audioElement8;
     var safeSpeed = this.speedOptions.includes(Number(newSpeed)) ? Number(newSpeed) : 1;
-    var currentTime = Number(((_this$audioElement5 = this.audioElement) === null || _this$audioElement5 === void 0 ? void 0 : _this$audioElement5.currentTime) || this.currentTime || 0);
+    var currentTime = Number(((_this$audioElement8 = this.audioElement) === null || _this$audioElement8 === void 0 ? void 0 : _this$audioElement8.currentTime) || this.currentTime || 0);
     this.speed = safeSpeed;
     if (this.audioElement) {
       this.audioElement.playbackRate = safeSpeed;
@@ -26646,7 +26858,7 @@ function createAdvancedState() {
     this.persistCentralSessionState();
     this.showBanner("Speed changed to ".concat(safeSpeed, "x"), 'info', 1000);
   }), "setActiveTab", function setActiveTab(tabName) {
-    var _this25 = this;
+    var _this26 = this;
     // Validate tab name
     var validTabs = ['tools', 'techniques', 'saved', 'settings'];
     if (!validTabs.includes(tabName)) {
@@ -26673,7 +26885,7 @@ function createAdvancedState() {
 
     // Scroll to top of panel content
     this.$nextTick(function () {
-      var panelBody = _this25.$refs.toolsBody;
+      var panelBody = _this26.$refs.toolsBody;
       if (panelBody) {
         panelBody.scrollTop = 0;
       }
@@ -26723,7 +26935,7 @@ function createAdvancedState() {
   }), "persistCentralSessionState", function persistCentralSessionState() {
     if (this.isBootstrapping) return;
     try {
-      var _this$audioElement6;
+      var _this$audioElement9;
       this.centralSession = _objectSpread(_objectSpread({}, this.centralSession), {}, {
         // Update to include 'techniques' as valid tab
         activeTab: ['tools', 'techniques', 'saved', 'settings'].includes(this.tab) ? this.tab : 'tools',
@@ -26739,7 +26951,7 @@ function createAdvancedState() {
         }),
         audio: {
           speed: Number(this.speed || 1),
-          currentTime: Number(((_this$audioElement6 = this.audioElement) === null || _this$audioElement6 === void 0 ? void 0 : _this$audioElement6.currentTime) || this.currentTime || 0)
+          currentTime: Number(((_this$audioElement9 = this.audioElement) === null || _this$audioElement9 === void 0 ? void 0 : _this$audioElement9.currentTime) || this.currentTime || 0)
         }
       });
       localStorage.setItem(CENTRAL_SESSION_STORAGE_KEY, JSON.stringify(this.centralSession));
@@ -26757,11 +26969,11 @@ function createAdvancedState() {
     this.$forceUpdate();
     this.showBanner(this.tajweedEnabled ? 'Tajweed colors enabled' : 'Tajweed colors disabled', 'info', 1500);
   }), "cycleQuranFontPill", function cycleQuranFontPill() {
-    var _this26 = this;
+    var _this27 = this;
     var options = this.quranFontOptions || [];
     if (!options.length) return;
     var currentIndex = Math.max(0, options.findIndex(function (f) {
-      return f.value === _this26.quranFont;
+      return f.value === _this27.quranFont;
     }));
     var next = options[(currentIndex + 1) % options.length];
     this.selectFont(next.value);
@@ -26777,35 +26989,35 @@ function createAdvancedState() {
     this.persistUiState();
     this.$forceUpdate();
   }), "setupWordClickHandler", function setupWordClickHandler() {
-    var _this27 = this;
+    var _this28 = this;
     document.addEventListener('click', function (e) {
       var wordElement = e.target.closest('.wbw-word');
-      if (wordElement && _this27.wordByWordAudioEnabled) {
+      if (wordElement && _this28.wordByWordAudioEnabled) {
         var verseKey = wordElement.dataset.verseKey;
         var wordIndex = parseInt(wordElement.dataset.wordIndex);
         var wordAudio = wordElement.dataset.wordAudio;
         if (wordAudio) {
-          _this27.playWordAudio(wordAudio);
+          _this28.playWordAudio(wordAudio);
         } else {
           // Find verse and play from this word position
-          var verse = _this27.verses.find(function (v) {
+          var verse = _this28.verses.find(function (v) {
             return v.key === verseKey;
           });
           if (verse && verse.audio) {
-            _this27.playVerse(verse);
+            _this28.playVerse(verse);
           }
         }
       }
     });
   }), "getRemainingTimeDetails", function getRemainingTimeDetails() {
-    var _this28 = this;
+    var _this29 = this;
     var remainingItems = (this.queue || []).slice(this.queueIndex);
     if (!remainingItems.length) return null;
     var reviewTimePerAyah = 5;
     var totalAudioSeconds = 0;
     var totalReviewSeconds = 0;
     remainingItems.forEach(function (item, index) {
-      totalAudioSeconds += _this28.getQueueItemAudioSeconds(item, index === 0);
+      totalAudioSeconds += _this29.getQueueItemAudioSeconds(item, index === 0);
       totalReviewSeconds += reviewTimePerAyah;
     });
     var totalSeconds = totalAudioSeconds + totalReviewSeconds;
@@ -26830,9 +27042,9 @@ function createAdvancedState() {
     this.fontDropdownOpen = false;
     this.persistUiState();
   }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "getCurrentFontLabel", function getCurrentFontLabel() {
-    var _this29 = this;
+    var _this30 = this;
     var font = this.quranFontOptions.find(function (f) {
-      return f.value === _this29.quranFont;
+      return f.value === _this30.quranFont;
     });
     return font ? font.label : 'Font';
   }), "getFontIcon", function getFontIcon(fontValue) {
@@ -26936,49 +27148,49 @@ function createAdvancedState() {
     var verseNumber = parseInt(verseParts[1]);
     return Math.abs(verseNumber - targetNumber) === 1;
   }), "downloadOfflineVerses", function downloadOfflineVerses() {
-    var _this30 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5() {
-      var _this30$currentChapte, _this30$verses$, surahId, surahName, found, storageKey, offlineData, catalogKey, catalog, entry, filtered, _t;
-      return _regenerator().w(function (_context5) {
-        while (1) switch (_context5.p = _context5.n) {
+    var _this31 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6() {
+      var _this31$currentChapte, _this31$verses$, surahId, surahName, found, storageKey, offlineData, catalogKey, catalog, entry, filtered, _t;
+      return _regenerator().w(function (_context6) {
+        while (1) switch (_context6.p = _context6.n) {
           case 0:
-            if (!(!_this30.verses || !_this30.verses.length)) {
-              _context5.n = 1;
+            if (!(!_this31.verses || !_this31.verses.length)) {
+              _context6.n = 1;
               break;
             }
-            _this30.showBanner('Load a surah first before downloading', 'info', 3000);
-            _this30.showTools = true;
-            return _context5.a(2);
+            _this31.showBanner('Load a surah first before downloading', 'info', 3000);
+            _this31.showTools = true;
+            return _context6.a(2);
           case 1:
-            _context5.p = 1;
-            surahId = _this30.chapterId;
-            surahName = (_this30$currentChapte = _this30.currentChapter) === null || _this30$currentChapte === void 0 ? void 0 : _this30$currentChapte.name_simple;
-            if (!surahId && (_this30$verses$ = _this30.verses[0]) !== null && _this30$verses$ !== void 0 && _this30$verses$.key) {
-              surahId = parseInt(_this30.verses[0].key.split(':')[0]);
-              found = _this30.chapters.find(function (c) {
+            _context6.p = 1;
+            surahId = _this31.chapterId;
+            surahName = (_this31$currentChapte = _this31.currentChapter) === null || _this31$currentChapte === void 0 ? void 0 : _this31$currentChapte.name_simple;
+            if (!surahId && (_this31$verses$ = _this31.verses[0]) !== null && _this31$verses$ !== void 0 && _this31$verses$.key) {
+              surahId = parseInt(_this31.verses[0].key.split(':')[0]);
+              found = _this31.chapters.find(function (c) {
                 return c.id === surahId;
               });
               surahName = (found === null || found === void 0 ? void 0 : found.name_simple) || 'Selected surah';
             }
             if (surahId) {
-              _context5.n = 2;
+              _context6.n = 2;
               break;
             }
-            _this30.showBanner('Could not identify surah', 'error', 3000);
-            return _context5.a(2);
+            _this31.showBanner('Could not identify surah', 'error', 3000);
+            return _context6.a(2);
           case 2:
-            storageKey = "offline_surah_".concat(surahId, "_").concat(_this30.rangeStart, "_").concat(_this30.rangeEnd);
+            storageKey = "offline_surah_".concat(surahId, "_").concat(_this31.rangeStart, "_").concat(_this31.rangeEnd);
             offlineData = {
               metadata: {
                 surah: surahName,
                 surahId: surahId,
-                rangeStart: _this30.rangeStart,
-                rangeEnd: _this30.rangeEnd,
-                reciterId: _this30.reciterId,
+                rangeStart: _this31.rangeStart,
+                rangeEnd: _this31.rangeEnd,
+                reciterId: _this31.reciterId,
                 downloadedAt: new Date().toISOString(),
-                totalVerses: _this30.verses.length
+                totalVerses: _this31.verses.length
               },
-              verses: _this30.verses
+              verses: _this31.verses
             };
             localStorage.setItem(storageKey, JSON.stringify(offlineData));
 
@@ -26994,8 +27206,8 @@ function createAdvancedState() {
               id: storageKey,
               surah: surahName,
               surahId: surahId,
-              range: "".concat(_this30.rangeStart, "-").concat(_this30.rangeEnd),
-              count: _this30.verses.length,
+              range: "".concat(_this31.rangeStart, "-").concat(_this31.rangeEnd),
+              count: _this31.verses.length,
               date: new Date().toLocaleDateString()
             };
             filtered = catalog.filter(function (c) {
@@ -27003,19 +27215,19 @@ function createAdvancedState() {
             });
             filtered.push(entry);
             localStorage.setItem(catalogKey, JSON.stringify(filtered));
-            _this30.offlineSurahs = filtered;
-            _this30.showBanner("Saved ".concat(_this30.verses.length, " verses from ").concat(surahName, " for offline reading."), 'success', 3000);
-            _context5.n = 4;
+            _this31.offlineSurahs = filtered;
+            _this31.showBanner("Saved ".concat(_this31.verses.length, " verses from ").concat(surahName, " for offline reading."), 'success', 3000);
+            _context6.n = 4;
             break;
           case 3:
-            _context5.p = 3;
-            _t = _context5.v;
+            _context6.p = 3;
+            _t = _context6.v;
             console.error('Download failed:', _t);
-            _this30.showBanner('Failed to download verses', 'error', 3000);
+            _this31.showBanner('Failed to download verses', 'error', 3000);
           case 4:
-            return _context5.a(2);
+            return _context6.a(2);
         }
-      }, _callee5, null, [[1, 3]]);
+      }, _callee6, null, [[1, 3]]);
     }))();
   }), "loadOfflineCatalog", function loadOfflineCatalog() {
     try {
@@ -27071,22 +27283,22 @@ function createAdvancedState() {
     this.pendingDeleteId = '';
     this.showBanner('Offline surah removed', 'info', 2000);
   }), "downloadVerseAudio", function downloadVerseAudio(verse) {
-    var _this31 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6() {
+    var _this32 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7() {
       var audioUrl, filename, downloadUrl, anchor;
-      return _regenerator().w(function (_context6) {
-        while (1) switch (_context6.n) {
+      return _regenerator().w(function (_context7) {
+        while (1) switch (_context7.n) {
           case 0:
-            audioUrl = _this31.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
+            audioUrl = _this32.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
             if (audioUrl) {
-              _context6.n = 1;
+              _context7.n = 1;
               break;
             }
-            _this31.showBanner('Audio not available for this ayah', 'info', 2200);
-            return _context6.a(2);
+            _this32.showBanner('Audio not available for this ayah', 'info', 2200);
+            return _context7.a(2);
           case 1:
             try {
-              filename = "surah-".concat(_this31.chapterId, "-ayah-").concat(verse.number, ".mp3");
+              filename = "surah-".concat(_this32.chapterId, "-ayah-").concat(verse.number, ".mp3");
               downloadUrl = "/memorisation/audio-download?url=".concat(encodeURIComponent(audioUrl), "&filename=").concat(encodeURIComponent(filename));
               anchor = document.createElement('a');
               anchor.href = downloadUrl;
@@ -27094,15 +27306,15 @@ function createAdvancedState() {
               document.body.appendChild(anchor);
               anchor.click();
               anchor.remove();
-              _this31.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
+              _this32.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
             } catch (error) {
               console.error('Verse download failed:', error);
-              _this31.showBanner('Failed to download ayah audio', 'error', 2600);
+              _this32.showBanner('Failed to download ayah audio', 'error', 2600);
             }
           case 2:
-            return _context6.a(2);
+            return _context7.a(2);
         }
-      }, _callee6);
+      }, _callee7);
     }))();
   }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "getDisplayArabic", function getDisplayArabic(verse) {
     if (!(verse !== null && verse !== void 0 && verse.arabic)) return '';
@@ -27130,36 +27342,36 @@ function createAdvancedState() {
     clone.innerHTML = innerHtml;
     return clone.outerHTML;
   }), "extractTajweedCharUnits", function extractTajweedCharUnits(node) {
-    var _this32 = this;
+    var _this33 = this;
     if (!node) return [];
     if (node.nodeType === Node.TEXT_NODE) {
       return Array.from(node.textContent || '').map(function (_char) {
         return {
           text: _char,
-          html: _this32.escapeHtml(_char)
+          html: _this33.escapeHtml(_char)
         };
       });
     }
     if (node.nodeType !== Node.ELEMENT_NODE) return [];
     var childUnits = Array.from(node.childNodes).flatMap(function (child) {
-      return _this32.extractTajweedCharUnits(child);
+      return _this33.extractTajweedCharUnits(child);
     });
     if (node.tagName === 'SPAN') {
       return childUnits.map(function (unit) {
         return {
           text: unit.text,
-          html: _this32.wrapHtmlWithElement(node, unit.html)
+          html: _this33.wrapHtmlWithElement(node, unit.html)
         };
       });
     }
     return childUnits;
   }), "buildTajweedWordTokens", function buildTajweedWordTokens(verse, tajweedHtml) {
-    var _this33 = this;
+    var _this34 = this;
     if (!tajweedHtml) return '';
     var tempDiv = document.createElement('div');
     tempDiv.innerHTML = tajweedHtml;
     var units = Array.from(tempDiv.childNodes).flatMap(function (node) {
-      return _this33.extractTajweedCharUnits(node);
+      return _this34.extractTajweedCharUnits(node);
     });
     var words = Array.isArray(verse.words) && verse.words.length ? verse.words : tokenizeArabicText(verse.arabic || '').map(function (ar) {
       return {
@@ -27197,7 +27409,7 @@ function createAdvancedState() {
         innerHtml += unit.html;
         collected += 1;
       }
-      html += _this33.buildWordTokenHtml(verse, word, idx, innerHtml);
+      html += _this34.buildWordTokenHtml(verse, word, idx, innerHtml);
     });
     while (cursor < units.length) {
       html += units[cursor].html;
@@ -27265,10 +27477,10 @@ function createAdvancedState() {
       '[g': 'ghn'
     };
     var normalized = this.sanitizeHtml(String(text)).replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/<\s*tajweed\b([^>]*)class=['"]?([a-zA-Z0-9_-]+)['"]?([^>]*)>/gi, '<span class="tajweed-mark tajweed-$2"$1$3>').replace(/<\s*\/\s*tajweed\s*>/gi, '</span>');
-    Object.entries(markerMap).forEach(function (_ref2) {
-      var _ref3 = _slicedToArray(_ref2, 2),
-        marker = _ref3[0],
-        className = _ref3[1];
+    Object.entries(markerMap).forEach(function (_ref3) {
+      var _ref4 = _slicedToArray(_ref3, 2),
+        marker = _ref4[0],
+        className = _ref4[1];
       var escapedMarker = marker.replace('[', '\\[');
       normalized = normalized.replace(new RegExp(escapedMarker, 'g'), "<span class=\"tajweed-mark tajweed-".concat(className, "\" data-tajweed=\""));
     });
@@ -27288,7 +27500,7 @@ function createAdvancedState() {
   }), "escapeRegex", function escapeRegex(str) {
     return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }), "splitArabicIntoWords", function splitArabicIntoWords(verse) {
-    var _this34 = this;
+    var _this35 = this;
     if (!verse || !verse.arabic) return '';
 
     // Get words from the verse object or tokenize
@@ -27317,24 +27529,24 @@ function createAdvancedState() {
     // Regular mode (without tajweed)
     words.forEach(function (word, idx) {
       var wordText = typeof word === 'string' ? word : word.ar;
-      html += "".concat(_this34.buildWordTokenHtml(verse, word, idx, _this34.escapeHtml(wordText)), " ");
+      html += "".concat(_this35.buildWordTokenHtml(verse, word, idx, _this35.escapeHtml(wordText)), " ");
     });
     return html;
   }), "getWordTimings", function getWordTimings(verse) {
     var _arguments2 = arguments,
-      _this35 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7() {
+      _this36 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee8() {
       var actualDuration, sourceWords, arabicText, safeDuration, cacheKey, cleanedWords, weightedUnits, totalUnits, timestamps, currentTime;
-      return _regenerator().w(function (_context7) {
-        while (1) switch (_context7.n) {
+      return _regenerator().w(function (_context8) {
+        while (1) switch (_context8.n) {
           case 0:
             actualDuration = _arguments2.length > 1 && _arguments2[1] !== undefined ? _arguments2[1] : null;
             if (!(!verse || !verse.key)) {
-              _context7.n = 1;
+              _context8.n = 1;
               break;
             }
             console.warn('getWordTimings: no verse');
-            return _context7.a(2, []);
+            return _context8.a(2, []);
           case 1:
             // Get words from the verse object directly (not from HTML)
             sourceWords = [];
@@ -27348,11 +27560,11 @@ function createAdvancedState() {
               sourceWords = tokenizeArabicText(arabicText);
             }
             if (sourceWords.length) {
-              _context7.n = 2;
+              _context8.n = 2;
               break;
             }
             console.warn('getWordTimings: no words for verse', verse.key);
-            return _context7.a(2, []);
+            return _context8.a(2, []);
           case 2:
             // Get actual audio duration or estimate
             safeDuration = 0;
@@ -27361,16 +27573,16 @@ function createAdvancedState() {
             } else if (verse.duration && Number(verse.duration) > 0) {
               safeDuration = Number(verse.duration);
             } else {
-              safeDuration = _this35.estimateVerseDuration(verse);
+              safeDuration = _this36.estimateVerseDuration(verse);
             }
 
             // Keep timestamps in media-time because audioElement.currentTime is also media-time.
-            cacheKey = "".concat(verse.key, "_").concat(_this35.reciterId, "_").concat(Math.round(safeDuration * 10));
-            if (!_this35.wordTimestampsMap.has(cacheKey)) {
-              _context7.n = 3;
+            cacheKey = "".concat(verse.key, "_").concat(_this36.reciterId, "_").concat(Math.round(safeDuration * 10));
+            if (!_this36.wordTimestampsMap.has(cacheKey)) {
+              _context8.n = 3;
               break;
             }
-            return _context7.a(2, _this35.wordTimestampsMap.get(cacheKey));
+            return _context8.a(2, _this36.wordTimestampsMap.get(cacheKey));
           case 3:
             // Build a normalized timing track so highlight end time always matches audio end time.
             cleanedWords = sourceWords.map(function (word) {
@@ -27396,13 +27608,13 @@ function createAdvancedState() {
               });
               currentTime += wordDuration;
             });
-            _this35.wordTimestampsMap.set(cacheKey, timestamps);
-            return _context7.a(2, timestamps);
+            _this36.wordTimestampsMap.set(cacheKey, timestamps);
+            return _context8.a(2, timestamps);
         }
-      }, _callee7);
+      }, _callee8);
     }))();
   }), "calculateWordTimings", function calculateWordTimings(verse) {
-    var _this36 = this;
+    var _this37 = this;
     var audioDuration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     return new Promise(function (resolve) {
       if (!verse.words || verse.words.length === 0) {
@@ -27410,7 +27622,7 @@ function createAdvancedState() {
         return;
       }
       var wordCount = verse.words.length;
-      var totalDuration = audioDuration || _this36.estimateVerseDuration(verse);
+      var totalDuration = audioDuration || _this37.estimateVerseDuration(verse);
       var durationPerWord = totalDuration / wordCount;
       var timestamps = [];
       var currentTime = 0;
@@ -27432,34 +27644,34 @@ function createAdvancedState() {
     return baseDuration;
   }), "startWordHighlighting", function startWordHighlighting(verse) {
     var _arguments3 = arguments,
-      _this37 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee8() {
+      _this38 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee9() {
       var options, timestamps;
-      return _regenerator().w(function (_context8) {
-        while (1) switch (_context8.n) {
+      return _regenerator().w(function (_context9) {
+        while (1) switch (_context9.n) {
           case 0:
             options = _arguments3.length > 1 && _arguments3[1] !== undefined ? _arguments3[1] : {};
-            if (!(!(verse !== null && verse !== void 0 && verse.key) || !_this37.wordByWordAudioEnabled)) {
-              _context8.n = 1;
+            if (!(!(verse !== null && verse !== void 0 && verse.key) || !_this38.wordByWordAudioEnabled)) {
+              _context9.n = 1;
               break;
             }
-            return _context8.a(2);
+            return _context9.a(2);
           case 1:
-            _context8.n = 2;
-            return _this37.ensureWordHighlightTrack(verse, options);
+            _context9.n = 2;
+            return _this38.ensureWordHighlightTrack(verse, options);
           case 2:
-            timestamps = _context8.v;
+            timestamps = _context9.v;
             if (timestamps.length) {
-              _context8.n = 3;
+              _context9.n = 3;
               break;
             }
-            return _context8.a(2);
+            return _context9.a(2);
           case 3:
-            _this37.queueWordHighlightFrame(verse);
+            _this38.queueWordHighlightFrame(verse);
           case 4:
-            return _context8.a(2);
+            return _context9.a(2);
         }
-      }, _callee8);
+      }, _callee9);
     }))();
   }), "wordTooltip", function wordTooltip(word) {
     var ar = String((word === null || word === void 0 ? void 0 : word.ar) || '').trim();
@@ -27518,66 +27730,66 @@ function createAdvancedState() {
     }
     return -1;
   }), "queueWordHighlightFrame", function queueWordHighlightFrame() {
-    var _this38 = this;
+    var _this39 = this;
     var verse = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.activeVerseRef;
     if (this.wordHighlightFrame) window.cancelAnimationFrame(this.wordHighlightFrame);
     this.wordHighlightFrame = null;
     if (!(verse !== null && verse !== void 0 && verse.key) || !this.audioElement || this.audioElement.paused || this.audioElement.ended) return;
     var _tick = function tick() {
-      if (!_this38.audioElement || _this38.audioElement.paused || _this38.audioElement.ended) {
-        _this38.wordHighlightFrame = null;
+      if (!_this39.audioElement || _this39.audioElement.paused || _this39.audioElement.ended) {
+        _this39.wordHighlightFrame = null;
         return;
       }
-      _this38.syncWordHighlightFromAudio(verse);
-      _this38.wordHighlightFrame = window.requestAnimationFrame(_tick);
+      _this39.syncWordHighlightFromAudio(verse);
+      _this39.wordHighlightFrame = window.requestAnimationFrame(_tick);
     };
     this.wordHighlightFrame = window.requestAnimationFrame(_tick);
   }), "ensureWordHighlightTrack", function ensureWordHighlightTrack(verse) {
     var _arguments4 = arguments,
-      _this39 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee9() {
-      var _this39$wordHighlight, _this39$audioElement;
+      _this40 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee0() {
+      var _this40$wordHighlight, _this40$audioElement;
       var options, _options$force, force, requestId, duration, timestamps;
-      return _regenerator().w(function (_context9) {
-        while (1) switch (_context9.n) {
+      return _regenerator().w(function (_context0) {
+        while (1) switch (_context0.n) {
           case 0:
             options = _arguments4.length > 1 && _arguments4[1] !== undefined ? _arguments4[1] : {};
             _options$force = options.force, force = _options$force === void 0 ? false : _options$force;
-            if (!(!(verse !== null && verse !== void 0 && verse.key) || !_this39.wordByWordAudioEnabled)) {
-              _context9.n = 1;
+            if (!(!(verse !== null && verse !== void 0 && verse.key) || !_this40.wordByWordAudioEnabled)) {
+              _context0.n = 1;
               break;
             }
-            return _context9.a(2, []);
+            return _context0.a(2, []);
           case 1:
-            if (!(!force && _this39.currentHighlightedVerseKey === verse.key && (_this39$wordHighlight = _this39.wordHighlightTimestamps) !== null && _this39$wordHighlight !== void 0 && _this39$wordHighlight.length)) {
-              _context9.n = 2;
+            if (!(!force && _this40.currentHighlightedVerseKey === verse.key && (_this40$wordHighlight = _this40.wordHighlightTimestamps) !== null && _this40$wordHighlight !== void 0 && _this40$wordHighlight.length)) {
+              _context0.n = 2;
               break;
             }
-            return _context9.a(2, _this39.wordHighlightTimestamps);
+            return _context0.a(2, _this40.wordHighlightTimestamps);
           case 2:
-            requestId = ++_this39.wordHighlightRequestId;
-            _this39.wordHighlightLoading = true;
-            _this39.currentHighlightedVerseKey = verse.key;
-            _this39.currentWordIndex = -1;
-            _this39.currentPhraseIndex = -1;
-            duration = Number((_this39$audioElement = _this39.audioElement) === null || _this39$audioElement === void 0 ? void 0 : _this39$audioElement.duration);
-            _context9.n = 3;
-            return _this39.getWordTimings(verse, Number.isFinite(duration) && duration > 0 ? duration : null);
+            requestId = ++_this40.wordHighlightRequestId;
+            _this40.wordHighlightLoading = true;
+            _this40.currentHighlightedVerseKey = verse.key;
+            _this40.currentWordIndex = -1;
+            _this40.currentPhraseIndex = -1;
+            duration = Number((_this40$audioElement = _this40.audioElement) === null || _this40$audioElement === void 0 ? void 0 : _this40$audioElement.duration);
+            _context0.n = 3;
+            return _this40.getWordTimings(verse, Number.isFinite(duration) && duration > 0 ? duration : null);
           case 3:
-            timestamps = _context9.v;
-            if (!(requestId !== _this39.wordHighlightRequestId)) {
-              _context9.n = 4;
+            timestamps = _context0.v;
+            if (!(requestId !== _this40.wordHighlightRequestId)) {
+              _context0.n = 4;
               break;
             }
-            return _context9.a(2, []);
+            return _context0.a(2, []);
           case 4:
-            _this39.wordHighlightLoading = false;
-            _this39.wordHighlightTimestamps = Array.isArray(timestamps) ? timestamps : [];
-            _this39.syncWordHighlightFromAudio(verse);
-            _this39.$forceUpdate();
-            return _context9.a(2, _this39.wordHighlightTimestamps);
+            _this40.wordHighlightLoading = false;
+            _this40.wordHighlightTimestamps = Array.isArray(timestamps) ? timestamps : [];
+            _this40.syncWordHighlightFromAudio(verse);
+            _this40.$forceUpdate();
+            return _context0.a(2, _this40.wordHighlightTimestamps);
         }
-      }, _callee9);
+      }, _callee0);
     }))();
   }), "syncWordHighlightFromAudio", function syncWordHighlightFromAudio() {
     var _this$wordHighlightTi;
@@ -27589,12 +27801,12 @@ function createAdvancedState() {
       this.updateWordHighlight(verse.key, activeIndex);
     }
   }), "restoreWordScroll", function restoreWordScroll(verseKey) {
-    var _this40 = this;
+    var _this41 = this;
     this.$nextTick(function () {
       if (!verseKey) return;
       var verseCard = document.querySelector(".verse-card[data-verse-key=\"".concat(verseKey, "\"]"));
       var wordsWrap = verseCard === null || verseCard === void 0 ? void 0 : verseCard.querySelector('.verse-words');
-      var remembered = _this40.verseScrollMemory[verseKey];
+      var remembered = _this41.verseScrollMemory[verseKey];
       if (!wordsWrap || !remembered) return;
       wordsWrap.scrollTop = Number(remembered.top || 0);
       wordsWrap.scrollLeft = Number(remembered.left || 0);
@@ -27621,7 +27833,7 @@ function createAdvancedState() {
     this.wordHighlightTimestamps = [];
     this.$forceUpdate();
   }), "initAudio", function initAudio() {
-    var _this41 = this;
+    var _this42 = this;
     this.audioElement = this.$refs.audio;
     if (!this.audioElement) return;
     this.audioElement.removeEventListener('timeupdate', this.audioTimeUpdate);
@@ -27634,112 +27846,112 @@ function createAdvancedState() {
     this.audioElement.removeEventListener('ratechange', this.audioRateChange);
     this.audioElement.removeEventListener('loadstart', this.audioLoadStart);
     this.audioTimeUpdate = function () {
-      _this41.currentTime = _this41.audioElement.currentTime;
-      _this41.duration = _this41.audioElement.duration;
-      _this41.centralSession.audio.currentTime = Number(_this41.currentTime || 0);
-      _this41.centralSession.audio.speed = Number(_this41.speed || 1);
-      if (_this41.segmentEndTime > 0 && Number(_this41.currentTime || 0) >= _this41.segmentEndTime - 0.04) {
-        _this41.handleSegmentBoundary();
+      _this42.currentTime = _this42.audioElement.currentTime;
+      _this42.duration = _this42.audioElement.duration;
+      _this42.centralSession.audio.currentTime = Number(_this42.currentTime || 0);
+      _this42.centralSession.audio.speed = Number(_this42.speed || 1);
+      if (_this42.segmentEndTime > 0 && Number(_this42.currentTime || 0) >= _this42.segmentEndTime - 0.04) {
+        _this42.handleSegmentBoundary();
         return;
       }
-      if (_this41.wordByWordAudioEnabled) {
-        var _verse = _this41.activeVerseRef;
+      if (_this42.wordByWordAudioEnabled) {
+        var _verse = _this42.activeVerseRef;
         if (_verse && _verse.key) {
-          var _this41$wordHighlight;
-          if ((!((_this41$wordHighlight = _this41.wordHighlightTimestamps) !== null && _this41$wordHighlight !== void 0 && _this41$wordHighlight.length) || _this41.currentHighlightedVerseKey !== _verse.key) && !_this41.wordHighlightLoading) {
-            _this41.startWordHighlighting(_verse);
-          } else if (!_this41.wordHighlightLoading) {
-            _this41.syncWordHighlightFromAudio(_verse);
+          var _this42$wordHighlight;
+          if ((!((_this42$wordHighlight = _this42.wordHighlightTimestamps) !== null && _this42$wordHighlight !== void 0 && _this42$wordHighlight.length) || _this42.currentHighlightedVerseKey !== _verse.key) && !_this42.wordHighlightLoading) {
+            _this42.startWordHighlighting(_verse);
+          } else if (!_this42.wordHighlightLoading) {
+            _this42.syncWordHighlightFromAudio(_verse);
           }
         }
       }
 
       // Waveform - separate from word highlighting (works even if word-by-word is off)
-      var verse = _this41.activeVerseRef;
-      if (verse && verse.key !== _this41.currentWaveVerseKey) {
-        _this41.currentWaveVerseKey = verse.key;
+      var verse = _this42.activeVerseRef;
+      if (verse && verse.key !== _this42.currentWaveVerseKey) {
+        _this42.currentWaveVerseKey = verse.key;
       }
     };
     this.audioEnded = function () {
-      if (_this41.advanceLocked) return;
-      _this41.advanceLocked = true;
-      _this41.isPlaying = false;
-      _this41.stopWordHighlighting();
-      if (_this41.guidedUiStep === 'learn') {
-        _this41.flowListenPlays += 1;
-        _this41.persistUiState();
+      if (_this42.advanceLocked) return;
+      _this42.advanceLocked = true;
+      _this42.isPlaying = false;
+      _this42.stopWordHighlighting();
+      if (_this42.guidedUiStep === 'learn') {
+        _this42.flowListenPlays += 1;
+        _this42.persistUiState();
       }
-      var gapSeconds = _this41.getCurrentPlaybackGapSeconds();
+      var gapSeconds = _this42.getCurrentPlaybackGapSeconds();
       var gapDelayMs = Math.max(0, gapSeconds * 1000);
-      if (_this41.playMode === 'auto') {
-        if (!_this41.chainingEnabled && _this41.selectedLoopCount === 'infinite' && _this41.activeQueueEntry) {
+      if (_this42.playMode === 'auto') {
+        if (!_this42.chainingEnabled && _this42.selectedLoopCount === 'infinite' && _this42.activeQueueEntry) {
           window.setTimeout(function () {
-            var entry = _this41.activeQueueEntry;
-            _this41.advanceLocked = false;
+            var entry = _this42.activeQueueEntry;
+            _this42.advanceLocked = false;
             if (entry) {
-              _this41.playQueueEntry(entry, {
+              _this42.playQueueEntry(entry, {
                 force: true,
-                queueIndex: _this41.queueIndex
+                queueIndex: _this42.queueIndex
               });
             }
           }, gapDelayMs);
           return;
         }
         window.setTimeout(function () {
-          _this41.advanceLocked = false;
-          _this41.next();
+          _this42.advanceLocked = false;
+          _this42.next();
         }, gapDelayMs);
       } else {
-        _this41.advanceLocked = false;
+        _this42.advanceLocked = false;
       }
     };
     this.audioSeeking = function () {
-      if (_this41.wordHighlightFrame) window.cancelAnimationFrame(_this41.wordHighlightFrame);
-      _this41.wordHighlightFrame = null;
-      if (_this41.currentHighlightedVerseKey) _this41.updateWordHighlight(_this41.currentHighlightedVerseKey, -1);
+      if (_this42.wordHighlightFrame) window.cancelAnimationFrame(_this42.wordHighlightFrame);
+      _this42.wordHighlightFrame = null;
+      if (_this42.currentHighlightedVerseKey) _this42.updateWordHighlight(_this42.currentHighlightedVerseKey, -1);
     };
     this.audioSeeked = function () {
-      var verse = _this41.activeVerseRef;
+      var verse = _this42.activeVerseRef;
       if (!verse) return;
-      if (_this41.wordByWordAudioEnabled) {
-        _this41.ensureWordHighlightTrack(verse).then(function () {
-          var _this41$audioElement;
-          _this41.syncWordHighlightFromAudio(verse);
-          if (!((_this41$audioElement = _this41.audioElement) !== null && _this41$audioElement !== void 0 && _this41$audioElement.paused)) _this41.queueWordHighlightFrame(verse);
+      if (_this42.wordByWordAudioEnabled) {
+        _this42.ensureWordHighlightTrack(verse).then(function () {
+          var _this42$audioElement;
+          _this42.syncWordHighlightFromAudio(verse);
+          if (!((_this42$audioElement = _this42.audioElement) !== null && _this42$audioElement !== void 0 && _this42$audioElement.paused)) _this42.queueWordHighlightFrame(verse);
         });
       }
     };
     this.audioPaused = function () {
-      _this41.isPlaying = false;
-      if (_this41.wordHighlightFrame) window.cancelAnimationFrame(_this41.wordHighlightFrame);
-      _this41.wordHighlightFrame = null;
+      _this42.isPlaying = false;
+      if (_this42.wordHighlightFrame) window.cancelAnimationFrame(_this42.wordHighlightFrame);
+      _this42.wordHighlightFrame = null;
     };
     this.audioPlaying = function () {
-      _this41.isPlaying = true;
-      var verse = _this41.activeVerseRef;
-      if (verse && _this41.wordByWordAudioEnabled) {
-        _this41.startWordHighlighting(verse);
+      _this42.isPlaying = true;
+      var verse = _this42.activeVerseRef;
+      if (verse && _this42.wordByWordAudioEnabled) {
+        _this42.startWordHighlighting(verse);
       }
     };
     this.audioRateChange = function () {
-      var _this41$audioElement2, _this41$wordHighlight2;
-      _this41.centralSession.audio.speed = Number(((_this41$audioElement2 = _this41.audioElement) === null || _this41$audioElement2 === void 0 ? void 0 : _this41$audioElement2.playbackRate) || _this41.speed || 1);
-      var verse = _this41.activeVerseRef;
-      if (verse && _this41.wordByWordAudioEnabled && (_this41$wordHighlight2 = _this41.wordHighlightTimestamps) !== null && _this41$wordHighlight2 !== void 0 && _this41$wordHighlight2.length) {
-        var _this41$audioElement3;
-        _this41.syncWordHighlightFromAudio(verse);
-        if (!((_this41$audioElement3 = _this41.audioElement) !== null && _this41$audioElement3 !== void 0 && _this41$audioElement3.paused)) _this41.queueWordHighlightFrame(verse);
+      var _this42$audioElement2, _this42$wordHighlight2;
+      _this42.centralSession.audio.speed = Number(((_this42$audioElement2 = _this42.audioElement) === null || _this42$audioElement2 === void 0 ? void 0 : _this42$audioElement2.playbackRate) || _this42.speed || 1);
+      var verse = _this42.activeVerseRef;
+      if (verse && _this42.wordByWordAudioEnabled && (_this42$wordHighlight2 = _this42.wordHighlightTimestamps) !== null && _this42$wordHighlight2 !== void 0 && _this42$wordHighlight2.length) {
+        var _this42$audioElement3;
+        _this42.syncWordHighlightFromAudio(verse);
+        if (!((_this42$audioElement3 = _this42.audioElement) !== null && _this42$audioElement3 !== void 0 && _this42$audioElement3.paused)) _this42.queueWordHighlightFrame(verse);
       }
     };
     this.audioLoadStart = function () {
-      _this41.stopWordHighlighting();
+      _this42.stopWordHighlighting();
     };
     this.audioError = function (e) {
       console.error('Audio error:', e);
-      _this41.isPlaying = false;
-      _this41.sessionErrorCount += 1;
-      _this41.stopWordHighlighting();
-      _this41.showBanner('Audio playback error', 'error', 3000);
+      _this42.isPlaying = false;
+      _this42.sessionErrorCount += 1;
+      _this42.stopWordHighlighting();
+      _this42.showBanner('Audio playback error', 'error', 3000);
     };
     this.audioElement.addEventListener('timeupdate', this.audioTimeUpdate);
     this.audioElement.addEventListener('ended', this.audioEnded);
@@ -27752,191 +27964,191 @@ function createAdvancedState() {
     this.audioElement.addEventListener('loadstart', this.audioLoadStart);
   }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "playVerse", function playVerse(verse) {
     var _arguments5 = arguments,
-      _this42 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee10() {
-      var _this42$audioElement;
+      _this43 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee11() {
+      var _this43$audioElement;
       var options, audioUrl, currentSrc, isSameSource;
-      return _regenerator().w(function (_context10) {
-        while (1) switch (_context10.n) {
+      return _regenerator().w(function (_context11) {
+        while (1) switch (_context11.n) {
           case 0:
             options = _arguments5.length > 1 && _arguments5[1] !== undefined ? _arguments5[1] : {};
-            if (!(_this42.playRequestLocked && !options.force)) {
-              _context10.n = 1;
+            if (!(_this43.playRequestLocked && !options.force)) {
+              _context11.n = 1;
               break;
             }
-            return _context10.a(2);
+            return _context11.a(2);
           case 1:
-            _this42.playRequestLocked = true;
-            if (_this42.segmentPlaybackTimer) {
-              clearTimeout(_this42.segmentPlaybackTimer);
-              _this42.segmentPlaybackTimer = null;
+            _this43.playRequestLocked = true;
+            if (_this43.segmentPlaybackTimer) {
+              clearTimeout(_this43.segmentPlaybackTimer);
+              _this43.segmentPlaybackTimer = null;
             }
-            _this42.segmentEndTime = 0;
+            _this43.segmentEndTime = 0;
             if (verse) {
-              _context10.n = 2;
+              _context11.n = 2;
               break;
             }
             console.error('No verse provided');
-            _this42.playRequestLocked = false;
-            return _context10.a(2);
+            _this43.playRequestLocked = false;
+            return _context11.a(2);
           case 2:
             if (verse.audio) {
-              _context10.n = 3;
+              _context11.n = 3;
               break;
             }
-            _this42.showBanner("Audio not available for verse ".concat(verse.number), 'info', 2000);
-            _this42.playRequestLocked = false;
-            return _context10.a(2);
+            _this43.showBanner("Audio not available for verse ".concat(verse.number), 'info', 2000);
+            _this43.playRequestLocked = false;
+            return _context11.a(2);
           case 3:
-            audioUrl = _this42.normalizeAudioUrl(verse.audio);
-            currentSrc = (_this42$audioElement = _this42.audioElement) !== null && _this42$audioElement !== void 0 && _this42$audioElement.currentSrc ? _this42.normalizeAudioUrl(_this42.audioElement.currentSrc) : '';
+            audioUrl = _this43.normalizeAudioUrl(verse.audio);
+            currentSrc = (_this43$audioElement = _this43.audioElement) !== null && _this43$audioElement !== void 0 && _this43$audioElement.currentSrc ? _this43.normalizeAudioUrl(_this43.audioElement.currentSrc) : '';
             isSameSource = !!currentSrc && currentSrc === audioUrl; // Toggle if same verse is playing
-            if (!(!options.force && _this42.activeKey === verse.key && isSameSource)) {
-              _context10.n = 4;
+            if (!(!options.force && _this43.activeKey === verse.key && isSameSource)) {
+              _context11.n = 4;
               break;
             }
-            _this42.togglePlay();
-            _this42.playRequestLocked = false;
-            return _context10.a(2);
+            _this43.togglePlay();
+            _this43.playRequestLocked = false;
+            return _context11.a(2);
           case 4:
             // Stop current playback and highlighting
-            _this42.stopWordHighlighting();
-            if (_this42.audioElement) {
+            _this43.stopWordHighlighting();
+            if (_this43.audioElement) {
               try {
-                _this42.audioElement.pause();
+                _this43.audioElement.pause();
               } catch (e) {
                 console.warn('Error pausing audio:', e);
               }
             }
-            _this42.setActiveVerse(verse.key, {
+            _this43.setActiveVerse(verse.key, {
               scroll: false,
               queueIndex: Number.isFinite(options.queueIndex) ? Number(options.queueIndex) : undefined
             });
-            if (_this42.audioElement) {
-              _context10.n = 6;
+            if (_this43.audioElement) {
+              _context11.n = 6;
               break;
             }
-            _this42.audioElement = _this42.$refs.audio;
-            if (_this42.audioElement) {
-              _context10.n = 5;
+            _this43.audioElement = _this43.$refs.audio;
+            if (_this43.audioElement) {
+              _context11.n = 5;
               break;
             }
-            _this42.showBanner('Audio system not ready', 'error', 3000);
-            _this42.playRequestLocked = false;
-            return _context10.a(2);
+            _this43.showBanner('Audio system not ready', 'error', 3000);
+            _this43.playRequestLocked = false;
+            return _context11.a(2);
           case 5:
-            _this42.initAudio();
+            _this43.initAudio();
           case 6:
             if (!isSameSource) {
-              _this42.audioElement.src = audioUrl;
-              _this42.audioElement.load();
+              _this43.audioElement.src = audioUrl;
+              _this43.audioElement.load();
             }
-            _this42.playerVisible = true;
-            return _context10.a(2, new Promise(function (resolve, reject) {
+            _this43.playerVisible = true;
+            return _context11.a(2, new Promise(function (resolve, reject) {
               var timeout = setTimeout(function () {
                 reject(new Error('Audio load timeout'));
               }, 10000);
               var startPlayback = /*#__PURE__*/function () {
-                var _ref4 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee0() {
+                var _ref5 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
                   var segment, segmentTotal, segmentIndex, segmentEnd, duration, segmentStart, _t2;
-                  return _regenerator().w(function (_context0) {
-                    while (1) switch (_context0.p = _context0.n) {
+                  return _regenerator().w(function (_context1) {
+                    while (1) switch (_context1.p = _context1.n) {
                       case 0:
                         clearTimeout(timeout);
-                        _this42.audioElement.playbackRate = _this42.speed;
+                        _this43.audioElement.playbackRate = _this43.speed;
                         segment = options.segment || null;
                         segmentTotal = Math.max(1, Number((segment === null || segment === void 0 ? void 0 : segment.sequenceTotal) || (segment === null || segment === void 0 ? void 0 : segment.total) || 1));
                         segmentIndex = Math.max(0, Math.min(segmentTotal - 1, Number((segment === null || segment === void 0 ? void 0 : segment.index) || 0)));
                         segmentEnd = 0;
-                        if (segment && Number.isFinite(_this42.audioElement.duration) && _this42.audioElement.duration > 0 && segmentTotal > 1) {
-                          duration = Number(_this42.audioElement.duration || 0);
+                        if (segment && Number.isFinite(_this43.audioElement.duration) && _this43.audioElement.duration > 0 && segmentTotal > 1) {
+                          duration = Number(_this43.audioElement.duration || 0);
                           segmentStart = Math.max(0, duration * (segmentIndex / segmentTotal));
                           segmentEnd = Math.min(duration, duration * ((segmentIndex + 1) / segmentTotal));
-                          _this42.segmentEndTime = segmentEnd;
-                          _this42.audioElement.currentTime = segmentStart;
+                          _this43.segmentEndTime = segmentEnd;
+                          _this43.audioElement.currentTime = segmentStart;
                         }
-                        _context0.p = 1;
-                        _context0.n = 2;
-                        return _this42.audioElement.play();
+                        _context1.p = 1;
+                        _context1.n = 2;
+                        return _this43.audioElement.play();
                       case 2:
-                        _this42.markPlaybackStart();
-                        _this42.addActivityEvent({
+                        _this43.markPlaybackStart();
+                        _this43.addActivityEvent({
                           ts: Date.now(),
                           type: 'play',
                           verseKey: verse.key
                         });
-                        _this42.recomputeAnalytics();
-                        if (_this42.wordByWordAudioEnabled) {
-                          _this42.ensureWordHighlightTrack(verse, {
+                        _this43.recomputeAnalytics();
+                        if (_this43.wordByWordAudioEnabled) {
+                          _this43.ensureWordHighlightTrack(verse, {
                             force: true
                           }).then(function () {
-                            var _this42$audioElement2;
-                            _this42.syncWordHighlightFromAudio(verse);
-                            if (!((_this42$audioElement2 = _this42.audioElement) !== null && _this42$audioElement2 !== void 0 && _this42$audioElement2.paused)) _this42.queueWordHighlightFrame(verse);
+                            var _this43$audioElement2;
+                            _this43.syncWordHighlightFromAudio(verse);
+                            if (!((_this43$audioElement2 = _this43.audioElement) !== null && _this43$audioElement2 !== void 0 && _this43$audioElement2.paused)) _this43.queueWordHighlightFrame(verse);
                           })["catch"](function (err) {
                             console.warn('Word highlight bootstrap failed:', err);
                           });
                         }
-                        _this42.playRequestLocked = false;
+                        _this43.playRequestLocked = false;
                         resolve();
-                        _context0.n = 4;
+                        _context1.n = 4;
                         break;
                       case 3:
-                        _context0.p = 3;
-                        _t2 = _context0.v;
-                        _this42.isPlaying = false;
-                        _this42.playRequestLocked = false;
+                        _context1.p = 3;
+                        _t2 = _context1.v;
+                        _this43.isPlaying = false;
+                        _this43.playRequestLocked = false;
                         reject(_t2);
                       case 4:
-                        return _context0.a(2);
+                        return _context1.a(2);
                     }
-                  }, _callee0, null, [[1, 3]]);
+                  }, _callee1, null, [[1, 3]]);
                 }));
                 return function startPlayback() {
-                  return _ref4.apply(this, arguments);
+                  return _ref5.apply(this, arguments);
                 };
               }();
               var _canPlayHandler = /*#__PURE__*/function () {
-                var _ref5 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
-                  return _regenerator().w(function (_context1) {
-                    while (1) switch (_context1.n) {
+                var _ref6 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee10() {
+                  return _regenerator().w(function (_context10) {
+                    while (1) switch (_context10.n) {
                       case 0:
-                        _context1.n = 1;
+                        _context10.n = 1;
                         return startPlayback();
                       case 1:
-                        _this42.audioElement.removeEventListener('canplay', _canPlayHandler);
+                        _this43.audioElement.removeEventListener('canplay', _canPlayHandler);
                       case 2:
-                        return _context1.a(2);
+                        return _context10.a(2);
                     }
-                  }, _callee1);
+                  }, _callee10);
                 }));
                 return function canPlayHandler() {
-                  return _ref5.apply(this, arguments);
+                  return _ref6.apply(this, arguments);
                 };
               }();
               var _errorHandler = function errorHandler(err) {
                 clearTimeout(timeout);
-                _this42.isPlaying = false;
-                _this42.playRequestLocked = false;
+                _this43.isPlaying = false;
+                _this43.playRequestLocked = false;
                 reject(err);
-                _this42.audioElement.removeEventListener('error', _errorHandler);
+                _this43.audioElement.removeEventListener('error', _errorHandler);
               };
-              _this42.audioElement.addEventListener('error', _errorHandler, {
+              _this43.audioElement.addEventListener('error', _errorHandler, {
                 once: true
               });
-              if (isSameSource && _this42.audioElement.readyState >= 2) {
+              if (isSameSource && _this43.audioElement.readyState >= 2) {
                 startPlayback();
               } else {
-                _this42.audioElement.addEventListener('canplay', _canPlayHandler);
+                _this43.audioElement.addEventListener('canplay', _canPlayHandler);
               }
             })["catch"](function (err) {
               console.error('playVerse failed:', err);
-              _this42.isPlaying = false;
-              _this42.playRequestLocked = false;
-              _this42.showBanner('Failed to play audio', 'error', 3000);
+              _this43.isPlaying = false;
+              _this43.playRequestLocked = false;
+              _this43.showBanner('Failed to play audio', 'error', 3000);
             }));
         }
-      }, _callee10);
+      }, _callee11);
     }))();
   }), "playQueueEntry", function playQueueEntry(entry) {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -27960,27 +28172,27 @@ function createAdvancedState() {
     }
     this.isPlaying = false;
   }), "togglePlay", function togglePlay() {
-    var _this$audioElement7,
-      _this43 = this;
-    if (!((_this$audioElement7 = this.audioElement) !== null && _this$audioElement7 !== void 0 && _this$audioElement7.src)) return;
+    var _this$audioElement0,
+      _this44 = this;
+    if (!((_this$audioElement0 = this.audioElement) !== null && _this$audioElement0 !== void 0 && _this$audioElement0.src)) return;
     if (this.audioElement.paused) {
       this.audioElement.play().then(function () {
-        _this43.isPlaying = true;
-        var verse = _this43.activeVerseRef;
-        if (verse && _this43.wordByWordAudioEnabled) {
-          _this43.ensureWordHighlightTrack(verse, {
+        _this44.isPlaying = true;
+        var verse = _this44.activeVerseRef;
+        if (verse && _this44.wordByWordAudioEnabled) {
+          _this44.ensureWordHighlightTrack(verse, {
             force: true
           }).then(function () {
-            var _this43$audioElement;
-            _this43.syncWordHighlightFromAudio(verse);
-            if (!((_this43$audioElement = _this43.audioElement) !== null && _this43$audioElement !== void 0 && _this43$audioElement.paused)) _this43.queueWordHighlightFrame(verse);
+            var _this44$audioElement;
+            _this44.syncWordHighlightFromAudio(verse);
+            if (!((_this44$audioElement = _this44.audioElement) !== null && _this44$audioElement !== void 0 && _this44$audioElement.paused)) _this44.queueWordHighlightFrame(verse);
           })["catch"](function (err) {
             console.warn('Word highlight resume failed:', err);
           });
         }
       })["catch"](function (err) {
         console.error('Failed to play:', err);
-        _this43.showBanner('Playback failed', 'error', 2000);
+        _this44.showBanner('Playback failed', 'error', 2000);
       });
     } else {
       this.audioElement.pause();
@@ -27989,7 +28201,7 @@ function createAdvancedState() {
   }), "applySpeed", function applySpeed() {
     if (this.audioElement) this.audioElement.playbackRate = this.speed;
   }), "next", function next() {
-    var _this44 = this;
+    var _this45 = this;
     if (this.advanceLocked) return;
     this.advanceLocked = true;
     if (this.canNext) {
@@ -28007,7 +28219,7 @@ function createAdvancedState() {
           queueIndex: this.queueIndex
         });
         this.$nextTick(function () {
-          return _this44.$forceUpdate();
+          return _this45.$forceUpdate();
         });
       }
       var v = this.queue[this.queueIndex];
@@ -28016,7 +28228,7 @@ function createAdvancedState() {
           force: true,
           queueIndex: this.queueIndex
         })["finally"](function () {
-          _this44.advanceLocked = false;
+          _this45.advanceLocked = false;
         });
       } else {
         this.advanceLocked = false;
@@ -28027,7 +28239,7 @@ function createAdvancedState() {
     this.handleSessionComplete();
   }), "prev", function prev() {
     var _entry$verse2,
-      _this45 = this;
+      _this46 = this;
     if (!this.canPrev) return;
     if (this.advanceLocked) return;
     this.advanceLocked = true;
@@ -28045,7 +28257,7 @@ function createAdvancedState() {
         queueIndex: this.queueIndex
       });
       this.$nextTick(function () {
-        return _this45.$forceUpdate();
+        return _this46.$forceUpdate();
       });
     }
     var v = this.queue[this.queueIndex];
@@ -28054,7 +28266,7 @@ function createAdvancedState() {
         force: true,
         queueIndex: this.queueIndex
       })["finally"](function () {
-        _this45.advanceLocked = false;
+        _this46.advanceLocked = false;
       });
     } else {
       this.advanceLocked = false;
@@ -28079,61 +28291,61 @@ function createAdvancedState() {
     this.persistAudioState();
   }), "loadVerses", function loadVerses() {
     var _arguments6 = arguments,
-      _this46 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee11() {
+      _this47 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee12() {
       var mode, target, chapterId, rangeStart, rangeEnd, reciterId, requestId, targetConfig, _cached$verses, _audioRes$data, _translationRes$data, _translitRes$data, _arabicRes$data, _tajweedRes$data, cached, _yield$Promise$all, _yield$Promise$all2, audioRes, translationRes, translitRes, arabicRes, tajweedRes, audioSurah, translationSurah, translitSurah, arabicSurah, tajweedEdition, audioAyahs, arabicByNumber, translationByNumber, translitByNumber, tajweedByNumber, start, end, mappedVerses, _t3;
-      return _regenerator().w(function (_context11) {
-        while (1) switch (_context11.p = _context11.n) {
+      return _regenerator().w(function (_context12) {
+        while (1) switch (_context12.p = _context12.n) {
           case 0:
-            mode = _arguments6.length > 0 && _arguments6[0] !== undefined ? _arguments6[0] : _this46.currentMode;
-            target = mode === 'beginner' ? _this46.beginner : _this46.advanced;
+            mode = _arguments6.length > 0 && _arguments6[0] !== undefined ? _arguments6[0] : _this47.currentMode;
+            target = mode === 'beginner' ? _this47.beginner : _this47.advanced;
             chapterId = Number(target.chapterId || 0);
             if (chapterId) {
-              _context11.n = 1;
+              _context12.n = 1;
               break;
             }
-            return _context11.a(2);
+            return _context12.a(2);
           case 1:
             rangeStart = Number(target.rangeStart || 1);
             rangeEnd = Number(target.rangeEnd || rangeStart || 1);
             reciterId = target.reciterId || DEFAULT_ALQURAN_RECITER;
-            requestId = ++_this46.verseRequestId;
-            targetConfig = _this46.buildSessionConfig(mode);
-            _this46.isDataReady = false;
-            _context11.p = 2;
-            cached = _this46.getCachedVerses(mode, targetConfig);
+            requestId = ++_this47.verseRequestId;
+            targetConfig = _this47.buildSessionConfig(mode);
+            _this47.isDataReady = false;
+            _context12.p = 2;
+            cached = _this47.getCachedVerses(mode, targetConfig);
             if (!(cached !== null && cached !== void 0 && (_cached$verses = cached.verses) !== null && _cached$verses !== void 0 && _cached$verses.length)) {
-              _context11.n = 3;
+              _context12.n = 3;
               break;
             }
             if (mode === 'beginner') {
-              _this46.beginner.verses = cached.verses;
-              _this46.beginner.loadedConfig = cached.loadedConfig;
+              _this47.beginner.verses = cached.verses;
+              _this47.beginner.loadedConfig = cached.loadedConfig;
             } else {
-              _this46.advanced.verses = cached.verses;
-              _this46.advanced.loadedConfig = cached.loadedConfig;
+              _this47.advanced.verses = cached.verses;
+              _this47.advanced.loadedConfig = cached.loadedConfig;
             }
-            _this46.buildQueue(mode);
-            _this46.syncActiveVerseState(mode);
-            _this46.syncMutqinAyahs(cached.verses);
-            _this46.isDataReady = true;
-            return _context11.a(2);
+            _this47.buildQueue(mode);
+            _this47.syncActiveVerseState(mode);
+            _this47.syncMutqinAyahs(cached.verses);
+            _this47.isDataReady = true;
+            return _context12.a(2);
           case 3:
-            _context11.n = 4;
+            _context12.n = 4;
             return Promise.all([(0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEdition)(chapterId, reciterId), (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEdition)(chapterId, 'en.asad'), (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEdition)(chapterId, 'en.transliteration'), (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEdition)(chapterId, 'quran-uthmani'), (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEditions)(chapterId, reciterId)]);
           case 4:
-            _yield$Promise$all = _context11.v;
+            _yield$Promise$all = _context12.v;
             _yield$Promise$all2 = _slicedToArray(_yield$Promise$all, 5);
             audioRes = _yield$Promise$all2[0];
             translationRes = _yield$Promise$all2[1];
             translitRes = _yield$Promise$all2[2];
             arabicRes = _yield$Promise$all2[3];
             tajweedRes = _yield$Promise$all2[4];
-            if (!(requestId !== _this46.verseRequestId)) {
-              _context11.n = 5;
+            if (!(requestId !== _this47.verseRequestId)) {
+              _context12.n = 5;
               break;
             }
-            return _context11.a(2);
+            return _context12.a(2);
           case 5:
             audioSurah = (_audioRes$data = audioRes.data) === null || _audioRes$data === void 0 ? void 0 : _audioRes$data.data;
             translationSurah = (_translationRes$data = translationRes.data) === null || _translationRes$data === void 0 ? void 0 : _translationRes$data.data;
@@ -28166,8 +28378,8 @@ function createAdvancedState() {
               var tajweed = tajweedByNumber.get(ayah.numberInSurah) || '';
 
               // Remove Basmala from Arabic text
-              arabic = _this46.removeBasmala(arabic);
-              tajweed = _this46.removeBasmala(tajweed);
+              arabic = _this47.removeBasmala(arabic);
+              tajweed = _this47.removeBasmala(tajweed);
               var transliteration = translitByNumber.get(ayah.numberInSurah) || '';
               var translation = translationByNumber.get(ayah.numberInSurah) || '';
               var arabicWords = tokenizeArabicText(arabic);
@@ -28179,9 +28391,9 @@ function createAdvancedState() {
                 chapterId: chapterId,
                 arabic: arabic,
                 arabic_tajweed: tajweed,
-                translation: _this46.cleanTranslationText(translation),
+                translation: _this47.cleanTranslationText(translation),
                 transliteration: transliteration,
-                audio: _this46.resolveAyahAudioUrl(ayah),
+                audio: _this47.resolveAyahAudioUrl(ayah),
                 words: arabicWords.map(function (word, index) {
                   return {
                     ar: word,
@@ -28193,48 +28405,48 @@ function createAdvancedState() {
               };
             });
             if (mode === 'beginner') {
-              _this46.beginner.verses = mappedVerses;
-              _this46.beginner.loadedConfig = {
+              _this47.beginner.verses = mappedVerses;
+              _this47.beginner.loadedConfig = {
                 chapterId: chapterId,
                 rangeStart: start,
                 rangeEnd: end,
                 reciterId: reciterId,
-                showWordByWord: _this46.showWordByWord,
-                tajweedEnabled: _this46.tajweedEnabled
+                showWordByWord: _this47.showWordByWord,
+                tajweedEnabled: _this47.tajweedEnabled
               };
             } else {
-              _this46.advanced.verses = mappedVerses;
-              _this46.advanced.loadedConfig = {
+              _this47.advanced.verses = mappedVerses;
+              _this47.advanced.loadedConfig = {
                 chapterId: chapterId,
                 rangeStart: start,
                 rangeEnd: end,
                 reciterId: reciterId,
-                showWordByWord: _this46.showWordByWord,
-                tajweedEnabled: _this46.tajweedEnabled
+                showWordByWord: _this47.showWordByWord,
+                tajweedEnabled: _this47.tajweedEnabled
               };
             }
-            _this46.syncMutqinAyahs(mappedVerses);
-            _this46.setCachedVerses(mode, targetConfig, {
+            _this47.syncMutqinAyahs(mappedVerses);
+            _this47.setCachedVerses(mode, targetConfig, {
               verses: mappedVerses,
-              loadedConfig: mode === 'beginner' ? _this46.beginner.loadedConfig : _this46.advanced.loadedConfig
+              loadedConfig: mode === 'beginner' ? _this47.beginner.loadedConfig : _this47.advanced.loadedConfig
             });
-            _this46.buildQueue(mode);
-            _this46.syncActiveVerseState(mode);
+            _this47.buildQueue(mode);
+            _this47.syncActiveVerseState(mode);
 
             // Set ready after data loads
-            _this46.isDataReady = true;
-            _context11.n = 7;
+            _this47.isDataReady = true;
+            _context12.n = 7;
             break;
           case 6:
-            _context11.p = 6;
-            _t3 = _context11.v;
+            _context12.p = 6;
+            _t3 = _context12.v;
             console.error('Error loading verses:', _t3);
-            _this46.showBanner('Failed to load verses', 'error', 3000);
-            _this46.isDataReady = true;
+            _this47.showBanner('Failed to load verses', 'error', 3000);
+            _this47.isDataReady = true;
           case 7:
-            return _context11.a(2);
+            return _context12.a(2);
         }
-      }, _callee11, null, [[2, 6]]);
+      }, _callee12, null, [[2, 6]]);
     }))();
   }), "cleanTranslationText", function cleanTranslationText(text) {
     if (!text) return '';
@@ -28487,109 +28699,109 @@ function createAdvancedState() {
       console.error("Failed to persist ".concat(mode, " mode state:"), e);
     }
   }), "startSession", function startSession() {
-    var _this47 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee12() {
+    var _this48 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee13() {
       var config, mode, currentVerses, modeNeedsReload, updatedVerses, builtQueue, sessionState, canonicalIndex, playbackIndex, nextCanonicalIndex, first, chainingStatus;
-      return _regenerator().w(function (_context12) {
-        while (1) switch (_context12.n) {
+      return _regenerator().w(function (_context13) {
+        while (1) switch (_context13.n) {
           case 0:
-            config = _this47.sessionConfig;
-            mode = config.mode || _this47.currentMode;
+            config = _this48.sessionConfig;
+            mode = config.mode || _this48.currentMode;
             if (!(!config.chapterId || config.chapterId === 0)) {
-              _context12.n = 1;
+              _context13.n = 1;
               break;
             }
-            _this47.showTools = true;
-            _this47.showBanner('Please select a surah first', 'info', 3600);
-            return _context12.a(2);
+            _this48.showTools = true;
+            _this48.showBanner('Please select a surah first', 'info', 3600);
+            return _context13.a(2);
           case 1:
-            if (_this47.validateSettings()) {
-              _context12.n = 2;
+            if (_this48.validateSettings()) {
+              _context13.n = 2;
               break;
             }
-            return _context12.a(2);
+            return _context13.a(2);
           case 2:
-            _this47.applySessionConfig(config);
-            _this47.persistModeState(mode);
-            _this47.persistUiState();
-            _this47.sessionCompleted = false;
-            _this47.sessionStartedAt = Date.now();
-            _this47.sessionErrorCount = 0;
-            _this47.statsTick = Date.now();
-            currentVerses = mode === 'beginner' ? _this47.beginner.verses : _this47.advanced.verses;
-            modeNeedsReload = !currentVerses || !currentVerses.length || !_this47.modeDataMatchesConfig(mode, config);
+            _this48.applySessionConfig(config);
+            _this48.persistModeState(mode);
+            _this48.persistUiState();
+            _this48.sessionCompleted = false;
+            _this48.sessionStartedAt = Date.now();
+            _this48.sessionErrorCount = 0;
+            _this48.statsTick = Date.now();
+            currentVerses = mode === 'beginner' ? _this48.beginner.verses : _this48.advanced.verses;
+            modeNeedsReload = !currentVerses || !currentVerses.length || !_this48.modeDataMatchesConfig(mode, config);
             if (!modeNeedsReload) {
-              _context12.n = 3;
+              _context13.n = 3;
               break;
             }
-            _context12.n = 3;
-            return _this47.loadVerses(mode);
+            _context13.n = 3;
+            return _this48.loadVerses(mode);
           case 3:
-            updatedVerses = mode === 'beginner' ? _this47.beginner.verses : _this47.advanced.verses;
+            updatedVerses = mode === 'beginner' ? _this48.beginner.verses : _this48.advanced.verses;
             if (!(!updatedVerses || updatedVerses.length === 0)) {
-              _context12.n = 4;
+              _context13.n = 4;
               break;
             }
-            _this47.showBanner('No verses loaded. Check your network connection.', 'error');
-            return _context12.a(2);
+            _this48.showBanner('No verses loaded. Check your network connection.', 'error');
+            return _context13.a(2);
           case 4:
-            if (!_this47.audioElement) {
-              _this47.initAudio();
+            if (!_this48.audioElement) {
+              _this48.initAudio();
             }
 
             // Rebuild queue with current chaining settings
             console.log('[startSession] Building queue with settings:', {
-              enabled: _this47.chainingEnabled,
-              method: _this47.chainingMethod,
-              repetitions: _this47.chainingRepetitions
+              enabled: _this48.chainingEnabled,
+              method: _this48.chainingMethod,
+              repetitions: _this48.chainingRepetitions
             });
-            _this47.buildQueue(mode);
-            builtQueue = mode === 'beginner' ? _this47.beginner.queue : _this47.advanced.queue;
+            _this48.buildQueue(mode);
+            builtQueue = mode === 'beginner' ? _this48.beginner.queue : _this48.advanced.queue;
             if (!(!builtQueue || builtQueue.length === 0)) {
-              _context12.n = 5;
+              _context13.n = 5;
               break;
             }
-            _this47.showBanner('Nothing to play. Check the selected range.', 'error');
-            return _context12.a(2);
+            _this48.showBanner('Nothing to play. Check the selected range.', 'error');
+            return _context13.a(2);
           case 5:
-            _this47.syncMutqinAyahs(updatedVerses);
-            sessionState = _this47.syncMutqinSession(builtQueue, mode);
+            _this48.syncMutqinAyahs(updatedVerses);
+            sessionState = _this48.syncMutqinSession(builtQueue, mode);
             canonicalIndex = Math.max(0, Number((sessionState === null || sessionState === void 0 ? void 0 : sessionState.current_index) || 0));
             playbackIndex = canonicalIndex > 0 ? Math.min(canonicalIndex - 1, builtQueue.length - 1) : 0;
-            _this47.queueIndex = playbackIndex;
-            _this47.getModeStore(mode).queueIndex = playbackIndex;
+            _this48.queueIndex = playbackIndex;
+            _this48.getModeStore(mode).queueIndex = playbackIndex;
             nextCanonicalIndex = canonicalIndex > 0 ? canonicalIndex : 1;
-            (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this47.mutqinState, nextCanonicalIndex);
+            (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this48.mutqinState, nextCanonicalIndex);
             first = builtQueue[playbackIndex];
             if (!(first && first.verse)) {
-              _context12.n = 7;
+              _context13.n = 7;
               break;
             }
-            _this47.setActiveVerse(first.verse.key, {
+            _this48.setActiveVerse(first.verse.key, {
               mode: mode,
               queueIndex: playbackIndex,
               scroll: false
             });
-            _context12.n = 6;
-            return _this47.$nextTick();
+            _context13.n = 6;
+            return _this48.$nextTick();
           case 6:
-            if (_this47.audioElement) {
-              _this47.audioElement.playbackRate = _this47.speed;
+            if (_this48.audioElement) {
+              _this48.audioElement.playbackRate = _this48.speed;
             }
-            _context12.n = 7;
-            return _this47.playQueueEntry(first, {
+            _context13.n = 7;
+            return _this48.playQueueEntry(first, {
               force: true,
               queueIndex: playbackIndex
             });
           case 7:
-            _this47.showTools = false;
-            _this47.flowStep = 'learn';
-            chainingStatus = _this47.chainingEnabled ? "".concat(_this47.chainingMethod, " chaining (").concat(_this47.chainingRepetitions, "x)") : 'no chaining';
-            _this47.showBanner("Session started with ".concat(builtQueue.length, " guided repetitions using ").concat(chainingStatus), 'success', 3000);
+            _this48.showTools = false;
+            _this48.flowStep = 'learn';
+            chainingStatus = _this48.chainingEnabled ? "".concat(_this48.chainingMethod, " chaining (").concat(_this48.chainingRepetitions, "x)") : 'no chaining';
+            _this48.showBanner("Session started with ".concat(builtQueue.length, " guided repetitions using ").concat(chainingStatus), 'success', 3000);
           case 8:
-            return _context12.a(2);
+            return _context13.a(2);
         }
-      }, _callee12);
+      }, _callee13);
     }))();
   }), "formatTime", function formatTime(sec) {
     var t = Math.max(0, Math.floor(sec || 0));
@@ -28624,7 +28836,7 @@ function createAdvancedState() {
     var arabicLength = String(verse.arabic || verse.text || '').replace(/[^ء-ي]/g, '').length || 80;
     return Math.max(5, Math.min(45, arabicLength * 0.12)) / speedFactor;
   }), "showBanner", function showBanner(message) {
-    var _this48 = this;
+    var _this49 = this;
     var kind = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'info';
     var ttlMs = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 3500;
     var action = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
@@ -28637,7 +28849,7 @@ function createAdvancedState() {
       actionLabel: (action === null || action === void 0 ? void 0 : action.label) || ''
     };
     this.bannerTimer = setTimeout(function () {
-      if (_this48.banner && Date.now() - _this48.banner.at >= ttlMs) _this48.banner = null;
+      if (_this49.banner && Date.now() - _this49.banner.at >= ttlMs) _this49.banner = null;
     }, ttlMs + 50);
   }), "runBannerAction", function runBannerAction() {
     var _this$banner;
@@ -28655,7 +28867,7 @@ function createAdvancedState() {
     if (!Array.isArray(verses) || !verses.length) return;
     (0,_composables_useAyahState__WEBPACK_IMPORTED_MODULE_3__.seedAyahs)(this.mutqinState, verses);
   }), "syncMutqinSession", function syncMutqinSession() {
-    var _this49 = this;
+    var _this50 = this;
     var queue = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.queue;
     var mode = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.currentMode;
     var playbackQueue = (queue || []).map(function (item) {
@@ -28684,18 +28896,18 @@ function createAdvancedState() {
     var planner = (0,_composables_useDailyPlanner__WEBPACK_IMPORTED_MODULE_5__.createDailyPlan)(this.mutqinState, uniqueVerses, {
       repetitions: 1,
       audioDurations: uniqueVerses.reduce(function (map, verse) {
-        map[verse.key] = Number(verse.duration || _this49.duration || 0);
+        map[verse.key] = Number(verse.duration || _this50.duration || 0);
         return map;
       }, {}),
       reviewSeconds: 18
     });
     var plannerQueue = uniqueVerses.slice(0, 1).map(function (verse) {
-      var _this49$currentChapte;
+      var _this50$currentChapte;
       return {
         phase: 'Planner',
         ayahId: verse.key,
         verse: verse,
-        prompt: "".concat(((_this49$currentChapte = _this49.currentChapter) === null || _this49$currentChapte === void 0 ? void 0 : _this49$currentChapte.name_simple) || 'Session', " ayahs ").concat(_this49.rangeStart, "-").concat(_this49.rangeEnd)
+        prompt: "".concat(((_this50$currentChapte = _this50.currentChapter) === null || _this50$currentChapte === void 0 ? void 0 : _this50$currentChapte.name_simple) || 'Session', " ayahs ").concat(_this50.rangeStart, "-").concat(_this50.rangeEnd)
       };
     });
     var recallQueue = uniqueVerses.map(function (verse) {
@@ -28747,12 +28959,12 @@ function createAdvancedState() {
     if (!ayah) return 'Review: due soon';
     return "Review: ".concat(ayah.next_review || 'today');
   }), "isWeakAyah", function isWeakAyah(key) {
-    var _this$mutqinState0;
-    var ayah = (_this$mutqinState0 = this.mutqinState) === null || _this$mutqinState0 === void 0 || (_this$mutqinState0 = _this$mutqinState0.ayahs) === null || _this$mutqinState0 === void 0 ? void 0 : _this$mutqinState0[key];
-    return Number((ayah === null || ayah === void 0 ? void 0 : ayah.weak_count) || 0) > 0;
-  }), "isMasteredAyah", function isMasteredAyah(key) {
     var _this$mutqinState1;
     var ayah = (_this$mutqinState1 = this.mutqinState) === null || _this$mutqinState1 === void 0 || (_this$mutqinState1 = _this$mutqinState1.ayahs) === null || _this$mutqinState1 === void 0 ? void 0 : _this$mutqinState1[key];
+    return Number((ayah === null || ayah === void 0 ? void 0 : ayah.weak_count) || 0) > 0;
+  }), "isMasteredAyah", function isMasteredAyah(key) {
+    var _this$mutqinState10;
+    var ayah = (_this$mutqinState10 = this.mutqinState) === null || _this$mutqinState10 === void 0 || (_this$mutqinState10 = _this$mutqinState10.ayahs) === null || _this$mutqinState10 === void 0 ? void 0 : _this$mutqinState10[key];
     return Number((ayah === null || ayah === void 0 ? void 0 : ayah.mastery_level) || 0) >= 5 || (ayah === null || ayah === void 0 ? void 0 : ayah.status) === 'mastered';
   }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "markTakrarHide", function markTakrarHide(verse) {
     this.syncMutqinAyahs([verse]);
@@ -28981,11 +29193,11 @@ function createAdvancedState() {
     document.documentElement.setAttribute('data-theme', this.theme);
     this.persistUiState();
   }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "toggleSection", function toggleSection(key) {
-    var _this50 = this;
+    var _this51 = this;
     var nextValue = !this.sectionOpen[key];
     Object.keys(this.sectionOpen).forEach(function (sectionKey) {
       if (['session_tools', 'live_stats'].includes(sectionKey)) {
-        _this50.sectionOpen[sectionKey] = false;
+        _this51.sectionOpen[sectionKey] = false;
       }
     });
     this.sectionOpen[key] = nextValue;
@@ -29018,7 +29230,7 @@ function createAdvancedState() {
 
         // Only apply if state exists
         if (state) {
-          var _state$showTranslatio, _state$showTransliter, _state$showWordByWord, _state$wordByWordAudi, _state$chainingEnable, _ref6, _state$defaultFontSiz, _state$anchorModeEnab, _state$anchorCount, _ref7, _state$tajweedEnabled, _state$showTranslatio2, _state$showTransliter2, _state$showWordByWord2, _state$wordByWordAudi2, _ref8, _state$defaultFontSiz2, _state$fontScale, _state$uiScale, _state$enScale, _state$tajweedEnabled2;
+          var _state$showTranslatio, _state$showTransliter, _state$showWordByWord, _state$wordByWordAudi, _state$chainingEnable, _ref7, _state$defaultFontSiz, _state$anchorModeEnab, _state$anchorCount, _ref8, _state$tajweedEnabled, _state$showTranslatio2, _state$showTransliter2, _state$showWordByWord2, _state$wordByWordAudi2, _ref9, _state$defaultFontSiz2, _state$fontScale, _state$uiScale, _state$enScale, _state$tajweedEnabled2;
           this.theme = state.theme || this.theme;
           this.tab = ['tools', 'techniques', 'saved', 'settings'].includes(state.tab) ? state.tab : 'tools';
           this.currentMode = state.currentMode || 'beginner';
@@ -29035,18 +29247,18 @@ function createAdvancedState() {
           this.repetitionsPerStep = this.selectedLoopCount === 'infinite' ? 10 : Math.max(1, Math.min(50, Number(state.repetitionsPerStep || this.selectedLoopCount || this.repetitionsPerStep || 5)));
           this.gapBetweenVerses = ['none', '1x', '3s', '5s', 'custom'].includes(state.gapBetweenVerses) ? state.gapBetweenVerses : this.gapBetweenVerses;
           this.customGapSeconds = Math.max(0.5, Math.min(10, Number(state.customGapSeconds || this.customGapSeconds || 2)));
-          this.defaultFontSize = Number((_ref6 = (_state$defaultFontSiz = state.defaultFontSize) !== null && _state$defaultFontSiz !== void 0 ? _state$defaultFontSiz : this.defaultFontSize) !== null && _ref6 !== void 0 ? _ref6 : 100);
+          this.defaultFontSize = Number((_ref7 = (_state$defaultFontSiz = state.defaultFontSize) !== null && _state$defaultFontSiz !== void 0 ? _state$defaultFontSiz : this.defaultFontSize) !== null && _ref7 !== void 0 ? _ref7 : 100);
 
           // Anchor Mode settings
           this.anchorModeEnabled = (_state$anchorModeEnab = state.anchorModeEnabled) !== null && _state$anchorModeEnab !== void 0 ? _state$anchorModeEnab : false;
           this.anchorCount = (_state$anchorCount = state.anchorCount) !== null && _state$anchorCount !== void 0 ? _state$anchorCount : 2;
           this.settingsDraft = {
-            tajweedEnabled: (_ref7 = (_state$tajweedEnabled = state.tajweedEnabled) !== null && _state$tajweedEnabled !== void 0 ? _state$tajweedEnabled : this.tajweedEnabled) !== null && _ref7 !== void 0 ? _ref7 : false,
+            tajweedEnabled: (_ref8 = (_state$tajweedEnabled = state.tajweedEnabled) !== null && _state$tajweedEnabled !== void 0 ? _state$tajweedEnabled : this.tajweedEnabled) !== null && _ref8 !== void 0 ? _ref8 : false,
             showTranslation: (_state$showTranslatio2 = state.showTranslation) !== null && _state$showTranslatio2 !== void 0 ? _state$showTranslatio2 : this.showTranslation,
             showTransliteration: (_state$showTransliter2 = state.showTransliteration) !== null && _state$showTransliter2 !== void 0 ? _state$showTransliter2 : this.showTransliteration,
             showWordByWord: (_state$showWordByWord2 = state.showWordByWord) !== null && _state$showWordByWord2 !== void 0 ? _state$showWordByWord2 : this.showWordByWord,
             wordByWordAudioEnabled: (_state$wordByWordAudi2 = state.wordByWordAudioEnabled) !== null && _state$wordByWordAudi2 !== void 0 ? _state$wordByWordAudi2 : this.wordByWordAudioEnabled,
-            defaultFontSize: Number((_ref8 = (_state$defaultFontSiz2 = state.defaultFontSize) !== null && _state$defaultFontSiz2 !== void 0 ? _state$defaultFontSiz2 : this.defaultFontSize) !== null && _ref8 !== void 0 ? _ref8 : 100)
+            defaultFontSize: Number((_ref9 = (_state$defaultFontSiz2 = state.defaultFontSize) !== null && _state$defaultFontSiz2 !== void 0 ? _state$defaultFontSiz2 : this.defaultFontSize) !== null && _ref9 !== void 0 ? _ref9 : 100)
           };
           this.fontScale = (_state$fontScale = state.fontScale) !== null && _state$fontScale !== void 0 ? _state$fontScale : this.fontScale;
           this.uiScale = Number((_state$uiScale = state.uiScale) !== null && _state$uiScale !== void 0 ? _state$uiScale : this.uiScale);
@@ -29123,7 +29335,7 @@ function createAdvancedState() {
       console.error(e);
     }
   }), "restoreSessionState", function restoreSessionState() {
-    var _this51 = this;
+    var _this52 = this;
     ;
     ['beginner', 'advanced'].forEach(function (mode) {
       var saved = localStorage.getItem(SESSION_STORAGE_KEYS[mode]);
@@ -29131,14 +29343,14 @@ function createAdvancedState() {
       try {
         var state = JSON.parse(saved);
         if (Date.now() - state.timestamp < 24 * 60 * 60 * 1000) {
-          var target = mode === 'beginner' ? _this51.beginner : _this51.advanced;
+          var target = mode === 'beginner' ? _this52.beginner : _this52.advanced;
           var restoredKey = state.activeVerseKey || state.activeKey || null;
           target.activeKey = restoredKey;
           target.queueIndex = Number(state.queueIndex || 0);
-          if (mode === _this51.currentMode) {
-            _this51.activeVerseKey = restoredKey;
-            _this51.activeKey = restoredKey;
-            _this51.queueIndex = target.queueIndex;
+          if (mode === _this52.currentMode) {
+            _this52.activeVerseKey = restoredKey;
+            _this52.activeKey = restoredKey;
+            _this52.queueIndex = target.queueIndex;
           }
         }
       } catch (e) {
@@ -29148,9 +29360,9 @@ function createAdvancedState() {
   }), "persistAudioState", function persistAudioState() {
     if (this.isBootstrapping) return;
     try {
-      var _this$audioElement8;
+      var _this$audioElement1;
       localStorage.setItem('telawa.audioState', JSON.stringify({
-        src: ((_this$audioElement8 = this.audioElement) === null || _this$audioElement8 === void 0 ? void 0 : _this$audioElement8.currentSrc) || '',
+        src: ((_this$audioElement1 = this.audioElement) === null || _this$audioElement1 === void 0 ? void 0 : _this$audioElement1.currentSrc) || '',
         currentTime: this.currentTime || 0,
         playerVisible: this.playerVisible,
         speed: this.speed,
@@ -29171,98 +29383,98 @@ function createAdvancedState() {
     this.persistSm2();
     (0,_composables_useMutqinPersistence__WEBPACK_IMPORTED_MODULE_2__.saveMutqinState)(this.mutqinState);
   }), "loadChapters", function loadChapters() {
-    var _this52 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee13() {
+    var _this53 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee14() {
       var _res$data, res, _t4;
-      return _regenerator().w(function (_context13) {
-        while (1) switch (_context13.p = _context13.n) {
+      return _regenerator().w(function (_context14) {
+        while (1) switch (_context14.p = _context14.n) {
           case 0:
-            _context13.p = 0;
-            _context13.n = 1;
+            _context14.p = 0;
+            _context14.n = 1;
             return axios__WEBPACK_IMPORTED_MODULE_8__["default"].get('https://api.quran.com/api/v4/chapters', {
               params: {
                 language: 'en'
               }
             });
           case 1:
-            res = _context13.v;
-            _this52.chapters = ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.chapters) || [];
-            if (!_this52.chapterId) {
-              _context13.n = 2;
+            res = _context14.v;
+            _this53.chapters = ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.chapters) || [];
+            if (!_this53.chapterId) {
+              _context14.n = 2;
               break;
             }
-            _context13.n = 2;
-            return _this52.loadChapter();
+            _context14.n = 2;
+            return _this53.loadChapter();
           case 2:
-            _context13.n = 4;
+            _context14.n = 4;
             break;
           case 3:
-            _context13.p = 3;
-            _t4 = _context13.v;
+            _context14.p = 3;
+            _t4 = _context14.v;
             console.error('Failed to load chapters:', _t4);
-            _this52.showBanner('Failed to load surah list', 'error', 3000);
+            _this53.showBanner('Failed to load surah list', 'error', 3000);
           case 4:
-            return _context13.a(2);
+            return _context14.a(2);
         }
-      }, _callee13, null, [[0, 3]]);
+      }, _callee14, null, [[0, 3]]);
     }))();
   }), "loadChapter", function loadChapter() {
     var _arguments7 = arguments,
-      _this53 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee14() {
-      var _this53$currentChapte;
+      _this54 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee15() {
+      var _this54$currentChapte;
       var mode, target, chapterId, max;
-      return _regenerator().w(function (_context14) {
-        while (1) switch (_context14.n) {
+      return _regenerator().w(function (_context15) {
+        while (1) switch (_context15.n) {
           case 0:
-            mode = _arguments7.length > 0 && _arguments7[0] !== undefined ? _arguments7[0] : _this53.currentMode;
-            target = mode === 'beginner' ? _this53.beginner : _this53.advanced;
+            mode = _arguments7.length > 0 && _arguments7[0] !== undefined ? _arguments7[0] : _this54.currentMode;
+            target = mode === 'beginner' ? _this54.beginner : _this54.advanced;
             chapterId = Number(target.chapterId || 0);
             if (chapterId) {
-              _context14.n = 1;
+              _context15.n = 1;
               break;
             }
-            _this53.currentChapter = null;
-            return _context14.a(2);
+            _this54.currentChapter = null;
+            return _context15.a(2);
           case 1:
-            _this53.currentChapter = _this53.chapters.find(function (c) {
+            _this54.currentChapter = _this54.chapters.find(function (c) {
               return c.id === chapterId;
             });
-            max = ((_this53$currentChapte = _this53.currentChapter) === null || _this53$currentChapte === void 0 ? void 0 : _this53$currentChapte.verses_count) || 286;
+            max = ((_this54$currentChapte = _this54.currentChapter) === null || _this54$currentChapte === void 0 ? void 0 : _this54$currentChapte.verses_count) || 286;
             if (mode === 'beginner') {
-              _this53.beginner.rangeEnd = Math.min(_this53.beginner.rangeEnd, max);
-              _this53.beginner.rangeStart = Math.max(1, _this53.beginner.rangeStart);
+              _this54.beginner.rangeEnd = Math.min(_this54.beginner.rangeEnd, max);
+              _this54.beginner.rangeStart = Math.max(1, _this54.beginner.rangeStart);
             } else {
-              _this53.advanced.rangeEnd = Math.min(_this53.advanced.rangeEnd, max);
-              _this53.advanced.rangeStart = Math.max(1, _this53.advanced.rangeStart);
+              _this54.advanced.rangeEnd = Math.min(_this54.advanced.rangeEnd, max);
+              _this54.advanced.rangeStart = Math.max(1, _this54.advanced.rangeStart);
             }
-            _context14.n = 2;
-            return _this53.loadVerses(mode);
+            _context15.n = 2;
+            return _this54.loadVerses(mode);
           case 2:
-            return _context14.a(2);
+            return _context15.a(2);
         }
-      }, _callee14);
+      }, _callee15);
     }))();
   }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "loadReciters", function loadReciters() {
-    var _this54 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee15() {
-      var _res$data2, res, list, allow, available, filtered, _this54$reciters$, _t5;
-      return _regenerator().w(function (_context15) {
-        while (1) switch (_context15.p = _context15.n) {
+    var _this55 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee16() {
+      var _res$data2, res, list, allow, available, filtered, _this55$reciters$, _t5;
+      return _regenerator().w(function (_context16) {
+        while (1) switch (_context16.p = _context16.n) {
           case 0:
-            _context15.p = 0;
-            _context15.n = 1;
+            _context16.p = 0;
+            _context16.n = 1;
             return (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getEditions)({
               format: 'audio'
             });
           case 1:
-            res = _context15.v;
+            res = _context16.v;
             list = ((_res$data2 = res.data) === null || _res$data2 === void 0 ? void 0 : _res$data2.data) || [];
             if (list.length) {
-              _context15.n = 2;
+              _context16.n = 2;
               break;
             }
-            return _context15.a(2);
+            return _context16.a(2);
           case 2:
             allow = [{
               id: 'ar.alafasy',
@@ -29297,7 +29509,7 @@ function createAdvancedState() {
                 name: entry.label
               };
             });
-            _this54.reciters = filtered.length ? filtered : list.filter(function (edition) {
+            _this55.reciters = filtered.length ? filtered : list.filter(function (edition) {
               return edition.format === 'audio';
             }).map(function (edition) {
               return {
@@ -29305,21 +29517,21 @@ function createAdvancedState() {
                 name: edition.englishName || edition.name || edition.identifier
               };
             });
-            if (!_this54.reciters.some(function (reciter) {
-              return reciter.id === _this54.reciterId;
+            if (!_this55.reciters.some(function (reciter) {
+              return reciter.id === _this55.reciterId;
             })) {
-              _this54.reciterId = ((_this54$reciters$ = _this54.reciters[0]) === null || _this54$reciters$ === void 0 ? void 0 : _this54$reciters$.id) || DEFAULT_ALQURAN_RECITER;
+              _this55.reciterId = ((_this55$reciters$ = _this55.reciters[0]) === null || _this55$reciters$ === void 0 ? void 0 : _this55$reciters$.id) || DEFAULT_ALQURAN_RECITER;
             }
-            _context15.n = 4;
+            _context16.n = 4;
             break;
           case 3:
-            _context15.p = 3;
-            _t5 = _context15.v;
+            _context16.p = 3;
+            _t5 = _context16.v;
             console.error(_t5);
           case 4:
-            return _context15.a(2);
+            return _context16.a(2);
         }
-      }, _callee15, null, [[0, 3]]);
+      }, _callee16, null, [[0, 3]]);
     }))();
   }), "loadSavedSessions", function loadSavedSessions() {
     try {
@@ -29424,7 +29636,7 @@ function createAdvancedState() {
       return [];
     }
   }), "recomputeAnalytics", function recomputeAnalytics() {
-    var _this$mutqinState10, _this$mutqinState11;
+    var _this$mutqinState11, _this$mutqinState12;
     var events = this.readActivityEvents();
     var now = Date.now();
     var dayKeys = [];
@@ -29484,13 +29696,13 @@ function createAdvancedState() {
     this.analytics.weeklyMinutes = weeklyMinutes.map(function (m) {
       return Math.round(m);
     });
-    var mutqinStats = ((_this$mutqinState10 = this.mutqinState) === null || _this$mutqinState10 === void 0 ? void 0 : _this$mutqinState10.stats) || {};
+    var mutqinStats = ((_this$mutqinState11 = this.mutqinState) === null || _this$mutqinState11 === void 0 ? void 0 : _this$mutqinState11.stats) || {};
     this.analytics.versesMastered = Number(mutqinStats.ayahs_memorised || this.analytics.versesMastered || 0);
     this.analytics.totalRepetitions = Math.max(this.analytics.totalRepetitions, Number(mutqinStats.repetitions || 0));
     this.analytics.sessionsCompleted = Math.max(this.analytics.sessionsCompleted, Number(mutqinStats.sessions_completed || 0));
     // Chaining-related stat removed (weak_transitions). Keep field stable.
     this.simpleStats.weak = 0;
-    this.weakVersesList = Object.values(((_this$mutqinState11 = this.mutqinState) === null || _this$mutqinState11 === void 0 ? void 0 : _this$mutqinState11.ayahs) || {}).filter(function (ayah) {
+    this.weakVersesList = Object.values(((_this$mutqinState12 = this.mutqinState) === null || _this$mutqinState12 === void 0 ? void 0 : _this$mutqinState12.ayahs) || {}).filter(function (ayah) {
       return Number(ayah.weak_count || 0) > 0;
     });
     this.persistAnalytics();
@@ -30118,345 +30330,365 @@ var _hoisted_85 = {
   "class": "sheet"
 };
 var _hoisted_86 = {
-  key: 0,
-  "class": "sheet-section active-techniques-section"
+  "class": "sheet-section"
 };
 var _hoisted_87 = {
-  "class": "active-techniques-header"
+  "class": "st-right-group"
 };
-var _hoisted_88 = {
-  "class": "active-techniques-count"
-};
+var _hoisted_88 = ["checked"];
 var _hoisted_89 = {
-  "class": "active-techniques-grid"
+  "class": "sheet-content"
 };
 var _hoisted_90 = {
-  "class": "active-technique-icon"
+  "class": "field-stack"
 };
 var _hoisted_91 = {
-  "class": "active-technique-copy"
+  key: 0,
+  "class": "field"
 };
 var _hoisted_92 = {
-  "class": "sheet-section"
+  "class": "range-control"
 };
 var _hoisted_93 = {
+  "class": "inline-setting-pill"
+};
+var _hoisted_94 = {
+  "class": "sheet-section"
+};
+var _hoisted_95 = {
   "class": "st-right-group"
 };
-var _hoisted_94 = ["checked"];
-var _hoisted_95 = {
-  "class": "sheet-content"
-};
-var _hoisted_96 = {
-  "class": "field-stack"
-};
+var _hoisted_96 = ["checked"];
 var _hoisted_97 = {
-  key: 0,
-  "class": "field"
+  "class": "sheet-content"
 };
 var _hoisted_98 = {
-  "class": "range-control"
+  "class": "field-stack"
 };
 var _hoisted_99 = {
-  "class": "inline-setting-pill"
+  key: 0,
+  "class": "field"
 };
 var _hoisted_100 = {
-  "class": "sheet-section"
-};
-var _hoisted_101 = {
-  "class": "st-right-group"
-};
-var _hoisted_102 = ["checked"];
-var _hoisted_103 = {
-  "class": "sheet-content"
-};
-var _hoisted_104 = {
-  "class": "field-stack"
-};
-var _hoisted_105 = {
-  key: 0,
-  "class": "field"
-};
-var _hoisted_106 = {
   "class": "range-control"
 };
-var _hoisted_107 = {
+var _hoisted_101 = {
   "class": "inline-setting-pill"
 };
-var _hoisted_108 = {
+var _hoisted_102 = {
   "class": "sheet-section"
 };
-var _hoisted_109 = {
+var _hoisted_103 = {
   "class": "st-left"
 };
-var _hoisted_110 = {
+var _hoisted_104 = {
   "class": "st-txt"
 };
-var _hoisted_111 = {
+var _hoisted_105 = {
   "class": "st-sub"
 };
-var _hoisted_112 = {
+var _hoisted_106 = {
   "class": "st-right-group"
 };
-var _hoisted_113 = ["checked"];
-var _hoisted_114 = {
+var _hoisted_107 = ["checked"];
+var _hoisted_108 = {
   "class": "sheet-content"
 };
-var _hoisted_115 = {
+var _hoisted_109 = {
   "class": "field-stack"
 };
-var _hoisted_116 = {
+var _hoisted_110 = {
   "class": "field"
 };
-var _hoisted_117 = {
+var _hoisted_111 = {
   "class": "technique-description"
 };
-var _hoisted_118 = {
+var _hoisted_112 = {
   key: 0,
   "class": "field"
 };
-var _hoisted_119 = {
+var _hoisted_113 = {
   "class": "radio-group"
 };
-var _hoisted_120 = {
+var _hoisted_114 = {
   "class": "radio"
 };
-var _hoisted_121 = {
+var _hoisted_115 = {
   "class": "radio"
 };
-var _hoisted_122 = {
+var _hoisted_116 = {
   "class": "field-hint"
 };
-var _hoisted_123 = {
+var _hoisted_117 = {
   key: 1,
   "class": "field"
 };
-var _hoisted_124 = {
+var _hoisted_118 = {
   "class": "range-control"
 };
-var _hoisted_125 = ["value"];
-var _hoisted_126 = {
+var _hoisted_119 = ["value"];
+var _hoisted_120 = {
   "class": "inline-setting-pill"
 };
-var _hoisted_127 = {
+var _hoisted_121 = {
   key: 2,
   "class": "technique-preview-block"
 };
-var _hoisted_128 = {
+var _hoisted_122 = {
   "class": "sheet-section"
 };
-var _hoisted_129 = {
+var _hoisted_123 = {
   "class": "st-right-group"
 };
-var _hoisted_130 = ["checked"];
-var _hoisted_131 = {
+var _hoisted_124 = ["checked"];
+var _hoisted_125 = {
   "class": "sheet-content"
 };
-var _hoisted_132 = {
+var _hoisted_126 = {
   "class": "field-stack"
 };
-var _hoisted_133 = {
+var _hoisted_127 = {
   key: 0,
   "class": "field"
 };
-var _hoisted_134 = {
+var _hoisted_128 = {
   "class": "field-hint"
 };
-var _hoisted_135 = {
+var _hoisted_129 = {
   "class": "sheet"
 };
-var _hoisted_136 = {
+var _hoisted_130 = {
   "class": "saved-sessions-container"
 };
-var _hoisted_137 = {
+var _hoisted_131 = {
   key: 0,
   "class": "empty-state"
 };
-var _hoisted_138 = {
+var _hoisted_132 = {
   key: 1,
   "class": "sessions-list"
 };
-var _hoisted_139 = ["onClick"];
-var _hoisted_140 = {
+var _hoisted_133 = ["onClick"];
+var _hoisted_134 = {
   "class": "session-name"
 };
-var _hoisted_141 = {
+var _hoisted_135 = {
   "class": "session-details"
 };
-var _hoisted_142 = ["onClick"];
-var _hoisted_143 = {
+var _hoisted_136 = ["onClick"];
+var _hoisted_137 = {
   key: 2,
   "class": "save-section"
 };
-var _hoisted_144 = {
+var _hoisted_138 = {
   "class": "current-info"
 };
-var _hoisted_145 = {
+var _hoisted_139 = {
   "class": "sheet"
 };
-var _hoisted_146 = {
+var _hoisted_140 = {
   "class": "sheet-section"
 };
-var _hoisted_147 = {
+var _hoisted_141 = {
   "class": "sheet-content"
 };
-var _hoisted_148 = {
+var _hoisted_142 = {
   "class": "setting-item setting-item-range"
 };
-var _hoisted_149 = {
+var _hoisted_143 = {
   "class": "range-control-compact"
 };
-var _hoisted_150 = {
+var _hoisted_144 = {
   "class": "range-value-badge"
 };
-var _hoisted_151 = {
+var _hoisted_145 = {
   "class": "sheet-section"
 };
-var _hoisted_152 = {
+var _hoisted_146 = {
   "class": "sheet-content"
 };
-var _hoisted_153 = {
+var _hoisted_147 = {
   "class": "setting-item"
 };
-var _hoisted_154 = {
+var _hoisted_148 = {
   "class": "setting-item"
 };
-var _hoisted_155 = {
+var _hoisted_149 = {
   "class": "setting-item"
 };
-var _hoisted_156 = {
+var _hoisted_150 = {
   "class": "setting-item"
 };
-var _hoisted_157 = {
+var _hoisted_151 = {
   key: 2,
   "class": "main container"
 };
-var _hoisted_158 = {
+var _hoisted_152 = {
   "class": "modal-content save-name-modal",
   role: "dialog",
   "aria-modal": "true",
   "aria-labelledby": "saveModalTitle"
 };
-var _hoisted_159 = {
+var _hoisted_153 = {
   "class": "modal-header"
 };
-var _hoisted_160 = {
+var _hoisted_154 = {
+  "class": "modal-header-text"
+};
+var _hoisted_155 = {
+  "class": "modal-context-badge"
+};
+var _hoisted_156 = {
   "class": "modal-body"
 };
-var _hoisted_161 = {
+var _hoisted_157 = {
   "class": "session-preview-card"
 };
-var _hoisted_162 = {
+var _hoisted_158 = {
   "class": "preview-surah"
 };
-var _hoisted_163 = {
+var _hoisted_159 = {
   "class": "preview-range"
 };
-var _hoisted_164 = {
+var _hoisted_160 = {
   "class": "preview-stats"
 };
-var _hoisted_165 = {
+var _hoisted_161 = {
   "class": "preview-stat"
 };
-var _hoisted_166 = {
+var _hoisted_162 = {
   "class": "preview-stat"
 };
-var _hoisted_167 = {
+var _hoisted_163 = {
   "class": "input-hint"
 };
-var _hoisted_168 = {
+var _hoisted_164 = {
   "class": "char-count"
 };
-var _hoisted_169 = {
+var _hoisted_165 = {
   key: 0,
   "class": "error-message"
 };
-var _hoisted_170 = {
+var _hoisted_166 = {
   "class": "quick-suggestions"
 };
-var _hoisted_171 = {
+var _hoisted_167 = {
   "class": "suggestion-chips"
 };
-var _hoisted_172 = ["onClick"];
-var _hoisted_173 = {
+var _hoisted_168 = ["onClick"];
+var _hoisted_169 = {
   "class": "info-note"
 };
-var _hoisted_174 = {
+var _hoisted_170 = {
   "class": "info-text"
 };
-var _hoisted_175 = {
+var _hoisted_171 = {
   "class": "modal-footer"
 };
-var _hoisted_176 = ["disabled"];
-var _hoisted_177 = {
+var _hoisted_172 = ["disabled"];
+var _hoisted_173 = {
   "class": "modal-content confirm-modal",
   role: "dialog",
   "aria-modal": "true"
 };
-var _hoisted_178 = {
+var _hoisted_174 = {
   "class": "modal-header"
 };
-var _hoisted_179 = {
+var _hoisted_175 = {
+  "class": "modal-header-text"
+};
+var _hoisted_176 = {
+  "class": "modal-context-badge"
+};
+var _hoisted_177 = {
   "class": "modal-body"
 };
-var _hoisted_180 = {
+var _hoisted_178 = {
   "class": "confirm-copy"
 };
-var _hoisted_181 = {
+var _hoisted_179 = {
   "class": "modal-footer"
 };
+var _hoisted_180 = {
+  "class": "modal-content confirm-modal session-exit-modal",
+  role: "dialog",
+  "aria-modal": "true",
+  "aria-labelledby": "sessionExitTitle"
+};
+var _hoisted_181 = {
+  "class": "modal-header"
+};
 var _hoisted_182 = {
-  key: 5,
-  "class": "countdown-overlay"
+  "class": "modal-header-text"
 };
 var _hoisted_183 = {
-  "class": "countdown-modal"
+  "class": "modal-context-badge"
 };
 var _hoisted_184 = {
-  "class": "countdown-number"
+  "class": "modal-body"
 };
 var _hoisted_185 = {
-  "class": "player-main"
+  "class": "session-exit-recap"
 };
 var _hoisted_186 = {
-  "class": "player-info"
+  "class": "session-exit-autosave"
 };
 var _hoisted_187 = {
-  "class": "player-chapter"
+  "class": "modal-footer"
 };
 var _hoisted_188 = {
-  "class": "player-verse"
+  key: 6,
+  "class": "countdown-overlay"
 };
-var _hoisted_189 = ["title"];
+var _hoisted_189 = {
+  "class": "countdown-modal"
+};
 var _hoisted_190 = {
-  "class": "player-controls"
+  "class": "countdown-number"
 };
 var _hoisted_191 = {
+  "class": "player-main"
+};
+var _hoisted_192 = {
+  "class": "player-info"
+};
+var _hoisted_193 = {
+  "class": "player-chapter"
+};
+var _hoisted_194 = {
+  "class": "player-verse"
+};
+var _hoisted_195 = ["title"];
+var _hoisted_196 = {
+  "class": "player-controls"
+};
+var _hoisted_197 = {
   "class": "player-loop-controls",
   "aria-label": "Loop count"
 };
-var _hoisted_192 = {
+var _hoisted_198 = {
   "class": "player-loop-group",
   role: "group",
   "aria-label": "Playback loop count"
 };
-var _hoisted_193 = ["onClick", "title"];
-var _hoisted_194 = {
+var _hoisted_199 = ["onClick", "title"];
+var _hoisted_200 = {
   "class": "player-progress-wrap"
 };
-var _hoisted_195 = {
+var _hoisted_201 = {
   "class": "player-time"
 };
-var _hoisted_196 = {
+var _hoisted_202 = {
   "class": "player-time"
 };
-var _hoisted_197 = {
+var _hoisted_203 = {
   ref: "audio",
   style: {
     "display": "none"
   }
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
-  var _$data$currentChapter, _$data$currentChapter2;
+  var _$data$currentChapter, _$data$currentChapter2, _$data$currentChapter3;
   return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     "class": "app",
     "data-theme": $data.theme,
@@ -30476,7 +30708,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $data.banner = null;
     }),
     "aria-label": "Dismiss"
-  }, _toConsumableArray(_cache[95] || (_cache[95] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[102] || (_cache[102] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */)])))])], 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Main Content "), $data.appReady && $options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 1,
@@ -30487,21 +30719,21 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       'flow-practice': $options.guidedUiStep === 'practice',
       'flow-recall': $options.guidedUiStep === 'recall'
     }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [!$options.hasVerses && !$options.currentConfig.chapterId ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [$data.hasContinueSession ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [_cache[96] || (_cache[96] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [!$options.hasVerses && !$options.currentConfig.chapterId ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [$data.hasContinueSession ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [_cache[103] || (_cache[103] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "continue-session-kicker"
   }, "Continue where you left off", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.continueSessionLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.continueSessionMeta), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-primary continue-session-btn",
     onClick: _cache[2] || (_cache[2] = function () {
       return $options.continueLastSession && $options.continueLastSession.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[97] || (_cache[97] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[104] || (_cache[104] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-fill"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Continue Session ", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-ghost continue-session-dismiss",
     onClick: _cache[3] || (_cache[3] = function () {
       return $options.confirmDiscardContinueSession && $options.confirmDiscardContinueSession.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[98] || (_cache[98] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[105] || (_cache[105] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */)])))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-primary setup-primary",
@@ -30512,11 +30744,11 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.openToolsPanel();
     }),
     title: "Open controls"
-  }, _toConsumableArray(_cache[99] || (_cache[99] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[106] || (_cache[106] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Open Session Controls ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_9), _cache[100] || (_cache[100] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Open Session Controls ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_9), _cache[107] || (_cache[107] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
     "class": "offcanvas-launcher-copy"
-  }, " Session setup lives in the offcanvas. ", -1 /* CACHED */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true),  false ? (0) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Grid "), !$data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_17, _toConsumableArray(_cache[107] || (_cache[107] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, " Session setup lives in the offcanvas. ", -1 /* CACHED */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true),  false ? (0) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Grid "), !$data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_17, _toConsumableArray(_cache[114] || (_cache[114] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-hourglass-split"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Loading...", -1 /* CACHED */)])))) : $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_18, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["workspace-shell", {
@@ -30524,34 +30756,43 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     }]),
     "aria-label": "Session overview"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_19, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_20, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_21, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h1", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.currentChapter ? $data.currentChapter.name_simple : $options.activeChapterName), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentActionLabel), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_22, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_23, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "action-icon-btn",
+    "class": "action-btn action-btn-secondary action-btn-exit",
+    type: "button",
     onClick: _cache[11] || (_cache[11] = function () {
+      return $options.openSessionExitModal && $options.openSessionExitModal.apply($options, arguments);
+    }),
+    title: "End session"
+  }, _toConsumableArray(_cache[115] || (_cache[115] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-box-arrow-right"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "End Session", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "action-icon-btn",
+    onClick: _cache[12] || (_cache[12] = function () {
       return $options.toggleFullScreen && $options.toggleFullScreen.apply($options, arguments);
     }),
     title: "Full screen mode"
-  }, _toConsumableArray(_cache[108] || (_cache[108] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[116] || (_cache[116] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrows-fullscreen"
   }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "action-icon-btn",
-    onClick: _cache[12] || (_cache[12] = function () {
+    onClick: _cache[13] || (_cache[13] = function () {
       return $options.toggleKeyboardShortcuts && $options.toggleKeyboardShortcuts.apply($options, arguments);
     }),
     title: "Keyboard shortcuts"
-  }, _toConsumableArray(_cache[109] || (_cache[109] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[117] || (_cache[117] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-keyboard"
   }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "action-btn action-btn-secondary",
     type: "button",
-    onClick: _cache[13] || (_cache[13] = function () {
+    onClick: _cache[14] || (_cache[14] = function () {
       return $options.openAdvancedControls && $options.openAdvancedControls.apply($options, arguments);
     }),
     title: "Open session controls"
-  }, _toConsumableArray(_cache[110] || (_cache[110] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[118] || (_cache[118] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Controls", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "action-btn action-btn-primary",
     type: "button",
-    onClick: _cache[14] || (_cache[14] = function () {
+    onClick: _cache[15] || (_cache[15] = function () {
       return $options.handlePrimaryAction && $options.handlePrimaryAction.apply($options, arguments);
     }),
     disabled: !$data.isPlaying && !$options.canStartSession
@@ -30560,29 +30801,29 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
   }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.isPlaying ? 'Pause' : 'Start Session'), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_24)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Keyboard Shortcuts Modal "), $data.showKeyboardShortcuts ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 0,
     "class": "keyboard-shortcuts-modal",
-    onClick: _cache[16] || (_cache[16] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
+    onClick: _cache[17] || (_cache[17] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
       return $data.showKeyboardShortcuts = false;
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [_cache[112] || (_cache[112] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [_cache[120] || (_cache[120] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-keyboard"
   }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Keyboard Shortcuts")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "shortcuts-modal-close",
-    onClick: _cache[15] || (_cache[15] = function ($event) {
+    onClick: _cache[16] || (_cache[16] = function ($event) {
       return $data.showKeyboardShortcuts = false;
     })
-  }, _toConsumableArray(_cache[111] || (_cache[111] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[119] || (_cache[119] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), _cache[113] || (_cache[113] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"shortcuts-modal-body\"><div class=\"shortcuts-grid\"><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Navigation</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↑</kbd></div><span>Previous verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↓</kbd></div><span>Next verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>←</kbd> / <kbd>J</kbd></div><span>Previous in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>→</kbd> / <kbd>K</kbd></div><span>Next in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Home</kbd></div><span>First verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>End</kbd></div><span>Last verse</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Playback</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Hold</kbd> <kbd>Space</kbd></div><span>Peek blurred upcoming ayahs</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Enter</kbd></div><span>Play current verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>P</kbd></div><span>Play / Pause audio</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Session</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Ctrl</kbd> + <kbd>S</kbd></div><span>Save session</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Esc</kbd></div><span>Close modals</span></div></div></div></div>", 1))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + " of " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "% complete", 1 /* TEXT */), $options.etaLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_28, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.activePracticeTechniques.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_29, [_cache[114] || (_cache[114] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)])))]), _cache[121] || (_cache[121] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"shortcuts-modal-body\"><div class=\"shortcuts-grid\"><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Navigation</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↑</kbd></div><span>Previous verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↓</kbd></div><span>Next verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>←</kbd> / <kbd>J</kbd></div><span>Previous in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>→</kbd> / <kbd>K</kbd></div><span>Next in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Home</kbd></div><span>First verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>End</kbd></div><span>Last verse</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Playback</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Hold</kbd> <kbd>Space</kbd></div><span>Peek blurred upcoming ayahs</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Enter</kbd></div><span>Play current verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>P</kbd></div><span>Play / Pause audio</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Session</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Ctrl</kbd> + <kbd>S</kbd></div><span>Save session</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Esc</kbd></div><span>Close modals</span></div></div></div></div>", 1))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + " of " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "% complete", 1 /* TEXT */), $options.etaLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_28, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.activePracticeTechniques.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_29, [_cache[122] || (_cache[122] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-stars"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activePracticeTechniques.length) + " active method" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activePracticeTechniques.length === 1 ? '' : 's'), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), !$data.mainCardCollapsed && $data.chainingEnabled && $options.hasSessionFeedback ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_30, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_31, [_cache[115] || (_cache[115] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activePracticeTechniques.length) + " active method" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activePracticeTechniques.length === 1 ? '' : 's'), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), !$data.mainCardCollapsed && $data.chainingEnabled && $options.hasSessionFeedback ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_30, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_31, [_cache[123] || (_cache[123] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-link-45deg"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions) + "x ", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_32, [_cache[116] || (_cache[116] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions) + "x ", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_32, [_cache[124] || (_cache[124] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-diagram-3"
   }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingProgressLabel), 1 /* TEXT */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.mainCardCollapsed]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_33, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
       active: $data.showTranslation
     }]),
-    onClick: _cache[17] || (_cache[17] = function ($event) {
+    onClick: _cache[18] || (_cache[18] = function ($event) {
       return $options.toggleReadingOption('translation');
     }),
     type: "button"
@@ -30590,7 +30831,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
       active: $data.showTransliteration
     }]),
-    onClick: _cache[18] || (_cache[18] = function ($event) {
+    onClick: _cache[19] || (_cache[19] = function ($event) {
       return $options.toggleReadingOption('transliteration');
     }),
     type: "button"
@@ -30598,7 +30839,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
       active: $data.showWordByWord
     }]),
-    onClick: _cache[19] || (_cache[19] = function ($event) {
+    onClick: _cache[20] || (_cache[20] = function ($event) {
       return $options.toggleReadingOption('wbw');
     }),
     type: "button"
@@ -30606,7 +30847,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
       active: $data.wordByWordAudioEnabled
     }]),
-    onClick: _cache[20] || (_cache[20] = function ($event) {
+    onClick: _cache[21] || (_cache[21] = function ($event) {
       return $options.toggleWordAudio();
     }),
     type: "button"
@@ -30614,13 +30855,13 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
       active: $data.tajweedEnabled
     }]),
-    onClick: _cache[21] || (_cache[21] = function () {
+    onClick: _cache[22] || (_cache[22] = function () {
       return $options.toggleTajweed && $options.toggleTajweed.apply($options, arguments);
     }),
     type: "button"
   }, "Tajweed", 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "toolbar-chip",
-    onClick: _cache[22] || (_cache[22] = function () {
+    onClick: _cache[23] || (_cache[23] = function () {
       return $options.cycleQuranFontPill && $options.cycleQuranFontPill.apply($options, arguments);
     }),
     type: "button"
@@ -30651,7 +30892,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       onTouchendPassive: function onTouchendPassive($event) {
         return $options.onVerseTouchEnd($event, verse.key);
       },
-      onTouchcancelPassive: _cache[23] || (_cache[23] = function () {
+      onTouchcancelPassive: _cache[24] || (_cache[24] = function () {
         return $options.clearTouchPeek && $options.clearTouchPeek.apply($options, arguments);
       }),
       onKeydown: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)((0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
@@ -30672,7 +30913,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       }, ["stop"]),
       disabled: !verse.audio,
       title: "Download audio for offline listening"
-    }, _toConsumableArray(_cache[117] || (_cache[117] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[125] || (_cache[125] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-download"
     }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_44), !$options.hasSessionFeedback ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_45, "Preview")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), verse.arabic && $data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: 0,
@@ -30689,11 +30930,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         'font-family': $options.quranFontFamily,
         'font-size': $options.getVerseFontSize(verse.key) / 100 + 'rem'
       })
-    }, null, 14 /* CLASS, STYLE, PROPS */, _hoisted_46)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Keep in-workspace aids available, but visually quieter "), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_47, [_cache[118] || (_cache[118] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-      "class": "verse-aid-title"
-    }, "Transliteration", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_48, [_cache[119] || (_cache[119] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-      "class": "verse-aid-title"
-    }, "Translation", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.translation), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showWordByWord && verse.words && verse.words.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+    }, null, 14 /* CLASS, STYLE, PROPS */, _hoisted_46)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Keep in-workspace aids available, but visually quieter "), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_47, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_48, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.translation), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showWordByWord && verse.words && verse.words.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: 3,
       "class": "verse-words verse-aid",
       onScroll: function onScroll($event) {
@@ -30718,7 +30955,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
           return $options.playWordAudio(word.audio);
         }, ["stop"])
-      }, _toConsumableArray(_cache[120] || (_cache[120] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[126] || (_cache[126] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-volume-up"
       }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_53)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 10 /* CLASS, PROPS */, _hoisted_50);
     }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_49)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 42 /* CLASS, PROPS, NEED_HYDRATION */, _hoisted_36);
@@ -30726,7 +30963,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["tools-backdrop", {
       open: $data.showTools
     }]),
-    onClick: _cache[24] || (_cache[24] = function () {
+    onClick: _cache[25] || (_cache[25] = function () {
       return $options.closeToolsPanel && $options.closeToolsPanel.apply($options, arguments);
     }),
     "aria-hidden": "true"
@@ -30736,117 +30973,117 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["tools offcanvas-section", {
       'open': $data.showTools
     }]),
-    onClick: _cache[77] || (_cache[77] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"])),
+    onClick: _cache[78] || (_cache[78] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"])),
     role: "dialog",
     "aria-modal": "true",
     "aria-labelledby": "memorisationToolsTitle",
     "aria-hidden": $data.showTools ? 'false' : 'true',
     tabindex: "-1",
-    onKeydown: _cache[78] || (_cache[78] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)((0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onKeydown: _cache[79] || (_cache[79] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)((0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.closeToolsPanel && $options.closeToolsPanel.apply($options, arguments);
     }, ["prevent"]), ["esc"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_55, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_56, [_cache[122] || (_cache[122] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_55, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_56, [_cache[128] || (_cache[128] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     id: "memorisationToolsTitle",
     "class": "tools-title"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("b", null, "Controls")])], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-x",
-    onClick: _cache[25] || (_cache[25] = function () {
+    onClick: _cache[26] || (_cache[26] = function () {
       return $options.closeToolsPanel && $options.closeToolsPanel.apply($options, arguments);
     }),
     "aria-label": "Close panel"
-  }, _toConsumableArray(_cache[121] || (_cache[121] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[127] || (_cache[127] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_57, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
       active: $data.tab === 'tools'
     }),
-    onClick: _cache[26] || (_cache[26] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
+    onClick: _cache[27] || (_cache[27] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
       return $options.setActiveTab('tools');
     }, ["prevent"])),
     title: "Session tools",
     type: "button"
-  }, _toConsumableArray(_cache[123] || (_cache[123] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[129] || (_cache[129] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Session ", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
       active: $data.tab === 'techniques'
     }),
-    onClick: _cache[27] || (_cache[27] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
+    onClick: _cache[28] || (_cache[28] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
       return $options.setActiveTab('techniques');
     }, ["prevent"])),
     title: "Practice presets",
     type: "button"
-  }, _toConsumableArray(_cache[124] || (_cache[124] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[130] || (_cache[130] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-stars"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Practice ", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
       active: $data.tab === 'saved'
     }),
-    onClick: _cache[28] || (_cache[28] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
+    onClick: _cache[29] || (_cache[29] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
       return $options.setActiveTab('saved');
     }, ["prevent"])),
     title: "Saved sessions",
     type: "button"
-  }, _toConsumableArray(_cache[125] || (_cache[125] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[131] || (_cache[131] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-clock-history"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Saved ", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button :class=\"{ active: tab === 'settings' }\" @click.prevent=\"setActiveTab('settings')\" type=\"button\">\n              <i class=\"bi bi-gear\"></i> Settings\n            </button> ")])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_58, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" TOOLS TAB "), $data.tab === 'tools' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_59, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_60, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[29] || (_cache[29] = function ($event) {
+    onClick: _cache[30] || (_cache[30] = function ($event) {
       return $options.toggleSection('advanced_setup');
     }),
     type: "button"
-  }, [_cache[127] || (_cache[127] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Session Setup</span><span class=\"st-sub\">Choose what you memorise</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[133] || (_cache[133] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Session Setup</span><span class=\"st-sub\">Choose what you memorise</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_setup
     }])
-  }, _toConsumableArray(_cache[126] || (_cache[126] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[132] || (_cache[132] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_61, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_62, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_63, [_cache[129] || (_cache[129] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_61, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_62, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_63, [_cache[135] || (_cache[135] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Surah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     value: $options.chapterId,
-    onChange: _cache[30] || (_cache[30] = function () {
+    onChange: _cache[31] || (_cache[31] = function () {
       return $options.onChapterChange && $options.onChapterChange.apply($options, arguments);
     }),
     "class": "select"
-  }, [_cache[128] || (_cache[128] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+  }, [_cache[134] || (_cache[134] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: 0
   }, "Choose a surah...", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (c) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: c.id,
       value: c.id
     }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_65);
-  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_64), _cache[130] || (_cache[130] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_64), _cache[136] || (_cache[136] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Pick the surah you want to work on.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_66, [_cache[132] || (_cache[132] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verse range", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_67, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Pick the surah you want to work on.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_66, [_cache[138] || (_cache[138] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Verse range", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_67, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
-    "onUpdate:modelValue": _cache[31] || (_cache[31] = function ($event) {
+    "onUpdate:modelValue": _cache[32] || (_cache[32] = function ($event) {
       return $options.rangeStart = $event;
     }),
-    onChange: _cache[32] || (_cache[32] = function () {
+    onChange: _cache[33] || (_cache[33] = function () {
       return $options.adjustRange && $options.adjustRange.apply($options, arguments);
     }),
     min: "1"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeStart, void 0, {
     number: true
-  }]]), _cache[131] || (_cache[131] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }]]), _cache[137] || (_cache[137] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
-    "onUpdate:modelValue": _cache[33] || (_cache[33] = function ($event) {
+    "onUpdate:modelValue": _cache[34] || (_cache[34] = function ($event) {
       return $options.rangeEnd = $event;
     }),
-    onChange: _cache[34] || (_cache[34] = function () {
+    onChange: _cache[35] || (_cache[35] = function () {
       return $options.adjustRange && $options.adjustRange.apply($options, arguments);
     }),
     min: "1"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeEnd, void 0, {
     number: true
-  }]])]), _cache[133] || (_cache[133] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }]])]), _cache[139] || (_cache[139] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Keep ranges small for focused memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_68, [_cache[134] || (_cache[134] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[35] || (_cache[35] = function ($event) {
+  }, "Keep ranges small for focused memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_68, [_cache[140] || (_cache[140] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Reciter", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[36] || (_cache[36] = function ($event) {
       return $options.reciterId = $event;
     }),
-    onChange: _cache[36] || (_cache[36] = function () {
+    onChange: _cache[37] || (_cache[37] = function () {
       return $options.refreshVerses && $options.refreshVerses.apply($options, arguments);
     }),
     "class": "select"
@@ -30855,11 +31092,11 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       key: r.id,
       value: r.id
     }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_69);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]]), _cache[135] || (_cache[135] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]]), _cache[141] || (_cache[141] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Changes the audio voice for the session.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_70, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_71, [_cache[136] || (_cache[136] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repetitions", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_72, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.repetitionsPerStep) + "x", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_73, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Changes the audio voice for the session.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_70, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_71, [_cache[142] || (_cache[142] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repetitions", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_72, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.repetitionsPerStep) + "x", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_73, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
-    "onUpdate:modelValue": _cache[37] || (_cache[37] = function ($event) {
+    "onUpdate:modelValue": _cache[38] || (_cache[38] = function ($event) {
       return $data.repetitionsPerStep = $event;
     }),
     min: "1",
@@ -30868,21 +31105,21 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": "input technique-range"
   }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.repetitionsPerStep, void 0, {
     number: true
-  }]])]), _cache[137] || (_cache[137] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }]])]), _cache[143] || (_cache[143] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "slider-markers"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "1x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "12x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "25x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "37x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "50x")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_74, "Repeat each verse " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.repetitionsPerStep) + " time" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.repetitionsPerStep === 1 ? '' : 's') + " before moving on.", 1 /* TEXT */)])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_75, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[38] || (_cache[38] = function ($event) {
+    onClick: _cache[39] || (_cache[39] = function ($event) {
       return $options.toggleSection('advanced_playback');
     }),
     type: "button"
-  }, [_cache[139] || (_cache[139] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Audio</span><span class=\"st-sub\">Playback settings</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[145] || (_cache[145] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Audio</span><span class=\"st-sub\">Playback settings</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_playback
     }])
-  }, _toConsumableArray(_cache[138] || (_cache[138] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[144] || (_cache[144] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_76, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_77, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_78, [_cache[140] || (_cache[140] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_79, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.speedOptions, function (option) {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_76, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_77, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_78, [_cache[146] || (_cache[146] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_79, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.speedOptions, function (option) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("label", {
       "class": "radio",
       key: "tool-speed-".concat(option)
@@ -30894,49 +31131,38 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         return $options.setPlaybackSpeed(option);
       }
     }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_80), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(option) + "x ", 1 /* TEXT */)]);
-  }), 128 /* KEYED_FRAGMENT */))]), _cache[141] || (_cache[141] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }), 128 /* KEYED_FRAGMENT */))]), _cache[147] || (_cache[147] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Use slower speed for early memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_81, [_cache[144] || (_cache[144] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_82, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_83, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Use slower speed for early memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_81, [_cache[150] || (_cache[150] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_82, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_83, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "auto",
-    "onUpdate:modelValue": _cache[39] || (_cache[39] = function ($event) {
-      return $options.playMode = $event;
-    })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[142] || (_cache[142] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_84, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "radio",
-    value: "manual",
     "onUpdate:modelValue": _cache[40] || (_cache[40] = function ($event) {
       return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[143] || (_cache[143] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No", -1 /* CACHED */))])]), _cache[145] || (_cache[145] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[148] || (_cache[148] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_84, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "radio",
+    value: "manual",
+    "onUpdate:modelValue": _cache[41] || (_cache[41] = function ($event) {
+      return $options.playMode = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[149] || (_cache[149] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No", -1 /* CACHED */))])]), _cache[151] || (_cache[151] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
   }, "Auto moves to the next queue item when audio ends.", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_playback]])])])) : $data.tab === 'techniques' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 1
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" TECHNIQUES TAB "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_85, [$options.activePracticeTechniques.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_86, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_87, [_cache[146] || (_cache[146] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "st-title"
-  }, "Active methods"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "st-sub"
-  }, "A quick view of the techniques shaping this session.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_88, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activePracticeTechniques.length), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_89, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.activePracticeTechniques, function (item) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
-      key: item.key,
-      "class": "active-technique-card"
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_90, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(item.icon)
-    }, null, 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_91, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.label), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.description), 1 /* TEXT */)])]);
-  }), 128 /* KEYED_FRAGMENT */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_92, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" TECHNIQUES TAB "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_85, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_86, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[44] || (_cache[44] = function ($event) {
+    onClick: _cache[45] || (_cache[45] = function ($event) {
       return $options.toggleSection('focus_mode');
     }),
     type: "button"
-  }, [_cache[149] || (_cache[149] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-bullseye\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Focus Mode</span><span class=\"st-sub\">Reduce distractions around the active ayah</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_93, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [_cache[154] || (_cache[154] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-bullseye\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Focus Mode</span><span class=\"st-sub\">Reduce distractions around the active ayah</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_87, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "mode-radio-group",
-    onClick: _cache[43] || (_cache[43] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
+    onClick: _cache[44] || (_cache[44] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["mode-radio", {
       active: $data.focusModeEnabled
     }]),
-    onClick: _cache[42] || (_cache[42] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onClick: _cache[43] || (_cache[43] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.toggleFocusModeRadio && $options.toggleFocusModeRadio.apply($options, arguments);
     }, ["prevent"]))
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
@@ -30944,45 +31170,45 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     name: "focus-mode-state",
     "aria-label": "Use focus mode",
     checked: $data.focusModeEnabled,
-    onChange: _cache[41] || (_cache[41] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onChange: _cache[42] || (_cache[42] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.toggleFocusModeRadio && $options.toggleFocusModeRadio.apply($options, arguments);
     }, ["prevent"]))
-  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_94), _cache[147] || (_cache[147] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_88), _cache[152] || (_cache[152] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "mode-radio-dot",
     "aria-hidden": "true"
   }, null, -1 /* CACHED */))], 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.focus_mode
     }])
-  }, _toConsumableArray(_cache[148] || (_cache[148] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[153] || (_cache[153] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_95, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_96, [_cache[152] || (_cache[152] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"field\"><div class=\"technique-description\"><i class=\"bi bi-info-circle-fill\"></i><span>Focus Mode dims all non-active verses, helping you concentrate on the current ayah without distractions.</span></div><div class=\"technique-best\"><i class=\"bi bi-check-circle-fill\"></i><span>Best for: Deep memorisation sessions</span></div></div>", 1)), $data.focusModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_97, [_cache[150] || (_cache[150] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Focus strength", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_98, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_89, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_90, [_cache[157] || (_cache[157] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"field\"><div class=\"technique-description\"><i class=\"bi bi-info-circle-fill\"></i><span>Focus Mode dims all non-active verses, helping you concentrate on the current ayah without distractions.</span></div><div class=\"technique-best\"><i class=\"bi bi-check-circle-fill\"></i><span>Best for: Deep memorisation sessions</span></div></div>", 1)), $data.focusModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_91, [_cache[155] || (_cache[155] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Focus strength", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_92, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     min: "30",
     max: "75",
     step: "5",
-    "onUpdate:modelValue": _cache[45] || (_cache[45] = function ($event) {
+    "onUpdate:modelValue": _cache[46] || (_cache[46] = function ($event) {
       return $data.focusDimPercent = $event;
     }),
     "class": "input"
   }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.focusDimPercent, void 0, {
     number: true
-  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_99, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.focusDimPercent) + "%", 1 /* TEXT */)]), _cache[151] || (_cache[151] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_93, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.focusDimPercent) + "%", 1 /* TEXT */)]), _cache[156] || (_cache[156] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Higher values dim non-active verses more aggressively.", -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.focus_mode]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_100, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Higher values dim non-active verses more aggressively.", -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.focus_mode]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_94, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[49] || (_cache[49] = function ($event) {
+    onClick: _cache[50] || (_cache[50] = function ($event) {
       return $options.toggleSection('blur_mode');
     }),
     type: "button"
-  }, [_cache[155] || (_cache[155] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-cloud-haze2\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Blur Mode</span><span class=\"st-sub\">Progressive concealment for active recall</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_101, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [_cache[160] || (_cache[160] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-cloud-haze2\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Blur Mode</span><span class=\"st-sub\">Progressive concealment for active recall</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_95, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "mode-radio-group",
-    onClick: _cache[48] || (_cache[48] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
+    onClick: _cache[49] || (_cache[49] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["mode-radio", {
       active: $data.blurModeEnabled
     }]),
-    onClick: _cache[47] || (_cache[47] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onClick: _cache[48] || (_cache[48] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.toggleBlurModeRadio && $options.toggleBlurModeRadio.apply($options, arguments);
     }, ["prevent"]))
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
@@ -30990,51 +31216,51 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     name: "blur-mode-state",
     "aria-label": "Use blur mode",
     checked: $data.blurModeEnabled,
-    onChange: _cache[46] || (_cache[46] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onChange: _cache[47] || (_cache[47] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.toggleBlurModeRadio && $options.toggleBlurModeRadio.apply($options, arguments);
     }, ["prevent"]))
-  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_102), _cache[153] || (_cache[153] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_96), _cache[158] || (_cache[158] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "mode-radio-dot",
     "aria-hidden": "true"
   }, null, -1 /* CACHED */))], 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.blur_mode
     }])
-  }, _toConsumableArray(_cache[154] || (_cache[154] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[159] || (_cache[159] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_103, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_104, [_cache[158] || (_cache[158] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"field\"><div class=\"technique-description\"><i class=\"bi bi-info-circle-fill\"></i><span>Blurs upcoming verses, requiring you to recall them before revealing.</span></div><div class=\"technique-best\"><i class=\"bi bi-check-circle-fill\"></i><span>Best for: Active recall testing</span></div></div>", 1)), $data.blurModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_105, [_cache[156] || (_cache[156] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Blur Intensity", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_106, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_97, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_98, [_cache[163] || (_cache[163] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"field\"><div class=\"technique-description\"><i class=\"bi bi-info-circle-fill\"></i><span>Blurs upcoming verses, requiring you to recall them before revealing.</span></div><div class=\"technique-best\"><i class=\"bi bi-check-circle-fill\"></i><span>Best for: Active recall testing</span></div></div>", 1)), $data.blurModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_99, [_cache[161] || (_cache[161] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Blur Intensity", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_100, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     min: "4",
     max: "18",
     step: "1",
-    "onUpdate:modelValue": _cache[50] || (_cache[50] = function ($event) {
+    "onUpdate:modelValue": _cache[51] || (_cache[51] = function ($event) {
       return $data.blurIntensity = $event;
     }),
     "class": "input"
   }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.blurIntensity, void 0, {
     number: true
-  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_107, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.blurIntensity) + "px", 1 /* TEXT */)]), _cache[157] || (_cache[157] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_101, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.blurIntensity) + "px", 1 /* TEXT */)]), _cache[162] || (_cache[162] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Hold "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("kbd", null, "Space"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(", hover, or long-press to peek temporarily")], -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.blur_mode]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_108, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Hold "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("kbd", null, "Space"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(", hover, or long-press to peek temporarily")], -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.blur_mode]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_102, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[54] || (_cache[54] = function ($event) {
+    onClick: _cache[55] || (_cache[55] = function ($event) {
       return $options.toggleSection('chaining');
     }),
     type: "button"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_109, [_cache[160] || (_cache[160] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_103, [_cache[165] || (_cache[165] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "st-ico"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-link-45deg"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_110, [_cache[159] || (_cache[159] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_104, [_cache[164] || (_cache[164] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "st-title"
-  }, "Chaining", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_111, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodDescription), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_112, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Chaining", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_105, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodDescription), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_106, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "mode-radio-group",
-    onClick: _cache[53] || (_cache[53] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
+    onClick: _cache[54] || (_cache[54] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["mode-radio", {
       active: $data.chainingEnabled
     }]),
-    onClick: _cache[52] || (_cache[52] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onClick: _cache[53] || (_cache[53] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.toggleChainingRadio && $options.toggleChainingRadio.apply($options, arguments);
     }, ["prevent"]))
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
@@ -31042,70 +31268,70 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     name: "chaining-state",
     "aria-label": "Use chaining",
     checked: $data.chainingEnabled,
-    onChange: _cache[51] || (_cache[51] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onChange: _cache[52] || (_cache[52] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.toggleChainingRadio && $options.toggleChainingRadio.apply($options, arguments);
     }, ["prevent"]))
-  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_113), _cache[161] || (_cache[161] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_107), _cache[166] || (_cache[166] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "mode-radio-dot",
     "aria-hidden": "true"
   }, null, -1 /* CACHED */))], 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.chaining
     }])
-  }, _toConsumableArray(_cache[162] || (_cache[162] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[167] || (_cache[167] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_114, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_115, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_116, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_117, [_cache[163] || (_cache[163] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_108, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_109, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_110, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_111, [_cache[168] || (_cache[168] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-info-circle-fill"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'cumulative' ? 'Build longer runs by adding one ayah at a time.' : 'Strengthen transitions between neighbouring ayahs.'), 1 /* TEXT */)]), _cache[164] || (_cache[164] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'cumulative' ? 'Build longer runs by adding one ayah at a time.' : 'Strengthen transitions between neighbouring ayahs.'), 1 /* TEXT */)]), _cache[169] || (_cache[169] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "technique-best"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-check-circle-fill"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Best for: Building long passages")], -1 /* CACHED */))]), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_118, [_cache[167] || (_cache[167] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Method", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_119, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_120, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Best for: Building long passages")], -1 /* CACHED */))]), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_112, [_cache[172] || (_cache[172] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Method", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_113, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_114, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "linking",
-    "onUpdate:modelValue": _cache[55] || (_cache[55] = function ($event) {
+    "onUpdate:modelValue": _cache[56] || (_cache[56] = function ($event) {
       return $data.chainingMethod = $event;
     }),
-    onChange: _cache[56] || (_cache[56] = function ($event) {
+    onChange: _cache[57] || (_cache[57] = function ($event) {
       return $options.setChainingMethod('linking');
     })
-  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.chainingMethod]]), _cache[165] || (_cache[165] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Linking ", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_121, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.chainingMethod]]), _cache[170] || (_cache[170] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Linking ", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_115, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "cumulative",
-    "onUpdate:modelValue": _cache[57] || (_cache[57] = function ($event) {
+    "onUpdate:modelValue": _cache[58] || (_cache[58] = function ($event) {
       return $data.chainingMethod = $event;
     }),
-    onChange: _cache[58] || (_cache[58] = function ($event) {
+    onChange: _cache[59] || (_cache[59] = function ($event) {
       return $options.setChainingMethod('cumulative');
     })
-  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.chainingMethod]]), _cache[166] || (_cache[166] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Cumulative ", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_122, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'linking' ? 'Practice ayahs individually, then in pairs.' : 'Start with first ayah, then add one more each time.'), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_123, [_cache[168] || (_cache[168] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repeats per step", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_124, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.chainingMethod]]), _cache[171] || (_cache[171] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Cumulative ", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_116, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'linking' ? 'Practice ayahs individually, then in pairs.' : 'Start with first ayah, then add one more each time.'), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_117, [_cache[173] || (_cache[173] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repeats per step", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_118, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     min: "1",
     max: "5",
     step: "1",
     value: $data.chainingRepetitions,
-    onInput: _cache[59] || (_cache[59] = function ($event) {
+    onInput: _cache[60] || (_cache[60] = function ($event) {
       return $options.setChainingRepetitions(Number($event.target.value));
     }),
     "class": "input"
-  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_125), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_126, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions), 1 /* TEXT */)]), _cache[169] || (_cache[169] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_119), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_120, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions), 1 /* TEXT */)]), _cache[174] || (_cache[174] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Number of times to repeat each chaining step", -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_127, [_cache[170] || (_cache[170] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, "Number of times to repeat each chaining step", -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_121, [_cache[175] || (_cache[175] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-eye"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodPreview), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.chaining]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_128, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodPreview), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.chaining]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_122, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[63] || (_cache[63] = function ($event) {
+    onClick: _cache[64] || (_cache[64] = function ($event) {
       return $options.toggleSection('anchor_mode');
     }),
     type: "button"
-  }, [_cache[173] || (_cache[173] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-pin-angle-fill\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Anchor Mode</span><span class=\"st-sub\">Mental hooks using key words</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_129, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [_cache[178] || (_cache[178] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-pin-angle-fill\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Anchor Mode</span><span class=\"st-sub\">Mental hooks using key words</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_123, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "mode-radio-group",
-    onClick: _cache[62] || (_cache[62] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
+    onClick: _cache[63] || (_cache[63] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["mode-radio", {
       active: $data.anchorModeEnabled
     }]),
-    onClick: _cache[61] || (_cache[61] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onClick: _cache[62] || (_cache[62] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.toggleAnchorModeRadio && $options.toggleAnchorModeRadio.apply($options, arguments);
     }, ["prevent"]))
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
@@ -31113,41 +31339,41 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     name: "anchor-mode-state",
     "aria-label": "Use anchor mode",
     checked: $data.anchorModeEnabled,
-    onChange: _cache[60] || (_cache[60] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onChange: _cache[61] || (_cache[61] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.toggleAnchorModeRadio && $options.toggleAnchorModeRadio.apply($options, arguments);
     }, ["prevent"]))
-  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_130), _cache[171] || (_cache[171] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_124), _cache[176] || (_cache[176] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "mode-radio-dot",
     "aria-hidden": "true"
   }, null, -1 /* CACHED */))], 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.anchor_mode
     }])
-  }, _toConsumableArray(_cache[172] || (_cache[172] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[177] || (_cache[177] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_131, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_132, [_cache[176] || (_cache[176] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"field\"><div class=\"technique-description\"><i class=\"bi bi-info-circle-fill\"></i><span>Highlights key words as memory anchors to help recall the entire ayah.</span></div><div class=\"technique-best\"><i class=\"bi bi-check-circle-fill\"></i><span>Best for: Memorising key vocabulary</span></div></div>", 1)), $data.anchorModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_133, [_cache[175] || (_cache[175] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Anchor points per ayah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[64] || (_cache[64] = function ($event) {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_125, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_126, [_cache[181] || (_cache[181] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"field\"><div class=\"technique-description\"><i class=\"bi bi-info-circle-fill\"></i><span>Highlights key words as memory anchors to help recall the entire ayah.</span></div><div class=\"technique-best\"><i class=\"bi bi-check-circle-fill\"></i><span>Best for: Memorising key vocabulary</span></div></div>", 1)), $data.anchorModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_127, [_cache[180] || (_cache[180] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Anchor points per ayah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[65] || (_cache[65] = function ($event) {
       return $data.anchorCount = $event;
     }),
-    onChange: _cache[65] || (_cache[65] = function () {
+    onChange: _cache[66] || (_cache[66] = function () {
       return $options.onAnchorCountChange && $options.onAnchorCountChange.apply($options, arguments);
     }),
     "class": "select"
-  }, _toConsumableArray(_cache[174] || (_cache[174] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+  }, _toConsumableArray(_cache[179] || (_cache[179] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: 1
   }, "1 anchor (center word)", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: 2
   }, "2 anchors (first + last)", -1 /* CACHED */)])), 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.anchorCount, void 0, {
     number: true
-  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_134, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.anchorModeDescription), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.anchor_mode]])])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : $data.tab === 'saved' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_128, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.anchorModeDescription), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.anchor_mode]])])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : $data.tab === 'saved' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 2
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" SAVED TAB "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_135, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_136, [_cache[186] || (_cache[186] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" SAVED TAB "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_129, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_130, [_cache[191] || (_cache[191] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "saved-header"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-bookmark-check"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Saved Sessions")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Your memorisation sessions, ready to resume")], -1 /* CACHED */)), $data.savedSessions.length === 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_137, _toConsumableArray(_cache[177] || (_cache[177] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Saved Sessions")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Your memorisation sessions, ready to resume")], -1 /* CACHED */)), $data.savedSessions.length === 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_131, _toConsumableArray(_cache[182] || (_cache[182] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-journal-bookmark"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "No saved sessions yet", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Save your current session to get started", -1 /* CACHED */)])))) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_138, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.savedSessions, function (session) {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "No saved sessions yet", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Save your current session to get started", -1 /* CACHED */)])))) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_132, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.savedSessions, function (session) {
     var _session$config, _session$config2, _session$config3, _session$config4;
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: session.id,
@@ -31157,47 +31383,47 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       onClick: function onClick($event) {
         return $options.loadSavedSession(session.id);
       }
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_140, [_cache[178] || (_cache[178] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_134, [_cache[183] || (_cache[183] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-bookmark-fill"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(session.name), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_141, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[179] || (_cache[179] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(session.name), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_135, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[184] || (_cache[184] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-book"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_session$config = session.config) === null || _session$config === void 0 ? void 0 : _session$config.chapterName) || "Surah\n                        ".concat((_session$config2 = session.config) === null || _session$config2 === void 0 ? void 0 : _session$config2.chapterId)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[180] || (_cache[180] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_session$config = session.config) === null || _session$config === void 0 ? void 0 : _session$config.chapterName) || "Surah\n                        ".concat((_session$config2 = session.config) === null || _session$config2 === void 0 ? void 0 : _session$config2.chapterId)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[185] || (_cache[185] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-text-paragraph"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_session$config3 = session.config) === null || _session$config3 === void 0 ? void 0 : _session$config3.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_session$config4 = session.config) === null || _session$config4 === void 0 ? void 0 : _session$config4.rangeEnd), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[181] || (_cache[181] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_session$config3 = session.config) === null || _session$config3 === void 0 ? void 0 : _session$config3.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_session$config4 = session.config) === null || _session$config4 === void 0 ? void 0 : _session$config4.rangeEnd), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[186] || (_cache[186] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-clock"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatDate(session.savedAt)), 1 /* TEXT */)])])], 8 /* PROPS */, _hoisted_139), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatDate(session.savedAt)), 1 /* TEXT */)])])], 8 /* PROPS */, _hoisted_133), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "delete-btn",
       onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
         return $options.deleteSavedSession(session.id);
       }, ["stop"]),
       title: "Delete session"
-    }, _toConsumableArray(_cache[182] || (_cache[182] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[187] || (_cache[187] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-trash3"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_142)]);
-  }), 128 /* KEYED_FRAGMENT */))])), $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_143, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_144, [_cache[184] || (_cache[184] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_136)]);
+  }), 128 /* KEYED_FRAGMENT */))])), $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_137, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_138, [_cache[189] || (_cache[189] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-circle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[183] || (_cache[183] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Current Session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter = $data.currentChapter) === null || _$data$currentChapter === void 0 ? void 0 : _$data$currentChapter.name_simple) || 'No surah') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[188] || (_cache[188] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Current Session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter = $data.currentChapter) === null || _$data$currentChapter === void 0 ? void 0 : _$data$currentChapter.name_simple) || 'No surah') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "save-btn",
-    onClick: _cache[66] || (_cache[66] = function ($event) {
+    onClick: _cache[67] || (_cache[67] = function ($event) {
       return $options.saveCurrentSessionWithName();
     })
-  }, _toConsumableArray(_cache[185] || (_cache[185] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[190] || (_cache[190] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-save"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Save ", -1 /* CACHED */)])))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : $data.tab === 'settings' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 3
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" SETTINGS TAB - Same layout as Techniques tab "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_145, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Display Settings Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_146, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" SETTINGS TAB - Same layout as Techniques tab "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_139, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Display Settings Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_140, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[67] || (_cache[67] = function ($event) {
+    onClick: _cache[68] || (_cache[68] = function ($event) {
       return $options.toggleSection('display_settings');
     }),
     type: "button"
-  }, [_cache[188] || (_cache[188] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-display\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Display</span><span class=\"st-sub\">Customize how the Quran appears</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[193] || (_cache[193] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-display\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Display</span><span class=\"st-sub\">Customize how the Quran appears</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.display_settings
     }])
-  }, _toConsumableArray(_cache[187] || (_cache[187] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[192] || (_cache[192] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_147, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Tajweed "), _cache[190] || (_cache[190] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_141, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Tajweed "), _cache[195] || (_cache[195] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-item"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-info"
@@ -31205,39 +31431,39 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": "setting-label"
   }, "Tajweed"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-description"
-  }, "Recitation color rules (Idgham, Ikhfa, Madd, etc.)")])], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Font Size "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_148, [_cache[189] || (_cache[189] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Recitation color rules (Idgham, Ikhfa, Madd, etc.)")])], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Font Size "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_142, [_cache[194] || (_cache[194] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-info"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-label"
   }, "Font size"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-description"
-  }, "Adjust the Arabic text size for better readability")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_149, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_150, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.defaultFontSize) + "%", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Adjust the Arabic text size for better readability")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_143, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_144, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.defaultFontSize) + "%", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     min: "80",
     max: "200",
     step: "5",
-    "onUpdate:modelValue": _cache[68] || (_cache[68] = function ($event) {
+    "onUpdate:modelValue": _cache[69] || (_cache[69] = function ($event) {
       return $data.defaultFontSize = $event;
     }),
-    onInput: _cache[69] || (_cache[69] = function () {
+    onInput: _cache[70] || (_cache[70] = function () {
       return $options.updateDefaultFontSize && $options.updateDefaultFontSize.apply($options, arguments);
     }),
     "class": "input range-slider"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.defaultFontSize, void 0, {
     number: true
-  }]])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.display_settings]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Reading Aids Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_151, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }]])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.display_settings]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Reading Aids Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_145, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[70] || (_cache[70] = function ($event) {
+    onClick: _cache[71] || (_cache[71] = function ($event) {
       return $options.toggleSection('reading_settings');
     }),
     type: "button"
-  }, [_cache[192] || (_cache[192] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book-half\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Reading Aids</span><span class=\"st-sub\">Translations and word helpers</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[197] || (_cache[197] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book-half\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Reading Aids</span><span class=\"st-sub\">Translations and word helpers</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.reading_settings
     }])
-  }, _toConsumableArray(_cache[191] || (_cache[191] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[196] || (_cache[196] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_152, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Translation "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_153, [_cache[193] || (_cache[193] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_146, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Translation "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_147, [_cache[198] || (_cache[198] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-info"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-label"
@@ -31247,10 +31473,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip", {
       active: $data.showTranslation
     }]),
-    onClick: _cache[71] || (_cache[71] = function ($event) {
+    onClick: _cache[72] || (_cache[72] = function ($event) {
       return $options.toggleReadingOption('translation');
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showTranslation ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Transliteration "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_154, [_cache[194] || (_cache[194] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showTranslation ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Transliteration "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_148, [_cache[199] || (_cache[199] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-info"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-label"
@@ -31260,10 +31486,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip", {
       active: $data.showTransliteration
     }]),
-    onClick: _cache[72] || (_cache[72] = function ($event) {
+    onClick: _cache[73] || (_cache[73] = function ($event) {
       return $options.toggleReadingOption('transliteration');
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showTransliteration ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Word by Word "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_155, [_cache[195] || (_cache[195] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showTransliteration ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Word by Word "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_149, [_cache[200] || (_cache[200] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-info"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-label"
@@ -31273,10 +31499,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip", {
       active: $data.showWordByWord
     }]),
-    onClick: _cache[73] || (_cache[73] = function ($event) {
+    onClick: _cache[74] || (_cache[74] = function ($event) {
       return $options.toggleReadingOption('wbw');
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showWordByWord ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Word Audio "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_156, [_cache[196] || (_cache[196] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showWordByWord ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Word Audio "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_150, [_cache[201] || (_cache[201] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-info"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-label"
@@ -31286,7 +31512,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip", {
       active: $data.wordByWordAudioEnabled
     }]),
-    onClick: _cache[74] || (_cache[74] = function ($event) {
+    onClick: _cache[75] || (_cache[75] = function ($event) {
       return $data.wordByWordAudioEnabled = !$data.wordByWordAudioEnabled;
     })
   }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.wordByWordAudioEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.reading_settings]])])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
@@ -31295,81 +31521,79 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     }])
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-btn tools-btn-ghost tools-btn-soft",
-    onClick: _cache[75] || (_cache[75] = function () {
+    onClick: _cache[76] || (_cache[76] = function () {
       return $options.resetControls && $options.resetControls.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[197] || (_cache[197] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[202] || (_cache[202] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-counterclockwise"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Reset", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-btn tools-btn-primary tools-btn-soft",
-    onClick: _cache[76] || (_cache[76] = function () {
+    onClick: _cache[77] || (_cache[77] = function () {
       return $options.startSessionAndClose && $options.startSessionAndClose.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[198] || (_cache[198] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[203] || (_cache[203] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-fill"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Start Session", -1 /* CACHED */)])))], 2 /* CLASS */)], 42 /* CLASS, PROPS, NEED_HYDRATION */, _hoisted_54)], 2 /* CLASS */)) : $data.appReady && !$options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_157, _toConsumableArray(_cache[199] || (_cache[199] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"login-hero\"><div class=\"login-card\"><div class=\"login-icon\"><i class=\"bi bi-book-half\"></i></div><h1>Welcome to Mutqin</h1><p class=\"login-subtitle\">Your personal Quran memorisation companion</p><div class=\"login-features\"><div class=\"feature\"><i class=\"bi bi-cloud-check\"></i><span>Sync across devices</span></div><div class=\"feature\"><i class=\"bi bi-graph-up\"></i><span>Track your progress</span></div><div class=\"feature\"><i class=\"bi bi-calendar-check\"></i><span>Never lose your place</span></div></div><a href=\"/login\" class=\"login-btn\" style=\"text-decoration:none;\"><i class=\"bi bi-box-arrow-in-right\"></i><span>Sign in to continue</span></a><p class=\"login-note\"> Your sessions, progress, and resume history sync after login </p></div></div>", 1)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Save Session Name Modal - Clean & Updated Version "), $data.showSaveNameModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Start Session", -1 /* CACHED */)])))], 2 /* CLASS */)], 42 /* CLASS, PROPS, NEED_HYDRATION */, _hoisted_54)], 2 /* CLASS */)) : $data.appReady && !$options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_151, _toConsumableArray(_cache[204] || (_cache[204] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"login-hero\"><div class=\"login-card\"><div class=\"login-icon\"><i class=\"bi bi-book-half\"></i></div><h1>Welcome to Mutqin</h1><p class=\"login-subtitle\">Your personal Quran memorisation companion</p><div class=\"login-features\"><div class=\"feature\"><i class=\"bi bi-cloud-check\"></i><span>Sync across devices</span></div><div class=\"feature\"><i class=\"bi bi-graph-up\"></i><span>Track your progress</span></div><div class=\"feature\"><i class=\"bi bi-calendar-check\"></i><span>Never lose your place</span></div></div><a href=\"/login\" class=\"login-btn\" style=\"text-decoration:none;\"><i class=\"bi bi-box-arrow-in-right\"></i><span>Sign in to continue</span></a><p class=\"login-note\"> Your sessions, progress, and resume history sync after login </p></div></div>", 1)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Save Session Name Modal - Clean & Updated Version "), $data.showSaveNameModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 3,
     "class": "modal-overlay",
-    onClick: _cache[85] || (_cache[85] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onClick: _cache[86] || (_cache[86] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.closeSaveModal && $options.closeSaveModal.apply($options, arguments);
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_158, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_159, [_cache[201] || (_cache[201] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_152, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_153, [_cache[208] || (_cache[208] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "modal-header-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-bookmark-plus-fill"
-  })], -1 /* CACHED */)), _cache[202] || (_cache[202] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "modal-header-text"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", {
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_154, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_155, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionContextBadge), 1 /* TEXT */), _cache[205] || (_cache[205] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", {
     id: "saveModalTitle"
-  }, "Save Memorisation Session"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Name your session to easily find and resume it later")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Save Memorisation Session", -1 /* CACHED */)), _cache[206] || (_cache[206] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Name your session to easily find and resume it later", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "modal-close-btn",
-    onClick: _cache[79] || (_cache[79] = function () {
+    onClick: _cache[80] || (_cache[80] = function () {
       return $options.closeSaveModal && $options.closeSaveModal.apply($options, arguments);
     }),
     "aria-label": "Close"
-  }, _toConsumableArray(_cache[200] || (_cache[200] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[207] || (_cache[207] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_160, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Session Preview Card "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_161, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_162, [_cache[203] || (_cache[203] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_156, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Session Preview Card "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_157, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_158, [_cache[209] || (_cache[209] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-book"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter2 = $data.currentChapter) === null || _$data$currentChapter2 === void 0 ? void 0 : _$data$currentChapter2.name_simple) || 'No surah selected'), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_163, [_cache[204] || (_cache[204] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter2 = $data.currentChapter) === null || _$data$currentChapter2 === void 0 ? void 0 : _$data$currentChapter2.name_simple) || 'No surah selected'), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_159, [_cache[210] || (_cache[210] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-text-paragraph"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Ayahs " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeStart) + " – " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_164, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_165, [_cache[205] || (_cache[205] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Ayahs " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeStart) + " – " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_160, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_161, [_cache[211] || (_cache[211] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-files"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd - $options.rangeStart + 1) + " verses ", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_166, [_cache[206] || (_cache[206] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd - $options.rangeStart + 1) + " verses ", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_162, [_cache[212] || (_cache[212] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-mic"
   }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getReciterName()), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Name Input Field "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["name-input-group", {
       'has-error': $data.nameError
     }])
-  }, [_cache[209] || (_cache[209] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+  }, [_cache[215] || (_cache[215] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
     "for": "sessionName"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-pencil-square"
   }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Session Name ")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     id: "sessionName",
     type: "text",
-    "onUpdate:modelValue": _cache[80] || (_cache[80] = function ($event) {
+    "onUpdate:modelValue": _cache[81] || (_cache[81] = function ($event) {
       return $data.saveSessionName = $event;
     }),
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["name-input", {
       'error': $data.nameError
     }]),
     placeholder: "e.g., Al-Fatihah Focus, Evening Review, Week 1 Progress",
-    onKeyup: _cache[81] || (_cache[81] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)(function () {
+    onKeyup: _cache[82] || (_cache[82] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)(function () {
       return $options.confirmSaveSession && $options.confirmSaveSession.apply($options, arguments);
     }, ["enter"])),
-    onInput: _cache[82] || (_cache[82] = function () {
+    onInput: _cache[83] || (_cache[83] = function () {
       return $options.clearNameError && $options.clearNameError.apply($options, arguments);
     }),
     autofocus: "",
     maxlength: "50"
-  }, null, 34 /* CLASS, NEED_HYDRATION */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.saveSessionName]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_167, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_168, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.saveSessionName.length) + "/50", 1 /* TEXT */), _cache[207] || (_cache[207] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, 34 /* CLASS, NEED_HYDRATION */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.saveSessionName]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_163, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_164, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.saveSessionName.length) + "/50", 1 /* TEXT */), _cache[213] || (_cache[213] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "hint-text"
-  }, "Give it a memorable name", -1 /* CACHED */))]), $data.nameError ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_169, [_cache[208] || (_cache[208] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, "Give it a memorable name", -1 /* CACHED */))]), $data.nameError ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_165, [_cache[214] || (_cache[214] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-exclamation-circle-fill"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.nameError), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quick Name Suggestions "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_170, [_cache[210] || (_cache[210] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.nameError), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quick Name Suggestions "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_166, [_cache[216] || (_cache[216] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "suggestions-label"
-  }, "Quick suggestions:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_171, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.nameSuggestions, function (suggestion) {
+  }, "Quick suggestions:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_167, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.nameSuggestions, function (suggestion) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
       key: suggestion,
       "class": "suggestion-chip",
@@ -31377,76 +31601,119 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         return $data.saveSessionName = suggestion;
       },
       type: "button"
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(suggestion), 9 /* TEXT, PROPS */, _hoisted_172);
-  }), 128 /* KEYED_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Session Info Note "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_173, [_cache[212] || (_cache[212] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(suggestion), 9 /* TEXT, PROPS */, _hoisted_168);
+  }), 128 /* KEYED_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Session Info Note "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_169, [_cache[218] || (_cache[218] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-info-circle-fill"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_174, [_cache[211] || (_cache[211] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Saved with current settings:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingEnabled ? "".concat($data.chainingMethod, " chaining (").concat($data.chainingRepetitions, "x)") : 'Standard mode'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.tajweedEnabled ? '· Tajweed enabled' : ''), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_175, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_170, [_cache[217] || (_cache[217] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Saved with current settings:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingEnabled ? "".concat($data.chainingMethod, " chaining (").concat($data.chainingRepetitions, "x)") : 'Standard mode'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.tajweedEnabled ? '· Tajweed enabled' : ''), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_171, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary",
-    onClick: _cache[83] || (_cache[83] = function () {
+    onClick: _cache[84] || (_cache[84] = function () {
       return $options.closeSaveModal && $options.closeSaveModal.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[213] || (_cache[213] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[219] || (_cache[219] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Cancel ", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-primary",
-    onClick: _cache[84] || (_cache[84] = function () {
+    onClick: _cache[85] || (_cache[85] = function () {
       return $options.confirmSaveSession && $options.confirmSaveSession.apply($options, arguments);
     }),
     disabled: !$options.isValidSessionName
-  }, _toConsumableArray(_cache[214] || (_cache[214] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[220] || (_cache[220] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-save"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Save Session ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_176)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showConfirmModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Save Session ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_172)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showConfirmModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 4,
     "class": "modal-overlay",
-    onClick: _cache[89] || (_cache[89] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onClick: _cache[90] || (_cache[90] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_177, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_178, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_173, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_174, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_175, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_176, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionContextBadge), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.title), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-icon",
-    onClick: _cache[86] || (_cache[86] = function () {
+    onClick: _cache[87] || (_cache[87] = function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[215] || (_cache[215] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[221] || (_cache[221] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_179, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_180, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.message), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_181, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_177, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_178, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.message), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_179, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary",
-    onClick: _cache[87] || (_cache[87] = function () {
+    onClick: _cache[88] || (_cache[88] = function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     })
   }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.cancelLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["btn-primary", {
       'btn-danger': $data.confirmModal.tone === 'danger'
     }]),
-    onClick: _cache[88] || (_cache[88] = function () {
+    onClick: _cache[89] || (_cache[89] = function () {
       return $options.runConfirmAction && $options.runConfirmAction.apply($options, arguments);
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.confirmLabel), 3 /* TEXT, CLASS */)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showCountdownOverlay ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_182, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_183, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_184, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.countdownValue), 1 /* TEXT */), _cache[216] || (_cache[216] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.confirmLabel), 3 /* TEXT, CLASS */)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showSessionExitModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+    key: 5,
+    "class": "modal-overlay",
+    onClick: _cache[96] || (_cache[96] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+      return $options.closeSessionExitModal && $options.closeSessionExitModal.apply($options, arguments);
+    }, ["self"]))
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_180, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_181, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_182, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_183, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionContextBadge), 1 /* TEXT */), _cache[222] || (_cache[222] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", {
+    id: "sessionExitTitle"
+  }, "End Session", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "btn-icon",
+    onClick: _cache[91] || (_cache[91] = function () {
+      return $options.closeSessionExitModal && $options.closeSessionExitModal.apply($options, arguments);
+    })
+  }, _toConsumableArray(_cache[223] || (_cache[223] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-x-lg"
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_184, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_185, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[224] || (_cache[224] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-book"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter3 = $data.currentChapter) === null || _$data$currentChapter3 === void 0 ? void 0 : _$data$currentChapter3.name_simple) || 'No surah'), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[225] || (_cache[225] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-text-paragraph"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + "/" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[226] || (_cache[226] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-clock"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime || 0)), 1 /* TEXT */)])]), _cache[228] || (_cache[228] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+    "class": "confirm-copy"
+  }, "You can leave now, or save this session before exiting. Continuing will restore the exact ayah, playback position, and blur state.", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_186, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "checkbox",
+    "onUpdate:modelValue": _cache[92] || (_cache[92] = function ($event) {
+      return $data.sessionExitAutoSave = $event;
+    })
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $data.sessionExitAutoSave]]), _cache[227] || (_cache[227] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Auto-save before exit", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_187, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "btn-secondary",
+    onClick: _cache[93] || (_cache[93] = function () {
+      return $options.closeSessionExitModal && $options.closeSessionExitModal.apply($options, arguments);
+    })
+  }, "Continue Session"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "btn-secondary",
+    onClick: _cache[94] || (_cache[94] = function () {
+      return $options.exitSessionAnyway && $options.exitSessionAnyway.apply($options, arguments);
+    })
+  }, "Exit Anyway"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "btn-primary",
+    onClick: _cache[95] || (_cache[95] = function () {
+      return $options.confirmSessionExit && $options.confirmSessionExit.apply($options, arguments);
+    })
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.sessionExitAutoSave ? 'Save & Exit' : 'End Session'), 1 /* TEXT */)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showCountdownOverlay ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_188, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_189, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_190, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.countdownValue), 1 /* TEXT */), _cache[229] || (_cache[229] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "countdown-text"
   }, "Prepare yourself", -1 /* CACHED */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Global Audio Player - Updated with Speed Controls "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(vue__WEBPACK_IMPORTED_MODULE_0__.Transition, {
     name: "slide-up"
   }, {
     "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-      var _$data$currentChapter3;
+      var _$data$currentChapter4;
       return [$data.appReady && $data.playerVisible ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
         key: 0,
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["player-bar", {
           collapsed: $data.playerCollapsed
         }])
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_185, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_186, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_187, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter3 = $data.currentChapter) === null || _$data$currentChapter3 === void 0 ? void 0 : _$data$currentChapter3.name_simple) || 'Quran'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_188, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activeAyahLabel) + " ", 1 /* TEXT */), $options.etaLabel && $data.isPlaying ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_191, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_192, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_193, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter4 = $data.currentChapter) === null || _$data$currentChapter4 === void 0 ? void 0 : _$data$currentChapter4.name_simple) || 'Quran'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_194, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activeAyahLabel) + " ", 1 /* TEXT */), $options.etaLabel && $data.isPlaying ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
         key: 0,
         "class": "player-eta",
         title: $options.getEtaTooltip()
-      }, " • " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel) + " remaining ", 9 /* TEXT, PROPS */, _hoisted_189)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_190, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      }, " • " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel) + " remaining ", 9 /* TEXT, PROPS */, _hoisted_195)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_196, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[90] || (_cache[90] = function () {
+        onClick: _cache[97] || (_cache[97] = function () {
           return $options.prev && $options.prev.apply($options, arguments);
         }),
         title: "Previous"
-      }, _toConsumableArray(_cache[217] || (_cache[217] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[230] || (_cache[230] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-skip-start-fill"
       }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn player-play",
-        onClick: _cache[91] || (_cache[91] = function () {
+        onClick: _cache[98] || (_cache[98] = function () {
           return $options.togglePlay && $options.togglePlay.apply($options, arguments);
         }),
         title: "Play/Pause"
@@ -31454,15 +31721,15 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
       }, null, 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[92] || (_cache[92] = function () {
+        onClick: _cache[99] || (_cache[99] = function () {
           return $options.next && $options.next.apply($options, arguments);
         }),
         title: "Next"
-      }, _toConsumableArray(_cache[218] || (_cache[218] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[231] || (_cache[231] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-skip-end-fill"
-      }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_191, [_cache[219] || (_cache[219] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+      }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_197, [_cache[232] || (_cache[232] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
         "class": "player-loop-label"
-      }, "Loop", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_192, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.loopCountOptions, function (option) {
+      }, "Loop", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_198, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.loopCountOptions, function (option) {
         return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
           key: "loop-".concat(option.value),
           "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["player-loop-chip", {
@@ -31473,10 +31740,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
             return $options.setLoopCount(option.value);
           },
           title: option.label
-        }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(option.shortLabel), 11 /* TEXT, CLASS, PROPS */, _hoisted_193);
-      }), 128 /* KEYED_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_194, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_195, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+        }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(option.shortLabel), 11 /* TEXT, CLASS, PROPS */, _hoisted_199);
+      }), 128 /* KEYED_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_200, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_201, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
         "class": "player-progress-bg",
-        onClick: _cache[93] || (_cache[93] = function () {
+        onClick: _cache[100] || (_cache[100] = function () {
           return _ctx.seek && _ctx.seek.apply(_ctx, arguments);
         }),
         ref: "progress"
@@ -31485,18 +31752,18 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
           width: $data.currentTime / ($data.duration || 1) * 100 + '%'
         })
-      }, null, 4 /* STYLE */)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_196, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.duration)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      }, null, 4 /* STYLE */)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_202, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.duration)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[94] || (_cache[94] = function ($event) {
+        onClick: _cache[101] || (_cache[101] = function ($event) {
           return $data.playerVisible = false;
         }),
         title: "Close player"
-      }, _toConsumableArray(_cache[220] || (_cache[220] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[233] || (_cache[233] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-x-lg"
       }, null, -1 /* CACHED */)])))])], 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)];
     }),
     _: 1 /* STABLE */
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio System "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_197, null, 512 /* NEED_PATCH */)], 12 /* STYLE, PROPS */, _hoisted_1);
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio System "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_203, null, 512 /* NEED_PATCH */)], 12 /* STYLE, PROPS */, _hoisted_1);
 }
 
 /***/ }),
@@ -38926,7 +39193,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n/* Range control styling - consistent with other sections */\n.range-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin-top: 8px;\n}\n.technique-range {\n  flex: 1;\n  height: 5px;\n  border-radius: 3px;\n  background: var(--border);\n  -webkit-appearance: none;\n  cursor: pointer;\n}\n.technique-range:focus {\n  outline: none;\n}\n.technique-range::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 18px;\n  height: 18px;\n  border-radius: 50%;\n  background: var(--accent);\n  cursor: pointer;\n  border: 2px solid var(--surface);\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);\n}\n.technique-range::-webkit-slider-thumb:hover {\n  transform: scale(1.15);\n}\n\n/* Field header with value pill */\n.field-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  margin-bottom: 8px;\n}\n.field-header label {\n  margin-bottom: 0;\n  font-weight: 600;\n}\n.range-value-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 52px;\n  padding: 4px 12px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n\n/* Slider markers */\n.slider-markers {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  padding: 0 4px;\n}\n.slider-markers span {\n  font-size: 10px;\n  color: var(--text-muted);\n}\n\n/* Gap options as radio cards */\n.gap-options {\n  display: grid !important;\n  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));\n  gap: 8px;\n}\n.gap-options .radio {\n  flex-direction: column;\n  text-align: center;\n  gap: 4px;\n  padding: 10px 8px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.gap-options .radio.active {\n  background: var(--accent);\n  border-color: var(--accent);\n  color: white;\n}\n.gap-options .radio.active .option-label,\n.gap-options .radio.active .option-desc {\n  color: white;\n}\n.gap-options .radio input {\n  display: none;\n}\n.option-label {\n  display: block;\n  font-weight: 600;\n  font-size: 0.85rem;\n}\n.option-desc {\n  display: block;\n  font-size: 0.65rem;\n  opacity: 0.7;\n}\n\n/* Custom gap control */\n.custom-gap-control {\n  margin-top: 16px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n}\n.inline-setting-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 60px;\n  padding: 6px 12px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.mt-2 {\n  margin-top: 12px;\n}\n/* Fix offcanvas positioning - add to your existing styles */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  width: min(var(--tools-width, 440px), 92vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.98), rgba(247, 240, 231, 0.96));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(16px);\n  transform: translateX(100%);\n  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);\n  z-index: 1000;\n  display: flex;\n  flex-direction: column;\n  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.15);\n  will-change: transform;\n}\n.tools.open {\n  transform: translateX(0);\n}\n\n/* Fix backdrop */\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.5);\n  backdrop-filter: blur(4px);\n  z-index: 999;\n  animation: fadeIn 0.2s ease;\n}\n\n/* Fix tools header spacing */\n.tools-top {\n  padding: 20px 20px 16px;\n  border-bottom: 1px solid var(--border);\n  background: inherit;\n  flex-shrink: 0;\n}\n\n/* Fix tools body scrolling */\n.tools-body {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px;\n  scroll-behavior: smooth;\n  -webkit-overflow-scrolling: touch;\n}\n\n/* Fix tools footer */\n.tools-footer {\n  position: relative;\n  padding: 16px 20px;\n  border-top: 1px solid var(--border);\n  background: inherit;\n  flex-shrink: 0;\n}\n\n/* Fix tab buttons */\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 16px;\n  background: rgba(0, 0, 0, 0.04);\n  border-radius: 14px;\n  padding: 6px;\n}\n.tools-tabs button {\n  flex: 1;\n  padding: 10px 12px;\n  border-radius: 10px;\n  background: transparent;\n  border: none;\n  font-size: 0.85rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.tools-tabs button.active {\n  background: var(--surface-strong);\n  color: var(--text);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.tools-tabs button:hover:not(.active) {\n  background: rgba(0, 0, 0, 0.04);\n  color: var(--text);\n}\n\n/* Fix button styles */\n.tools-btn {\n  padding: 12px 20px;\n  border-radius: 12px;\n  font-weight: 600;\n  font-size: 0.9rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  border: none;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.tools-btn-soft {\n  background: rgba(0, 0, 0, 0.05);\n  color: var(--text);\n}\n.tools-btn-soft:hover {\n  background: rgba(0, 0, 0, 0.08);\n  transform: translateY(-1px);\n}\n.tools-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.tools-btn-primary:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.4);\n}\n\n/* Fix close button */\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n}\n.tools-x:hover {\n  background: var(--accent-light);\n  transform: rotate(90deg);\n}\n\n/* Mobile optimizations */\n@media (max-width: 768px) {\n.tools {\n    width: 100vw;\n    max-width: 100vw;\n}\n.tools-tabs button span {\n    display: none;\n}\n.tools-tabs button i {\n    font-size: 1.2rem;\n}\n.tools-tabs button {\n    padding: 12px;\n}\n.tools-body {\n    padding: 16px;\n}\n}\n\n/* Animation for backdrop */\n@keyframes fadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n:root {\n  --bg: #f3eee6;\n  --surface: rgba(255, 250, 243, 0.88);\n  --surface-strong: rgba(255, 255, 255, 0.92);\n  --border: rgba(78, 58, 38, 0.10);\n  --text: #1f1a17;\n  --text-muted: #6c6258;\n  --accent: #9a6738;\n  --accent-strong: #6e4726;\n  --accent-soft: #d8c1a8;\n  --accent-light: rgba(154, 103, 56, 0.10);\n  --accent-wash: rgba(228, 211, 194, 0.42);\n  --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);\n  --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);\n  --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);\n  --radius: 16px;\n  --navbar-offset: 56px;\n  --tools-width: 440px;\n  --tools-footer-h: 78px;\n  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;\n  --font-ui: \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n[data-theme=\"dark\"] {\n  --bg: #14110f;\n  --surface: rgba(31, 27, 24, 0.92);\n  --surface-strong: rgba(43, 37, 32, 0.96);\n  --border: rgba(255, 236, 216, 0.16);\n  --text: #f7ebdf;\n  --text-muted: #d1c2b3;\n  --accent: #d0a06b;\n  --accent-strong: #efc18d;\n  --accent-soft: #5f4530;\n  --accent-light: rgba(208, 160, 107, 0.14);\n  --accent-wash: rgba(208, 160, 107, 0.08);\n  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);\n  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);\n  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);\n}\n[data-theme=\"sepia\"] {\n  --bg: #efe2cb;\n  --surface: rgba(250, 241, 227, 0.88);\n  --surface-strong: rgba(255, 248, 237, 0.94);\n  --text: #352516;\n  --text-muted: #75624f;\n  --accent: #b8824e;\n  --accent-strong: #8f6033;\n  --accent-soft: #dcc3a6;\n  --accent-light: rgba(184, 130, 78, 0.12);\n  --accent-wash: rgba(221, 194, 162, 0.35);\n}\n[v-cloak] {\n  display: none !important;\n}\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\n.session-setup {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n}\n.setting-section {\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  overflow: hidden;\n}\n.section-header {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 16px 20px;\n  background: var(--surface);\n  border-bottom: 1px solid var(--border);\n  font-weight: 500;\n  color: var(--text);\n}\n.section-header i {\n  font-size: 18px;\n  color: var(--text-muted);\n}\n.section-content {\n  padding: 20px;\n}\n\n/* Slider styles */\n.slider-wrapper {\n  width: 100%;\n}\n.form-range {\n  width: 100%;\n  height: 4px;\n  padding: 0;\n  background: var(--border);\n  border-radius: 4px;\n  -webkit-appearance: none;\n}\n.form-range:focus {\n  outline: none;\n}\n.form-range::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 16px;\n  height: 16px;\n  background: #2c7a4d;\n  border-radius: 50%;\n  cursor: pointer;\n  border: none;\n  box-shadow: 0 1px 3px rgba(0,0,0,0.1);\n}\n.form-range::-webkit-slider-thumb:hover {\n  transform: scale(1.15);\n}\n.slider-labels {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  padding: 0 4px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.repetition-value {\n  margin-top: 12px;\n  font-size: 13px;\n  color: var(--text-muted);\n}\n.repetition-value strong {\n  color: #2c7a4d;\n  font-weight: 600;\n}\n\n/* Select styles */\n.form-select {\n  width: 100%;\n  padding: 8px 12px;\n  border: 1px solid var(--border);\n  border-radius: 8px;\n  font-size: 14px;\n  color: var(--text);\n  background-color: var(--surface-strong);\n  cursor: pointer;\n}\n.form-select:focus {\n  outline: none;\n  border-color: #2c7a4d;\n  box-shadow: 0 0 0 2px rgba(44, 122, 77, 0.1);\n}\n\n/* Input group */\n.input-group {\n  display: flex;\n  align-items: stretch;\n}\n.form-control {\n  flex: 1;\n  padding: 8px 12px;\n  border: 1px solid #e5e7eb;\n  border-right: none;\n  border-radius: 8px 0 0 8px;\n  font-size: 14px;\n}\n.form-control:focus {\n  outline: none;\n  border-color: #2c7a4d;\n}\n.input-group-text {\n  padding: 8px 12px;\n  background: #f9fafb;\n  border: 1px solid #e5e7eb;\n  border-left: none;\n  border-radius: 0 8px 8px 0;\n  font-size: 14px;\n  color: #6b7280;\n}\n\n/* Hint */\n.setting-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  margin-top: 12px;\n  padding: 10px 12px;\n  background: #f9fafb;\n  border-radius: 8px;\n  font-size: 12px;\n  color: #6b7280;\n}\n.setting-hint i {\n  font-size: 14px;\n  color: #9ca3af;\n}\n.mt-2 {\n  margin-top: 12px;\n}\n.session-setup-tab {\n  padding: 20px;\n  max-width: 600px;\n}\n.setting-group {\n  margin-bottom: 24px;\n  padding: 16px;\n  background: #f5f5f5;\n  border-radius: 8px;\n}\n.section-label {\n  font-weight: 600;\n  font-size: 14px;\n  margin-bottom: 12px;\n  display: block;\n  color: #333;\n}\n\n/* Feature 1: Repetitions Control */\n.repetition-control {\n  margin-top: 8px;\n}\n.slider-container {\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  margin-bottom: 8px;\n}\n.repetition-slider {\n  flex: 1;\n  height: 4px;\n  border-radius: 2px;\n  background: #ddd;\n  outline: none;\n  -webkit-appearance: none;\n}\n.repetition-slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 16px;\n  height: 16px;\n  border-radius: 50%;\n  background: #2c7a4d;\n  cursor: pointer;\n}\n.slider-value {\n  min-width: 60px;\n  text-align: center;\n}\n.slider-value .value {\n  font-size: 18px;\n  font-weight: 600;\n  color: #2c7a4d;\n}\n.slider-value .unit {\n  font-size: 14px;\n  color: #666;\n  margin-left: 4px;\n}\n\n/* Techniques Grid */\n.techniques-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));\n  gap: 12px;\n}\n.technique-checkbox {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  cursor: pointer;\n}\n\n/* Feature 2: Audio Settings */\n.audio-settings {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.setting-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.setting-item label {\n  font-size: 14px;\n  color: #555;\n  min-width: 120px;\n}\n.setting-item select,\n.setting-item input[type=\"number\"] {\n  padding: 6px 12px;\n  border: 1px solid #ddd;\n  border-radius: 4px;\n  font-size: 14px;\n}\n.setting-item input[type=\"checkbox\"] {\n  width: 18px;\n  height: 18px;\n  cursor: pointer;\n}\n.setting-hint {\n  font-size: 12px;\n  color: #888;\n  margin-top: 8px;\n  font-style: italic;\n}\n\n/* Responsive */\n@media (max-width: 480px) {\n.setting-item {\n    flex-direction: column;\n    align-items: flex-start;\n}\n.setting-item label {\n    min-width: auto;\n}\n}\n.session-setup {\n  padding: 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  max-width: 500px;\n  margin: 0 auto;\n}\n\n/* Setting Card */\n.setting-card {\n  background: white;\n  border-radius: 20px;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);\n  overflow: hidden;\n  transition: all 0.2s ease;\n}\n.card-header {\n  padding: 20px 20px 0 20px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.card-icon {\n  font-size: 24px;\n}\n.card-title {\n  font-size: 18px;\n  font-weight: 600;\n  color: #1a1a1a;\n  margin: 0;\n}\n.card-content {\n  padding: 16px 20px 20px 20px;\n}\n\n/* Repetitions Control */\n.repetition-control {\n  width: 100%;\n}\n.repetition-stats {\n  text-align: center;\n  margin-bottom: 20px;\n}\n.repetition-value {\n  font-size: 48px;\n  font-weight: 700;\n  color: #2c7a4d;\n  line-height: 1;\n}\n.repetition-unit {\n  font-size: 14px;\n  color: #666;\n  margin-left: 8px;\n}\n.repetition-slider {\n  width: 100%;\n  height: 6px;\n  border-radius: 3px;\n  background: linear-gradient(to right, #2c7a4d 0%, #2c7a4d 0%, #e5e7eb 0%, #e5e7eb 100%);\n  outline: none;\n  -webkit-appearance: none;\n  cursor: pointer;\n}\n.repetition-slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 20px;\n  height: 20px;\n  border-radius: 50%;\n  background: #2c7a4d;\n  box-shadow: 0 2px 6px rgba(44, 122, 77, 0.3);\n  cursor: pointer;\n  border: 2px solid white;\n}\n.repetition-slider::-webkit-slider-thumb:hover {\n  transform: scale(1.15);\n}\n.repetition-markers {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  padding: 0 4px;\n}\n.repetition-markers span {\n  font-size: 11px;\n  color: #999;\n}\n.setting-hint {\n  font-size: 13px;\n  color: #888;\n  margin-top: 16px;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  background: #f9fafb;\n  padding: 10px 12px;\n  border-radius: 12px;\n}\n.hint-icon {\n  font-size: 14px;\n}\n\n/* Gap Options */\n.gap-options {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));\n  gap: 10px;\n  margin-bottom: 20px;\n}\n.gap-option {\n  background: #f9fafb;\n  border: 1.5px solid #e5e7eb;\n  border-radius: 12px;\n  padding: 12px 8px;\n  text-align: center;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.gap-option:hover {\n  background: #f3f4f6;\n  border-color: #d1d5db;\n  transform: translateY(-1px);\n}\n.gap-option.active {\n  background: #2c7a4d;\n  border-color: #2c7a4d;\n  color: white;\n}\n.option-label {\n  display: block;\n  font-weight: 600;\n  font-size: 15px;\n  margin-bottom: 4px;\n}\n.option-desc {\n  display: block;\n  font-size: 11px;\n  opacity: 0.7;\n}\n.gap-option.active .option-label,\n.gap-option.active .option-desc {\n  color: white;\n}\n\n/* Custom Gap */\n.custom-gap {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid #e5e7eb;\n}\n.custom-slider {\n  width: 100%;\n  height: 6px;\n  border-radius: 3px;\n  background: #e5e7eb;\n  outline: none;\n  -webkit-appearance: none;\n  cursor: pointer;\n}\n.custom-slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 18px;\n  height: 18px;\n  border-radius: 50%;\n  background: #2c7a4d;\n  cursor: pointer;\n  border: 2px solid white;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);\n}\n.custom-gap-value {\n  text-align: center;\n  margin-top: 12px;\n}\n.custom-gap-value .value {\n  font-size: 28px;\n  font-weight: 600;\n  color: #2c7a4d;\n}\n.custom-gap-value .unit {\n  font-size: 14px;\n  color: #666;\n  margin-left: 6px;\n}\n\n/* Responsive */\n@media (max-width: 480px) {\n.session-setup {\n    padding: 16px;\n}\n.gap-options {\n    grid-template-columns: repeat(3, 1fr);\n}\n.repetition-value {\n    font-size: 40px;\n}\n}\n\n/* Enhanced Save Modal Styles */\n.save-name-modal {\n  max-width: 520px;\n  width: 100%;\n  animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.modal-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 16px;\n  padding: 24px 24px 20px;\n  border-bottom: 1px solid var(--border);\n  background: linear-gradient(135deg, var(--surface), var(--surface-strong));\n}\n.modal-header-icon {\n  width: 48px;\n  height: 48px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-radius: 14px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.modal-header-icon i {\n  font-size: 1.5rem;\n  color: white;\n}\n.modal-header-text {\n  flex: 1;\n}\n.modal-header-text h2 {\n  margin: 0 0 4px 0;\n  font-size: 1.2rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.modal-header-text p {\n  margin: 0;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.modal-close-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n  flex-shrink: 0;\n}\n.modal-close-btn:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n  transform: rotate(90deg);\n}\n\n/* Session Preview Card */\n.session-preview-card {\n  background: linear-gradient(135deg, var(--accent-light), var(--accent-wash));\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  margin-bottom: 24px;\n  display: flex;\n  flex-wrap: wrap;\n  align-items: center;\n  gap: 16px;\n}\n.preview-surah,\n.preview-range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  background: var(--surface);\n  border-radius: 10px;\n  font-size: 0.85rem;\n  font-weight: 500;\n  color: var(--text);\n}\n.preview-surah i,\n.preview-range i {\n  color: var(--accent);\n  font-size: 0.9rem;\n}\n.preview-stats {\n  display: flex;\n  gap: 12px;\n  margin-left: auto;\n}\n.preview-stat {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.preview-stat i {\n  font-size: 0.7rem;\n  color: var(--accent);\n}\n\n/* Name Input Group */\n.name-input-group {\n  margin-bottom: 20px;\n}\n.name-input-group label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.name-input-group label i {\n  color: var(--accent);\n  font-size: 0.9rem;\n}\n.name-input {\n  width: 100%;\n  padding: 14px 16px;\n  border-radius: 12px;\n  border: 2px solid var(--border);\n  background: var(--surface);\n  font-size: 0.95rem;\n  color: var(--text);\n  transition: all 0.2s;\n}\n.name-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 3px var(--accent-light);\n}\n.name-input.error {\n  border-color: #dc3545;\n}\n.input-hint {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 6px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.char-count {\n  font-family: monospace;\n}\n.error-message {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  margin-top: 8px;\n  padding: 8px 12px;\n  background: rgba(220, 53, 69, 0.1);\n  border-radius: 8px;\n  font-size: 0.75rem;\n  color: #dc3545;\n}\n.error-message i {\n  font-size: 0.8rem;\n}\n\n/* Quick Suggestions */\n.quick-suggestions {\n  margin-bottom: 20px;\n}\n.suggestions-label {\n  display: block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-bottom: 10px;\n  font-weight: 500;\n}\n.suggestion-chips {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.suggestion-chip {\n  padding: 6px 14px;\n  border-radius: 20px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.75rem;\n  color: var(--text);\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.suggestion-chip:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n  transform: translateY(-1px);\n}\n\n/* Info Note */\n.info-note {\n  display: flex;\n  gap: 10px;\n  padding: 12px 14px;\n  background: rgba(46, 125, 50, 0.08);\n  border-radius: 12px;\n  border: 1px solid rgba(46, 125, 50, 0.12);\n}\n.info-note i {\n  color: #2e7d32;\n  font-size: 1rem;\n  flex-shrink: 0;\n  margin-top: 2px;\n}\n.info-text {\n  flex: 1;\n}\n.info-text strong {\n  display: block;\n  font-size: 0.7rem;\n  color: #2e7d32;\n  margin-bottom: 4px;\n}\n.info-text span {\n  display: inline-block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-right: 8px;\n}\n\n/* Modal Footer */\n.modal-footer {\n  display: flex;\n  gap: 12px;\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.btn-secondary,\n.btn-primary {\n  flex: 1;\n  padding: 12px 16px;\n  border-radius: 12px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.btn-secondary {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  color: var(--text);\n}\n.btn-secondary:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.4);\n}\n.btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n  transform: none;\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .session-preview-card {\n  background: rgba(208, 160, 107, 0.1);\n}\n[data-theme=\"dark\"] .info-note {\n  background: rgba(76, 175, 80, 0.1);\n  border-color: rgba(76, 175, 80, 0.2);\n}\n[data-theme=\"dark\"] .info-note i {\n  color: #81c784;\n}\n[data-theme=\"dark\"] .info-text strong {\n  color: #81c784;\n}\n\n/* Responsive */\n@media (max-width: 560px) {\n.session-preview-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.preview-stats {\n    margin-left: 0;\n    justify-content: space-between;\n}\n.modal-header {\n    padding: 20px;\n}\n.modal-footer {\n    padding: 16px 20px;\n    flex-direction: column;\n}\n.suggestion-chips {\n    justify-content: center;\n}\n}\n.wbw-word {\n  display: inline-block;\n  position: relative;\n  margin: 0 2px;\n  padding: 2px 4px;\n  border-radius: 6px;\n  transition: all 0.15s ease;\n}\n.wbw-word .word-audio-btn {\n  position: absolute;\n  top: -12px;\n  right: -8px;\n  width: 18px;\n  height: 18px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  color: white;\n  font-size: 10px;\n  opacity: 0;\n  transition: opacity 0.2s;\n}\n.wbw-word:hover .word-audio-btn {\n  opacity: 1;\n}\n.wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n}\n\n/* Combined Tajweed + Word Highlighting */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {\n  background: var(--accent);\n  color: white !important;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n\n/* Preserve tajweed colors inside highlighted words but make them visible */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*=\"tajweed-\"],\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {\n  color: inherit !important;\n  background: transparent !important;\n}\n\n/* Field header for toggle chips - matching Techniques tab */\n.field-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  margin-bottom: 6px;\n}\n.field-header label {\n  margin-bottom: 0;\n}\n\n/* Range value pill */\n.range-value-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 52px;\n  padding: 4px 10px;\n  background: var(--accent-light);\n  border-radius: 8px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n\n/* Setting items - matching Techniques tab style */\n.setting-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 20px;\n  padding: 16px 0;\n  border-bottom: 1px solid var(--border);\n}\n.setting-item:last-child {\n  border-bottom: none;\n}\n.setting-item-range {\n  flex-direction: column;\n  align-items: stretch;\n  gap: 14px;\n}\n.setting-info {\n  flex: 1;\n}\n.setting-label {\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 6px;\n}\n.setting-description {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n\n/* Range control compact */\n.range-control-compact {\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  width: 100%;\n}\n.range-value-badge {\n  min-width: 60px;\n  padding: 6px 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--accent);\n  text-align: center;\n}\n.range-slider {\n  flex: 1;\n  height: 5px;\n  border-radius: 3px;\n  background: var(--border);\n  -webkit-appearance: none;\n}\n.range-slider:focus {\n  outline: none;\n}\n.range-slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 18px;\n  height: 18px;\n  border-radius: 50%;\n  background: var(--accent);\n  cursor: pointer;\n  border: 2px solid var(--surface);\n  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n}\n.range-slider::-webkit-slider-thumb:hover {\n  transform: scale(1.1);\n}\n\n/* Larger toggle chips for settings */\n.setting-item .toggle-chip {\n  min-height: 38px;\n  min-width: 80px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  letter-spacing: 0.5px;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.setting-item {\n    flex-direction: column;\n    align-items: stretch;\n    gap: 12px;\n    padding: 14px 0;\n}\n.setting-item .toggle-chip {\n    align-self: flex-start;\n}\n.setting-label {\n    font-size: 0.95rem;\n}\n.setting-description {\n    font-size: 0.75rem;\n}\n.range-control-compact {\n    gap: 12px;\n}\n.range-value-badge {\n    min-width: 55px;\n    padding: 5px 10px;\n    font-size: 0.8rem;\n}\n}\n\n/* Inline field for toggle chips */\n.field-inline {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  flex-wrap: wrap;\n}\n.field-label-group {\n  flex: 1;\n  min-width: 0;\n}\n.field-label-group label {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 2px;\n}\n.field-label-group label i {\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.field-label-group small {\n  display: block;\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n\n/* Range control */\n.range-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.range-control .input {\n  flex: 1;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.field-inline {\n    flex-direction: column;\n    align-items: stretch;\n}\n.field-inline .toggle-chip {\n    align-self: flex-start;\n}\n}\n\n/* Settings Container */\n.settings-container {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n  padding-bottom: 20px;\n}\n\n/* Settings Group */\n.settings-group {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 20px;\n  overflow: hidden;\n}\n.settings-group-header {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 16px 20px;\n  background: var(--surface-strong);\n  border-bottom: 1px solid var(--border);\n  font-weight: 600;\n  font-size: 0.85rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--accent);\n}\n.settings-group-header i {\n  font-size: 1rem;\n}\n\n/* Settings Stack */\n.settings-stack {\n  display: flex;\n  flex-direction: column;\n}\n\n/* Settings Row */\n.settings-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px 20px;\n  border-bottom: 1px solid var(--border);\n  transition: background 0.2s ease;\n}\n.settings-row:last-child {\n  border-bottom: none;\n}\n.settings-row:hover {\n  background: var(--accent-light);\n}\n.settings-row-info {\n  flex: 1;\n}\n.settings-row-label {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  font-weight: 600;\n  font-size: 0.9rem;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.settings-row-label i {\n  font-size: 1rem;\n  color: var(--accent);\n  width: 20px;\n}\n.settings-row-desc {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-left: 30px;\n}\n\n/* Range Row */\n.settings-row-range {\n  flex-direction: column;\n  align-items: stretch;\n  gap: 12px;\n}\n.settings-range-control {\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  margin-left: 30px;\n}\n.range-value {\n  min-width: 50px;\n  padding: 4px 8px;\n  background: var(--accent-light);\n  border-radius: 8px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--accent);\n  text-align: center;\n}\n.settings-range-input {\n  flex: 1;\n  height: 4px;\n  border-radius: 2px;\n  background: var(--border);\n  -webkit-appearance: none;\n}\n.settings-range-input:focus {\n  outline: none;\n}\n.settings-range-input::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 16px;\n  height: 16px;\n  border-radius: 50%;\n  background: var(--accent);\n  cursor: pointer;\n  border: none;\n}\n\n/* Toggle Button */\n.settings-toggle-btn {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  background: none;\n  border: none;\n  cursor: pointer;\n  padding: 0;\n}\n.toggle-status {\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  min-width: 32px;\n  text-align: right;\n}\n.settings-toggle-btn.active .toggle-status {\n  color: var(--accent);\n}\n.toggle-slider {\n  position: relative;\n  width: 44px;\n  height: 24px;\n  background: var(--border);\n  border-radius: 24px;\n  transition: all 0.2s ease;\n}\n.toggle-slider::before {\n  content: '';\n  position: absolute;\n  top: 2px;\n  left: 2px;\n  width: 20px;\n  height: 20px;\n  background: white;\n  border-radius: 50%;\n  transition: transform 0.2s ease;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);\n}\n.settings-toggle-btn.active .toggle-slider {\n  background: var(--accent);\n}\n.settings-toggle-btn.active .toggle-slider::before {\n  transform: translateX(20px);\n}\n\n/* Warning Notice */\n.settings-notice-warning {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 12px 16px;\n  background: rgba(255, 152, 0, 0.1);\n  border: 1px solid rgba(255, 152, 0, 0.2);\n  border-radius: 12px;\n  font-size: 0.7rem;\n  color: #e6a017;\n}\n.settings-notice-warning i {\n  font-size: 1rem;\n  flex-shrink: 0;\n}\n\n/* Settings Footer Actions */\n.settings-footer-actions {\n  display: flex;\n  gap: 12px;\n  padding: 16px 20px;\n  margin-top: 8px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.settings-reset-btn,\n.settings-start-btn {\n  flex: 1;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  padding: 12px 16px;\n  border-radius: 14px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  border: none;\n}\n.settings-reset-btn {\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n}\n.settings-reset-btn:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n  transform: translateY(-1px);\n}\n.settings-start-btn {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.25);\n}\n.settings-start-btn:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.35);\n}\n.settings-start-btn:active,\n.settings-reset-btn:active {\n  transform: translateY(0);\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .settings-group {\n  background: var(--surface-strong);\n}\n[data-theme=\"dark\"] .settings-row:hover {\n  background: rgba(208, 160, 107, 0.08);\n}\n[data-theme=\"dark\"] .toggle-slider::before {\n  background: var(--surface);\n}\n[data-theme=\"dark\"] .settings-reset-btn {\n  background: var(--surface);\n}\n\n/* Mobile responsive */\n@media (max-width: 640px) {\n.settings-row {\n    padding: 14px 16px;\n}\n.settings-row-label {\n    font-size: 0.85rem;\n}\n.settings-row-desc {\n    font-size: 0.65rem;\n    margin-left: 30px;\n}\n.settings-range-control {\n    margin-left: 30px;\n}\n.settings-footer-actions {\n    padding: 12px 16px;\n}\n.settings-reset-btn,\n  .settings-start-btn {\n    padding: 10px 14px;\n    font-size: 0.8rem;\n}\n}\n\n/* Technique description styling */\n.technique-description {\n  display: flex;\n  align-items: flex-start;\n  gap: 10px;\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  margin-bottom: 12px;\n}\n.technique-description i {\n  color: var(--accent);\n  font-size: 1rem;\n  margin-top: 2px;\n  flex-shrink: 0;\n}\n.technique-description span {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n.technique-best {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: rgba(46, 125, 50, 0.08);\n  border-radius: 10px;\n  border: 1px solid rgba(46, 125, 50, 0.15);\n}\n.technique-best i {\n  color: #2e7d32;\n  font-size: 0.8rem;\n  flex-shrink: 0;\n}\n.technique-best span {\n  font-size: 0.7rem;\n  color: #2e7d32;\n  font-weight: 500;\n}\n.technique-preview-block {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 12px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  margin-top: 8px;\n}\n.technique-preview-block i {\n  color: var(--accent);\n  font-size: 0.9rem;\n  flex-shrink: 0;\n}\n.technique-preview-block span {\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .technique-description {\n  background: rgba(208, 160, 107, 0.1);\n}\n[data-theme=\"dark\"] .technique-best {\n  background: rgba(76, 175, 80, 0.1);\n  border-color: rgba(76, 175, 80, 0.2);\n}\n[data-theme=\"dark\"] .technique-best span {\n  color: #81c784;\n}\n[data-theme=\"dark\"] .technique-preview-block {\n  background: var(--surface-strong);\n}\n.techniques-header {\n  margin-bottom: 24px;\n  padding-bottom: 16px;\n  border-bottom: 1px solid var(--border);\n}\n.techniques-header h3 {\n  margin: 0 0 6px 0;\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.techniques-header p {\n  margin: 0 0 12px 0;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.compatibility-info-btn {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  padding: 6px 12px;\n  border-radius: 20px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  color: var(--accent);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.technique-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  margin-bottom: 16px;\n  transition: all 0.2s ease;\n}\n.technique-card-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 14px;\n  margin-bottom: 12px;\n}\n.technique-icon {\n  width: 44px;\n  height: 44px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.technique-icon i {\n  font-size: 1.3rem;\n  color: var(--accent);\n}\n.technique-info {\n  flex: 1;\n  min-width: 0;\n}\n.technique-info h4 {\n  margin: 0 0 4px 0;\n  font-size: 0.95rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.technique-info p {\n  margin: 0;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n.technique-toggle {\n  flex-shrink: 0;\n  min-width: 70px;\n  min-height: 36px;\n}\n.technique-controls {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.control-group {\n  margin-bottom: 14px;\n}\n.control-group label {\n  display: block;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.range-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.technique-range {\n  flex: 1;\n  padding: 0;\n}\n.value-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 48px;\n  padding: 4px 8px;\n  background: var(--accent-light);\n  border-radius: 8px;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.technique-select {\n  width: 100%;\n  padding: 8px 12px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.8rem;\n  color: var(--text);\n}\n.technique-preview {\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.technique-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: rgba(154, 103, 56, 0.08);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.technique-hint kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.65rem;\n  font-weight: 600;\n}\n.presets-section {\n  margin-top: 24px;\n  padding-top: 20px;\n  border-top: 1px solid var(--border);\n}\n.presets-section h4 {\n  margin: 0 0 12px 0;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.presets-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));\n  gap: 10px;\n}\n.preset-btn {\n  padding: 10px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.preset-btn:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n  transform: translateY(-1px);\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n  overflow-x: auto;\n  -webkit-overflow-scrolling: touch;\n}\n.tools-tabs button {\n  flex: 1;\n  padding: 8px 12px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.8rem;\n  cursor: pointer;\n  color: var(--text-muted);\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: all 0.2s ease;\n  white-space: nowrap;\n}\n.tools-tabs button.active {\n  background: var(--surface-strong);\n  color: var(--text);\n  box-shadow: var(--shadow-sm);\n}\n.tools-tabs button i {\n  font-size: 0.9rem;\n}\n\n/* Expanded offcanvas width */\n.tools {\n  --tools-width: 520px;\n  width: min(var(--tools-width), 92vw);\n}\n\n/* Techniques Tab Styles */\n.techniques-header {\n  margin-bottom: 24px;\n  padding-bottom: 16px;\n  border-bottom: 1px solid var(--border);\n}\n.techniques-header h3 {\n  margin: 0 0 6px 0;\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.techniques-header p {\n  margin: 0 0 12px 0;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.compatibility-info-btn {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  padding: 6px 12px;\n  border-radius: 20px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  color: var(--accent);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.compatibility-info-btn:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.techniques-list-expanded {\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  margin-bottom: 24px;\n}\n.technique-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  transition: all 0.2s ease;\n}\n.technique-card:hover {\n  border-color: var(--accent);\n  box-shadow: var(--shadow-sm);\n}\n.technique-card-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 14px;\n  margin-bottom: 12px;\n}\n.technique-icon {\n  width: 44px;\n  height: 44px;\n  background: linear-gradient(135deg, var(--accent-light), var(--accent-wash));\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.technique-icon i {\n  font-size: 1.3rem;\n  color: var(--accent);\n}\n.technique-info {\n  flex: 1;\n  min-width: 0;\n}\n.technique-info h4 {\n  margin: 0 0 4px 0;\n  font-size: 0.95rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.technique-info p {\n  margin: 0;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n.technique-toggle {\n  flex-shrink: 0;\n  min-width: 70px;\n  min-height: 36px;\n}\n.technique-controls {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.control-group {\n  margin-bottom: 14px;\n}\n.control-group label {\n  display: block;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.range-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.technique-range {\n  flex: 1;\n  padding: 0;\n}\n.value-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 48px;\n  padding: 4px 8px;\n  background: var(--accent-light);\n  border-radius: 8px;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.technique-select {\n  width: 100%;\n  padding: 8px 12px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.8rem;\n  color: var(--text);\n}\n.technique-preview {\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.technique-preview i {\n  color: var(--accent);\n  font-size: 0.8rem;\n}\n.technique-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  margin-top: 12px;\n  background: rgba(154, 103, 56, 0.08);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.technique-hint kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.65rem;\n  font-weight: 600;\n}\n.technique-benefits {\n  margin-top: 12px;\n  padding-top: 10px;\n  border-top: 1px solid var(--border);\n}\n.technique-benefits small {\n  font-size: 0.65rem;\n  color: var(--accent);\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.technique-benefits small i {\n  font-size: 0.6rem;\n}\n\n/* Presets Section */\n.presets-section {\n  margin-top: 24px;\n  padding-top: 20px;\n  border-top: 1px solid var(--border);\n}\n.presets-section h4 {\n  margin: 0 0 12px 0;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.presets-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));\n  gap: 10px;\n}\n.preset-btn {\n  padding: 10px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.preset-btn:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n  transform: translateY(-1px);\n}\n.preset-btn i {\n  font-size: 0.8rem;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.tools {\n    --tools-width: 100vw;\n}\n.technique-card-header {\n    flex-wrap: wrap;\n}\n.technique-toggle {\n    width: 100%;\n}\n.presets-grid {\n    grid-template-columns: 1fr;\n}\n}\n.conflict-badge {\n  margin-top: 6px;\n  padding: 2px 8px;\n  background: #fee2e2;\n  color: #dc2626;\n  border-radius: 20px;\n  font-size: 0.65rem;\n  font-weight: 500;\n  display: inline-block;\n}\n[data-theme=\"dark\"] .conflict-badge {\n  background: rgba(220, 38, 38, 0.15);\n  color: #f87171;\n}\n.technique-conflict-warning {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  margin-top: 6px;\n  padding: 4px 8px;\n  background: rgba(220, 53, 69, 0.1);\n  border-radius: 8px;\n  font-size: 0.65rem;\n  color: #c62828;\n  border: 1px solid rgba(220, 53, 69, 0.2);\n  animation: warningPulse 1s ease-in-out;\n}\n.technique-conflict-warning i {\n  font-size: 0.7rem;\n}\n@keyframes warningPulse {\n0%,\n  100% {\n    opacity: 0.7;\n}\n50% {\n    opacity: 1;\n    background: rgba(220, 53, 69, 0.2);\n}\n}\n\n/* Dark mode */\n[data-theme=\"dark\"] .technique-conflict-warning {\n  background: rgba(229, 57, 53, 0.15);\n  color: #ef9a9a;\n}\n\n/* Hint button in sheet toggle */\n.st-right-group {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.st-hint-btn {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--accent);\n  transition: all 0.2s ease;\n}\n.st-hint-btn:hover {\n  background: var(--accent-light);\n  transform: scale(1.05);\n}\n.st-hint-btn i {\n  font-size: 0.9rem;\n}\n\n/* Compatibility Modal */\n.compatibility-modal {\n  max-width: 560px;\n  width: 100%;\n}\n.compatibility-intro {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n  margin-bottom: 20px;\n  line-height: 1.4;\n}\n.compatibility-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n  margin-bottom: 20px;\n}\n.compatibility-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 14px 16px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  transition: all 0.2s ease;\n}\n.compatibility-row:hover {\n  border-color: var(--accent);\n  background: var(--accent-light);\n}\n.combo-icons {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  min-width: 70px;\n  font-size: 1.1rem;\n  color: var(--accent);\n}\n.combo-icons i {\n  font-size: 1rem;\n}\n.combo-icons .bi-plus-lg {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.combo-text {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.combo-text strong {\n  font-size: 0.85rem;\n  color: var(--text);\n}\n.combo-text span {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.combo-badge {\n  padding: 4px 10px;\n  border-radius: 20px;\n  font-size: 0.7rem;\n  font-weight: 600;\n  white-space: nowrap;\n}\n.combo-badge.success {\n  background: rgba(46, 125, 50, 0.12);\n  color: #2e7d32;\n  border: 1px solid rgba(46, 125, 50, 0.2);\n}\n.combo-badge.alone {\n  background: rgba(154, 103, 56, 0.12);\n  color: var(--accent);\n  border: 1px solid rgba(154, 103, 56, 0.2);\n}\n.compatibility-note {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 12px 14px;\n  background: rgba(220, 53, 69, 0.08);\n  border-radius: 12px;\n  font-size: 0.75rem;\n  color: #c62828;\n  border: 1px solid rgba(220, 53, 69, 0.15);\n}\n.compatibility-note i {\n  font-size: 1rem;\n  flex-shrink: 0;\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .compatibility-row {\n  background: var(--surface-strong);\n}\n[data-theme=\"dark\"] .compatibility-row:hover {\n  background: rgba(208, 160, 107, 0.1);\n}\n[data-theme=\"dark\"] .combo-badge.success {\n  background: rgba(76, 175, 80, 0.15);\n  color: #81c784;\n}\n[data-theme=\"dark\"] .compatibility-note {\n  background: rgba(229, 57, 53, 0.12);\n  color: #ef9a9a;\n}\n\n/* Responsive */\n@media (max-width: 560px) {\n.compatibility-row {\n    flex-wrap: wrap;\n    gap: 10px;\n}\n.combo-badge {\n    margin-left: auto;\n}\n.combo-icons {\n    min-width: 55px;\n}\n}\n.segmented-control-compact button {\n  font-size: 0.7rem;\n  padding: 6px 8px;\n}\n.save-name-modal {\n  max-width: 420px;\n  width: 100%;\n}\n.save-modal-desc {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n  margin-bottom: 20px;\n  line-height: 1.4;\n}\n.save-name-input-group {\n  margin-bottom: 16px;\n}\n.save-name-input-group label {\n  display: block;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.save-name-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  color: var(--text);\n  transition: all 0.2s;\n}\n.save-name-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 3px var(--accent-light);\n}\n.save-preview-info {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-top: 8px;\n}\n.save-preview-info i {\n  color: var(--accent);\n  font-size: 0.9rem;\n}\n.technique-desc-hint {\n  display: block;\n  font-size: 0.65rem;\n  color: var(--accent);\n  margin-top: 4px;\n  font-weight: 500;\n}\n.technique-example-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  margin-top: 8px;\n  background: rgba(154, 103, 56, 0.08);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n}\n.technique-example-hint i {\n  color: var(--accent);\n  font-size: 0.8rem;\n  flex-shrink: 0;\n}\n.technique-example-hint strong {\n  color: var(--accent);\n}\n\n/* Anchor Mode Styles - Enhanced */\n.verse-arabic .wbw-word.anchor-highlight,\n.verse-arabic word.anchor-highlight,\n.word-item.anchor-highlight {\n  position: relative;\n  background: linear-gradient(135deg, rgba(255, 193, 7, 0.3), rgba(255, 152, 0, 0.4));\n  border-bottom: 3px solid #ff9800;\n  border-radius: 8px;\n  transform: scale(1.02);\n  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);\n  cursor: pointer;\n  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.2);\n}\n\n/* Animation for newly highlighted anchors */\n.anchor-pulse {\n  animation: anchorPulse 0.6s ease-out;\n}\n@keyframes anchorPulse {\n0% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7);\n}\n50% {\n    transform: scale(1.08);\n    box-shadow: 0 0 0 8px rgba(255, 152, 0, 0);\n}\n100% {\n    transform: scale(1.02);\n    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0);\n}\n}\n.verse-arabic .wbw-word.anchor-highlight:hover,\n.verse-arabic word.anchor-highlight:hover,\n.word-item.anchor-highlight:hover {\n  background: rgba(255, 152, 0, 0.6);\n  transform: scale(1.08);\n  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);\n}\n\n/* Tooltip for anchors */\n.anchor-highlight::after {\n  content: \"🔗 Memory Anchor\";\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: #333;\n  color: white;\n  padding: 4px 8px;\n  border-radius: 6px;\n  font-size: 0.7rem;\n  white-space: nowrap;\n  z-index: 100;\n  opacity: 0;\n  pointer-events: none;\n  transition: opacity 0.2s;\n}\n.anchor-highlight:hover::after {\n  opacity: 1;\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .anchor-highlight {\n  background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 152, 0, 0.3));\n  border-bottom-color: #ffb74d;\n}\n[data-theme=\"dark\"] .anchor-highlight:hover {\n  background: rgba(255, 152, 0, 0.4);\n}\n.main.blur-mode-active .verse-card.blur-upcoming .anchor-highlight {\n  filter: blur(calc(var(--recall-blur, 10px) - 4px));\n}\n.technique-select {\n  padding: 8px 12px;\n  border-radius: 10px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  font-size: 0.8rem;\n}\n.verse-small-play-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: white;\n  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);\n}\n.verse-small-play-btn i {\n  font-size: 0.8rem;\n}\n.verse-small-play-btn:hover {\n  transform: scale(1.05);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--accent);\n}\n\n/* Add to your style section */\n.countdown-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.85);\n  backdrop-filter: blur(12px);\n  z-index: 99999;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.countdown-modal {\n  text-align: center;\n}\n.countdown-number {\n  font-size: 8rem;\n  font-weight: 800;\n  color: var(--accent);\n  animation: pulse 1s ease infinite;\n}\n.countdown-text {\n  font-size: 1.5rem;\n  color: white;\n  margin-top: 20px;\n}\n@keyframes pulse {\n0%,\n  100% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.1);\n}\n}\n@media (max-width: 640px) {\n.countdown-number {\n    font-size: 5rem;\n}\n.countdown-text {\n    font-size: 1.2rem;\n}\n}\n\n/* Add these styles if missing */\n.technique-peek-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  margin-top: 8px;\n  border-radius: 10px;\n  background: rgba(154, 103, 56, 0.08);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.technique-peek-hint i {\n  color: var(--accent);\n  font-size: 0.8rem;\n  flex-shrink: 0;\n}\n.technique-peek-hint kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.65rem;\n  font-weight: 600;\n  color: var(--accent);\n  display: inline-block;\n}\n\n/* Add to style section */\n.countdown-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.85);\n  backdrop-filter: blur(12px);\n  z-index: 10000;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  animation: fadeIn 0.3s ease;\n}\n.countdown-modal {\n  text-align: center;\n  animation: scaleIn 0.4s cubic-bezier(0.34, 1.2, 0.64, 1);\n}\n.countdown-number {\n  font-size: 8rem;\n  font-weight: 800;\n  color: var(--accent);\n  text-shadow: 0 0 30px rgba(154, 103, 56, 0.5);\n  animation: pulse 1s ease infinite;\n  font-family: monospace;\n}\n.countdown-text {\n  font-size: 1.5rem;\n  color: white;\n  margin-top: 20px;\n  font-weight: 500;\n  letter-spacing: 2px;\n}\n.countdown-hint {\n  font-size: 0.85rem;\n  color: rgba(255, 255, 255, 0.6);\n  margin-top: 12px;\n}\n@keyframes fadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n@keyframes scaleIn {\nfrom {\n    opacity: 0;\n    transform: scale(0.8);\n}\nto {\n    opacity: 1;\n    transform: scale(1);\n}\n}\n@keyframes pulse {\n0%,\n  100% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.1);\n}\n}\n@media (max-width: 640px) {\n.countdown-number {\n    font-size: 5rem;\n}\n.countdown-text {\n    font-size: 1.2rem;\n}\n}\n\n\n/* Mobile */\n@media (max-width: 768px) {\n.wavemark-bars {\n    height: 30px;\n    gap: 1.5px;\n}\n.wavemark-playhead::before {\n    width: 8px;\n    height: 8px;\n    top: -5px;\n    left: -3px;\n}\n}\n.waveform-canvas {\n  width: 100%;\n  height: 60px;\n  display: block;\n  border-radius: 8px;\n  cursor: pointer;\n}\n\n/* Settings notice */\n.settings-notice {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 14px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  margin-bottom: 20px;\n  font-size: 0.75rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.settings-notice i {\n  font-size: 0.9rem;\n}\n\n/* Login Hero Section */\n.login-hero {\n  min-height: calc(100vh - 100px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  padding: 40px 20px;\n}\n.login-card {\n  max-width: 480px;\n  width: 100%;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  border-radius: 32px;\n  padding: 48px 40px;\n  text-align: center;\n  box-shadow: var(--shadow-lg);\n  animation: loginFadeIn 0.5s ease-out;\n}\n.login-icon {\n  width: 80px;\n  height: 80px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  margin: 0 auto 24px;\n  box-shadow: 0 8px 24px rgba(154, 103, 56, 0.25);\n}\n.login-icon i {\n  font-size: 2.5rem;\n  color: white;\n}\n.login-card h1 {\n  font-size: 1.8rem;\n  font-weight: 700;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.login-subtitle {\n  font-size: 0.95rem;\n  color: var(--text-muted);\n  margin-bottom: 32px;\n}\n.login-features {\n  display: flex;\n  justify-content: center;\n  gap: 24px;\n  margin-bottom: 40px;\n  flex-wrap: wrap;\n}\n.feature {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 8px;\n}\n.feature i {\n  font-size: 1.5rem;\n  color: var(--accent);\n  background: var(--accent-light);\n  width: 48px;\n  height: 48px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 24px;\n  transition: all 0.2s ease;\n}\n.feature span {\n  font-size: 0.75rem;\n  font-weight: 500;\n  color: var(--text-muted);\n}\n.login-btn {\n  width: 100%;\n  padding: 14px 24px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 60px;\n  font-size: 1rem;\n  font-weight: 600;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  transition: all 0.2s ease;\n  margin-bottom: 20px;\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.login-btn:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 24px rgba(154, 103, 56, 0.4);\n}\n.login-btn:active {\n  transform: translateY(0);\n}\n.login-note {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin: 0;\n  line-height: 1.4;\n}\n@keyframes loginFadeIn {\nfrom {\n    opacity: 0;\n    transform: translateY(20px);\n}\nto {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n/* Responsive */\n@media (max-width: 520px) {\n.login-card {\n    padding: 32px 24px;\n}\n.login-icon {\n    width: 64px;\n    height: 64px;\n}\n.login-icon i {\n    font-size: 2rem;\n}\n.login-card h1 {\n    font-size: 1.5rem;\n}\n.login-features {\n    gap: 16px;\n}\n.feature i {\n    width: 40px;\n    height: 40px;\n    font-size: 1.2rem;\n}\n.feature span {\n    font-size: 0.7rem;\n}\n}\n\n/* Save Name Modal Styles */\n.save-name-modal {\n  max-width: 420px;\n  width: 100%;\n}\n.save-modal-desc {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n  margin-bottom: 20px;\n  line-height: 1.4;\n}\n.save-name-input-group {\n  margin-bottom: 16px;\n}\n.save-name-input-group label {\n  display: block;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.save-name-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  color: var(--text);\n  transition: all 0.2s;\n}\n.save-name-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 3px var(--accent-light);\n}\n.save-preview-info {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-top: 8px;\n}\n.save-preview-info i {\n  color: var(--accent);\n  font-size: 0.9rem;\n}\n\n/* Fix saved tab layout */\n.saved-sessions-container {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  padding: 16px;\n  box-shadow: var(--shadow-sm);\n}\n.saved-header {\n  margin-bottom: 16px;\n  padding-bottom: 12px;\n  border-bottom: 1px solid var(--border);\n}\n.saved-header h3 {\n  margin: 0 0 4px 0;\n  font-size: 0.9rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.saved-header p {\n  margin: 0;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.sessions-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  margin-bottom: 16px;\n  max-height: 320px;\n  overflow-y: auto;\n}\n.session-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  transition: all 0.2s ease;\n  overflow: hidden;\n}\n.session-info {\n  flex: 1;\n  min-width: 0;\n  padding: 10px 12px;\n  cursor: pointer;\n}\n.session-info:hover {\n  background: var(--accent-light);\n}\n.session-name {\n  font-weight: 600;\n  font-size: 0.8rem;\n  color: var(--text);\n  margin-bottom: 4px;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.session-name i {\n  color: var(--accent);\n  font-size: 0.7rem;\n}\n.session-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n  font-size: 0.6rem;\n  color: var(--text-muted);\n}\n.session-meta span {\n  display: inline-flex;\n  align-items: center;\n  gap: 3px;\n}\n.delete-btn {\n  width: 36px;\n  height: 36px;\n  margin-right: 8px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: #dc3545;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.delete-btn:hover {\n  background: #dc3545;\n  color: white;\n  border-color: #dc3545;\n}\n.save-section {\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.current-info {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 1;\n  min-width: 0;\n  padding: 8px 10px;\n  background: var(--accent-light);\n  border-radius: 10px;\n}\n.current-info i {\n  font-size: 1rem;\n  color: var(--accent);\n  flex-shrink: 0;\n}\n.current-info div {\n  display: flex;\n  flex-direction: column;\n  min-width: 0;\n}\n.current-info strong {\n  font-size: 0.75rem;\n  color: var(--text);\n}\n.current-info small {\n  font-size: 0.6rem;\n  color: var(--text-muted);\n}\n.save-btn {\n  padding: 8px 16px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 10px;\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  gap: 5px;\n  transition: all 0.2s;\n  flex-shrink: 0;\n}\n.save-btn:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.save-btn:active {\n  transform: translateY(0);\n}\n\n/* Saved Tab Styles - Clean Version */\n.saved-header {\n  margin-bottom: 24px;\n  padding-bottom: 16px;\n  border-bottom: 1px solid var(--border);\n}\n.saved-header h3 {\n  margin: 0 0 6px 0;\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.saved-header p {\n  margin: 0;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.empty-state {\n  text-align: center;\n  padding: 48px 24px;\n  color: var(--text-muted);\n}\n.empty-state i {\n  font-size: 3rem;\n  margin-bottom: 12px;\n  opacity: 0.4;\n}\n.empty-state p {\n  margin-bottom: 4px;\n  font-weight: 500;\n  color: var(--text);\n}\n.empty-state span {\n  font-size: 0.7rem;\n}\n.sessions-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  margin-bottom: 24px;\n  max-height: 320px;\n  overflow-y: auto;\n}\n.session-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 12px 14px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.session-item:hover {\n  border-color: var(--accent);\n  background: var(--accent-light);\n  transform: translateX(2px);\n}\n.session-info {\n  flex: 1;\n  min-width: 0;\n}\n.session-name {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-weight: 600;\n  font-size: 0.85rem;\n  color: var(--text);\n  margin-bottom: 6px;\n}\n.session-name i {\n  color: var(--accent);\n  font-size: 0.8rem;\n}\n.session-details {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.session-details span {\n  display: inline-flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.session-details i {\n  font-size: 0.6rem;\n}\n.delete-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: #dc3545;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.delete-btn:hover {\n  background: #dc3545;\n  color: white;\n  border-color: #dc3545;\n}\n.save-section {\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.current-info {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex: 1;\n  min-width: 0;\n}\n.current-info i {\n  font-size: 1.2rem;\n  color: var(--accent);\n  flex-shrink: 0;\n}\n.current-info div {\n  display: flex;\n  flex-direction: column;\n  min-width: 0;\n}\n.current-info strong {\n  font-size: 0.8rem;\n  color: var(--text);\n}\n.current-info small {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.save-btn {\n  padding: 8px 16px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 10px;\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  transition: all 0.2s;\n  flex-shrink: 0;\n}\n.save-btn:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.action-icon {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 52px;\n  height: 42px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  font-size: 1.2rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: rgba(0, 0, 0, 0.78);\n}\n.action-icon:hover {\n  transform: translateY(-2px);\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n\n/* Add to your style section */\n.tools-tabs button {\n  flex: 1;\n  padding: 8px 12px;\n  font-size: 0.8rem;\n}\n.saved-sessions-container {\n  padding: 16px;\n}\n.saved-session-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 12px;\n  margin-bottom: 12px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.saved-session-card:hover {\n  border-color: var(--accent);\n  transform: translateX(4px);\n  box-shadow: var(--shadow-sm);\n}\n.saved-session-header {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin-bottom: 8px;\n}\n.session-icon {\n  width: 36px;\n  height: 36px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--accent);\n}\n.session-details {\n  flex: 1;\n}\n.session-title {\n  font-weight: 600;\n  font-size: 0.85rem;\n  color: var(--text);\n}\n.session-range {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.session-delete-btn-icon {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: #dc3545;\n  transition: all 0.2s;\n}\n.session-delete-btn-icon:hover {\n  background: #dc3545;\n  color: white;\n  border-color: #dc3545;\n}\n.session-footer {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  padding-left: 48px;\n}\n.session-resume-hint {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  color: var(--accent);\n}\n.save-current-session-panel {\n  margin-top: 20px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.save-session-btn-full {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 12px;\n  cursor: pointer;\n  font-weight: 600;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.save-session-btn-full:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.empty-saved-state {\n  text-align: center;\n  padding: 48px 24px;\n  color: var(--text-muted);\n}\n.empty-saved-state i {\n  font-size: 3rem;\n  margin-bottom: 12px;\n  opacity: 0.5;\n}\n\n/* Action Buttons Group - Perfect Alignment */\n.action-buttons-group {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.action-icon-btn {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  width: 42px;\n  height: 42px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  font-size: 1.1rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n  flex-shrink: 0;\n}\n.action-icon-btn:hover {\n  transform: translateY(-1px);\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n.action-icon-btn:active {\n  transform: translateY(0);\n}\n.action-btn {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  height: 42px;\n  padding: 0 18px;\n  border-radius: 12px;\n  font-weight: 600;\n  font-size: 0.85rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  border: none;\n  white-space: nowrap;\n  flex-shrink: 0;\n}\n.action-btn-secondary {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  border: 1px solid var(--border);\n  color: var(--text);\n  box-shadow: var(--shadow-sm);\n}\n.action-btn-secondary:hover {\n  transform: translateY(-1px);\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n.action-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.25);\n  border: none;\n}\n.action-btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.35);\n}\n.action-btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n  transform: none;\n}\n.action-btn-secondary:active,\n.action-icon-btn:active {\n  transform: translateY(0);\n}\n\n/* Responsive adjustments */\n@media (max-width: 640px) {\n.action-buttons-group {\n    gap: 6px;\n}\n.action-icon-btn {\n    width: 38px;\n    height: 38px;\n    font-size: 1rem;\n}\n.action-btn {\n    height: 38px;\n    padding: 0 14px;\n    font-size: 0.8rem;\n}\n.action-btn span {\n    display: inline-block;\n}\n}\n@media (max-width: 480px) {\n.action-btn span {\n    display: none;\n}\n.action-btn {\n    width: 42px;\n    padding: 0;\n}\n.action-btn i {\n    font-size: 1.1rem;\n    margin: 0;\n}\n}\n\n/* Keyboard Shortcuts Modal - Larger & Cleaner */\n.keyboard-shortcuts-modal {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.6);\n  backdrop-filter: blur(8px);\n  z-index: 1000;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  animation: modalFadeIn 0.2s ease;\n}\n.shortcuts-modal {\n  background: var(--surface-strong);\n  border-radius: 24px;\n  width: min(520px, 90vw);\n  max-width: 520px;\n  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.3);\n  border: 1px solid var(--border);\n  animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n  overflow: hidden;\n}\n.shortcuts-modal-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 20px 24px;\n  background: linear-gradient(135deg, var(--surface), var(--surface-strong));\n  border-bottom: 1px solid var(--border);\n}\n.shortcuts-modal-header h3 {\n  margin: 0;\n  font-size: 1.2rem;\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  color: var(--text);\n  font-weight: 600;\n}\n.shortcuts-modal-header h3 i {\n  font-size: 1.3rem;\n  color: var(--accent);\n}\n.shortcuts-modal-close {\n  width: 36px;\n  height: 36px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n  color: var(--text-muted);\n}\n.shortcuts-modal-close:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n  transform: rotate(90deg);\n}\n.shortcuts-modal-body {\n  padding: 24px;\n  max-height: none;\n  overflow-y: visible;\n}\n.shortcuts-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));\n  gap: 24px;\n}\n.shortcut-card {\n  background: var(--surface);\n  border-radius: 16px;\n  padding: 16px;\n  border: 1px solid var(--border);\n}\n.shortcut-card-title {\n  font-size: 0.75rem;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--accent);\n  padding-bottom: 12px;\n  margin-bottom: 12px;\n  border-bottom: 2px solid var(--accent-light);\n}\n.shortcut-row {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 0;\n  border-bottom: 1px solid var(--border);\n}\n.shortcut-row:last-child {\n  border-bottom: none;\n}\n.shortcut-keys {\n  display: flex;\n  gap: 6px;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.shortcut-keys kbd {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border: 1px solid var(--border);\n  border-radius: 8px;\n  padding: 4px 10px;\n  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;\n  font-size: 0.7rem;\n  font-weight: 700;\n  color: var(--accent);\n  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);\n  letter-spacing: 0.5px;\n}\n.shortcut-row span {\n  color: var(--text-muted);\n  font-size: 0.85rem;\n  font-weight: 500;\n}\n@keyframes modalFadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n@keyframes modalSlideUp {\nfrom {\n    opacity: 0;\n    transform: translateY(30px) scale(0.95);\n}\nto {\n    opacity: 1;\n    transform: translateY(0) scale(1);\n}\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.action-buttons-group {\n    width: 100%;\n    gap: 8px;\n}\n.action-icon {\n    min-width: 44px;\n    height: 40px;\n}\n.action-btn {\n    min-width: 0;\n    flex: 1;\n    padding: 0 12px;\n    height: 40px;\n    font-size: 0.8rem;\n}\n.action-btn span {\n    display: inline;\n}\n.shortcuts-modal {\n    width: 95vw;\n\n    margin: 16px;\n}\n.shortcuts-modal-header {\n    padding: 16px 20px;\n}\n.shortcuts-modal-header h3 {\n    font-size: 1rem;\n}\n.shortcuts-modal-body {\n    padding: 16px;\n}\n.shortcuts-grid {\n    grid-template-columns: 1fr;\n    gap: 16px;\n}\n.shortcut-card {\n    padding: 12px;\n}\n.shortcut-row {\n    padding: 8px 0;\n}\n.shortcut-keys kbd {\n    padding: 3px 8px;\n    font-size: 0.65rem;\n}\n.shortcut-row span {\n    font-size: 0.8rem;\n}\n}\n@media (max-width: 480px) {\n.action-btn span {\n    display: none;\n}\n.action-btn {\n    min-width: 44px;\n    padding: 0;\n}\n.action-btn i {\n    font-size: 1.1rem;\n    margin: 0;\n}\n}\n\n/* Keyboard Shortcuts Dropdown - Compact */\n.shortcuts-panel.compact {\n  background: var(--surface-strong);\n  border-radius: 14px;\n  width: 280px;\n  box-shadow: var(--shadow-lg);\n  border: 1px solid var(--border);\n  animation: slideUp 0.2s ease;\n  overflow: hidden;\n}\n.shortcuts-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 14px;\n  border-bottom: 1px solid var(--border);\n  background: var(--surface);\n}\n.shortcuts-header h3 {\n  margin: 0;\n  font-size: 0.85rem;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--text);\n}\n.shortcuts-header h3 i {\n  font-size: 0.9rem;\n}\n.shortcuts-close {\n  width: 26px;\n  height: 26px;\n  border-radius: 6px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 18px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.15s;\n  color: var(--text-muted);\n}\n.shortcuts-close:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.shortcuts-list {\n  padding: 8px 6px;\n  max-height: 400px;\n  overflow-y: auto;\n}\n.shortcut-item {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 6px 10px;\n  border-radius: 6px;\n  font-size: 0.75rem;\n}\n.shortcut-item:hover {\n  background: var(--accent-light);\n}\n.shortcut-item kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--accent);\n  box-shadow: 0 1px 0 var(--border);\n}\n.shortcut-item span {\n  color: var(--text-muted);\n  font-size: 0.75rem;\n}\n@keyframes fadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n@keyframes slideUp {\nfrom {\n    opacity: 0;\n    transform: translateY(10px);\n}\nto {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n/* Saved Sessions Styles */\n.saved-sessions-list {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n  max-height: 300px;\n  overflow-y: auto;\n}\n.saved-session-item {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 10px 12px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 10px;\n  transition: all 0.2s ease;\n}\n.saved-session-item:hover {\n  border-color: var(--accent);\n  background: var(--surface-strong);\n}\n.session-info {\n  flex: 1;\n  min-width: 0;\n}\n.session-name {\n  font-weight: 600;\n  font-size: 0.85rem;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.session-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.session-meta span {\n  display: inline-flex;\n  align-items: center;\n  gap: 3px;\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.session-actions {\n  display: flex;\n  gap: 6px;\n  flex-shrink: 0;\n}\n.session-load-btn,\n.session-delete-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  transition: all 0.2s ease;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.session-load-btn {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.session-load-btn:hover {\n  background: var(--accent-strong);\n  transform: scale(1.05);\n}\n.session-delete-btn {\n  background: rgba(220, 53, 69, 0.1);\n  color: #dc3545;\n}\n.session-delete-btn:hover {\n  background: #dc3545;\n  color: white;\n}\n.save-current-session {\n  margin-top: 12px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n}\n.save-session-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.save-session-info {\n  flex: 1;\n}\n.save-session-info strong {\n  display: block;\n  font-size: 0.8rem;\n  color: var(--text);\n  margin-bottom: 2px;\n}\n.save-session-info small {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.save-session-btn {\n  padding: 6px 14px;\n  border-radius: 8px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  gap: 5px;\n  transition: all 0.2s ease;\n}\n.save-session-btn:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\n.verse-download-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.82);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--accent);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.verse-download-btn:hover:not(:disabled) {\n  transform: scale(1.05);\n  border-color: var(--accent);\n  background: rgba(255, 255, 255, 0.96);\n}\n.verse-download-btn:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n\n/* Add to your style section */\n.main.tools-open {\n  overflow: hidden;\n}\n\n/* Fix tools panel positioning - ensure it goes from very top */\n.tools {\n  position: fixed;\n  top: 0;\n  /* Changed from auto/padding */\n  right: 0;\n  bottom: 0;\n  height: 100dvh;\n  width: min(var(--tools-width), 92vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease, visibility 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n  visibility: hidden;\n  pointer-events: none;\n  overscroll-behavior: contain;\n}\n\n/* Adjust tools-top padding to account for no navbar offset */\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n  padding-top: calc(18px + env(safe-area-inset-top, 0px));\n}\n\n/* Ensure tools body scrolls correctly */\n.tools-body {\n  flex: 1;\n  min-height: 0;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n  overscroll-behavior: contain;\n  -webkit-overflow-scrolling: touch;\n}\nbody.has-navbar .tools {\n  top: 0;\n  /* Still 0, but adjust internal spacing */\n}\nbody.has-navbar .tools-top {\n  padding-top: calc(18px + var(--navbar-height, 0px));\n}\n.tools.open {\n  transform: translateX(0);\n  visibility: visible;\n  pointer-events: auto;\n}\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.5);\n  z-index: 59;\n  opacity: 0;\n  pointer-events: none;\n  transition: opacity 0.2s ease;\n}\n.tools-backdrop.open {\n  opacity: 1;\n  pointer-events: auto;\n}\n\n/* Replace the existing blur mode CSS with this */\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-aid {\n  filter: blur(var(--recall-blur, 10px));\n  opacity: 0.7;\n  transition: filter 0.3s ease, opacity 0.3s ease;\n}\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .tajweed-mark,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic word,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .wbw-word {\n  filter: blur(var(--recall-blur, 10px));\n}\n\n/* Keep active verse clear */\n.main.blur-mode-active .verse-card.active .verse-arabic,\n.main.blur-mode-active .verse-card.active .verse-aid {\n  filter: none;\n  opacity: 1;\n}\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic,\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-aid,\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic .tajweed-mark,\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic word,\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic .wbw-word {\n  filter: none !important;\n  opacity: 1;\n}\n\n/* Force tajweed spans to display properly */\n.verse-arabic.tajweed-enabled span[class*=\"tajweed-\"] {\n  display: inline !important;\n}\n\n/* Ensure proper line height for tajweed text */\n.verse-arabic.tajweed-enabled {\n  line-height: 2.2 !important;\n  font-family: var(--font-ar);\n}\n\n/* Make tajweed colors visible */\n.verse-arabic.tajweed-enabled .tajweed-ham_wasl,\n.verse-arabic.tajweed-enabled .tajweed-slnt {\n  color: #7e8a97;\n}\n.verse-arabic.tajweed-enabled .tajweed-ghn,\n.verse-arabic.tajweed-enabled .tajweed-idgh_ghn,\n.verse-arabic.tajweed-enabled .tajweed-iqlb {\n  color: #2e9d62;\n  background: rgba(46, 157, 98, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,\n.verse-arabic.tajweed-enabled .tajweed-ikhf,\n.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw {\n  color: #9b59b6;\n  background: rgba(155, 89, 182, 0.10);\n}\n.verse-arabic {\n  --verse-font-percent: 100;\n  --verse-font-size: clamp(2rem, calc(var(--verse-font-percent, 120) * 0.02rem), 3.8rem);\n  font-family: var(--font-ar);\n  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));\n  line-height: 2;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n\n/* Force re-render when font changes */\n.verse-arabic.tajweed-enabled,\n.verse-arabic:not(.tajweed-enabled) {\n  transition: font-size 0.1s ease;\n}\n@keyframes wordHighlightPulse {\n0% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.03);\n}\n100% {\n    transform: scale(1.02);\n}\n}\n\n/* Combined Tajweed + Word Highlighting */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n\n/* Preserve tajweed colors inside highlighted words but make them visible */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {\n  color: inherit !important;\n  background: transparent !important;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*=\"tajweed-\"] {\n  color: white !important;\n  background: transparent !important;\n}\n\n/* Mode Button Styling */\n.mode-btn {\n  background: var(--surface);\n  border: 1px solid var(--accent);\n  color: var(--accent);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mode-btn i:first-child {\n  font-size: 0.85rem;\n}\n.mode-btn .bi-chevron-down {\n  font-size: 0.7rem;\n  transition: transform 0.2s;\n}\n.mode-btn:hover .bi-chevron-down {\n  transform: translateY(2px);\n}\n.mode-btn:hover {\n  background: var(--accent-light);\n}\n\n/* Make all buttons consistent */\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn:disabled,\n.rail-btn-ghost:disabled,\n.rail-btn-primary:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n  pointer-events: none;\n  transform: none;\n  box-shadow: none;\n}\n.rail-btn-resume {\n  background: rgba(255, 255, 255, 0.92);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.rail-btn-resume:hover {\n  background: var(--accent-light);\n  transform: translateY(-1px);\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\nbody {\n  font-family: var(--font-ui);\n  background: var(--bg);\n  color: var(--text);\n}\nhtml {\n  background: var(--bg);\n}\n.app {\n  min-height: 100vh;\n  font-size: calc(16px * var(--ui-scale, 1));\n  animation: appFade 260ms ease-out;\n}\n.verse-arabic {\n  min-height: 60px;\n}\n\n/* Session Rail */\n.session-rail {\n  background: var(--surface);\n  border-radius: 20px;\n  margin-bottom: 20px;\n  padding: 12px 16px 14px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.session-rail-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 10px;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.session-rail-copy {\n  flex: 1;\n  min-width: 0;\n}\n.session-rail-headline {\n  display: flex;\n  align-items: baseline;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.session-rail-pills {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  margin-top: 6px;\n}\n.session-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 4px;\n  padding: 5px 9px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n  font-size: 0.71rem;\n  white-space: nowrap;\n}\n.session-pill strong {\n  color: var(--text);\n  font-weight: 700;\n}\n.session-pill-focus {\n  max-width: min(280px, 100%);\n}\n.session-pill-focus strong {\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.session-rail-kicker {\n  font-size: 0.7rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.session-rail-meta {\n  font-size: 0.72rem;\n  color: var(--text-muted);\n  margin-top: 2px;\n}\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\n.session-rail-subnote {\n  margin-top: 10px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n}\n\n/* Mode Indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 10px;\n  padding: 6px 14px;\n  margin: 8px 0 12px 0;\n  background: var(--accent-light);\n  border-radius: 40px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n.mode-switch-btn {\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 4px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.mode-switch-btn:hover {\n  background: rgba(154, 103, 56, 0.2);\n  transform: rotate(180deg);\n}\n.progress-bar-wide {\n  margin-top: 10px;\n  height: 6px;\n  position: relative;\n  overflow: visible;\n}\n.progress-label {\n  position: absolute;\n  top: -24px;\n  right: 0;\n  font-size: 0.72rem;\n  font-weight: 700;\n  color: var(--accent);\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.session-rail-top {\n    flex-direction: column;\n    align-items: stretch;\n}\n.session-rail-actions {\n    justify-content: stretch;\n    width: 100%;\n    flex-wrap: wrap;\n}\n.rail-btn {\n    flex: 1;\n    justify-content: center;\n}\n}\n.verse-arabic-loading {\n  min-height: 60px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--text-muted);\n  animation: pulse 1s infinite;\n}\n@keyframes pulse {\n0%,\n  100% {\n    opacity: 0.3;\n}\n50% {\n    opacity: 0.6;\n}\n}\n\n/* Ensure HTML content is styled properly before Vue mounts */\n.verse-arabic word,\n.verse-arabic .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n}\n\n/* Prevent raw HTML showing */\n.verse-arabic:empty {\n  display: none;\n}\n\n/* Tajweed styles */\n.verse-arabic.tajweed-enabled [class*=\"tajweed\"] {\n  display: inline;\n}\n\n/* Color rules for tajweed - adjust based on what API returns */\n.verse-arabic [class*=\"ghunnah\"],\n.verse-arabic [class*=\"Ghunnah\"] {\n  color: #2ecc71;\n}\n.verse-arabic [class*=\"madd\"],\n.verse-arabic [class*=\"Madd\"] {\n  color: #e74c3c;\n}\n.verse-arabic [class*=\"qalqalah\"],\n.verse-arabic [class*=\"Qalqalah\"] {\n  color: #f39c12;\n}\n.verse-arabic [class*=\"ikhfa\"],\n.verse-arabic [class*=\"Ikhfa\"] {\n  color: #9b59b6;\n}\n.verse-arabic [class*=\"idgham\"],\n.verse-arabic [class*=\"Idgham\"] {\n  color: #3498db;\n}\n\n/* Word by Word styles */\n.wbw-word {\n  display: inline-block;\n  padding: 5px 8px;\n  margin: 2px 3px;\n  border-radius: 8px;\n  transition: all 0.2s ease;\n  cursor: pointer;\n  font-size: 1.05rem;\n  background: rgba(154, 103, 56, 0.05);\n}\n.wbw-word:hover {\n  background: var(--accent-light);\n  transform: scale(1.02);\n}\n.wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n  animation: pop 180ms ease-out;\n}\n.verse-arabic.verse-weak .wbw-word.weak-word {\n  background: #fff3bf;\n  color: #5f4b00;\n}\n.verse-arabic.verse-mastered .wbw-word.mastered-word {\n  background: #d3f9d8;\n  color: #1f6f31;\n}\n@keyframes pop {\nfrom {\n    transform: scale(1.01);\n}\nto {\n    transform: scale(1.05);\n}\n}\n\n/* Word highlighting styles */\n.verse-arabic word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n.rail-stat strong,\n.player-eta {\n  cursor: help;\n  border-bottom: 1px dotted var(--text-muted);\n}\n\n/* Optional: Show detailed breakdown on hover */\n.rail-stat:hover strong::after {\n  content: attr(title);\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: var(--surface-strong);\n  color: var(--text);\n  padding: 4px 8px;\n  border-radius: 8px;\n  font-size: 0.7rem;\n  white-space: nowrap;\n  z-index: 100;\n  box-shadow: var(--shadow-sm);\n  border: 1px solid var(--border);\n}\n\n/* Minimized Session Rail */\n.session-rail-mini {\n  position: sticky;\n  top: 12px;\n  z-index: 18;\n  padding: 10px;\n  padding-top: 8px;\n  margin-bottom: 20px;\n  background: var(--surface);\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-sm);\n  overflow: hidden;\n  transition: all 0.2s ease;\n}\n.session-rail-mini:hover {\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent-soft);\n}\n.rail-mini-content {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 8px 12px 8px 16px;\n}\n.rail-mini-info {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  flex: 1;\n}\n.rail-mini-icon {\n  width: 32px;\n  height: 32px;\n  background: var(--accent-light);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.rail-mini-icon i {\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.rail-mini-details {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-mini-surah {\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.rail-mini-progress {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.rail-mini-stats {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.mini-stat-item {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.mini-stat-item i {\n  font-size: 0.7rem;\n  color: var(--accent);\n}\n.rail-mini-actions {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mini-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n}\n.mini-btn:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n}\n.mini-btn:first-child {\n  background: var(--accent);\n  border-color: var(--accent);\n  color: white;\n}\n.mini-btn:first-child:hover {\n  transform: scale(1.05);\n  background: var(--accent-strong);\n}\n.rail-mini-progress {\n  height: 2px;\n  background: var(--border);\n}\n.progress-fill-mini {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.rail-mini-stats {\n    display: none;\n}\n.rail-mini-content {\n    padding: 6px 10px 6px 12px;\n}\n.rail-mini-surah {\n    font-size: 0.75rem;\n}\n}\n\n/* Font Dropdown */\n.font-dropdown {\n  position: relative;\n}\n.font-dropdown-trigger {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 999px;\n  font-size: 0.75rem;\n  cursor: pointer;\n  transition: all 0.2s;\n  color: var(--text);\n}\n.font-dropdown-trigger:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.font-dropdown-trigger .bi-chevron-down {\n  transition: transform 0.2s;\n  font-size: 0.7rem;\n}\n.font-dropdown-trigger .bi-chevron-down.rotated {\n  transform: rotate(180deg);\n}\n.font-dropdown-menu {\n  position: absolute;\n  top: calc(100% + 8px);\n  right: 0;\n  min-width: 200px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  box-shadow: var(--shadow-lg);\n  overflow: hidden;\n  z-index: 100;\n  backdrop-filter: blur(12px);\n}\n.font-option {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  width: 100%;\n  padding: 10px 14px;\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  font-size: 0.8rem;\n  text-align: left;\n  transition: all 0.15s;\n  color: var(--text);\n}\n.font-option:hover {\n  background: var(--accent-light);\n}\n.font-option.active {\n  background: var(--accent);\n  color: white;\n}\n.font-option .check-icon {\n  margin-left: auto;\n  font-size: 0.8rem;\n}\n\n/* Dropdown Animation */\n.dropdown-fade-enter-active,\n.dropdown-fade-leave-active {\n  transition: all 0.2s ease;\n}\n.dropdown-fade-enter-from,\n.dropdown-fade-leave-to {\n  opacity: 0;\n  transform: translateY(-8px);\n}\n\n/* Tajweed styles for AlQuran quran-tajweed edition */\n.verse-arabic.tajweed-enabled {\n  line-height: 2;\n  white-space: normal;\n  overflow-wrap: anywhere;\n}\n.verse-arabic.tajweed-enabled .tajweed-mark {\n  display: inline;\n  border-radius: 0.2em;\n  padding: 0 0.03em;\n}\n.verse-arabic.tajweed-enabled .tajweed-ham_wasl,\n.verse-arabic.tajweed-enabled .tajweed-slnt {\n  color: #7e8a97;\n}\n.verse-arabic.tajweed-enabled .tajweed-ghn,\n.verse-arabic.tajweed-enabled .tajweed-idgh_ghn,\n.verse-arabic.tajweed-enabled .tajweed-iqlb {\n  color: #2e9d62;\n  background: rgba(46, 157, 98, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,\n.verse-arabic.tajweed-enabled .tajweed-ikhf,\n.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw {\n  color: #9b59b6;\n  background: rgba(155, 89, 182, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-qlq,\n.verse-arabic.tajweed-enabled .tajweed-lqlq {\n  color: #d98824;\n  background: rgba(217, 136, 36, 0.12);\n}\n.verse-arabic.tajweed-enabled .tajweed-madda_normal,\n.verse-arabic.tajweed-enabled .tajweed-madda_permissible,\n.verse-arabic.tajweed-enabled .tajweed-madda_necessary,\n.verse-arabic.tajweed-enabled .tajweed-madda_obligatory,\n.verse-arabic.tajweed-enabled .tajweed-madda_pbligatory {\n  color: #d55245;\n  background: rgba(213, 82, 69, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_mus,\n.verse-arabic.tajweed-enabled .tajweed-idghm_shfw,\n.verse-arabic.tajweed-enabled .tajweed-idgh_shfw,\n.verse-arabic.tajweed-enabled .tajweed-ghn+.tajweed-mark {\n  color: #2b7bbb;\n  background: rgba(43, 123, 187, 0.10);\n}\n\n/* Toolbar chip active state for tajweed */\n.toolbar-chip.active {\n  background: var(--accent);\n  color: white;\n}\n.verse-play-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: white;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.verse-play-btn i {\n  font-size: 0.9rem;\n}\n.verse-play-btn:hover {\n  transform: scale(1.05);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--accent);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.verse-play-btn:active {\n  transform: scale(0.98);\n}\n.verse-preview-label {\n  margin-left: 10px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n  font-weight: 650;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n}\n.resume-details {\n  margin-top: 10px;\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.72);\n  padding: 10px 12px;\n}\n.resume-details summary {\n  cursor: pointer;\n  list-style: none;\n  font-weight: 650;\n  color: var(--text);\n}\n.resume-details summary::-webkit-details-marker {\n  display: none;\n}\n.verse-download-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.82);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--accent);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.verse-download-btn:hover:not(:disabled) {\n  transform: scale(1.05);\n  border-color: var(--accent);\n  background: rgba(255, 255, 255, 0.96);\n}\n.verse-download-btn:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n.speed-label {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-right: 4px;\n}\n.speed-controls {\n  display: flex;\n  gap: 4px;\n}\n.speed-btn {\n  padding: 4px 8px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.speed-btn.active {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.streak-motivation {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border-radius: 40px;\n  font-size: 0.75rem;\n}\n.streak-badge {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-weight: 500;\n}\n.motivation-message {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--text-muted);\n  font-size: 0.7rem;\n}\n.pa-note {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n  margin-top: 4px;\n  display: block;\n}\n\n/* Active tab indicator with pulse effect */\n.tools-tabs button.active-tab {\n  position: relative;\n  animation: tabPulse 0.22s ease-out;\n}\n@keyframes tabPulse {\n0% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 var(--accent);\n}\n50% {\n    transform: scale(1.012);\n    box-shadow: 0 0 0 3px var(--accent-light);\n}\n100% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n.quick-tools {\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.78);\n}\n.quick-tools-grid {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n  padding: 12px 14px;\n}\n.quick-tool {\n  border: 1px solid rgba(154, 103, 56, 0.10);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.82);\n  padding: 10px;\n  display: grid;\n  gap: 8px;\n  min-width: 0;\n}\n.quick-tool-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 8px;\n}\n.quick-tool-label {\n  font-size: 0.74rem;\n  font-weight: 750;\n  color: var(--text);\n}\n.quick-tool-value {\n  font-size: 0.74rem;\n  font-weight: 650;\n  color: var(--text-muted);\n}\n.quick-tool-body {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.quick-tool-body.disabled {\n  opacity: 0.55;\n}\n.quick-tool-body-muted {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n}\n.quick-range {\n  flex: 1 1 auto;\n  min-width: 0;\n}\n.toggle-chip {\n  min-height: 32px;\n  min-width: 68px;\n  padding: 6px 14px;\n  border-radius: 40px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);\n  border: 1px solid var(--border);\n  background: var(--surface);\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n  position: relative;\n  overflow: hidden;\n}\n\n/* Improved Toggle Buttons - Consistent with modern UI */\n.toggle-chip {\n  min-height: 32px;\n  min-width: 68px;\n  padding: 6px 14px;\n  border-radius: 40px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);\n  border: 1px solid var(--border);\n  background: var(--surface);\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n  position: relative;\n  overflow: hidden;\n}\n.toggle-chip::before {\n  content: '';\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  width: 0;\n  height: 0;\n  border-radius: 50%;\n  background: rgba(154, 103, 56, 0.2);\n  transform: translate(-50%, -50%);\n  transition: width 0.4s, height 0.4s;\n}\n.toggle-chip:active::before {\n  width: 100px;\n  height: 100px;\n}\n.toggle-chip:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-sm);\n}\n.toggle-chip.active {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.toggle-chip.active:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.4);\n  filter: brightness(1.05);\n}\n.toggle-chip:active {\n  transform: translateY(0);\n}\n.mode-radio-group {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex-wrap: wrap;\n  justify-content: flex-end;\n}\n.mode-radio {\n  position: relative;\n  display: inline-grid;\n  place-items: center;\n  width: 24px;\n  height: 24px;\n  padding: 0;\n  border-radius: 50%;\n  border: 1px solid rgba(154, 103, 56, 0.24);\n  background: rgba(255, 250, 243, 0.95);\n  cursor: pointer;\n  transition: all 0.18s ease;\n}\n.mode-radio input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.mode-radio-dot {\n  width: 11px;\n  height: 11px;\n  border-radius: 50%;\n  border: 1.5px solid rgba(154, 103, 56, 0.52);\n  background: rgba(255, 255, 255, 0.9);\n  position: relative;\n  flex: 0 0 auto;\n  transition: all 0.18s ease;\n}\n.mode-radio-dot::after {\n  content: \"\";\n  position: absolute;\n  inset: 2px;\n  border-radius: 50%;\n  background: transparent;\n  transition: background 0.18s ease;\n}\n.mode-radio.active {\n  border-color: rgba(154, 103, 56, 0.38);\n  background: rgba(248, 236, 222, 0.95);\n}\n.mode-radio.active .mode-radio-dot {\n  border-color: rgba(154, 103, 56, 0.86);\n}\n.mode-radio.active .mode-radio-dot::after {\n  background: rgba(154, 103, 56, 0.86);\n}\n.mode-radio:hover {\n  border-color: rgba(154, 103, 56, 0.3);\n  background: rgba(252, 244, 235, 0.95);\n}\n.workspace-shell-active-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 5px;\n  padding: 4px 10px;\n  border-radius: 999px;\n  background: rgba(58, 167, 109, 0.16);\n  border: 1px solid rgba(58, 167, 109, 0.28);\n  color: #1f6b45;\n  font-size: 0.72rem;\n  font-weight: 700;\n}\n.active-techniques-section {\n  padding: 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(58, 167, 109, 0.1);\n  background: linear-gradient(180deg, rgba(245, 252, 247, 0.82), rgba(241, 249, 243, 0.72));\n  box-shadow: none;\n}\n.active-techniques-header {\n  margin-bottom: 10px;\n  padding: 0 0 2px;\n  display: flex;\n  align-items: flex-start;\n  justify-content: space-between;\n  gap: 10px;\n}\n.active-techniques-count {\n  min-width: 24px;\n  height: 24px;\n  padding: 0 8px;\n  border-radius: 999px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  background: rgba(58, 167, 109, 0.08);\n  color: rgba(31, 107, 69, 0.75);\n  font-size: 0.72rem;\n  font-weight: 700;\n}\n.active-techniques-grid {\n  display: grid;\n  gap: 8px;\n}\n.active-technique-card {\n  display: flex;\n  align-items: flex-start;\n  gap: 10px;\n  padding: 9px 10px;\n  border-radius: 10px;\n  border: 1px solid rgba(58, 167, 109, 0.08);\n  background: rgba(250, 253, 250, 0.92);\n  box-shadow: none;\n}\n.active-technique-icon {\n  width: 28px;\n  height: 28px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  color: rgba(47, 140, 90, 0.82);\n  background: rgba(58, 167, 109, 0.08);\n  flex: 0 0 auto;\n}\n.active-technique-copy {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n  min-width: 0;\n  padding-top: 0;\n}\n.active-technique-copy strong {\n  font-size: 0.78rem;\n  color: rgba(31, 107, 69, 0.9);\n  font-weight: 700;\n}\n.active-technique-copy span {\n  font-size: 0.69rem;\n  line-height: 1.35;\n  color: rgba(31, 107, 69, 0.68);\n}\n\n/* Compact toggle for headers */\n.st-right-group {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.st-right-group .toggle-chip {\n  min-height: 32px;\n  min-width: 68px;\n  padding: 4px 12px;\n  font-size: 0.75rem;\n}\n\n/* Switch-style alternative (optional) */\n.toggle-switch {\n  position: relative;\n  display: inline-flex;\n  align-items: center;\n  cursor: pointer;\n  min-width: 52px;\n  height: 30px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 30px;\n  transition: all 0.2s ease;\n}\n.toggle-switch.active {\n  background: var(--accent);\n  border-color: transparent;\n}\n.toggle-switch-knob {\n  position: absolute;\n  left: 2px;\n  width: 24px;\n  height: 24px;\n  background: white;\n  border-radius: 50%;\n  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);\n}\n.toggle-switch.active .toggle-switch-knob {\n  transform: translateX(22px);\n}\n.toggle-switch-label {\n  margin-left: 60px;\n  font-size: 0.75rem;\n  font-weight: 500;\n  color: var(--text-muted);\n}\n.toggle-switch.active+.toggle-switch-label {\n  color: var(--accent);\n}\n\n/* Technique toggle specific */\n.technique-toggle {\n  min-height: 32px;\n  min-width: 72px;\n  font-weight: 600;\n  letter-spacing: 0.5px;\n}\n\n/* Settings toggle */\n.settings-toggle {\n  min-height: 36px;\n  min-width: 72px;\n  font-weight: 600;\n}\n\n/* Ripple effect animation */\n@keyframes ripple {\nto {\n    transform: scale(4);\n    opacity: 0;\n}\n}\n.toggle-chip-ripple {\n  position: absolute;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.5);\n  transform: scale(0);\n  animation: ripple 0.4s linear;\n  pointer-events: none;\n}\n\n/* Toggle switch animation and visual feedback */\n.switch {\n  transition: all 0.2s ease;\n}\n.switch:active {\n  transform: scale(0.98);\n}\n.switch-ui {\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n  animation: switchPulse 0.3s ease-out;\n}\n@keyframes switchPulse {\n0% {\n    box-shadow: 0 0 0 0 rgba(139, 94, 60, 0.4);\n}\n50% {\n    box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.2);\n}\n100% {\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Field hint styling */\n.field-hint {\n  font-size: calc(0.7rem * var(--en-scale, 1));\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.26;\n  display: block;\n}\n\n/* Verse Arabic styling */\n.verse-arabic {\n  --verse-font-percent: 100;\n  --verse-font-size: clamp(1.5rem, calc(var(--verse-font-percent, 150) * 0.0175rem), 3.25rem);\n  font-family: var(--font-ar);\n  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n.verse-arabic word {\n  display: inline-block;\n  font-size: 1em;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-card {\n  background: var(--surface);\n  border-radius: 20px;\n  padding: 26px;\n  transition: all 0.2s ease;\n  border: 1px solid var(--border);\n  position: relative;\n  direction: ltr;\n  overflow: hidden;\n  width: 100%;\n}\n.verse-card::before {\n  content: \"\";\n  position: absolute;\n  inset: 0;\n  pointer-events: none;\n  background:\n    linear-gradient(180deg, rgba(184, 130, 78, 0.03), transparent 22%),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.05), transparent 28%);\n}\n.verse-card.active {\n  border-color: var(--accent);\n  background: linear-gradient(145deg, rgba(184, 130, 78, 0.14), rgba(154, 103, 56, 0.04));\n  box-shadow: 0 0 0 1px var(--accent), 0 14px 32px rgba(154, 103, 56, 0.18);\n  transform: translateY(-1px);\n  transition: all 0.2s ease;\n}\n.main.focus-mode-active .verse-card:not(.active) {\n  opacity: 0.54;\n  filter: saturate(0.72);\n}\n.main.focus-mode-active .workspace-fab-live,\n.main.focus-mode-active .verse-card:not(.active) .verse-aid {\n  opacity: 0.38;\n}\n\n\n\n/* Removed: \"For serious huffadh training\" badge */\n.verse-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 16px;\n}\n.verse-badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-number {\n  font-size: 0.78rem;\n  padding: 6px 12px;\n  background: var(--accent);\n  border-radius: 999px;\n  color: #fff;\n  font-weight: 700;\n  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.24);\n}\n.verse-status-badge,\n.verse-status-subtle {\n  border-radius: 999px;\n  padding: 5px 10px;\n  font-size: 0.68rem;\n  font-weight: 600;\n}\n.verse-status-badge {\n  background: var(--accent-light);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.verse-status-subtle {\n  background: var(--bg-elevated);\n  color: var(--text-muted);\n}\n.verse-ref {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex-shrink: 0;\n}\n\n/* Font controls */\n.verse-font-controls {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  padding: 2px 6px;\n  margin-right: 8px;\n}\n.verse-font-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 12px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 10px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.verse-font-btn:hover {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n}\n.verse-font-size-indicator {\n  font-size: 10px;\n  min-width: 35px;\n  text-align: center;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n\n/* Session rail */\n.session-rail {\n  position: sticky;\n  top: 14px;\n  z-index: 18;\n  margin-bottom: 18px;\n  padding: 12px 14px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-md);\n  animation: railIn 280ms ease-out;\n}\n.session-rail-top {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  gap: 12px;\n  align-items: center;\n}\n.session-rail-kicker {\n  font-size: 10px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  margin-top: 2px;\n  font-size: 14px;\n  font-weight: 450;\n}\n.session-rail-meta {\n  margin-top: 2px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.session-rail-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 8px;\n  margin-top: 10px;\n}\n.rail-stat {\n  padding: 8px 10px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-stat span {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n}\n.rail-stat strong {\n  font-size: 0.78rem;\n  font-weight: 500;\n}\n.rail-btn {\n  height: 34px;\n  padding: 0 12px;\n  border-radius: 13px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  color: var(--text);\n  font-size: 12px;\n  font-weight: 450;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.rail-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);\n}\n.progress-bar {\n  flex: 1;\n  height: 4px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-wide {\n  margin-top: 10px;\n}\n.progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s;\n}\n\n/* Mode indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  margin: 8px 0 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n\n/* Reading toolbar */\n.reading-toolbar {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  margin-bottom: 16px;\n  padding: 12px 14px;\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.reading-toolbar-group {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  align-items: flex-start;\n}\n.toolbar-chip {\n  border: 0;\n  border-radius: 999px;\n  padding: 8px 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  font-size: 0.75rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: var(--shadow-sm);\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.toolbar-chip i,\n.rail-btn i,\n.tools-tabs button i,\n.st-ico i {\n  font-size: 0.9rem;\n  line-height: 1;\n}\n.toolbar-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.toolbar-chip:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n\n/* Tools panel */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  height: 100dvh;\n  width: min(var(--tools-width), 92vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease, visibility 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n  visibility: hidden;\n  pointer-events: none;\n  overscroll-behavior: contain;\n}\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(15, 12, 8, 0.35);\n  backdrop-filter: blur(1px);\n  z-index: 59;\n  touch-action: none;\n}\n.tools.open {\n  transform: translateX(0);\n  visibility: visible;\n  pointer-events: auto;\n}\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n}\n.tools-topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.tools-title {\n  font-size: 1rem;\n  font-weight: 700;\n  letter-spacing: -0.2px;\n  color: var(--text);\n}\n.tools-context {\n  margin-top: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 600;\n}\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n  color: rgba(0, 0, 0, 0.7);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n  overflow-x: auto;\n  -webkit-overflow-scrolling: touch;\n  width: 100%;\n}\n.tools-tabs button {\n  flex: 1 1 0;\n  padding: 7px 10px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.82rem;\n  cursor: pointer;\n  color: rgba(0, 0, 0, 0.55);\n  font-weight: 450;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: background 140ms ease, color 140ms ease, transform 140ms ease, box-shadow 160ms ease;\n  white-space: nowrap;\n}\n.tools-tabs button.active {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));\n  box-shadow: var(--shadow-sm);\n  color: rgba(0, 0, 0, 0.85);\n}\n.tools-body {\n  flex: 1;\n  min-height: 0;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n  overscroll-behavior: contain;\n  -webkit-overflow-scrolling: touch;\n}\n\n/* Compact mode (default) to reduce cognitive load */\n.tools-body.compact .st-sub,\n.tools-body.compact .field-hint,\n.tools-body.compact .analytics-help,\n.tools-body.compact .stat-help {\n  display: block !important;\n}\n.tools-body.compact .sheet {\n  gap: 8px;\n}\n.tools-body.compact .sheet-section {\n  padding: 0;\n  border-radius: 14px;\n}\n.tools-body.compact .sheet-toggle {\n  padding: 10px 12px;\n}\n.tools-body.compact .sheet-content {\n  padding: 8px 12px 10px;\n}\n.tools-body.compact .field-stack {\n  gap: 12px;\n}\n.tools-body.compact .field label {\n  margin-bottom: 6px;\n}\n.tools-body.compact .sheet-section-compact {\n  border-radius: 14px;\n}\n.tools-body.compact .sheet-section-compact .sheet-toggle {\n  padding: 11px 13px;\n}\n.tools-body.compact .sheet-section-compact .sheet-content {\n  padding: 8px 13px 13px;\n}\n.tools-body.compact .field-stack-compact {\n  gap: 10px;\n}\n.tools-body.compact .field-stack-compact .field {\n  gap: 6px;\n}\n.tools-body.compact .field-stack-compact .field label {\n  margin-bottom: 0;\n}\n.tools-body.compact .field-stack-compact .select,\n.tools-body.compact .field-stack-compact .input {\n  padding: 10px 12px;\n}\n.tools-body.compact .field-stack-compact .field-hint {\n  margin-top: 1px;\n}\n.tools-body.compact .field-stack-compact .slider-markers {\n  margin-top: 2px;\n}\n.sheet {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.sheet-section {\n  border: 1px solid var(--border);\n  background: rgba(255, 252, 248, 0.5);\n  border-radius: 14px;\n  padding: 0;\n  overflow: hidden;\n  animation: riseSoft 260ms ease-out;\n}\n.sheet-toggle {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border: none;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease;\n}\n.st-left {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.st-ico {\n  width: 24px;\n  height: 24px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));\n  border: 1px solid rgba(139, 94, 60, 0.18);\n  flex: 0 0 auto;\n  font-size: 11px;\n  font-weight: 600;\n  color: var(--accent);\n}\n.st-txt {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 2px;\n  min-width: 0;\n}\n.st-title {\n  padding-top: 5px;\n  font-weight: 450;\n  letter-spacing: -0.2px;\n  color: var(--text);\n  font-size: 0.82rem;\n  white-space: nowrap;\n}\n.st-sub {\n  font-size: 0.66rem;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.st-chev {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  display: grid;\n  place-items: center;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  color: rgba(0, 0, 0, 0.65);\n  transition: transform 0.15s ease;\n  box-shadow: var(--shadow-sm);\n}\n.st-chev.open {\n  transform: rotate(180deg);\n}\n.sheet-content {\n  padding: 12px 12px 14px;\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field-stack {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  min-width: 0;\n}\n.field label {\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n}\n.field-hint {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.35;\n  display: block;\n}\n.select,\n.input {\n  width: 100%;\n  min-width: 0;\n  padding: 11px 12px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--text);\n  font-size: 0.8rem;\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n.range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.range-single {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n  align-items: center;\n}\n.range span {\n  color: rgba(0, 0, 0, 0.35);\n  font-weight: 450;\n  font-size: 11px;\n}\n.radio-group {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.radio {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 0.85rem;\n  color: var(--text);\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  transition: all 0.2s ease;\n}\n.radio:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-sm);\n}\n.radio input {\n  margin: 0;\n}\n.switch {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 11px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  cursor: pointer;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  transition: all 0.2s ease;\n}\n.switch input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.switch-ui {\n  width: 44px;\n  height: 26px;\n  border-radius: 999px;\n  background: rgba(0, 0, 0, 0.12);\n  position: relative;\n  flex: 0 0 auto;\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  content: \"\";\n  position: absolute;\n  top: 3px;\n  left: 3px;\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  background: white;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n}\n.switch input:checked+.switch-ui::after {\n  transform: translateX(18px);\n}\n.switch-text {\n  font-size: 0.74rem;\n  color: rgba(0, 0, 0, 0.72);\n  font-weight: 400;\n}\n.tools-techniques-section {\n  border-color: rgba(139, 94, 60, 0.16);\n  box-shadow: none;\n}\n.techniques-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.technique-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 13px;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.78);\n  box-shadow: 0 10px 24px rgba(63, 39, 18, 0.055);\n}\n.technique-row-stacked {\n  align-items: stretch;\n  flex-direction: column;\n}\n.technique-row-main,\n.technique-control {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.technique-copy {\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  gap: 3px;\n}\n.technique-copy label {\n  margin: 0;\n  color: var(--text);\n  font-family: inherit;\n  font-size: 0.86rem;\n  font-weight: 560;\n  white-space: nowrap;\n}\n.technique-copy small,\n.technique-control span {\n  color: var(--text-muted);\n  font-family: inherit;\n  font-size: 0.73rem;\n  font-weight: 400;\n  line-height: 1.45;\n}\n.technique-toggle {\n  flex: 0 0 86px;\n  min-height: 40px;\n  border-radius: 12px;\n  font-family: inherit;\n  font-size: 0.82rem;\n  font-weight: 560;\n  border-width: 1px;\n}\n.technique-control {\n  padding-top: 12px;\n  border-top: 1px solid rgba(154, 103, 56, 0.10);\n}\n.technique-range {\n  flex: 1 1 auto;\n  min-width: 96px;\n  padding: 0;\n  box-shadow: none;\n}\n.segmented-control {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 6px;\n  padding: 5px;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 14px;\n  background: rgba(98, 73, 49, 0.045);\n}\n.segmented-control button {\n  min-width: 0;\n  min-height: 42px;\n  padding: 9px 10px;\n  border: 1px solid transparent;\n  border-radius: 10px;\n  background: transparent;\n  color: var(--text-muted);\n  font-family: inherit;\n  font-size: 0.8rem;\n  font-weight: 560;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n}\n.segmented-control button.active {\n  background: #fffaf4;\n  color: var(--accent-strong);\n  border-color: rgba(154, 103, 56, 0.20);\n  box-shadow: 0 8px 18px rgba(63, 39, 18, 0.09);\n}\n.technique-preview {\n  padding: 10px 12px;\n  border-radius: 12px;\n  background: rgba(154, 103, 56, 0.07);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: rgba(98, 73, 49, 0.92);\n  font-family: inherit;\n  font-size: 0.74rem;\n  font-weight: 430;\n  line-height: 1.45;\n}\n\n/* Start button */\n.start-btn {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  border-radius: 12px;\n  color: white;\n  font-size: 1rem;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  margin-top: 20px;\n  transition: all 0.2s ease;\n}\n.start-btn:hover:not(:disabled) {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);\n}\n.start-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n\n/* Tools footer */\n.tools-footer {\n  position: sticky;\n  bottom: 0;\n  min-height: var(--tools-footer-h);\n  padding: 12px 16px 14px;\n  border-top: 1px solid var(--border);\n  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));\n  display: flex;\n  gap: 10px;\n  justify-content: space-between;\n  align-items: center;\n  z-index: 1;\n}\n.tools-btn {\n  flex: 1;\n  min-height: 44px;\n  padding: 10px 10px;\n  border-radius: 15px;\n  font-weight: 500;\n  border: 1px solid rgba(0, 0, 0, 0.1);\n  cursor: pointer;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  line-height: 1;\n}\n.tools-btn-soft {\n  color: var(--text-muted);\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.42));\n  box-shadow: none;\n}\n.tools-btn-soft:hover {\n  color: var(--text);\n  border-color: var(--accent-soft);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.6));\n}\n.tools-btn-primary {\n  color: #fff;\n  border-color: rgba(0, 0, 0, 0.08);\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  box-shadow: var(--shadow-sm);\n}\n.tools-btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n.tools-btn:active:not(:disabled),\n.fab-btn:active:not(:disabled),\n.toggle-chip:active:not(:disabled),\n.sheet-toggle:active:not(:disabled) {\n  transform: translateY(0);\n}\n.tools-btn:hover:not(:disabled),\n.fab-btn:hover:not(:disabled),\n.toggle-chip:hover:not(:disabled),\n.sheet-toggle:hover:not(:disabled) {\n  filter: brightness(1.02);\n}\n.tools-btn-primary:disabled {\n  opacity: 0.55;\n  cursor: not-allowed;\n  box-shadow: none;\n}\n.tools-btn-start {\n  flex: 1.6;\n}\n\n/* Hero section */\n.hero-card {\n  margin-bottom: 16px;\n  padding: 18px 18px 16px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 236, 226, 0.92));\n  box-shadow: var(--shadow-md);\n  display: grid;\n  gap: 14px;\n  animation: riseSoft 260ms ease-out;\n}\n.hero-kicker {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  color: var(--accent);\n}\n.hero-title {\n  margin-top: 6px;\n  font-size: 1.24rem;\n  font-weight: 500;\n  letter-spacing: -0.03em;\n}\n.hero-sub {\n  margin-top: 8px;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  max-width: 56ch;\n}\n.hero-flow {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n}\n.hero-step {\n  padding: 10px 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.62);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.74rem;\n}\n.hero-step span {\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  display: grid;\n  place-items: center;\n  background: var(--accent-light);\n  color: var(--accent);\n  font-size: 11px;\n}\n.hero-step strong {\n  font-weight: 500;\n}\n.hero-points {\n  display: grid;\n  gap: 8px;\n}\n.hero-point {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.hero-point i {\n  color: var(--accent);\n}\n.hero-actions,\n.empty-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cta {\n  flex: 1;\n  padding: 10px 10px;\n  border-radius: 14px;\n  font-weight: 450;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 11px;\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.cta-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);\n}\n.cta-ghost {\n  background: rgba(255, 255, 255, 0.58);\n  box-shadow: var(--shadow-sm);\n}\n\n/* Empty state */\n.empty {\n  padding: 40px 0;\n}\n.empty-card {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: var(--radius);\n  padding: 32px;\n  text-align: center;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-md);\n}\n.empty-icon {\n  font-family: var(--font-ar);\n  font-size: 2.2rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.empty-card h3 {\n  font-weight: 450;\n  margin-bottom: 6px;\n  font-size: 1rem;\n}\n.empty-card p {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  margin-bottom: 16px;\n}\n\n/* Verses grid */\n.workspace {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr);\n  gap: 14px;\n  align-items: start;\n  margin-top: 14px;\n}\n.workspace-main {\n  min-width: 0;\n}\n.workspace-shell {\n  width: 80%;\n  margin: 0 auto 18px;\n}\n.workspace-shell {\n  display: grid;\n  gap: 6px;\n  padding: 10px 12px;\n  border-radius: 20px;\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background:\n    linear-gradient(160deg, rgba(255, 251, 245, 0.98), rgba(255, 255, 255, 0.9)),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.09), transparent 28%);\n  box-shadow: 0 14px 28px rgba(63, 39, 18, 0.07);\n  position: relative;\n}\n.workspace-shell.collapsed {\n  gap: 8px;\n  padding: 12px 14px;\n}\n.workspace-shell-head {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  gap: 16px;\n  align-items: flex-start;\n}\n.workspace-shell-copy {\n  display: grid;\n  gap: 3px;\n  min-width: 0;\n}\n.workspace-shell-kicker {\n  display: inline-flex;\n  width: -moz-fit-content;\n  width: fit-content;\n  padding: 3px 7px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.1);\n  color: var(--accent-strong);\n  font-size: 0.68rem;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 0.06em;\n}\n.workspace-shell-kicker-review {\n  background: rgba(183, 28, 28, 0.12);\n  color: #9f1f1f;\n}\n.workspace-shell-title-row {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  flex-wrap: wrap;\n}\n.workspace-shell-copy h1 {\n  margin: 0;\n  color: var(--text);\n  font-size: clamp(1rem, 1.5vw, 1.25rem);\n  line-height: 1.08;\n  font-weight: 650;\n}\n.workspace-shell-phase {\n  display: inline-flex;\n  align-items: center;\n  min-height: 28px;\n  padding: 5px 10px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.88);\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  color: var(--accent-strong);\n  font-size: 0.73rem;\n  font-weight: 650;\n}\n.workspace-shell-phase-review {\n  border-color: rgba(183, 28, 28, 0.24);\n  color: #9f1f1f;\n  background: rgba(183, 28, 28, 0.09);\n}\n.workspace-shell-copy h2 {\n  margin: 0;\n  color: var(--text);\n  font-size: 1rem;\n  line-height: 1.15;\n  font-weight: 600;\n}\n.workspace-shell-copy p {\n  margin: 0;\n  color: var(--text-muted);\n  max-width: 58ch;\n  font-size: 0.8rem;\n  line-height: 1.35;\n}\n.workspace-shell-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.workspace-shell-meta span {\n  display: inline-flex;\n  align-items: center;\n  min-height: 28px;\n  padding: 5px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.15);\n  background: rgba(255, 255, 255, 0.86);\n  color: rgba(48, 42, 35, 0.86);\n  font-size: 0.76rem;\n  font-weight: 600;\n}\n.workspace-shell-meta-review {\n  border-color: rgba(183, 28, 28, 0.24) !important;\n  color: #9f1f1f !important;\n  background: rgba(183, 28, 28, 0.08) !important;\n}\n.resume-feedback-bars,\n.session-feedback-bars {\n  display: grid;\n  gap: 6px;\n  margin-top: 8px;\n}\n.session-feedback-panel {\n  margin-top: 8px;\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.72);\n  padding: 8px 10px;\n}\n.session-feedback-panel summary {\n  list-style: none;\n  cursor: pointer;\n  display: grid;\n  gap: 2px;\n  color: var(--text);\n  font-weight: 650;\n}\n.session-feedback-panel summary::-webkit-details-marker {\n  display: none;\n}\n.session-feedback-panel summary small {\n  color: var(--text-muted);\n  font-weight: 500;\n  font-size: 0.74rem;\n}\n.resume-feedback-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.resume-progress-repetition {\n  background: linear-gradient(90deg, #f2c94c, #e3a008);\n}\n.resume-progress-retention {\n  background: linear-gradient(90deg, #e57373, #c62828);\n}\n.pill-status-mastered {\n  border-color: rgba(46, 125, 50, 0.22);\n  background: rgba(76, 175, 80, 0.08);\n  color: #2e7d32;\n}\n.pill-status-weak {\n  border-color: rgba(245, 158, 11, 0.22);\n  background: rgba(245, 158, 11, 0.1);\n  color: #8a5a00;\n}\n.pill-status-repeat {\n  border-color: rgba(198, 40, 40, 0.22);\n  background: rgba(229, 57, 53, 0.08);\n  color: #9f1f1f;\n}\n.workspace-shell-chaining {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  align-items: center;\n}\n.workspace-shell-chain-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  min-height: 28px;\n  padding: 5px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background: rgba(255, 255, 255, 0.86);\n  color: rgba(48, 42, 35, 0.86);\n  font-size: 0.72rem;\n  font-weight: 650;\n}\n.workspace-shell-chain-pill i {\n  color: var(--accent-strong);\n}\n.workspace-shell-chain-pill-soft {\n  background: rgba(154, 103, 56, 0.09);\n  border-color: rgba(154, 103, 56, 0.14);\n  color: var(--accent-strong);\n}\n.workspace-shell-actions {\n  display: grid;\n  grid-template-columns: repeat(2, auto);\n  gap: 8px;\n  align-items: start;\n}\n.main-nav-btn,\n.main-card-primary {\n  min-height: 42px;\n  border-radius: 14px;\n  font-weight: 600;\n  font-size: 0.84rem;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  padding: 8px 12px;\n}\n.main-nav-btn {\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background: rgba(255, 255, 255, 0.82);\n  color: var(--text);\n}\n.main-card-primary {\n  border: 0;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  box-shadow: 0 12px 24px rgba(154, 103, 56, 0.18);\n}\n.main-nav-btn:disabled,\n.main-card-primary:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n  box-shadow: none;\n}\n.workspace-fab {\n  position: sticky;\n  top: 14px;\n  z-index: 25;\n  display: flex;\n  min-width: 0;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 8px 10px;\n  margin: 8px 0 6px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.06);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.58));\n  box-shadow: 0 16px 38px rgba(63, 39, 18, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.38);\n  backdrop-filter: blur(10px);\n  animation: cardSoftIn 220ms cubic-bezier(0.16, 1, 0.3, 1);\n  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;\n}\n.workspace-fab:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 20px 44px rgba(63, 39, 18, 0.18), 0 0 0 1px rgba(154, 103, 56, 0.18);\n  border-color: rgba(154, 103, 56, 0.2);\n}\n@keyframes cardSoftIn {\nfrom {\n    transform: translateY(6px);\n    opacity: 0.9;\n}\nto {\n    transform: translateY(0);\n    opacity: 1;\n}\n}\n.workspace-fab-meta {\n  min-width: 0;\n  flex: 1 1 auto;\n  display: grid;\n  gap: 4px;\n}\n.workspace-fab-kicker {\n  display: inline-flex;\n  align-items: center;\n  width: -moz-fit-content;\n  width: fit-content;\n  padding: 4px 8px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.10);\n  color: var(--accent-strong);\n  font-size: 0.68rem;\n  font-weight: 650;\n  letter-spacing: 0.06em;\n  text-transform: uppercase;\n}\n.workspace-fab-title {\n  font-weight: 650;\n  color: var(--text);\n  letter-spacing: -0.2px;\n  font-size: 0.92rem;\n  line-height: 1.15;\n}\n.workspace-fab-sub {\n  margin-top: 3px;\n  font-size: 0.74rem;\n  color: var(--text-muted);\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  align-items: center;\n  line-height: 1.2;\n}\n.workspace-fab-sub span {\n  display: inline-flex;\n  align-items: center;\n  max-width: 100%;\n  padding: 6px 10px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.18);\n  background: rgba(255, 255, 255, 0.86);\n  box-shadow: 0 8px 18px rgba(63, 39, 18, 0.06);\n  color: rgba(48, 42, 35, 0.82);\n  font-weight: 600;\n}\n.workspace-fab-live {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 5px;\n}\n.workspace-fab-live-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  max-width: 100%;\n  min-height: 38px;\n  padding: 8px 12px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.11);\n  border: 1px solid rgba(154, 103, 56, 0.20);\n  color: var(--accent-strong);\n  font-size: 0.82rem;\n  font-weight: 750;\n  box-shadow: 0 10px 20px rgba(63, 39, 18, 0.08);\n}\n.workspace-fab-live-pill i {\n  display: inline-grid;\n  place-items: center;\n  width: 22px;\n  height: 22px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.14);\n}\n.workspace-fab-live-pill-primary {\n  background: linear-gradient(180deg, rgba(154, 103, 56, 0.16), rgba(154, 103, 56, 0.09));\n  border-color: rgba(154, 103, 56, 0.28);\n}\n.workspace-fab-live-pill-mode {\n  background: rgba(255, 255, 255, 0.86);\n}\n.workspace-fab-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n  line-height: 1.26;\n  max-width: 60ch;\n  overflow-wrap: anywhere;\n}\n.workspace-fab-chip {\n  display: inline-flex;\n  align-items: center;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(46, 125, 50, 0.18);\n  background: rgba(46, 125, 50, 0.10);\n  color: rgba(46, 125, 50, 0.95);\n  font-weight: 650;\n  font-size: 0.72rem;\n}\n.workspace-fab-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex: 0 0 auto;\n}\n.fab-btn {\n  min-height: 40px;\n  padding: 8px 11px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.76);\n  box-shadow: var(--shadow-sm);\n  font-weight: 600;\n  font-size: 0.84rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  white-space: nowrap;\n  cursor: pointer;\n  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 140ms ease;\n}\n.fab-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  border-color: transparent;\n  box-shadow: 0 14px 28px rgba(154, 103, 56, 0.22);\n}\n.fab-btn-soft {\n  color: rgba(0, 0, 0, 0.78);\n}\n.fab-btn-ghost {\n  color: rgba(0, 0, 0, 0.78);\n}\n.verses-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n  margin-top: 0;\n}\n.verse-arabic-primary {\n  /* Primary focus: Quran dominates; aids are quieter. */\n  font-size: clamp(2.1rem, 2.75vw, 3.05rem);\n  line-height: 2.25;\n  letter-spacing: 0.01em;\n}\n.verse-aid {\n  opacity: 0.82;\n  filter: saturate(0.78);\n  margin-top: 0.4rem;\n  font-size: 0.93em;\n}\n.verse-aid-title {\n  margin-bottom: 4px;\n  color: var(--accent-strong);\n  font-size: 0.66rem;\n  font-weight: 650;\n  font-style: normal;\n  text-transform: uppercase;\n  letter-spacing: 0.04em;\n}\n.inline-setting-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.input-compact {\n  flex: 0 0 140px;\n}\n.inline-setting-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-height: 30px;\n  min-width: 58px;\n  padding: 0 10px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.08);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: var(--accent-strong);\n  font-size: 0.72rem;\n  font-family: inherit;\n  font-weight: 460;\n}\n.settings-section {\n  padding: 18px;\n  border-radius: 18px;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  background: #fffdf9;\n  box-shadow: 0 18px 42px rgba(40, 28, 16, 0.08);\n}\n.settings-heading {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  align-items: start;\n  gap: 16px;\n  padding-bottom: 16px;\n  margin-bottom: 16px;\n  border-bottom: 1px solid rgba(28, 24, 20, 0.07);\n}\n.settings-heading-copy {\n  min-width: 0;\n  display: grid;\n  gap: 6px;\n}\n.settings-heading-copy h3 {\n  margin: 0;\n  color: #1f1d1a;\n  font-size: 1.12rem;\n  font-weight: 560;\n  line-height: 1.15;\n}\n.settings-heading-copy p {\n  margin: 0;\n  color: #6d655d;\n  font-size: 0.78rem;\n  line-height: 1.45;\n}\n.settings-status {\n  min-height: 30px;\n  padding: 0 11px;\n  border-radius: 999px;\n  background: #f7f2eb;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  color: #614326;\n  font-size: 0.64rem;\n  font-weight: 520;\n  letter-spacing: 0.04em;\n  text-transform: uppercase;\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n}\n.settings-status-dot {\n  width: 7px;\n  height: 7px;\n  border-radius: 999px;\n  background: #2f9f68;\n  box-shadow: 0 0 0 4px rgba(47, 159, 104, 0.12);\n}\n.settings-panels {\n  display: grid;\n  gap: 16px;\n}\n.settings-group {\n  display: grid;\n  gap: 10px;\n}\n.settings-group-title {\n  color: #725233;\n  font-size: 0.64rem;\n  font-weight: 560;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n}\n.settings-card-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 10px;\n}\n.settings-display-grid {\n  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);\n}\n.settings-card {\n  min-width: 0;\n  border-radius: 14px;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  background: linear-gradient(180deg, #ffffff, #fbf8f3);\n  box-shadow: 0 8px 18px rgba(40, 28, 16, 0.045);\n}\n.settings-card-toggle {\n  min-height: 126px;\n  padding: 14px;\n  display: grid;\n  align-content: space-between;\n  gap: 14px;\n}\n.settings-card-range {\n  min-height: 126px;\n  padding: 14px;\n  display: grid;\n  gap: 14px;\n}\n.settings-row-copy {\n  min-width: 0;\n  display: grid;\n  gap: 6px;\n}\n.settings-row-copy label {\n  color: #211f1c;\n  font-size: 0.86rem;\n  font-weight: 540;\n  display: inline-flex;\n  align-items: center;\n  gap: 9px;\n  min-width: 0;\n}\n.settings-row-copy small {\n  color: #6f675f;\n  font-size: 0.7rem;\n  line-height: 1.4;\n}\n.settings-icon {\n  width: 32px;\n  height: 32px;\n  border-radius: 10px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  background: #f7f1ea;\n  border: 1px solid rgba(154, 103, 56, 0.13);\n  color: #8c5b2e;\n  flex: 0 0 auto;\n}\n.settings-toggle {\n  width: 100%;\n  min-height: 40px;\n  padding: 7px 14px;\n  border-radius: 10px;\n  font-size: 0.78rem;\n  font-weight: 540;\n  box-shadow: none;\n  border-width: 1px;\n}\n.settings-range-wrap {\n  width: 100%;\n  min-width: 0;\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  align-items: center;\n  gap: 12px;\n}\n.settings-range {\n  min-width: 0;\n  width: 100%;\n  padding: 0;\n  box-shadow: none;\n}\n.settings-apply-section {\n  padding: 12px;\n  border-radius: 14px;\n  background: #f8f2ea;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  display: grid;\n  gap: 8px;\n}\n.settings-apply-primary {\n  width: 100%;\n  min-height: 48px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  background: #8d5a2c;\n  color: #fff;\n  font-size: 0.92rem;\n  font-weight: 560;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  cursor: pointer;\n  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;\n}\n.settings-apply-primary:hover {\n  transform: translateY(-1px);\n  background: #7b4b22;\n  box-shadow: 0 10px 20px rgba(123, 75, 34, 0.24);\n}\n.settings-apply-section small {\n  color: #6f675f;\n  font-size: 0.7rem;\n}\n.tools-footer.settings-footer {\n  background: transparent;\n  border-top: none;\n  box-shadow: none;\n  pointer-events: none;\n}\n.tools-footer.settings-footer .tools-btn {\n  visibility: hidden;\n}\n.offline-list {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n  margin-bottom: 16px;\n}\n.offline-item {\n  background: var(--bg-elevated);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  transition: all 0.2s ease;\n}\n.offline-item:hover {\n  border-color: var(--accent);\n  background: var(--surface);\n}\n.oi-info {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.oi-name {\n  font-weight: 600;\n  font-size: 1rem;\n}\n.oi-meta {\n  font-size: 0.8rem;\n  opacity: 0.7;\n}\n.oi-date {\n  font-size: 0.7rem;\n  opacity: 0.5;\n}\n.oi-actions {\n  display: flex;\n  gap: 8px;\n}\n.oi-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.oi-load:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.oi-delete:hover {\n  background: #ff4d4d;\n  color: white;\n  border-color: #ff4d4d;\n}\n.empty-mini {\n  text-align: center;\n  padding: 32px 16px;\n  background: var(--bg-elevated);\n  border-radius: 20px;\n  border: 1px dashed var(--border);\n}\n.offline-note {\n  margin-top: 24px;\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  display: flex;\n  gap: 10px;\n  font-size: 0.75rem;\n  line-height: 1.4;\n  color: var(--accent);\n}\n\n/* Floating Player */\n.player-bar {\n  position: fixed;\n  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);\n  left: 50%;\n  transform: translateX(-50%);\n  width: min(calc(100vw - 32px), 960px);\n  max-width: 960px;\n  background: rgba(255, 255, 255, 0.98);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 24px;\n  box-shadow: 0 20px 40px rgba(63, 39, 18, 0.12);\n  z-index: 1000;\n  padding: 12px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  /* Avoid iOS Safari compositing artifacts (black bands) from backdrop-filter on fixed elements. */\n  backdrop-filter: none;\n  -webkit-backdrop-filter: none;\n  transition: transform 0.22s ease, opacity 0.22s ease, padding 0.22s ease;\n}\n.player-bar.collapsed {\n  transform: translateX(-50%);\n  opacity: 0.98;\n}\n.player-main {\n  display: grid;\n  grid-template-columns: minmax(150px, 1.1fr) auto minmax(200px, 0.95fr) minmax(180px, 1fr) auto;\n  align-items: center;\n  gap: clamp(10px, 1.6vw, 20px);\n  min-width: 0;\n}\n.player-info {\n  min-width: 0;\n}\n.player-chapter {\n  font-weight: 700;\n  font-size: 0.9rem;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-verse {\n  font-size: 0.75rem;\n  opacity: 0.7;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-eta {\n  color: var(--accent);\n  font-weight: 500;\n  opacity: 1;\n}\n.player-controls {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n}\n.player-loop-controls {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.player-loop-label {\n  font-size: 0.72rem;\n  font-weight: 700;\n  color: var(--text-muted);\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n}\n.player-loop-group {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  padding: 4px;\n  border: 1px solid var(--border);\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.9);\n  overflow-x: auto;\n}\n.player-loop-chip {\n  border: none;\n  border-radius: 999px;\n  background: transparent;\n  color: var(--text-muted);\n  min-height: 34px;\n  padding: 0 12px;\n  font-size: 0.76rem;\n  font-weight: 700;\n  white-space: nowrap;\n  cursor: pointer;\n  transition: background 0.2s ease, color 0.2s ease;\n}\n.player-loop-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.sheet-fade-enter-active,\n.sheet-fade-leave-active {\n  transition: opacity 0.2s ease, transform 0.2s ease;\n}\n.sheet-fade-enter-from,\n.sheet-fade-leave-to {\n  opacity: 0;\n  transform: translateY(8px);\n}\n.player-btn {\n  width: 44px;\n  height: 44px;\n  border-radius: 12px;\n  border: none;\n  background: none;\n  color: var(--text);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.2rem;\n  transition: all 0.2s ease;\n  flex: 0 0 auto;\n}\n.player-btn:hover {\n  background: rgba(154, 103, 56, 0.08);\n}\n.player-play {\n  background: var(--accent);\n  color: white;\n  width: 52px;\n  height: 52px;\n  border-radius: 16px;\n  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.3);\n}\n.player-play:hover {\n  background: rgba(255, 255, 255, 0.88);\n  color: var(--accent);\n  transform: scale(1.05);\n}\n.player-progress-wrap {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  min-width: 0;\n}\n.player-time {\n  font-size: 0.75rem;\n  font-variant-numeric: tabular-nums;\n  opacity: 0.7;\n  min-width: 40px;\n}\n.player-progress-bg {\n  flex: 1;\n  height: 6px;\n  background: var(--bg-elevated);\n  border-radius: 3px;\n  position: relative;\n  cursor: pointer;\n}\n.player-progress-fill {\n  position: absolute;\n  left: 0;\n  top: 0;\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.1s linear;\n}\n\n/* Animations */\n.slide-up-enter-active,\n.slide-up-leave-active {\n  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.slide-up-enter-from,\n.slide-up-leave-to {\n  transform: translate(-50%, 100px);\n  opacity: 0;\n}\n.verse-translation {\n  font-size: calc(0.94rem * var(--en-scale, 1));\n  color: var(--text);\n  line-height: 1.55;\n  padding-top: 10px;\n  margin-top: 8px;\n  border-top: 1px solid var(--border);\n  display: block;\n  opacity: 0.92;\n}\n.verse-transliteration {\n  font-size: calc(0.98rem * var(--en-scale, 1));\n  color: var(--text);\n  font-style: italic;\n  margin-top: 8px;\n  padding-top: 8px;\n  border-top: 1px solid var(--border);\n  line-height: 1.5;\n  opacity: 0.98;\n}\n.verse-words {\n  display: flex;\n  flex-wrap: nowrap;\n  gap: 8px;\n  direction: rtl;\n  margin-top: 12px;\n  padding-top: 10px;\n  border-top: 1px solid var(--border);\n  overflow-x: auto;\n  overflow-y: hidden;\n  -webkit-overflow-scrolling: touch;\n  scroll-snap-type: x proximity;\n  padding-bottom: 8px;\n}\n.word-item {\n  position: relative;\n  background: var(--accent-light);\n  padding: 6px 12px;\n  border-radius: 20px;\n  display: inline-flex;\n  flex-direction: row-reverse;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.75rem;\n  flex: 0 0 auto;\n  scroll-snap-align: center;\n  cursor: help;\n  min-height: 36px;\n}\n.word-item:hover::after,\n.word-item:focus::after {\n  content: attr(data-tooltip);\n  position: absolute;\n  left: 50%;\n  bottom: calc(100% + 8px);\n  transform: translateX(-50%);\n  z-index: 5;\n  width: -moz-max-content;\n  width: max-content;\n  max-width: 220px;\n  padding: 6px 8px;\n  border-radius: 9px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n  color: var(--text);\n  direction: ltr;\n  text-align: center;\n  font-size: 0.72rem;\n  line-height: 1.25;\n}\n.word-arabic {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n}\n.word-meaning {\n  color: var(--text-muted);\n  font-size: calc(0.82rem * var(--en-scale, 1));\n}\n.word-audio-btn {\n  background: none;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 0 4px;\n}\n.field-switch {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.reading-aid-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 8px;\n}\n.tools,\n.tools-body,\n.sheet-content {\n  overflow-x: hidden;\n}\n.live-stats-grid {\n  display: grid;\n  gap: 10px;\n}\n.live-stat-card {\n  min-height: 72px;\n  padding: 14px 16px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 252, 247, 0.9);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.live-stat-label {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  font-weight: 500;\n}\n.live-stat-card strong {\n  color: var(--text);\n  font-size: 1rem;\n  font-weight: 600;\n}\n.resume-copy {\n  margin-bottom: 8px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(251, 245, 238, 0.96));\n  border-radius: 18px;\n  box-shadow: 0 24px 72px rgba(31, 24, 17, 0.22);\n}\n.modal-header h2 {\n  font-size: 1.05rem;\n  font-weight: 600;\n}\n.resume-modal {\n  background: linear-gradient(180deg, rgba(255, 251, 245, 0.99), rgba(248, 241, 233, 0.97));\n}\n.resume-modal .modal-header,\n.resume-modal .modal-body,\n.resume-modal .modal-footer {\n  padding-top: 18px;\n  padding-bottom: 18px;\n}\n.resume-grid .pill,\n.resume-modal .pill {\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid rgba(184, 130, 78, 0.16);\n}\n.wbw-word.highlighted,\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.03);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.24);\n}\n.wbw-word.phrase-highlighted {\n  box-shadow: 0 0 0 2px rgba(184, 130, 78, 0.18);\n}\n.word-item.highlighted,\n.word-item.phrase-highlighted {\n  background: rgba(184, 130, 78, 0.2);\n}\n\n/* Quiz overlay */\n.quiz-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 80;\n  background: rgba(0, 0, 0, 0.35);\n  backdrop-filter: blur(6px);\n  display: grid;\n  place-items: center;\n  padding: 18px;\n}\n.quiz-card {\n  width: min(680px, 100%);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba, rgba(250, 245, 239, 0.95));\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 22px;\n  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);\n  overflow: hidden;\n}\n.quiz-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 18px 22px 14px;\n  border-bottom: 1px solid rgba(0, 0, 0, 0.08);\n}\n.quiz-title {\n  font-weight: 500;\n  font-size: 1.05rem;\n}\n.quiz-subtitle {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.quiz-close {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.7);\n  cursor: pointer;\n  font-size: 24px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.quiz-progress {\n  padding: 14px 22px 0;\n}\n.quiz-progress-bar {\n  height: 4px;\n  background: var(--border);\n  border-radius: 2px;\n  overflow: hidden;\n}\n.quiz-progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n.quiz-stats {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.quiz-body {\n  padding: 18px 22px 22px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.quiz-question {\n  font-weight: 600;\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.quiz-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.4rem;\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  padding: 16px;\n  background: var(--accent-light);\n  border-radius: 16px;\n}\n.quiz-reveal-btn {\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n}\n.quiz-answer {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.quiz-translation {\n  font-size: 0.9rem;\n  line-height: 1.6;\n  color: var(--text);\n  margin-bottom: 16px;\n}\n.quiz-grade-buttons {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.grade-btn {\n  flex: 1;\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.grade-btn.primary {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.quiz-options {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.quiz-option {\n  padding: 12px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  text-align: left;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.quiz-option:hover {\n  background: var(--accent-light);\n  transform: translateX(4px);\n}\n.quiz-summary {\n  padding: 22px;\n  text-align: center;\n}\n.quiz-summary-icon {\n  font-size: 3rem;\n  margin-bottom: 16px;\n}\n.quiz-summary-stats {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin: 20px 0;\n}\n.quiz-summary-stats .stat {\n  padding: 16px;\n  background: var(--surface);\n  border-radius: 16px;\n}\n.stat-label {\n  display: block;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.stat-value {\n  display: block;\n  font-size: 1.5rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.quiz-summary-mistakes {\n  margin: 20px 0;\n}\n.mistake-tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 8px;\n  justify-content: center;\n}\n.mistake-tag {\n  padding: 6px 12px;\n  background: rgba(190, 73, 73, 0.1);\n  border-radius: 20px;\n  font-size: 0.8rem;\n  color: #c0392b;\n}\n.quiz-actions {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n}\n.btn-outline {\n  padding: 10px 24px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n.btn-primary {\n  padding: 10px 24px;\n  border-radius: 12px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n\n/* Fix banner positioning */\n.banner {\n  position: fixed;\n  top: 80px;\n  left: 50%;\n  transform: translateX(-50%);\n  z-index: 1000;\n  min-width: min(560px, calc(100vw - 32px));\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px 14px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: var(--surface-strong);\n  box-shadow: var(--shadow-lg);\n  font-weight: 450;\n  animation: riseSoft 220ms ease-out;\n}\n.navbar {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  z-index: 100;\n  /* Higher than tools? Lower? Tools should be 60, navbar 100 */\n  background: var(--surface-strong);\n}\n\n/* Ensure main content doesn't go under navbar */\n.main.container {\n  padding-top: 80px;\n  /* Adjust to match navbar height + spacing */\n}\n\n/* Mobile adjustment */\n@media (max-width: 768px) {\n.banner {\n    top: calc(env(safe-area-inset-top, 0px) + 60px);\n    width: calc(100% - 32px);\n    min-width: auto;\n}\n.main.container {\n    padding-top: 70px;\n}\n}\n.banner-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.banner-action {\n  border: 0;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  padding: 9px 12px;\n  font-size: 0.78rem;\n  font-weight: 500;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n}\n.banner-x {\n  width: 36px;\n  height: 36px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n}\n\n/* Add this to your \\3c style> */\n.main.container {\n  padding-top: 20px;\n}\n\n/* If you have a navbar, add this */\n.app>.navbar+.main.container,\nbody>.navbar+.app .main.container {\n  padding-top: 80px;\n}\n\n/* Animations */\n@keyframes appFade {\n0% {\n    opacity: 0;\n    transform: translateY(4px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes railIn {\n0% {\n    opacity: 0;\n    transform: translateY(-8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes riseSoft {\n0% {\n    opacity: 0;\n    transform: translateY(8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n\n/* Responsive */\n@media (max-width: 768px) {\n.main {\n    padding: 16px 16px 100px;\n}\n.main.tools-open {\n    padding-right: 16px;\n}\n.tools {\n    left: 0;\n    right: 0;\n    width: 100%;\n}\n.session-rail-stats {\n    grid-template-columns: 1fr 1fr;\n}\n.hero-flow {\n    grid-template-columns: 1fr 1fr;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 8px);\n    justify-content: center;\n}\n.verse-font-controls {\n    gap: 2px;\n    padding: 2px 4px;\n}\n.verse-font-btn {\n    width: 20px;\n    height: 20px;\n}\n.verse-font-size-indicator {\n    min-width: 30px;\n    font-size: 9px;\n}\n}\n@media (max-width: 640px) {\n.quiz-grade-buttons {\n    flex-direction: column;\n}\n.quiz-actions {\n    flex-direction: column;\n}\n.hero-actions,\n  .empty-actions {\n    flex-direction: column;\n}\n.cta {\n    width: 100%;\n}\n}\n\n/* Dark theme overrides */\n[data-theme=\"dark\"] .tools {\n  color: var(--text);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(12, 11, 10, 0.96));\n  border-left-color: var(--border);\n}\n[data-theme=\"dark\"] .sheet-section {\n  border-color: var(--border);\n  background: var(--surface);\n}\n[data-theme=\"dark\"] .tools-top,\n[data-theme=\"dark\"] .tools-footer {\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.92));\n}\n[data-theme=\"dark\"] .tools-footer {\n  background: linear-gradient(to top, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.86), rgba(18, 15, 13, 0));\n}\n[data-theme=\"dark\"] .tools-tabs {\n  background: rgba(255, 255, 255, 0.035);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .tools-tabs button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-tabs button.active {\n  color: var(--text);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .tools-title,\n[data-theme=\"dark\"] .st-title,\n[data-theme=\"dark\"] .technique-copy label,\n[data-theme=\"dark\"] .settings-heading-copy h3,\n[data-theme=\"dark\"] .settings-row-copy label {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .tools-context,\n[data-theme=\"dark\"] .st-sub,\n[data-theme=\"dark\"] .technique-copy small,\n[data-theme=\"dark\"] .technique-control span,\n[data-theme=\"dark\"] .settings-heading-copy p,\n[data-theme=\"dark\"] .settings-row-copy small {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-x,\n[data-theme=\"dark\"] .st-chev,\n[data-theme=\"dark\"] .sheet-toggle,\n[data-theme=\"dark\"] .technique-row,\n[data-theme=\"dark\"] .radio,\n[data-theme=\"dark\"] .toggle-chip,\n[data-theme=\"dark\"] .segmented-control,\n[data-theme=\"dark\"] .technique-preview {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .sheet-toggle {\n  background: rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .st-ico {\n  color: var(--accent-strong);\n  border-color: rgba(239, 193, 141, 0.22);\n  background: rgba(239, 193, 141, 0.10);\n}\n[data-theme=\"dark\"] .segmented-control button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .segmented-control button.active,\n[data-theme=\"dark\"] .toggle-chip.active {\n  color: white;\n  border-color: rgba(239, 193, 141, 0.42);\n  background: rgba(239, 193, 141, 0.12);\n}\n[data-theme=\"dark\"] .tools-btn-soft {\n  color: var(--text-muted);\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .select,\n[data-theme=\"dark\"] .input {\n  color: var(--text);\n  border-color: var(--border);\n  background: rgba(255, 255, 255, 0.045);\n}\n[data-theme=\"dark\"] .switch {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n}\n[data-theme=\"dark\"] .verse-translation {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .verse-transliteration,\n[data-theme=\"dark\"] .workspace-fab-copy,\n[data-theme=\"dark\"] .workspace-fab-sub,\n[data-theme=\"dark\"] .settings-row-copy small,\n[data-theme=\"dark\"] .field-hint {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .workspace-fab,\n[data-theme=\"dark\"] .workspace-fab-sub span,\n[data-theme=\"dark\"] .workspace-fab-live-pill,\n[data-theme=\"dark\"] .settings-card,\n[data-theme=\"dark\"] .word-item:hover::after,\n[data-theme=\"dark\"] .word-item:focus::after {\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .workspace-fab {\n  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.46), 0 0 0 1px rgba(255, 236, 216, 0.12);\n}\n[data-theme=\"dark\"] .workspace-fab:hover {\n  box-shadow: 0 26px 64px rgba(0, 0, 0, 0.54), 0 0 0 1px rgba(239, 193, 141, 0.20);\n}\n[data-theme=\"dark\"] .settings-section {\n  background: rgba(24, 21, 19, 0.96);\n  border-color: var(--border);\n  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .settings-status {\n  background: rgba(255, 255, 255, 0.05);\n  border-color: rgba(255, 236, 216, 0.12);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .settings-icon {\n  background: rgba(255, 255, 255, 0.04);\n  border-color: rgba(255, 236, 216, 0.12);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .settings-card {\n  background: var(--surface-strong);\n  border-color: rgba(255, 236, 216, 0.10);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .settings-toggle {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 236, 216, 0.14);\n  color: var(--text);\n}\n[data-theme=\"dark\"] .settings-toggle.active {\n  background: rgba(239, 193, 141, 0.13);\n  border-color: rgba(239, 193, 141, 0.42);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .quiz-card {\n  background: rgba(18, 18, 18, 0.92);\n  border-color: rgba(255, 255, 255, 0.10);\n}\n[data-theme=\"dark\"] .hero-card,\n[data-theme=\"dark\"] .empty-card,\n[data-theme=\"dark\"] .continue-session-card,\n[data-theme=\"dark\"] .offcanvas-launcher-card,\n[data-theme=\"dark\"] .setup-start-card,\n[data-theme=\"dark\"] .home-dashboard-card,\n[data-theme=\"dark\"] .saved-header,\n[data-theme=\"dark\"] .save-section,\n[data-theme=\"dark\"] .session-item,\n[data-theme=\"dark\"] .empty-state,\n[data-theme=\"dark\"] .session-quickstart-card {\n  background: linear-gradient(180deg, rgba(34, 29, 26, 0.96), rgba(24, 21, 19, 0.94));\n  border-color: var(--border);\n  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);\n}\n[data-theme=\"dark\"] .workspace-shell,\n[data-theme=\"dark\"] .session-feedback-panel,\n[data-theme=\"dark\"] .workspace-fab,\n[data-theme=\"dark\"] .verse-card,\n[data-theme=\"dark\"] .verse-arabic,\n[data-theme=\"dark\"] .player-bar,\n[data-theme=\"dark\"] .modal-content,\n[data-theme=\"dark\"] .shortcuts-modal,\n[data-theme=\"dark\"] .setting-section,\n[data-theme=\"dark\"] .settings-group {\n  background: linear-gradient(180deg, rgba(34, 29, 26, 0.96), rgba(22, 19, 17, 0.94));\n  border-color: var(--border);\n  color: var(--text);\n}\n[data-theme=\"dark\"] .workspace-shell {\n  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.34);\n}\n[data-theme=\"dark\"] .workspace-shell-meta span,\n[data-theme=\"dark\"] .workspace-shell-chain-pill,\n[data-theme=\"dark\"] .workspace-shell-phase,\n[data-theme=\"dark\"] .toolbar-chip,\n[data-theme=\"dark\"] .action-icon-btn,\n[data-theme=\"dark\"] .main-nav-btn,\n[data-theme=\"dark\"] .player-loop-chip,\n[data-theme=\"dark\"] .word-item,\n[data-theme=\"dark\"] .saved-sessions-container .delete-btn,\n[data-theme=\"dark\"] .font-dropdown-trigger,\n[data-theme=\"dark\"] .font-option,\n[data-theme=\"dark\"] .mode-radio,\n[data-theme=\"dark\"] .active-technique-card,\n[data-theme=\"dark\"] .active-techniques-count {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 236, 216, 0.14);\n  color: var(--text);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .toolbar-chip.active,\n[data-theme=\"dark\"] .workspace-shell-active-pill,\n[data-theme=\"dark\"] .player-loop-chip.active {\n  background: rgba(208, 160, 107, 0.18);\n  border-color: rgba(208, 160, 107, 0.32);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .action-btn.action-btn-secondary,\n[data-theme=\"dark\"] .action-btn.action-btn-secondary span,\n[data-theme=\"dark\"] .action-btn.action-btn-secondary i {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 236, 216, 0.16);\n  color: #f3dfc8;\n}\n[data-theme=\"dark\"] .workspace-shell-active-pill {\n  color: #f3dfc8;\n}\n[data-theme=\"dark\"] .workspace-shell-copy h1,\n[data-theme=\"dark\"] .workspace-shell-copy h2,\n[data-theme=\"dark\"] .hero-title,\n[data-theme=\"dark\"] .saved-header h3,\n[data-theme=\"dark\"] .session-name,\n[data-theme=\"dark\"] .active-technique-copy strong,\n[data-theme=\"dark\"] .modal-header h2,\n[data-theme=\"dark\"] .shortcut-card-title {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .workspace-shell-copy p,\n[data-theme=\"dark\"] .workspace-shell-meta span,\n[data-theme=\"dark\"] .workspace-shell-chain-pill,\n[data-theme=\"dark\"] .hero-sub,\n[data-theme=\"dark\"] .hero-point,\n[data-theme=\"dark\"] .session-details span,\n[data-theme=\"dark\"] .empty-state span,\n[data-theme=\"dark\"] .active-technique-copy span,\n[data-theme=\"dark\"] .confirm-copy,\n[data-theme=\"dark\"] .shortcut-row span,\n[data-theme=\"dark\"] .player-time,\n[data-theme=\"dark\"] .player-loop-label,\n[data-theme=\"dark\"] .offcanvas-launcher-copy {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .saved-sessions-container {\n  background: linear-gradient(180deg, rgba(28, 24, 22, 0.98), rgba(20, 18, 17, 0.96));\n  border-color: rgba(255, 236, 216, 0.12);\n  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34);\n}\n[data-theme=\"dark\"] .saved-header,\n[data-theme=\"dark\"] .empty-state,\n[data-theme=\"dark\"] .save-section {\n  background: transparent;\n  border-color: rgba(255, 236, 216, 0.1);\n}\n[data-theme=\"dark\"] .current-info {\n  background: rgba(208, 160, 107, 0.12);\n  border: 1px solid rgba(208, 160, 107, 0.16);\n}\n[data-theme=\"dark\"] .save-btn {\n  background: linear-gradient(135deg, #d0a06b, #b98654);\n  color: #1a140f;\n}\n[data-theme=\"dark\"] .verse-card::before {\n  background:\n    linear-gradient(180deg, rgba(208, 160, 107, 0.04), transparent 22%),\n    radial-gradient(circle at top right, rgba(208, 160, 107, 0.06), transparent 28%);\n}\n[data-theme=\"dark\"] .verse-card.active {\n  background: linear-gradient(145deg, rgba(208, 160, 107, 0.12), rgba(255, 255, 255, 0.02));\n  box-shadow: 0 0 0 1px rgba(208, 160, 107, 0.42), 0 16px 34px rgba(0, 0, 0, 0.34);\n}\n[data-theme=\"dark\"] .verse-number,\n[data-theme=\"dark\"] .verse-status-badge,\n[data-theme=\"dark\"] .player-chapter,\n[data-theme=\"dark\"] .player-verse,\n[data-theme=\"dark\"] .preview-stat,\n[data-theme=\"dark\"] .preview-surah,\n[data-theme=\"dark\"] .preview-range {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .player-progress-bg,\n[data-theme=\"dark\"] .progress-bar-track,\n[data-theme=\"dark\"] .form-range {\n  background: rgba(255, 255, 255, 0.12);\n}\n[data-theme=\"dark\"] .banner,\n[data-theme=\"dark\"] .countdown-modal {\n  background: linear-gradient(180deg, rgba(34, 29, 26, 0.98), rgba(22, 19, 17, 0.96));\n  border-color: var(--border);\n  color: var(--text);\n}\n[data-theme=\"dark\"] .banner-x,\n[data-theme=\"dark\"] .shortcuts-modal-close,\n[data-theme=\"dark\"] .modal-close-btn,\n[data-theme=\"dark\"] .btn-icon,\n[data-theme=\"dark\"] .verse-small-play-btn,\n[data-theme=\"dark\"] .verse-download-btn,\n[data-theme=\"dark\"] .player-btn {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 236, 216, 0.14);\n  color: var(--text);\n}\n[data-theme=\"dark\"] .modal-footer,\n[data-theme=\"dark\"] .shortcuts-header,\n[data-theme=\"dark\"] .section-header {\n  background: rgba(255, 255, 255, 0.03);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .mode-radio {\n  background: rgba(255, 255, 255, 0.04);\n  border-color: rgba(208, 160, 107, 0.24);\n}\n[data-theme=\"dark\"] .mode-radio.active {\n  background: rgba(208, 160, 107, 0.14);\n  border-color: rgba(208, 160, 107, 0.4);\n}\n[data-theme=\"dark\"] .mode-radio-dot {\n  background: rgba(12, 11, 10, 0.9);\n  border-color: rgba(208, 160, 107, 0.7);\n}\n[data-theme=\"dark\"] .mode-radio.active .mode-radio-dot::after {\n  background: rgba(208, 160, 107, 0.9);\n}\n[data-theme=\"dark\"] .active-techniques-section {\n  background: linear-gradient(180deg, rgba(29, 35, 30, 0.92), rgba(20, 25, 22, 0.9));\n  border-color: rgba(108, 167, 126, 0.18);\n}\n\n/* Sepia theme overrides */\n[data-theme=\"sepia\"] .verse-translation {\n  color: #7a684a;\n}\n\n/* Planner & Analytics UI */\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(12, 10, 8, 0.62);\n  backdrop-filter: blur(8px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 9999;\n  padding: 20px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 250, 243, 0.92));\n  border-radius: 20px;\n  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42);\n  border: 1px solid rgba(255, 255, 255, 0.55);\n  display: flex;\n  flex-direction: column;\n  max-height: 90vh;\n  overflow: hidden;\n  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.resume-modal {\n  width: min(760px, 96vw);\n}\n.resume-modal .modal-header h2 {\n  font-size: clamp(1.25rem, 2.3vw, 1.75rem);\n}\n.resume-saved-at {\n  display: inline-block;\n  margin-top: 4px;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n}\n.resume-grid {\n  margin-top: 12px;\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 10px;\n}\n.resume-grid .pill {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 12px 14px;\n}\n@keyframes modalIn {\nfrom {\n    transform: translateY(10px);\n    opacity: 0.6;\n}\nto {\n    transform: translateY(0);\n    opacity: 1;\n}\n}\n@keyframes modalFadeIn {\nfrom {\n    opacity: 0;\n    transform: translateY(20px) scale(0.95);\n}\nto {\n    opacity: 1;\n    transform: translateY(0) scale(1);\n}\n}\n.modal-header {\n  padding: 20px 24px;\n  border-bottom: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 1.25rem;\n  font-weight: 700;\n}\n.modal-body {\n  padding: 24px;\n  overflow-y: auto;\n}\n.modal-footer {\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--bg-elevated);\n}\n.confirm-modal {\n  max-width: 460px;\n  width: 100%;\n}\n.confirm-copy {\n  color: var(--text-muted);\n  line-height: 1.65;\n}\n.btn-danger {\n  background: #b55041;\n}\n.tools-btn-danger {\n  opacity: 0.82;\n}\n.btn-icon {\n  background: none;\n  border: none;\n  font-size: 1.2rem;\n  color: var(--text-muted);\n  cursor: pointer;\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.btn-icon:hover {\n  background: var(--border);\n  color: var(--text);\n}\n.planner-modal {\n  max-width: 500px;\n  width: 100%;\n}\n.planner-field {\n  margin-bottom: 24px;\n}\n.planner-field label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.planner-select,\n.planner-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.planner-select:focus,\n.planner-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 2px var(--accent-light);\n}\n.verses-per-day-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.quantity-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.quantity-btn:hover:not(:disabled) {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.quantity-btn:disabled {\n  opacity: 0.4;\n  cursor: not-allowed;\n}\n.planner-stats-grid {\n  display: grid;\n  grid-template-columns: repeat(2, 1fr);\n  gap: 12px;\n  margin: 24px 0;\n}\n.planner-stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  transition: all 0.2s;\n}\n.progress-info {\n  display: flex;\n  justify-content: space-between;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.progress-bar-track {\n  height: 6px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-fill {\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.3s ease;\n}\n.modal-footer {\n  display: flex;\n  gap: 12px;\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.btn-secondary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.btn-secondary:hover {\n  background: var(--border);\n}\n.btn-primary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.9rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.btn-primary:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.field-hint {\n  display: block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 6px;\n}\n.pa-lbl {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.analytics-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin-top: 20px;\n}\n.analytics-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.78rem * var(--en-scale, 1));\n  line-height: 1.4;\n}\n.stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 20px;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  transition: transform 0.2s;\n}\n.stat-delta {\n  display: inline-flex;\n  align-items: center;\n  margin-left: 10px;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  font-size: 0.7rem;\n  color: var(--accent-strong);\n  font-weight: 700;\n  vertical-align: middle;\n}\n.stat-card:hover {\n  transform: translateY(-2px);\n  border-color: var(--accent);\n}\n.stat-card i {\n  font-size: 1.8rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.stat-value {\n  font-size: 1.5rem;\n  font-weight: 700;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.stat-label {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n}\n.stat-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.72rem * var(--en-scale, 1));\n  line-height: 1.35;\n}\n.mini-trend {\n  position: relative;\n  width: 80px;\n  height: 24px;\n  margin-top: 10px;\n}\n.mini-trend span {\n  position: absolute;\n  width: 8px;\n  border-radius: 999px;\n  background: linear-gradient(180deg, var(--accent), var(--accent-soft));\n  opacity: 0.9;\n}\n\n/* Home Dashboard UI */\n.home-dashboard {\n  max-width: 800px;\n  margin: 40px auto;\n  padding: 0 20px;\n  animation: modalFadeIn 0.4s ease-out;\n}\n.dashboard-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-end;\n  margin-bottom: 40px;\n  flex-wrap: wrap;\n  gap: 20px;\n}\n.welcome-text {\n  max-width: 500px;\n}\n.header-stats {\n  display: flex;\n  gap: 16px;\n  background: var(--surface);\n  padding: 12px 20px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.mini-stat {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.9rem;\n}\n.mini-stat strong {\n  color: var(--text);\n  font-size: 1rem;\n}\n.dashboard-actions {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));\n  gap: 20px;\n  margin-bottom: 40px;\n}\n.home-dashboard-minimal {\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  min-height: 160px;\n}\n.offcanvas {\n  position: fixed;\n  top: 0;\n  right: 0;\n  width: 380px;\n  height: 100%;\n  background: #fff;\n  z-index: 1000;\n  transform: translateX(100%);\n  transition: transform 0.3s ease;\n  display: flex;\n  flex-direction: column;\n  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);\n}\n.offcanvas-launcher-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.offcanvas-launcher-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-start-card {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto auto;\n  align-items: center;\n  gap: 18px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.setup-start-copy {\n  min-width: 0;\n}\n.setup-kicker {\n  display: inline-flex;\n  margin-bottom: 6px;\n  color: var(--accent);\n  font-size: 0.72rem;\n  font-weight: 800;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n}\n.setup-start-copy h2 {\n  margin: 0 0 6px;\n  color: var(--text);\n  font-size: clamp(1.2rem, 2vw, 1.65rem);\n  line-height: 1.1;\n}\n.setup-start-copy p {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-review-hint {\n  margin-top: 10px;\n  padding: 10px 12px;\n  border-radius: 12px;\n  background: rgba(184, 130, 78, 0.10);\n  border: 1px solid rgba(184, 130, 78, 0.18);\n  color: var(--accent);\n  font-weight: 700;\n}\n.setup-mode-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(112px, 1fr));\n  gap: 10px;\n}\n.setup-mode-card {\n  min-height: 86px;\n  padding: 12px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: var(--surface);\n  color: var(--text);\n  cursor: pointer;\n  display: grid;\n  justify-items: center;\n  align-content: center;\n  gap: 4px;\n  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;\n}\n.setup-mode-card:hover,\n.setup-mode-card.active {\n  border-color: var(--accent);\n  box-shadow: var(--shadow-sm);\n  transform: translateY(-1px);\n}\n.setup-mode-card i {\n  color: var(--accent);\n  font-size: 1.2rem;\n}\n.setup-mode-card span {\n  font-weight: 800;\n}\n.setup-mode-card small {\n  color: var(--text-muted);\n  font-size: 0.78rem;\n}\n.setup-primary {\n  min-height: 48px;\n  white-space: nowrap;\n}\n.setup-optional-panel,\n.session-tools-panel {\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.68);\n}\n.setup-optional-panel summary,\n.session-tools-panel summary {\n  cursor: pointer;\n  list-style: none;\n  padding: 12px 14px;\n  font-weight: 700;\n  color: var(--text);\n}\n.setup-optional-panel summary::-webkit-details-marker,\n.session-tools-panel summary::-webkit-details-marker {\n  display: none;\n}\n.setup-optional-grid,\n.session-tools-grid {\n  display: grid;\n  gap: 12px;\n  padding: 0 14px 14px;\n}\n.setup-optional-grid {\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.session-tools-grid {\n  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));\n}\n.field-inline-toggle {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.toggle-chip {\n  min-height: 42px;\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  background: var(--surface);\n  color: var(--text);\n  font-family: inherit;\n  font-weight: 540;\n}\n.toggle-chip.active {\n  border-color: var(--accent);\n  color: white;\n}\n.continue-session-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 16px 18px;\n  margin-bottom: 18px;\n  border: 1px solid var(--accent-soft);\n  border-radius: 18px;\n  background: linear-gradient(135deg, var(--surface), var(--accent-light));\n  box-shadow: var(--shadow-sm);\n  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;\n}\n.continue-session-card:hover {\n  transform: translateY(-2px);\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent);\n}\n.continue-session-copy {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.continue-session-actions {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.continue-session-kicker {\n  font-size: 0.72rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--accent);\n}\n.continue-session-copy small {\n  color: var(--text-muted);\n}\n.continue-session-btn {\n  min-height: 44px;\n  white-space: nowrap;\n}\n.continue-session-dismiss {\n  min-width: 44px;\n  padding-inline: 0;\n  justify-content: center;\n}\n.resume-action {\n  background: linear-gradient(145deg, rgba(154, 103, 56, 0.12), rgba(255, 255, 255, 0.94));\n  border-color: var(--accent-soft);\n}\n.resume-action .action-icon {\n  background: rgba(154, 103, 56, 0.15);\n  color: var(--accent);\n}\n.resume-action .action-arrow {\n  color: var(--accent);\n}\n.action-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n  display: flex;\n  flex-direction: column;\n  position: relative;\n  overflow: hidden;\n}\n.action-card:hover {\n  transform: translateY(-4px);\n  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);\n  border-color: var(--accent);\n}\n.action-card.primary-action {\n  background: linear-gradient(145deg, var(--accent), var(--accent-dark));\n  color: white;\n  border: none;\n}\n.action-card.primary-action .action-icon {\n  background: rgba(255, 255, 255, 0.2);\n  color: white;\n}\n.action-card.primary-action h3,\n.action-card.primary-action p,\n.action-card.primary-action .action-arrow {\n  color: white;\n}\n.action-icon {\n  width: 48px;\n  height: 48px;\n  background: var(--bg-body);\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.5rem;\n  color: var(--accent);\n  margin-bottom: 20px;\n}\n.action-content h3 {\n  font-size: 1.15rem;\n  margin: 0 0 8px 0;\n  color: var(--text);\n}\n.action-content p {\n  font-size: 0.9rem;\n  color: var(--text-muted);\n  margin: 0;\n  line-height: 1.4;\n}\n.action-arrow {\n  position: absolute;\n  bottom: 24px;\n  right: 24px;\n  font-size: 1.2rem;\n  color: var(--accent);\n  opacity: 0;\n  transform: translateX(-10px);\n  transition: all 0.2s ease;\n}\n.action-card:hover .action-arrow {\n  opacity: 1;\n  transform: translateX(0);\n}\n.dashboard-recent {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n}\n.recent-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.recent-header h3 {\n  margin: 0;\n  font-size: 1.1rem;\n}\n.btn-ghost {\n  background: none;\n  border: none;\n  color: var(--accent);\n  font-weight: 500;\n  cursor: pointer;\n  padding: 6px 12px;\n  border-radius: 8px;\n  transition: background 0.2s;\n}\n.btn-ghost:hover {\n  background: var(--accent-light);\n}\n.recent-stats {\n  display: flex;\n  gap: 32px;\n  flex-wrap: wrap;\n}\n.r-stat {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.r-stat span {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.r-stat strong {\n  font-size: 1.4rem;\n  color: var(--text);\n}\n@media (max-width: 768px) {\n.quick-tools-grid {\n    grid-template-columns: 1fr;\n    gap: 8px;\n    padding: 12px;\n}\n.workspace-shell {\n    width: 100%;\n    margin-bottom: 14px;\n}\n.workspace-shell {\n    padding: 14px;\n}\n.workspace-shell-head {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 12px;\n}\n.workspace-shell-actions {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n}\n.workspace-shell-title-row {\n    align-items: flex-start;\n}\n.workspace-shell-phase {\n    min-height: 26px;\n}\n.workspace-shell-meta {\n    gap: 6px;\n}\n.workspace-shell-chaining {\n    gap: 6px;\n}\n.resume-feedback-row {\n    font-size: 0.74rem;\n}\n.resume-grid {\n    grid-template-columns: 1fr;\n}\n.workspace-fab {\n    top: 8px;\n    display: grid;\n    grid-template-columns: minmax(0, 1fr);\n    gap: 8px;\n    padding: 9px;\n    margin: 8px 0 6px;\n    border-radius: 14px;\n}\n.workspace-fab-meta {\n    min-width: 0;\n}\n.workspace-fab-kicker {\n    font-size: 0.64rem;\n}\n.workspace-fab-title {\n    font-size: 0.9rem;\n}\n.workspace-fab-sub {\n    font-size: 0.72rem;\n    gap: 5px;\n}\n.workspace-fab-sub span {\n    flex: 1 1 auto;\n    justify-content: center;\n    min-width: min(128px, 100%);\n}\n.workspace-fab-copy {\n    font-size: 0.78rem;\n}\n.workspace-fab-live {\n    gap: 6px;\n}\n.workspace-fab-live-pill {\n    flex: 1 1 0;\n    min-width: 0;\n    justify-content: center;\n}\n.workspace-fab-actions {\n    display: grid;\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n    gap: 8px;\n    width: 100%;\n}\n.fab-btn {\n    width: 100%;\n    min-width: 0;\n    justify-content: center;\n    padding: 8px 10px;\n    font-size: 0.82rem;\n    min-height: 44px;\n}\n.main-nav-btn,\n  .main-card-primary {\n    width: 100%;\n    min-height: 44px;\n}\n.settings-heading {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 10px;\n    padding-bottom: 12px;\n    margin-bottom: 14px;\n}\n.settings-status {\n    justify-self: start;\n}\n.settings-card-grid,\n  .settings-display-grid {\n    grid-template-columns: minmax(0, 1fr);\n}\n.settings-card-toggle,\n  .settings-card-range {\n    min-height: 0;\n    padding: 13px;\n    gap: 12px;\n}\n.settings-toggle {\n    min-height: 38px;\n}\n.settings-range-wrap {\n    gap: 10px;\n}\n.settings-apply-section {\n    padding: 12px;\n}\n.settings-apply-primary {\n    min-height: 46px;\n    border-radius: 12px;\n    font-size: 0.88rem;\n}\n.setup-start-card {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n    padding: 16px;\n}\n.setup-mode-grid {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.setup-primary {\n    width: 100%;\n    justify-content: center;\n}\n.continue-session-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.dashboard-actions {\n    grid-template-columns: 1fr;\n    gap: 14px;\n    margin-bottom: 20px;\n}\n.offcanvas-launcher-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.action-card {\n    padding: 18px;\n}\n.action-icon {\n    margin-bottom: 14px;\n}\n.continue-session-btn,\n  .btn-primary,\n  .btn-secondary,\n  .tools-btn,\n  .player-btn,\n  .toolbar-chip,\n  .toggle-chip {\n    min-height: 44px;\n}\n.settings-toggle {\n    min-height: 34px;\n}\n.inline-setting-row {\n    align-items: stretch;\n}\n.input-compact,\n  .inline-setting-pill {\n    width: 100%;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.technique-row,\n  .technique-row-main,\n  .technique-control {\n    align-items: stretch;\n    flex-direction: column;\n}\n.technique-toggle,\n  .segmented-control {\n    width: 100%;\n}\n.player-bar {\n    width: calc(100% - 24px);\n    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);\n    padding: 12px 14px;\n}\n.player-bar.collapsed {\n    transform: translateX(-50%);\n}\n.player-main {\n    grid-template-columns: minmax(88px, 0.75fr) auto minmax(0, 1fr) minmax(0, 1fr) auto;\n    align-items: center;\n    gap: 8px;\n}\n.player-info {\n    flex: 0 1 120px;\n    min-width: 0;\n}\n.player-chapter {\n    font-size: 0.78rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-verse {\n    font-size: 0.72rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-controls {\n    justify-content: center;\n    gap: 4px;\n}\n.player-progress-wrap {\n    order: 0;\n    min-width: 0;\n    gap: 6px;\n}\n.player-loop-controls {\n    order: 3;\n    width: 100%;\n    grid-column: 1 / -2;\n    justify-content: space-between;\n}\n.player-loop-group {\n    width: 100%;\n    justify-content: space-between;\n}\n.player-speed-controls {\n    display: none;\n}\n.analytics-grid {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n}\n.session-rail-actions {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.rail-btn {\n    flex: initial;\n    width: 100%;\n    justify-content: center;\n}\n.rail-btn-primary {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.toolbar-chip {\n    flex: initial;\n    width: 100%;\n}\n.font-dropdown {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 4px);\n    justify-content: center;\n    min-width: 0;\n}\n.font-dropdown {\n    width: 100%;\n}\n.font-dropdown-trigger {\n    width: 100%;\n    justify-content: space-between;\n}\n.verse-card {\n    padding: 16px;\n    border-radius: 18px;\n}\n.verse-header {\n    flex-direction: column;\n    align-items: stretch;\n    gap: 12px;\n}\n.verse-badges,\n  .verse-actions {\n    flex-wrap: wrap;\n}\n.verse-actions {\n    justify-content: space-between;\n}\n.verse-font-controls {\n    margin-right: 0;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.modal-content,\n  .confirm-modal,\n  .planner-modal {\n    width: 100%;\n    max-width: 100%;\n    border-radius: 18px;\n}\n.modal-header,\n  .modal-body,\n  .modal-footer {\n    padding-left: 16px;\n    padding-right: 16px;\n}\n.planner-stats-grid {\n    grid-template-columns: 1fr;\n}\n.tools {\n    width: 100vw;\n    max-width: 100vw;\n}\n.tools-top,\n  .tools-body,\n  .tools-footer {\n    padding-left: 14px;\n    padding-right: 14px;\n}\n.tools-tabs {\n    overflow-x: hidden;\n    display: grid;\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n    gap: 8px;\n}\n.tools-tabs button {\n    width: 100%;\n    min-width: 0;\n}\n.reading-aid-grid,\n  .session-tools-grid {\n    grid-template-columns: 1fr;\n}\n.verse-card,\n  .tools,\n  .sheet,\n  .sheet-content {\n    overflow-x: hidden;\n}\n}\n@media (min-width: 769px) and (max-width: 1024px) {\n.dashboard-actions {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n}\n.session-rail-actions {\n    flex-wrap: wrap;\n}\n.reading-toolbar {\n    align-items: flex-start;\n}\n.reading-toolbar-group:first-child {\n    flex: 1 1 100%;\n}\n.toolbar-chip {\n    flex: 0 1 auto;\n}\n.player-bar {\n    width: calc(100vw - 40px);\n}\n.player-main {\n    grid-template-columns: minmax(132px, 0.9fr) auto minmax(160px, 0.9fr) minmax(150px, 1fr) auto;\n    gap: 12px;\n}\n.player-progress-wrap {\n    min-width: 0;\n}\n}\n@media (max-width: 480px) {\n.verse-header {\n    flex-wrap: wrap;\n}\n.verse-badges {\n    flex-wrap: wrap;\n}\n.verse-actions {\n    margin-top: 8px;\n    width: 100%;\n    justify-content: flex-start;\n}\n.session-pill {\n    white-space: normal;\n    text-align: center;\n    justify-content: center;\n}\n.rail-btn,\n  .toolbar-chip {\n    flex: 1 1 100%;\n}\n.player-time {\n    min-width: auto;\n    font-size: 0.7rem;\n}\n.player-progress-wrap {\n    gap: 8px;\n}\n.verse-number,\n  .verse-status-badge,\n  .verse-status-subtle {\n    width: 100%;\n    justify-content: center;\n    text-align: center;\n}\n}\n.verse-status-badge-review {\n  border-color: rgba(183, 28, 28, 0.24);\n  color: #9f1f1f;\n  background: rgba(183, 28, 28, 0.08);\n}\n.verse-card.feedback-mastered {\n  border-left: 4px solid #43a047;\n}\n.verse-card.feedback-weak {\n  border-left: 4px solid #e3a008;\n}\n.verse-card.feedback-repeat {\n  border-left: 4px solid #c62828;\n}\n.main.flow-recall .verse-card.active .verse-arabic {\n  color: transparent;\n  text-shadow: 0 0 22px rgba(232, 237, 247, 0.55);\n}\n.main.flow-practice .verse-card.active .verse-arabic {\n  opacity: 0.45;\n}\n.main.flow-recall .verse-card.active .verse-arabic .tajweed-mark,\n.main.flow-recall .verse-card.active .verse-arabic word,\n.main.flow-recall .verse-card.active .verse-arabic .wbw-word {\n  color: transparent !important;\n  background: transparent !important;\n  box-shadow: none !important;\n}\n.workspace-quick-controls {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n  padding: 0 10px 10px;\n}\n.session-quickstart-card {\n  display: flex;\n  gap: 16px;\n  justify-content: space-between;\n  align-items: center;\n  padding: 16px;\n  border-radius: 18px;\n  background: rgba(17, 24, 39, 0.04);\n  border: 1px solid rgba(17, 24, 39, 0.08);\n}\n.session-quickstart-copy {\n  margin: 6px 0 0;\n  color: #5f6b7a;\n}\n.session-quickstart-actions {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-end;\n  gap: 8px;\n}\n.preset-btn-primary {\n  background: #0f766e;\n  color: #fff;\n}\n.presets-grid-wide {\n  width: 100%;\n}\n@media (max-width: 768px) {\n.session-quickstart-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.session-quickstart-actions {\n    align-items: stretch;\n}\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n/* Range control styling - consistent with other sections */\n.range-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin-top: 8px;\n}\n.technique-range {\n  flex: 1;\n  height: 5px;\n  border-radius: 3px;\n  background: var(--border);\n  -webkit-appearance: none;\n  cursor: pointer;\n}\n.technique-range:focus {\n  outline: none;\n}\n.technique-range::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 18px;\n  height: 18px;\n  border-radius: 50%;\n  background: var(--accent);\n  cursor: pointer;\n  border: 2px solid var(--surface);\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);\n}\n.technique-range::-webkit-slider-thumb:hover {\n  transform: scale(1.15);\n}\n\n/* Field header with value pill */\n.field-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  margin-bottom: 8px;\n}\n.field-header label {\n  margin-bottom: 0;\n  font-weight: 600;\n}\n.range-value-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 52px;\n  padding: 4px 12px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n\n/* Slider markers */\n.slider-markers {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  padding: 0 4px;\n}\n.slider-markers span {\n  font-size: 10px;\n  color: var(--text-muted);\n}\n\n/* Gap options as radio cards */\n.gap-options {\n  display: grid !important;\n  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));\n  gap: 8px;\n}\n.gap-options .radio {\n  flex-direction: column;\n  text-align: center;\n  gap: 4px;\n  padding: 10px 8px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.gap-options .radio.active {\n  background: var(--accent);\n  border-color: var(--accent);\n  color: white;\n}\n.gap-options .radio.active .option-label,\n.gap-options .radio.active .option-desc {\n  color: white;\n}\n.gap-options .radio input {\n  display: none;\n}\n.option-label {\n  display: block;\n  font-weight: 600;\n  font-size: 0.85rem;\n}\n.option-desc {\n  display: block;\n  font-size: 0.65rem;\n  opacity: 0.7;\n}\n\n/* Custom gap control */\n.custom-gap-control {\n  margin-top: 16px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n}\n.inline-setting-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 60px;\n  padding: 6px 12px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.mt-2 {\n  margin-top: 12px;\n}\n/* Fix offcanvas positioning - add to your existing styles */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  width: min(var(--tools-width, 440px), 92vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.98), rgba(247, 240, 231, 0.96));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(16px);\n  transform: translateX(100%);\n  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);\n  z-index: 1000;\n  display: flex;\n  flex-direction: column;\n  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.15);\n  will-change: transform;\n}\n.tools.open {\n  transform: translateX(0);\n}\n\n/* Fix backdrop */\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.5);\n  backdrop-filter: blur(4px);\n  z-index: 999;\n  animation: fadeIn 0.2s ease;\n}\n\n/* Fix tools header spacing */\n.tools-top {\n  padding: 20px 20px 16px;\n  border-bottom: 1px solid var(--border);\n  background: inherit;\n  flex-shrink: 0;\n}\n\n/* Fix tools body scrolling */\n.tools-body {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px;\n  scroll-behavior: smooth;\n  -webkit-overflow-scrolling: touch;\n}\n\n/* Fix tools footer */\n.tools-footer {\n  position: relative;\n  padding: 16px 20px;\n  border-top: 1px solid var(--border);\n  background: inherit;\n  flex-shrink: 0;\n}\n\n/* Fix tab buttons */\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 16px;\n  background: rgba(0, 0, 0, 0.04);\n  border-radius: 14px;\n  padding: 6px;\n}\n.tools-tabs button {\n  flex: 1;\n  padding: 10px 12px;\n  border-radius: 10px;\n  background: transparent;\n  border: none;\n  font-size: 0.85rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.tools-tabs button.active {\n  background: var(--surface-strong);\n  color: var(--text);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.tools-tabs button:hover:not(.active) {\n  background: rgba(0, 0, 0, 0.04);\n  color: var(--text);\n}\n\n/* Fix button styles */\n.tools-btn {\n  padding: 12px 20px;\n  border-radius: 12px;\n  font-weight: 600;\n  font-size: 0.9rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  border: none;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.tools-btn-soft {\n  background: rgba(0, 0, 0, 0.05);\n  color: var(--text);\n}\n.tools-btn-soft:hover {\n  background: rgba(0, 0, 0, 0.08);\n  transform: translateY(-1px);\n}\n.tools-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.tools-btn-primary:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.4);\n}\n\n/* Fix close button */\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n}\n.tools-x:hover {\n  background: var(--accent-light);\n  transform: rotate(90deg);\n}\n\n/* Mobile optimizations */\n@media (max-width: 768px) {\n.tools {\n    width: 100vw;\n    max-width: 100vw;\n}\n.tools-tabs button span {\n    display: none;\n}\n.tools-tabs button i {\n    font-size: 1.2rem;\n}\n.tools-tabs button {\n    padding: 12px;\n}\n.tools-body {\n    padding: 16px;\n}\n}\n\n/* Animation for backdrop */\n@keyframes fadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n:root {\n  --bg: #f3eee6;\n  --surface: rgba(255, 250, 243, 0.88);\n  --surface-strong: rgba(255, 255, 255, 0.92);\n  --border: rgba(78, 58, 38, 0.10);\n  --text: #1f1a17;\n  --text-muted: #6c6258;\n  --accent: #9a6738;\n  --accent-strong: #6e4726;\n  --accent-soft: #d8c1a8;\n  --accent-light: rgba(154, 103, 56, 0.10);\n  --accent-wash: rgba(228, 211, 194, 0.42);\n  --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);\n  --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);\n  --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);\n  --radius: 16px;\n  --navbar-offset: 56px;\n  --tools-width: 440px;\n  --tools-footer-h: 78px;\n  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;\n  --font-ui: \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n[data-theme=\"dark\"] {\n  --bg: #14110f;\n  --surface: rgba(31, 27, 24, 0.92);\n  --surface-strong: rgba(43, 37, 32, 0.96);\n  --border: rgba(255, 236, 216, 0.16);\n  --text: #f7ebdf;\n  --text-muted: #d1c2b3;\n  --accent: #d0a06b;\n  --accent-strong: #efc18d;\n  --accent-soft: #5f4530;\n  --accent-light: rgba(208, 160, 107, 0.14);\n  --accent-wash: rgba(208, 160, 107, 0.08);\n  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);\n  --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);\n  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);\n}\n[data-theme=\"sepia\"] {\n  --bg: #efe2cb;\n  --surface: rgba(250, 241, 227, 0.88);\n  --surface-strong: rgba(255, 248, 237, 0.94);\n  --text: #352516;\n  --text-muted: #75624f;\n  --accent: #b8824e;\n  --accent-strong: #8f6033;\n  --accent-soft: #dcc3a6;\n  --accent-light: rgba(184, 130, 78, 0.12);\n  --accent-wash: rgba(221, 194, 162, 0.35);\n}\n[v-cloak] {\n  display: none !important;\n}\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\n.session-setup {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n}\n.setting-section {\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  overflow: hidden;\n}\n.section-header {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 16px 20px;\n  background: var(--surface);\n  border-bottom: 1px solid var(--border);\n  font-weight: 500;\n  color: var(--text);\n}\n.section-header i {\n  font-size: 18px;\n  color: var(--text-muted);\n}\n.section-content {\n  padding: 20px;\n}\n\n/* Slider styles */\n.slider-wrapper {\n  width: 100%;\n}\n.form-range {\n  width: 100%;\n  height: 4px;\n  padding: 0;\n  background: var(--border);\n  border-radius: 4px;\n  -webkit-appearance: none;\n}\n.form-range:focus {\n  outline: none;\n}\n.form-range::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 16px;\n  height: 16px;\n  background: #2c7a4d;\n  border-radius: 50%;\n  cursor: pointer;\n  border: none;\n  box-shadow: 0 1px 3px rgba(0,0,0,0.1);\n}\n.form-range::-webkit-slider-thumb:hover {\n  transform: scale(1.15);\n}\n.slider-labels {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  padding: 0 4px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.repetition-value {\n  margin-top: 12px;\n  font-size: 13px;\n  color: var(--text-muted);\n}\n.repetition-value strong {\n  color: #2c7a4d;\n  font-weight: 600;\n}\n\n/* Select styles */\n.form-select {\n  width: 100%;\n  padding: 8px 12px;\n  border: 1px solid var(--border);\n  border-radius: 8px;\n  font-size: 14px;\n  color: var(--text);\n  background-color: var(--surface-strong);\n  cursor: pointer;\n}\n.form-select:focus {\n  outline: none;\n  border-color: #2c7a4d;\n  box-shadow: 0 0 0 2px rgba(44, 122, 77, 0.1);\n}\n\n/* Input group */\n.input-group {\n  display: flex;\n  align-items: stretch;\n}\n.form-control {\n  flex: 1;\n  padding: 8px 12px;\n  border: 1px solid #e5e7eb;\n  border-right: none;\n  border-radius: 8px 0 0 8px;\n  font-size: 14px;\n}\n.form-control:focus {\n  outline: none;\n  border-color: #2c7a4d;\n}\n.input-group-text {\n  padding: 8px 12px;\n  background: #f9fafb;\n  border: 1px solid #e5e7eb;\n  border-left: none;\n  border-radius: 0 8px 8px 0;\n  font-size: 14px;\n  color: #6b7280;\n}\n\n/* Hint */\n.setting-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  margin-top: 12px;\n  padding: 10px 12px;\n  background: #f9fafb;\n  border-radius: 8px;\n  font-size: 12px;\n  color: #6b7280;\n}\n.setting-hint i {\n  font-size: 14px;\n  color: #9ca3af;\n}\n.mt-2 {\n  margin-top: 12px;\n}\n.session-setup-tab {\n  padding: 20px;\n  max-width: 600px;\n}\n.setting-group {\n  margin-bottom: 24px;\n  padding: 16px;\n  background: #f5f5f5;\n  border-radius: 8px;\n}\n.section-label {\n  font-weight: 600;\n  font-size: 14px;\n  margin-bottom: 12px;\n  display: block;\n  color: #333;\n}\n\n/* Feature 1: Repetitions Control */\n.repetition-control {\n  margin-top: 8px;\n}\n.slider-container {\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  margin-bottom: 8px;\n}\n.repetition-slider {\n  flex: 1;\n  height: 4px;\n  border-radius: 2px;\n  background: #ddd;\n  outline: none;\n  -webkit-appearance: none;\n}\n.repetition-slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 16px;\n  height: 16px;\n  border-radius: 50%;\n  background: #2c7a4d;\n  cursor: pointer;\n}\n.slider-value {\n  min-width: 60px;\n  text-align: center;\n}\n.slider-value .value {\n  font-size: 18px;\n  font-weight: 600;\n  color: #2c7a4d;\n}\n.slider-value .unit {\n  font-size: 14px;\n  color: #666;\n  margin-left: 4px;\n}\n\n/* Techniques Grid */\n.techniques-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));\n  gap: 12px;\n}\n.technique-checkbox {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  cursor: pointer;\n}\n\n/* Feature 2: Audio Settings */\n.audio-settings {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.setting-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.setting-item label {\n  font-size: 14px;\n  color: #555;\n  min-width: 120px;\n}\n.setting-item select,\n.setting-item input[type=\"number\"] {\n  padding: 6px 12px;\n  border: 1px solid #ddd;\n  border-radius: 4px;\n  font-size: 14px;\n}\n.setting-item input[type=\"checkbox\"] {\n  width: 18px;\n  height: 18px;\n  cursor: pointer;\n}\n.setting-hint {\n  font-size: 12px;\n  color: #888;\n  margin-top: 8px;\n  font-style: italic;\n}\n\n/* Responsive */\n@media (max-width: 480px) {\n.setting-item {\n    flex-direction: column;\n    align-items: flex-start;\n}\n.setting-item label {\n    min-width: auto;\n}\n}\n.session-setup {\n  padding: 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  max-width: 500px;\n  margin: 0 auto;\n}\n\n/* Setting Card */\n.setting-card {\n  background: white;\n  border-radius: 20px;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);\n  overflow: hidden;\n  transition: all 0.2s ease;\n}\n.card-header {\n  padding: 20px 20px 0 20px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.card-icon {\n  font-size: 24px;\n}\n.card-title {\n  font-size: 18px;\n  font-weight: 600;\n  color: #1a1a1a;\n  margin: 0;\n}\n.card-content {\n  padding: 16px 20px 20px 20px;\n}\n\n/* Repetitions Control */\n.repetition-control {\n  width: 100%;\n}\n.repetition-stats {\n  text-align: center;\n  margin-bottom: 20px;\n}\n.repetition-value {\n  font-size: 48px;\n  font-weight: 700;\n  color: #2c7a4d;\n  line-height: 1;\n}\n.repetition-unit {\n  font-size: 14px;\n  color: #666;\n  margin-left: 8px;\n}\n.repetition-slider {\n  width: 100%;\n  height: 6px;\n  border-radius: 3px;\n  background: linear-gradient(to right, #2c7a4d 0%, #2c7a4d 0%, #e5e7eb 0%, #e5e7eb 100%);\n  outline: none;\n  -webkit-appearance: none;\n  cursor: pointer;\n}\n.repetition-slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 20px;\n  height: 20px;\n  border-radius: 50%;\n  background: #2c7a4d;\n  box-shadow: 0 2px 6px rgba(44, 122, 77, 0.3);\n  cursor: pointer;\n  border: 2px solid white;\n}\n.repetition-slider::-webkit-slider-thumb:hover {\n  transform: scale(1.15);\n}\n.repetition-markers {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  padding: 0 4px;\n}\n.repetition-markers span {\n  font-size: 11px;\n  color: #999;\n}\n.setting-hint {\n  font-size: 13px;\n  color: #888;\n  margin-top: 16px;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  background: #f9fafb;\n  padding: 10px 12px;\n  border-radius: 12px;\n}\n.hint-icon {\n  font-size: 14px;\n}\n\n/* Gap Options */\n.gap-options {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));\n  gap: 10px;\n  margin-bottom: 20px;\n}\n.gap-option {\n  background: #f9fafb;\n  border: 1.5px solid #e5e7eb;\n  border-radius: 12px;\n  padding: 12px 8px;\n  text-align: center;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.gap-option:hover {\n  background: #f3f4f6;\n  border-color: #d1d5db;\n  transform: translateY(-1px);\n}\n.gap-option.active {\n  background: #2c7a4d;\n  border-color: #2c7a4d;\n  color: white;\n}\n.option-label {\n  display: block;\n  font-weight: 600;\n  font-size: 15px;\n  margin-bottom: 4px;\n}\n.option-desc {\n  display: block;\n  font-size: 11px;\n  opacity: 0.7;\n}\n.gap-option.active .option-label,\n.gap-option.active .option-desc {\n  color: white;\n}\n\n/* Custom Gap */\n.custom-gap {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid #e5e7eb;\n}\n.custom-slider {\n  width: 100%;\n  height: 6px;\n  border-radius: 3px;\n  background: #e5e7eb;\n  outline: none;\n  -webkit-appearance: none;\n  cursor: pointer;\n}\n.custom-slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 18px;\n  height: 18px;\n  border-radius: 50%;\n  background: #2c7a4d;\n  cursor: pointer;\n  border: 2px solid white;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);\n}\n.custom-gap-value {\n  text-align: center;\n  margin-top: 12px;\n}\n.custom-gap-value .value {\n  font-size: 28px;\n  font-weight: 600;\n  color: #2c7a4d;\n}\n.custom-gap-value .unit {\n  font-size: 14px;\n  color: #666;\n  margin-left: 6px;\n}\n\n/* Responsive */\n@media (max-width: 480px) {\n.session-setup {\n    padding: 16px;\n}\n.gap-options {\n    grid-template-columns: repeat(3, 1fr);\n}\n.repetition-value {\n    font-size: 40px;\n}\n}\n\n/* Enhanced Save Modal Styles */\n.save-name-modal {\n  max-width: 520px;\n  width: 100%;\n  animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.modal-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 16px;\n  padding: 24px 24px 20px;\n  border-bottom: 1px solid var(--border);\n  background: linear-gradient(135deg, var(--surface), var(--surface-strong));\n}\n.modal-header-icon {\n  width: 48px;\n  height: 48px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-radius: 14px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.modal-header-icon i {\n  font-size: 1.5rem;\n  color: white;\n}\n.modal-header-text {\n  flex: 1;\n}\n.modal-context-badge {\n  display: inline-flex;\n  align-items: center;\n  margin-bottom: 8px;\n  padding: 4px 9px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.10);\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  color: var(--accent-strong);\n  font-size: 0.68rem;\n  font-weight: 700;\n  letter-spacing: 0.04em;\n}\n.modal-header-text h2 {\n  margin: 0 0 4px 0;\n  font-size: 1.2rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.modal-header-text p {\n  margin: 0;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.session-exit-modal {\n  max-width: 520px;\n}\n.session-exit-recap {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-bottom: 12px;\n}\n.session-exit-recap span {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  min-height: 30px;\n  padding: 0 10px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  background: rgba(255, 255, 255, 0.72);\n  color: var(--text);\n  font-size: 0.74rem;\n  font-weight: 600;\n}\n.session-exit-autosave {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  margin-top: 10px;\n  color: var(--text);\n  font-size: 0.82rem;\n}\n.modal-close-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n  flex-shrink: 0;\n}\n.modal-close-btn:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n  transform: rotate(90deg);\n}\n\n/* Session Preview Card */\n.session-preview-card {\n  background: linear-gradient(135deg, var(--accent-light), var(--accent-wash));\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  margin-bottom: 24px;\n  display: flex;\n  flex-wrap: wrap;\n  align-items: center;\n  gap: 16px;\n}\n.preview-surah,\n.preview-range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  background: var(--surface);\n  border-radius: 10px;\n  font-size: 0.85rem;\n  font-weight: 500;\n  color: var(--text);\n}\n.preview-surah i,\n.preview-range i {\n  color: var(--accent);\n  font-size: 0.9rem;\n}\n.preview-stats {\n  display: flex;\n  gap: 12px;\n  margin-left: auto;\n}\n.preview-stat {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.preview-stat i {\n  font-size: 0.7rem;\n  color: var(--accent);\n}\n\n/* Name Input Group */\n.name-input-group {\n  margin-bottom: 20px;\n}\n.name-input-group label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.name-input-group label i {\n  color: var(--accent);\n  font-size: 0.9rem;\n}\n.name-input {\n  width: 100%;\n  padding: 14px 16px;\n  border-radius: 12px;\n  border: 2px solid var(--border);\n  background: var(--surface);\n  font-size: 0.95rem;\n  color: var(--text);\n  transition: all 0.2s;\n}\n.name-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 3px var(--accent-light);\n}\n.name-input.error {\n  border-color: #dc3545;\n}\n.input-hint {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 6px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.char-count {\n  font-family: monospace;\n}\n.error-message {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  margin-top: 8px;\n  padding: 8px 12px;\n  background: rgba(220, 53, 69, 0.1);\n  border-radius: 8px;\n  font-size: 0.75rem;\n  color: #dc3545;\n}\n.error-message i {\n  font-size: 0.8rem;\n}\n\n/* Quick Suggestions */\n.quick-suggestions {\n  margin-bottom: 20px;\n}\n.suggestions-label {\n  display: block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-bottom: 10px;\n  font-weight: 500;\n}\n.suggestion-chips {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.suggestion-chip {\n  padding: 6px 14px;\n  border-radius: 20px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.75rem;\n  color: var(--text);\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.suggestion-chip:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n  transform: translateY(-1px);\n}\n\n/* Info Note */\n.info-note {\n  display: flex;\n  gap: 10px;\n  padding: 12px 14px;\n  background: rgba(46, 125, 50, 0.08);\n  border-radius: 12px;\n  border: 1px solid rgba(46, 125, 50, 0.12);\n}\n.info-note i {\n  color: #2e7d32;\n  font-size: 1rem;\n  flex-shrink: 0;\n  margin-top: 2px;\n}\n.info-text {\n  flex: 1;\n}\n.info-text strong {\n  display: block;\n  font-size: 0.7rem;\n  color: #2e7d32;\n  margin-bottom: 4px;\n}\n.info-text span {\n  display: inline-block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-right: 8px;\n}\n\n/* Modal Footer */\n.modal-footer {\n  display: flex;\n  gap: 12px;\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.btn-secondary,\n.btn-primary {\n  flex: 1;\n  padding: 12px 16px;\n  border-radius: 12px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.btn-secondary {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  color: var(--text);\n}\n.btn-secondary:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.4);\n}\n.btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n  transform: none;\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .session-preview-card {\n  background: rgba(208, 160, 107, 0.1);\n}\n[data-theme=\"dark\"] .info-note {\n  background: rgba(76, 175, 80, 0.1);\n  border-color: rgba(76, 175, 80, 0.2);\n}\n[data-theme=\"dark\"] .info-note i {\n  color: #81c784;\n}\n[data-theme=\"dark\"] .info-text strong {\n  color: #81c784;\n}\n\n/* Responsive */\n@media (max-width: 560px) {\n.session-preview-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.preview-stats {\n    margin-left: 0;\n    justify-content: space-between;\n}\n.modal-header {\n    padding: 20px;\n}\n.modal-footer {\n    padding: 16px 20px;\n    flex-direction: column;\n}\n.suggestion-chips {\n    justify-content: center;\n}\n}\n.wbw-word {\n  display: inline-block;\n  position: relative;\n  margin: 0 2px;\n  padding: 2px 4px;\n  border-radius: 6px;\n  transition: all 0.15s ease;\n}\n.wbw-word .word-audio-btn {\n  position: absolute;\n  top: -12px;\n  right: -8px;\n  width: 18px;\n  height: 18px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  color: white;\n  font-size: 10px;\n  opacity: 0;\n  transition: opacity 0.2s;\n}\n.wbw-word:hover .word-audio-btn {\n  opacity: 1;\n}\n.wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n}\n\n/* Combined Tajweed + Word Highlighting */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {\n  background: var(--accent);\n  color: white !important;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n\n/* Preserve tajweed colors inside highlighted words but make them visible */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*=\"tajweed-\"],\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {\n  color: inherit !important;\n  background: transparent !important;\n}\n\n/* Field header for toggle chips - matching Techniques tab */\n.field-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  margin-bottom: 6px;\n}\n.field-header label {\n  margin-bottom: 0;\n}\n\n/* Range value pill */\n.range-value-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 52px;\n  padding: 4px 10px;\n  background: var(--accent-light);\n  border-radius: 8px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n\n/* Setting items - matching Techniques tab style */\n.setting-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 20px;\n  padding: 16px 0;\n  border-bottom: 1px solid var(--border);\n}\n.setting-item:last-child {\n  border-bottom: none;\n}\n.setting-item-range {\n  flex-direction: column;\n  align-items: stretch;\n  gap: 14px;\n}\n.setting-info {\n  flex: 1;\n}\n.setting-label {\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 6px;\n}\n.setting-description {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n\n/* Range control compact */\n.range-control-compact {\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  width: 100%;\n}\n.range-value-badge {\n  min-width: 60px;\n  padding: 6px 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--accent);\n  text-align: center;\n}\n.range-slider {\n  flex: 1;\n  height: 5px;\n  border-radius: 3px;\n  background: var(--border);\n  -webkit-appearance: none;\n}\n.range-slider:focus {\n  outline: none;\n}\n.range-slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 18px;\n  height: 18px;\n  border-radius: 50%;\n  background: var(--accent);\n  cursor: pointer;\n  border: 2px solid var(--surface);\n  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n}\n.range-slider::-webkit-slider-thumb:hover {\n  transform: scale(1.1);\n}\n\n/* Larger toggle chips for settings */\n.setting-item .toggle-chip {\n  min-height: 38px;\n  min-width: 80px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  letter-spacing: 0.5px;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.setting-item {\n    flex-direction: column;\n    align-items: stretch;\n    gap: 12px;\n    padding: 14px 0;\n}\n.setting-item .toggle-chip {\n    align-self: flex-start;\n}\n.setting-label {\n    font-size: 0.95rem;\n}\n.setting-description {\n    font-size: 0.75rem;\n}\n.range-control-compact {\n    gap: 12px;\n}\n.range-value-badge {\n    min-width: 55px;\n    padding: 5px 10px;\n    font-size: 0.8rem;\n}\n}\n\n/* Inline field for toggle chips */\n.field-inline {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  flex-wrap: wrap;\n}\n.field-label-group {\n  flex: 1;\n  min-width: 0;\n}\n.field-label-group label {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 2px;\n}\n.field-label-group label i {\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.field-label-group small {\n  display: block;\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n\n/* Range control */\n.range-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.range-control .input {\n  flex: 1;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.field-inline {\n    flex-direction: column;\n    align-items: stretch;\n}\n.field-inline .toggle-chip {\n    align-self: flex-start;\n}\n}\n\n/* Settings Container */\n.settings-container {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n  padding-bottom: 20px;\n}\n\n/* Settings Group */\n.settings-group {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 20px;\n  overflow: hidden;\n}\n.settings-group-header {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 16px 20px;\n  background: var(--surface-strong);\n  border-bottom: 1px solid var(--border);\n  font-weight: 600;\n  font-size: 0.85rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--accent);\n}\n.settings-group-header i {\n  font-size: 1rem;\n}\n\n/* Settings Stack */\n.settings-stack {\n  display: flex;\n  flex-direction: column;\n}\n\n/* Settings Row */\n.settings-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px 20px;\n  border-bottom: 1px solid var(--border);\n  transition: background 0.2s ease;\n}\n.settings-row:last-child {\n  border-bottom: none;\n}\n.settings-row:hover {\n  background: var(--accent-light);\n}\n.settings-row-info {\n  flex: 1;\n}\n.settings-row-label {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  font-weight: 600;\n  font-size: 0.9rem;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.settings-row-label i {\n  font-size: 1rem;\n  color: var(--accent);\n  width: 20px;\n}\n.settings-row-desc {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-left: 30px;\n}\n\n/* Range Row */\n.settings-row-range {\n  flex-direction: column;\n  align-items: stretch;\n  gap: 12px;\n}\n.settings-range-control {\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  margin-left: 30px;\n}\n.range-value {\n  min-width: 50px;\n  padding: 4px 8px;\n  background: var(--accent-light);\n  border-radius: 8px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--accent);\n  text-align: center;\n}\n.settings-range-input {\n  flex: 1;\n  height: 4px;\n  border-radius: 2px;\n  background: var(--border);\n  -webkit-appearance: none;\n}\n.settings-range-input:focus {\n  outline: none;\n}\n.settings-range-input::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 16px;\n  height: 16px;\n  border-radius: 50%;\n  background: var(--accent);\n  cursor: pointer;\n  border: none;\n}\n\n/* Toggle Button */\n.settings-toggle-btn {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  background: none;\n  border: none;\n  cursor: pointer;\n  padding: 0;\n}\n.toggle-status {\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  min-width: 32px;\n  text-align: right;\n}\n.settings-toggle-btn.active .toggle-status {\n  color: var(--accent);\n}\n.toggle-slider {\n  position: relative;\n  width: 44px;\n  height: 24px;\n  background: var(--border);\n  border-radius: 24px;\n  transition: all 0.2s ease;\n}\n.toggle-slider::before {\n  content: '';\n  position: absolute;\n  top: 2px;\n  left: 2px;\n  width: 20px;\n  height: 20px;\n  background: white;\n  border-radius: 50%;\n  transition: transform 0.2s ease;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);\n}\n.settings-toggle-btn.active .toggle-slider {\n  background: var(--accent);\n}\n.settings-toggle-btn.active .toggle-slider::before {\n  transform: translateX(20px);\n}\n\n/* Warning Notice */\n.settings-notice-warning {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 12px 16px;\n  background: rgba(255, 152, 0, 0.1);\n  border: 1px solid rgba(255, 152, 0, 0.2);\n  border-radius: 12px;\n  font-size: 0.7rem;\n  color: #e6a017;\n}\n.settings-notice-warning i {\n  font-size: 1rem;\n  flex-shrink: 0;\n}\n\n/* Settings Footer Actions */\n.settings-footer-actions {\n  display: flex;\n  gap: 12px;\n  padding: 16px 20px;\n  margin-top: 8px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.settings-reset-btn,\n.settings-start-btn {\n  flex: 1;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  padding: 12px 16px;\n  border-radius: 14px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  border: none;\n}\n.settings-reset-btn {\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n}\n.settings-reset-btn:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n  transform: translateY(-1px);\n}\n.settings-start-btn {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.25);\n}\n.settings-start-btn:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.35);\n}\n.settings-start-btn:active,\n.settings-reset-btn:active {\n  transform: translateY(0);\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .settings-group {\n  background: var(--surface-strong);\n}\n[data-theme=\"dark\"] .settings-row:hover {\n  background: rgba(208, 160, 107, 0.08);\n}\n[data-theme=\"dark\"] .toggle-slider::before {\n  background: var(--surface);\n}\n[data-theme=\"dark\"] .settings-reset-btn {\n  background: var(--surface);\n}\n\n/* Mobile responsive */\n@media (max-width: 640px) {\n.settings-row {\n    padding: 14px 16px;\n}\n.settings-row-label {\n    font-size: 0.85rem;\n}\n.settings-row-desc {\n    font-size: 0.65rem;\n    margin-left: 30px;\n}\n.settings-range-control {\n    margin-left: 30px;\n}\n.settings-footer-actions {\n    padding: 12px 16px;\n}\n.settings-reset-btn,\n  .settings-start-btn {\n    padding: 10px 14px;\n    font-size: 0.8rem;\n}\n}\n\n/* Technique description styling */\n.technique-description {\n  display: flex;\n  align-items: flex-start;\n  gap: 10px;\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  margin-bottom: 12px;\n}\n.technique-description i {\n  color: var(--accent);\n  font-size: 1rem;\n  margin-top: 2px;\n  flex-shrink: 0;\n}\n.technique-description span {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n.technique-best {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: rgba(46, 125, 50, 0.08);\n  border-radius: 10px;\n  border: 1px solid rgba(46, 125, 50, 0.15);\n}\n.technique-best i {\n  color: #2e7d32;\n  font-size: 0.8rem;\n  flex-shrink: 0;\n}\n.technique-best span {\n  font-size: 0.7rem;\n  color: #2e7d32;\n  font-weight: 500;\n}\n.technique-preview-block {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 12px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  margin-top: 8px;\n}\n.technique-preview-block i {\n  color: var(--accent);\n  font-size: 0.9rem;\n  flex-shrink: 0;\n}\n.technique-preview-block span {\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .technique-description {\n  background: rgba(208, 160, 107, 0.1);\n}\n[data-theme=\"dark\"] .technique-best {\n  background: rgba(76, 175, 80, 0.1);\n  border-color: rgba(76, 175, 80, 0.2);\n}\n[data-theme=\"dark\"] .technique-best span {\n  color: #81c784;\n}\n[data-theme=\"dark\"] .technique-preview-block {\n  background: var(--surface-strong);\n}\n.techniques-header {\n  margin-bottom: 24px;\n  padding-bottom: 16px;\n  border-bottom: 1px solid var(--border);\n}\n.techniques-header h3 {\n  margin: 0 0 6px 0;\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.techniques-header p {\n  margin: 0 0 12px 0;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.compatibility-info-btn {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  padding: 6px 12px;\n  border-radius: 20px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  color: var(--accent);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.technique-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  margin-bottom: 16px;\n  transition: all 0.2s ease;\n}\n.technique-card-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 14px;\n  margin-bottom: 12px;\n}\n.technique-icon {\n  width: 44px;\n  height: 44px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.technique-icon i {\n  font-size: 1.3rem;\n  color: var(--accent);\n}\n.technique-info {\n  flex: 1;\n  min-width: 0;\n}\n.technique-info h4 {\n  margin: 0 0 4px 0;\n  font-size: 0.95rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.technique-info p {\n  margin: 0;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n.technique-toggle {\n  flex-shrink: 0;\n  min-width: 70px;\n  min-height: 36px;\n}\n.technique-controls {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.control-group {\n  margin-bottom: 14px;\n}\n.control-group label {\n  display: block;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.range-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.technique-range {\n  flex: 1;\n  padding: 0;\n}\n.value-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 48px;\n  padding: 4px 8px;\n  background: var(--accent-light);\n  border-radius: 8px;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.technique-select {\n  width: 100%;\n  padding: 8px 12px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.8rem;\n  color: var(--text);\n}\n.technique-preview {\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.technique-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: rgba(154, 103, 56, 0.08);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.technique-hint kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.65rem;\n  font-weight: 600;\n}\n.presets-section {\n  margin-top: 24px;\n  padding-top: 20px;\n  border-top: 1px solid var(--border);\n}\n.presets-section h4 {\n  margin: 0 0 12px 0;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.presets-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));\n  gap: 10px;\n}\n.preset-btn {\n  padding: 10px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.preset-btn:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n  transform: translateY(-1px);\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n  overflow-x: auto;\n  -webkit-overflow-scrolling: touch;\n}\n.tools-tabs button {\n  flex: 1;\n  padding: 8px 12px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.8rem;\n  cursor: pointer;\n  color: var(--text-muted);\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: all 0.2s ease;\n  white-space: nowrap;\n}\n.tools-tabs button.active {\n  background: var(--surface-strong);\n  color: var(--text);\n  box-shadow: var(--shadow-sm);\n}\n.tools-tabs button i {\n  font-size: 0.9rem;\n}\n\n/* Expanded offcanvas width */\n.tools {\n  --tools-width: 520px;\n  width: min(var(--tools-width), 92vw);\n}\n\n/* Techniques Tab Styles */\n.techniques-header {\n  margin-bottom: 24px;\n  padding-bottom: 16px;\n  border-bottom: 1px solid var(--border);\n}\n.techniques-header h3 {\n  margin: 0 0 6px 0;\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.techniques-header p {\n  margin: 0 0 12px 0;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.compatibility-info-btn {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  padding: 6px 12px;\n  border-radius: 20px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  color: var(--accent);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.compatibility-info-btn:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.techniques-list-expanded {\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  margin-bottom: 24px;\n}\n.technique-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  transition: all 0.2s ease;\n}\n.technique-card:hover {\n  border-color: var(--accent);\n  box-shadow: var(--shadow-sm);\n}\n.technique-card-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 14px;\n  margin-bottom: 12px;\n}\n.technique-icon {\n  width: 44px;\n  height: 44px;\n  background: linear-gradient(135deg, var(--accent-light), var(--accent-wash));\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.technique-icon i {\n  font-size: 1.3rem;\n  color: var(--accent);\n}\n.technique-info {\n  flex: 1;\n  min-width: 0;\n}\n.technique-info h4 {\n  margin: 0 0 4px 0;\n  font-size: 0.95rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.technique-info p {\n  margin: 0;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  line-height: 1.4;\n}\n.technique-toggle {\n  flex-shrink: 0;\n  min-width: 70px;\n  min-height: 36px;\n}\n.technique-controls {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.control-group {\n  margin-bottom: 14px;\n}\n.control-group label {\n  display: block;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.range-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.technique-range {\n  flex: 1;\n  padding: 0;\n}\n.value-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 48px;\n  padding: 4px 8px;\n  background: var(--accent-light);\n  border-radius: 8px;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.technique-select {\n  width: 100%;\n  padding: 8px 12px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.8rem;\n  color: var(--text);\n}\n.technique-preview {\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.technique-preview i {\n  color: var(--accent);\n  font-size: 0.8rem;\n}\n.technique-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  margin-top: 12px;\n  background: rgba(154, 103, 56, 0.08);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.technique-hint kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.65rem;\n  font-weight: 600;\n}\n.technique-benefits {\n  margin-top: 12px;\n  padding-top: 10px;\n  border-top: 1px solid var(--border);\n}\n.technique-benefits small {\n  font-size: 0.65rem;\n  color: var(--accent);\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.technique-benefits small i {\n  font-size: 0.6rem;\n}\n\n/* Presets Section */\n.presets-section {\n  margin-top: 24px;\n  padding-top: 20px;\n  border-top: 1px solid var(--border);\n}\n.presets-section h4 {\n  margin: 0 0 12px 0;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.presets-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));\n  gap: 10px;\n}\n.preset-btn {\n  padding: 10px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.preset-btn:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n  transform: translateY(-1px);\n}\n.preset-btn i {\n  font-size: 0.8rem;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.tools {\n    --tools-width: 100vw;\n}\n.technique-card-header {\n    flex-wrap: wrap;\n}\n.technique-toggle {\n    width: 100%;\n}\n.presets-grid {\n    grid-template-columns: 1fr;\n}\n}\n.conflict-badge {\n  margin-top: 6px;\n  padding: 2px 8px;\n  background: #fee2e2;\n  color: #dc2626;\n  border-radius: 20px;\n  font-size: 0.65rem;\n  font-weight: 500;\n  display: inline-block;\n}\n[data-theme=\"dark\"] .conflict-badge {\n  background: rgba(220, 38, 38, 0.15);\n  color: #f87171;\n}\n.technique-conflict-warning {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  margin-top: 6px;\n  padding: 4px 8px;\n  background: rgba(220, 53, 69, 0.1);\n  border-radius: 8px;\n  font-size: 0.65rem;\n  color: #c62828;\n  border: 1px solid rgba(220, 53, 69, 0.2);\n  animation: warningPulse 1s ease-in-out;\n}\n.technique-conflict-warning i {\n  font-size: 0.7rem;\n}\n@keyframes warningPulse {\n0%,\n  100% {\n    opacity: 0.7;\n}\n50% {\n    opacity: 1;\n    background: rgba(220, 53, 69, 0.2);\n}\n}\n\n/* Dark mode */\n[data-theme=\"dark\"] .technique-conflict-warning {\n  background: rgba(229, 57, 53, 0.15);\n  color: #ef9a9a;\n}\n\n/* Hint button in sheet toggle */\n.st-right-group {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.st-hint-btn {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--accent);\n  transition: all 0.2s ease;\n}\n.st-hint-btn:hover {\n  background: var(--accent-light);\n  transform: scale(1.05);\n}\n.st-hint-btn i {\n  font-size: 0.9rem;\n}\n\n/* Compatibility Modal */\n.compatibility-modal {\n  max-width: 560px;\n  width: 100%;\n}\n.compatibility-intro {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n  margin-bottom: 20px;\n  line-height: 1.4;\n}\n.compatibility-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n  margin-bottom: 20px;\n}\n.compatibility-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 14px 16px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  transition: all 0.2s ease;\n}\n.compatibility-row:hover {\n  border-color: var(--accent);\n  background: var(--accent-light);\n}\n.combo-icons {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  min-width: 70px;\n  font-size: 1.1rem;\n  color: var(--accent);\n}\n.combo-icons i {\n  font-size: 1rem;\n}\n.combo-icons .bi-plus-lg {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.combo-text {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.combo-text strong {\n  font-size: 0.85rem;\n  color: var(--text);\n}\n.combo-text span {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.combo-badge {\n  padding: 4px 10px;\n  border-radius: 20px;\n  font-size: 0.7rem;\n  font-weight: 600;\n  white-space: nowrap;\n}\n.combo-badge.success {\n  background: rgba(46, 125, 50, 0.12);\n  color: #2e7d32;\n  border: 1px solid rgba(46, 125, 50, 0.2);\n}\n.combo-badge.alone {\n  background: rgba(154, 103, 56, 0.12);\n  color: var(--accent);\n  border: 1px solid rgba(154, 103, 56, 0.2);\n}\n.compatibility-note {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 12px 14px;\n  background: rgba(220, 53, 69, 0.08);\n  border-radius: 12px;\n  font-size: 0.75rem;\n  color: #c62828;\n  border: 1px solid rgba(220, 53, 69, 0.15);\n}\n.compatibility-note i {\n  font-size: 1rem;\n  flex-shrink: 0;\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .compatibility-row {\n  background: var(--surface-strong);\n}\n[data-theme=\"dark\"] .compatibility-row:hover {\n  background: rgba(208, 160, 107, 0.1);\n}\n[data-theme=\"dark\"] .combo-badge.success {\n  background: rgba(76, 175, 80, 0.15);\n  color: #81c784;\n}\n[data-theme=\"dark\"] .compatibility-note {\n  background: rgba(229, 57, 53, 0.12);\n  color: #ef9a9a;\n}\n\n/* Responsive */\n@media (max-width: 560px) {\n.compatibility-row {\n    flex-wrap: wrap;\n    gap: 10px;\n}\n.combo-badge {\n    margin-left: auto;\n}\n.combo-icons {\n    min-width: 55px;\n}\n}\n.segmented-control-compact button {\n  font-size: 0.7rem;\n  padding: 6px 8px;\n}\n.save-name-modal {\n  max-width: 420px;\n  width: 100%;\n}\n.save-modal-desc {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n  margin-bottom: 20px;\n  line-height: 1.4;\n}\n.save-name-input-group {\n  margin-bottom: 16px;\n}\n.save-name-input-group label {\n  display: block;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.save-name-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  color: var(--text);\n  transition: all 0.2s;\n}\n.save-name-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 3px var(--accent-light);\n}\n.save-preview-info {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-top: 8px;\n}\n.save-preview-info i {\n  color: var(--accent);\n  font-size: 0.9rem;\n}\n.technique-desc-hint {\n  display: block;\n  font-size: 0.65rem;\n  color: var(--accent);\n  margin-top: 4px;\n  font-weight: 500;\n}\n.technique-example-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  margin-top: 8px;\n  background: rgba(154, 103, 56, 0.08);\n  border-radius: 10px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n}\n.technique-example-hint i {\n  color: var(--accent);\n  font-size: 0.8rem;\n  flex-shrink: 0;\n}\n.technique-example-hint strong {\n  color: var(--accent);\n}\n\n/* Anchor Mode Styles - Enhanced */\n.verse-arabic .wbw-word.anchor-highlight,\n.verse-arabic word.anchor-highlight,\n.word-item.anchor-highlight {\n  position: relative;\n  background: linear-gradient(135deg, rgba(255, 193, 7, 0.3), rgba(255, 152, 0, 0.4));\n  border-bottom: 3px solid #ff9800;\n  border-radius: 8px;\n  transform: scale(1.02);\n  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);\n  cursor: pointer;\n  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.2);\n}\n\n/* Animation for newly highlighted anchors */\n.anchor-pulse {\n  animation: anchorPulse 0.6s ease-out;\n}\n@keyframes anchorPulse {\n0% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7);\n}\n50% {\n    transform: scale(1.08);\n    box-shadow: 0 0 0 8px rgba(255, 152, 0, 0);\n}\n100% {\n    transform: scale(1.02);\n    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0);\n}\n}\n.verse-arabic .wbw-word.anchor-highlight:hover,\n.verse-arabic word.anchor-highlight:hover,\n.word-item.anchor-highlight:hover {\n  background: rgba(255, 152, 0, 0.6);\n  transform: scale(1.08);\n  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);\n}\n\n/* Tooltip for anchors */\n.anchor-highlight::after {\n  content: \"🔗 Memory Anchor\";\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: #333;\n  color: white;\n  padding: 4px 8px;\n  border-radius: 6px;\n  font-size: 0.7rem;\n  white-space: nowrap;\n  z-index: 100;\n  opacity: 0;\n  pointer-events: none;\n  transition: opacity 0.2s;\n}\n.anchor-highlight:hover::after {\n  opacity: 1;\n}\n\n/* Dark mode support */\n[data-theme=\"dark\"] .anchor-highlight {\n  background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 152, 0, 0.3));\n  border-bottom-color: #ffb74d;\n}\n[data-theme=\"dark\"] .anchor-highlight:hover {\n  background: rgba(255, 152, 0, 0.4);\n}\n.main.blur-mode-active .verse-card.blur-upcoming .anchor-highlight {\n  filter: blur(calc(var(--recall-blur, 10px) - 4px));\n}\n.technique-select {\n  padding: 8px 12px;\n  border-radius: 10px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  font-size: 0.8rem;\n}\n.verse-small-play-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: white;\n  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);\n}\n.verse-small-play-btn i {\n  font-size: 0.8rem;\n}\n.verse-small-play-btn:hover {\n  transform: scale(1.05);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--accent);\n}\n\n/* Add to your style section */\n.countdown-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.85);\n  backdrop-filter: blur(12px);\n  z-index: 99999;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.countdown-modal {\n  text-align: center;\n}\n.countdown-number {\n  font-size: 8rem;\n  font-weight: 800;\n  color: var(--accent);\n  animation: pulse 1s ease infinite;\n}\n.countdown-text {\n  font-size: 1.5rem;\n  color: white;\n  margin-top: 20px;\n}\n@keyframes pulse {\n0%,\n  100% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.1);\n}\n}\n@media (max-width: 640px) {\n.countdown-number {\n    font-size: 5rem;\n}\n.countdown-text {\n    font-size: 1.2rem;\n}\n}\n\n/* Add these styles if missing */\n.technique-peek-hint {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  margin-top: 8px;\n  border-radius: 10px;\n  background: rgba(154, 103, 56, 0.08);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.technique-peek-hint i {\n  color: var(--accent);\n  font-size: 0.8rem;\n  flex-shrink: 0;\n}\n.technique-peek-hint kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.65rem;\n  font-weight: 600;\n  color: var(--accent);\n  display: inline-block;\n}\n\n/* Add to style section */\n.countdown-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.85);\n  backdrop-filter: blur(12px);\n  z-index: 10000;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  animation: fadeIn 0.3s ease;\n}\n.countdown-modal {\n  text-align: center;\n  animation: scaleIn 0.4s cubic-bezier(0.34, 1.2, 0.64, 1);\n}\n.countdown-number {\n  font-size: 8rem;\n  font-weight: 800;\n  color: var(--accent);\n  text-shadow: 0 0 30px rgba(154, 103, 56, 0.5);\n  animation: pulse 1s ease infinite;\n  font-family: monospace;\n}\n.countdown-text {\n  font-size: 1.5rem;\n  color: white;\n  margin-top: 20px;\n  font-weight: 500;\n  letter-spacing: 2px;\n}\n.countdown-hint {\n  font-size: 0.85rem;\n  color: rgba(255, 255, 255, 0.6);\n  margin-top: 12px;\n}\n@keyframes fadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n@keyframes scaleIn {\nfrom {\n    opacity: 0;\n    transform: scale(0.8);\n}\nto {\n    opacity: 1;\n    transform: scale(1);\n}\n}\n@keyframes pulse {\n0%,\n  100% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.1);\n}\n}\n@media (max-width: 640px) {\n.countdown-number {\n    font-size: 5rem;\n}\n.countdown-text {\n    font-size: 1.2rem;\n}\n}\n\n\n/* Mobile */\n@media (max-width: 768px) {\n.wavemark-bars {\n    height: 30px;\n    gap: 1.5px;\n}\n.wavemark-playhead::before {\n    width: 8px;\n    height: 8px;\n    top: -5px;\n    left: -3px;\n}\n}\n.waveform-canvas {\n  width: 100%;\n  height: 60px;\n  display: block;\n  border-radius: 8px;\n  cursor: pointer;\n}\n\n/* Settings notice */\n.settings-notice {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 14px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  margin-bottom: 20px;\n  font-size: 0.75rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.settings-notice i {\n  font-size: 0.9rem;\n}\n\n/* Login Hero Section */\n.login-hero {\n  min-height: calc(100vh - 100px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  padding: 40px 20px;\n}\n.login-card {\n  max-width: 480px;\n  width: 100%;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  border-radius: 32px;\n  padding: 48px 40px;\n  text-align: center;\n  box-shadow: var(--shadow-lg);\n  animation: loginFadeIn 0.5s ease-out;\n}\n.login-icon {\n  width: 80px;\n  height: 80px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  margin: 0 auto 24px;\n  box-shadow: 0 8px 24px rgba(154, 103, 56, 0.25);\n}\n.login-icon i {\n  font-size: 2.5rem;\n  color: white;\n}\n.login-card h1 {\n  font-size: 1.8rem;\n  font-weight: 700;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.login-subtitle {\n  font-size: 0.95rem;\n  color: var(--text-muted);\n  margin-bottom: 32px;\n}\n.login-features {\n  display: flex;\n  justify-content: center;\n  gap: 24px;\n  margin-bottom: 40px;\n  flex-wrap: wrap;\n}\n.feature {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 8px;\n}\n.feature i {\n  font-size: 1.5rem;\n  color: var(--accent);\n  background: var(--accent-light);\n  width: 48px;\n  height: 48px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 24px;\n  transition: all 0.2s ease;\n}\n.feature span {\n  font-size: 0.75rem;\n  font-weight: 500;\n  color: var(--text-muted);\n}\n.login-btn {\n  width: 100%;\n  padding: 14px 24px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 60px;\n  font-size: 1rem;\n  font-weight: 600;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  transition: all 0.2s ease;\n  margin-bottom: 20px;\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.login-btn:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 24px rgba(154, 103, 56, 0.4);\n}\n.login-btn:active {\n  transform: translateY(0);\n}\n.login-note {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin: 0;\n  line-height: 1.4;\n}\n@keyframes loginFadeIn {\nfrom {\n    opacity: 0;\n    transform: translateY(20px);\n}\nto {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n/* Responsive */\n@media (max-width: 520px) {\n.login-card {\n    padding: 32px 24px;\n}\n.login-icon {\n    width: 64px;\n    height: 64px;\n}\n.login-icon i {\n    font-size: 2rem;\n}\n.login-card h1 {\n    font-size: 1.5rem;\n}\n.login-features {\n    gap: 16px;\n}\n.feature i {\n    width: 40px;\n    height: 40px;\n    font-size: 1.2rem;\n}\n.feature span {\n    font-size: 0.7rem;\n}\n}\n\n/* Save Name Modal Styles */\n.save-name-modal {\n  max-width: 420px;\n  width: 100%;\n}\n.save-modal-desc {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n  margin-bottom: 20px;\n  line-height: 1.4;\n}\n.save-name-input-group {\n  margin-bottom: 16px;\n}\n.save-name-input-group label {\n  display: block;\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.save-name-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  color: var(--text);\n  transition: all 0.2s;\n}\n.save-name-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 3px var(--accent-light);\n}\n.save-preview-info {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 10px 12px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-top: 8px;\n}\n.save-preview-info i {\n  color: var(--accent);\n  font-size: 0.9rem;\n}\n\n/* Fix saved tab layout */\n.saved-sessions-container {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  padding: 16px;\n  box-shadow: var(--shadow-sm);\n}\n.saved-header {\n  margin-bottom: 16px;\n  padding-bottom: 12px;\n  border-bottom: 1px solid var(--border);\n}\n.saved-header h3 {\n  margin: 0 0 4px 0;\n  font-size: 0.9rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.saved-header p {\n  margin: 0;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.sessions-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  margin-bottom: 16px;\n  max-height: 320px;\n  overflow-y: auto;\n}\n.session-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  transition: all 0.2s ease;\n  overflow: hidden;\n}\n.session-info {\n  flex: 1;\n  min-width: 0;\n  padding: 10px 12px;\n  cursor: pointer;\n}\n.session-info:hover {\n  background: var(--accent-light);\n}\n.session-name {\n  font-weight: 600;\n  font-size: 0.8rem;\n  color: var(--text);\n  margin-bottom: 4px;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.session-name i {\n  color: var(--accent);\n  font-size: 0.7rem;\n}\n.session-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n  font-size: 0.6rem;\n  color: var(--text-muted);\n}\n.session-meta span {\n  display: inline-flex;\n  align-items: center;\n  gap: 3px;\n}\n.delete-btn {\n  width: 36px;\n  height: 36px;\n  margin-right: 8px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: #dc3545;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.delete-btn:hover {\n  background: #dc3545;\n  color: white;\n  border-color: #dc3545;\n}\n.save-section {\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.current-info {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 1;\n  min-width: 0;\n  padding: 8px 10px;\n  background: var(--accent-light);\n  border-radius: 10px;\n}\n.current-info i {\n  font-size: 1rem;\n  color: var(--accent);\n  flex-shrink: 0;\n}\n.current-info div {\n  display: flex;\n  flex-direction: column;\n  min-width: 0;\n}\n.current-info strong {\n  font-size: 0.75rem;\n  color: var(--text);\n}\n.current-info small {\n  font-size: 0.6rem;\n  color: var(--text-muted);\n}\n.save-btn {\n  padding: 8px 16px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 10px;\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  gap: 5px;\n  transition: all 0.2s;\n  flex-shrink: 0;\n}\n.save-btn:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.save-btn:active {\n  transform: translateY(0);\n}\n\n/* Saved Tab Styles - Clean Version */\n.saved-header {\n  margin-bottom: 24px;\n  padding-bottom: 16px;\n  border-bottom: 1px solid var(--border);\n}\n.saved-header h3 {\n  margin: 0 0 6px 0;\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.saved-header p {\n  margin: 0;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.empty-state {\n  text-align: center;\n  padding: 48px 24px;\n  color: var(--text-muted);\n}\n.empty-state i {\n  font-size: 3rem;\n  margin-bottom: 12px;\n  opacity: 0.4;\n}\n.empty-state p {\n  margin-bottom: 4px;\n  font-weight: 500;\n  color: var(--text);\n}\n.empty-state span {\n  font-size: 0.7rem;\n}\n.sessions-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  margin-bottom: 24px;\n  max-height: 320px;\n  overflow-y: auto;\n}\n.session-item {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 12px 14px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.session-item:hover {\n  border-color: var(--accent);\n  background: var(--accent-light);\n  transform: translateX(2px);\n}\n.session-info {\n  flex: 1;\n  min-width: 0;\n}\n.session-name {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-weight: 600;\n  font-size: 0.85rem;\n  color: var(--text);\n  margin-bottom: 6px;\n}\n.session-name i {\n  color: var(--accent);\n  font-size: 0.8rem;\n}\n.session-details {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.session-details span {\n  display: inline-flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.session-details i {\n  font-size: 0.6rem;\n}\n.delete-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: #dc3545;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.delete-btn:hover {\n  background: #dc3545;\n  color: white;\n  border-color: #dc3545;\n}\n.save-section {\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.current-info {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex: 1;\n  min-width: 0;\n}\n.current-info i {\n  font-size: 1.2rem;\n  color: var(--accent);\n  flex-shrink: 0;\n}\n.current-info div {\n  display: flex;\n  flex-direction: column;\n  min-width: 0;\n}\n.current-info strong {\n  font-size: 0.8rem;\n  color: var(--text);\n}\n.current-info small {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.save-btn {\n  padding: 8px 16px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 10px;\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  transition: all 0.2s;\n  flex-shrink: 0;\n}\n.save-btn:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.action-icon {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 52px;\n  height: 42px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  font-size: 1.2rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: rgba(0, 0, 0, 0.78);\n}\n.action-icon:hover {\n  transform: translateY(-2px);\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n\n/* Add to your style section */\n.tools-tabs button {\n  flex: 1;\n  padding: 8px 12px;\n  font-size: 0.8rem;\n}\n.saved-sessions-container {\n  padding: 16px;\n}\n.saved-session-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 12px;\n  margin-bottom: 12px;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.saved-session-card:hover {\n  border-color: var(--accent);\n  transform: translateX(4px);\n  box-shadow: var(--shadow-sm);\n}\n.saved-session-header {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin-bottom: 8px;\n}\n.session-icon {\n  width: 36px;\n  height: 36px;\n  background: var(--accent-light);\n  border-radius: 10px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--accent);\n}\n.session-details {\n  flex: 1;\n}\n.session-title {\n  font-weight: 600;\n  font-size: 0.85rem;\n  color: var(--text);\n}\n.session-range {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.session-delete-btn-icon {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  color: #dc3545;\n  transition: all 0.2s;\n}\n.session-delete-btn-icon:hover {\n  background: #dc3545;\n  color: white;\n  border-color: #dc3545;\n}\n.session-footer {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  padding-left: 48px;\n}\n.session-resume-hint {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  color: var(--accent);\n}\n.save-current-session-panel {\n  margin-top: 20px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.save-session-btn-full {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  border-radius: 12px;\n  cursor: pointer;\n  font-weight: 600;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.save-session-btn-full:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.empty-saved-state {\n  text-align: center;\n  padding: 48px 24px;\n  color: var(--text-muted);\n}\n.empty-saved-state i {\n  font-size: 3rem;\n  margin-bottom: 12px;\n  opacity: 0.5;\n}\n\n/* Action Buttons Group - Perfect Alignment */\n.action-buttons-group {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.action-icon-btn {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  width: 42px;\n  height: 42px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  font-size: 1.1rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n  flex-shrink: 0;\n}\n.action-icon-btn:hover {\n  transform: translateY(-1px);\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n.action-icon-btn:active {\n  transform: translateY(0);\n}\n.action-btn {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  height: 42px;\n  padding: 0 18px;\n  border-radius: 12px;\n  font-weight: 600;\n  font-size: 0.85rem;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  border: none;\n  white-space: nowrap;\n  flex-shrink: 0;\n}\n.action-btn-secondary {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  border: 1px solid var(--border);\n  color: var(--text);\n  box-shadow: var(--shadow-sm);\n}\n.action-btn-secondary:hover {\n  transform: translateY(-1px);\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n.action-btn-exit {\n  background: rgba(255, 247, 243, 0.9);\n  border: 1px solid rgba(154, 103, 56, 0.14);\n}\n.action-btn-exit:hover {\n  background: rgba(255, 239, 232, 0.96);\n  border-color: rgba(139, 79, 57, 0.22);\n  color: #8b4f39;\n}\n.action-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.25);\n  border: none;\n}\n.action-btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.35);\n}\n.action-btn-primary:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n  transform: none;\n}\n.action-btn-secondary:active,\n.action-icon-btn:active {\n  transform: translateY(0);\n}\n\n/* Responsive adjustments */\n@media (max-width: 640px) {\n.action-buttons-group {\n    gap: 6px;\n}\n.action-icon-btn {\n    width: 38px;\n    height: 38px;\n    font-size: 1rem;\n}\n.action-btn {\n    height: 38px;\n    padding: 0 14px;\n    font-size: 0.8rem;\n}\n.action-btn span {\n    display: inline-block;\n}\n}\n@media (max-width: 480px) {\n.action-btn span {\n    display: none;\n}\n.action-btn {\n    width: 42px;\n    padding: 0;\n}\n.action-btn i {\n    font-size: 1.1rem;\n    margin: 0;\n}\n}\n\n/* Keyboard Shortcuts Modal - Larger & Cleaner */\n.keyboard-shortcuts-modal {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.6);\n  backdrop-filter: blur(8px);\n  z-index: 1000;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  animation: modalFadeIn 0.2s ease;\n}\n.shortcuts-modal {\n  background: var(--surface-strong);\n  border-radius: 24px;\n  width: min(520px, 90vw);\n  max-width: 520px;\n  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.3);\n  border: 1px solid var(--border);\n  animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n  overflow: hidden;\n}\n.shortcuts-modal-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 20px 24px;\n  background: linear-gradient(135deg, var(--surface), var(--surface-strong));\n  border-bottom: 1px solid var(--border);\n}\n.shortcuts-modal-header h3 {\n  margin: 0;\n  font-size: 1.2rem;\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  color: var(--text);\n  font-weight: 600;\n}\n.shortcuts-modal-header h3 i {\n  font-size: 1.3rem;\n  color: var(--accent);\n}\n.shortcuts-modal-close {\n  width: 36px;\n  height: 36px;\n  border-radius: 10px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n  color: var(--text-muted);\n}\n.shortcuts-modal-close:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n  transform: rotate(90deg);\n}\n.shortcuts-modal-body {\n  padding: 24px;\n  max-height: none;\n  overflow-y: visible;\n}\n.shortcuts-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));\n  gap: 24px;\n}\n.shortcut-card {\n  background: var(--surface);\n  border-radius: 16px;\n  padding: 16px;\n  border: 1px solid var(--border);\n}\n.shortcut-card-title {\n  font-size: 0.75rem;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--accent);\n  padding-bottom: 12px;\n  margin-bottom: 12px;\n  border-bottom: 2px solid var(--accent-light);\n}\n.shortcut-row {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 0;\n  border-bottom: 1px solid var(--border);\n}\n.shortcut-row:last-child {\n  border-bottom: none;\n}\n.shortcut-keys {\n  display: flex;\n  gap: 6px;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.shortcut-keys kbd {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border: 1px solid var(--border);\n  border-radius: 8px;\n  padding: 4px 10px;\n  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;\n  font-size: 0.7rem;\n  font-weight: 700;\n  color: var(--accent);\n  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);\n  letter-spacing: 0.5px;\n}\n.shortcut-row span {\n  color: var(--text-muted);\n  font-size: 0.85rem;\n  font-weight: 500;\n}\n@keyframes modalFadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n@keyframes modalSlideUp {\nfrom {\n    opacity: 0;\n    transform: translateY(30px) scale(0.95);\n}\nto {\n    opacity: 1;\n    transform: translateY(0) scale(1);\n}\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.action-buttons-group {\n    width: 100%;\n    gap: 8px;\n}\n.action-icon {\n    min-width: 44px;\n    height: 40px;\n}\n.action-btn {\n    min-width: 0;\n    flex: 1;\n    padding: 0 12px;\n    height: 40px;\n    font-size: 0.8rem;\n}\n.action-btn span {\n    display: inline;\n}\n.shortcuts-modal {\n    width: 95vw;\n\n    margin: 16px;\n}\n.shortcuts-modal-header {\n    padding: 16px 20px;\n}\n.shortcuts-modal-header h3 {\n    font-size: 1rem;\n}\n.shortcuts-modal-body {\n    padding: 16px;\n}\n.shortcuts-grid {\n    grid-template-columns: 1fr;\n    gap: 16px;\n}\n.shortcut-card {\n    padding: 12px;\n}\n.shortcut-row {\n    padding: 8px 0;\n}\n.shortcut-keys kbd {\n    padding: 3px 8px;\n    font-size: 0.65rem;\n}\n.shortcut-row span {\n    font-size: 0.8rem;\n}\n}\n@media (max-width: 480px) {\n.action-btn span {\n    display: none;\n}\n.action-btn {\n    min-width: 44px;\n    padding: 0;\n}\n.action-btn i {\n    font-size: 1.1rem;\n    margin: 0;\n}\n}\n\n/* Keyboard Shortcuts Dropdown - Compact */\n.shortcuts-panel.compact {\n  background: var(--surface-strong);\n  border-radius: 14px;\n  width: 280px;\n  box-shadow: var(--shadow-lg);\n  border: 1px solid var(--border);\n  animation: slideUp 0.2s ease;\n  overflow: hidden;\n}\n.shortcuts-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 10px 14px;\n  border-bottom: 1px solid var(--border);\n  background: var(--surface);\n}\n.shortcuts-header h3 {\n  margin: 0;\n  font-size: 0.85rem;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--text);\n}\n.shortcuts-header h3 i {\n  font-size: 0.9rem;\n}\n.shortcuts-close {\n  width: 26px;\n  height: 26px;\n  border-radius: 6px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 18px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.15s;\n  color: var(--text-muted);\n}\n.shortcuts-close:hover {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.shortcuts-list {\n  padding: 8px 6px;\n  max-height: 400px;\n  overflow-y: auto;\n}\n.shortcut-item {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 6px 10px;\n  border-radius: 6px;\n  font-size: 0.75rem;\n}\n.shortcut-item:hover {\n  background: var(--accent-light);\n}\n.shortcut-item kbd {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 4px;\n  padding: 2px 6px;\n  font-family: monospace;\n  font-size: 0.7rem;\n  font-weight: 600;\n  color: var(--accent);\n  box-shadow: 0 1px 0 var(--border);\n}\n.shortcut-item span {\n  color: var(--text-muted);\n  font-size: 0.75rem;\n}\n@keyframes fadeIn {\nfrom {\n    opacity: 0;\n}\nto {\n    opacity: 1;\n}\n}\n@keyframes slideUp {\nfrom {\n    opacity: 0;\n    transform: translateY(10px);\n}\nto {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n/* Saved Sessions Styles */\n.saved-sessions-list {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n  max-height: 300px;\n  overflow-y: auto;\n}\n.saved-session-item {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 10px 12px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 10px;\n  transition: all 0.2s ease;\n}\n.saved-session-item:hover {\n  border-color: var(--accent);\n  background: var(--surface-strong);\n}\n.session-info {\n  flex: 1;\n  min-width: 0;\n}\n.session-name {\n  font-weight: 600;\n  font-size: 0.85rem;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.session-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.session-meta span {\n  display: inline-flex;\n  align-items: center;\n  gap: 3px;\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.session-actions {\n  display: flex;\n  gap: 6px;\n  flex-shrink: 0;\n}\n.session-load-btn,\n.session-delete-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  transition: all 0.2s ease;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.session-load-btn {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.session-load-btn:hover {\n  background: var(--accent-strong);\n  transform: scale(1.05);\n}\n.session-delete-btn {\n  background: rgba(220, 53, 69, 0.1);\n  color: #dc3545;\n}\n.session-delete-btn:hover {\n  background: #dc3545;\n  color: white;\n}\n.save-current-session {\n  margin-top: 12px;\n  padding-top: 12px;\n  border-top: 1px solid var(--border);\n}\n.save-session-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.save-session-info {\n  flex: 1;\n}\n.save-session-info strong {\n  display: block;\n  font-size: 0.8rem;\n  color: var(--text);\n  margin-bottom: 2px;\n}\n.save-session-info small {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.save-session-btn {\n  padding: 6px 14px;\n  border-radius: 8px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.75rem;\n  font-weight: 500;\n  display: inline-flex;\n  align-items: center;\n  gap: 5px;\n  transition: all 0.2s ease;\n}\n.save-session-btn:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\n.verse-download-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.82);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--accent);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.verse-download-btn:hover:not(:disabled) {\n  transform: scale(1.05);\n  border-color: var(--accent);\n  background: rgba(255, 255, 255, 0.96);\n}\n.verse-download-btn:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n\n/* Add to your style section */\n.main.tools-open {\n  overflow: hidden;\n}\n\n/* Fix tools panel positioning - ensure it goes from very top */\n.tools {\n  position: fixed;\n  top: 0;\n  /* Changed from auto/padding */\n  right: 0;\n  bottom: 0;\n  height: 100dvh;\n  width: min(var(--tools-width), 92vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease, visibility 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n  visibility: hidden;\n  pointer-events: none;\n  overscroll-behavior: contain;\n}\n\n/* Adjust tools-top padding to account for no navbar offset */\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n  padding-top: calc(18px + env(safe-area-inset-top, 0px));\n}\n\n/* Ensure tools body scrolls correctly */\n.tools-body {\n  flex: 1;\n  min-height: 0;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n  overscroll-behavior: contain;\n  -webkit-overflow-scrolling: touch;\n}\nbody.has-navbar .tools {\n  top: 0;\n  /* Still 0, but adjust internal spacing */\n}\nbody.has-navbar .tools-top {\n  padding-top: calc(18px + var(--navbar-height, 0px));\n}\n.tools.open {\n  transform: translateX(0);\n  visibility: visible;\n  pointer-events: auto;\n}\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.5);\n  z-index: 59;\n  opacity: 0;\n  pointer-events: none;\n  transition: opacity 0.2s ease;\n}\n.tools-backdrop.open {\n  opacity: 1;\n  pointer-events: auto;\n}\n\n/* Replace the existing blur mode CSS with this */\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-aid {\n  filter: blur(var(--recall-blur, 10px));\n  opacity: 0.7;\n  transition: filter 0.3s ease, opacity 0.3s ease;\n}\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .tajweed-mark,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic word,\n.main.blur-mode-active .verse-card.blur-upcoming .verse-arabic .wbw-word {\n  filter: blur(var(--recall-blur, 10px));\n}\n\n/* Keep active verse clear */\n.main.blur-mode-active .verse-card.active .verse-arabic,\n.main.blur-mode-active .verse-card.active .verse-aid {\n  filter: none;\n  opacity: 1;\n}\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic,\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-aid,\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic .tajweed-mark,\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic word,\n.main.blur-mode-active .verse-card.blur-upcoming.peek-revealed .verse-arabic .wbw-word {\n  filter: none !important;\n  opacity: 1;\n}\n\n/* Force tajweed spans to display properly */\n.verse-arabic.tajweed-enabled span[class*=\"tajweed-\"] {\n  display: inline !important;\n}\n\n/* Ensure proper line height for tajweed text */\n.verse-arabic.tajweed-enabled {\n  line-height: 2.2 !important;\n  font-family: var(--font-ar);\n}\n\n/* Make tajweed colors visible */\n.verse-arabic.tajweed-enabled .tajweed-ham_wasl,\n.verse-arabic.tajweed-enabled .tajweed-slnt {\n  color: #7e8a97;\n}\n.verse-arabic.tajweed-enabled .tajweed-ghn,\n.verse-arabic.tajweed-enabled .tajweed-idgh_ghn,\n.verse-arabic.tajweed-enabled .tajweed-iqlb {\n  color: #2e9d62;\n  background: rgba(46, 157, 98, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,\n.verse-arabic.tajweed-enabled .tajweed-ikhf,\n.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw {\n  color: #9b59b6;\n  background: rgba(155, 89, 182, 0.10);\n}\n.verse-arabic {\n  --verse-font-percent: 100;\n  --verse-font-size: clamp(2rem, calc(var(--verse-font-percent, 120) * 0.02rem), 3.8rem);\n  font-family: var(--font-ar);\n  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));\n  line-height: 2;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n  display: block;\n  overflow-wrap: anywhere;\n  word-break: normal;\n  contain: layout paint;\n}\n\n/* Force re-render when font changes */\n.verse-arabic.tajweed-enabled,\n.verse-arabic:not(.tajweed-enabled) {\n  transition: font-size 0.1s ease;\n}\n@keyframes wordHighlightPulse {\n0% {\n    transform: scale(1);\n}\n50% {\n    transform: scale(1.03);\n}\n100% {\n    transform: scale(1.02);\n}\n}\n\n/* Combined Tajweed + Word Highlighting */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n\n/* Preserve tajweed colors inside highlighted words but make them visible */\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {\n  color: inherit !important;\n  background: transparent !important;\n}\n.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*=\"tajweed-\"] {\n  color: white !important;\n  background: transparent !important;\n}\n\n/* Mode Button Styling */\n.mode-btn {\n  background: var(--surface);\n  border: 1px solid var(--accent);\n  color: var(--accent);\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mode-btn i:first-child {\n  font-size: 0.85rem;\n}\n.mode-btn .bi-chevron-down {\n  font-size: 0.7rem;\n  transition: transform 0.2s;\n}\n.mode-btn:hover .bi-chevron-down {\n  transform: translateY(2px);\n}\n.mode-btn:hover {\n  background: var(--accent-light);\n}\n\n/* Make all buttons consistent */\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn:disabled,\n.rail-btn-ghost:disabled,\n.rail-btn-primary:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n  pointer-events: none;\n  transform: none;\n  box-shadow: none;\n}\n.rail-btn-resume {\n  background: rgba(255, 255, 255, 0.92);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.rail-btn-resume:hover {\n  background: var(--accent-light);\n  transform: translateY(-1px);\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\nbody {\n  font-family: var(--font-ui);\n  background: var(--bg);\n  color: var(--text);\n}\nhtml {\n  background: var(--bg);\n}\n.app {\n  min-height: 100vh;\n  font-size: calc(16px * var(--ui-scale, 1));\n  animation: appFade 260ms ease-out;\n}\n.verse-arabic {\n  min-height: 60px;\n}\n\n/* Session Rail */\n.session-rail {\n  background: var(--surface);\n  border-radius: 20px;\n  margin-bottom: 20px;\n  padding: 12px 16px 14px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.session-rail-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 10px;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.session-rail-copy {\n  flex: 1;\n  min-width: 0;\n}\n.session-rail-headline {\n  display: flex;\n  align-items: baseline;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.session-rail-pills {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  margin-top: 6px;\n}\n.session-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 4px;\n  padding: 5px 9px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid var(--border);\n  color: var(--text-muted);\n  font-size: 0.71rem;\n  white-space: nowrap;\n}\n.session-pill strong {\n  color: var(--text);\n  font-weight: 700;\n}\n.session-pill-focus {\n  max-width: min(280px, 100%);\n}\n.session-pill-focus strong {\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.session-rail-kicker {\n  font-size: 0.7rem;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  font-size: 1rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.session-rail-meta {\n  font-size: 0.72rem;\n  color: var(--text-muted);\n  margin-top: 2px;\n}\n.session-rail-actions {\n  display: flex;\n  gap: 10px;\n}\n.rail-btn {\n  padding: 8px 16px;\n  border-radius: 12px;\n  font-size: 0.8rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  border: none;\n}\n.rail-btn-ghost {\n  background: var(--accent-light);\n  color: var(--accent);\n}\n.rail-btn-ghost:hover {\n  background: var(--accent);\n  color: white;\n}\n.rail-btn-primary {\n  background: var(--accent);\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.2);\n}\n.rail-btn-primary:hover {\n  background: var(--accent-strong);\n  transform: translateY(-1px);\n}\n.session-rail-subnote {\n  margin-top: 10px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n}\n\n/* Mode Indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 10px;\n  padding: 6px 14px;\n  margin: 8px 0 12px 0;\n  background: var(--accent-light);\n  border-radius: 40px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n.mode-switch-btn {\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 4px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.mode-switch-btn:hover {\n  background: rgba(154, 103, 56, 0.2);\n  transform: rotate(180deg);\n}\n.progress-bar-wide {\n  margin-top: 10px;\n  height: 6px;\n  position: relative;\n  overflow: visible;\n}\n.progress-label {\n  position: absolute;\n  top: -24px;\n  right: 0;\n  font-size: 0.72rem;\n  font-weight: 700;\n  color: var(--accent);\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.session-rail-top {\n    flex-direction: column;\n    align-items: stretch;\n}\n.session-rail-actions {\n    justify-content: stretch;\n    width: 100%;\n    flex-wrap: wrap;\n}\n.rail-btn {\n    flex: 1;\n    justify-content: center;\n}\n}\n.verse-arabic-loading {\n  min-height: 60px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--text-muted);\n  animation: pulse 1s infinite;\n}\n@keyframes pulse {\n0%,\n  100% {\n    opacity: 0.3;\n}\n50% {\n    opacity: 0.6;\n}\n}\n\n/* Ensure HTML content is styled properly before Vue mounts */\n.verse-arabic word,\n.verse-arabic .wbw-word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  vertical-align: baseline;\n  white-space: nowrap;\n}\n\n/* Prevent raw HTML showing */\n.verse-arabic:empty {\n  display: none;\n}\n\n/* Tajweed styles */\n.verse-arabic.tajweed-enabled [class*=\"tajweed\"] {\n  display: inline;\n}\n\n/* Color rules for tajweed - adjust based on what API returns */\n.verse-arabic [class*=\"ghunnah\"],\n.verse-arabic [class*=\"Ghunnah\"] {\n  color: #2ecc71;\n}\n.verse-arabic [class*=\"madd\"],\n.verse-arabic [class*=\"Madd\"] {\n  color: #e74c3c;\n}\n.verse-arabic [class*=\"qalqalah\"],\n.verse-arabic [class*=\"Qalqalah\"] {\n  color: #f39c12;\n}\n.verse-arabic [class*=\"ikhfa\"],\n.verse-arabic [class*=\"Ikhfa\"] {\n  color: #9b59b6;\n}\n.verse-arabic [class*=\"idgham\"],\n.verse-arabic [class*=\"Idgham\"] {\n  color: #3498db;\n}\n\n/* Word by Word styles */\n.wbw-word {\n  display: inline-block;\n  padding: 5px 8px;\n  margin: 2px 3px;\n  border-radius: 8px;\n  transition: all 0.2s ease;\n  cursor: pointer;\n  font-size: 1.05rem;\n  background: rgba(154, 103, 56, 0.05);\n}\n.wbw-word:hover {\n  background: var(--accent-light);\n  transform: scale(1.02);\n}\n.wbw-word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n  animation: pop 180ms ease-out;\n}\n.verse-arabic.verse-weak .wbw-word.weak-word {\n  background: #fff3bf;\n  color: #5f4b00;\n}\n.verse-arabic.verse-mastered .wbw-word.mastered-word {\n  background: #d3f9d8;\n  color: #1f6f31;\n}\n@keyframes pop {\nfrom {\n    transform: scale(1.01);\n}\nto {\n    transform: scale(1.05);\n}\n}\n\n/* Word highlighting styles */\n.verse-arabic word {\n  display: inline-block;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n  cursor: pointer;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-arabic word:hover {\n  background: var(--accent-light);\n  cursor: pointer;\n}\n.rail-stat strong,\n.player-eta {\n  cursor: help;\n  border-bottom: 1px dotted var(--text-muted);\n}\n\n/* Optional: Show detailed breakdown on hover */\n.rail-stat:hover strong::after {\n  content: attr(title);\n  position: absolute;\n  bottom: 100%;\n  left: 50%;\n  transform: translateX(-50%);\n  background: var(--surface-strong);\n  color: var(--text);\n  padding: 4px 8px;\n  border-radius: 8px;\n  font-size: 0.7rem;\n  white-space: nowrap;\n  z-index: 100;\n  box-shadow: var(--shadow-sm);\n  border: 1px solid var(--border);\n}\n\n/* Minimized Session Rail */\n.session-rail-mini {\n  position: sticky;\n  top: 12px;\n  z-index: 18;\n  padding: 10px;\n  padding-top: 8px;\n  margin-bottom: 20px;\n  background: var(--surface);\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-sm);\n  overflow: hidden;\n  transition: all 0.2s ease;\n}\n.session-rail-mini:hover {\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent-soft);\n}\n.rail-mini-content {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 8px 12px 8px 16px;\n}\n.rail-mini-info {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  flex: 1;\n}\n.rail-mini-icon {\n  width: 32px;\n  height: 32px;\n  background: var(--accent-light);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.rail-mini-icon i {\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.rail-mini-details {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-mini-surah {\n  font-size: 0.8rem;\n  font-weight: 600;\n  color: var(--text);\n}\n.rail-mini-progress {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n}\n.rail-mini-stats {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.mini-stat-item {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n}\n.mini-stat-item i {\n  font-size: 0.7rem;\n  color: var(--accent);\n}\n.rail-mini-actions {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.mini-btn {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: transparent;\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--text-muted);\n}\n.mini-btn:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n  color: var(--accent);\n}\n.mini-btn:first-child {\n  background: var(--accent);\n  border-color: var(--accent);\n  color: white;\n}\n.mini-btn:first-child:hover {\n  transform: scale(1.05);\n  background: var(--accent-strong);\n}\n.rail-mini-progress {\n  height: 2px;\n  background: var(--border);\n}\n.progress-fill-mini {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n\n/* Responsive */\n@media (max-width: 640px) {\n.rail-mini-stats {\n    display: none;\n}\n.rail-mini-content {\n    padding: 6px 10px 6px 12px;\n}\n.rail-mini-surah {\n    font-size: 0.75rem;\n}\n}\n\n/* Font Dropdown */\n.font-dropdown {\n  position: relative;\n}\n.font-dropdown-trigger {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 999px;\n  font-size: 0.75rem;\n  cursor: pointer;\n  transition: all 0.2s;\n  color: var(--text);\n}\n.font-dropdown-trigger:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n}\n.font-dropdown-trigger .bi-chevron-down {\n  transition: transform 0.2s;\n  font-size: 0.7rem;\n}\n.font-dropdown-trigger .bi-chevron-down.rotated {\n  transform: rotate(180deg);\n}\n.font-dropdown-menu {\n  position: absolute;\n  top: calc(100% + 8px);\n  right: 0;\n  min-width: 200px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  box-shadow: var(--shadow-lg);\n  overflow: hidden;\n  z-index: 100;\n  backdrop-filter: blur(12px);\n}\n.font-option {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  width: 100%;\n  padding: 10px 14px;\n  background: transparent;\n  border: none;\n  cursor: pointer;\n  font-size: 0.8rem;\n  text-align: left;\n  transition: all 0.15s;\n  color: var(--text);\n}\n.font-option:hover {\n  background: var(--accent-light);\n}\n.font-option.active {\n  background: var(--accent);\n  color: white;\n}\n.font-option .check-icon {\n  margin-left: auto;\n  font-size: 0.8rem;\n}\n\n/* Dropdown Animation */\n.dropdown-fade-enter-active,\n.dropdown-fade-leave-active {\n  transition: all 0.2s ease;\n}\n.dropdown-fade-enter-from,\n.dropdown-fade-leave-to {\n  opacity: 0;\n  transform: translateY(-8px);\n}\n\n/* Tajweed styles for AlQuran quran-tajweed edition */\n.verse-arabic.tajweed-enabled {\n  line-height: 2;\n  white-space: normal;\n  overflow-wrap: anywhere;\n}\n.verse-arabic.tajweed-enabled .tajweed-mark {\n  display: inline;\n  border-radius: 0.2em;\n  padding: 0 0.03em;\n}\n.verse-arabic.tajweed-enabled .tajweed-ham_wasl,\n.verse-arabic.tajweed-enabled .tajweed-slnt {\n  color: #7e8a97;\n}\n.verse-arabic.tajweed-enabled .tajweed-ghn,\n.verse-arabic.tajweed-enabled .tajweed-idgh_ghn,\n.verse-arabic.tajweed-enabled .tajweed-iqlb {\n  color: #2e9d62;\n  background: rgba(46, 157, 98, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,\n.verse-arabic.tajweed-enabled .tajweed-ikhf,\n.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw {\n  color: #9b59b6;\n  background: rgba(155, 89, 182, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-qlq,\n.verse-arabic.tajweed-enabled .tajweed-lqlq {\n  color: #d98824;\n  background: rgba(217, 136, 36, 0.12);\n}\n.verse-arabic.tajweed-enabled .tajweed-madda_normal,\n.verse-arabic.tajweed-enabled .tajweed-madda_permissible,\n.verse-arabic.tajweed-enabled .tajweed-madda_necessary,\n.verse-arabic.tajweed-enabled .tajweed-madda_obligatory,\n.verse-arabic.tajweed-enabled .tajweed-madda_pbligatory {\n  color: #d55245;\n  background: rgba(213, 82, 69, 0.10);\n}\n.verse-arabic.tajweed-enabled .tajweed-idgh_mus,\n.verse-arabic.tajweed-enabled .tajweed-idghm_shfw,\n.verse-arabic.tajweed-enabled .tajweed-idgh_shfw,\n.verse-arabic.tajweed-enabled .tajweed-ghn+.tajweed-mark {\n  color: #2b7bbb;\n  background: rgba(43, 123, 187, 0.10);\n}\n\n/* Toolbar chip active state for tajweed */\n.toolbar-chip.active {\n  background: var(--accent);\n  color: white;\n}\n.verse-play-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: var(--accent);\n  border: none;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: white;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n.verse-play-btn i {\n  font-size: 0.9rem;\n}\n.verse-play-btn:hover {\n  transform: scale(1.05);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--accent);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.verse-play-btn:active {\n  transform: scale(0.98);\n}\n.verse-preview-label {\n  margin-left: 10px;\n  font-size: 0.72rem;\n  color: var(--text-muted);\n  font-weight: 650;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n}\n.resume-details {\n  margin-top: 10px;\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.72);\n  padding: 10px 12px;\n}\n.resume-details summary {\n  cursor: pointer;\n  list-style: none;\n  font-weight: 650;\n  color: var(--text);\n}\n.resume-details summary::-webkit-details-marker {\n  display: none;\n}\n.verse-download-btn {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.82);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s ease;\n  color: var(--accent);\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n}\n.verse-download-btn:hover:not(:disabled) {\n  transform: scale(1.05);\n  border-color: var(--accent);\n  background: rgba(255, 255, 255, 0.96);\n}\n.verse-download-btn:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n.speed-label {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-right: 4px;\n}\n.speed-controls {\n  display: flex;\n  gap: 4px;\n}\n.speed-btn {\n  padding: 4px 8px;\n  border-radius: 8px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.7rem;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.speed-btn.active {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.streak-motivation {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 8px 12px;\n  background: var(--surface);\n  border-radius: 40px;\n  font-size: 0.75rem;\n}\n.streak-badge {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  font-weight: 500;\n}\n.motivation-message {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--text-muted);\n  font-size: 0.7rem;\n}\n.pa-note {\n  font-size: 0.65rem;\n  color: var(--text-muted);\n  margin-top: 4px;\n  display: block;\n}\n\n/* Active tab indicator with pulse effect */\n.tools-tabs button.active-tab {\n  position: relative;\n  animation: tabPulse 0.22s ease-out;\n}\n@keyframes tabPulse {\n0% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 var(--accent);\n}\n50% {\n    transform: scale(1.012);\n    box-shadow: 0 0 0 3px var(--accent-light);\n}\n100% {\n    transform: scale(1);\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n.quick-tools {\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.78);\n}\n.quick-tools-grid {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n  padding: 12px 14px;\n}\n.quick-tool {\n  border: 1px solid rgba(154, 103, 56, 0.10);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.82);\n  padding: 10px;\n  display: grid;\n  gap: 8px;\n  min-width: 0;\n}\n.quick-tool-top {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 8px;\n}\n.quick-tool-label {\n  font-size: 0.74rem;\n  font-weight: 750;\n  color: var(--text);\n}\n.quick-tool-value {\n  font-size: 0.74rem;\n  font-weight: 650;\n  color: var(--text-muted);\n}\n.quick-tool-body {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.quick-tool-body.disabled {\n  opacity: 0.55;\n}\n.quick-tool-body-muted {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n}\n.quick-range {\n  flex: 1 1 auto;\n  min-width: 0;\n}\n.toggle-chip {\n  min-height: 32px;\n  min-width: 68px;\n  padding: 6px 14px;\n  border-radius: 40px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);\n  border: 1px solid var(--border);\n  background: var(--surface);\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n  position: relative;\n  overflow: hidden;\n}\n\n/* Improved Toggle Buttons - Consistent with modern UI */\n.toggle-chip {\n  min-height: 32px;\n  min-width: 68px;\n  padding: 6px 14px;\n  border-radius: 40px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);\n  border: 1px solid var(--border);\n  background: var(--surface);\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n  position: relative;\n  overflow: hidden;\n}\n.toggle-chip::before {\n  content: '';\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  width: 0;\n  height: 0;\n  border-radius: 50%;\n  background: rgba(154, 103, 56, 0.2);\n  transform: translate(-50%, -50%);\n  transition: width 0.4s, height 0.4s;\n}\n.toggle-chip:active::before {\n  width: 100px;\n  height: 100px;\n}\n.toggle-chip:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-sm);\n}\n.toggle-chip.active {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.toggle-chip.active:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.4);\n  filter: brightness(1.05);\n}\n.toggle-chip:active {\n  transform: translateY(0);\n}\n.mode-radio-group {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex-wrap: wrap;\n  justify-content: flex-end;\n}\n.mode-radio {\n  position: relative;\n  display: inline-grid;\n  place-items: center;\n  width: 24px;\n  height: 24px;\n  padding: 0;\n  border-radius: 50%;\n  border: 1px solid rgba(154, 103, 56, 0.24);\n  background: rgba(255, 250, 243, 0.95);\n  cursor: pointer;\n  transition: all 0.18s ease;\n}\n.mode-radio input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.mode-radio-dot {\n  width: 11px;\n  height: 11px;\n  border-radius: 50%;\n  border: 1.5px solid rgba(154, 103, 56, 0.52);\n  background: rgba(255, 255, 255, 0.9);\n  position: relative;\n  flex: 0 0 auto;\n  transition: all 0.18s ease;\n}\n.mode-radio-dot::after {\n  content: \"\";\n  position: absolute;\n  inset: 2px;\n  border-radius: 50%;\n  background: transparent;\n  transition: background 0.18s ease;\n}\n.mode-radio.active {\n  border-color: rgba(154, 103, 56, 0.38);\n  background: rgba(248, 236, 222, 0.95);\n}\n.mode-radio.active .mode-radio-dot {\n  border-color: rgba(154, 103, 56, 0.86);\n}\n.mode-radio.active .mode-radio-dot::after {\n  background: rgba(154, 103, 56, 0.86);\n}\n.mode-radio:hover {\n  border-color: rgba(154, 103, 56, 0.3);\n  background: rgba(252, 244, 235, 0.95);\n}\n.workspace-shell-active-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 5px;\n  padding: 4px 10px;\n  border-radius: 999px;\n  background: rgba(58, 167, 109, 0.16);\n  border: 1px solid rgba(58, 167, 109, 0.28);\n  color: #1f6b45;\n  font-size: 0.72rem;\n  font-weight: 700;\n}\n.active-techniques-section {\n  padding: 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(58, 167, 109, 0.1);\n  background: linear-gradient(180deg, rgba(245, 252, 247, 0.82), rgba(241, 249, 243, 0.72));\n  box-shadow: none;\n}\n.active-techniques-header {\n  margin-bottom: 10px;\n  padding: 0 0 2px;\n  display: flex;\n  align-items: flex-start;\n  justify-content: space-between;\n  gap: 10px;\n}\n.active-techniques-count {\n  min-width: 24px;\n  height: 24px;\n  padding: 0 8px;\n  border-radius: 999px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  background: rgba(58, 167, 109, 0.08);\n  color: rgba(31, 107, 69, 0.75);\n  font-size: 0.72rem;\n  font-weight: 700;\n}\n.active-techniques-grid {\n  display: grid;\n  gap: 8px;\n}\n.active-technique-card {\n  display: flex;\n  align-items: flex-start;\n  gap: 10px;\n  padding: 9px 10px;\n  border-radius: 10px;\n  border: 1px solid rgba(58, 167, 109, 0.08);\n  background: rgba(250, 253, 250, 0.92);\n  box-shadow: none;\n}\n.active-technique-icon {\n  width: 28px;\n  height: 28px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  color: rgba(47, 140, 90, 0.82);\n  background: rgba(58, 167, 109, 0.08);\n  flex: 0 0 auto;\n}\n.active-technique-copy {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n  min-width: 0;\n  padding-top: 0;\n}\n.active-technique-copy strong {\n  font-size: 0.78rem;\n  color: rgba(31, 107, 69, 0.9);\n  font-weight: 700;\n}\n.active-technique-copy span {\n  font-size: 0.69rem;\n  line-height: 1.35;\n  color: rgba(31, 107, 69, 0.68);\n}\n\n/* Compact toggle for headers */\n.st-right-group {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.st-right-group .toggle-chip {\n  min-height: 32px;\n  min-width: 68px;\n  padding: 4px 12px;\n  font-size: 0.75rem;\n}\n\n/* Switch-style alternative (optional) */\n.toggle-switch {\n  position: relative;\n  display: inline-flex;\n  align-items: center;\n  cursor: pointer;\n  min-width: 52px;\n  height: 30px;\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 30px;\n  transition: all 0.2s ease;\n}\n.toggle-switch.active {\n  background: var(--accent);\n  border-color: transparent;\n}\n.toggle-switch-knob {\n  position: absolute;\n  left: 2px;\n  width: 24px;\n  height: 24px;\n  background: white;\n  border-radius: 50%;\n  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);\n}\n.toggle-switch.active .toggle-switch-knob {\n  transform: translateX(22px);\n}\n.toggle-switch-label {\n  margin-left: 60px;\n  font-size: 0.75rem;\n  font-weight: 500;\n  color: var(--text-muted);\n}\n.toggle-switch.active+.toggle-switch-label {\n  color: var(--accent);\n}\n\n/* Technique toggle specific */\n.technique-toggle {\n  min-height: 32px;\n  min-width: 72px;\n  font-weight: 600;\n  letter-spacing: 0.5px;\n}\n\n/* Settings toggle */\n.settings-toggle {\n  min-height: 36px;\n  min-width: 72px;\n  font-weight: 600;\n}\n\n/* Ripple effect animation */\n@keyframes ripple {\nto {\n    transform: scale(4);\n    opacity: 0;\n}\n}\n.toggle-chip-ripple {\n  position: absolute;\n  border-radius: 50%;\n  background: rgba(255, 255, 255, 0.5);\n  transform: scale(0);\n  animation: ripple 0.4s linear;\n  pointer-events: none;\n}\n\n/* Toggle switch animation and visual feedback */\n.switch {\n  transition: all 0.2s ease;\n}\n.switch:active {\n  transform: scale(0.98);\n}\n.switch-ui {\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n  animation: switchPulse 0.3s ease-out;\n}\n@keyframes switchPulse {\n0% {\n    box-shadow: 0 0 0 0 rgba(139, 94, 60, 0.4);\n}\n50% {\n    box-shadow: 0 0 0 4px rgba(139, 94, 60, 0.2);\n}\n100% {\n    box-shadow: 0 0 0 0 transparent;\n}\n}\n\n/* Field hint styling */\n.field-hint {\n  font-size: calc(0.7rem * var(--en-scale, 1));\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.26;\n  display: block;\n}\n\n/* Verse Arabic styling */\n.verse-arabic {\n  --verse-font-percent: 100;\n  --verse-font-size: clamp(1.5rem, calc(var(--verse-font-percent, 150) * 0.0175rem), 3.25rem);\n  font-family: var(--font-ar);\n  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  unicode-bidi: isolate;\n  background: var(--bg-elevated);\n  padding: 20px;\n  border-radius: 16px;\n  margin: 12px 0;\n}\n.verse-arabic word {\n  display: inline-block;\n  font-size: 1em;\n  transition: all 0.15s ease;\n  border-radius: 4px;\n  padding: 0 2px;\n}\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.02);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);\n}\n.verse-card {\n  background: var(--surface);\n  border-radius: 20px;\n  padding: 26px;\n  transition: all 0.2s ease;\n  border: 1px solid var(--border);\n  position: relative;\n  direction: ltr;\n  overflow: hidden;\n  width: 100%;\n}\n.verse-card::before {\n  content: \"\";\n  position: absolute;\n  inset: 0;\n  pointer-events: none;\n  background:\n    linear-gradient(180deg, rgba(184, 130, 78, 0.03), transparent 22%),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.05), transparent 28%);\n}\n.verse-card.active {\n  border-color: var(--accent);\n  background: linear-gradient(145deg, rgba(184, 130, 78, 0.14), rgba(154, 103, 56, 0.04));\n  box-shadow: 0 0 0 1px var(--accent), 0 14px 32px rgba(154, 103, 56, 0.18);\n  transform: translateY(-1px);\n  transition: all 0.2s ease;\n}\n.main.focus-mode-active .verse-card:not(.active) {\n  opacity: 0.54;\n  filter: saturate(0.72);\n}\n.main.focus-mode-active .workspace-fab-live,\n.main.focus-mode-active .verse-card:not(.active) .verse-aid {\n  opacity: 0.38;\n}\n\n\n\n/* Removed: \"For serious huffadh training\" badge */\n.verse-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 16px;\n}\n.verse-badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.verse-number {\n  font-size: 0.78rem;\n  padding: 6px 12px;\n  background: var(--accent);\n  border-radius: 999px;\n  color: #fff;\n  font-weight: 700;\n  box-shadow: 0 6px 16px rgba(154, 103, 56, 0.24);\n}\n.verse-status-badge,\n.verse-status-subtle {\n  border-radius: 999px;\n  padding: 5px 10px;\n  font-size: 0.68rem;\n  font-weight: 600;\n}\n.verse-status-badge {\n  background: var(--accent-light);\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n}\n.verse-status-subtle {\n  background: var(--bg-elevated);\n  color: var(--text-muted);\n}\n.verse-ref {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  font-family: monospace;\n}\n.verse-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex-shrink: 0;\n}\n\n/* Font controls */\n.verse-font-controls {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  padding: 2px 6px;\n  margin-right: 8px;\n}\n.verse-font-btn {\n  width: 24px;\n  height: 24px;\n  border-radius: 12px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 10px;\n  transition: all 0.2s ease;\n  color: var(--text);\n}\n.verse-font-btn:hover {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.05);\n}\n.verse-font-size-indicator {\n  font-size: 10px;\n  min-width: 35px;\n  text-align: center;\n  color: var(--text-muted);\n  font-weight: 500;\n}\n\n/* Session rail */\n.session-rail {\n  position: sticky;\n  top: 14px;\n  z-index: 18;\n  margin-bottom: 18px;\n  padding: 12px 14px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  backdrop-filter: blur(12px);\n  box-shadow: var(--shadow-md);\n  animation: railIn 280ms ease-out;\n}\n.session-rail-top {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  gap: 12px;\n  align-items: center;\n}\n.session-rail-kicker {\n  font-size: 10px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: var(--text-muted);\n}\n.session-rail-title {\n  margin-top: 2px;\n  font-size: 14px;\n  font-weight: 450;\n}\n.session-rail-meta {\n  margin-top: 2px;\n  font-size: 11px;\n  color: var(--text-muted);\n}\n.session-rail-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-rail-stats {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 8px;\n  margin-top: 10px;\n}\n.rail-stat {\n  padding: 8px 10px;\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.58);\n  border: 1px solid rgba(78, 58, 38, 0.07);\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.rail-stat span {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n}\n.rail-stat strong {\n  font-size: 0.78rem;\n  font-weight: 500;\n}\n.rail-btn {\n  height: 34px;\n  padding: 0 12px;\n  border-radius: 13px;\n  border: 1px solid var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  color: var(--text);\n  font-size: 12px;\n  font-weight: 450;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.rail-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: transparent;\n  color: white;\n  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.28);\n}\n.progress-bar {\n  flex: 1;\n  height: 4px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-wide {\n  margin-top: 10px;\n}\n.progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s;\n}\n\n/* Mode indicator */\n.mode-indicator {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  padding: 6px 12px;\n  margin: 8px 0 4px;\n  background: var(--accent-light);\n  border-radius: 20px;\n  font-size: 0.7rem;\n  color: var(--accent);\n  border: 1px solid var(--accent-soft);\n  width: -moz-fit-content;\n  width: fit-content;\n}\n\n/* Reading toolbar */\n.reading-toolbar {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  margin-bottom: 16px;\n  padding: 12px 14px;\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.reading-toolbar-group {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  align-items: flex-start;\n}\n.toolbar-chip {\n  border: 0;\n  border-radius: 999px;\n  padding: 8px 12px;\n  background: rgba(255, 255, 255, 0.78);\n  color: var(--text-muted);\n  font-size: 0.75rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  box-shadow: var(--shadow-sm);\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.toolbar-chip i,\n.rail-btn i,\n.tools-tabs button i,\n.st-ico i {\n  font-size: 0.9rem;\n  line-height: 1;\n}\n.toolbar-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.toolbar-chip:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n\n/* Tools panel */\n.tools {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  height: 100dvh;\n  width: min(var(--tools-width), 92vw);\n  background: linear-gradient(180deg, rgba(255, 250, 243, 0.96), rgba(247, 240, 231, 0.92));\n  border-left: 1px solid var(--border);\n  backdrop-filter: blur(14px);\n  transform: translateX(100%);\n  transition: transform 0.25s ease, visibility 0.25s ease;\n  z-index: 60;\n  display: flex;\n  flex-direction: column;\n  overflow-x: hidden;\n  box-shadow: var(--shadow-lg);\n  isolation: isolate;\n  visibility: hidden;\n  pointer-events: none;\n  overscroll-behavior: contain;\n}\n.tools-backdrop {\n  position: fixed;\n  inset: 0;\n  background: rgba(15, 12, 8, 0.35);\n  backdrop-filter: blur(1px);\n  z-index: 59;\n  touch-action: none;\n}\n.tools.open {\n  transform: translateX(0);\n  visibility: visible;\n  pointer-events: auto;\n}\n.tools-top {\n  padding: 18px 18px 12px;\n  border-bottom: 1px solid var(--border);\n}\n.tools-topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.tools-title {\n  font-size: 1rem;\n  font-weight: 700;\n  letter-spacing: -0.2px;\n  color: var(--text);\n}\n.tools-context {\n  margin-top: 8px;\n  font-size: 0.78rem;\n  color: var(--text-muted);\n  font-weight: 600;\n}\n.tools-x {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n  color: rgba(0, 0, 0, 0.7);\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease;\n}\n.tools-tabs {\n  display: flex;\n  gap: 8px;\n  margin-top: 12px;\n  background: rgba(0, 0, 0, 0.04);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 6px;\n  overflow-x: auto;\n  -webkit-overflow-scrolling: touch;\n  width: 100%;\n}\n.tools-tabs button {\n  flex: 1 1 0;\n  padding: 7px 10px;\n  border-radius: 12px;\n  background: transparent;\n  border: none;\n  font-size: 0.82rem;\n  cursor: pointer;\n  color: rgba(0, 0, 0, 0.55);\n  font-weight: 450;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  transition: background 140ms ease, color 140ms ease, transform 140ms ease, box-shadow 160ms ease;\n  white-space: nowrap;\n}\n.tools-tabs button.active {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.84));\n  box-shadow: var(--shadow-sm);\n  color: rgba(0, 0, 0, 0.85);\n}\n.tools-body {\n  flex: 1;\n  min-height: 0;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 20px 20px calc(var(--tools-footer-h) + 26px);\n  overscroll-behavior: contain;\n  -webkit-overflow-scrolling: touch;\n}\n\n/* Compact mode (default) to reduce cognitive load */\n.tools-body.compact .st-sub,\n.tools-body.compact .field-hint,\n.tools-body.compact .analytics-help,\n.tools-body.compact .stat-help {\n  display: block !important;\n}\n.tools-body.compact .sheet {\n  gap: 8px;\n}\n.tools-body.compact .sheet-section {\n  padding: 0;\n  border-radius: 14px;\n}\n.tools-body.compact .sheet-toggle {\n  padding: 10px 12px;\n}\n.tools-body.compact .sheet-content {\n  padding: 8px 12px 10px;\n}\n.tools-body.compact .field-stack {\n  gap: 12px;\n}\n.tools-body.compact .field label {\n  margin-bottom: 6px;\n}\n.tools-body.compact .sheet-section-compact {\n  border-radius: 14px;\n}\n.tools-body.compact .sheet-section-compact .sheet-toggle {\n  padding: 11px 13px;\n}\n.tools-body.compact .sheet-section-compact .sheet-content {\n  padding: 8px 13px 13px;\n}\n.tools-body.compact .field-stack-compact {\n  gap: 10px;\n}\n.tools-body.compact .field-stack-compact .field {\n  gap: 6px;\n}\n.tools-body.compact .field-stack-compact .field label {\n  margin-bottom: 0;\n}\n.tools-body.compact .field-stack-compact .select,\n.tools-body.compact .field-stack-compact .input {\n  padding: 10px 12px;\n}\n.tools-body.compact .field-stack-compact .field-hint {\n  margin-top: 1px;\n}\n.tools-body.compact .field-stack-compact .slider-markers {\n  margin-top: 2px;\n}\n.sheet {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.sheet-section {\n  border: 1px solid var(--border);\n  background: rgba(255, 252, 248, 0.5);\n  border-radius: 14px;\n  padding: 0;\n  overflow: hidden;\n  animation: riseSoft 260ms ease-out;\n}\n.sheet-toggle {\n  width: 100%;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 10px 12px;\n  border: none;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.78));\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease;\n}\n.st-left {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.st-ico {\n  width: 24px;\n  height: 24px;\n  border-radius: 8px;\n  display: grid;\n  place-items: center;\n  background: linear-gradient(180deg, rgba(139, 94, 60, 0.16), rgba(139, 94, 60, 0.06));\n  border: 1px solid rgba(139, 94, 60, 0.18);\n  flex: 0 0 auto;\n  font-size: 11px;\n  font-weight: 600;\n  color: var(--accent);\n}\n.st-txt {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 2px;\n  min-width: 0;\n}\n.st-title {\n  padding-top: 5px;\n  font-weight: 450;\n  letter-spacing: -0.2px;\n  color: var(--text);\n  font-size: 0.82rem;\n  white-space: nowrap;\n}\n.st-sub {\n  font-size: 0.66rem;\n  color: var(--text-muted);\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.st-chev {\n  width: 28px;\n  height: 28px;\n  border-radius: 10px;\n  display: grid;\n  place-items: center;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.78);\n  color: rgba(0, 0, 0, 0.65);\n  transition: transform 0.15s ease;\n  box-shadow: var(--shadow-sm);\n}\n.st-chev.open {\n  transform: rotate(180deg);\n}\n.sheet-content {\n  padding: 12px 12px 14px;\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field-stack {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n.field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  min-width: 0;\n}\n.field label {\n  font-size: 0.75rem;\n  font-weight: 600;\n  color: var(--text-muted);\n  letter-spacing: 0.3px;\n}\n.field-hint {\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 3px;\n  line-height: 1.35;\n  display: block;\n}\n.select,\n.input {\n  width: 100%;\n  min-width: 0;\n  padding: 11px 12px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.85);\n  color: var(--text);\n  font-size: 0.8rem;\n  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);\n}\n.range {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.range-single {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);\n  align-items: center;\n}\n.range span {\n  color: rgba(0, 0, 0, 0.35);\n  font-weight: 450;\n  font-size: 11px;\n}\n.radio-group {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.radio {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 0.85rem;\n  color: var(--text);\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  transition: all 0.2s ease;\n}\n.radio:hover {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-sm);\n}\n.radio input {\n  margin: 0;\n}\n.switch {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 11px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);\n  cursor: pointer;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n          user-select: none;\n  transition: all 0.2s ease;\n}\n.switch input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n.switch-ui {\n  width: 44px;\n  height: 26px;\n  border-radius: 999px;\n  background: rgba(0, 0, 0, 0.12);\n  position: relative;\n  flex: 0 0 auto;\n  transition: background 0.2s ease;\n}\n.switch-ui::after {\n  content: \"\";\n  position: absolute;\n  top: 3px;\n  left: 3px;\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  background: white;\n  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);\n  transition: transform 0.2s ease, background 0.2s ease;\n}\n.switch input:checked+.switch-ui {\n  background: rgba(139, 94, 60, 0.65);\n}\n.switch input:checked+.switch-ui::after {\n  transform: translateX(18px);\n}\n.switch-text {\n  font-size: 0.74rem;\n  color: rgba(0, 0, 0, 0.72);\n  font-weight: 400;\n}\n.tools-techniques-section {\n  border-color: rgba(139, 94, 60, 0.16);\n  box-shadow: none;\n}\n.techniques-list {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.technique-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 13px;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.78);\n  box-shadow: 0 10px 24px rgba(63, 39, 18, 0.055);\n}\n.technique-row-stacked {\n  align-items: stretch;\n  flex-direction: column;\n}\n.technique-row-main,\n.technique-control {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.technique-copy {\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  gap: 3px;\n}\n.technique-copy label {\n  margin: 0;\n  color: var(--text);\n  font-family: inherit;\n  font-size: 0.86rem;\n  font-weight: 560;\n  white-space: nowrap;\n}\n.technique-copy small,\n.technique-control span {\n  color: var(--text-muted);\n  font-family: inherit;\n  font-size: 0.73rem;\n  font-weight: 400;\n  line-height: 1.45;\n}\n.technique-toggle {\n  flex: 0 0 86px;\n  min-height: 40px;\n  border-radius: 12px;\n  font-family: inherit;\n  font-size: 0.82rem;\n  font-weight: 560;\n  border-width: 1px;\n}\n.technique-control {\n  padding-top: 12px;\n  border-top: 1px solid rgba(154, 103, 56, 0.10);\n}\n.technique-range {\n  flex: 1 1 auto;\n  min-width: 96px;\n  padding: 0;\n  box-shadow: none;\n}\n.segmented-control {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 6px;\n  padding: 5px;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 14px;\n  background: rgba(98, 73, 49, 0.045);\n}\n.segmented-control button {\n  min-width: 0;\n  min-height: 42px;\n  padding: 9px 10px;\n  border: 1px solid transparent;\n  border-radius: 10px;\n  background: transparent;\n  color: var(--text-muted);\n  font-family: inherit;\n  font-size: 0.8rem;\n  font-weight: 560;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n}\n.segmented-control button.active {\n  background: #fffaf4;\n  color: var(--accent-strong);\n  border-color: rgba(154, 103, 56, 0.20);\n  box-shadow: 0 8px 18px rgba(63, 39, 18, 0.09);\n}\n.technique-preview {\n  padding: 10px 12px;\n  border-radius: 12px;\n  background: rgba(154, 103, 56, 0.07);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: rgba(98, 73, 49, 0.92);\n  font-family: inherit;\n  font-size: 0.74rem;\n  font-weight: 430;\n  line-height: 1.45;\n}\n\n/* Start button */\n.start-btn {\n  width: 100%;\n  padding: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border: none;\n  border-radius: 12px;\n  color: white;\n  font-size: 1rem;\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  margin-top: 20px;\n  transition: all 0.2s ease;\n}\n.start-btn:hover:not(:disabled) {\n  transform: translateY(-2px);\n  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);\n}\n.start-btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n\n/* Tools footer */\n.tools-footer {\n  position: sticky;\n  bottom: 0;\n  min-height: var(--tools-footer-h);\n  padding: 12px 16px 14px;\n  border-top: 1px solid var(--border);\n  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));\n  display: flex;\n  gap: 10px;\n  justify-content: space-between;\n  align-items: center;\n  z-index: 1;\n}\n.tools-btn {\n  flex: 1;\n  min-height: 44px;\n  padding: 10px 10px;\n  border-radius: 15px;\n  font-weight: 500;\n  border: 1px solid rgba(0, 0, 0, 0.1);\n  cursor: pointer;\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));\n  box-shadow: var(--shadow-sm);\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  line-height: 1;\n}\n.tools-btn-soft {\n  color: var(--text-muted);\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.42));\n  box-shadow: none;\n}\n.tools-btn-soft:hover {\n  color: var(--text);\n  border-color: var(--accent-soft);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.6));\n}\n.tools-btn-primary {\n  color: #fff;\n  border-color: rgba(0, 0, 0, 0.08);\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  box-shadow: var(--shadow-sm);\n}\n.tools-btn-primary:hover:not(:disabled) {\n  transform: translateY(-1px);\n  box-shadow: var(--shadow-md);\n}\n.tools-btn:active:not(:disabled),\n.fab-btn:active:not(:disabled),\n.toggle-chip:active:not(:disabled),\n.sheet-toggle:active:not(:disabled) {\n  transform: translateY(0);\n}\n.tools-btn:hover:not(:disabled),\n.fab-btn:hover:not(:disabled),\n.toggle-chip:hover:not(:disabled),\n.sheet-toggle:hover:not(:disabled) {\n  filter: brightness(1.02);\n}\n.tools-btn-primary:disabled {\n  opacity: 0.55;\n  cursor: not-allowed;\n  box-shadow: none;\n}\n.tools-btn-start {\n  flex: 1.6;\n}\n\n/* Hero section */\n.hero-card {\n  margin-bottom: 16px;\n  padding: 18px 18px 16px;\n  border-radius: 22px;\n  border: 1px solid var(--border);\n  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 236, 226, 0.92));\n  box-shadow: var(--shadow-md);\n  display: grid;\n  gap: 14px;\n  animation: riseSoft 260ms ease-out;\n}\n.hero-kicker {\n  font-size: 10px;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  color: var(--accent);\n}\n.hero-title {\n  margin-top: 6px;\n  font-size: 1.24rem;\n  font-weight: 500;\n  letter-spacing: -0.03em;\n}\n.hero-sub {\n  margin-top: 8px;\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  max-width: 56ch;\n}\n.hero-flow {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n}\n.hero-step {\n  padding: 10px 12px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.62);\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.74rem;\n}\n.hero-step span {\n  width: 20px;\n  height: 20px;\n  border-radius: 999px;\n  display: grid;\n  place-items: center;\n  background: var(--accent-light);\n  color: var(--accent);\n  font-size: 11px;\n}\n.hero-step strong {\n  font-weight: 500;\n}\n.hero-points {\n  display: grid;\n  gap: 8px;\n}\n.hero-point {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.hero-point i {\n  color: var(--accent);\n}\n.hero-actions,\n.empty-actions {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.cta {\n  flex: 1;\n  padding: 10px 10px;\n  border-radius: 14px;\n  font-weight: 450;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  cursor: pointer;\n  font-size: 11px;\n  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.cta-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border-color: rgba(0, 0, 0, 0.06);\n  box-shadow: 0 16px 36px rgba(139, 94, 60, 0.28);\n}\n.cta-ghost {\n  background: rgba(255, 255, 255, 0.58);\n  box-shadow: var(--shadow-sm);\n}\n\n/* Empty state */\n.empty {\n  padding: 40px 0;\n}\n.empty-card {\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: var(--radius);\n  padding: 32px;\n  text-align: center;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-md);\n}\n.empty-icon {\n  font-family: var(--font-ar);\n  font-size: 2.2rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.empty-card h3 {\n  font-weight: 450;\n  margin-bottom: 6px;\n  font-size: 1rem;\n}\n.empty-card p {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  margin-bottom: 16px;\n}\n\n/* Verses grid */\n.workspace {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr);\n  gap: 14px;\n  align-items: start;\n  margin-top: 14px;\n}\n.workspace-main {\n  min-width: 0;\n}\n.workspace-shell {\n  width: 80%;\n  margin: 0 auto 18px;\n}\n.workspace-shell {\n  display: grid;\n  gap: 6px;\n  padding: 10px 12px;\n  border-radius: 20px;\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background:\n    linear-gradient(160deg, rgba(255, 251, 245, 0.98), rgba(255, 255, 255, 0.9)),\n    radial-gradient(circle at top right, rgba(184, 130, 78, 0.09), transparent 28%);\n  box-shadow: 0 14px 28px rgba(63, 39, 18, 0.07);\n  position: relative;\n}\n.workspace-shell.collapsed {\n  gap: 8px;\n  padding: 12px 14px;\n}\n.workspace-shell-head {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  gap: 16px;\n  align-items: flex-start;\n}\n.workspace-shell-copy {\n  display: grid;\n  gap: 3px;\n  min-width: 0;\n}\n.workspace-shell-kicker {\n  display: inline-flex;\n  width: -moz-fit-content;\n  width: fit-content;\n  padding: 3px 7px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.1);\n  color: var(--accent-strong);\n  font-size: 0.68rem;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 0.06em;\n}\n.workspace-shell-kicker-review {\n  background: rgba(183, 28, 28, 0.12);\n  color: #9f1f1f;\n}\n.workspace-shell-title-row {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  flex-wrap: wrap;\n}\n.workspace-shell-copy h1 {\n  margin: 0;\n  color: var(--text);\n  font-size: clamp(1rem, 1.5vw, 1.25rem);\n  line-height: 1.08;\n  font-weight: 650;\n}\n.workspace-shell-phase {\n  display: inline-flex;\n  align-items: center;\n  min-height: 28px;\n  padding: 5px 10px;\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.88);\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  color: var(--accent-strong);\n  font-size: 0.73rem;\n  font-weight: 650;\n}\n.workspace-shell-phase-review {\n  border-color: rgba(183, 28, 28, 0.24);\n  color: #9f1f1f;\n  background: rgba(183, 28, 28, 0.09);\n}\n.workspace-shell-copy h2 {\n  margin: 0;\n  color: var(--text);\n  font-size: 1rem;\n  line-height: 1.15;\n  font-weight: 600;\n}\n.workspace-shell-copy p {\n  margin: 0;\n  color: var(--text-muted);\n  max-width: 58ch;\n  font-size: 0.8rem;\n  line-height: 1.35;\n}\n.workspace-shell-meta {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n.workspace-shell-meta span {\n  display: inline-flex;\n  align-items: center;\n  min-height: 28px;\n  padding: 5px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.15);\n  background: rgba(255, 255, 255, 0.86);\n  color: rgba(48, 42, 35, 0.86);\n  font-size: 0.76rem;\n  font-weight: 600;\n}\n.workspace-shell-meta-review {\n  border-color: rgba(183, 28, 28, 0.24) !important;\n  color: #9f1f1f !important;\n  background: rgba(183, 28, 28, 0.08) !important;\n}\n.resume-feedback-bars,\n.session-feedback-bars {\n  display: grid;\n  gap: 6px;\n  margin-top: 8px;\n}\n.session-feedback-panel {\n  margin-top: 8px;\n  border: 1px solid rgba(154, 103, 56, 0.14);\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.72);\n  padding: 8px 10px;\n}\n.session-feedback-panel summary {\n  list-style: none;\n  cursor: pointer;\n  display: grid;\n  gap: 2px;\n  color: var(--text);\n  font-weight: 650;\n}\n.session-feedback-panel summary::-webkit-details-marker {\n  display: none;\n}\n.session-feedback-panel summary small {\n  color: var(--text-muted);\n  font-weight: 500;\n  font-size: 0.74rem;\n}\n.resume-feedback-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  font-size: 0.76rem;\n  color: var(--text-muted);\n}\n.resume-progress-repetition {\n  background: linear-gradient(90deg, #f2c94c, #e3a008);\n}\n.resume-progress-retention {\n  background: linear-gradient(90deg, #e57373, #c62828);\n}\n.pill-status-mastered {\n  border-color: rgba(46, 125, 50, 0.22);\n  background: rgba(76, 175, 80, 0.08);\n  color: #2e7d32;\n}\n.pill-status-weak {\n  border-color: rgba(245, 158, 11, 0.22);\n  background: rgba(245, 158, 11, 0.1);\n  color: #8a5a00;\n}\n.pill-status-repeat {\n  border-color: rgba(198, 40, 40, 0.22);\n  background: rgba(229, 57, 53, 0.08);\n  color: #9f1f1f;\n}\n.workspace-shell-chaining {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  align-items: center;\n}\n.workspace-shell-chain-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  min-height: 28px;\n  padding: 5px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background: rgba(255, 255, 255, 0.86);\n  color: rgba(48, 42, 35, 0.86);\n  font-size: 0.72rem;\n  font-weight: 650;\n}\n.workspace-shell-chain-pill i {\n  color: var(--accent-strong);\n}\n.workspace-shell-chain-pill-soft {\n  background: rgba(154, 103, 56, 0.09);\n  border-color: rgba(154, 103, 56, 0.14);\n  color: var(--accent-strong);\n}\n.workspace-shell-actions {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  align-items: center;\n  justify-content: flex-end;\n}\n.main-nav-btn,\n.main-card-primary {\n  min-height: 42px;\n  border-radius: 14px;\n  font-weight: 600;\n  font-size: 0.84rem;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  padding: 8px 12px;\n}\n.main-nav-btn {\n  border: 1px solid rgba(154, 103, 56, 0.16);\n  background: rgba(255, 255, 255, 0.82);\n  color: var(--text);\n}\n.main-card-primary {\n  border: 0;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  box-shadow: 0 12px 24px rgba(154, 103, 56, 0.18);\n}\n.main-nav-btn:disabled,\n.main-card-primary:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n  box-shadow: none;\n}\n.workspace-fab {\n  position: sticky;\n  top: 14px;\n  z-index: 25;\n  display: flex;\n  min-width: 0;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 8px 10px;\n  margin: 8px 0 6px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.06);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.58));\n  box-shadow: 0 16px 38px rgba(63, 39, 18, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.38);\n  backdrop-filter: blur(10px);\n  animation: cardSoftIn 220ms cubic-bezier(0.16, 1, 0.3, 1);\n  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;\n}\n.workspace-fab:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 20px 44px rgba(63, 39, 18, 0.18), 0 0 0 1px rgba(154, 103, 56, 0.18);\n  border-color: rgba(154, 103, 56, 0.2);\n}\n@keyframes cardSoftIn {\nfrom {\n    transform: translateY(6px);\n    opacity: 0.9;\n}\nto {\n    transform: translateY(0);\n    opacity: 1;\n}\n}\n.workspace-fab-meta {\n  min-width: 0;\n  flex: 1 1 auto;\n  display: grid;\n  gap: 4px;\n}\n.workspace-fab-kicker {\n  display: inline-flex;\n  align-items: center;\n  width: -moz-fit-content;\n  width: fit-content;\n  padding: 4px 8px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.10);\n  color: var(--accent-strong);\n  font-size: 0.68rem;\n  font-weight: 650;\n  letter-spacing: 0.06em;\n  text-transform: uppercase;\n}\n.workspace-fab-title {\n  font-weight: 650;\n  color: var(--text);\n  letter-spacing: -0.2px;\n  font-size: 0.92rem;\n  line-height: 1.15;\n}\n.workspace-fab-sub {\n  margin-top: 3px;\n  font-size: 0.74rem;\n  color: var(--text-muted);\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  align-items: center;\n  line-height: 1.2;\n}\n.workspace-fab-sub span {\n  display: inline-flex;\n  align-items: center;\n  max-width: 100%;\n  padding: 6px 10px;\n  border-radius: 999px;\n  border: 1px solid rgba(154, 103, 56, 0.18);\n  background: rgba(255, 255, 255, 0.86);\n  box-shadow: 0 8px 18px rgba(63, 39, 18, 0.06);\n  color: rgba(48, 42, 35, 0.82);\n  font-weight: 600;\n}\n.workspace-fab-live {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 5px;\n}\n.workspace-fab-live-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  max-width: 100%;\n  min-height: 38px;\n  padding: 8px 12px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.11);\n  border: 1px solid rgba(154, 103, 56, 0.20);\n  color: var(--accent-strong);\n  font-size: 0.82rem;\n  font-weight: 750;\n  box-shadow: 0 10px 20px rgba(63, 39, 18, 0.08);\n}\n.workspace-fab-live-pill i {\n  display: inline-grid;\n  place-items: center;\n  width: 22px;\n  height: 22px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.14);\n}\n.workspace-fab-live-pill-primary {\n  background: linear-gradient(180deg, rgba(154, 103, 56, 0.16), rgba(154, 103, 56, 0.09));\n  border-color: rgba(154, 103, 56, 0.28);\n}\n.workspace-fab-live-pill-mode {\n  background: rgba(255, 255, 255, 0.86);\n}\n.workspace-fab-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n  line-height: 1.26;\n  max-width: 60ch;\n  overflow-wrap: anywhere;\n}\n.workspace-fab-chip {\n  display: inline-flex;\n  align-items: center;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid rgba(46, 125, 50, 0.18);\n  background: rgba(46, 125, 50, 0.10);\n  color: rgba(46, 125, 50, 0.95);\n  font-weight: 650;\n  font-size: 0.72rem;\n}\n.workspace-fab-actions {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  flex: 0 0 auto;\n}\n.fab-btn {\n  min-height: 40px;\n  padding: 8px 11px;\n  border-radius: 13px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.76);\n  box-shadow: var(--shadow-sm);\n  font-weight: 600;\n  font-size: 0.84rem;\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  white-space: nowrap;\n  cursor: pointer;\n  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 140ms ease;\n}\n.fab-btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  border-color: transparent;\n  box-shadow: 0 14px 28px rgba(154, 103, 56, 0.22);\n}\n.fab-btn-soft {\n  color: rgba(0, 0, 0, 0.78);\n}\n.fab-btn-ghost {\n  color: rgba(0, 0, 0, 0.78);\n}\n.verses-grid {\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n  margin-top: 0;\n}\n.verse-arabic-primary {\n  /* Primary focus: Quran dominates; aids are quieter. */\n  font-size: clamp(2.1rem, 2.75vw, 3.05rem);\n  line-height: 2.25;\n  letter-spacing: 0.01em;\n}\n.verse-aid {\n  opacity: 0.82;\n  filter: saturate(0.78);\n  margin-top: 0.4rem;\n  font-size: 0.93em;\n}\n.verse-aid-title {\n  margin-bottom: 4px;\n  color: var(--accent-strong);\n  font-size: 0.66rem;\n  font-weight: 650;\n  font-style: normal;\n  text-transform: uppercase;\n  letter-spacing: 0.04em;\n}\n.inline-setting-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.input-compact {\n  flex: 0 0 140px;\n}\n.inline-setting-pill {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-height: 30px;\n  min-width: 58px;\n  padding: 0 10px;\n  border-radius: 999px;\n  background: rgba(154, 103, 56, 0.08);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  color: var(--accent-strong);\n  font-size: 0.72rem;\n  font-family: inherit;\n  font-weight: 460;\n}\n.settings-section {\n  padding: 18px;\n  border-radius: 18px;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  background: #fffdf9;\n  box-shadow: 0 18px 42px rgba(40, 28, 16, 0.08);\n}\n.settings-heading {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  align-items: start;\n  gap: 16px;\n  padding-bottom: 16px;\n  margin-bottom: 16px;\n  border-bottom: 1px solid rgba(28, 24, 20, 0.07);\n}\n.settings-heading-copy {\n  min-width: 0;\n  display: grid;\n  gap: 6px;\n}\n.settings-heading-copy h3 {\n  margin: 0;\n  color: #1f1d1a;\n  font-size: 1.12rem;\n  font-weight: 560;\n  line-height: 1.15;\n}\n.settings-heading-copy p {\n  margin: 0;\n  color: #6d655d;\n  font-size: 0.78rem;\n  line-height: 1.45;\n}\n.settings-status {\n  min-height: 30px;\n  padding: 0 11px;\n  border-radius: 999px;\n  background: #f7f2eb;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  color: #614326;\n  font-size: 0.64rem;\n  font-weight: 520;\n  letter-spacing: 0.04em;\n  text-transform: uppercase;\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n}\n.settings-status-dot {\n  width: 7px;\n  height: 7px;\n  border-radius: 999px;\n  background: #2f9f68;\n  box-shadow: 0 0 0 4px rgba(47, 159, 104, 0.12);\n}\n.settings-panels {\n  display: grid;\n  gap: 16px;\n}\n.settings-group {\n  display: grid;\n  gap: 10px;\n}\n.settings-group-title {\n  color: #725233;\n  font-size: 0.64rem;\n  font-weight: 560;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n}\n.settings-card-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 10px;\n}\n.settings-display-grid {\n  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);\n}\n.settings-card {\n  min-width: 0;\n  border-radius: 14px;\n  border: 1px solid rgba(28, 24, 20, 0.08);\n  background: linear-gradient(180deg, #ffffff, #fbf8f3);\n  box-shadow: 0 8px 18px rgba(40, 28, 16, 0.045);\n}\n.settings-card-toggle {\n  min-height: 126px;\n  padding: 14px;\n  display: grid;\n  align-content: space-between;\n  gap: 14px;\n}\n.settings-card-range {\n  min-height: 126px;\n  padding: 14px;\n  display: grid;\n  gap: 14px;\n}\n.settings-row-copy {\n  min-width: 0;\n  display: grid;\n  gap: 6px;\n}\n.settings-row-copy label {\n  color: #211f1c;\n  font-size: 0.86rem;\n  font-weight: 540;\n  display: inline-flex;\n  align-items: center;\n  gap: 9px;\n  min-width: 0;\n}\n.settings-row-copy small {\n  color: #6f675f;\n  font-size: 0.7rem;\n  line-height: 1.4;\n}\n.settings-icon {\n  width: 32px;\n  height: 32px;\n  border-radius: 10px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  background: #f7f1ea;\n  border: 1px solid rgba(154, 103, 56, 0.13);\n  color: #8c5b2e;\n  flex: 0 0 auto;\n}\n.settings-toggle {\n  width: 100%;\n  min-height: 40px;\n  padding: 7px 14px;\n  border-radius: 10px;\n  font-size: 0.78rem;\n  font-weight: 540;\n  box-shadow: none;\n  border-width: 1px;\n}\n.settings-range-wrap {\n  width: 100%;\n  min-width: 0;\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  align-items: center;\n  gap: 12px;\n}\n.settings-range {\n  min-width: 0;\n  width: 100%;\n  padding: 0;\n  box-shadow: none;\n}\n.settings-apply-section {\n  padding: 12px;\n  border-radius: 14px;\n  background: #f8f2ea;\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  display: grid;\n  gap: 8px;\n}\n.settings-apply-primary {\n  width: 100%;\n  min-height: 48px;\n  border-radius: 12px;\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  background: #8d5a2c;\n  color: #fff;\n  font-size: 0.92rem;\n  font-weight: 560;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  cursor: pointer;\n  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;\n}\n.settings-apply-primary:hover {\n  transform: translateY(-1px);\n  background: #7b4b22;\n  box-shadow: 0 10px 20px rgba(123, 75, 34, 0.24);\n}\n.settings-apply-section small {\n  color: #6f675f;\n  font-size: 0.7rem;\n}\n.tools-footer.settings-footer {\n  background: transparent;\n  border-top: none;\n  box-shadow: none;\n  pointer-events: none;\n}\n.tools-footer.settings-footer .tools-btn {\n  visibility: hidden;\n}\n.offline-list {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n  margin-bottom: 16px;\n}\n.offline-item {\n  background: var(--bg-elevated);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  transition: all 0.2s ease;\n}\n.offline-item:hover {\n  border-color: var(--accent);\n  background: var(--surface);\n}\n.oi-info {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.oi-name {\n  font-weight: 600;\n  font-size: 1rem;\n}\n.oi-meta {\n  font-size: 0.8rem;\n  opacity: 0.7;\n}\n.oi-date {\n  font-size: 0.7rem;\n  opacity: 0.5;\n}\n.oi-actions {\n  display: flex;\n  gap: 8px;\n}\n.oi-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.oi-load:hover {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.oi-delete:hover {\n  background: #ff4d4d;\n  color: white;\n  border-color: #ff4d4d;\n}\n.empty-mini {\n  text-align: center;\n  padding: 32px 16px;\n  background: var(--bg-elevated);\n  border-radius: 20px;\n  border: 1px dashed var(--border);\n}\n.offline-note {\n  margin-top: 24px;\n  padding: 12px;\n  background: var(--accent-light);\n  border-radius: 12px;\n  display: flex;\n  gap: 10px;\n  font-size: 0.75rem;\n  line-height: 1.4;\n  color: var(--accent);\n}\n\n/* Floating Player */\n.player-bar {\n  position: fixed;\n  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);\n  left: 50%;\n  transform: translateX(-50%);\n  width: min(calc(100vw - 32px), 960px);\n  max-width: 960px;\n  background: rgba(255, 255, 255, 0.98);\n  border: 1px solid rgba(154, 103, 56, 0.12);\n  border-radius: 24px;\n  box-shadow: 0 20px 40px rgba(63, 39, 18, 0.12);\n  z-index: 1000;\n  padding: 12px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  /* Avoid iOS Safari compositing artifacts (black bands) from backdrop-filter on fixed elements. */\n  backdrop-filter: none;\n  -webkit-backdrop-filter: none;\n  transition: transform 0.22s ease, opacity 0.22s ease, padding 0.22s ease;\n}\n.player-bar.collapsed {\n  transform: translateX(-50%);\n  opacity: 0.98;\n}\n.player-main {\n  display: grid;\n  grid-template-columns: minmax(150px, 1.1fr) auto minmax(200px, 0.95fr) minmax(180px, 1fr) auto;\n  align-items: center;\n  gap: clamp(10px, 1.6vw, 20px);\n  min-width: 0;\n}\n.player-info {\n  min-width: 0;\n}\n.player-chapter {\n  font-weight: 700;\n  font-size: 0.9rem;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-verse {\n  font-size: 0.75rem;\n  opacity: 0.7;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.player-eta {\n  color: var(--accent);\n  font-weight: 500;\n  opacity: 1;\n}\n.player-controls {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex: 0 0 auto;\n}\n.player-loop-controls {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.player-loop-label {\n  font-size: 0.72rem;\n  font-weight: 700;\n  color: var(--text-muted);\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n}\n.player-loop-group {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  padding: 4px;\n  border: 1px solid var(--border);\n  border-radius: 999px;\n  background: rgba(255, 255, 255, 0.9);\n  overflow-x: auto;\n}\n.player-loop-chip {\n  border: none;\n  border-radius: 999px;\n  background: transparent;\n  color: var(--text-muted);\n  min-height: 34px;\n  padding: 0 12px;\n  font-size: 0.76rem;\n  font-weight: 700;\n  white-space: nowrap;\n  cursor: pointer;\n  transition: background 0.2s ease, color 0.2s ease;\n}\n.player-loop-chip.active {\n  background: var(--accent);\n  color: #fff;\n}\n.sheet-fade-enter-active,\n.sheet-fade-leave-active {\n  transition: opacity 0.2s ease, transform 0.2s ease;\n}\n.sheet-fade-enter-from,\n.sheet-fade-leave-to {\n  opacity: 0;\n  transform: translateY(8px);\n}\n.player-btn {\n  width: 44px;\n  height: 44px;\n  border-radius: 12px;\n  border: none;\n  background: none;\n  color: var(--text);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.2rem;\n  transition: all 0.2s ease;\n  flex: 0 0 auto;\n}\n.player-btn:hover {\n  background: rgba(154, 103, 56, 0.08);\n}\n.player-play {\n  background: var(--accent);\n  color: white;\n  width: 52px;\n  height: 52px;\n  border-radius: 16px;\n  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.3);\n}\n.player-play:hover {\n  background: rgba(255, 255, 255, 0.88);\n  color: var(--accent);\n  transform: scale(1.05);\n}\n.player-progress-wrap {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  min-width: 0;\n}\n.player-time {\n  font-size: 0.75rem;\n  font-variant-numeric: tabular-nums;\n  opacity: 0.7;\n  min-width: 40px;\n}\n.player-progress-bg {\n  flex: 1;\n  height: 6px;\n  background: var(--bg-elevated);\n  border-radius: 3px;\n  position: relative;\n  cursor: pointer;\n}\n.player-progress-fill {\n  position: absolute;\n  left: 0;\n  top: 0;\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.1s linear;\n}\n\n/* Animations */\n.slide-up-enter-active,\n.slide-up-leave-active {\n  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.slide-up-enter-from,\n.slide-up-leave-to {\n  transform: translate(-50%, 100px);\n  opacity: 0;\n}\n.verse-translation {\n  font-size: calc(0.94rem * var(--en-scale, 1));\n  color: var(--text);\n  line-height: 1.55;\n  padding-top: 10px;\n  margin-top: 8px;\n  border-top: 1px solid var(--border);\n  display: block;\n  opacity: 0.92;\n}\n.verse-transliteration {\n  font-size: calc(0.98rem * var(--en-scale, 1));\n  color: var(--text);\n  font-style: italic;\n  margin-top: 8px;\n  padding-top: 8px;\n  border-top: 1px solid var(--border);\n  line-height: 1.5;\n  opacity: 0.98;\n}\n.verse-words {\n  display: flex;\n  flex-wrap: nowrap;\n  gap: 8px;\n  direction: rtl;\n  margin-top: 12px;\n  padding-top: 10px;\n  border-top: 1px solid var(--border);\n  overflow-x: auto;\n  overflow-y: hidden;\n  -webkit-overflow-scrolling: touch;\n  scroll-snap-type: x proximity;\n  padding-bottom: 8px;\n}\n.word-item {\n  position: relative;\n  background: var(--accent-light);\n  padding: 6px 12px;\n  border-radius: 20px;\n  display: inline-flex;\n  flex-direction: row-reverse;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.75rem;\n  flex: 0 0 auto;\n  scroll-snap-align: center;\n  cursor: help;\n  min-height: 36px;\n}\n.word-item:hover::after,\n.word-item:focus::after {\n  content: attr(data-tooltip);\n  position: absolute;\n  left: 50%;\n  bottom: calc(100% + 8px);\n  transform: translateX(-50%);\n  z-index: 5;\n  width: -moz-max-content;\n  width: max-content;\n  max-width: 220px;\n  padding: 6px 8px;\n  border-radius: 9px;\n  background: var(--surface-strong);\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n  color: var(--text);\n  direction: ltr;\n  text-align: center;\n  font-size: 0.72rem;\n  line-height: 1.25;\n}\n.word-arabic {\n  font-family: var(--font-ar);\n  font-size: 0.9rem;\n}\n.word-meaning {\n  color: var(--text-muted);\n  font-size: calc(0.82rem * var(--en-scale, 1));\n}\n.word-audio-btn {\n  background: none;\n  border: none;\n  cursor: pointer;\n  color: var(--accent);\n  padding: 0 4px;\n}\n.field-switch {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.reading-aid-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 8px;\n}\n.tools,\n.tools-body,\n.sheet-content {\n  overflow-x: hidden;\n}\n.live-stats-grid {\n  display: grid;\n  gap: 10px;\n}\n.live-stat-card {\n  min-height: 72px;\n  padding: 14px 16px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 252, 247, 0.9);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.live-stat-label {\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  font-weight: 500;\n}\n.live-stat-card strong {\n  color: var(--text);\n  font-size: 1rem;\n  font-weight: 600;\n}\n.resume-copy {\n  margin-bottom: 8px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(251, 245, 238, 0.96));\n  border-radius: 18px;\n  box-shadow: 0 24px 72px rgba(31, 24, 17, 0.22);\n}\n.modal-header h2 {\n  font-size: 1.05rem;\n  font-weight: 600;\n}\n.resume-modal {\n  background: linear-gradient(180deg, rgba(255, 251, 245, 0.99), rgba(248, 241, 233, 0.97));\n}\n.resume-modal .modal-header,\n.resume-modal .modal-body,\n.resume-modal .modal-footer {\n  padding-top: 18px;\n  padding-bottom: 18px;\n}\n.resume-grid .pill,\n.resume-modal .pill {\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.72);\n  border: 1px solid rgba(184, 130, 78, 0.16);\n}\n.wbw-word.highlighted,\n.verse-arabic word.highlighted {\n  background: var(--accent);\n  color: white;\n  transform: scale(1.03);\n  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.24);\n}\n.wbw-word.phrase-highlighted {\n  box-shadow: 0 0 0 2px rgba(184, 130, 78, 0.18);\n}\n.word-item.highlighted,\n.word-item.phrase-highlighted {\n  background: rgba(184, 130, 78, 0.2);\n}\n\n/* Quiz overlay */\n.quiz-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 80;\n  background: rgba(0, 0, 0, 0.35);\n  backdrop-filter: blur(6px);\n  display: grid;\n  place-items: center;\n  padding: 18px;\n}\n.quiz-card {\n  width: min(680px, 100%);\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba, rgba(250, 245, 239, 0.95));\n  border: 1px solid rgba(0, 0, 0, 0.08);\n  border-radius: 22px;\n  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);\n  overflow: hidden;\n}\n.quiz-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 18px 22px 14px;\n  border-bottom: 1px solid rgba(0, 0, 0, 0.08);\n}\n.quiz-title {\n  font-weight: 500;\n  font-size: 1.05rem;\n}\n.quiz-subtitle {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.quiz-close {\n  width: 40px;\n  height: 40px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.7);\n  cursor: pointer;\n  font-size: 24px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n.quiz-progress {\n  padding: 14px 22px 0;\n}\n.quiz-progress-bar {\n  height: 4px;\n  background: var(--border);\n  border-radius: 2px;\n  overflow: hidden;\n}\n.quiz-progress-fill {\n  height: 100%;\n  background: var(--accent);\n  transition: width 0.3s ease;\n}\n.quiz-stats {\n  display: flex;\n  justify-content: space-between;\n  margin-top: 8px;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n}\n.quiz-body {\n  padding: 18px 22px 22px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.quiz-question {\n  font-weight: 600;\n  font-size: 0.9rem;\n  color: var(--accent);\n}\n.quiz-arabic {\n  font-family: var(--font-ar);\n  font-size: 1.4rem;\n  line-height: 1.8;\n  text-align: right;\n  direction: rtl;\n  padding: 16px;\n  background: var(--accent-light);\n  border-radius: 16px;\n}\n.quiz-reveal-btn {\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n}\n.quiz-answer {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid var(--border);\n}\n.quiz-translation {\n  font-size: 0.9rem;\n  line-height: 1.6;\n  color: var(--text);\n  margin-bottom: 16px;\n}\n.quiz-grade-buttons {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n.grade-btn {\n  flex: 1;\n  padding: 10px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.grade-btn.primary {\n  background: var(--accent);\n  color: white;\n  border-color: transparent;\n}\n.quiz-options {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n.quiz-option {\n  padding: 12px 16px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  text-align: left;\n  font-size: 0.85rem;\n  transition: all 0.2s ease;\n}\n.quiz-option:hover {\n  background: var(--accent-light);\n  transform: translateX(4px);\n}\n.quiz-summary {\n  padding: 22px;\n  text-align: center;\n}\n.quiz-summary-icon {\n  font-size: 3rem;\n  margin-bottom: 16px;\n}\n.quiz-summary-stats {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin: 20px 0;\n}\n.quiz-summary-stats .stat {\n  padding: 16px;\n  background: var(--surface);\n  border-radius: 16px;\n}\n.stat-label {\n  display: block;\n  font-size: 0.75rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.stat-value {\n  display: block;\n  font-size: 1.5rem;\n  font-weight: 600;\n  color: var(--accent);\n}\n.quiz-summary-mistakes {\n  margin: 20px 0;\n}\n.mistake-tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-top: 8px;\n  justify-content: center;\n}\n.mistake-tag {\n  padding: 6px 12px;\n  background: rgba(190, 73, 73, 0.1);\n  border-radius: 20px;\n  font-size: 0.8rem;\n  color: #c0392b;\n}\n.quiz-actions {\n  display: flex;\n  gap: 12px;\n  justify-content: center;\n}\n.btn-outline {\n  padding: 10px 24px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n.btn-primary {\n  padding: 10px 24px;\n  border-radius: 12px;\n  background: var(--accent);\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.85rem;\n}\n\n/* Fix banner positioning */\n.banner {\n  position: fixed;\n  top: 80px;\n  left: 50%;\n  transform: translateX(-50%);\n  z-index: 1000;\n  min-width: min(560px, calc(100vw - 32px));\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  padding: 12px 14px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: var(--surface-strong);\n  box-shadow: var(--shadow-lg);\n  font-weight: 450;\n  animation: riseSoft 220ms ease-out;\n}\n.navbar {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  z-index: 100;\n  /* Higher than tools? Lower? Tools should be 60, navbar 100 */\n  background: var(--surface-strong);\n}\n\n/* Ensure main content doesn't go under navbar */\n.main.container {\n  padding-top: 80px;\n  /* Adjust to match navbar height + spacing */\n}\n\n/* Mobile adjustment */\n@media (max-width: 768px) {\n.banner {\n    top: calc(env(safe-area-inset-top, 0px) + 60px);\n    width: calc(100% - 32px);\n    min-width: auto;\n}\n.main.container {\n    padding-top: 70px;\n}\n}\n.banner-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.banner-action {\n  border: 0;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: #fff;\n  padding: 9px 12px;\n  font-size: 0.78rem;\n  font-weight: 500;\n  cursor: pointer;\n  box-shadow: var(--shadow-sm);\n}\n.banner-x {\n  width: 36px;\n  height: 36px;\n  border-radius: 14px;\n  border: 1px solid rgba(0, 0, 0, 0.10);\n  background: rgba(255, 255, 255, 0.75);\n  cursor: pointer;\n  font-size: 18px;\n  line-height: 1;\n}\n\n/* Add this to your \\3c style> */\n.main.container {\n  padding-top: 20px;\n}\n\n/* If you have a navbar, add this */\n.app>.navbar+.main.container,\nbody>.navbar+.app .main.container {\n  padding-top: 80px;\n}\n\n/* Animations */\n@keyframes appFade {\n0% {\n    opacity: 0;\n    transform: translateY(4px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes railIn {\n0% {\n    opacity: 0;\n    transform: translateY(-8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n@keyframes riseSoft {\n0% {\n    opacity: 0;\n    transform: translateY(8px);\n}\n100% {\n    opacity: 1;\n    transform: translateY(0);\n}\n}\n\n\n/* Responsive */\n@media (max-width: 768px) {\n.main {\n    padding: 16px 16px 100px;\n}\n.main.tools-open {\n    padding-right: 16px;\n}\n.tools {\n    left: 0;\n    right: 0;\n    width: 100%;\n}\n.session-rail-stats {\n    grid-template-columns: 1fr 1fr;\n}\n.hero-flow {\n    grid-template-columns: 1fr 1fr;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 8px);\n    justify-content: center;\n}\n.verse-font-controls {\n    gap: 2px;\n    padding: 2px 4px;\n}\n.verse-font-btn {\n    width: 20px;\n    height: 20px;\n}\n.verse-font-size-indicator {\n    min-width: 30px;\n    font-size: 9px;\n}\n}\n@media (max-width: 640px) {\n.quiz-grade-buttons {\n    flex-direction: column;\n}\n.quiz-actions {\n    flex-direction: column;\n}\n.hero-actions,\n  .empty-actions {\n    flex-direction: column;\n}\n.cta {\n    width: 100%;\n}\n}\n\n/* Dark theme overrides */\n[data-theme=\"dark\"] .tools {\n  color: var(--text);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(12, 11, 10, 0.96));\n  border-left-color: var(--border);\n}\n[data-theme=\"dark\"] .sheet-section {\n  border-color: var(--border);\n  background: var(--surface);\n}\n[data-theme=\"dark\"] .tools-top,\n[data-theme=\"dark\"] .tools-footer {\n  border-color: var(--border);\n  background: linear-gradient(180deg, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.92));\n}\n[data-theme=\"dark\"] .tools-footer {\n  background: linear-gradient(to top, rgba(18, 15, 13, 0.98), rgba(18, 15, 13, 0.86), rgba(18, 15, 13, 0));\n}\n[data-theme=\"dark\"] .tools-tabs {\n  background: rgba(255, 255, 255, 0.035);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .tools-tabs button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-tabs button.active {\n  color: var(--text);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .tools-title,\n[data-theme=\"dark\"] .st-title,\n[data-theme=\"dark\"] .technique-copy label,\n[data-theme=\"dark\"] .settings-heading-copy h3,\n[data-theme=\"dark\"] .settings-row-copy label {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .tools-context,\n[data-theme=\"dark\"] .st-sub,\n[data-theme=\"dark\"] .technique-copy small,\n[data-theme=\"dark\"] .technique-control span,\n[data-theme=\"dark\"] .settings-heading-copy p,\n[data-theme=\"dark\"] .settings-row-copy small {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .tools-x,\n[data-theme=\"dark\"] .st-chev,\n[data-theme=\"dark\"] .sheet-toggle,\n[data-theme=\"dark\"] .technique-row,\n[data-theme=\"dark\"] .radio,\n[data-theme=\"dark\"] .toggle-chip,\n[data-theme=\"dark\"] .segmented-control,\n[data-theme=\"dark\"] .technique-preview {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .sheet-toggle {\n  background: rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .st-ico {\n  color: var(--accent-strong);\n  border-color: rgba(239, 193, 141, 0.22);\n  background: rgba(239, 193, 141, 0.10);\n}\n[data-theme=\"dark\"] .segmented-control button {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .segmented-control button.active,\n[data-theme=\"dark\"] .toggle-chip.active {\n  color: white;\n  border-color: rgba(239, 193, 141, 0.42);\n  background: rgba(239, 193, 141, 0.12);\n}\n[data-theme=\"dark\"] .tools-btn-soft {\n  color: var(--text-muted);\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .select,\n[data-theme=\"dark\"] .input {\n  color: var(--text);\n  border-color: var(--border);\n  background: rgba(255, 255, 255, 0.045);\n}\n[data-theme=\"dark\"] .switch {\n  color: var(--text);\n  border-color: var(--border);\n  background: var(--surface-strong);\n}\n[data-theme=\"dark\"] .verse-translation {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .verse-transliteration,\n[data-theme=\"dark\"] .workspace-fab-copy,\n[data-theme=\"dark\"] .workspace-fab-sub,\n[data-theme=\"dark\"] .settings-row-copy small,\n[data-theme=\"dark\"] .field-hint {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .workspace-fab,\n[data-theme=\"dark\"] .workspace-fab-sub span,\n[data-theme=\"dark\"] .workspace-fab-live-pill,\n[data-theme=\"dark\"] .settings-card,\n[data-theme=\"dark\"] .word-item:hover::after,\n[data-theme=\"dark\"] .word-item:focus::after {\n  background: var(--surface-strong);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .workspace-fab {\n  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.46), 0 0 0 1px rgba(255, 236, 216, 0.12);\n}\n[data-theme=\"dark\"] .workspace-fab:hover {\n  box-shadow: 0 26px 64px rgba(0, 0, 0, 0.54), 0 0 0 1px rgba(239, 193, 141, 0.20);\n}\n[data-theme=\"dark\"] .settings-section {\n  background: rgba(24, 21, 19, 0.96);\n  border-color: var(--border);\n  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.035);\n}\n[data-theme=\"dark\"] .settings-status {\n  background: rgba(255, 255, 255, 0.05);\n  border-color: rgba(255, 236, 216, 0.12);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .settings-icon {\n  background: rgba(255, 255, 255, 0.04);\n  border-color: rgba(255, 236, 216, 0.12);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .settings-card {\n  background: var(--surface-strong);\n  border-color: rgba(255, 236, 216, 0.10);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .settings-toggle {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 236, 216, 0.14);\n  color: var(--text);\n}\n[data-theme=\"dark\"] .settings-toggle.active {\n  background: rgba(239, 193, 141, 0.13);\n  border-color: rgba(239, 193, 141, 0.42);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .quiz-card {\n  background: rgba(18, 18, 18, 0.92);\n  border-color: rgba(255, 255, 255, 0.10);\n}\n[data-theme=\"dark\"] .hero-card,\n[data-theme=\"dark\"] .empty-card,\n[data-theme=\"dark\"] .continue-session-card,\n[data-theme=\"dark\"] .offcanvas-launcher-card,\n[data-theme=\"dark\"] .setup-start-card,\n[data-theme=\"dark\"] .home-dashboard-card,\n[data-theme=\"dark\"] .saved-header,\n[data-theme=\"dark\"] .save-section,\n[data-theme=\"dark\"] .session-item,\n[data-theme=\"dark\"] .empty-state,\n[data-theme=\"dark\"] .session-quickstart-card {\n  background: linear-gradient(180deg, rgba(34, 29, 26, 0.96), rgba(24, 21, 19, 0.94));\n  border-color: var(--border);\n  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);\n}\n[data-theme=\"dark\"] .workspace-shell,\n[data-theme=\"dark\"] .session-feedback-panel,\n[data-theme=\"dark\"] .workspace-fab,\n[data-theme=\"dark\"] .verse-card,\n[data-theme=\"dark\"] .verse-arabic,\n[data-theme=\"dark\"] .player-bar,\n[data-theme=\"dark\"] .modal-content,\n[data-theme=\"dark\"] .shortcuts-modal,\n[data-theme=\"dark\"] .setting-section,\n[data-theme=\"dark\"] .settings-group {\n  background: linear-gradient(180deg, rgba(34, 29, 26, 0.96), rgba(22, 19, 17, 0.94));\n  border-color: var(--border);\n  color: var(--text);\n}\n[data-theme=\"dark\"] .workspace-shell {\n  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.34);\n}\n[data-theme=\"dark\"] .workspace-shell-meta span,\n[data-theme=\"dark\"] .workspace-shell-chain-pill,\n[data-theme=\"dark\"] .workspace-shell-phase,\n[data-theme=\"dark\"] .toolbar-chip,\n[data-theme=\"dark\"] .action-icon-btn,\n[data-theme=\"dark\"] .main-nav-btn,\n[data-theme=\"dark\"] .player-loop-chip,\n[data-theme=\"dark\"] .word-item,\n[data-theme=\"dark\"] .saved-sessions-container .delete-btn,\n[data-theme=\"dark\"] .font-dropdown-trigger,\n[data-theme=\"dark\"] .font-option,\n[data-theme=\"dark\"] .mode-radio,\n[data-theme=\"dark\"] .active-technique-card,\n[data-theme=\"dark\"] .active-techniques-count {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 236, 216, 0.14);\n  color: var(--text);\n  box-shadow: none;\n}\n[data-theme=\"dark\"] .toolbar-chip.active,\n[data-theme=\"dark\"] .workspace-shell-active-pill,\n[data-theme=\"dark\"] .player-loop-chip.active {\n  background: rgba(208, 160, 107, 0.18);\n  border-color: rgba(208, 160, 107, 0.32);\n  color: var(--accent-strong);\n}\n[data-theme=\"dark\"] .action-btn.action-btn-secondary,\n[data-theme=\"dark\"] .action-btn.action-btn-secondary span,\n[data-theme=\"dark\"] .action-btn.action-btn-secondary i {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 236, 216, 0.16);\n  color: #f3dfc8;\n}\n[data-theme=\"dark\"] .workspace-shell-active-pill {\n  color: #f3dfc8;\n}\n[data-theme=\"dark\"] .workspace-shell-copy h1,\n[data-theme=\"dark\"] .workspace-shell-copy h2,\n[data-theme=\"dark\"] .hero-title,\n[data-theme=\"dark\"] .saved-header h3,\n[data-theme=\"dark\"] .session-name,\n[data-theme=\"dark\"] .active-technique-copy strong,\n[data-theme=\"dark\"] .modal-header h2,\n[data-theme=\"dark\"] .shortcut-card-title {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .workspace-shell-copy p,\n[data-theme=\"dark\"] .workspace-shell-meta span,\n[data-theme=\"dark\"] .workspace-shell-chain-pill,\n[data-theme=\"dark\"] .hero-sub,\n[data-theme=\"dark\"] .hero-point,\n[data-theme=\"dark\"] .session-details span,\n[data-theme=\"dark\"] .empty-state span,\n[data-theme=\"dark\"] .active-technique-copy span,\n[data-theme=\"dark\"] .confirm-copy,\n[data-theme=\"dark\"] .shortcut-row span,\n[data-theme=\"dark\"] .player-time,\n[data-theme=\"dark\"] .player-loop-label,\n[data-theme=\"dark\"] .offcanvas-launcher-copy {\n  color: var(--text-muted);\n}\n[data-theme=\"dark\"] .saved-sessions-container {\n  background: linear-gradient(180deg, rgba(28, 24, 22, 0.98), rgba(20, 18, 17, 0.96));\n  border-color: rgba(255, 236, 216, 0.12);\n  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34);\n}\n[data-theme=\"dark\"] .saved-header,\n[data-theme=\"dark\"] .empty-state,\n[data-theme=\"dark\"] .save-section {\n  background: transparent;\n  border-color: rgba(255, 236, 216, 0.1);\n}\n[data-theme=\"dark\"] .current-info {\n  background: rgba(208, 160, 107, 0.12);\n  border: 1px solid rgba(208, 160, 107, 0.16);\n}\n[data-theme=\"dark\"] .save-btn {\n  background: linear-gradient(135deg, #d0a06b, #b98654);\n  color: #1a140f;\n}\n[data-theme=\"dark\"] .verse-card::before {\n  background:\n    linear-gradient(180deg, rgba(208, 160, 107, 0.04), transparent 22%),\n    radial-gradient(circle at top right, rgba(208, 160, 107, 0.06), transparent 28%);\n}\n[data-theme=\"dark\"] .verse-card.active {\n  background: linear-gradient(145deg, rgba(208, 160, 107, 0.12), rgba(255, 255, 255, 0.02));\n  box-shadow: 0 0 0 1px rgba(208, 160, 107, 0.42), 0 16px 34px rgba(0, 0, 0, 0.34);\n}\n[data-theme=\"dark\"] .verse-number,\n[data-theme=\"dark\"] .verse-status-badge,\n[data-theme=\"dark\"] .player-chapter,\n[data-theme=\"dark\"] .player-verse,\n[data-theme=\"dark\"] .preview-stat,\n[data-theme=\"dark\"] .preview-surah,\n[data-theme=\"dark\"] .preview-range {\n  color: var(--text);\n}\n[data-theme=\"dark\"] .player-progress-bg,\n[data-theme=\"dark\"] .progress-bar-track,\n[data-theme=\"dark\"] .form-range {\n  background: rgba(255, 255, 255, 0.12);\n}\n[data-theme=\"dark\"] .banner,\n[data-theme=\"dark\"] .countdown-modal {\n  background: linear-gradient(180deg, rgba(34, 29, 26, 0.98), rgba(22, 19, 17, 0.96));\n  border-color: var(--border);\n  color: var(--text);\n}\n[data-theme=\"dark\"] .banner-x,\n[data-theme=\"dark\"] .shortcuts-modal-close,\n[data-theme=\"dark\"] .modal-close-btn,\n[data-theme=\"dark\"] .btn-icon,\n[data-theme=\"dark\"] .verse-small-play-btn,\n[data-theme=\"dark\"] .verse-download-btn,\n[data-theme=\"dark\"] .player-btn {\n  background: rgba(255, 255, 255, 0.06);\n  border-color: rgba(255, 236, 216, 0.14);\n  color: var(--text);\n}\n[data-theme=\"dark\"] .modal-footer,\n[data-theme=\"dark\"] .shortcuts-header,\n[data-theme=\"dark\"] .section-header {\n  background: rgba(255, 255, 255, 0.03);\n  border-color: var(--border);\n}\n[data-theme=\"dark\"] .mode-radio {\n  background: rgba(255, 255, 255, 0.04);\n  border-color: rgba(208, 160, 107, 0.24);\n}\n[data-theme=\"dark\"] .mode-radio.active {\n  background: rgba(208, 160, 107, 0.14);\n  border-color: rgba(208, 160, 107, 0.4);\n}\n[data-theme=\"dark\"] .mode-radio-dot {\n  background: rgba(12, 11, 10, 0.9);\n  border-color: rgba(208, 160, 107, 0.7);\n}\n[data-theme=\"dark\"] .mode-radio.active .mode-radio-dot::after {\n  background: rgba(208, 160, 107, 0.9);\n}\n[data-theme=\"dark\"] .active-techniques-section {\n  background: linear-gradient(180deg, rgba(29, 35, 30, 0.92), rgba(20, 25, 22, 0.9));\n  border-color: rgba(108, 167, 126, 0.18);\n}\n\n/* Sepia theme overrides */\n[data-theme=\"sepia\"] .verse-translation {\n  color: #7a684a;\n}\n\n/* Planner & Analytics UI */\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(12, 10, 8, 0.62);\n  backdrop-filter: blur(8px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 9999;\n  padding: 20px;\n}\n.modal-content {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 250, 243, 0.92));\n  border-radius: 20px;\n  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42);\n  border: 1px solid rgba(255, 255, 255, 0.55);\n  display: flex;\n  flex-direction: column;\n  max-height: 90vh;\n  overflow: hidden;\n  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.resume-modal {\n  width: min(760px, 96vw);\n}\n.resume-modal .modal-header h2 {\n  font-size: clamp(1.25rem, 2.3vw, 1.75rem);\n}\n.resume-saved-at {\n  display: inline-block;\n  margin-top: 4px;\n  color: var(--text-muted);\n  font-size: 0.82rem;\n}\n.resume-grid {\n  margin-top: 12px;\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 10px;\n}\n.resume-grid .pill {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 12px 14px;\n}\n@keyframes modalIn {\nfrom {\n    transform: translateY(10px);\n    opacity: 0.6;\n}\nto {\n    transform: translateY(0);\n    opacity: 1;\n}\n}\n@keyframes modalFadeIn {\nfrom {\n    opacity: 0;\n    transform: translateY(20px) scale(0.95);\n}\nto {\n    opacity: 1;\n    transform: translateY(0) scale(1);\n}\n}\n.modal-header {\n  padding: 20px 24px;\n  border-bottom: 1px solid var(--border);\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 1.25rem;\n  font-weight: 700;\n}\n.modal-body {\n  padding: 24px;\n  overflow-y: auto;\n}\n.modal-footer {\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--bg-elevated);\n}\n.confirm-modal {\n  max-width: 460px;\n  width: 100%;\n}\n.confirm-copy {\n  color: var(--text-muted);\n  line-height: 1.65;\n}\n.btn-danger {\n  background: #b55041;\n}\n.tools-btn-danger {\n  opacity: 0.82;\n}\n.btn-icon {\n  background: none;\n  border: none;\n  font-size: 1.2rem;\n  color: var(--text-muted);\n  cursor: pointer;\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.btn-icon:hover {\n  background: var(--border);\n  color: var(--text);\n}\n.planner-modal {\n  max-width: 500px;\n  width: 100%;\n}\n.planner-field {\n  margin-bottom: 24px;\n}\n.planner-field label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85rem;\n  font-weight: 600;\n  color: var(--text);\n  margin-bottom: 8px;\n}\n.planner-select,\n.planner-input {\n  width: 100%;\n  padding: 12px 14px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.planner-select:focus,\n.planner-input:focus {\n  outline: none;\n  border-color: var(--accent);\n  box-shadow: 0 0 0 2px var(--accent-light);\n}\n.verses-per-day-control {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.quantity-btn {\n  width: 40px;\n  height: 40px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: var(--surface);\n  cursor: pointer;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.2s;\n}\n.quantity-btn:hover:not(:disabled) {\n  background: var(--accent);\n  color: white;\n  border-color: var(--accent);\n}\n.quantity-btn:disabled {\n  opacity: 0.4;\n  cursor: not-allowed;\n}\n.planner-stats-grid {\n  display: grid;\n  grid-template-columns: repeat(2, 1fr);\n  gap: 12px;\n  margin: 24px 0;\n}\n.planner-stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 16px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  transition: all 0.2s;\n}\n.progress-info {\n  display: flex;\n  justify-content: space-between;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-bottom: 8px;\n}\n.progress-bar-track {\n  height: 6px;\n  background: var(--border);\n  border-radius: 3px;\n  overflow: hidden;\n}\n.progress-bar-fill {\n  height: 100%;\n  background: var(--accent);\n  border-radius: 3px;\n  transition: width 0.3s ease;\n}\n.modal-footer {\n  display: flex;\n  gap: 12px;\n  padding: 20px 24px;\n  border-top: 1px solid var(--border);\n  background: var(--surface);\n}\n.btn-secondary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  background: transparent;\n  cursor: pointer;\n  font-size: 0.9rem;\n  transition: all 0.2s;\n}\n.btn-secondary:hover {\n  background: var(--border);\n}\n.btn-primary {\n  flex: 1;\n  padding: 12px;\n  border-radius: 12px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: white;\n  border: none;\n  cursor: pointer;\n  font-size: 0.9rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  transition: all 0.2s;\n}\n.btn-primary:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);\n}\n.field-hint {\n  display: block;\n  font-size: 0.7rem;\n  color: var(--text-muted);\n  margin-top: 6px;\n}\n.pa-lbl {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n.analytics-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n  margin-top: 20px;\n}\n.analytics-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.78rem * var(--en-scale, 1));\n  line-height: 1.4;\n}\n.stat-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 20px;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  transition: transform 0.2s;\n}\n.stat-delta {\n  display: inline-flex;\n  align-items: center;\n  margin-left: 10px;\n  padding: 4px 8px;\n  border-radius: 999px;\n  border: 1px solid var(--border);\n  background: rgba(255, 255, 255, 0.72);\n  font-size: 0.7rem;\n  color: var(--accent-strong);\n  font-weight: 700;\n  vertical-align: middle;\n}\n.stat-card:hover {\n  transform: translateY(-2px);\n  border-color: var(--accent);\n}\n.stat-card i {\n  font-size: 1.8rem;\n  color: var(--accent);\n  margin-bottom: 12px;\n}\n.stat-value {\n  font-size: 1.5rem;\n  font-weight: 700;\n  color: var(--text);\n  margin-bottom: 4px;\n}\n.stat-label {\n  font-size: 0.85rem;\n  color: var(--text-muted);\n}\n.stat-help {\n  margin-top: 10px;\n  color: var(--text-muted);\n  font-size: calc(0.72rem * var(--en-scale, 1));\n  line-height: 1.35;\n}\n.mini-trend {\n  position: relative;\n  width: 80px;\n  height: 24px;\n  margin-top: 10px;\n}\n.mini-trend span {\n  position: absolute;\n  width: 8px;\n  border-radius: 999px;\n  background: linear-gradient(180deg, var(--accent), var(--accent-soft));\n  opacity: 0.9;\n}\n\n/* Home Dashboard UI */\n.home-dashboard {\n  max-width: 800px;\n  margin: 40px auto;\n  padding: 0 20px;\n  animation: modalFadeIn 0.4s ease-out;\n}\n.dashboard-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-end;\n  margin-bottom: 40px;\n  flex-wrap: wrap;\n  gap: 20px;\n}\n.welcome-text {\n  max-width: 500px;\n}\n.header-stats {\n  display: flex;\n  gap: 16px;\n  background: var(--surface);\n  padding: 12px 20px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.mini-stat {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.9rem;\n}\n.mini-stat strong {\n  color: var(--text);\n  font-size: 1rem;\n}\n.dashboard-actions {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));\n  gap: 20px;\n  margin-bottom: 40px;\n}\n.home-dashboard-minimal {\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  min-height: 160px;\n}\n.offcanvas {\n  position: fixed;\n  top: 0;\n  right: 0;\n  width: 380px;\n  height: 100%;\n  background: #fff;\n  z-index: 1000;\n  transform: translateX(100%);\n  transition: transform 0.3s ease;\n  display: flex;\n  flex-direction: column;\n  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);\n}\n.offcanvas-launcher-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.offcanvas-launcher-copy {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-start-card {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto auto;\n  align-items: center;\n  gap: 18px;\n  padding: 20px;\n  margin-bottom: 18px;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: var(--surface);\n  box-shadow: var(--shadow-sm);\n}\n.setup-start-copy {\n  min-width: 0;\n}\n.setup-kicker {\n  display: inline-flex;\n  margin-bottom: 6px;\n  color: var(--accent);\n  font-size: 0.72rem;\n  font-weight: 800;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n}\n.setup-start-copy h2 {\n  margin: 0 0 6px;\n  color: var(--text);\n  font-size: clamp(1.2rem, 2vw, 1.65rem);\n  line-height: 1.1;\n}\n.setup-start-copy p {\n  margin: 0;\n  color: var(--text-muted);\n  font-size: 0.95rem;\n  line-height: 1.45;\n}\n.setup-review-hint {\n  margin-top: 10px;\n  padding: 10px 12px;\n  border-radius: 12px;\n  background: rgba(184, 130, 78, 0.10);\n  border: 1px solid rgba(184, 130, 78, 0.18);\n  color: var(--accent);\n  font-weight: 700;\n}\n.setup-mode-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(112px, 1fr));\n  gap: 10px;\n}\n.setup-mode-card {\n  min-height: 86px;\n  padding: 12px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: var(--surface);\n  color: var(--text);\n  cursor: pointer;\n  display: grid;\n  justify-items: center;\n  align-content: center;\n  gap: 4px;\n  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;\n}\n.setup-mode-card:hover,\n.setup-mode-card.active {\n  border-color: var(--accent);\n  box-shadow: var(--shadow-sm);\n  transform: translateY(-1px);\n}\n.setup-mode-card i {\n  color: var(--accent);\n  font-size: 1.2rem;\n}\n.setup-mode-card span {\n  font-weight: 800;\n}\n.setup-mode-card small {\n  color: var(--text-muted);\n  font-size: 0.78rem;\n}\n.setup-primary {\n  min-height: 48px;\n  white-space: nowrap;\n}\n.setup-optional-panel,\n.session-tools-panel {\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: rgba(255, 255, 255, 0.68);\n}\n.setup-optional-panel summary,\n.session-tools-panel summary {\n  cursor: pointer;\n  list-style: none;\n  padding: 12px 14px;\n  font-weight: 700;\n  color: var(--text);\n}\n.setup-optional-panel summary::-webkit-details-marker,\n.session-tools-panel summary::-webkit-details-marker {\n  display: none;\n}\n.setup-optional-grid,\n.session-tools-grid {\n  display: grid;\n  gap: 12px;\n  padding: 0 14px 14px;\n}\n.setup-optional-grid {\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.session-tools-grid {\n  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));\n}\n.field-inline-toggle {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.toggle-chip {\n  min-height: 42px;\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  background: var(--surface);\n  color: var(--text);\n  font-family: inherit;\n  font-weight: 540;\n}\n.toggle-chip.active {\n  border-color: var(--accent);\n  color: white;\n}\n.continue-session-card {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 16px 18px;\n  margin-bottom: 18px;\n  border: 1px solid var(--accent-soft);\n  border-radius: 18px;\n  background: linear-gradient(135deg, var(--surface), var(--accent-light));\n  box-shadow: var(--shadow-sm);\n  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;\n}\n.continue-session-card:hover {\n  transform: translateY(-2px);\n  box-shadow: var(--shadow-md);\n  border-color: var(--accent);\n}\n.continue-session-copy {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.continue-session-actions {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.continue-session-kicker {\n  font-size: 0.72rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--accent);\n}\n.continue-session-copy small {\n  color: var(--text-muted);\n}\n.continue-session-btn {\n  min-height: 44px;\n  white-space: nowrap;\n}\n.continue-session-dismiss {\n  min-width: 44px;\n  padding-inline: 0;\n  justify-content: center;\n}\n.resume-action {\n  background: linear-gradient(145deg, rgba(154, 103, 56, 0.12), rgba(255, 255, 255, 0.94));\n  border-color: var(--accent-soft);\n}\n.resume-action .action-icon {\n  background: rgba(154, 103, 56, 0.15);\n  color: var(--accent);\n}\n.resume-action .action-arrow {\n  color: var(--accent);\n}\n.action-card {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n  cursor: pointer;\n  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n  display: flex;\n  flex-direction: column;\n  position: relative;\n  overflow: hidden;\n}\n.action-card:hover {\n  transform: translateY(-4px);\n  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);\n  border-color: var(--accent);\n}\n.action-card.primary-action {\n  background: linear-gradient(145deg, var(--accent), var(--accent-dark));\n  color: white;\n  border: none;\n}\n.action-card.primary-action .action-icon {\n  background: rgba(255, 255, 255, 0.2);\n  color: white;\n}\n.action-card.primary-action h3,\n.action-card.primary-action p,\n.action-card.primary-action .action-arrow {\n  color: white;\n}\n.action-icon {\n  width: 48px;\n  height: 48px;\n  background: var(--bg-body);\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.5rem;\n  color: var(--accent);\n  margin-bottom: 20px;\n}\n.action-content h3 {\n  font-size: 1.15rem;\n  margin: 0 0 8px 0;\n  color: var(--text);\n}\n.action-content p {\n  font-size: 0.9rem;\n  color: var(--text-muted);\n  margin: 0;\n  line-height: 1.4;\n}\n.action-arrow {\n  position: absolute;\n  bottom: 24px;\n  right: 24px;\n  font-size: 1.2rem;\n  color: var(--accent);\n  opacity: 0;\n  transform: translateX(-10px);\n  transition: all 0.2s ease;\n}\n.action-card:hover .action-arrow {\n  opacity: 1;\n  transform: translateX(0);\n}\n.dashboard-recent {\n  background: var(--surface);\n  border: 1px solid var(--border);\n  border-radius: 16px;\n  padding: 24px;\n}\n.recent-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.recent-header h3 {\n  margin: 0;\n  font-size: 1.1rem;\n}\n.btn-ghost {\n  background: none;\n  border: none;\n  color: var(--accent);\n  font-weight: 500;\n  cursor: pointer;\n  padding: 6px 12px;\n  border-radius: 8px;\n  transition: background 0.2s;\n}\n.btn-ghost:hover {\n  background: var(--accent-light);\n}\n.recent-stats {\n  display: flex;\n  gap: 32px;\n  flex-wrap: wrap;\n}\n.r-stat {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n.r-stat span {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.r-stat strong {\n  font-size: 1.4rem;\n  color: var(--text);\n}\n@media (max-width: 768px) {\n.quick-tools-grid {\n    grid-template-columns: 1fr;\n    gap: 8px;\n    padding: 12px;\n}\n.workspace-shell {\n    width: 100%;\n    margin-bottom: 14px;\n}\n.workspace-shell {\n    padding: 14px;\n}\n.workspace-shell-head {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 12px;\n}\n.workspace-shell-actions {\n    width: 100%;\n    display: flex;\n    flex-wrap: wrap;\n    justify-content: stretch;\n}\n.workspace-shell-title-row {\n    align-items: flex-start;\n}\n.workspace-shell-phase {\n    min-height: 26px;\n}\n.workspace-shell-meta {\n    gap: 6px;\n}\n.workspace-shell-chaining {\n    gap: 6px;\n}\n.resume-feedback-row {\n    font-size: 0.74rem;\n}\n.resume-grid {\n    grid-template-columns: 1fr;\n}\n.workspace-fab {\n    top: 8px;\n    display: grid;\n    grid-template-columns: minmax(0, 1fr);\n    gap: 8px;\n    padding: 9px;\n    margin: 8px 0 6px;\n    border-radius: 14px;\n}\n.workspace-fab-meta {\n    min-width: 0;\n}\n.workspace-fab-kicker {\n    font-size: 0.64rem;\n}\n.workspace-fab-title {\n    font-size: 0.9rem;\n}\n.workspace-fab-sub {\n    font-size: 0.72rem;\n    gap: 5px;\n}\n.workspace-fab-sub span {\n    flex: 1 1 auto;\n    justify-content: center;\n    min-width: min(128px, 100%);\n}\n.workspace-fab-copy {\n    font-size: 0.78rem;\n}\n.workspace-fab-live {\n    gap: 6px;\n}\n.workspace-fab-live-pill {\n    flex: 1 1 0;\n    min-width: 0;\n    justify-content: center;\n}\n.workspace-fab-actions {\n    display: grid;\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n    gap: 8px;\n    width: 100%;\n}\n.fab-btn {\n    width: 100%;\n    min-width: 0;\n    justify-content: center;\n    padding: 8px 10px;\n    font-size: 0.82rem;\n    min-height: 44px;\n}\n.main-nav-btn,\n  .main-card-primary {\n    width: 100%;\n    min-height: 44px;\n}\n.settings-heading {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 10px;\n    padding-bottom: 12px;\n    margin-bottom: 14px;\n}\n.settings-status {\n    justify-self: start;\n}\n.settings-card-grid,\n  .settings-display-grid {\n    grid-template-columns: minmax(0, 1fr);\n}\n.settings-card-toggle,\n  .settings-card-range {\n    min-height: 0;\n    padding: 13px;\n    gap: 12px;\n}\n.settings-toggle {\n    min-height: 38px;\n}\n.settings-range-wrap {\n    gap: 10px;\n}\n.settings-apply-section {\n    padding: 12px;\n}\n.settings-apply-primary {\n    min-height: 46px;\n    border-radius: 12px;\n    font-size: 0.88rem;\n}\n.setup-start-card {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n    padding: 16px;\n}\n.setup-mode-grid {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n}\n.setup-primary {\n    width: 100%;\n    justify-content: center;\n}\n.continue-session-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.dashboard-actions {\n    grid-template-columns: 1fr;\n    gap: 14px;\n    margin-bottom: 20px;\n}\n.offcanvas-launcher-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.action-card {\n    padding: 18px;\n}\n.action-icon {\n    margin-bottom: 14px;\n}\n.continue-session-btn,\n  .btn-primary,\n  .btn-secondary,\n  .tools-btn,\n  .player-btn,\n  .toolbar-chip,\n  .toggle-chip {\n    min-height: 44px;\n}\n.settings-toggle {\n    min-height: 34px;\n}\n.inline-setting-row {\n    align-items: stretch;\n}\n.input-compact,\n  .inline-setting-pill {\n    width: 100%;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.technique-row,\n  .technique-row-main,\n  .technique-control {\n    align-items: stretch;\n    flex-direction: column;\n}\n.technique-toggle,\n  .segmented-control {\n    width: 100%;\n}\n.player-bar {\n    width: calc(100% - 24px);\n    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);\n    padding: 12px 14px;\n}\n.player-bar.collapsed {\n    transform: translateX(-50%);\n}\n.player-main {\n    grid-template-columns: minmax(88px, 0.75fr) auto minmax(0, 1fr) minmax(0, 1fr) auto;\n    align-items: center;\n    gap: 8px;\n}\n.player-info {\n    flex: 0 1 120px;\n    min-width: 0;\n}\n.player-chapter {\n    font-size: 0.78rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-verse {\n    font-size: 0.72rem;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 120px;\n}\n.player-controls {\n    justify-content: center;\n    gap: 4px;\n}\n.player-progress-wrap {\n    order: 0;\n    min-width: 0;\n    gap: 6px;\n}\n.player-loop-controls {\n    order: 3;\n    width: 100%;\n    grid-column: 1 / -2;\n    justify-content: space-between;\n}\n.player-loop-group {\n    width: 100%;\n    justify-content: space-between;\n}\n.player-speed-controls {\n    display: none;\n}\n.analytics-grid {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n    align-items: stretch;\n}\n.session-rail-actions {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.rail-btn {\n    flex: initial;\n    width: 100%;\n    justify-content: center;\n}\n.rail-btn-primary {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 10px;\n}\n.toolbar-chip {\n    flex: initial;\n    width: 100%;\n}\n.font-dropdown {\n    grid-column: 1 / -1;\n}\n.reading-toolbar {\n    padding: 12px;\n    gap: 10px;\n}\n.reading-toolbar-group {\n    width: 100%;\n}\n.toolbar-chip {\n    flex: 1 1 calc(50% - 4px);\n    justify-content: center;\n    min-width: 0;\n}\n.font-dropdown {\n    width: 100%;\n}\n.font-dropdown-trigger {\n    width: 100%;\n    justify-content: space-between;\n}\n.verse-card {\n    padding: 16px;\n    border-radius: 18px;\n}\n.verse-header {\n    flex-direction: column;\n    align-items: stretch;\n    gap: 12px;\n}\n.verse-badges,\n  .verse-actions {\n    flex-wrap: wrap;\n}\n.verse-actions {\n    justify-content: space-between;\n}\n.verse-font-controls {\n    margin-right: 0;\n    flex: 1 1 100%;\n    justify-content: center;\n}\n.modal-content,\n  .confirm-modal,\n  .planner-modal {\n    width: 100%;\n    max-width: 100%;\n    border-radius: 18px;\n}\n.modal-header,\n  .modal-body,\n  .modal-footer {\n    padding-left: 16px;\n    padding-right: 16px;\n}\n.planner-stats-grid {\n    grid-template-columns: 1fr;\n}\n.tools {\n    width: 100vw;\n    max-width: 100vw;\n}\n.tools-top,\n  .tools-body,\n  .tools-footer {\n    padding-left: 14px;\n    padding-right: 14px;\n}\n.tools-tabs {\n    overflow-x: hidden;\n    display: grid;\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n    gap: 8px;\n}\n.tools-tabs button {\n    width: 100%;\n    min-width: 0;\n}\n.reading-aid-grid,\n  .session-tools-grid {\n    grid-template-columns: 1fr;\n}\n.verse-card,\n  .tools,\n  .sheet,\n  .sheet-content {\n    overflow-x: hidden;\n}\n}\n@media (min-width: 769px) and (max-width: 1024px) {\n.dashboard-actions {\n    grid-template-columns: 1fr;\n}\n.session-rail-top {\n    grid-template-columns: 1fr;\n}\n.session-rail-actions {\n    flex-wrap: wrap;\n}\n.reading-toolbar {\n    align-items: flex-start;\n}\n.reading-toolbar-group:first-child {\n    flex: 1 1 100%;\n}\n.toolbar-chip {\n    flex: 0 1 auto;\n}\n.player-bar {\n    width: calc(100vw - 40px);\n}\n.player-main {\n    grid-template-columns: minmax(132px, 0.9fr) auto minmax(160px, 0.9fr) minmax(150px, 1fr) auto;\n    gap: 12px;\n}\n.player-progress-wrap {\n    min-width: 0;\n}\n}\n@media (max-width: 480px) {\n.verse-header {\n    flex-wrap: wrap;\n}\n.verse-badges {\n    flex-wrap: wrap;\n}\n.verse-actions {\n    margin-top: 8px;\n    width: 100%;\n    justify-content: flex-start;\n}\n.session-pill {\n    white-space: normal;\n    text-align: center;\n    justify-content: center;\n}\n.rail-btn,\n  .toolbar-chip {\n    flex: 1 1 100%;\n}\n.player-time {\n    min-width: auto;\n    font-size: 0.7rem;\n}\n.player-progress-wrap {\n    gap: 8px;\n}\n.verse-number,\n  .verse-status-badge,\n  .verse-status-subtle {\n    width: 100%;\n    justify-content: center;\n    text-align: center;\n}\n}\n.verse-status-badge-review {\n  border-color: rgba(183, 28, 28, 0.24);\n  color: #9f1f1f;\n  background: rgba(183, 28, 28, 0.08);\n}\n.verse-card.feedback-mastered {\n  border-left: 4px solid #43a047;\n}\n.verse-card.feedback-weak {\n  border-left: 4px solid #e3a008;\n}\n.verse-card.feedback-repeat {\n  border-left: 4px solid #c62828;\n}\n.main.flow-recall .verse-card.active .verse-arabic {\n  color: transparent;\n  text-shadow: 0 0 22px rgba(232, 237, 247, 0.55);\n}\n.main.flow-practice .verse-card.active .verse-arabic {\n  opacity: 0.45;\n}\n.main.flow-recall .verse-card.active .verse-arabic .tajweed-mark,\n.main.flow-recall .verse-card.active .verse-arabic word,\n.main.flow-recall .verse-card.active .verse-arabic .wbw-word {\n  color: transparent !important;\n  background: transparent !important;\n  box-shadow: none !important;\n}\n.workspace-quick-controls {\n  display: flex;\n  gap: 10px;\n  flex-wrap: wrap;\n  padding: 0 10px 10px;\n}\n.session-quickstart-card {\n  display: flex;\n  gap: 16px;\n  justify-content: space-between;\n  align-items: center;\n  padding: 16px;\n  border-radius: 18px;\n  background: rgba(17, 24, 39, 0.04);\n  border: 1px solid rgba(17, 24, 39, 0.08);\n}\n.session-quickstart-copy {\n  margin: 6px 0 0;\n  color: #5f6b7a;\n}\n.session-quickstart-actions {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-end;\n  gap: 8px;\n}\n.preset-btn-primary {\n  background: #0f766e;\n  color: #fff;\n}\n.presets-grid-wide {\n  width: 100%;\n}\n@media (max-width: 768px) {\n.session-quickstart-card {\n    flex-direction: column;\n    align-items: stretch;\n}\n.session-quickstart-actions {\n    align-items: stretch;\n}\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 

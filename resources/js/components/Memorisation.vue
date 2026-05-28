@@ -110,6 +110,11 @@
               </div>
               <div class="workspace-shell-actions">
                 <div class="action-buttons-group">
+                  <button class="action-btn action-btn-secondary action-btn-exit" type="button" @click="openSessionExitModal"
+                    title="End session">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>End Session</span>
+                  </button>
                   <button class="action-icon-btn" @click="toggleFullScreen" title="Full screen mode">
                     <i class="bi bi-arrows-fullscreen"></i>
                   </button>
@@ -284,11 +289,9 @@
 
                 <!-- Keep in-workspace aids available, but visually quieter -->
                 <div v-if="showTransliteration && verse.transliteration" class="verse-transliteration verse-aid">
-                  <div class="verse-aid-title">Transliteration</div>
                   {{ verse.transliteration }}
                 </div>
                 <div v-if="showTranslation && verse.translation" class="verse-translation verse-aid">
-                  <div class="verse-aid-title">Translation</div>
                   {{ verse.translation }}
                 </div>
                 <div v-if="showWordByWord && verse.words && verse.words.length" class="verse-words verse-aid"
@@ -461,24 +464,6 @@
 
           <!-- TECHNIQUES TAB -->
           <div v-else-if="tab === 'techniques'" class="sheet">
-            <section v-if="activePracticeTechniques.length" class="sheet-section active-techniques-section">
-              <div class="active-techniques-header">
-                <div>
-                  <div class="st-title">Active methods</div>
-                  <div class="st-sub">A quick view of the techniques shaping this session.</div>
-                </div>
-                <div class="active-techniques-count">{{ activePracticeTechniques.length }}</div>
-              </div>
-              <div class="active-techniques-grid">
-                <div v-for="item in activePracticeTechniques" :key="item.key" class="active-technique-card">
-                  <div class="active-technique-icon"><i :class="item.icon"></i></div>
-                  <div class="active-technique-copy">
-                    <strong>{{ item.label }}</strong>
-                    <span>{{ item.description }}</span>
-                  </div>
-                </div>
-              </div>
-            </section>
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('focus_mode')" type="button">
                 <span class="st-left">
@@ -889,6 +874,7 @@
             <i class="bi bi-bookmark-plus-fill"></i>
           </div>
           <div class="modal-header-text">
+            <div class="modal-context-badge">{{ sessionContextBadge }}</div>
             <h2 id="saveModalTitle">Save Memorisation Session</h2>
             <p>Name your session to easily find and resume it later</p>
           </div>
@@ -978,7 +964,10 @@
     <div class="modal-overlay" v-if="showConfirmModal" @click.self="closeConfirmModal">
       <div class="modal-content confirm-modal" role="dialog" aria-modal="true">
         <div class="modal-header">
-          <h2>{{ confirmModal.title }}</h2>
+          <div class="modal-header-text">
+            <div class="modal-context-badge">{{ sessionContextBadge }}</div>
+            <h2>{{ confirmModal.title }}</h2>
+          </div>
           <button class="btn-icon" @click="closeConfirmModal"><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="modal-body">
@@ -988,6 +977,35 @@
           <button class="btn-secondary" @click="closeConfirmModal">{{ confirmModal.cancelLabel }}</button>
           <button class="btn-primary" :class="{ 'btn-danger': confirmModal.tone === 'danger' }"
             @click="runConfirmAction">{{ confirmModal.confirmLabel }}</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" v-if="showSessionExitModal" @click.self="closeSessionExitModal">
+      <div class="modal-content confirm-modal session-exit-modal" role="dialog" aria-modal="true" aria-labelledby="sessionExitTitle">
+        <div class="modal-header">
+          <div class="modal-header-text">
+            <div class="modal-context-badge">{{ sessionContextBadge }}</div>
+            <h2 id="sessionExitTitle">End Session</h2>
+          </div>
+          <button class="btn-icon" @click="closeSessionExitModal"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="session-exit-recap">
+            <span><i class="bi bi-book"></i> {{ currentChapter?.name_simple || 'No surah' }}</span>
+            <span><i class="bi bi-text-paragraph"></i> Ayah {{ currentPosition }}/{{ totalVerses }}</span>
+            <span><i class="bi bi-clock"></i> {{ formatTime(currentTime || 0) }}</span>
+          </div>
+          <p class="confirm-copy">You can leave now, or save this session before exiting. Continuing will restore the exact ayah, playback position, and blur state.</p>
+          <label class="session-exit-autosave">
+            <input type="checkbox" v-model="sessionExitAutoSave">
+            <span>Auto-save before exit</span>
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="closeSessionExitModal">Continue Session</button>
+          <button class="btn-secondary" @click="exitSessionAnyway">Exit Anyway</button>
+          <button class="btn-primary" @click="confirmSessionExit">{{ sessionExitAutoSave ? 'Save & Exit' : 'End Session' }}</button>
         </div>
       </div>
     </div>
@@ -1276,6 +1294,9 @@ export default {
       flowListenPlays: 0,
       showPlannerModal: false,
       showConfirmModal: false,
+      showSessionExitModal: false,
+      sessionExitAutoSave: true,
+      sessionExitSnapshot: null,
       confirmModal: {
         title: '',
         message: '',
@@ -1971,6 +1992,13 @@ export default {
       return Math.max(1, num - this.rangeStart + 1)
     },
 
+    sessionContextBadge() {
+      const chapterName = this.currentChapter?.name_simple || this.activeChapterName || 'Session'
+      const total = Math.max(1, Number(this.totalVerses || 1))
+      const ayah = Math.max(1, Math.min(total, Number(this.currentPosition || 1)))
+      return `Memorising - ${chapterName} - Ayah ${ayah}/${total}`
+    },
+
     remainingAyahs() {
       return Math.max(0, this.totalVerses - this.currentPosition)
     },
@@ -2556,6 +2584,69 @@ export default {
       return reciter ? reciter.name : 'Alafasy'
     },
 
+    buildSessionRecord(name) {
+      return {
+        id: Date.now().toString(),
+        name,
+        savedAt: new Date().toISOString(),
+        config: {
+          chapterId: this.chapterId,
+          chapterName: this.currentChapter?.name_simple,
+          rangeStart: this.rangeStart,
+          rangeEnd: this.rangeEnd,
+          reciterId: this.reciterId,
+          speed: this.speed,
+          playMode: this.playMode,
+          chainingEnabled: this.chainingEnabled,
+          chainingMethod: this.chainingMethod,
+          chainingRepetitions: this.chainingRepetitions,
+          tajweedEnabled: this.tajweedEnabled,
+          showTranslation: this.showTranslation,
+          showTransliteration: this.showTransliteration,
+          showWordByWord: this.showWordByWord,
+          wordByWordAudioEnabled: this.wordByWordAudioEnabled,
+          focusModeEnabled: this.focusModeEnabled,
+          blurModeEnabled: this.blurModeEnabled,
+          blurIntensity: this.blurIntensity,
+          anchorModeEnabled: this.anchorModeEnabled,
+          anchorCount: this.anchorCount,
+          quranFont: this.quranFont,
+          activeVerseKey: this.effectiveActiveVerseKey || this.activeVerseKey || null,
+          queueIndex: Math.max(0, Number(this.queueIndex || 0)),
+          currentTime: Number(this.currentTime || 0),
+          playerVisible: !!this.playerVisible,
+          audioSrc: this.audioElement?.currentSrc || ''
+        }
+      }
+    },
+
+    addSavedSession(session) {
+      this.savedSessions.unshift(session)
+      if (this.savedSessions.length > 20) this.savedSessions = this.savedSessions.slice(0, 20)
+      this.persistSavedSessions()
+      return session
+    },
+
+    buildAutoSaveSessionName() {
+      const chapter = this.currentChapter?.name_simple || 'Session'
+      const ayah = Math.max(1, Number(this.currentPosition || 1))
+      const stamp = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+      let candidate = `${chapter} ${this.rangeStart}-${this.rangeEnd} · Ayah ${ayah} · ${stamp}`
+      let suffix = 2
+      while (this.savedSessions.some(session => session.name.toLowerCase() === candidate.toLowerCase())) {
+        candidate = `${chapter} ${this.rangeStart}-${this.rangeEnd} · Ayah ${ayah} (${suffix})`
+        suffix += 1
+      }
+      return candidate
+    },
+
+    saveCurrentSessionSilently(name = this.buildAutoSaveSessionName()) {
+      if (!this.hasVerses) return null
+      const session = this.buildSessionRecord(name)
+      this.addSavedSession(session)
+      return session
+    },
+
     confirmSaveSession() {
       const trimmedName = this.saveSessionName.trim()
 
@@ -2576,31 +2667,7 @@ export default {
         return
       }
 
-      const session = {
-        id: Date.now().toString(),
-        name: trimmedName,
-        savedAt: new Date().toISOString(),
-        config: {
-          chapterId: this.chapterId,
-          chapterName: this.currentChapter?.name_simple,
-          rangeStart: this.rangeStart,
-          rangeEnd: this.rangeEnd,
-          reciterId: this.reciterId,
-          speed: this.speed,
-          playMode: this.playMode,
-          chainingEnabled: this.chainingEnabled,
-          chainingMethod: this.chainingMethod,
-          chainingRepetitions: this.chainingRepetitions,
-          tajweedEnabled: this.tajweedEnabled,
-          showTranslation: this.showTranslation,
-          showTransliteration: this.showTransliteration,
-          showWordByWord: this.showWordByWord
-        }
-      }
-
-      this.savedSessions.unshift(session)
-      if (this.savedSessions.length > 20) this.savedSessions = this.savedSessions.slice(0, 20)
-      this.persistSavedSessions()
+      const session = this.addSavedSession(this.buildSessionRecord(trimmedName))
 
       this.showBanner(`✓ Session "${session.name}" saved`, 'success', 2000)
       this.closeSaveModal()
@@ -2990,31 +3057,7 @@ export default {
         return
       }
 
-      const session = {
-        id: Date.now().toString(),
-        name: `${this.currentChapter?.name_simple || 'Session'} ${this.rangeStart}-${this.rangeEnd}`,
-        savedAt: new Date().toISOString(),
-        config: {
-          chapterId: this.chapterId,
-          chapterName: this.currentChapter?.name_simple,
-          rangeStart: this.rangeStart,
-          rangeEnd: this.rangeEnd,
-          reciterId: this.reciterId,
-          speed: this.speed,
-          playMode: this.playMode,
-          chainingEnabled: this.chainingEnabled,
-          chainingMethod: this.chainingMethod,
-          chainingRepetitions: this.chainingRepetitions,
-          tajweedEnabled: this.tajweedEnabled,
-          showTranslation: this.showTranslation,
-          showTransliteration: this.showTransliteration,
-          showWordByWord: this.showWordByWord
-        }
-      }
-
-      this.savedSessions.unshift(session)
-      if (this.savedSessions.length > 20) this.savedSessions = this.savedSessions.slice(0, 20)
-      this.persistSavedSessions()
+      this.addSavedSession(this.buildSessionRecord(`${this.currentChapter?.name_simple || 'Session'} ${this.rangeStart}-${this.rangeEnd}`))
       this.showBanner('Session saved', 'success', 1500)
     },
 
@@ -3037,15 +3080,34 @@ export default {
       this.showTranslation = session.config.showTranslation
       this.showTransliteration = session.config.showTransliteration
       this.showWordByWord = session.config.showWordByWord
+      this.wordByWordAudioEnabled = session.config.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
+      this.focusModeEnabled = !!session.config.focusModeEnabled
+      this.blurModeEnabled = !!session.config.blurModeEnabled
+      this.blurIntensity = Number(session.config.blurIntensity || this.blurIntensity || 10)
+      this.anchorModeEnabled = !!session.config.anchorModeEnabled
+      this.anchorCount = Number(session.config.anchorCount || this.anchorCount || 2)
+      this.quranFont = session.config.quranFont || this.quranFont
 
       // Load verses and start session
       this.applyWorkspaceControls({ reason: 'load-session' })
       this.showTools = false
       this.showBanner(`Loaded: ${session.name}`, 'success', 2000)
 
-      // Auto-start session
       this.$nextTick(() => {
-        this.startSession()
+        ;(async () => {
+          await this.startSession()
+          if (!session.config.activeVerseKey) return
+          const restoredIndex = Math.max(0, Number(session.config.queueIndex || 0))
+          this.setActiveVerse(session.config.activeVerseKey, { queueIndex: restoredIndex, scroll: false })
+          this.restoredAudioState = {
+            src: session.config.audioSrc || '',
+            currentTime: Number(session.config.currentTime || 0),
+            playerVisible: !!session.config.playerVisible,
+            speed: Number(session.config.speed || this.speed || 1),
+            isPlaying: false
+          }
+          this.applyRestoredAudioState()
+        })()
       })
     },
 
@@ -3683,6 +3745,11 @@ export default {
           this.closeConfirmModal()
           return
         }
+        if (this.showSessionExitModal) {
+          event.preventDefault()
+          this.closeSessionExitModal()
+          return
+        }
         if (this.showPlannerModal) {
           event.preventDefault()
           this.showPlannerModal = false
@@ -3957,6 +4024,154 @@ export default {
         this.audioElement.removeEventListener('loadedmetadata', seekOnLoad)
       }
       this.audioElement.addEventListener('loadedmetadata', seekOnLoad)
+    },
+
+    buildSessionExitSnapshot() {
+      return {
+        mode: this.currentMode,
+        tab: this.tab,
+        activeVerseKey: this.effectiveActiveVerseKey || this.activeVerseKey || null,
+        activeKey: this.activeKey || null,
+        queueIndex: Math.max(0, Number(this.queueIndex || 0)),
+        playerVisible: !!this.playerVisible,
+        isPlaying: !!this.isPlaying,
+        currentTime: Number(this.audioElement?.currentTime || this.currentTime || 0),
+        speed: Number(this.speed || 1),
+        audioSrc: this.audioElement?.currentSrc || '',
+        blurModeEnabled: !!this.blurModeEnabled,
+        blurIntensity: Number(this.blurIntensity || 10),
+        blurPeekHoldingSpace: !!this.blurPeekHoldingSpace,
+        hoverPeekVerseKey: this.hoverPeekVerseKey || null,
+        touchPeekVerseKey: this.touchPeekVerseKey || null
+      }
+    },
+
+    openSessionExitModal() {
+      if (!this.hasVerses && !this.playerVisible) return
+      this.flushPlaybackTime()
+      this.sessionExitSnapshot = this.buildSessionExitSnapshot()
+      this.sessionExitAutoSave = true
+      this.showTools = false
+      this.showConfirmModal = false
+      this.showResumeModal = false
+      this.showSessionExitModal = true
+      if (this.audioElement && !this.audioElement.paused) {
+        this.audioElement.pause()
+      }
+      this.isPlaying = false
+    },
+
+    restoreSessionExitSnapshot() {
+      const snapshot = this.sessionExitSnapshot
+      if (!snapshot) return
+
+      this.currentMode = snapshot.mode || this.currentMode
+      this.tab = snapshot.tab || this.tab
+      this.blurModeEnabled = !!snapshot.blurModeEnabled
+      this.blurIntensity = Number(snapshot.blurIntensity || this.blurIntensity || 10)
+      this.blurPeekHoldingSpace = !!snapshot.blurPeekHoldingSpace
+      this.hoverPeekVerseKey = snapshot.hoverPeekVerseKey || null
+      this.touchPeekVerseKey = snapshot.touchPeekVerseKey || null
+
+      if (snapshot.activeVerseKey) {
+        this.setActiveVerse(snapshot.activeVerseKey, {
+          mode: snapshot.mode || this.currentMode,
+          queueIndex: Number(snapshot.queueIndex || 0),
+          scroll: false
+        })
+      }
+
+      this.playerVisible = !!snapshot.playerVisible
+      this.currentTime = Number(snapshot.currentTime || 0)
+      this.speed = Number(snapshot.speed || this.speed || 1)
+      this.restoredAudioState = {
+        src: snapshot.audioSrc || '',
+        currentTime: Number(snapshot.currentTime || 0),
+        playerVisible: !!snapshot.playerVisible,
+        speed: Number(snapshot.speed || this.speed || 1),
+        isPlaying: !!snapshot.isPlaying
+      }
+      this.$nextTick(() => {
+        this.applyRestoredAudioState()
+      })
+    },
+
+    closeSessionExitModal(options = {}) {
+      const { restore = true } = options
+      this.showSessionExitModal = false
+      if (restore) {
+        this.restoreSessionExitSnapshot()
+      } else {
+        this.sessionExitSnapshot = null
+      }
+    },
+
+    clearExitSessionStorage() {
+      try {
+        localStorage.removeItem('telawa.continueSession')
+        localStorage.removeItem('telawa.audioState')
+      } catch (error) {
+        console.error('Failed to clear exit-session storage:', error)
+      }
+      this.hasContinueSession = false
+      this.continueSessionPayload = null
+      this.continueSessionLabel = ''
+    },
+
+    finishSessionCleanup() {
+      this.closePlayer()
+      this.clearTouchPeek()
+      this.blurPeekHoldingSpace = false
+      this.hoverPeekVerseKey = null
+      this.touchPeekVerseKey = null
+      this.stopWordHighlighting()
+
+      const store = this.getModeStore(this.currentMode)
+      const firstKey = this.verses[0]?.key || null
+      store.queue = []
+      store.queueIndex = 0
+      store.activeKey = firstKey
+      store.sessionActive = false
+
+      this.queue = []
+      this.queueIndex = 0
+      this.activeVerseKey = null
+      this.activeKey = firstKey
+      this.playerVisible = false
+      this.isPlaying = false
+      this.currentTime = 0
+      this.duration = 0
+
+      if (this.mutqinState?.sessionState) {
+        this.mutqinState.sessionState.active = false
+      }
+
+      this.clearExitSessionStorage()
+      this.persistModeState(this.currentMode)
+      this.persistUiState()
+      this.persistCentralSessionState()
+    },
+
+    exitSessionAnyway() {
+      this.closeSessionExitModal({ restore: false })
+      this.finishSessionCleanup()
+      this.showBanner('Session ended. You can start again from the current setup.', 'info', 2200)
+    },
+
+    confirmSessionExit() {
+      const recapAyah = Math.max(1, Number(this.currentPosition || 1))
+      const recapTotal = Math.max(1, Number(this.totalVerses || 1))
+      let savedName = ''
+      if (this.sessionExitAutoSave) {
+        const savedSession = this.saveCurrentSessionSilently()
+        savedName = savedSession?.name || ''
+      }
+      this.closeSessionExitModal({ restore: false })
+      this.finishSessionCleanup()
+      const recap = savedName
+        ? `Session ended. Auto-saved as "${savedName}".`
+        : `Session ended at ayah ${recapAyah}/${recapTotal}.`
+      this.showBanner(recap, 'success', 2600)
     },
 
     openConfirmModal(options) {
@@ -7960,6 +8175,20 @@ export default {
   flex: 1;
 }
 
+.modal-context-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(154, 103, 56, 0.10);
+  border: 1px solid rgba(154, 103, 56, 0.14);
+  color: var(--accent-strong);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
 .modal-header-text h2 {
   margin: 0 0 4px 0;
   font-size: 1.2rem;
@@ -7971,6 +8200,40 @@ export default {
   margin: 0;
   font-size: 0.8rem;
   color: var(--text-muted);
+}
+
+.session-exit-modal {
+  max-width: 520px;
+}
+
+.session-exit-recap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.session-exit-recap span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text);
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.session-exit-autosave {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--text);
+  font-size: 0.82rem;
 }
 
 .modal-close-btn {
@@ -10976,6 +11239,17 @@ export default {
   box-shadow: var(--shadow-md);
 }
 
+.action-btn-exit {
+  background: rgba(255, 247, 243, 0.9);
+  border: 1px solid rgba(154, 103, 56, 0.14);
+}
+
+.action-btn-exit:hover {
+  background: rgba(255, 239, 232, 0.96);
+  border-color: rgba(139, 79, 57, 0.22);
+  color: #8b4f39;
+}
+
 .action-btn-primary {
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: white;
@@ -11712,6 +11986,10 @@ body.has-navbar .tools-top {
   padding: 20px;
   border-radius: 16px;
   margin: 12px 0;
+  display: block;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  contain: layout paint;
 }
 
 /* Force re-render when font changes */
@@ -12099,6 +12377,8 @@ html {
 .verse-arabic .wbw-word {
   display: inline-block;
   transition: all 0.15s ease;
+  vertical-align: baseline;
+  white-space: nowrap;
 }
 
 /* Prevent raw HTML showing */
@@ -14553,10 +14833,11 @@ html {
 }
 
 .workspace-shell-actions {
-  display: grid;
-  grid-template-columns: repeat(2, auto);
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  align-items: start;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .main-nav-btn,
@@ -17260,8 +17541,9 @@ body>.navbar+.app .main.container {
 
   .workspace-shell-actions {
     width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: stretch;
   }
 
   .workspace-shell-title-row {
