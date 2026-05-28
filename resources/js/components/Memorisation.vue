@@ -362,8 +362,9 @@
             <div id="memorisationToolsTitle" class="tools-title">
               <h3><b>Controls</b></h3>
             </div>
-            <button class="tools-x" @click="closeToolsPanel" aria-label="Close panel"><i
-                class="bi bi-x-lg"></i></button>
+            <button class="tools-x" @click="closeToolsPanel" aria-label="Close panel" type="button">
+              <span class="tools-x-glyph" aria-hidden="true">&times;</span>
+            </button>
           </div>
           <div class="tools-tabs" role="tablist" aria-label="Controls tabs">
             <button :class="{ active: tab === 'tools' }" @click.prevent="setActiveTab('tools')" title="Session tools"
@@ -500,7 +501,7 @@
                   <div class="mode-radio-group" @click.stop>
                     <label class="mode-radio" :class="{ active: focusModeEnabled }" @click.prevent="toggleFocusModeRadio">
                       <input type="radio" name="focus-mode-state" aria-label="Use focus mode" :checked="focusModeEnabled" @change.prevent="toggleFocusModeRadio">
-                      <span class="mode-radio-dot" aria-hidden="true"></span>
+                      <i class="mode-radio-icon bi" :class="focusModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'" aria-hidden="true"></i>
                     </label>
                   </div>
                   <span class="st-chev" :class="{ open: sectionOpen.focus_mode }">
@@ -546,7 +547,7 @@
                   <div class="mode-radio-group" @click.stop>
                     <label class="mode-radio" :class="{ active: blurModeEnabled }" @click.prevent="toggleBlurModeRadio">
                       <input type="radio" name="blur-mode-state" aria-label="Use blur mode" :checked="blurModeEnabled" @change.prevent="toggleBlurModeRadio">
-                      <span class="mode-radio-dot" aria-hidden="true"></span>
+                      <i class="mode-radio-icon bi" :class="blurModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'" aria-hidden="true"></i>
                     </label>
                   </div>
                   <span class="st-chev" :class="{ open: sectionOpen.blur_mode }"><i
@@ -590,7 +591,7 @@
                   <div class="mode-radio-group" @click.stop>
                     <label class="mode-radio" :class="{ active: chainingEnabled }" @click.prevent="toggleChainingRadio">
                       <input type="radio" name="chaining-state" aria-label="Use chaining" :checked="chainingEnabled" @change.prevent="toggleChainingRadio">
-                      <span class="mode-radio-dot" aria-hidden="true"></span>
+                      <i class="mode-radio-icon bi" :class="chainingEnabled ? 'bi-check-circle-fill' : 'bi-circle'" aria-hidden="true"></i>
                     </label>
                   </div>
                   <span class="st-chev" :class="{ open: sectionOpen.chaining }"><i
@@ -656,7 +657,7 @@
                   <div class="mode-radio-group" @click.stop>
                     <label class="mode-radio" :class="{ active: anchorModeEnabled }" @click.prevent="toggleAnchorModeRadio">
                       <input type="radio" name="anchor-mode-state" aria-label="Use anchor mode" :checked="anchorModeEnabled" @change.prevent="toggleAnchorModeRadio">
-                      <span class="mode-radio-dot" aria-hidden="true"></span>
+                      <i class="mode-radio-icon bi" :class="anchorModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'" aria-hidden="true"></i>
                     </label>
                   </div>
                   <span class="st-chev" :class="{ open: sectionOpen.anchor_mode }"><i
@@ -3141,9 +3142,155 @@ export default {
       this.showBanner('Session deleted', 'info', 1500)
     },
 
+    savedSessionsStorageKey() {
+      return this.userStorageKey('savedSessions')
+    },
+
+    buildSeededSession(name, config = {}, position = 0) {
+      const baseId = `${this.auth?.id || 'guest'}-${position + 1}`
+      return {
+        id: `seeded-${baseId}`,
+        name,
+        archived: false,
+        autoSaved: false,
+        savedAt: new Date(Date.UTC(2026, 4, 20 - Math.min(position, 10), 8 + (position % 8), 15, 0)).toISOString(),
+        config: {
+          chapterId: 1,
+          chapterName: 'Al-Fatihah',
+          rangeStart: 1,
+          rangeEnd: 7,
+          reciterId: DEFAULT_ALQURAN_RECITER,
+          speed: 1,
+          playMode: 'auto',
+          chainingEnabled: true,
+          chainingMethod: 'linking',
+          chainingRepetitions: 1,
+          tajweedEnabled: false,
+          showTranslation: true,
+          showTransliteration: false,
+          showWordByWord: false,
+          wordByWordAudioEnabled: false,
+          focusModeEnabled: false,
+          blurModeEnabled: false,
+          blurIntensity: 10,
+          anchorModeEnabled: false,
+          anchorCount: 2,
+          quranFont: 'uthmani',
+          activeVerseKey: null,
+          queueIndex: 0,
+          currentTime: 0,
+          playerVisible: false,
+          audioSrc: '',
+          ...config
+        }
+      }
+    },
+
+    getSeededSessionsForCurrentUser() {
+      const email = String(this.auth?.email || '').toLowerCase()
+      const match = email.match(/^practice(\d{2})@example\.com$/)
+      if (!match) return []
+
+      const presetGroups = [
+        [
+          this.buildSeededSession('Focused Start', {
+            chapterId: 112,
+            chapterName: 'Al-Ikhlas',
+            rangeStart: 1,
+            rangeEnd: 4,
+            focusModeEnabled: true,
+            showTranslation: true,
+            showWordByWord: true
+          }, 0),
+          this.buildSeededSession('Linking Review', {
+            chapterId: 87,
+            chapterName: 'Al-Ala',
+            rangeStart: 1,
+            rangeEnd: 7,
+            chainingEnabled: true,
+            chainingMethod: 'linking',
+            chainingRepetitions: 2,
+            tajweedEnabled: true
+          }, 1)
+        ],
+        [
+          this.buildSeededSession('Pure Recall Drill', {
+            chapterId: 75,
+            chapterName: 'Al-Qiyamah',
+            rangeStart: 1,
+            rangeEnd: 10,
+            blurModeEnabled: true,
+            blurIntensity: 14,
+            chainingEnabled: false,
+            showTranslation: false
+          }, 0),
+          this.buildSeededSession('Anchor Pass', {
+            chapterId: 78,
+            chapterName: 'An-Naba',
+            rangeStart: 31,
+            rangeEnd: 40,
+            anchorModeEnabled: true,
+            anchorCount: 2,
+            showWordByWord: true
+          }, 1)
+        ],
+        [
+          this.buildSeededSession('Cumulative Build', {
+            chapterId: 73,
+            chapterName: 'Al-Muzzammil',
+            rangeStart: 1,
+            rangeEnd: 8,
+            chainingEnabled: true,
+            chainingMethod: 'cumulative',
+            chainingRepetitions: 3,
+            speed: 0.75
+          }, 0),
+          this.buildSeededSession('Translation Support', {
+            chapterId: 55,
+            chapterName: 'Ar-Rahman',
+            rangeStart: 1,
+            rangeEnd: 6,
+            showTranslation: true,
+            showTransliteration: true,
+            tajweedEnabled: true
+          }, 1)
+        ]
+      ]
+
+      const index = Math.max(0, Number.parseInt(match[1], 10) - 1)
+      return (presetGroups[index % presetGroups.length] || []).map((session, sessionIndex) => ({
+        ...session,
+        id: `seeded-${match[1]}-${sessionIndex + 1}`
+      }))
+    },
+
+    ensureSeededSavedSessions() {
+      if (!this.auth?.check) return
+      const seededFlagKey = this.userStorageKey('savedSessionsSeeded')
+      const storageKey = this.savedSessionsStorageKey()
+
+      try {
+        if (localStorage.getItem(seededFlagKey) === '1') return
+
+        const existing = JSON.parse(localStorage.getItem(storageKey) || '[]')
+        if (Array.isArray(existing) && existing.length > 0) {
+          localStorage.setItem(seededFlagKey, '1')
+          return
+        }
+
+        const seededSessions = this.getSeededSessionsForCurrentUser()
+        if (!seededSessions.length) return
+
+        localStorage.setItem(storageKey, JSON.stringify(seededSessions))
+        localStorage.setItem(seededFlagKey, '1')
+      } catch (error) {
+        console.error('Failed to seed demo saved sessions:', error)
+      }
+    },
+
     persistSavedSessions() {
       try {
-        localStorage.setItem('telawa.savedSessions', JSON.stringify(this.savedSessions))
+        localStorage.setItem(this.savedSessionsStorageKey(), JSON.stringify(this.savedSessions))
       } catch (e) {
         console.error('Failed to save sessions:', e)
       }
@@ -3151,7 +3298,8 @@ export default {
 
     loadSavedSessions() {
       try {
-        const saved = localStorage.getItem('telawa.savedSessions')
+        this.ensureSeededSavedSessions()
+        const saved = localStorage.getItem(this.savedSessionsStorageKey())
         if (saved) {
           this.savedSessions = JSON.parse(saved)
         }
@@ -6966,7 +7114,12 @@ export default {
     },
 
     loadSavedSessions() {
-      try { this.savedSessions = JSON.parse(localStorage.getItem('telawa.savedSessions') || '[]') } catch { this.savedSessions = [] }
+      try {
+        this.ensureSeededSavedSessions()
+        this.savedSessions = JSON.parse(localStorage.getItem(this.savedSessionsStorageKey()) || '[]')
+      } catch {
+        this.savedSessions = []
+      }
     },
 
     loadSm2() {
@@ -7545,20 +7698,31 @@ export default {
 
 /* Fix close button */
 .tools-x {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--surface);
+  border: 1px solid rgba(154, 103, 56, 0.28);
+  background: rgba(255, 253, 249, 0.98);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  color: #5c4633;
+  box-shadow: 0 10px 24px rgba(61, 40, 20, 0.08);
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.tools-x-glyph {
+  display: inline-block;
+  font-size: 1.55rem;
+  line-height: 1;
+  font-weight: 500;
+  transform: translateY(-1px);
 }
 
 .tools-x:hover {
-  background: var(--accent-light);
+  border-color: rgba(154, 103, 56, 0.45);
+  background: rgba(248, 236, 222, 0.98);
   transform: rotate(90deg);
 }
 
@@ -11899,7 +12063,7 @@ export default {
   backdrop-filter: blur(14px);
   transform: translateX(100%);
   transition: transform 0.25s ease, visibility 0.25s ease;
-  z-index: 60;
+  z-index: 1100;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
@@ -11930,11 +12094,10 @@ export default {
 
 body.has-navbar .tools {
   top: 0;
-  /* Still 0, but adjust internal spacing */
 }
 
 body.has-navbar .tools-top {
-  padding-top: calc(18px + var(--navbar-height, 0px));
+  padding-top: calc(18px + env(safe-area-inset-top, 0px));
 }
 
 .tools.open {
@@ -11947,7 +12110,7 @@ body.has-navbar .tools-top {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 59;
+  z-index: 1099;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
@@ -13184,24 +13347,13 @@ html {
   pointer-events: none;
 }
 
-.mode-radio-dot {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(154, 103, 56, 0.52);
-  background: rgba(255, 255, 255, 0.9);
-  position: relative;
-  flex: 0 0 auto;
-  transition: all 0.18s ease;
-}
-
-.mode-radio-dot::after {
-  content: "";
-  position: absolute;
-  inset: 2px;
-  border-radius: 50%;
-  background: transparent;
-  transition: background 0.18s ease;
+.mode-radio-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  color: rgba(154, 103, 56, 0.72);
+  transition: color 0.18s ease, transform 0.18s ease;
 }
 
 .mode-radio.active {
@@ -13209,12 +13361,9 @@ html {
   background: rgba(248, 236, 222, 0.95);
 }
 
-.mode-radio.active .mode-radio-dot {
-  border-color: rgba(154, 103, 56, 0.86);
-}
-
-.mode-radio.active .mode-radio-dot::after {
-  background: rgba(154, 103, 56, 0.86);
+.mode-radio.active .mode-radio-icon {
+  color: #2f8f52;
+  transform: scale(1.05);
 }
 
 .mode-radio:hover {
@@ -13878,7 +14027,7 @@ html {
   backdrop-filter: blur(14px);
   transform: translateX(100%);
   transition: transform 0.25s ease, visibility 0.25s ease;
-  z-index: 60;
+  z-index: 1100;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
@@ -13894,7 +14043,7 @@ html {
   inset: 0;
   background: rgba(15, 12, 8, 0.35);
   backdrop-filter: blur(1px);
-  z-index: 59;
+  z-index: 1099;
   touch-action: none;
 }
 
@@ -13931,17 +14080,26 @@ html {
 }
 
 .tools-x {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 14px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(154, 103, 56, 0.28);
+  background: rgba(255, 252, 247, 0.96);
   cursor: pointer;
-  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #5c4633;
+  box-shadow: 0 8px 24px rgba(61, 40, 20, 0.08);
+  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 140ms ease;
+}
+
+.tools-x-glyph {
+  display: inline-block;
+  font-size: 1.6rem;
   line-height: 1;
-  color: rgba(0, 0, 0, 0.7);
-  box-shadow: var(--shadow-sm);
-  transition: transform 140ms ease, box-shadow 140ms ease;
+  font-weight: 500;
+  transform: translateY(-1px);
 }
 
 .tools-tabs {
@@ -16468,6 +16626,12 @@ body>.navbar+.app .main.container {
   box-shadow: none;
 }
 
+[data-theme="dark"] .tools-x {
+  color: #f5e8d8;
+  border-color: rgba(229, 197, 160, 0.32);
+  background: rgba(26, 22, 18, 0.96);
+}
+
 [data-theme="dark"] .sheet-toggle {
   background: rgba(255, 255, 255, 0.035);
 }
@@ -16791,13 +16955,12 @@ body>.navbar+.app .main.container {
   border-color: rgba(208, 160, 107, 0.4);
 }
 
-[data-theme="dark"] .mode-radio-dot {
-  background: rgba(12, 11, 10, 0.9);
-  border-color: rgba(208, 160, 107, 0.7);
+[data-theme="dark"] .mode-radio-icon {
+  color: rgba(229, 197, 160, 0.82);
 }
 
-[data-theme="dark"] .mode-radio.active .mode-radio-dot::after {
-  background: rgba(208, 160, 107, 0.9);
+[data-theme="dark"] .mode-radio.active .mode-radio-icon {
+  color: #7fe09f;
 }
 
 [data-theme="dark"] .active-techniques-section {
@@ -18247,6 +18410,10 @@ body>.navbar+.app .main.container {
   padding: 0 10px 10px;
 }
 
+.quick-font-controls {
+  min-width: min(220px, 100%);
+}
+
 .session-quickstart-card {
   display: flex;
   gap: 16px;
@@ -18280,6 +18447,59 @@ body>.navbar+.app .main.container {
 }
 
 @media (max-width: 768px) {
+  .tools-top {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    backdrop-filter: blur(16px);
+    background: rgba(250, 245, 238, 0.94);
+  }
+
+  [data-theme="dark"] .tools-top {
+    background: rgba(18, 16, 13, 0.94);
+  }
+
+  .tools-topbar {
+    align-items: flex-start;
+  }
+
+  .action-buttons-group {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .action-btn,
+  .action-icon-btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .action-btn-primary,
+  .action-btn-exit {
+    grid-column: 1 / -1;
+  }
+
+  .workspace-quick-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0;
+  }
+
+  .workspace-quick-controls .toolbar-chip,
+  .quick-font-controls,
+  .quick-font-dropdown,
+  .quick-font-dropdown .font-dropdown-trigger {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .quick-font-controls {
+    grid-column: 1 / -1;
+  }
+
   .session-quickstart-card {
     flex-direction: column;
     align-items: stretch;

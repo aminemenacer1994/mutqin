@@ -1,5 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
-    <memorisation :auth='@json(['check' => Auth::check(), 'id' => Auth::id()])'></memorisation>
+    @php
+        $memorisationAuth = [
+            'check' => Auth::check(),
+            'id' => Auth::id(),
+            'email' => Auth::user()?->email,
+            'name' => Auth::user()?->name,
+        ];
+    @endphp
+
+    <memorisation :auth='@json($memorisationAuth)'></memorisation>
 @endsection
