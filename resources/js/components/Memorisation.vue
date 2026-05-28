@@ -379,6 +379,10 @@
               type="button">
               <i class="bi bi-clock-history"></i> Saved
             </button>
+            <button v-if="isLoggedIn" :class="{ active: tab === 'stats' }" @click.prevent="setActiveTab('stats')" title="Session stats"
+              type="button">
+              <i class="bi bi-bar-chart-line"></i> Stats
+            </button>
             <!-- <button :class="{ active: tab === 'settings' }" @click.prevent="setActiveTab('settings')" type="button">
               <i class="bi bi-gear"></i> Settings
             </button> -->
@@ -701,8 +705,8 @@
                 <p>No saved sessions yet</p>
                 <span>Save your current session to get started</span>
               </div>
-                <div v-else class="sessions-list">
-                  <div v-for="session in savedSessions" :key="session.id" class="session-item">
+              <div v-else class="sessions-list">
+                <div v-for="session in savedSessions" :key="session.id" class="session-item">
                   <div class="session-info" @click="loadSavedSession(session.id)">
                     <div class="session-name">
                       <i class="bi bi-bookmark-fill"></i>
@@ -717,10 +721,54 @@
                       <span><i class="bi bi-clock"></i> {{ formatDate(session.savedAt) }}</span>
                     </div>
                   </div>
-                  <button class="delete-btn" @click.stop="deleteSavedSession(session.id)" title="Delete session">
-                    <i class="bi bi-trash3"></i>
-                  </button>
+                  <div class="session-actions">
+                    <div class="session-export-group">
+                      <button
+                        class="session-export-btn"
+                        type="button"
+                        @click.stop="exportSavedSession(session.id, 'json')"
+                        :disabled="isExportingSession(session.id)"
+                        :title="isExportingSession(session.id) ? 'Exporting session' : 'Export session as JSON'"
+                      >
+                        <i class="bi" :class="isExportingSession(session.id) ? 'bi-arrow-repeat spin' : 'bi-filetype-json'"></i>
+                        <span>JSON</span>
+                      </button>
+                      <button
+                        class="session-export-btn"
+                        type="button"
+                        @click.stop="exportSavedSession(session.id, 'pdf')"
+                        :disabled="isExportingSession(session.id)"
+                        :title="isExportingSession(session.id) ? 'Exporting session' : 'Export session as PDF'"
+                      >
+                        <i class="bi" :class="isExportingSession(session.id) ? 'bi-arrow-repeat spin' : 'bi-filetype-pdf'"></i>
+                        <span>PDF</span>
+                      </button>
+                      <button
+                        class="session-export-btn"
+                        type="button"
+                        @click.stop="exportSavedSession(session.id, 'word')"
+                        :disabled="isExportingSession(session.id)"
+                        :title="isExportingSession(session.id) ? 'Exporting session' : 'Export session as Word'"
+                      >
+                        <i class="bi" :class="isExportingSession(session.id) ? 'bi-arrow-repeat spin' : 'bi-filetype-doc'"></i>
+                        <span>Word</span>
+                      </button>
+                    </div>
+                    <button class="delete-btn" @click.stop="deleteSavedSession(session.id)" title="Delete session">
+                      <i class="bi bi-trash3"></i>
+                    </button>
+                  </div>
                 </div>
+              </div>
+              <div v-if="activeExportErrorSessionId" class="export-error-card">
+                <div>
+                  <strong>Export failed</strong>
+                  <p>{{ exportErrorMessage }}</p>
+                </div>
+                <button type="button" class="session-export-btn" @click="retryFailedExport">
+                  <i class="bi bi-arrow-repeat"></i>
+                  <span>Retry</span>
+                </button>
               </div>
               <div v-if="hasVerses" class="save-section">
                 <div class="current-info">
@@ -733,6 +781,83 @@
                 <button class="save-btn" @click="saveCurrentSessionWithName()">
                   <i class="bi bi-save"></i> Save
                 </button>
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="isLoggedIn && tab === 'stats'" class="sheet">
+            <div class="stats-sessions-container">
+              <div class="saved-header">
+                <h3><i class="bi bi-bar-chart-line"></i> Your Progress</h3>
+                <p>Quick, calm insights from your saved memorisation sessions</p>
+              </div>
+              <div v-if="savedSessions.length === 0" class="empty-state">
+                <i class="bi bi-activity"></i>
+                <p>No stats yet</p>
+                <span>Save a session and you’ll see a simple summary here.</span>
+              </div>
+              <div v-else class="stats-panel">
+                <div v-if="savedSessions.length > 1" class="stats-session-picker">
+                  <button
+                    v-for="session in savedSessions"
+                    :key="`stats-${session.id}`"
+                    type="button"
+                    class="stats-session-pill"
+                    :class="{ active: selectedStatsSessionId === session.id }"
+                    @click="selectStatsSession(session.id)"
+                  >
+                    <strong>{{ session.name }}</strong>
+                    <span>{{ session.config?.chapterName || `Surah ${session.config?.chapterId || ''}` }}</span>
+                  </button>
+                </div>
+                <div v-if="selectedStatsSessionRecord" class="stats-detail">
+                  <div class="stats-detail-head stats-detail-head-hero">
+                    <div class="session-export-group">
+                      <button
+                        class="session-export-btn"
+                        type="button"
+                        @click="exportSavedSession(selectedStatsSessionRecord.id, 'json')"
+                        :disabled="isExportingSession(selectedStatsSessionRecord.id)"
+                        title="Export session as JSON"
+                      >
+                        <i class="bi" :class="isExportingSession(selectedStatsSessionRecord.id) ? 'bi-arrow-repeat spin' : 'bi-filetype-json'"></i>
+                        <span>{{ isExportingSession(selectedStatsSessionRecord.id) ? 'Exporting session...' : 'JSON' }}</span>
+                      </button>
+                      <button
+                        class="session-export-btn"
+                        type="button"
+                        @click="exportSavedSession(selectedStatsSessionRecord.id, 'pdf')"
+                        :disabled="isExportingSession(selectedStatsSessionRecord.id)"
+                        title="Export session as PDF"
+                      >
+                        <i class="bi" :class="isExportingSession(selectedStatsSessionRecord.id) ? 'bi-arrow-repeat spin' : 'bi-filetype-pdf'"></i>
+                        <span>PDF</span>
+                      </button>
+                      <button
+                        class="session-export-btn"
+                        type="button"
+                        @click="exportSavedSession(selectedStatsSessionRecord.id, 'word')"
+                        :disabled="isExportingSession(selectedStatsSessionRecord.id)"
+                        title="Export session as Word"
+                      >
+                        <i class="bi" :class="isExportingSession(selectedStatsSessionRecord.id) ? 'bi-arrow-repeat spin' : 'bi-filetype-doc'"></i>
+                        <span>Word</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="stats-grid stats-grid-hero">
+                    <div v-for="item in buildStatsBreakdown(selectedStatsSessionRecord)" :key="item.key" class="stats-card">
+                      <i class="bi stats-card-icon" :class="item.icon"></i>
+                      <em class="stats-card-value">{{ item.value }}</em>
+                      <span>{{ item.label }}</span>
+                    </div>
+                  </div>
+                  <div class="stats-detail-footer">
+                    <span>Saved {{ formatDate(selectedStatsSessionRecord.savedAt) }}</span>
+                    <span v-if="selectedStatsSessionRecord.archived">Archived auto-save</span>
+                    <span v-else>Manual save</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1151,6 +1276,15 @@ function deepClone(value) {
   return JSON.parse(JSON.stringify(rawValue))
 }
 
+function slugifySessionFilePart(value) {
+  return String(value || 'session')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60) || 'session'
+}
+
 function createCentralSessionState() {
   return {
     showSaveNameModal: false,
@@ -1404,6 +1538,14 @@ export default {
       offlineSurahs: [],
       reciters: [{ id: 7, name: 'Alafasy' }],
       savedSessions: [],
+      selectedStatsSessionId: '',
+      exportSessionState: {
+        activeSessionId: '',
+        activeFormat: '',
+        errorSessionId: '',
+        errorFormat: '',
+        errorMessage: ''
+      },
       selectedSessionId: '',
       sessionName: '',
 
@@ -1712,6 +1854,16 @@ export default {
 
     activeQueueEntry() {
       return this.queue?.[Math.max(0, Number(this.queueIndex || 0))] || null
+    },
+    selectedStatsSessionRecord() {
+      if (!this.savedSessions.length) return null
+      return this.savedSessions.find(session => session.id === this.selectedStatsSessionId) || this.savedSessions[0] || null
+    },
+    activeExportErrorSessionId() {
+      return this.exportSessionState.errorSessionId || ''
+    },
+    exportErrorMessage() {
+      return this.exportSessionState.errorMessage || 'Unable to export this session right now.'
     },
     chainingProgressLabel() {
       if (!this.chainingEnabled) return ''
@@ -2383,7 +2535,7 @@ export default {
     window.removeEventListener('storage', this.handleThemeStorageSync)
   },
     tab(newVal) {
-      if (!['tools', 'techniques', 'saved', 'settings'].includes(newVal)) {
+      if (!['tools', 'techniques', 'saved', 'stats', 'settings'].includes(newVal)) {
         this.tab = 'tools'
         return
       }
@@ -2597,6 +2749,64 @@ export default {
       return reciter ? reciter.name : 'Alafasy'
     },
 
+    buildCurrentSessionStatsSnapshot() {
+      const queue = Array.isArray(this.queue) ? this.queue : []
+      const currentIndex = Math.max(0, Number(this.queueIndex || 0))
+      const completedEntries = queue.slice(0, currentIndex)
+      const completedVerseKeys = new Set(completedEntries.map(item => item?.verse?.key || item?.key).filter(Boolean))
+      const activeVerseKey = this.effectiveActiveVerseKey || this.activeVerseKey || null
+      if (activeVerseKey) completedVerseKeys.add(activeVerseKey)
+      const versesRead = completedVerseKeys.size
+      const elapsedSeconds = this.sessionStartedAt
+        ? Math.max(0, Math.round((Number(this.statsTick || Date.now()) - Number(this.sessionStartedAt)) / 1000))
+        : 0
+      const repetitionsCompleted = Math.max(
+        Number(this.centralSession?.repetitionTimes || 0),
+        currentIndex
+      )
+      const weakVerses = Math.max(0, Number(this.sessionErrorCount || 0))
+      return {
+        verses_read: versesRead,
+        time_spent_seconds: elapsedSeconds,
+        repetitions_completed: repetitionsCompleted,
+        sessions_completed: Number(this.sessionCompleted ? 1 : 0),
+        session_flow_steps: Math.max(1, queue.length || (this.verses?.length || 0) || 1),
+        average_time_per_verse_seconds: versesRead > 0 ? Math.round(elapsedSeconds / versesRead) : 0,
+        weak_verses_encountered: weakVerses,
+        generated_at: new Date().toISOString()
+      }
+    },
+
+    normalizeSessionStats(stats = {}, fallbackConfig = {}) {
+      const rangeStart = Number(fallbackConfig?.rangeStart || 0)
+      const rangeEnd = Number(fallbackConfig?.rangeEnd || 0)
+      const totalVerses = rangeEnd >= rangeStart && rangeStart > 0 ? (rangeEnd - rangeStart + 1) : 0
+      const normalized = {
+        verses_read: Math.max(0, Number(stats?.verses_read || 0)),
+        time_spent_seconds: Math.max(0, Number(stats?.time_spent_seconds || 0)),
+        repetitions_completed: Math.max(0, Number(stats?.repetitions_completed || 0)),
+        sessions_completed: Math.max(0, Number(stats?.sessions_completed || 0)),
+        session_flow_steps: Math.max(1, Number(stats?.session_flow_steps || totalVerses || 1)),
+        average_time_per_verse_seconds: Math.max(0, Number(stats?.average_time_per_verse_seconds || 0)),
+        weak_verses_encountered: Math.max(0, Number(stats?.weak_verses_encountered || 0)),
+        generated_at: stats?.generated_at || null
+      }
+      if (!normalized.average_time_per_verse_seconds && normalized.verses_read > 0 && normalized.time_spent_seconds > 0) {
+        normalized.average_time_per_verse_seconds = Math.round(normalized.time_spent_seconds / normalized.verses_read)
+      }
+      return normalized
+    },
+
+    normalizeSavedSessionRecord(session) {
+      if (!session || typeof session !== 'object') return null
+      const normalized = {
+        ...session,
+        config: { ...(session.config || {}) }
+      }
+      normalized.stats = this.normalizeSessionStats(session.stats || {}, normalized.config)
+      return normalized
+    },
+
     buildSessionRecord(name, options = {}) {
       const { archived = false, autoSaved = false } = options
       return {
@@ -2605,6 +2815,7 @@ export default {
         archived: !!archived,
         autoSaved: !!autoSaved,
         savedAt: new Date().toISOString(),
+        stats: this.buildCurrentSessionStatsSnapshot(),
         config: {
           chapterId: this.chapterId,
           chapterName: this.currentChapter?.name_simple,
@@ -2632,13 +2843,23 @@ export default {
           currentTime: Number(this.currentTime || 0),
           playerVisible: !!this.playerVisible,
           audioSrc: this.audioElement?.currentSrc || ''
+        },
+        restore: {
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          continueSession: this.buildContinueSessionPayload(),
+          sessionExitSnapshot: this.buildSessionExitSnapshot(),
+          centralSession: deepClone(this.centralSession),
+          currentMode: this.currentMode,
+          theme: this.theme
         }
       }
     },
 
     addSavedSession(session) {
-      this.savedSessions.unshift(session)
+      this.savedSessions.unshift(this.normalizeSavedSessionRecord(session))
       if (this.savedSessions.length > 20) this.savedSessions = this.savedSessions.slice(0, 20)
+      if (!this.selectedStatsSessionId && this.savedSessions[0]?.id) this.selectedStatsSessionId = this.savedSessions[0].id
       this.persistSavedSessions()
       return session
     },
@@ -3131,6 +3352,9 @@ export default {
     deleteSavedSession(sessionId) {
       if (confirm('Delete this saved session? This action cannot be undone.')) {
         this.savedSessions = this.savedSessions.filter(s => s.id !== sessionId)
+        if (this.selectedStatsSessionId === sessionId) {
+          this.selectedStatsSessionId = this.savedSessions[0]?.id || ''
+        }
         this.persistSavedSessions()
         this.showBanner('Session deleted', 'info', 1500)
       }
@@ -3138,6 +3362,9 @@ export default {
 
     performDeleteSavedSession(sessionId) {
       this.savedSessions = this.savedSessions.filter(s => s.id !== sessionId)
+      if (this.selectedStatsSessionId === sessionId) {
+        this.selectedStatsSessionId = this.savedSessions[0]?.id || ''
+      }
       this.persistSavedSessions()
       this.showBanner('Session deleted', 'info', 1500)
     },
@@ -3301,12 +3528,286 @@ export default {
         this.ensureSeededSavedSessions()
         const saved = localStorage.getItem(this.savedSessionsStorageKey())
         if (saved) {
-          this.savedSessions = JSON.parse(saved)
+          this.savedSessions = JSON.parse(saved).map(session => this.normalizeSavedSessionRecord(session)).filter(Boolean)
+          if (!this.savedSessions.some(session => session.id === this.selectedStatsSessionId)) {
+            this.selectedStatsSessionId = this.savedSessions[0]?.id || ''
+          }
         }
       } catch (e) {
         console.error('Failed to load saved sessions:', e)
         this.savedSessions = []
+        this.selectedStatsSessionId = ''
       }
+    },
+
+    selectStatsSession(sessionId) {
+      this.selectedStatsSessionId = sessionId
+    },
+
+    buildStatsBreakdown(session) {
+      const stats = this.normalizeSessionStats(session?.stats || {}, session?.config || {})
+      return [
+        { key: 'verses_read', label: 'Ayahs you reviewed', value: `${stats.verses_read}`, icon: 'bi-book' },
+        { key: 'time_spent', label: 'Time memorising', value: this.formatTime(stats.time_spent_seconds), icon: 'bi-clock-history' },
+        { key: 'repetitions_completed', label: 'Repeats completed', value: `${stats.repetitions_completed}`, icon: 'bi-arrow-repeat' },
+        { key: 'sessions_completed', label: 'Runs completed', value: `${stats.sessions_completed}`, icon: 'bi-check2-circle' },
+        { key: 'average_time_per_verse', label: 'Average time per ayah', value: this.formatTime(stats.average_time_per_verse_seconds), icon: 'bi-stopwatch' },
+        { key: 'weak_verses_encountered', label: 'Ayahs you struggled with', value: `${stats.weak_verses_encountered}`, icon: 'bi-fire' }
+      ]
+    },
+
+    buildStatsSummary(session) {
+      const stats = this.normalizeSessionStats(session?.stats || {}, session?.config || {})
+      const verses = Number(stats.verses_read || 0)
+      const time = Number(stats.time_spent_seconds || 0)
+      const reps = Number(stats.repetitions_completed || 0)
+      const struggled = Number(stats.weak_verses_encountered || 0)
+      const parts = []
+
+      if (verses > 0) parts.push(`You reviewed ${verses} ayah${verses === 1 ? '' : 's'}`)
+      if (time > 0) parts.push(`in ${this.formatTime(time)}`)
+      if (reps > 0) parts.push(`with ${reps} repeat${reps === 1 ? '' : 's'}`)
+      if (!parts.length) return 'Practice and save your session to build your progress summary.'
+
+      const base = parts.join(' ')
+      if (struggled > 0) return `${base}. ${struggled} ayah${struggled === 1 ? '' : 's'} needed extra attention.`
+      return `${base}.`
+    },
+
+    getSessionStatDisplay(session, key) {
+      const stats = this.normalizeSessionStats(session?.stats || {}, session?.config || {})
+      if (key === 'verses_read') return `${stats.verses_read} verses read`
+      if (key === 'time_spent') return `${this.formatTime(stats.time_spent_seconds)} spent`
+      return ''
+    },
+
+    isExportingSession(sessionId, format = '') {
+      if (this.exportSessionState.activeSessionId !== sessionId) return false
+      if (!format) return true
+      return this.exportSessionState.activeFormat === format
+    },
+
+    validateSessionForExport(session) {
+      const errors = []
+      if (!session?.id) errors.push('Missing session id.')
+      if (!session?.name) errors.push('Missing session name.')
+      if (!session?.config?.chapterId) errors.push('Missing surah selection.')
+      if (!Number(session?.config?.rangeStart) || !Number(session?.config?.rangeEnd)) errors.push('Missing ayah range.')
+      if (!session?.savedAt) errors.push('Missing saved timestamp.')
+      return {
+        ok: errors.length === 0,
+        message: errors[0] || ''
+      }
+    },
+
+    buildSessionExportPayload(session) {
+      const normalizedSession = this.normalizeSavedSessionRecord(session)
+      return {
+        version: 1,
+        app: 'mutqin',
+        exportedAt: new Date().toISOString(),
+        session: normalizedSession,
+        restore: {
+          ...(normalizedSession?.restore || {}),
+          savedSession: normalizedSession,
+          uiState: {
+            theme: this.theme
+          }
+        }
+      }
+    },
+
+    buildSessionExportFilename(session, format = 'json') {
+      const safeName = slugifySessionFilePart(session?.name || 'session')
+      const stamp = new Date(session?.savedAt || Date.now()).toISOString().slice(0, 10)
+      const suffix = `${safeName}_${stamp}_mutqin`
+      if (format === 'word') return `${suffix}.doc`
+      if (format === 'pdf') return `${suffix}.pdf`
+      return `${suffix}.json`
+    },
+
+    triggerJsonDownload(filename, payload) {
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = filename
+      document.body.appendChild(anchor)
+      anchor.click()
+      document.body.removeChild(anchor)
+      window.setTimeout(() => URL.revokeObjectURL(url), 500)
+    },
+
+    triggerWordDownload(filename, payload) {
+      // Lightweight "Word" export: an HTML document wrapped with a .doc extension.
+      // This stays dependency-free and is good enough for sharing/backup.
+      const html = this.buildSessionExportHtml(payload)
+      const blob = new Blob([html], { type: 'application/msword' })
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = filename
+      document.body.appendChild(anchor)
+      anchor.click()
+      document.body.removeChild(anchor)
+      window.setTimeout(() => URL.revokeObjectURL(url), 500)
+    },
+
+    triggerPdfExport(filename, payload) {
+      // PDF export uses the browser print pipeline (user can "Save as PDF").
+      // We set the document title for a sensible default file name.
+      const html = this.buildSessionExportHtml(payload)
+      const w = window.open('', '_blank', 'noopener,noreferrer,width=900,height=700')
+      if (!w) throw new Error('Popup blocked')
+      const title = filename.replace(/\\.pdf$/i, '')
+      w.document.open()
+      w.document.write(html.replace('{{__TITLE__}}', this.escapeHtml(title)))
+      w.document.close()
+      w.focus()
+      // Wait a tick for layout; then print.
+      window.setTimeout(() => {
+        try {
+          w.print()
+        } finally {
+          // Close after the print dialog is opened; safe across browsers.
+          window.setTimeout(() => w.close(), 400)
+        }
+      }, 350)
+    },
+
+    escapeHtml(value) {
+      return String(value || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;')
+    },
+
+    buildSessionExportHtml(payload) {
+      const session = payload?.session || {}
+      const config = session?.config || {}
+      const stats = this.normalizeSessionStats(session?.stats || {}, config)
+
+      const title = this.escapeHtml(session?.name || 'Session Export')
+      const subtitleParts = [
+        config?.chapterName || (config?.chapterId ? `Surah ${config.chapterId}` : ''),
+        (config?.rangeStart && config?.rangeEnd) ? `Ayahs ${config.rangeStart}-${config.rangeEnd}` : ''
+      ].filter(Boolean)
+      const subtitle = this.escapeHtml(subtitleParts.join(' · '))
+
+      const rows = [
+        { label: 'Verses read', value: `${stats.verses_read}` },
+        { label: 'Time spent', value: this.formatTime(stats.time_spent_seconds) },
+        { label: 'Repetitions completed', value: `${stats.repetitions_completed}` },
+        { label: 'Sessions completed', value: `${stats.sessions_completed}` },
+        { label: 'Average time per verse', value: this.formatTime(stats.average_time_per_verse_seconds) },
+        { label: 'Struggled ayahs', value: `${stats.weak_verses_encountered}` }
+      ]
+
+      const meta = [
+        { label: 'Saved', value: session?.savedAt ? new Date(session.savedAt).toLocaleString('en-GB') : '' },
+        { label: 'Exported', value: payload?.exportedAt ? new Date(payload.exportedAt).toLocaleString('en-GB') : '' }
+      ].filter(r => r.value)
+
+      const rowsHtml = rows.map(r => `<tr><td>${this.escapeHtml(r.label)}</td><td>${this.escapeHtml(r.value)}</td></tr>`).join('')
+      const metaHtml = meta.map(r => `<span><strong>${this.escapeHtml(r.label)}:</strong> ${this.escapeHtml(r.value)}</span>`).join('')
+
+      return `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{__TITLE__}}</title>
+    <style>
+      :root { color-scheme: light; }
+      body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin: 32px; color: #1d1d1d; }
+      h1 { margin: 0; font-size: 22px; letter-spacing: -0.01em; }
+      p { margin: 6px 0 0 0; color: #555; }
+      .meta { margin-top: 10px; color: #666; font-size: 12px; display: flex; gap: 12px; flex-wrap: wrap; }
+      .card { margin-top: 18px; border: 1px solid #e7e1d9; border-radius: 14px; padding: 16px; background: #fffaf3; }
+      table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+      td { padding: 10px 8px; border-bottom: 1px solid #eee7df; vertical-align: top; }
+      td:first-child { width: 55%; color: #444; }
+      td:last-child { text-align: right; font-weight: 600; }
+      .foot { margin-top: 18px; font-size: 11px; color: #777; }
+      @media print { body { margin: 14mm; } .foot { display: none; } }
+    </style>
+  </head>
+  <body>
+    <h1>${title}</h1>
+    ${subtitle ? `<p>${subtitle}</p>` : ''}
+    ${metaHtml ? `<div class="meta">${metaHtml}</div>` : ''}
+    <div class="card">
+      <table aria-label="Session stats">
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
+    </div>
+    <div class="foot">Mutqin session export</div>
+  </body>
+</html>`
+    },
+
+    async exportSavedSession(sessionId, format = 'json') {
+      const session = this.savedSessions.find(item => item.id === sessionId)
+      if (!session) return
+      const validation = this.validateSessionForExport(session)
+      if (!validation.ok) {
+        this.exportSessionState = {
+          activeSessionId: '',
+          activeFormat: '',
+          errorSessionId: sessionId,
+          errorFormat: format,
+          errorMessage: validation.message
+        }
+        this.showBanner('Session export blocked: incomplete session data.', 'error', 2600)
+        return
+      }
+
+      this.exportSessionState = {
+        activeSessionId: sessionId,
+        activeFormat: format,
+        errorSessionId: '',
+        errorFormat: '',
+        errorMessage: ''
+      }
+
+      try {
+        await new Promise(resolve => window.setTimeout(resolve, 120))
+        const payload = this.buildSessionExportPayload(session)
+        if (format === 'word') {
+          this.triggerWordDownload(this.buildSessionExportFilename(session, 'word'), payload)
+        } else if (format === 'pdf') {
+          this.triggerPdfExport(this.buildSessionExportFilename(session, 'pdf'), payload)
+        } else {
+          this.triggerJsonDownload(this.buildSessionExportFilename(session, 'json'), payload)
+        }
+        this.exportSessionState = {
+          activeSessionId: '',
+          activeFormat: '',
+          errorSessionId: '',
+          errorFormat: '',
+          errorMessage: ''
+        }
+        this.showBanner('Session export complete', 'success', 1800)
+      } catch (error) {
+        console.error('Failed to export session:', error)
+        this.exportSessionState = {
+          activeSessionId: '',
+          activeFormat: '',
+          errorSessionId: sessionId,
+          errorFormat: format,
+          errorMessage: 'Something went wrong while creating the export file.'
+        }
+        this.showBanner('Failed to export session', 'error', 2600)
+      }
+    },
+
+    retryFailedExport() {
+      if (!this.exportSessionState.errorSessionId) return
+      this.exportSavedSession(this.exportSessionState.errorSessionId, this.exportSessionState.errorFormat || 'json')
     },
 
     formatDate(dateString) {
@@ -4447,7 +4948,7 @@ export default {
 
     setActiveTab(tabName) {
       // Validate tab name
-      const validTabs = ['tools', 'techniques', 'saved', 'settings']
+      const validTabs = ['tools', 'techniques', 'saved', 'stats', 'settings']
       if (!validTabs.includes(tabName)) {
         console.warn(`Invalid tab: ${tabName}, defaulting to tools`)
         this.tab = 'tools'
@@ -4461,6 +4962,12 @@ export default {
       }
       if (this.tab === 'saved') {
         this.loadSavedSessions()
+      }
+      if (this.tab === 'stats') {
+        this.loadSavedSessions()
+        if (!this.selectedStatsSessionId && this.savedSessions[0]?.id) {
+          this.selectedStatsSessionId = this.savedSessions[0].id
+        }
       }
 
       // Store and persist
@@ -4514,7 +5021,7 @@ export default {
           }
         }
         // Update to include 'techniques' as valid tab
-        this.tab = ['tools', 'techniques', 'saved', 'settings'].includes(this.centralSession.activeTab)
+        this.tab = ['tools', 'techniques', 'saved', 'stats', 'settings'].includes(this.centralSession.activeTab)
           ? this.centralSession.activeTab
           : 'tools'
         this.tajweedEnabled = !!this.centralSession.tajweedEnabled
@@ -4538,7 +5045,7 @@ export default {
         this.centralSession = {
           ...this.centralSession,
           // Update to include 'techniques' as valid tab
-          activeTab: ['tools', 'techniques', 'saved', 'settings'].includes(this.tab) ? this.tab : 'tools',
+          activeTab: ['tools', 'techniques', 'saved', 'stats', 'settings'].includes(this.tab) ? this.tab : 'tools',
           tajweedEnabled: !!this.tajweedEnabled,
           focusModeEnabled: !!this.focusModeEnabled,
           blurModeEnabled: !!this.blurModeEnabled,
@@ -6873,7 +7380,7 @@ export default {
           // Only apply if state exists
           if (state) {
             this.theme = state.theme || this.theme
-            this.tab = ['tools', 'techniques', 'saved', 'settings'].includes(state.tab) ? state.tab : 'tools'
+            this.tab = ['tools', 'techniques', 'saved', 'stats', 'settings'].includes(state.tab) ? state.tab : 'tools'
             this.currentMode = state.currentMode || 'beginner'
             this.flowStep = ['learn', 'practice', 'recall'].includes(state.flowStep)
               ? state.flowStep
@@ -7117,8 +7624,14 @@ export default {
       try {
         this.ensureSeededSavedSessions()
         this.savedSessions = JSON.parse(localStorage.getItem(this.savedSessionsStorageKey()) || '[]')
+          .map(session => this.normalizeSavedSessionRecord(session))
+          .filter(Boolean)
+        if (!this.savedSessions.some(session => session.id === this.selectedStatsSessionId)) {
+          this.selectedStatsSessionId = this.savedSessions[0]?.id || ''
+        }
       } catch {
         this.savedSessions = []
+        this.selectedStatsSessionId = ''
       }
     },
 
@@ -10858,8 +11371,8 @@ export default {
 
 .saved-header h3 {
   margin: 0 0 4px 0;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 650;
   color: var(--text);
   display: flex;
   align-items: center;
@@ -10868,7 +11381,8 @@ export default {
 
 .saved-header p {
   margin: 0;
-  font-size: 0.7rem;
+  font-size: 0.82rem;
+  line-height: 1.35;
   color: var(--text-muted);
 }
 
@@ -11919,6 +12433,232 @@ export default {
   display: flex;
   gap: 6px;
   flex-shrink: 0;
+}
+
+.session-export-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.session-export-btn {
+  min-height: 32px;
+  padding: 0 11px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.session-export-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+  background: var(--accent-light);
+}
+
+.session-export-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.spin {
+  animation: spin360 0.9s linear infinite;
+}
+
+@keyframes spin360 {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.export-error-card {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(220, 53, 69, 0.18);
+  background: rgba(220, 53, 69, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.export-error-card strong {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text);
+}
+
+.export-error-card p {
+  margin: 4px 0 0;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.stats-sessions-container {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 242, 0.62));
+  box-shadow: var(--shadow-sm);
+}
+
+.stats-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.stats-session-picker,
+.stats-detail-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.stats-session-pill {
+  min-width: 0;
+  padding: 8px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: grid;
+  gap: 3px;
+  text-align: left;
+}
+
+.stats-session-pill strong,
+.stats-detail-head h4 {
+  font-size: 0.84rem;
+  color: var(--text);
+}
+
+.stats-session-pill span,
+.stats-detail-head p,
+.stats-detail-footer {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.stats-summary {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 252, 246, 0.7);
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.stats-session-pill:hover,
+.stats-session-pill.active {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.stats-detail {
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 248, 242, 0.72));
+  box-shadow: var(--shadow-sm);
+}
+
+.stats-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.stats-detail-head-hero {
+  margin-bottom: 12px;
+}
+
+.stats-detail-head h4 {
+  margin: 0 0 4px;
+  font-size: 0.98rem;
+}
+
+.stats-detail-head p {
+  margin: 0;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.stats-grid-hero {
+  gap: 12px;
+}
+
+@media (max-width: 520px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-detail-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .session-export-group {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+.stats-card {
+  padding: 14px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(255, 252, 246, 0.82);
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 8px;
+  text-align: center;
+  min-height: 132px;
+}
+
+.stats-card-icon {
+  font-size: 1.55rem;
+  color: var(--accent);
+}
+
+.stats-card span {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+.stats-card-value {
+  font-style: normal;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1;
+}
+
+.stats-detail-footer {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
 }
 
 .session-load-btn,
@@ -16787,6 +17527,7 @@ body>.navbar+.app .main.container {
 [data-theme="dark"] .player-loop-chip,
 [data-theme="dark"] .word-item,
 [data-theme="dark"] .saved-sessions-container .delete-btn,
+[data-theme="dark"] .session-export-btn,
 [data-theme="dark"] .font-dropdown-trigger,
 [data-theme="dark"] .font-option,
 [data-theme="dark"] .mode-radio,
@@ -16880,6 +17621,29 @@ body>.navbar+.app .main.container {
 [data-theme="dark"] .save-section {
   background: transparent;
   border-color: rgba(255, 236, 216, 0.1);
+}
+
+[data-theme="dark"] .stats-detail,
+[data-theme="dark"] .stats-card {
+  background: rgba(255, 247, 236, 0.06);
+  border-color: rgba(255, 236, 216, 0.1);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .stats-session-pill {
+  background: rgba(255, 247, 236, 0.08);
+  border-color: rgba(255, 236, 216, 0.12);
+}
+
+[data-theme="dark"] .stats-session-pill:hover,
+[data-theme="dark"] .stats-session-pill.active {
+  background: rgba(208, 160, 107, 0.14);
+  border-color: rgba(208, 160, 107, 0.24);
+}
+
+[data-theme="dark"] .export-error-card {
+  background: rgba(220, 53, 69, 0.12);
+  border-color: rgba(220, 53, 69, 0.24);
 }
 
 [data-theme="dark"] .current-info {
@@ -18273,6 +19037,17 @@ body>.navbar+.app .main.container {
   .reading-aid-grid,
   .session-tools-grid {
     grid-template-columns: 1fr;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-detail-head,
+  .export-error-card,
+  .save-section {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .verse-card,
