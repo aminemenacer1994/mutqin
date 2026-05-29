@@ -25,7 +25,15 @@ class LoginController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/home';
+    protected $redirectTo = '/memorisation';
+
+    /**
+     * Where to redirect users after logout.
+     */
+    protected function loggedOut($request)
+    {
+        return redirect('/memorisation');
+    }
 
     /**
      * Create a new controller instance.

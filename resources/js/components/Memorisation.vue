@@ -123,6 +123,9 @@
                   <button class="action-icon-btn" @click="toggleKeyboardShortcuts" title="Keyboard shortcuts">
                     <i class="bi bi-keyboard"></i>
                   </button>
+                  <button class="action-icon-btn" @click="openOnboardingModal(true)" title="How Mutqin works">
+                    <i class="bi bi-question-circle"></i>
+                  </button>
                   <button class="action-btn action-btn-secondary" type="button" @click="openAdvancedControls"
                     title="Open session controls">
                     <i class="bi bi-sliders"></i>
@@ -226,29 +229,35 @@
             </hr>
             </div>
             <div v-show="!mainCardCollapsed" class="workspace-quick-controls" aria-label="Quick reading controls">
-              <button class="toolbar-chip" :class="{ active: showTranslation }" @click="toggleReadingOption('translation')" type="button">Translation</button>
-              <button class="toolbar-chip" :class="{ active: showTransliteration }" @click="toggleReadingOption('transliteration')" type="button">Transliteration</button>
-              <button class="toolbar-chip" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')" type="button">Word by word</button>
-              <button class="toolbar-chip" :class="{ active: wordByWordAudioEnabled }" @click="toggleWordAudio()" type="button">Word audio</button>
-              <button class="toolbar-chip" :class="{ active: tajweedEnabled }" @click="toggleTajweed" type="button">Tajweed</button>
-              <div class="quick-font-controls">
-                <div class="font-dropdown quick-font-dropdown">
-                  <button class="toolbar-chip font-dropdown-trigger" @click.stop="toggleFontDropdown" type="button" title="Change Quran font">
-                    <span>Font: {{ getCurrentFontLabel() }}</span>
-                    <i class="bi bi-chevron-down" :class="{ rotated: fontDropdownOpen }"></i>
-                  </button>
-                  <transition name="dropdown-fade">
-                    <div v-if="fontDropdownOpen" class="font-dropdown-menu quick-font-menu">
-                      <button v-for="font in quranFontOptions" :key="font.value" class="font-option"
-                        :class="{ active: quranFont === font.value }" @click="selectFont(font.value)">
-                        <i class="bi" :class="getFontIcon(font.value)"></i>
-                        <span>{{ font.label }}</span>
-                        <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon"></i>
-                      </button>
-                    </div>
-                  </transition>
+              <details class="quick-pill-group" open>
+                <summary>
+                  <span>Reading aids</span>
+                  <i class="bi bi-chevron-down quick-pill-summary-icon"></i>
+                </summary>
+                <div class="quick-pill-group-list">
+                  <button class="toolbar-chip" :class="{ active: showTranslation }" @click="toggleReadingOption('translation')" type="button">Translation</button>
+                  <button class="toolbar-chip" :class="{ active: showTransliteration }" @click="toggleReadingOption('transliteration')" type="button">Transliteration</button>
+                  <button class="toolbar-chip" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')" type="button">Word by word</button>
+                  <button class="toolbar-chip" :class="{ active: wordByWordAudioEnabled }" @click="toggleWordAudio()" type="button">Word audio</button>
+                  <button class="toolbar-chip" :class="{ active: tajweedEnabled }" @click="toggleTajweed" type="button">Tajweed</button>
+                  <div class="font-dropdown quick-font-dropdown">
+                    <button class="toolbar-chip font-dropdown-trigger" @click.stop="toggleFontDropdown" type="button" title="Change Quran font">
+                      <span>Font: {{ getCurrentFontLabel() }}</span>
+                      <i class="bi" :class="fontDropdownOpen ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                    </button>
+                    <transition name="dropdown-fade">
+                      <div v-if="fontDropdownOpen" class="font-dropdown-menu quick-font-menu">
+                        <button v-for="font in quranFontOptions" :key="font.value" class="font-option"
+                          :class="{ active: quranFont === font.value }" @click="selectFont(font.value)">
+                          <i class="bi" :class="getFontIcon(font.value)"></i>
+                          <span>{{ font.label }}</span>
+                          <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon"></i>
+                        </button>
+                      </div>
+                    </transition>
+                  </div>
                 </div>
-              </div>
+              </details>
             </div>
           </section>
 
@@ -387,9 +396,9 @@
               type="button">
               <i class="bi bi-clock-history"></i> Saved
             </button>
-            <button v-if="isLoggedIn" :class="{ active: tab === 'stats' }" @click.prevent="setActiveTab('stats')" title="Session stats"
+            <button v-if="isLoggedIn" :class="{ active: tab === 'stats' }" @click.prevent="setActiveTab('stats')" title="Session insights"
               type="button">
-              <i class="bi bi-bar-chart-line"></i> Stats
+              <i class="bi bi-bar-chart-line"></i> Insights
             </button>
             <!-- <button :class="{ active: tab === 'settings' }" @click.prevent="setActiveTab('settings')" type="button">
               <i class="bi bi-gear"></i> Settings
@@ -421,6 +430,13 @@
                       <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.name_simple }}</option>
                     </select>
                     <small class="field-hint">Pick the surah you want to work on.</small>
+                    <div class="setup-metric-row">
+                      <span><i class="bi bi-play-circle"></i> Session plays: {{ sessionPlayCountValue }}</span>
+                      <span><i class="bi bi-music-note-list"></i> Verse plays: {{ totalVersePlayCountValue }}</span>
+                    </div>
+                    <div v-if="sessionVersePlaySummary.length" class="setup-metric-detail" aria-label="Verse play counts">
+                      <span v-for="item in sessionVersePlaySummary" :key="item.key">{{ item.label }}: {{ item.count }}</span>
+                    </div>
                   </div>
                   <div class="field">
                     <label>Verse range</label>
@@ -511,10 +527,9 @@
                 </span>
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
-                    <label class="mode-radio" :class="{ active: focusModeEnabled }" @click.prevent="toggleFocusModeRadio">
-                      <input type="radio" name="focus-mode-state" aria-label="Use focus mode" :checked="focusModeEnabled" @change.prevent="toggleFocusModeRadio">
+                    <button type="button" class="mode-radio" :class="{ active: focusModeEnabled }" :aria-pressed="focusModeEnabled ? 'true' : 'false'" aria-label="Use focus mode" @click="toggleFocusModeRadio">
                       <i class="mode-radio-icon bi" :class="focusModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'" aria-hidden="true"></i>
-                    </label>
+                    </button>
                   </div>
                   <span class="st-chev" :class="{ open: sectionOpen.focus_mode }">
                     <i class="bi bi-chevron-down"></i>
@@ -557,10 +572,9 @@
                 </span>
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
-                    <label class="mode-radio" :class="{ active: blurModeEnabled }" @click.prevent="toggleBlurModeRadio">
-                      <input type="radio" name="blur-mode-state" aria-label="Use blur mode" :checked="blurModeEnabled" @change.prevent="toggleBlurModeRadio">
+                    <button type="button" class="mode-radio" :class="{ active: blurModeEnabled }" :aria-pressed="blurModeEnabled ? 'true' : 'false'" aria-label="Use blur mode" @click="toggleBlurModeRadio">
                       <i class="mode-radio-icon bi" :class="blurModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'" aria-hidden="true"></i>
-                    </label>
+                    </button>
                   </div>
                   <span class="st-chev" :class="{ open: sectionOpen.blur_mode }"><i
                       class="bi bi-chevron-down"></i></span>
@@ -601,10 +615,9 @@
                 </span>
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
-                    <label class="mode-radio" :class="{ active: chainingEnabled }" @click.prevent="toggleChainingRadio">
-                      <input type="radio" name="chaining-state" aria-label="Use chaining" :checked="chainingEnabled" @change.prevent="toggleChainingRadio">
+                    <button type="button" class="mode-radio" :class="{ active: chainingEnabled }" :aria-pressed="chainingEnabled ? 'true' : 'false'" aria-label="Use chaining" @click="toggleChainingRadio">
                       <i class="mode-radio-icon bi" :class="chainingEnabled ? 'bi-check-circle-fill' : 'bi-circle'" aria-hidden="true"></i>
-                    </label>
+                    </button>
                   </div>
                   <span class="st-chev" :class="{ open: sectionOpen.chaining }"><i
                       class="bi bi-chevron-down"></i></span>
@@ -667,10 +680,9 @@
                 </span>
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
-                    <label class="mode-radio" :class="{ active: anchorModeEnabled }" @click.prevent="toggleAnchorModeRadio">
-                      <input type="radio" name="anchor-mode-state" aria-label="Use anchor mode" :checked="anchorModeEnabled" @change.prevent="toggleAnchorModeRadio">
+                    <button type="button" class="mode-radio" :class="{ active: anchorModeEnabled }" :aria-pressed="anchorModeEnabled ? 'true' : 'false'" aria-label="Use anchor mode" @click="toggleAnchorModeRadio">
                       <i class="mode-radio-icon bi" :class="anchorModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'" aria-hidden="true"></i>
-                    </label>
+                    </button>
                   </div>
                   <span class="st-chev" :class="{ open: sectionOpen.anchor_mode }"><i
                       class="bi bi-chevron-down"></i></span>
@@ -746,7 +758,7 @@
                         @click.stop="exportSavedSession(session.id, 'pdf')"
                       >
                         <i class="bi" :class="isExportingSession(session.id, 'pdf') ? 'bi-arrow-repeat spin' : 'bi-filetype-pdf'"></i>
-                        <span>PDF</span>
+                        <span>{{ isExportingSession(session.id, 'pdf') ? 'Generating export…' : 'PDF' }}</span>
                       </button>
                       <button
                         type="button"
@@ -755,7 +767,7 @@
                         @click.stop="exportSavedSession(session.id, 'word')"
                       >
                         <i class="bi" :class="isExportingSession(session.id, 'word') ? 'bi-arrow-repeat spin' : 'bi-file-earmark-word'"></i>
-                        <span>Word</span>
+                        <span>{{ isExportingSession(session.id, 'word') ? 'Generating export…' : 'Word' }}</span>
                       </button>
                     </div>
                     <button class="delete-btn" @click.stop="deleteSavedSession(session.id)" title="Delete session">
@@ -792,12 +804,12 @@
           <div v-else-if="isLoggedIn && tab === 'stats'" class="sheet">
             <div class="stats-sessions-container">
               <div class="saved-header">
-                <h3><i class="bi bi-bar-chart-line"></i> Your Progress</h3>
+                <h3><i class="bi bi-bar-chart-line"></i> Insights</h3>
                 <p>Quick, calm insights from your saved memorisation sessions</p>
               </div>
               <div v-if="savedSessions.length === 0" class="empty-state">
                 <i class="bi bi-activity"></i>
-                <p>No stats yet</p>
+                <p>No insights yet</p>
                 <span>Save a session and you’ll see a simple summary here.</span>
               </div>
               <div v-else class="stats-panel">
@@ -825,6 +837,12 @@
                         </select>
                       </div>
                     </div>
+                  </div>
+                  <div class="stats-detail-actions stats-detail-actions-prominent">
+                    <button type="button" class="session-export-btn stats-full-analytics-btn" @click="openSessionAnalyticsModal(selectedStatsSessionRecord)">
+                      <i class="bi bi-graph-up-arrow"></i>
+                      <span>View Full Analytics</span>
+                    </button>
                   </div>
                   <div class="stats-grid stats-grid-hero">
                     <div v-for="item in buildStatsBreakdown(selectedStatsSessionRecord)" :key="item.key" class="stats-card">
@@ -1151,6 +1169,74 @@
       </div>
     </div>
 
+    <div v-if="showSessionAnalyticsModal" class="modal-overlay session-analytics-overlay" @click.self="closeSessionAnalyticsModal">
+      <div class="modal-content session-analytics-modal" role="dialog" aria-modal="true" aria-labelledby="sessionAnalyticsTitle">
+        <div class="modal-header session-analytics-header">
+          <div class="session-analytics-head-copy">
+            <h2 id="sessionAnalyticsTitle">Session Analytics Overview</h2>
+            <p v-if="analyticsModalSessionLabel">{{ analyticsModalSessionLabel }}</p>
+            <small v-if="analyticsModalSessionMeta">{{ analyticsModalSessionMeta }}</small>
+          </div>
+          <div class="session-analytics-head-actions">
+            <button
+              type="button"
+              class="session-export-btn session-analytics-download"
+              :disabled="analyticsReportState.loading || !analyticsModalRecord"
+              @click="downloadSessionAnalyticsReport"
+            >
+              <i class="bi" :class="analyticsReportIcon"></i>
+              <span>{{ analyticsReportLabel }}</span>
+            </button>
+            <button class="modal-close-btn" @click="closeSessionAnalyticsModal" aria-label="Close">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+        </div>
+        <div class="modal-body session-analytics-body">
+          <div v-if="!analyticsModalLoaded" class="analytics-loading">
+            <i class="bi bi-hourglass-split"></i>
+            <span>Preparing analytics...</span>
+          </div>
+          <template v-else-if="analyticsModalData">
+            <section class="session-analytics-section">
+              <div class="session-analytics-summary-grid">
+                <article v-for="item in analyticsSummaryCards" :key="item.key" class="session-analytics-summary-card">
+                  <span>{{ item.label }}</span>
+                  <strong>{{ item.value }}</strong>
+                </article>
+              </div>
+            </section>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showPostLoginOnboarding" class="modal-overlay post-onboarding-overlay" @click.self="skipOnboarding">
+      <div class="modal-content post-onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="postOnboardingTitle">
+        <div class="modal-header post-onboarding-header">
+          <h2 id="postOnboardingTitle">{{ onboardingStepContent.title }}</h2>
+          <button class="modal-close-btn" @click="skipOnboarding" aria-label="Skip onboarding">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+        <div class="modal-body post-onboarding-body">
+          <span class="post-onboarding-kicker">Step {{ onboardingStepIndex + 1 }} of {{ onboardingSteps.length }}</span>
+          <p>{{ onboardingStepContent.body }}</p>
+          <ul v-if="onboardingStepContent.points?.length" class="post-onboarding-points">
+            <li v-for="item in onboardingStepContent.points" :key="item">{{ item }}</li>
+          </ul>
+          <div class="post-onboarding-progress">
+            <span v-for="dot in onboardingSteps.length" :key="`ob-dot-${dot}`" :class="{ active: onboardingStepIndex === dot - 1 }"></span>
+          </div>
+        </div>
+        <div class="modal-footer post-onboarding-footer">
+          <button class="btn-secondary" @click="skipOnboarding">Skip</button>
+          <button v-if="onboardingStepIndex < onboardingSteps.length - 1" class="btn-primary" @click="nextOnboardingStep">Next</button>
+          <button v-else class="btn-primary" @click="completeOnboardingAndStart">Start your first session</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Global Audio Player - Updated with Speed Controls -->
     <transition name="slide-up">
       <div v-if="appReady && playerVisible" class="player-bar" :class="{ collapsed: playerCollapsed }">
@@ -1418,6 +1504,47 @@ export default {
       flowStep: 'learn',
       flowListenPlays: 0,
       showPlannerModal: false,
+      showPostLoginOnboarding: false,
+      onboardingStepIndex: 0,
+      onboardingDemoSnapshot: null,
+      onboardingDemoActive: false,
+      onboardingSteps: [
+        {
+          title: 'Welcome to Mutqin',
+          body: 'Mutqin helps you memorise Quran with calm, session-based structure.',
+          points: []
+        },
+        {
+          title: 'Session Setup',
+          body: 'Start here to choose the surah, range, reciter, and repetition pattern.',
+          points: ['Select the surah', 'Set the ayah range', 'Choose the reciter']
+        },
+        {
+          title: 'Audio',
+          body: 'This section controls playback speed and automatic progression.',
+          points: ['Playback speed', 'Auto advance', 'Session rhythm']
+        },
+        {
+          title: 'Focus Mode',
+          body: 'Use focus mode to keep attention on the active ayah.',
+          points: ['Reduce distractions', 'Read with clarity']
+        },
+        {
+          title: 'Blur Mode',
+          body: 'Blur supports recall by hiding upcoming ayahs until you need them.',
+          points: ['Blur upcoming ayahs', 'Peek when ready']
+        },
+        {
+          title: 'Chaining',
+          body: 'Chaining builds longer memorisation runs using linking or cumulative flow.',
+          points: ['Linking', 'Cumulative']
+        },
+        {
+          title: 'Anchor Mode',
+          body: 'Anchor mode adds simple memory cues to help you recall the ayah.',
+          points: ['Highlight key words', 'Keep recall simple']
+        }
+      ],
       showConfirmModal: false,
       showSessionExitModal: false,
       sessionExitAutoSave: true,
@@ -1529,6 +1656,15 @@ export default {
         errorFormat: '',
         errorMessage: ''
       },
+      showSessionAnalyticsModal: false,
+      analyticsModalLoaded: false,
+      analyticsModalRecordId: '',
+      analyticsModalData: null,
+      analyticsReportState: {
+        loading: false,
+        success: false,
+        error: ''
+      },
       selectedSessionId: '',
       sessionName: '',
 
@@ -1540,7 +1676,6 @@ export default {
       planRun: null,
       metrics: null,
       weakVersesList: [],
-
       // Simple stats
       simpleStats: {
         streak: 0,
@@ -1866,6 +2001,122 @@ export default {
     exportErrorMessage() {
       return this.exportSessionState.errorMessage || 'Unable to export this session right now.'
     },
+    analyticsModalRecord() {
+      if (!this.analyticsModalRecordId) return null
+      return this.savedSessions.find(session => session.id === this.analyticsModalRecordId) || null
+    },
+    analyticsModalSessionLabel() {
+      const session = this.analyticsModalRecord
+      if (!session) return ''
+      return this.getSessionPrimaryLabel(session)
+    },
+    analyticsModalSessionMeta() {
+      const session = this.analyticsModalRecord
+      if (!session) return ''
+      const stats = this.normalizeSessionStats(session.stats || {}, session.config || {})
+      return `Saved ${this.formatDate(session.savedAt)} · Duration ${this.formatTime(stats.time_spent_seconds || 0)}`
+    },
+    analyticsReportLabel() {
+      if (this.analyticsReportState.loading) return 'Generating report...'
+      if (this.analyticsReportState.success) return 'Download ready ✓'
+      if (this.analyticsReportState.error) return 'Export failed, retry'
+      return 'Download Report'
+    },
+    analyticsReportIcon() {
+      if (this.analyticsReportState.loading) return 'bi-arrow-repeat spin'
+      if (this.analyticsReportState.success) return 'bi-check2-circle'
+      if (this.analyticsReportState.error) return 'bi-exclamation-triangle'
+      return 'bi-download'
+    },
+    analyticsSummaryCards() {
+      const data = this.analyticsModalData
+      if (!data) return []
+      return [
+        { key: 'verses', label: 'Ayahs Reviewed', value: `${data.metrics.verses_read}` },
+        { key: 'time', label: 'Time Memorising', value: this.formatTime(data.metrics.time_spent_seconds) },
+        { key: 'reps', label: 'Repeats Completed', value: `${data.metrics.repetitions_completed}` },
+        { key: 'session_plays', label: 'Session Plays', value: `${data.metrics.session_play_count || 0}` },
+        { key: 'verse_plays', label: 'Verse Plays', value: `${data.metrics.total_verse_play_count || 0}` },
+        { key: 'recall', label: 'Recall Strength', value: data.metrics.recall_strength }
+      ]
+    },
+    analyticsLinePoints() {
+      const series = this.analyticsModalData?.charts?.timeSeries || []
+      if (!series.length) return ''
+      const maxY = Math.max(1, ...series.map(point => Number(point.value || 0)))
+      const width = 300
+      const height = 120
+      return series.map((point, idx) => {
+        const x = (idx / Math.max(1, series.length - 1)) * (width - 8) + 4
+        const y = height - ((Number(point.value || 0) / maxY) * (height - 16) + 8)
+        return `${x.toFixed(2)},${y.toFixed(2)}`
+      }).join(' ')
+    },
+    analyticsTopRepeatedBars() {
+      const bars = this.analyticsModalData?.charts?.topRepeated || []
+      const maxValue = Math.max(1, ...bars.map(item => Number(item.value || 0)))
+      return bars.map(item => ({
+        label: item.label,
+        value: Number(item.value || 0),
+        width: Math.max(6, Math.round((Number(item.value || 0) / maxValue) * 100))
+      }))
+    },
+    analyticsComparison() {
+      const comparison = this.analyticsModalData?.charts?.weakStrong || { weak: 0, strong: 0 }
+      return {
+        weak: Number(comparison.weak || 0),
+        strong: Number(comparison.strong || 0)
+      }
+    },
+    analyticsPieSlices() {
+      const slices = this.analyticsModalData?.charts?.activityBreakdown || []
+      const total = Math.max(1, slices.reduce((sum, item) => sum + Number(item.value || 0), 0))
+      return slices.map(item => ({
+        key: item.key,
+        label: item.label,
+        percent: Math.round((Number(item.value || 0) / total) * 100)
+      }))
+    },
+    analyticsPieGradient() {
+      const slices = this.analyticsPieSlices
+      if (!slices.length) return 'conic-gradient(#4f9d8a 0deg 360deg)'
+      const palette = ['#4f9d8a', '#5aa58f', '#3c786c', '#74b5a1']
+      let cursor = 0
+      const parts = slices.map((slice, idx) => {
+        const next = cursor + (slice.percent * 3.6)
+        const part = `${palette[idx % palette.length]} ${cursor.toFixed(1)}deg ${next.toFixed(1)}deg`
+        cursor = next
+        return part
+      })
+      return `conic-gradient(${parts.join(', ')})`
+    },
+    analyticsHeatmapCells() {
+      return this.analyticsModalData?.heatmap || []
+    },
+    sessionPlayCountValue() {
+      return Math.max(0, Number(this.mutqinState?.sessionState?.play_count || 0))
+    },
+    totalVersePlayCountValue() {
+      const counts = this.mutqinState?.sessionState?.verse_play_counts || {}
+      return Object.values(counts).reduce((sum, value) => sum + Math.max(0, Number(value || 0)), 0)
+    },
+    sessionVersePlaySummary() {
+      const counts = this.mutqinState?.sessionState?.verse_play_counts || {}
+      const sourceVerses = Array.isArray(this.verses) && this.verses.length
+        ? this.verses
+        : Object.keys(counts).map(key => ({ key, number: String(key).split(':')[1] || key }))
+      return sourceVerses
+        .map(verse => ({
+          key: verse.key,
+          label: verse.number ? `Ayah ${verse.number}` : String(verse.key || 'Ayah'),
+          count: Math.max(0, Number(counts?.[verse.key] || 0))
+        }))
+        .filter(item => item.count > 0)
+        .slice(0, 6)
+    },
+    onboardingStepContent() {
+      return this.onboardingSteps[this.onboardingStepIndex] || this.onboardingSteps[0]
+    },
     chainingProgressLabel() {
       if (!this.chainingEnabled) return ''
       const entry = this.activeQueueEntry
@@ -1950,7 +2201,7 @@ export default {
       return Array.isArray(this.queue) && this.queue.length > 0
     },
     hasSessionStarted() {
-      return !!this.sessionStartedAt
+      return this.isSessionLive
     },
     isSessionLive() {
       const mutqinActive = !!this.mutqinState?.sessionState?.active
@@ -2368,7 +2619,7 @@ export default {
     },
 
     toolsHeaderTitle() {
-      if (this.tab === 'stats') return 'Stats'
+      if (this.tab === 'stats') return 'Insights'
       if (this.tab === 'settings') return 'Settings'
       if (this.tab === 'advanced') return 'Advanced session'
       return 'Guided session setup'
@@ -2454,6 +2705,10 @@ export default {
     this.initAudio()
     this.restoreAudioState()
     this.theme = document.documentElement.getAttribute('data-theme') || this.theme
+    if (!this.isLoggedIn) {
+      this.theme = 'dark'
+      document.documentElement.setAttribute('data-theme', 'dark')
+    }
     this.loadBookmarksPins(),
       this.setupWordClickHandler()
     this.loadContinueSessionPrompt()
@@ -2483,6 +2738,11 @@ export default {
 
     this.isBootstrapping = false
     this.appReady = true
+    this.$nextTick(() => {
+      if (this.isLoggedIn && !this.hasCompletedOnboarding()) {
+        this.openOnboardingModal(false)
+      }
+    })
 
     window.addEventListener('online', this.handleOnline)
     window.addEventListener('offline', this.handleOffline)
@@ -2769,6 +3029,8 @@ export default {
         currentIndex
       )
       const weakVerses = Math.max(0, Number(this.sessionErrorCount || 0))
+      const versePlayCounts = { ...(this.mutqinState?.sessionState?.verse_play_counts || {}) }
+      const totalVersePlays = Object.values(versePlayCounts).reduce((sum, value) => sum + Math.max(0, Number(value || 0)), 0)
       return {
         verses_read: versesRead,
         time_spent_seconds: elapsedSeconds,
@@ -2777,6 +3039,9 @@ export default {
         session_flow_steps: Math.max(1, queue.length || (this.verses?.length || 0) || 1),
         average_time_per_verse_seconds: versesRead > 0 ? Math.round(elapsedSeconds / versesRead) : 0,
         weak_verses_encountered: weakVerses,
+        session_play_count: Math.max(0, Number(this.mutqinState?.sessionState?.play_count || 0)),
+        verse_play_counts: versePlayCounts,
+        total_verse_play_count: totalVersePlays,
         generated_at: new Date().toISOString()
       }
     },
@@ -2785,6 +3050,8 @@ export default {
       const rangeStart = Number(fallbackConfig?.rangeStart || 0)
       const rangeEnd = Number(fallbackConfig?.rangeEnd || 0)
       const totalVerses = rangeEnd >= rangeStart && rangeStart > 0 ? (rangeEnd - rangeStart + 1) : 0
+      const versePlayCounts = (stats?.verse_play_counts && typeof stats.verse_play_counts === 'object') ? stats.verse_play_counts : {}
+      const derivedVersePlayTotal = Object.values(versePlayCounts).reduce((sum, value) => sum + Math.max(0, Number(value || 0)), 0)
       const normalized = {
         verses_read: Math.max(0, Number(stats?.verses_read || 0)),
         time_spent_seconds: Math.max(0, Number(stats?.time_spent_seconds || 0)),
@@ -2793,6 +3060,9 @@ export default {
         session_flow_steps: Math.max(1, Number(stats?.session_flow_steps || totalVerses || 1)),
         average_time_per_verse_seconds: Math.max(0, Number(stats?.average_time_per_verse_seconds || 0)),
         weak_verses_encountered: Math.max(0, Number(stats?.weak_verses_encountered || 0)),
+        session_play_count: Math.max(0, Number(stats?.session_play_count || 0)),
+        verse_play_counts: versePlayCounts,
+        total_verse_play_count: Math.max(derivedVersePlayTotal, Number(stats?.total_verse_play_count || 0)),
         generated_at: stats?.generated_at || null
       }
       if (!normalized.average_time_per_verse_seconds && normalized.verses_read > 0 && normalized.time_spent_seconds > 0) {
@@ -3248,6 +3518,9 @@ export default {
         this.showBanner('Please select a valid surah and ayah range first', 'info', 3600)
         return
       }
+      this.applySessionConfig(this.buildSessionConfig(this.currentMode))
+      this.persistUiState()
+      this.persistCentralSessionState()
       this.closeToolsPanel()
       setTimeout(() => {
         this.startSessionWithCountdown()
@@ -3552,6 +3825,285 @@ export default {
     selectStatsSession(sessionId) {
       this.selectedStatsSessionId = sessionId
     },
+    getOnboardingStorageKey() {
+      const userId = this.auth?.id ? String(this.auth.id) : 'guest'
+      return `mutqin.onboardingCompleted.${userId}`
+    },
+    hasCompletedOnboarding() {
+      try {
+        return localStorage.getItem(this.getOnboardingStorageKey()) === 'true'
+      } catch {
+        return false
+      }
+    },
+    markOnboardingCompleted() {
+      try {
+        localStorage.setItem(this.getOnboardingStorageKey(), 'true')
+      } catch { }
+    },
+    openOnboardingModal(force = false) {
+      if (!this.isLoggedIn && !force) return
+      this.onboardingStepIndex = 0
+      if (!force && this.hasCompletedOnboarding()) return
+      if (!this.onboardingDemoActive) this.prepareOnboardingDemo()
+      this.showTools = true
+      this.tab = 'tools'
+      window.setTimeout(() => {
+        this.showPostLoginOnboarding = true
+        this.applyOnboardingStep(0)
+      }, 50)
+    },
+    nextOnboardingStep() {
+      this.onboardingStepIndex = Math.min(this.onboardingSteps.length - 1, this.onboardingStepIndex + 1)
+      this.applyOnboardingStep(this.onboardingStepIndex)
+    },
+    skipOnboarding() {
+      this.markOnboardingCompleted()
+      this.showPostLoginOnboarding = false
+      this.onboardingStepIndex = 0
+      this.restoreOnboardingDemo()
+    },
+    completeOnboardingAndStart() {
+      this.markOnboardingCompleted()
+      this.showPostLoginOnboarding = false
+      this.onboardingStepIndex = 0
+      this.applyOnboardingStep(this.onboardingSteps.length - 1)
+      this.restoreOnboardingDemo({ keepCurrentSession: true })
+      this.startSession()
+    },
+    prepareOnboardingDemo() {
+      const snapshot = {
+        tab: this.tab,
+        showTools: this.showTools,
+        currentMode: this.currentMode,
+        chapterId: this.chapterId,
+        rangeStart: this.rangeStart,
+        rangeEnd: this.rangeEnd,
+        reciterId: this.reciterId,
+        speed: this.speed,
+        playMode: this.playMode,
+        chainingEnabled: this.chainingEnabled,
+        chainingMethod: this.chainingMethod,
+        chainingRepetitions: this.chainingRepetitions,
+        focusModeEnabled: this.focusModeEnabled,
+        blurModeEnabled: this.blurModeEnabled,
+        anchorModeEnabled: this.anchorModeEnabled,
+        anchorCount: this.anchorCount,
+        sectionOpen: deepClone(this.sectionOpen || {})
+      }
+      this.onboardingDemoSnapshot = snapshot
+      this.onboardingDemoActive = true
+      const demoChapter = this.chapters.find(chapter => Number(chapter.id) === 112) || this.chapters[0] || null
+      if (demoChapter) {
+        this.chapterId = Number(demoChapter.id)
+        this.currentChapter = demoChapter
+      }
+      this.rangeStart = 1
+      this.rangeEnd = 4
+      this.reciterId = this.reciters[0]?.id || this.reciterId
+      this.speed = 1
+      this.playMode = 'auto'
+      this.chainingEnabled = true
+      this.chainingMethod = 'linking'
+      this.chainingRepetitions = 1
+      this.focusModeEnabled = false
+      this.blurModeEnabled = false
+      this.anchorModeEnabled = false
+      this.anchorCount = 2
+      this.tab = 'tools'
+      this.showTools = true
+    },
+    restoreOnboardingDemo(options = {}) {
+      const snapshot = this.onboardingDemoSnapshot
+      if (!snapshot) return
+      this.onboardingDemoActive = false
+      this.onboardingDemoSnapshot = null
+      if (options.keepCurrentSession) return
+      this.tab = snapshot.tab
+      this.showTools = snapshot.showTools
+      this.currentMode = snapshot.currentMode
+      this.chapterId = snapshot.chapterId
+      this.rangeStart = snapshot.rangeStart
+      this.rangeEnd = snapshot.rangeEnd
+      this.reciterId = snapshot.reciterId
+      this.speed = snapshot.speed
+      this.playMode = snapshot.playMode
+      this.chainingEnabled = snapshot.chainingEnabled
+      this.chainingMethod = snapshot.chainingMethod
+      this.chainingRepetitions = snapshot.chainingRepetitions
+      this.focusModeEnabled = snapshot.focusModeEnabled
+      this.blurModeEnabled = snapshot.blurModeEnabled
+      this.anchorModeEnabled = snapshot.anchorModeEnabled
+      this.anchorCount = snapshot.anchorCount
+      this.sectionOpen = deepClone(snapshot.sectionOpen || this.sectionOpen)
+      this.persistUiState()
+    },
+    applyOnboardingStep(stepIndex) {
+      if (!this.onboardingDemoActive) return
+      const step = Math.max(0, Math.min(this.onboardingSteps.length - 1, Number(stepIndex || 0)))
+      const stepConfig = [
+        { tab: 'tools', section: 'advanced_setup' },
+        { tab: 'tools', section: 'advanced_setup' },
+        { tab: 'tools', section: 'advanced_playback' },
+        { tab: 'techniques', section: 'focus_mode' },
+        { tab: 'techniques', section: 'blur_mode' },
+        { tab: 'techniques', section: 'chaining' },
+        { tab: 'techniques', section: 'anchor_mode' }
+      ][step] || { tab: 'tools', section: 'advanced_setup' }
+      this.tab = stepConfig.tab
+      this.showTools = true
+      if (stepConfig.section) {
+        const openMap = {
+          advanced_setup: true,
+          advanced_playback: false,
+          focus_mode: false,
+          blur_mode: false,
+          chaining: false,
+          anchor_mode: false
+        }
+        Object.keys(openMap).forEach(key => {
+          if (this.sectionOpen[key] !== undefined) this.sectionOpen[key] = false
+        })
+        if (this.sectionOpen[stepConfig.section] !== undefined) this.sectionOpen[stepConfig.section] = true
+      }
+      this.$nextTick(() => {
+        const section = this.$refs.toolsBody?.querySelector?.(`.sheet-section .sheet-toggle`) || null
+        if (section?.scrollIntoView) section.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      })
+    },
+    openSessionAnalyticsModal(session) {
+      if (!session?.id) return
+      this.analyticsModalRecordId = session.id
+      this.analyticsModalLoaded = false
+      this.analyticsModalData = null
+      this.analyticsReportState = { loading: false, success: false, error: '' }
+      this.showSessionAnalyticsModal = true
+
+      window.requestAnimationFrame(() => {
+        this.analyticsModalData = this.buildSessionAnalyticsDataset(session)
+        this.analyticsModalLoaded = true
+      })
+    },
+    closeSessionAnalyticsModal() {
+      this.showSessionAnalyticsModal = false
+      this.analyticsModalLoaded = false
+      this.analyticsModalRecordId = ''
+      this.analyticsModalData = null
+      this.analyticsReportState = { loading: false, success: false, error: '' }
+    },
+    buildSessionAnalyticsDataset(session) {
+      const stats = this.normalizeSessionStats(session?.stats || {}, session?.config || {})
+      const versesRead = Math.max(0, Number(stats.verses_read || 0))
+      const repetitions = Math.max(0, Number(stats.repetitions_completed || 0))
+      const weakVerses = Math.max(0, Number(stats.weak_verses_encountered || 0))
+      const selfChecks = Math.max(0, Math.round(repetitions * 0.35))
+      const strongVerses = Math.max(0, versesRead - weakVerses)
+      const recallRatio = versesRead > 0 ? ((strongVerses / versesRead) * 100) : 0
+      const recallStrength = recallRatio >= 75 ? 'High' : recallRatio >= 45 ? 'Medium' : 'Low'
+
+      return {
+        generatedAt: new Date().toISOString(),
+        session: {
+          id: session.id,
+          name: session.name,
+          label: this.getSessionPrimaryLabel(session),
+          savedAt: session.savedAt,
+          config: { ...(session.config || {}) }
+        },
+        metrics: {
+          verses_read: versesRead,
+          time_spent_seconds: Math.max(0, Number(stats.time_spent_seconds || 0)),
+          repetitions_completed: repetitions,
+          self_checks: selfChecks,
+          weak_verses: weakVerses,
+          strong_verses: strongVerses,
+          recall_strength: recallStrength,
+          session_play_count: Math.max(0, Number(stats.session_play_count || 0)),
+          total_verse_play_count: Math.max(0, Number(stats.total_verse_play_count || 0)),
+          verse_play_counts: { ...(stats.verse_play_counts || {}) },
+          playback_total_seconds: Math.max(0, Number(stats.time_spent_seconds || 0)),
+          playback_average_seconds_per_verse: Math.max(0, Number(stats.average_time_per_verse_seconds || 0))
+        },
+        charts: {
+          timeSeries: [],
+          topRepeated: [],
+          weakStrong: { weak: weakVerses, strong: strongVerses },
+          activityBreakdown: []
+        },
+        heatmap: []
+      }
+    },
+    validateAnalyticsReportPayload(payload) {
+      const metrics = payload?.metrics || {}
+      if (!payload?.session?.id) return { ok: false, message: 'Missing session id.' }
+      if (!payload?.session?.savedAt) return { ok: false, message: 'Missing session date.' }
+      if (!Number.isFinite(Number(metrics.verses_read))) return { ok: false, message: 'Missing verses read.' }
+      return { ok: true, message: '' }
+    },
+    async downloadSessionAnalyticsReport() {
+      if (!this.analyticsModalRecord || !this.analyticsModalData) return
+      this.analyticsReportState = { loading: true, success: false, error: '' }
+      try {
+        await new Promise(resolve => window.setTimeout(resolve, 120))
+        const reportPayload = {
+          version: 1,
+          app: 'mutqin',
+          exportedAt: new Date().toISOString(),
+          summary: {
+            title: this.analyticsModalData.session.label,
+            saved_on: this.analyticsModalData.session.savedAt,
+            duration: this.formatTime(this.analyticsModalData.metrics.time_spent_seconds),
+            ayahs_reviewed: this.analyticsModalData.metrics.verses_read,
+            repeats_completed: this.analyticsModalData.metrics.repetitions_completed,
+            session_plays: this.analyticsModalData.metrics.session_play_count || 0,
+            verse_plays: this.analyticsModalData.metrics.total_verse_play_count || 0,
+            recall_strength: this.analyticsModalData.metrics.recall_strength
+          },
+          session: {
+            id: this.analyticsModalData.session.id,
+            name: this.analyticsModalData.session.name,
+            label: this.analyticsModalData.session.label,
+            savedAt: this.analyticsModalData.session.savedAt
+          },
+          metadata: {
+            date: this.analyticsModalData.session.savedAt,
+            duration: this.formatTime(this.analyticsModalData.metrics.time_spent_seconds),
+            session_name: this.analyticsModalData.session.name,
+            surah: this.analyticsModalData.session.config?.chapterName || '',
+            ayah_range: `${this.analyticsModalData.session.config?.rangeStart || ''}-${this.analyticsModalData.session.config?.rangeEnd || ''}`
+          },
+          metrics: {
+            verses_read: this.analyticsModalData.metrics.verses_read,
+            time_spent_seconds: this.analyticsModalData.metrics.time_spent_seconds,
+            repetitions_completed: this.analyticsModalData.metrics.repetitions_completed,
+            session_play_count: this.analyticsModalData.metrics.session_play_count || 0,
+            total_verse_play_count: this.analyticsModalData.metrics.total_verse_play_count || 0,
+            weak_verses: this.analyticsModalData.metrics.weak_verses,
+            recall_strength: this.analyticsModalData.metrics.recall_strength
+          },
+          verse_play_counts: this.analyticsModalData.metrics.verse_play_counts || {}
+        }
+        const validation = this.validateAnalyticsReportPayload(reportPayload)
+        if (!validation.ok) throw new Error(validation.message)
+
+        const safeName = slugifySessionFilePart(this.analyticsModalData.session?.name || this.analyticsModalData.session?.label || 'session')
+        const stamp = new Date(this.analyticsModalData.session?.savedAt || Date.now()).toISOString().slice(0, 10)
+        const filename = `mutqin-session_${safeName}_${stamp}.json`
+        const blob = new Blob([JSON.stringify(reportPayload, null, 2)], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const anchor = document.createElement('a')
+        anchor.href = url
+        anchor.download = filename
+        document.body.appendChild(anchor)
+        anchor.click()
+        document.body.removeChild(anchor)
+        window.setTimeout(() => URL.revokeObjectURL(url), 500)
+        this.analyticsReportState = { loading: false, success: true, error: '' }
+      } catch (error) {
+        console.error('Analytics report export failed:', error)
+        this.analyticsReportState = { loading: false, success: false, error: String(error?.message || 'Export failed') }
+      }
+    },
 
     buildStatsBreakdown(session) {
       const stats = this.normalizeSessionStats(session?.stats || {}, session?.config || {})
@@ -3560,6 +4112,8 @@ export default {
         { key: 'time_spent', label: 'Time memorising', value: this.formatTime(stats.time_spent_seconds), icon: 'bi-clock-history' },
         { key: 'repetitions_completed', label: 'Repeats completed', value: `${stats.repetitions_completed}`, icon: 'bi-arrow-repeat' },
         { key: 'sessions_completed', label: 'Runs completed', value: `${stats.sessions_completed}`, icon: 'bi-check2-circle' },
+        { key: 'session_plays', label: 'Session plays', value: `${Number(stats.session_play_count || 0)}`, icon: 'bi-play-circle' },
+        { key: 'verse_plays_total', label: 'Total verse plays', value: `${Number(stats.total_verse_play_count || 0)}`, icon: 'bi-music-note-list' }
       ]
     },
 
@@ -3587,11 +4141,28 @@ export default {
       if (key === 'time_spent') return `${this.formatTime(stats.time_spent_seconds)} spent`
       return ''
     },
-
     isExportingSession(sessionId, format = '') {
       if (this.exportSessionState.activeSessionId !== sessionId) return false
       if (!format) return true
       return this.exportSessionState.activeFormat === format
+    },
+    incrementSessionPlayCount() {
+      const current = Math.max(0, Number(this.mutqinState?.sessionState?.play_count || 0))
+      if (!this.mutqinState?.sessionState) return
+      this.mutqinState.sessionState.play_count = current + 1
+      saveMutqinState(this.mutqinState)
+      this.persistCentralSessionState()
+    },
+    incrementVersePlayCount(verseKey) {
+      if (!verseKey || !this.mutqinState?.sessionState) return
+      const currentMap = this.mutqinState.sessionState.verse_play_counts || {}
+      const current = Math.max(0, Number(currentMap[verseKey] || 0))
+      this.mutqinState.sessionState.verse_play_counts = {
+        ...currentMap,
+        [verseKey]: current + 1
+      }
+      saveMutqinState(this.mutqinState)
+      this.persistCentralSessionState()
     },
 
     validateSessionForExport(session) {
@@ -3646,6 +4217,8 @@ export default {
         ['Verses Read', `${stats.verses_read || 0}`],
         ['Time Spent', this.formatTime(stats.time_spent_seconds)],
         ['Repetitions Completed', `${stats.repetitions_completed || 0}`],
+        ['Session Plays', `${stats.session_play_count || 0}`],
+        ['Total Verse Plays', `${stats.total_verse_play_count || 0}`],
         ['Sessions Completed', `${stats.sessions_completed || 0}`],
         ['Average Time Per Verse', this.formatTime(stats.average_time_per_verse_seconds)],
         ['Struggled Ayahs', `${stats.weak_verses_encountered || 0}`]
@@ -3658,51 +4231,50 @@ export default {
 
     triggerCsvDownload(filename, payload) {
       const blob = new Blob([this.buildSessionExportCsv(payload)], { type: 'text/csv;charset=utf-8' })
-      const url = URL.createObjectURL(blob)
-      const anchor = document.createElement('a')
-      anchor.href = url
-      anchor.download = filename
-      document.body.appendChild(anchor)
-      anchor.click()
-      document.body.removeChild(anchor)
-      window.setTimeout(() => URL.revokeObjectURL(url), 500)
+      this.triggerFileDownloadBlob(blob, filename)
     },
 
     triggerWordDownload(filename, payload) {
       // Lightweight "Word" export: an HTML document wrapped with a .doc extension.
       // This stays dependency-free and is good enough for sharing/backup.
       const html = this.buildSessionExportHtml(payload)
-      const blob = new Blob([html], { type: 'application/msword' })
+      const blob = new Blob(['\ufeff', html], { type: 'application/msword;charset=utf-8' })
+      this.triggerFileDownloadBlob(blob, filename)
+    },
+
+    triggerPdfExport(filename, payload) {
+      // PDF export uses browser print pipeline with a stable Blob preview.
+      const html = this.buildSessionExportHtml(payload)
+      const blob = new Blob([html.replace('{{__TITLE__}}', this.escapeHtml(filename.replace(/\\.pdf$/i, '')))], { type: 'text/html;charset=utf-8' })
+      const previewUrl = URL.createObjectURL(blob)
+      const w = window.open(previewUrl, '_blank', 'noopener,noreferrer')
+      if (!w) throw new Error('Popup blocked')
+      window.setTimeout(() => {
+        try {
+          w.focus()
+          w.print()
+        } finally {
+          window.setTimeout(() => {
+            URL.revokeObjectURL(previewUrl)
+            w.close()
+          }, 600)
+        }
+      }, 420)
+    },
+
+    triggerFileDownloadBlob(blob, filename) {
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
       anchor.href = url
       anchor.download = filename
+      anchor.rel = 'noopener'
+      anchor.style.display = 'none'
       document.body.appendChild(anchor)
-      anchor.click()
-      document.body.removeChild(anchor)
-      window.setTimeout(() => URL.revokeObjectURL(url), 500)
-    },
-
-    triggerPdfExport(filename, payload) {
-      // PDF export uses the browser print pipeline (user can "Save as PDF").
-      // We set the document title for a sensible default file name.
-      const html = this.buildSessionExportHtml(payload)
-      const w = window.open('', '_blank', 'noopener,noreferrer,width=900,height=700')
-      if (!w) throw new Error('Popup blocked')
-      const title = filename.replace(/\\.pdf$/i, '')
-      w.document.open()
-      w.document.write(html.replace('{{__TITLE__}}', this.escapeHtml(title)))
-      w.document.close()
-      w.focus()
-      // Wait a tick for layout; then print.
-      window.setTimeout(() => {
-        try {
-          w.print()
-        } finally {
-          // Close after the print dialog is opened; safe across browsers.
-          window.setTimeout(() => w.close(), 400)
-        }
-      }, 350)
+      window.requestAnimationFrame(() => {
+        anchor.click()
+        document.body.removeChild(anchor)
+        window.setTimeout(() => URL.revokeObjectURL(url), 1200)
+      })
     },
 
     escapeHtml(value) {
@@ -3730,6 +4302,8 @@ export default {
         { label: 'Verses read', value: `${stats.verses_read}` },
         { label: 'Time spent', value: this.formatTime(stats.time_spent_seconds) },
         { label: 'Repetitions completed', value: `${stats.repetitions_completed}` },
+        { label: 'Session plays', value: `${stats.session_play_count || 0}` },
+        { label: 'Total verse plays', value: `${stats.total_verse_play_count || 0}` },
         { label: 'Sessions completed', value: `${stats.sessions_completed}` },
         { label: 'Average time per verse', value: this.formatTime(stats.average_time_per_verse_seconds) },
         { label: 'Struggled ayahs', value: `${stats.weak_verses_encountered}` }
@@ -3821,7 +4395,7 @@ export default {
           errorFormat: '',
           errorMessage: ''
         }
-        this.showBanner('Session export complete', 'success', 1800)
+        this.showBanner('Download ready ✓', 'success', 1800)
       } catch (error) {
         console.error('Failed to export session:', error)
         this.exportSessionState = {
@@ -3829,9 +4403,9 @@ export default {
           activeFormat: '',
           errorSessionId: sessionId,
           errorFormat: format,
-          errorMessage: 'Something went wrong while creating the export file.'
+          errorMessage: 'Something went wrong. Please retry.'
         }
-        this.showBanner('Failed to export session', 'error', 2600)
+        this.showBanner('Export failed, retry', 'error', 2600)
       }
     },
 
@@ -4839,6 +5413,7 @@ export default {
       this.isPlaying = false
       this.currentTime = 0
       this.duration = 0
+      this.sessionStartedAt = 0
 
       if (this.mutqinState?.sessionState) {
         this.mutqinState.sessionState.active = false
@@ -6270,6 +6845,7 @@ export default {
 
           try {
             await this.audioElement.play()
+            this.incrementVersePlayCount(verse.key)
             this.markPlaybackStart()
             this.addActivityEvent({ ts: Date.now(), type: 'play', verseKey: verse.key })
             this.recomputeAnalytics()
@@ -6771,11 +7347,11 @@ export default {
     },
     toggleFocusModeRadio() {
       this.focusModeEnabled = !this.focusModeEnabled
-      this.persistCentralSessionState()
+      this.persistUiState()
     },
     toggleBlurModeRadio() {
       this.blurModeEnabled = !this.blurModeEnabled
-      this.persistCentralSessionState()
+      this.persistUiState()
     },
     toggleChainingRadio() {
       this.setChainingEnabled(!this.chainingEnabled)
@@ -6908,6 +7484,7 @@ export default {
 
       this.syncMutqinAyahs(updatedVerses)
       const sessionState = this.syncMutqinSession(builtQueue, mode)
+      this.incrementSessionPlayCount()
       const canonicalIndex = Math.max(0, Number(sessionState?.current_index || 0))
       let playbackIndex = canonicalIndex > 0
         ? Math.min(canonicalIndex - 1, builtQueue.length - 1)
@@ -8987,7 +9564,7 @@ export default {
 
 /* Enhanced Save Modal Styles */
 .save-name-modal {
-  max-width: 520px;
+  max-width: 680px;
   width: 100%;
   animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -10847,7 +11424,7 @@ export default {
 }
 
 .save-name-modal {
-  max-width: 420px;
+  max-width: 680px;
   width: 100%;
 }
 
@@ -11391,6 +11968,30 @@ export default {
   line-height: 1.4;
 }
 
+[data-theme="dark"] .login-hero {
+  background: radial-gradient(circle at top, rgba(79, 157, 138, 0.12), transparent 42%),
+    linear-gradient(180deg, rgba(18, 16, 13, 0.98), rgba(12, 11, 10, 0.96));
+}
+
+[data-theme="dark"] .login-card {
+  background: linear-gradient(180deg, rgba(28, 33, 31, 0.96), rgba(22, 27, 25, 0.94));
+  border-color: rgba(109, 160, 145, 0.22);
+  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.46);
+}
+
+[data-theme="dark"] .login-icon {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
+}
+
+[data-theme="dark"] .feature i {
+  color: #97c9ba;
+  background: rgba(79, 157, 138, 0.14);
+}
+
+[data-theme="dark"] .login-btn {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
+}
+
 @keyframes loginFadeIn {
   from {
     opacity: 0;
@@ -11439,7 +12040,7 @@ export default {
 
 /* Save Name Modal Styles */
 .save-name-modal {
-  max-width: 420px;
+  max-width: 680px;
   width: 100%;
 }
 
@@ -12895,6 +13496,21 @@ export default {
   border-top: 1px solid var(--border);
 }
 
+.stats-detail-actions-prominent {
+  margin: 4px 0 2px;
+}
+
+.stats-full-analytics-btn {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+}
+
 .session-load-btn,
 .session-delete-btn {
   width: 32px;
@@ -14306,12 +14922,14 @@ html {
   position: relative;
   display: inline-grid;
   place-items: center;
-  width: 24px;
-  height: 24px;
+  min-width: 34px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   border-radius: 50%;
   border: 1px solid rgba(154, 103, 56, 0.24);
   background: rgba(255, 250, 243, 0.95);
+  color: inherit;
   cursor: pointer;
   transition: all 0.18s ease;
 }
@@ -14326,7 +14944,7 @@ html {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: rgba(154, 103, 56, 0.72);
   transition: color 0.18s ease, transform 0.18s ease;
 }
@@ -14344,6 +14962,11 @@ html {
 .mode-radio:hover {
   border-color: rgba(154, 103, 56, 0.3);
   background: rgba(252, 244, 235, 0.95);
+}
+
+.mode-radio:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 .workspace-shell-active-pill {
@@ -18044,6 +18667,390 @@ html {
   padding: 20px;
 }
 
+.session-analytics-overlay {
+  z-index: 12000;
+}
+
+.post-onboarding-overlay {
+  z-index: 12500;
+}
+
+.post-onboarding-modal {
+  width: min(640px, 94vw);
+  border-radius: 18px;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(32, 38, 35, 0.98), rgba(24, 30, 27, 0.96));
+  border: 1px solid rgba(104, 160, 143, 0.2);
+  color: #e7efeb;
+  animation: onboardingScaleIn 220ms ease;
+}
+
+.post-onboarding-header {
+  background: transparent;
+  border-bottom: 1px solid rgba(104, 160, 143, 0.16);
+}
+
+.post-onboarding-header h2 {
+  margin: 0;
+  font-size: 1.28rem;
+  font-weight: 500;
+  color: #f1f7f4;
+}
+
+.post-onboarding-body p {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.62;
+  color: #c2d0cb;
+}
+
+.post-onboarding-kicker {
+  display: inline-flex;
+  margin-bottom: 10px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(79, 157, 138, 0.16);
+  color: #97c9ba;
+  font-size: 0.7rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.post-onboarding-points {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  color: #d7e3de;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.post-onboarding-progress {
+  margin-top: 14px;
+  display: flex;
+  gap: 8px;
+}
+
+.post-onboarding-progress span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(104, 160, 143, 0.28);
+}
+
+.post-onboarding-progress span.active {
+  background: #5aa58f;
+}
+
+.post-onboarding-footer {
+  border-top: 1px solid rgba(104, 160, 143, 0.14);
+}
+
+@keyframes onboardingScaleIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.session-analytics-modal {
+  width: min(760px, 94vw);
+  max-height: 88vh;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(249, 245, 239, 0.98), rgba(241, 235, 226, 0.96));
+}
+
+.session-analytics-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: inherit;
+}
+
+.session-analytics-head-copy h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.session-analytics-head-copy p {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.session-analytics-head-copy small {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+
+.session-analytics-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.session-analytics-download {
+  min-height: 38px;
+}
+
+.session-analytics-body {
+  max-height: calc(88vh - 92px);
+  overflow-y: auto;
+  display: grid;
+  gap: 14px;
+}
+
+.session-analytics-section {
+  display: grid;
+  gap: 10px;
+}
+
+.session-analytics-section h3 {
+  margin: 0;
+  font-size: 0.88rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+}
+
+.session-analytics-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.session-analytics-summary-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.64);
+  display: grid;
+  gap: 4px;
+}
+
+.session-analytics-summary-card span {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.session-analytics-summary-card strong {
+  font-size: 0.98rem;
+  color: var(--text);
+}
+
+.session-analytics-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.session-analytics-chart-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.session-analytics-chart-card header {
+  margin-bottom: 8px;
+}
+
+.session-analytics-chart-card header span {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.line-chart-shell svg {
+  width: 100%;
+  height: 120px;
+}
+
+.line-chart-track {
+  fill: none;
+  stroke: #4f9d8a;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bar-chart-shell {
+  display: grid;
+  gap: 8px;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 86px) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.bar-row span,
+.bar-row em {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-style: normal;
+}
+
+.bar-track {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(79, 157, 138, 0.12);
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: #4f9d8a;
+}
+
+.comparison-chart-shell {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.comparison-item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.58);
+  display: grid;
+  gap: 4px;
+}
+
+.comparison-item span {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.comparison-item strong {
+  font-size: 1.2rem;
+  color: var(--text);
+}
+
+.pie-chart-shell {
+  display: grid;
+  gap: 10px;
+}
+
+.pie-chart-ring {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  margin: 0 auto;
+  box-shadow: inset 0 0 0 12px rgba(0, 0, 0, 0.08);
+}
+
+.pie-chart-legend {
+  display: grid;
+  gap: 4px;
+}
+
+.pie-chart-legend span {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.heatmap-cell {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-height: 32px;
+  background: radial-gradient(circle at center, rgba(79, 157, 138, calc(var(--heat-intensity, 0.1) * 0.55)), rgba(79, 157, 138, calc(var(--heat-intensity, 0.1) * 0.12)));
+  color: var(--text);
+  font-size: 0.66rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.analytics-loading {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+}
+
+[data-theme="dark"] .session-analytics-modal {
+  background: linear-gradient(180deg, #1f2422, #1a201d);
+}
+
+[data-theme="dark"] .session-analytics-summary-card,
+[data-theme="dark"] .session-analytics-chart-card,
+[data-theme="dark"] .comparison-item {
+  background: rgba(40, 49, 45, 0.76);
+  border-color: rgba(108, 158, 143, 0.22);
+}
+
+[data-theme="dark"] .bar-track {
+  background: rgba(79, 157, 138, 0.22);
+}
+
+[data-theme="dark"] .heatmap-cell {
+  border-color: rgba(108, 158, 143, 0.22);
+}
+
+@media (max-width: 1024px) {
+  .session-analytics-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .session-analytics-chart-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .post-onboarding-modal {
+    width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+
+  .post-onboarding-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: rgba(24, 30, 27, 0.96);
+  }
+
+  .session-analytics-modal {
+    width: 100vw;
+    max-height: 100dvh;
+    height: 100dvh;
+    border-radius: 0;
+  }
+
+  .session-analytics-body {
+    max-height: calc(100dvh - 92px);
+  }
+
+  .session-analytics-summary-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .heatmap-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+}
+
 .modal-content {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 250, 243, 0.92));
   border-radius: 20px;
@@ -19476,14 +20483,95 @@ html {
 }
 
 .workspace-quick-controls {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  width: 100%;
   padding: 0 10px 10px;
 }
 
-.quick-font-controls {
-  min-width: min(220px, 100%);
+.quick-pill-group {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.42);
+  padding: 5px;
+}
+
+.quick-pill-group > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  list-style: none;
+  cursor: pointer;
+  padding: 4px 7px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.quick-pill-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.quick-pill-group-list {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.quick-pill-summary-icon {
+  transition: transform 0.18s ease;
+}
+
+.quick-pill-group[open] .quick-pill-summary-icon {
+  transform: rotate(180deg);
+}
+
+.quick-font-dropdown,
+.quick-font-dropdown .font-dropdown-trigger {
+  width: auto;
+  min-width: 0;
+}
+
+.quick-font-dropdown .font-dropdown-trigger {
+  justify-content: space-between;
+}
+
+.setup-metric-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.setup-metric-row span {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--accent-light);
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 650;
+}
+
+.setup-metric-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.setup-metric-detail span {
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: rgba(154, 103, 56, 0.08);
 }
 
 .session-quickstart-card {
@@ -19554,22 +20642,23 @@ html {
   }
 
   .workspace-quick-controls {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
     padding: 0;
   }
 
+  .quick-pill-group {
+    width: 100%;
+  }
+
+  .quick-pill-group-list .toolbar-chip {
+    flex: 1 1 calc(50% - 6px);
+    min-height: 42px;
+  }
+
   .workspace-quick-controls .toolbar-chip,
-  .quick-font-controls,
   .quick-font-dropdown,
   .quick-font-dropdown .font-dropdown-trigger {
     width: 100%;
     min-width: 0;
-  }
-
-  .quick-font-controls {
-    grid-column: 1 / -1;
   }
 
   .session-quickstart-card {
@@ -19580,5 +20669,118 @@ html {
   .session-quickstart-actions {
     align-items: stretch;
   }
+}
+
+.workspace-shell {
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.workspace-shell:has(.action-btn-exit) {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+  border-color: rgba(165, 126, 84, 0.28);
+}
+
+.workspace-shell-meta {
+  padding: 0 10px 8px;
+}
+
+.workspace-shell-meta > span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+}
+
+.main,
+.content,
+.workspace,
+.workspace-main {
+  overflow-x: clip;
+}
+
+[data-theme="dark"] .quick-pill-group {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(216, 185, 150, 0.18);
+}
+
+[data-theme="light"] .quick-pill-group,
+[data-theme="sepia"] .quick-pill-group {
+  background: rgba(255, 255, 255, 0.68);
+  border-color: rgba(160, 120, 76, 0.16);
+}
+
+[data-theme="dark"] .quick-font-dropdown .font-dropdown-trigger,
+[data-theme="dark"] .setup-metric-row span {
+  background: rgba(255, 247, 236, 0.055);
+  border-color: rgba(255, 236, 216, 0.14);
+  color: var(--text);
+}
+
+[data-theme="dark"] .setup-metric-detail span {
+  background: rgba(255, 247, 236, 0.045);
+  color: var(--text-muted);
+}
+
+[data-theme="light"] .quick-font-dropdown .font-dropdown-trigger,
+[data-theme="sepia"] .quick-font-dropdown .font-dropdown-trigger,
+[data-theme="light"] .setup-metric-row span,
+[data-theme="sepia"] .setup-metric-row span {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(160, 120, 76, 0.16);
+  color: var(--text-muted);
+}
+
+[data-theme="light"] .setup-metric-detail span,
+[data-theme="sepia"] .setup-metric-detail span {
+  background: rgba(154, 103, 56, 0.08);
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .stats-full-analytics-btn {
+  color: #1a140f;
+  background: linear-gradient(135deg, #d0a06b, #b98654);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.36);
+}
+
+[data-theme="light"] .stats-full-analytics-btn,
+[data-theme="sepia"] .stats-full-analytics-btn {
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  box-shadow: 0 12px 24px rgba(112, 78, 43, 0.18);
+}
+
+[data-theme="light"] .post-onboarding-modal,
+[data-theme="sepia"] .post-onboarding-modal {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(250, 245, 238, 0.96));
+  border-color: rgba(160, 120, 76, 0.16);
+  color: var(--text);
+}
+
+[data-theme="light"] .post-onboarding-header,
+[data-theme="sepia"] .post-onboarding-header,
+[data-theme="light"] .post-onboarding-footer,
+[data-theme="sepia"] .post-onboarding-footer {
+  border-color: rgba(160, 120, 76, 0.14);
+}
+
+[data-theme="light"] .post-onboarding-header h2,
+[data-theme="sepia"] .post-onboarding-header h2 {
+  color: var(--text);
+}
+
+[data-theme="light"] .post-onboarding-body p,
+[data-theme="sepia"] .post-onboarding-body p,
+[data-theme="light"] .post-onboarding-points,
+[data-theme="sepia"] .post-onboarding-points {
+  color: var(--text-muted);
+}
+
+[data-theme="light"] .session-analytics-summary-card,
+[data-theme="light"] .session-analytics-chart-card,
+[data-theme="light"] .comparison-item,
+[data-theme="sepia"] .session-analytics-summary-card,
+[data-theme="sepia"] .session-analytics-chart-card,
+[data-theme="sepia"] .comparison-item {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(160, 120, 76, 0.14);
 }
 </style>

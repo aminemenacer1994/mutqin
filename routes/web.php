@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\HomeController;
 
 // Authentication routes (from laravel/ui)
@@ -10,8 +11,8 @@ Auth::routes();
 
 // Public routes
 Route::get('/', function () {
-    return view('home');
-})->name('home');
+    return redirect()->route('memorisation');
+})->name('onboarding');
 
 Route::get('/memorisation', function () {
     return view('memorisation');

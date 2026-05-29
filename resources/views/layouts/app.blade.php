@@ -430,7 +430,7 @@
     <div id="app">
         <nav class="navbar navbar-expand-lg app-navbar">
             <div class="container-fluid shell navbar-shell">
-                <a class="navbar-brand" href="/">
+                <a class="navbar-brand" href="/memorisation">
                     <img
                         id="appNavbarLogo"
                         src="/images/logo.png"
@@ -447,8 +447,8 @@
 
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <div class="navbar-nav nav-links-desktop me-auto">
-                        <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="/">Home</a>
-                        <a class="nav-link {{ request()->is('memorisation') ? 'active' : '' }}" href="/memorisation">Memorisation</a>
+                        <!-- <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="/">Home</a>
+                        <a class="nav-link {{ request()->is('memorisation') ? 'active' : '' }}" href="/memorisation">Memorisation</a> -->
                     </div>
 
                     <div class="d-flex align-items-center gap-3 ms-auto app-navbar-actions">
