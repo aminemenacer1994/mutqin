@@ -103,39 +103,48 @@
         </div>
         <div v-else-if="hasVerses" class="workspace">
           <section class="workspace-shell" :class="{ collapsed: mainCardCollapsed }" aria-label="Session overview">
-            <div class="workspace-shell-head" style="padding: 10px;">
+            <div class="workspace-shell-head">
               <div class="workspace-shell-copy">
+                <span class="workspace-shell-kicker">{{ hasSessionStarted ? 'Active session' : 'Session ready' }}</span>
                 <div class="workspace-shell-title-row">
                   <h1>{{ currentChapter ? currentChapter.name_simple : activeChapterName }}</h1>
                 </div>
                 <p>{{ currentActionLabel }}</p>
+                <div v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
+                  <span>Ayah {{ currentPosition }} of {{ totalVerses }}</span>
+                  <span>{{ progressPercent }}% complete</span>
+                  <span v-if="etaLabel">{{ etaLabel }} left</span>
+                  <span v-if="chainingEnabled && hasSessionFeedback">{{ chainingMethodLabel }}</span>
+                </div>
               </div>
               <div class="workspace-shell-actions">
                 <div class="action-buttons-group">
-                  <button v-if="hasSessionStarted" class="action-btn action-btn-secondary action-btn-exit" type="button" @click="openSessionExitModal"
-                    title="End session">
-                    <i class="bi bi-box-arrow-right"></i>
-                    <span>End Session</span>
-                  </button>
-                  <button class="action-icon-btn" @click="toggleFullScreen" title="Full screen mode">
-                    <i class="bi bi-arrows-fullscreen"></i>
-                  </button>
-                  <button class="action-icon-btn" @click="toggleKeyboardShortcuts" title="Keyboard shortcuts">
-                    <i class="bi bi-keyboard"></i>
-                  </button>
-                  <button class="action-icon-btn" @click="openOnboardingModal(true)" title="How Mutqin works">
-                    <i class="bi bi-question-circle"></i>
+                  <button class="action-btn action-btn-primary" type="button" @click="handlePrimaryAction"
+                    :disabled="!isPlaying && !canStartSession">
+                    <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                    <span>{{ isPlaying ? 'Pause' : 'Start Session' }}</span>
                   </button>
                   <button class="action-btn action-btn-secondary" type="button" @click="openAdvancedControls"
                     title="Open session controls">
                     <i class="bi bi-sliders"></i>
                     <span>Controls</span>
                   </button>
-                  <button class="action-btn action-btn-primary" type="button" @click="handlePrimaryAction"
-                    :disabled="!isPlaying && !canStartSession">
-                    <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-                    <span>{{ isPlaying ? 'Pause' : 'Start Session' }}</span>
+                  <button v-if="hasSessionStarted" class="action-btn action-btn-secondary action-btn-exit" type="button" @click="openSessionExitModal"
+                    title="End session">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>End Session</span>
                   </button>
+                  <div class="workspace-shell-icon-actions">
+                    <button class="action-icon-btn" @click="toggleKeyboardShortcuts" title="Keyboard shortcuts">
+                      <i class="bi bi-keyboard"></i>
+                    </button>
+                    <button class="action-icon-btn" @click="openOnboardingModal(true)" title="How Mutqin works">
+                      <i class="bi bi-question-circle"></i>
+                    </button>
+                    <button class="action-icon-btn" @click="toggleFullScreen" title="Full screen mode">
+                      <i class="bi bi-arrows-fullscreen"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -211,25 +220,8 @@
                 </div>
               </div>
             </div>
-            <div v-show="!mainCardCollapsed" class="workspace-shell-meta">
-              <span>Ayah {{ currentPosition }} of {{ totalVerses }}</span>
-              <span>{{ progressPercent }}% complete</span>
-              <span v-if="etaLabel">{{ etaLabel }}</span>
-
-              <div v-if="!mainCardCollapsed && chainingEnabled && hasSessionFeedback" class="workspace-shell-chaining"
-                aria-label="Chaining status">
-                <span class="workspace-shell-chain-pill shadow-md">
-                  <i class="bi bi-link-45deg"></i>{{ chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking' }} · {{
-                    chainingRepetitions }}x
-                </span>
-                <span class="workspace-shell-chain-pill workspace-shell-chain-pill-soft shadow-md">
-                  <i class="bi bi-diagram-3"></i>{{ chainingProgressLabel }}
-                </span>
-              </div>
-            </hr>
-            </div>
             <div v-show="!mainCardCollapsed" class="workspace-quick-controls" aria-label="Quick reading controls">
-              <details class="quick-pill-group" open>
+              <details class="quick-pill-group">
                 <summary>
                   <span>Reading aids</span>
                   <i class="bi bi-chevron-down quick-pill-summary-icon"></i>
@@ -430,12 +422,24 @@
                       <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.name_simple }}</option>
                     </select>
                     <small class="field-hint">Pick the surah you want to work on.</small>
-                    <div class="setup-metric-row">
-                      <span><i class="bi bi-play-circle"></i> Session plays: {{ sessionPlayCountValue }}</span>
-                      <span><i class="bi bi-music-note-list"></i> Verse plays: {{ totalVersePlayCountValue }}</span>
+                    <div class="setup-metric-grid">
+                      <article class="setup-metric-card">
+                        <span>Session plays</span>
+                        <strong>{{ sessionPlayCountValue }}</strong>
+                        <small>How many times this session has been started or resumed.</small>
+                      </article>
+                      <article class="setup-metric-card">
+                        <span>Total verse plays</span>
+                        <strong>{{ totalVersePlayCountValue }}</strong>
+                        <small>Audio starts counted across the selected ayahs.</small>
+                      </article>
                     </div>
-                    <div v-if="sessionVersePlaySummary.length" class="setup-metric-detail" aria-label="Verse play counts">
-                      <span v-for="item in sessionVersePlaySummary" :key="item.key">{{ item.label }}: {{ item.count }}</span>
+                    <div class="setup-metric-list" aria-label="Verse play counts">
+                      <div v-if="sessionVersePlaySummary.length" v-for="item in sessionVersePlaySummary" :key="item.key" class="setup-metric-list-row">
+                        <span>{{ item.label }}</span>
+                        <strong>{{ item.count }} play{{ item.count === 1 ? '' : 's' }}</strong>
+                      </div>
+                      <div v-else class="setup-metric-list-empty">No ayah audio played yet for this session.</div>
                     </div>
                   </div>
                   <div class="field">
@@ -981,36 +985,157 @@
 
     <div v-else-if="appReady && !isLoggedIn" class="main container">
       <div class="login-hero">
-        <div class="login-card">
-          <div class="login-icon">
-            <i class="bi bi-book-half"></i>
-          </div>
-          <h1>Welcome to Mutqin</h1>
-          <p class="login-subtitle">Your personal Quran memorisation companion</p>
+        <div class="guest-shell">
+          <section class="guest-hero">
+            <div class="guest-hero-copy">
+              <span class="guest-kicker">Calm Quran memorisation</span>
+              <h1>Memorise with a quieter, more deliberate session flow.</h1>
+              <div class="guest-copy-stack">
+                <p class="guest-subtitle">
+                  Build each session around a small ayah range, steady repetition, and clean recall.
+                </p>
+                <p class="guest-copy-support">
+                  Mutqin keeps the page focused on the Quran itself, while your progress, playback, and saved sessions remain structured in the background.
+                </p>
+              </div>
 
-          <div class="login-features">
-            <div class="feature">
-              <i class="bi bi-cloud-check"></i>
-              <span>Sync across devices</span>
-            </div>
-            <div class="feature">
-              <i class="bi bi-graph-up"></i>
-              <span>Track your progress</span>
-            </div>
-            <div class="feature">
-              <i class="bi bi-calendar-check"></i>
-              <span>Never lose your place</span>
-            </div>
-          </div>
+              <div class="guest-action-row">
+                <a href="/login" class="login-btn guest-primary-btn" style="text-decoration: none;">
+                  <i class="bi bi-box-arrow-in-right"></i>
+                  <span>Start with your account</span>
+                </a>
+                <a href="/register" class="guest-secondary-btn" style="text-decoration: none;">
+                  <i class="bi bi-person-plus"></i>
+                  <span>Create a new account</span>
+                </a>
+              </div>
+              <p class="guest-cta-note">Login keeps your sessions, insights, and exact memorisation position in sync.</p>
 
-          <a href="/login" class="login-btn" style="text-decoration: none;">
-            <i class="bi bi-box-arrow-in-right"></i>
-            <span>Sign in to continue</span>
-          </a>
+              <div class="guest-proof-row">
+                <span><i class="bi bi-cloud-check"></i> Sync progress across devices</span>
+                <span><i class="bi bi-arrow-repeat"></i> Structured repetition loops</span>
+                <span><i class="bi bi-clock-history"></i> Resume where you stopped</span>
+              </div>
+            </div>
 
-          <p class="login-note">
-            Your sessions, progress, and resume history sync after login
-          </p>
+            <aside class="guest-hero-panel">
+              <div class="guest-preview-card">
+                <div class="guest-preview-icon">
+                  <i class="bi bi-book-half"></i>
+                </div>
+                <div class="guest-preview-copy">
+                  <strong>What a Mutqin session feels like</strong>
+                  <p>Short enough to stay focused. Structured enough to make long-term memorisation easier to revisit.</p>
+                </div>
+                <div class="guest-preview-steps">
+                  <div class="guest-preview-step">
+                    <span>1</span>
+                    <div>
+                      <strong>Choose your ayahs</strong>
+                      <small>Pick the surah, range, and reciter.</small>
+                    </div>
+                  </div>
+                  <div class="guest-preview-step">
+                    <span>2</span>
+                    <div>
+                      <strong>Repeat with structure</strong>
+                      <small>Use playback, chaining, focus, and blur tools.</small>
+                    </div>
+                  </div>
+                  <div class="guest-preview-step">
+                    <span>3</span>
+                    <div>
+                      <strong>Recall and review</strong>
+                      <small>Track what was covered and return later with clarity.</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </section>
+
+          <section class="guest-section guest-section-row">
+            <div class="guest-section-head guest-section-head-side">
+              <span class="guest-section-kicker">Core experience</span>
+              <h2>Built around real memorisation sessions</h2>
+              <p>Everything stays centred on recitation, recall, and repetition instead of a dashboard-heavy workflow.</p>
+            </div>
+            <div class="guest-feature-grid">
+              <article class="guest-feature-card">
+                <i class="bi bi-layers"></i>
+                <strong>Session-based memorisation</strong>
+                <p>Choose a focused ayah range and work through it with a clear beginning and end.</p>
+              </article>
+              <article class="guest-feature-card">
+                <i class="bi bi-arrow-repeat"></i>
+                <strong>Smart repetition loops</strong>
+                <p>Repeat ayahs cleanly or use chaining methods when transitions need more work.</p>
+              </article>
+              <article class="guest-feature-card">
+                <i class="bi bi-ear"></i>
+                <strong>Recall with less clutter</strong>
+                <p>Turn on only the reading aids and support tools that help the current session.</p>
+              </article>
+              <article class="guest-feature-card">
+                <i class="bi bi-graph-up-arrow"></i>
+                <strong>Progress you can return to</strong>
+                <p>Saved sessions, insights, and resume history remain ready after login.</p>
+              </article>
+            </div>
+          </section>
+
+          <section class="guest-section guest-section-split">
+            <article class="guest-panel">
+              <div class="guest-panel-head">
+                <span class="guest-section-kicker">Session flow</span>
+                <h3>How a memorisation session moves</h3>
+              </div>
+              <div class="guest-flow-list">
+                <div class="guest-flow-item">
+                  <span>01</span>
+                  <p>Select a surah, define a short ayah range, and choose your reciter.</p>
+                </div>
+                <div class="guest-flow-item">
+                  <span>02</span>
+                  <p>Listen and repeat with the number of plays and pacing that suits your level.</p>
+                </div>
+                <div class="guest-flow-item">
+                  <span>03</span>
+                  <p>Switch into recall with fewer aids, then review weak points without losing context.</p>
+                </div>
+              </div>
+            </article>
+
+            <article class="guest-panel">
+              <div class="guest-panel-head">
+                <span class="guest-section-kicker">After login</span>
+                <h3>What you keep</h3>
+              </div>
+              <div class="guest-benefit-list">
+                <div class="guest-benefit-item">
+                  <i class="bi bi-save2"></i>
+                  <div>
+                    <strong>Saved sessions</strong>
+                    <p>Keep named memorisation sessions ready for later review.</p>
+                  </div>
+                </div>
+                <div class="guest-benefit-item">
+                  <i class="bi bi-play-circle"></i>
+                  <div>
+                    <strong>Resume history</strong>
+                    <p>Return to the exact ayah, queue position, and playback context.</p>
+                  </div>
+                </div>
+                <div class="guest-benefit-item">
+                  <i class="bi bi-bar-chart-line"></i>
+                  <div>
+                    <strong>Session insights</strong>
+                    <p>See ayahs reviewed, time spent, play counts, and compact analytics.</p>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </section>
         </div>
       </div>
     </div>
@@ -1203,8 +1328,83 @@
                 <article v-for="item in analyticsSummaryCards" :key="item.key" class="session-analytics-summary-card">
                   <span>{{ item.label }}</span>
                   <strong>{{ item.value }}</strong>
+                  <small>{{ item.description }}</small>
                 </article>
               </div>
+            </section>
+            <section class="session-analytics-section session-analytics-two-col">
+              <article class="session-analytics-panel">
+                <header>
+                  <h3>Progress</h3>
+                  <p>Simple coverage across the selected ayah range.</p>
+                </header>
+                <div class="analytics-progress-split">
+                  <div class="analytics-progress-stat">
+                    <strong>{{ analyticsCurrentProgressPercent }}%</strong>
+                    <span>Current progress</span>
+                    <small>{{ analyticsProgressSummary }}</small>
+                  </div>
+                  <div class="analytics-progress-stat">
+                    <strong>{{ analyticsRemainingProgressPercent }}%</strong>
+                    <span>Remaining progress</span>
+                    <small>{{ analyticsRemainingSummary }}</small>
+                  </div>
+                </div>
+                <div class="analytics-progress-bar">
+                  <div class="analytics-progress-bar-fill" :style="{ width: `${analyticsCurrentProgressPercent}%` }"></div>
+                </div>
+              </article>
+              <article class="session-analytics-panel">
+                <header>
+                  <h3>Ayah activity</h3>
+                  <p>Verse plays across the selected range.</p>
+                </header>
+                <div v-if="analyticsVerseSeries.length" class="analytics-line-chart">
+                  <svg viewBox="0 0 320 160" role="img" aria-label="Ayah activity chart">
+                    <defs>
+                      <linearGradient id="analyticsAreaGradient" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stop-color="rgba(189, 140, 88, 0.34)"></stop>
+                        <stop offset="100%" stop-color="rgba(189, 140, 88, 0.02)"></stop>
+                      </linearGradient>
+                    </defs>
+                    <path :d="analyticsLineAreaPath" fill="url(#analyticsAreaGradient)"></path>
+                    <path :d="analyticsLinePath" class="analytics-line-path"></path>
+                    <circle
+                      v-for="point in analyticsLineDots"
+                      :key="point.key"
+                      :cx="point.x"
+                      :cy="point.y"
+                      r="3.5"
+                      class="analytics-line-dot"
+                    ></circle>
+                  </svg>
+                  <div class="analytics-line-labels">
+                    <span v-for="item in analyticsVerseSeries" :key="`label-${item.key}`">{{ item.shortLabel }}</span>
+                  </div>
+                </div>
+                <div v-else class="analytics-empty-panel">Play ayah audio to populate the activity chart.</div>
+              </article>
+            </section>
+            <section class="session-analytics-section">
+              <article class="session-analytics-panel">
+                <header>
+                  <h3>Ayah heatmap</h3>
+                  <p>Darker cells show more audio replay on that ayah.</p>
+                </header>
+                <div v-if="analyticsHeatmapCells.length" class="analytics-heatmap-grid">
+                  <div
+                    v-for="cell in analyticsHeatmapCells"
+                    :key="cell.key"
+                    class="analytics-heatmap-cell"
+                    :style="{ '--cell-intensity': cell.intensity }"
+                    :title="`${cell.label}: ${cell.value} play${cell.value === 1 ? '' : 's'}`"
+                  >
+                    <span>{{ cell.shortLabel }}</span>
+                    <strong>{{ cell.value }}</strong>
+                  </div>
+                </div>
+                <div v-else class="analytics-empty-panel">No verse play data available yet.</div>
+              </article>
             </section>
           </template>
         </div>
@@ -1232,7 +1432,7 @@
         <div class="modal-footer post-onboarding-footer">
           <button class="btn-secondary" @click="skipOnboarding">Skip</button>
           <button v-if="onboardingStepIndex < onboardingSteps.length - 1" class="btn-primary" @click="nextOnboardingStep">Next</button>
-          <button v-else class="btn-primary" @click="completeOnboardingAndStart">Start your first session</button>
+          <button v-else class="btn-primary" @click="completeOnboardingAndStart">Finish and start</button>
         </div>
       </div>
     </div>
@@ -1543,6 +1743,16 @@ export default {
           title: 'Anchor Mode',
           body: 'Anchor mode adds simple memory cues to help you recall the ayah.',
           points: ['Highlight key words', 'Keep recall simple']
+        },
+        {
+          title: 'Before you recite',
+          body: 'The only specific opener before reciting is seeking refuge in Allah. These Qur\'anic supplications are safe, established, and widely taught before study and recitation.',
+          points: [
+            'A\'udhu billahi min ash-shaytan ir-rajim. I seek refuge in Allah from the accursed Shaytan.',
+            'Bismillahir-Rahmanir-Rahim. In the name of Allah, the Most Compassionate, the Most Merciful.',
+            'Rabbi zidni ilma. My Lord, increase me in knowledge.',
+            'Rabbi ishrah li sadri wa yassir li amri. My Lord, expand my chest and make my task easy.'
+          ]
         }
       ],
       showConfirmModal: false,
@@ -2032,63 +2242,60 @@ export default {
       const data = this.analyticsModalData
       if (!data) return []
       return [
-        { key: 'verses', label: 'Ayahs Reviewed', value: `${data.metrics.verses_read}` },
-        { key: 'time', label: 'Time Memorising', value: this.formatTime(data.metrics.time_spent_seconds) },
-        { key: 'reps', label: 'Repeats Completed', value: `${data.metrics.repetitions_completed}` },
-        { key: 'session_plays', label: 'Session Plays', value: `${data.metrics.session_play_count || 0}` },
-        { key: 'verse_plays', label: 'Verse Plays', value: `${data.metrics.total_verse_play_count || 0}` },
-        { key: 'recall', label: 'Recall Strength', value: data.metrics.recall_strength }
+        { key: 'verses', label: 'Ayahs reviewed', value: `${data.metrics.verses_read}`, description: 'Distinct ayahs covered in this session.' },
+        { key: 'time', label: 'Time memorising', value: this.formatTime(data.metrics.time_spent_seconds), description: 'Focused study time recorded for this session.' },
+        { key: 'session_plays', label: 'Session plays', value: `${data.metrics.session_play_count || 0}`, description: 'How often this session was started or resumed.' },
+        { key: 'verse_plays', label: 'Verse plays', value: `${data.metrics.total_verse_play_count || 0}`, description: 'Total ayah audio starts across the selected range.' }
       ]
     },
-    analyticsLinePoints() {
-      const series = this.analyticsModalData?.charts?.timeSeries || []
-      if (!series.length) return ''
-      const maxY = Math.max(1, ...series.map(point => Number(point.value || 0)))
-      const width = 300
-      const height = 120
-      return series.map((point, idx) => {
-        const x = (idx / Math.max(1, series.length - 1)) * (width - 8) + 4
-        const y = height - ((Number(point.value || 0) / maxY) * (height - 16) + 8)
-        return `${x.toFixed(2)},${y.toFixed(2)}`
-      }).join(' ')
+    analyticsTotalAyahs() {
+      return Math.max(1, Number(this.analyticsModalData?.metrics?.total_ayahs || 1))
     },
-    analyticsTopRepeatedBars() {
-      const bars = this.analyticsModalData?.charts?.topRepeated || []
-      const maxValue = Math.max(1, ...bars.map(item => Number(item.value || 0)))
-      return bars.map(item => ({
-        label: item.label,
-        value: Number(item.value || 0),
-        width: Math.max(6, Math.round((Number(item.value || 0) / maxValue) * 100))
-      }))
+    analyticsCurrentProgressPercent() {
+      const reviewed = Math.max(0, Number(this.analyticsModalData?.metrics?.verses_read || 0))
+      return Math.max(0, Math.min(100, Math.round((reviewed / this.analyticsTotalAyahs) * 100)))
     },
-    analyticsComparison() {
-      const comparison = this.analyticsModalData?.charts?.weakStrong || { weak: 0, strong: 0 }
-      return {
-        weak: Number(comparison.weak || 0),
-        strong: Number(comparison.strong || 0)
-      }
+    analyticsRemainingProgressPercent() {
+      return Math.max(0, 100 - this.analyticsCurrentProgressPercent)
     },
-    analyticsPieSlices() {
-      const slices = this.analyticsModalData?.charts?.activityBreakdown || []
-      const total = Math.max(1, slices.reduce((sum, item) => sum + Number(item.value || 0), 0))
-      return slices.map(item => ({
-        key: item.key,
-        label: item.label,
-        percent: Math.round((Number(item.value || 0) / total) * 100)
-      }))
+    analyticsProgressSummary() {
+      const reviewed = Math.max(0, Number(this.analyticsModalData?.metrics?.verses_read || 0))
+      return `${reviewed} of ${this.analyticsTotalAyahs} ayahs covered`
     },
-    analyticsPieGradient() {
-      const slices = this.analyticsPieSlices
-      if (!slices.length) return 'conic-gradient(#4f9d8a 0deg 360deg)'
-      const palette = ['#4f9d8a', '#5aa58f', '#3c786c', '#74b5a1']
-      let cursor = 0
-      const parts = slices.map((slice, idx) => {
-        const next = cursor + (slice.percent * 3.6)
-        const part = `${palette[idx % palette.length]} ${cursor.toFixed(1)}deg ${next.toFixed(1)}deg`
-        cursor = next
-        return part
+    analyticsRemainingSummary() {
+      const remaining = Math.max(0, this.analyticsTotalAyahs - Number(this.analyticsModalData?.metrics?.verses_read || 0))
+      return `${remaining} ayah${remaining === 1 ? '' : 's'} left to complete the range`
+    },
+    analyticsVerseSeries() {
+      return this.analyticsModalData?.charts?.verseSeries || []
+    },
+    analyticsLineDots() {
+      const series = this.analyticsVerseSeries
+      if (!series.length) return []
+      const width = 320
+      const height = 160
+      const innerWidth = 280
+      const innerHeight = 112
+      const left = 20
+      const bottom = 132
+      const maxValue = Math.max(1, ...series.map(item => Number(item.value || 0)))
+      return series.map((item, index) => {
+        const x = left + ((innerWidth * index) / Math.max(1, series.length - 1))
+        const y = bottom - ((Number(item.value || 0) / maxValue) * innerHeight)
+        return { ...item, x, y }
       })
-      return `conic-gradient(${parts.join(', ')})`
+    },
+    analyticsLinePath() {
+      const dots = this.analyticsLineDots
+      if (!dots.length) return ''
+      return dots.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ')
+    },
+    analyticsLineAreaPath() {
+      const dots = this.analyticsLineDots
+      if (!dots.length) return ''
+      const first = dots[0]
+      const last = dots[dots.length - 1]
+      return `${this.analyticsLinePath} L ${last.x} 132 L ${first.x} 132 Z`
     },
     analyticsHeatmapCells() {
       return this.analyticsModalData?.heatmap || []
@@ -2160,12 +2367,12 @@ export default {
       return 'Use when you want to strengthen transitions between neighboring ayahs.'
     },
     currentActionLabel() {
-      if (!this.hasVerses) return 'Choose surah and range, then start.'
-      if (!this.effectiveActiveVerseKey) return 'Tap Start Session to build and start the queue.'
-      if (this.guidedUiStep === 'review') return 'Action now: review this ayah and continue.'
-      if (this.guidedUiStep === 'recall') return 'Action now: recite from memory, then reveal to confirm.'
-      if (this.isPlaying) return 'Action now: listen and follow the active ayah.'
-      return 'Action now: press Play, then recite and repeat as needed.'
+      if (!this.hasVerses) return 'Choose a surah and ayah range to begin.'
+      if (!this.effectiveActiveVerseKey) return 'Start the session to build your memorisation queue.'
+      if (this.guidedUiStep === 'review') return 'Review this ayah, then continue.'
+      if (this.guidedUiStep === 'recall') return 'Recite from memory, then reveal to confirm.'
+      if (this.isPlaying) return 'Listen to the active ayah and follow calmly.'
+      return 'Press play, then recite and repeat at your pace.'
     },
     reviewPriorityLabel() {
       if (this.guidedUiStep !== 'review') return ''
@@ -2909,6 +3116,20 @@ export default {
     fontScale: 'persistUiState',
     quranFont: 'persistUiState',
     script: 'persistUiState',
+    repetitionsPerStep(newVal) {
+      const safeValue = Math.max(1, Math.min(50, Number(newVal || 1)))
+      if (safeValue !== Number(this.repetitionsPerStep)) {
+        this.repetitionsPerStep = safeValue
+        return
+      }
+      this.persistUiState()
+      this.persistCentralSessionState()
+      if (this.hasVerses && !this.chainingEnabled) this.rebuildQueue(this.currentMode)
+    },
+    selectedLoopCount: 'persistUiState',
+    gapBetweenVerses: 'persistUiState',
+    customGapSeconds: 'persistUiState',
+    focusDimPercent: 'persistUiState',
     activeKey: 'persistSessionState',
     queueIndex: 'persistSessionState',
     playerVisible: 'persistAudioState',
@@ -2916,6 +3137,9 @@ export default {
     currentTime: 'persistAudioState',
     flowStep: 'persistUiState',
     sectionOpen: { handler: 'persistUiState', deep: true },
+    statsTick() {
+      if (this.showSessionAnalyticsModal) this.refreshAnalyticsModalData()
+    },
 
     tajweedEnabled() {
       this.persistUiState()
@@ -3098,6 +3322,10 @@ export default {
           reciterId: this.reciterId,
           speed: this.speed,
           playMode: this.playMode,
+          repetitionsPerStep: this.repetitionsPerStep,
+          selectedLoopCount: this.selectedLoopCount,
+          gapBetweenVerses: this.gapBetweenVerses,
+          customGapSeconds: this.customGapSeconds,
           chainingEnabled: this.chainingEnabled,
           chainingMethod: this.chainingMethod,
           chainingRepetitions: this.chainingRepetitions,
@@ -3107,6 +3335,7 @@ export default {
           showWordByWord: this.showWordByWord,
           wordByWordAudioEnabled: this.wordByWordAudioEnabled,
           focusModeEnabled: this.focusModeEnabled,
+          focusDimPercent: this.focusDimPercent,
           blurModeEnabled: this.blurModeEnabled,
           blurIntensity: this.blurIntensity,
           anchorModeEnabled: this.anchorModeEnabled,
@@ -3512,7 +3741,7 @@ export default {
         self.startSession()
       })
     },
-    startSessionAndClose() {
+    async startSessionAndClose() {
       if (!this.canStartSession) {
         this.showTools = true
         this.showBanner('Please select a valid surah and ayah range first', 'info', 3600)
@@ -3521,6 +3750,7 @@ export default {
       this.applySessionConfig(this.buildSessionConfig(this.currentMode))
       this.persistUiState()
       this.persistCentralSessionState()
+      await this.applyWorkspaceControls({ mode: this.currentMode })
       this.closeToolsPanel()
       setTimeout(() => {
         this.startSessionWithCountdown()
@@ -3882,11 +4112,17 @@ export default {
         reciterId: this.reciterId,
         speed: this.speed,
         playMode: this.playMode,
+        repetitionsPerStep: this.repetitionsPerStep,
+        selectedLoopCount: this.selectedLoopCount,
+        gapBetweenVerses: this.gapBetweenVerses,
+        customGapSeconds: this.customGapSeconds,
         chainingEnabled: this.chainingEnabled,
         chainingMethod: this.chainingMethod,
         chainingRepetitions: this.chainingRepetitions,
         focusModeEnabled: this.focusModeEnabled,
+        focusDimPercent: this.focusDimPercent,
         blurModeEnabled: this.blurModeEnabled,
+        blurIntensity: this.blurIntensity,
         anchorModeEnabled: this.anchorModeEnabled,
         anchorCount: this.anchorCount,
         sectionOpen: deepClone(this.sectionOpen || {})
@@ -3903,11 +4139,14 @@ export default {
       this.reciterId = this.reciters[0]?.id || this.reciterId
       this.speed = 1
       this.playMode = 'auto'
+      this.repetitionsPerStep = 5
       this.chainingEnabled = true
       this.chainingMethod = 'linking'
       this.chainingRepetitions = 1
       this.focusModeEnabled = false
+      this.focusDimPercent = 54
       this.blurModeEnabled = false
+      this.blurIntensity = 10
       this.anchorModeEnabled = false
       this.anchorCount = 2
       this.tab = 'tools'
@@ -3928,11 +4167,17 @@ export default {
       this.reciterId = snapshot.reciterId
       this.speed = snapshot.speed
       this.playMode = snapshot.playMode
+      this.repetitionsPerStep = snapshot.repetitionsPerStep || this.repetitionsPerStep
+      this.selectedLoopCount = snapshot.selectedLoopCount ?? this.selectedLoopCount
+      this.gapBetweenVerses = snapshot.gapBetweenVerses || this.gapBetweenVerses
+      this.customGapSeconds = snapshot.customGapSeconds || this.customGapSeconds
       this.chainingEnabled = snapshot.chainingEnabled
       this.chainingMethod = snapshot.chainingMethod
       this.chainingRepetitions = snapshot.chainingRepetitions
       this.focusModeEnabled = snapshot.focusModeEnabled
+      this.focusDimPercent = snapshot.focusDimPercent || this.focusDimPercent
       this.blurModeEnabled = snapshot.blurModeEnabled
+      this.blurIntensity = snapshot.blurIntensity || this.blurIntensity
       this.anchorModeEnabled = snapshot.anchorModeEnabled
       this.anchorCount = snapshot.anchorCount
       this.sectionOpen = deepClone(snapshot.sectionOpen || this.sectionOpen)
@@ -3948,7 +4193,8 @@ export default {
         { tab: 'techniques', section: 'focus_mode' },
         { tab: 'techniques', section: 'blur_mode' },
         { tab: 'techniques', section: 'chaining' },
-        { tab: 'techniques', section: 'anchor_mode' }
+        { tab: 'techniques', section: 'anchor_mode' },
+        { tab: 'tools', section: null }
       ][step] || { tab: 'tools', section: 'advanced_setup' }
       this.tab = stepConfig.tab
       this.showTools = true
@@ -3980,8 +4226,7 @@ export default {
       this.showSessionAnalyticsModal = true
 
       window.requestAnimationFrame(() => {
-        this.analyticsModalData = this.buildSessionAnalyticsDataset(session)
-        this.analyticsModalLoaded = true
+        this.refreshAnalyticsModalData(session)
       })
     },
     closeSessionAnalyticsModal() {
@@ -3991,8 +4236,30 @@ export default {
       this.analyticsModalData = null
       this.analyticsReportState = { loading: false, success: false, error: '' }
     },
+    refreshAnalyticsModalData(session = null) {
+      const sourceSession = session || this.analyticsModalRecord
+      if (!sourceSession?.id) return
+      this.analyticsModalData = this.buildSessionAnalyticsDataset(sourceSession)
+      this.analyticsModalLoaded = true
+    },
+    sessionMatchesCurrentLiveConfig(session) {
+      if (!session?.config || !this.isSessionLive) return false
+      return Number(session.config.chapterId || 0) === Number(this.chapterId || 0)
+        && Number(session.config.rangeStart || 0) === Number(this.rangeStart || 0)
+        && Number(session.config.rangeEnd || 0) === Number(this.rangeEnd || 0)
+    },
+    getAnalyticsSessionStats(session) {
+      if (this.sessionMatchesCurrentLiveConfig(session)) {
+        return this.normalizeSessionStats(this.buildCurrentSessionStatsSnapshot(), session?.config || {})
+      }
+      return this.normalizeSessionStats(session?.stats || {}, session?.config || {})
+    },
     buildSessionAnalyticsDataset(session) {
-      const stats = this.normalizeSessionStats(session?.stats || {}, session?.config || {})
+      const stats = this.getAnalyticsSessionStats(session)
+      const rangeStart = Math.max(1, Number(session?.config?.rangeStart || 1))
+      const rangeEnd = Math.max(rangeStart, Number(session?.config?.rangeEnd || rangeStart))
+      const totalAyahs = Math.max(1, rangeEnd - rangeStart + 1)
+      const versePlayCounts = { ...(stats.verse_play_counts || {}) }
       const versesRead = Math.max(0, Number(stats.verses_read || 0))
       const repetitions = Math.max(0, Number(stats.repetitions_completed || 0))
       const weakVerses = Math.max(0, Number(stats.weak_verses_encountered || 0))
@@ -4000,6 +4267,20 @@ export default {
       const strongVerses = Math.max(0, versesRead - weakVerses)
       const recallRatio = versesRead > 0 ? ((strongVerses / versesRead) * 100) : 0
       const recallStrength = recallRatio >= 75 ? 'High' : recallRatio >= 45 ? 'Medium' : 'Low'
+      const verseSeries = Array.from({ length: totalAyahs }).map((_, index) => {
+        const ayahNumber = rangeStart + index
+        const verseKey = `${Number(session?.config?.chapterId || this.chapterId || 0)}:${ayahNumber}`
+        const inferredValue = ayahNumber < (rangeStart + versesRead) ? 1 : 0
+        const value = Math.max(0, Number(versePlayCounts[verseKey] || inferredValue))
+        return {
+          key: verseKey,
+          ayahNumber,
+          label: `Ayah ${ayahNumber}`,
+          shortLabel: `${ayahNumber}`,
+          value
+        }
+      })
+      const maxHeatValue = Math.max(1, ...verseSeries.map(item => Number(item.value || 0)))
 
       return {
         generatedAt: new Date().toISOString(),
@@ -4012,6 +4293,7 @@ export default {
         },
         metrics: {
           verses_read: versesRead,
+          total_ayahs: totalAyahs,
           time_spent_seconds: Math.max(0, Number(stats.time_spent_seconds || 0)),
           repetitions_completed: repetitions,
           self_checks: selfChecks,
@@ -4025,12 +4307,16 @@ export default {
           playback_average_seconds_per_verse: Math.max(0, Number(stats.average_time_per_verse_seconds || 0))
         },
         charts: {
-          timeSeries: [],
-          topRepeated: [],
+          verseSeries,
+          timeSeries: verseSeries,
+          topRepeated: verseSeries.filter(item => item.value > 0),
           weakStrong: { weak: weakVerses, strong: strongVerses },
           activityBreakdown: []
         },
-        heatmap: []
+        heatmap: verseSeries.map(item => ({
+          ...item,
+          intensity: Math.max(0.08, Math.min(1, Number(item.value || 0) / maxHeatValue))
+        }))
       }
     },
     validateAnalyticsReportPayload(payload) {
@@ -4074,6 +4360,7 @@ export default {
           },
           metrics: {
             verses_read: this.analyticsModalData.metrics.verses_read,
+            total_ayahs: this.analyticsModalData.metrics.total_ayahs || 0,
             time_spent_seconds: this.analyticsModalData.metrics.time_spent_seconds,
             repetitions_completed: this.analyticsModalData.metrics.repetitions_completed,
             session_play_count: this.analyticsModalData.metrics.session_play_count || 0,
@@ -4081,7 +4368,11 @@ export default {
             weak_verses: this.analyticsModalData.metrics.weak_verses,
             recall_strength: this.analyticsModalData.metrics.recall_strength
           },
-          verse_play_counts: this.analyticsModalData.metrics.verse_play_counts || {}
+          verse_play_counts: this.analyticsModalData.metrics.verse_play_counts || {},
+          charts: {
+            verse_series: this.analyticsModalData.charts?.verseSeries || []
+          },
+          heatmap: this.analyticsModalData.heatmap || []
         }
         const validation = this.validateAnalyticsReportPayload(reportPayload)
         if (!validation.ok) throw new Error(validation.message)
@@ -4897,6 +5188,10 @@ export default {
       return this.cloneModeState({
         ...config,
         mode,
+        repetitionsPerStep: Math.max(1, Math.min(50, Number(this.repetitionsPerStep || 1))),
+        selectedLoopCount: this.selectedLoopCount,
+        gapBetweenVerses: this.gapBetweenVerses,
+        customGapSeconds: Math.max(0.5, Math.min(10, Number(this.customGapSeconds || 2))),
         tajweedEnabled: this.tajweedEnabled,
         quranFont: this.quranFont,
         fontScale: this.fontScale,
@@ -4906,6 +5201,7 @@ export default {
         showWordByWord: this.showWordByWord,
         wordByWordAudioEnabled: this.wordByWordAudioEnabled,
         focusModeEnabled: this.focusModeEnabled,
+        focusDimPercent: Math.max(30, Math.min(75, Number(this.focusDimPercent || 54))),
         blurModeEnabled: this.blurModeEnabled,
         blurIntensity: this.blurIntensity,
         anchorModeEnabled: this.anchorModeEnabled,
@@ -4933,6 +5229,14 @@ export default {
       this.delay = Number.isFinite(parsedDelay) && parsedDelay >= 0 ? parsedDelay : 2
       this.playMode = config.playMode || 'auto'
       this.order = 'seq'
+      this.repetitionsPerStep = Math.max(1, Math.min(50, Number(config.repetitionsPerStep || this.repetitionsPerStep || 5)))
+      this.selectedLoopCount = config.selectedLoopCount === 'infinite'
+        ? 'infinite'
+        : Math.max(1, Math.min(50, Number(config.selectedLoopCount || this.selectedLoopCount || this.repetitionsPerStep || 5)))
+      this.gapBetweenVerses = ['none', '1x', '3s', '5s', 'custom'].includes(config.gapBetweenVerses)
+        ? config.gapBetweenVerses
+        : this.gapBetweenVerses
+      this.customGapSeconds = Math.max(0.5, Math.min(10, Number(config.customGapSeconds || this.customGapSeconds || 2)))
       this.chainingEnabled = config.chainingEnabled ?? this.chainingEnabled
       this.chainingMethod = ['linking', 'cumulative'].includes(config.chainingMethod)
         ? config.chainingMethod
@@ -4947,6 +5251,7 @@ export default {
       this.showWordByWord = config.showWordByWord ?? this.showWordByWord
       this.wordByWordAudioEnabled = config.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
       this.focusModeEnabled = !!config.focusModeEnabled
+      this.focusDimPercent = Math.max(30, Math.min(75, Number(config.focusDimPercent || this.focusDimPercent || 54)))
       this.blurModeEnabled = !!config.blurModeEnabled
       this.blurIntensity = Math.max(4, Math.min(18, Number(config.blurIntensity || this.blurIntensity || 10)))
       this.anchorModeEnabled = !!config.anchorModeEnabled
@@ -11851,86 +12156,351 @@ export default {
 /* Login Hero Section */
 .login-hero {
   min-height: calc(100vh - 100px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
+  padding: 34px 20px 48px;
+  align-items: stretch;
 }
 
-.login-card {
-  max-width: 480px;
-  width: 100%;
-  background: var(--surface-strong);
-  border: 1px solid var(--border);
-  border-radius: 32px;
-  padding: 48px 40px;
-  text-align: center;
-  box-shadow: var(--shadow-lg);
+.guest-shell {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 22px;
   animation: loginFadeIn 0.5s ease-out;
 }
 
-.login-icon {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  border-radius: 50%;
+.guest-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: 24px;
+  align-items: stretch;
+}
+
+.guest-hero-copy,
+.guest-hero-panel,
+.guest-section,
+.guest-panel {
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 252, 247, 0.96), rgba(247, 240, 231, 0.92));
+  box-shadow: var(--shadow-lg);
+}
+
+.guest-hero-copy {
+  border-radius: 34px;
+  padding: 38px;
+  display: grid;
+  gap: 18px;
+  align-content: center;
+}
+
+.guest-kicker,
+.guest-section-kicker {
+  display: inline-flex;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(154, 103, 56, 0.1);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.guest-hero-copy h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1.06;
+  letter-spacing: -0.04em;
+  color: var(--text);
+  max-width: 12ch;
+  font-weight: 650;
+}
+
+.guest-subtitle {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--text-muted);
+}
+
+.guest-copy-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.guest-copy-support,
+.guest-cta-note {
+  margin: 0;
+  max-width: 58ch;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.guest-action-row {
   display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.guest-primary-btn {
+  width: auto;
+  min-width: 260px;
+  margin-bottom: 0;
+  min-height: 58px;
+  padding-inline: 28px;
+  font-size: 1rem;
+  box-shadow: 0 14px 30px rgba(154, 103, 56, 0.24);
+}
+
+.guest-secondary-btn {
+  min-height: 58px;
+  padding: 14px 24px;
+  border-radius: 60px;
+  border: 1px solid rgba(154, 103, 56, 0.18);
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text);
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 24px;
-  box-shadow: 0 8px 24px rgba(154, 103, 56, 0.25);
+  gap: 10px;
+  font-size: 0.96rem;
+  font-weight: 600;
+  box-shadow: 0 12px 22px rgba(61, 40, 20, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.login-icon i {
-  font-size: 2.5rem;
-  color: white;
+.guest-secondary-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(154, 103, 56, 0.28);
 }
 
-.login-card h1 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 8px;
-}
-
-.login-subtitle {
-  font-size: 0.95rem;
-  color: var(--text-muted);
-  margin-bottom: 32px;
-}
-
-.login-features {
+.guest-proof-row {
   display: flex;
-  justify-content: center;
-  gap: 24px;
-  margin-bottom: 40px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
-.feature {
-  display: flex;
-  flex-direction: column;
+.guest-proof-row span {
+  display: inline-flex;
   align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.guest-hero-panel {
+  border-radius: 30px;
+  padding: 22px;
+  display: grid;
+}
+
+.guest-preview-card {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.guest-preview-icon {
+  width: 68px;
+  height: 68px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  box-shadow: 0 12px 28px rgba(154, 103, 56, 0.2);
+}
+
+.guest-preview-icon i {
+  font-size: 1.8rem;
+}
+
+.guest-preview-copy strong,
+.guest-panel h3,
+.guest-section h2,
+.guest-feature-card strong,
+.guest-benefit-item strong,
+.guest-preview-step strong {
+  color: var(--text);
+}
+
+.guest-preview-copy p,
+.guest-preview-step small,
+.guest-feature-card p,
+.guest-flow-item p,
+.guest-benefit-item p,
+.guest-section-head p {
+  color: var(--text-muted);
+}
+
+.guest-preview-steps {
+  display: grid;
+  gap: 12px;
+}
+
+.guest-preview-step {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(154, 103, 56, 0.12);
+}
+
+.guest-preview-step span,
+.guest-flow-item span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(154, 103, 56, 0.12);
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.guest-section {
+  border-radius: 28px;
+  padding: 28px;
+  display: grid;
+  gap: 18px;
+}
+
+.guest-section-row {
+  grid-template-columns: minmax(240px, 0.42fr) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.guest-section-head {
+  display: grid;
   gap: 8px;
 }
 
-.feature i {
-  font-size: 1.5rem;
-  color: var(--accent);
-  background: var(--accent-light);
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 24px;
-  transition: all 0.2s ease;
+.guest-section-head-side {
+  align-content: start;
 }
 
-.feature span {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--text-muted);
+.guest-section-head h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2vw, 1.9rem);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.guest-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.guest-feature-card {
+  border-radius: 18px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  display: grid;
+  gap: 10px;
+}
+
+.guest-feature-card i {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: rgba(154, 103, 56, 0.1);
+  color: var(--accent);
+  font-size: 1.05rem;
+}
+
+.guest-feature-card strong,
+.guest-panel h3 {
+  font-size: 0.98rem;
+  font-weight: 650;
+}
+
+.guest-feature-card p,
+.guest-benefit-item p,
+.guest-flow-item p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.guest-section-split {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.guest-panel {
+  border-radius: 24px;
+  padding: 24px;
+  display: grid;
+  gap: 16px;
+}
+
+.guest-panel-head {
+  display: grid;
+  gap: 8px;
+}
+
+.guest-panel h3 {
+  margin: 0;
+  font-size: 1.18rem;
+}
+
+.guest-flow-list,
+.guest-benefit-list {
+  display: grid;
+  gap: 12px;
+}
+
+.guest-flow-item {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.guest-benefit-item {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.guest-benefit-item i {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(154, 103, 56, 0.1);
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+.guest-benefit-item strong {
+  display: block;
+  margin-bottom: 4px;
 }
 
 .login-btn {
@@ -11969,23 +12539,43 @@ export default {
 }
 
 [data-theme="dark"] .login-hero {
-  background: radial-gradient(circle at top, rgba(79, 157, 138, 0.12), transparent 42%),
-    linear-gradient(180deg, rgba(18, 16, 13, 0.98), rgba(12, 11, 10, 0.96));
+  background: transparent;
 }
 
-[data-theme="dark"] .login-card {
+[data-theme="dark"] .guest-hero-copy,
+[data-theme="dark"] .guest-hero-panel,
+[data-theme="dark"] .guest-section,
+[data-theme="dark"] .guest-panel {
   background: linear-gradient(180deg, rgba(28, 33, 31, 0.96), rgba(22, 27, 25, 0.94));
   border-color: rgba(109, 160, 145, 0.22);
   box-shadow: 0 28px 60px rgba(0, 0, 0, 0.46);
 }
 
-[data-theme="dark"] .login-icon {
+[data-theme="dark"] .guest-proof-row span,
+[data-theme="dark"] .guest-preview-step,
+[data-theme="dark"] .guest-feature-card,
+[data-theme="dark"] .guest-secondary-btn,
+[data-theme="dark"] .guest-flow-item span,
+[data-theme="dark"] .guest-benefit-item i {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(216, 185, 150, 0.16);
+}
+
+[data-theme="dark"] .guest-kicker,
+[data-theme="dark"] .guest-section-kicker {
+  background: rgba(208, 160, 107, 0.14);
+  color: #ddb07c;
+}
+
+[data-theme="dark"] .guest-preview-icon,
+[data-theme="dark"] .guest-feature-card i {
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
 }
 
-[data-theme="dark"] .feature i {
+[data-theme="dark"] .guest-feature-card i,
+[data-theme="dark"] .guest-benefit-item i,
+[data-theme="dark"] .guest-flow-item span {
   color: #97c9ba;
-  background: rgba(79, 157, 138, 0.14);
 }
 
 [data-theme="dark"] .login-btn {
@@ -12005,36 +12595,89 @@ export default {
 }
 
 /* Responsive */
+@media (max-width: 1024px) {
+  .guest-hero,
+  .guest-section-split {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .guest-section-row {
+    grid-template-columns: 1fr;
+  }
+
+  .guest-feature-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .login-hero {
+    padding: 20px 0 36px;
+  }
+
+  .guest-hero,
+  .guest-feature-grid,
+  .guest-section-split,
+  .guest-section-row {
+    grid-template-columns: 1fr;
+  }
+
+  .guest-hero-copy,
+  .guest-hero-panel,
+  .guest-section,
+  .guest-panel {
+    border-radius: 24px;
+  }
+
+  .guest-hero-copy,
+  .guest-section,
+  .guest-panel {
+    padding: 22px;
+  }
+
+  .guest-hero-copy h1 {
+    max-width: none;
+    font-size: 1.9rem;
+  }
+
+  .guest-action-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .guest-primary-btn,
+  .guest-secondary-btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .guest-proof-row {
+    flex-direction: column;
+  }
+
+  .guest-proof-row span {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .guest-copy-support,
+  .guest-cta-note {
+    max-width: none;
+  }
+}
+
 @media (max-width: 520px) {
-  .login-card {
-    padding: 32px 24px;
+  .guest-hero-copy h1 {
+    font-size: 1.7rem;
   }
 
-  .login-icon {
-    width: 64px;
-    height: 64px;
+  .guest-subtitle {
+    font-size: 0.92rem;
   }
 
-  .login-icon i {
-    font-size: 2rem;
-  }
-
-  .login-card h1 {
-    font-size: 1.5rem;
-  }
-
-  .login-features {
-    gap: 16px;
-  }
-
-  .feature i {
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
-  }
-
-  .feature span {
-    font-size: 0.7rem;
+  .guest-section-head h2,
+  .guest-panel h3 {
+    font-size: 1.1rem;
   }
 }
 
@@ -16709,6 +17352,62 @@ html {
   justify-content: flex-end;
 }
 
+.workspace-shell {
+  width: min(100%, 920px);
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.workspace-shell-head {
+  gap: 14px;
+  align-items: center;
+}
+
+.workspace-shell-copy {
+  gap: 6px;
+}
+
+.workspace-shell-copy h1 {
+  font-size: clamp(1.06rem, 1.45vw, 1.3rem);
+  font-weight: 620;
+}
+
+.workspace-shell-copy p {
+  max-width: 52ch;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.workspace-shell-compact-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 2px;
+}
+
+.workspace-shell-compact-meta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(154, 103, 56, 0.14);
+  background: rgba(255, 255, 255, 0.72);
+  color: rgba(48, 42, 35, 0.82);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.workspace-shell-actions {
+  justify-content: flex-end;
+}
+
+.workspace-shell-icon-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .main-nav-btn,
 .main-card-primary {
   min-height: 42px;
@@ -18754,9 +19453,9 @@ html {
 }
 
 .session-analytics-modal {
-  width: min(760px, 94vw);
+  width: min(1080px, 96vw);
   max-height: 88vh;
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
   background: linear-gradient(180deg, rgba(249, 245, 239, 0.98), rgba(241, 235, 226, 0.96));
 }
@@ -18804,12 +19503,13 @@ html {
   max-height: calc(88vh - 92px);
   overflow-y: auto;
   display: grid;
-  gap: 14px;
+  gap: 16px;
+  padding: 4px 2px 6px;
 }
 
 .session-analytics-section {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .session-analytics-section h3 {
@@ -18822,67 +19522,181 @@ html {
 
 .session-analytics-summary-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .session-analytics-summary-card {
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px;
+  border-radius: 14px;
+  padding: 14px;
   background: rgba(255, 255, 255, 0.64);
+  display: grid;
+  gap: 5px;
+}
+
+.session-analytics-summary-card span {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.session-analytics-summary-card strong {
+  font-size: 1.18rem;
+  color: var(--text);
+}
+
+.session-analytics-summary-card small {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.session-analytics-two-col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.session-analytics-panel {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.62);
+  display: grid;
+  gap: 12px;
+}
+
+.session-analytics-panel header {
   display: grid;
   gap: 4px;
 }
 
-.session-analytics-summary-card span {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
-
-.session-analytics-summary-card strong {
-  font-size: 0.98rem;
+.session-analytics-panel header h3 {
+  margin: 0;
+  font-size: 0.94rem;
+  font-weight: 650;
   color: var(--text);
 }
 
-.session-analytics-chart-grid {
+.session-analytics-panel header p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.analytics-progress-split {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
-.session-analytics-chart-card {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.62);
+.analytics-progress-stat {
+  border-radius: 14px;
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  background: rgba(255, 255, 255, 0.48);
+  padding: 12px;
+  display: grid;
+  gap: 4px;
 }
 
-.session-analytics-chart-card header {
-  margin-bottom: 8px;
+.analytics-progress-stat strong {
+  font-size: 1.34rem;
+  color: var(--text);
 }
 
-.session-analytics-chart-card header span {
+.analytics-progress-stat span {
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--text);
+}
+
+.analytics-progress-stat small {
   font-size: 0.74rem;
   color: var(--text-muted);
+  line-height: 1.4;
 }
 
-.line-chart-shell svg {
+.analytics-progress-bar {
   width: 100%;
-  height: 120px;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(154, 103, 56, 0.12);
+  overflow: hidden;
 }
 
-.line-chart-track {
+.analytics-progress-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), #d3a36f);
+}
+
+.analytics-line-chart svg {
+  width: 100%;
+  height: 160px;
+}
+
+.analytics-line-path {
   fill: none;
-  stroke: #4f9d8a;
+  stroke: #bd8c58;
   stroke-width: 3;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.bar-chart-shell {
+.analytics-line-dot {
+  fill: #bd8c58;
+  stroke: rgba(255, 255, 255, 0.88);
+  stroke-width: 1.4;
+}
+
+.analytics-line-labels {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18px, 1fr));
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.analytics-heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
   gap: 8px;
+}
+
+.analytics-heatmap-cell {
+  border-radius: 12px;
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, calc(0.92 - (var(--cell-intensity, 0.08) * 0.26))), rgba(243, 232, 219, calc(0.74 + (var(--cell-intensity, 0.08) * 0.12)))),
+    rgba(189, 140, 88, calc(var(--cell-intensity, 0.08) * 0.18));
+  padding: 10px;
+  display: grid;
+  gap: 3px;
+}
+
+.analytics-heatmap-cell span {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.analytics-heatmap-cell strong {
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.analytics-empty-panel {
+  border-radius: 12px;
+  border: 1px dashed rgba(154, 103, 56, 0.18);
+  padding: 14px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.stats-detail-actions-prominent {
+  margin-bottom: 14px;
 }
 
 .bar-row {
@@ -20537,41 +21351,65 @@ html {
   justify-content: space-between;
 }
 
-.setup-metric-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+.setup-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.setup-metric-card {
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.42);
+  padding: 10px 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.setup-metric-card span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.setup-metric-card strong {
+  font-size: 1.08rem;
+  color: var(--text);
+}
+
+.setup-metric-card small {
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.setup-metric-list {
+  display: grid;
+  gap: 6px;
   margin-top: 8px;
 }
 
-.setup-metric-row span {
-  min-height: 30px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--accent-light);
+.setup-metric-list-row,
+.setup-metric-list-empty {
+  border-radius: 10px;
+  background: rgba(154, 103, 56, 0.06);
+  padding: 8px 10px;
+  font-size: 0.76rem;
   color: var(--text-muted);
-  font-size: 0.74rem;
-  font-weight: 650;
 }
 
-.setup-metric-detail {
+.setup-metric-list-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 6px;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  line-height: 1.35;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
-.setup-metric-detail span {
-  border-radius: 999px;
-  padding: 4px 8px;
-  background: rgba(154, 103, 56, 0.08);
+.setup-metric-list-row strong {
+  color: var(--text);
+  font-size: 0.78rem;
 }
 
 .session-quickstart-card {
@@ -20709,30 +21547,59 @@ html {
 }
 
 [data-theme="dark"] .quick-font-dropdown .font-dropdown-trigger,
-[data-theme="dark"] .setup-metric-row span {
+[data-theme="dark"] .setup-metric-card {
   background: rgba(255, 247, 236, 0.055);
   border-color: rgba(255, 236, 216, 0.14);
   color: var(--text);
 }
 
-[data-theme="dark"] .setup-metric-detail span {
+[data-theme="dark"] .setup-metric-list-row,
+[data-theme="dark"] .setup-metric-list-empty,
+[data-theme="dark"] .analytics-progress-stat,
+[data-theme="dark"] .analytics-heatmap-cell,
+[data-theme="dark"] .workspace-shell-compact-meta span {
   background: rgba(255, 247, 236, 0.045);
+  border-color: rgba(255, 236, 216, 0.14);
   color: var(--text-muted);
 }
 
 [data-theme="light"] .quick-font-dropdown .font-dropdown-trigger,
 [data-theme="sepia"] .quick-font-dropdown .font-dropdown-trigger,
-[data-theme="light"] .setup-metric-row span,
-[data-theme="sepia"] .setup-metric-row span {
+[data-theme="light"] .setup-metric-card,
+[data-theme="sepia"] .setup-metric-card {
   background: rgba(255, 255, 255, 0.72);
   border-color: rgba(160, 120, 76, 0.16);
   color: var(--text-muted);
 }
 
-[data-theme="light"] .setup-metric-detail span,
-[data-theme="sepia"] .setup-metric-detail span {
+[data-theme="light"] .setup-metric-list-row,
+[data-theme="light"] .setup-metric-list-empty,
+[data-theme="light"] .analytics-progress-stat,
+[data-theme="light"] .analytics-heatmap-cell,
+[data-theme="light"] .workspace-shell-compact-meta span,
+[data-theme="sepia"] .setup-metric-list-row,
+[data-theme="sepia"] .setup-metric-list-empty,
+[data-theme="sepia"] .analytics-progress-stat,
+[data-theme="sepia"] .analytics-heatmap-cell,
+[data-theme="sepia"] .workspace-shell-compact-meta span {
   background: rgba(154, 103, 56, 0.08);
   color: var(--text-muted);
+}
+
+[data-theme="dark"] .session-analytics-panel,
+[data-theme="dark"] .session-analytics-summary-card {
+  background: rgba(40, 34, 30, 0.74);
+  border-color: rgba(216, 185, 150, 0.14);
+}
+
+[data-theme="dark"] .workspace-shell {
+  background:
+    linear-gradient(180deg, rgba(34, 29, 26, 0.98), rgba(24, 20, 18, 0.96)),
+    radial-gradient(circle at top right, rgba(208, 160, 107, 0.1), transparent 28%);
+}
+
+[data-theme="dark"] .analytics-progress-bar {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 [data-theme="dark"] .stats-full-analytics-btn {
@@ -20782,5 +21649,46 @@ html {
 [data-theme="sepia"] .comparison-item {
   background: rgba(255, 255, 255, 0.72);
   border-color: rgba(160, 120, 76, 0.14);
+}
+
+@media (max-width: 900px) {
+  .session-analytics-summary-grid,
+  .session-analytics-two-col,
+  .setup-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .workspace-shell-head {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workspace-shell-actions,
+  .action-buttons-group {
+    width: 100%;
+  }
+
+  .workspace-shell-icon-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .session-analytics-summary-grid,
+  .session-analytics-two-col,
+  .analytics-progress-split,
+  .setup-metric-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .session-analytics-modal {
+    width: min(100vw, 100%);
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .analytics-heatmap-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 </style>
