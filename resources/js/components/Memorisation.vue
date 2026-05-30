@@ -116,6 +116,12 @@
                   <span v-if="etaLabel">{{ etaLabel }} left</span>
                   <span v-if="chainingEnabled && hasSessionFeedback">{{ chainingMethodLabel }}</span>
                 </div>
+                <div v-if="activeTechniqueBadges.length" v-show="!mainCardCollapsed" class="workspace-shell-techniques" aria-label="Active techniques">
+                  <span v-for="badge in activeTechniqueBadges" :key="badge.key" class="workspace-shell-technique-badge">
+                    <i class="bi" :class="badge.icon"></i>
+                    <span>{{ badge.label }}</span>
+                  </span>
+                </div>
               </div>
               <div class="workspace-shell-actions">
                 <div class="action-buttons-group">
@@ -414,6 +420,15 @@
                     class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.advanced_setup">
+                <div v-if="activeTechniqueBadges.length" class="session-setup-techniques" aria-label="Active memorisation techniques">
+                  <span class="session-setup-techniques-label">Active techniques</span>
+                  <div class="session-setup-techniques-row">
+                    <span v-for="badge in activeTechniqueBadges" :key="`setup-${badge.key}`" class="saved-technique-chip">
+                      <i class="bi" :class="badge.icon"></i>
+                      <span>{{ badge.label }}</span>
+                    </span>
+                  </div>
+                </div>
                 <div class="field-stack field-stack-compact">
                   <div class="field">
                     <label>Surah</label>
@@ -422,18 +437,6 @@
                       <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.name_simple }}</option>
                     </select>
                     <small class="field-hint">Pick the surah you want to work on.</small>
-                    <div class="setup-metric-grid">
-                      <article class="setup-metric-card">
-                        <span>Session plays</span>
-                        <strong>{{ sessionPlayCountValue }}</strong>
-                        <small>How many times this session has been started or resumed.</small>
-                      </article>
-                      <article class="setup-metric-card">
-                        <span>Total verse plays</span>
-                        <strong>{{ totalVersePlayCountValue }}</strong>
-                        <small>Audio starts counted across the selected ayahs.</small>
-                      </article>
-                    </div>
                     <div class="setup-metric-list" aria-label="Verse play counts">
                       <div v-if="sessionVersePlaySummary.length" v-for="item in sessionVersePlaySummary" :key="item.key" class="setup-metric-list-row">
                         <span>{{ item.label }}</span>
@@ -461,20 +464,31 @@
                   <div class="field">
                     <div class="field-header">
                       <label>Repetitions</label>
-                      <span class="range-value-pill">{{ repetitionsPerStep }}x</span>
+                      <span class="range-value-pill">{{ repetitionDisplayValue }}</span>
                     </div>
                     <div class="range-control">
                       <input
                         type="range"
-                        v-model.number="repetitionsPerStep"
+                        :value="sliderRepetitionValue"
+                        @input="setRepetitionsFromSlider(Number($event.target.value))"
                         min="1"
-                        max="50"
+                        max="10"
                         step="1"
                         class="input technique-range"
                       />
                     </div>
-                    <div class="slider-markers">
-                      <span>1x</span><span>12x</span><span>25x</span><span>37x</span><span>50x</span>
+                    <div class="slider-markers slider-markers-compact">
+                      <span>1x</span><span>3x</span><span>5x</span><span>7x</span><span>10x</span>
+                    </div>
+                    <div class="repetition-custom-row">
+                      <button type="button" class="repetition-custom-toggle" :class="{ active: usingCustomRepetitions }" @click="toggleCustomRepetitions">
+                        <i class="bi" :class="usingCustomRepetitions ? 'bi-sliders2-vertical' : 'bi-plus-circle'"></i>
+                        <span>Custom</span>
+                      </button>
+                      <label v-if="usingCustomRepetitions" class="repetition-custom-input">
+                        <span>Higher repeat count</span>
+                        <input type="number" min="11" max="50" :value="repetitionsPerStep" @input="setCustomRepetitions($event.target.value)" class="input">
+                      </label>
                     </div>
                     <small class="field-hint">Repeat each verse {{ repetitionsPerStep }} time{{ repetitionsPerStep === 1 ? '' : 's' }} before moving on.</small>
                   </div>
@@ -724,59 +738,85 @@
                 <h3><i class="bi bi-bookmark-check"></i> Saved Sessions</h3>
                 <p>Your memorisation sessions, ready to resume</p>
               </div>
+              <div v-if="hasContinueSession" class="saved-continue-banner">
+                <div class="saved-continue-copy">
+                  <span class="saved-continue-kicker">Resume previous session</span>
+                  <strong>{{ continueSessionLabel }}</strong>
+                  <small>{{ continueSessionMeta }}</small>
+                </div>
+                <div class="saved-continue-actions">
+                  <button class="session-resume-btn" type="button" @click="continueLastSession">
+                    <i class="bi bi-play-fill"></i>
+                    <span>Resume Previous Session</span>
+                  </button>
+                  <button class="delete-btn session-delete-btn session-delete-btn-quiet" type="button" @click="confirmDiscardContinueSession" title="Dismiss previous session snapshot">
+                    <i class="bi bi-x-lg"></i>
+                    <span>Dismiss</span>
+                  </button>
+                </div>
+              </div>
               <div v-if="savedSessions.length === 0" class="empty-state">
                 <i class="bi bi-journal-bookmark"></i>
                 <p>No saved sessions yet</p>
                 <span>Save your current session to get started</span>
               </div>
               <div v-else class="sessions-list">
-                <div v-for="session in savedSessions" :key="session.id" class="session-item">
+                <div v-for="session in savedSessions" :key="session.id" class="session-item" :class="{ 'session-item-active': sessionMatchesCurrentLiveConfig(session) }">
                   <div class="session-info" @click="loadSavedSession(session.id)">
                     <div class="session-name">
                       <i class="bi bi-bookmark-fill"></i>
                       <span>{{ getSessionPrimaryLabel(session) }}</span>
                       <span v-if="session.archived" class="session-archive-badge">Archived</span>
+                      <span v-if="sessionMatchesCurrentLiveConfig(session)" class="session-live-badge">Active now</span>
+                      <span class="session-status-badge" :class="`session-status-${getSavedSessionState(session).tone}`">{{ getSavedSessionState(session).label }}</span>
                     </div>
                     <div v-if="session.name && session.name !== getSessionPrimaryLabel(session)" class="session-subtitle">
                       {{ session.name }}
                     </div>
                     <div class="session-details">
                       <span><i class="bi bi-clock"></i> Saved {{ formatDate(session.savedAt) }}</span>
+                      <span><i class="bi bi-arrow-repeat"></i> {{ buildSessionResumeSummary(session) }}</span>
                     </div>
                   </div>
                   <div class="session-actions">
-                    <div class="session-export-group">
-                      <button
-                        type="button"
-                        class="session-export-btn"
-                        :disabled="isExportingSession(session.id)"
-                        @click.stop="exportSavedSession(session.id, 'csv')"
-                      >
-                        <i class="bi" :class="isExportingSession(session.id, 'csv') ? 'bi-arrow-repeat spin' : 'bi-filetype-csv'"></i>
-                        <span>CSV</span>
-                      </button>
-                      <button
-                        type="button"
-                        class="session-export-btn"
-                        :disabled="isExportingSession(session.id)"
-                        @click.stop="exportSavedSession(session.id, 'pdf')"
-                      >
-                        <i class="bi" :class="isExportingSession(session.id, 'pdf') ? 'bi-arrow-repeat spin' : 'bi-filetype-pdf'"></i>
-                        <span>{{ isExportingSession(session.id, 'pdf') ? 'Generating export…' : 'PDF' }}</span>
-                      </button>
-                      <button
-                        type="button"
-                        class="session-export-btn"
-                        :disabled="isExportingSession(session.id)"
-                        @click.stop="exportSavedSession(session.id, 'word')"
-                      >
-                        <i class="bi" :class="isExportingSession(session.id, 'word') ? 'bi-arrow-repeat spin' : 'bi-file-earmark-word'"></i>
-                        <span>{{ isExportingSession(session.id, 'word') ? 'Generating export…' : 'Word' }}</span>
+                    <div class="session-primary-action">
+                      <button class="session-resume-btn" @click="loadSavedSession(session.id)" type="button" :disabled="isLoadingSession(session.id)">
+                        <i class="bi" :class="isLoadingSession(session.id) ? 'bi-arrow-repeat spin' : 'bi-play-fill'"></i>
+                        <span>{{ isLoadingSession(session.id) ? 'Resuming…' : 'Resume Session' }}</span>
                       </button>
                     </div>
-                    <button class="delete-btn" @click.stop="deleteSavedSession(session.id)" title="Delete session">
-                      <i class="bi bi-trash3"></i>
-                    </button>
+                    <div class="session-secondary-actions">
+                      <div class="session-export-group" role="group" :aria-label="`Export actions for ${session.name || getSessionPrimaryLabel(session)}`">
+                        <button
+                          type="button"
+                          class="session-export-btn session-export-btn-pdf"
+                          :class="{ success: isSessionExportSuccessful(session.id, 'pdf') }"
+                          :disabled="isExportingSession(session.id)"
+                          @click.stop="exportSavedSession(session.id, 'pdf')"
+                        >
+                          <i class="bi" :class="getSessionExportIcon(session.id, 'pdf', 'bi-filetype-pdf')"></i>
+                          <span>{{ getSessionExportLabel(session.id, 'pdf', 'PDF Export') }}</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="session-export-btn session-export-btn-word"
+                          :class="{ success: isSessionExportSuccessful(session.id, 'word') }"
+                          :disabled="isExportingSession(session.id)"
+                          @click.stop="exportSavedSession(session.id, 'word')"
+                        >
+                          <i class="bi" :class="getSessionExportIcon(session.id, 'word', 'bi-file-earmark-word')"></i>
+                          <span>{{ getSessionExportLabel(session.id, 'word', 'Word Export') }}</span>
+                        </button>
+                      </div>
+                      <button
+                        class="delete-btn session-delete-btn"
+                        @click.stop="deleteSavedSession(session.id)"
+                        title="Delete session"
+                      >
+                        <i class="bi bi-trash3"></i>
+                        <span>Delete Session</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -992,10 +1032,10 @@
               <h1>Memorise with a quieter, more deliberate session flow.</h1>
               <div class="guest-copy-stack">
                 <p class="guest-subtitle">
-                  Build each session around a small ayah range, steady repetition, and clean recall.
+                  Build each session around a small ayah range, steady repetition, and clear recall.
                 </p>
                 <p class="guest-copy-support">
-                  Mutqin keeps the page focused on the Quran itself, while your progress, playback, and saved sessions remain structured in the background.
+                  Mutqin keeps the Quran central while playback, progress, and saved sessions stay quietly organised around it.
                 </p>
               </div>
 
@@ -1012,9 +1052,9 @@
               <p class="guest-cta-note">Login keeps your sessions, insights, and exact memorisation position in sync.</p>
 
               <div class="guest-proof-row">
-                <span><i class="bi bi-cloud-check"></i> Sync progress across devices</span>
-                <span><i class="bi bi-arrow-repeat"></i> Structured repetition loops</span>
-                <span><i class="bi bi-clock-history"></i> Resume where you stopped</span>
+                <span><i class="bi bi-cloud-check"></i> Sync progress</span>
+                <span><i class="bi bi-arrow-repeat"></i> Structured repetition</span>
+                <span><i class="bi bi-clock-history"></i> Resume exactly</span>
               </div>
             </div>
 
@@ -1367,6 +1407,10 @@
                         <stop offset="100%" stop-color="rgba(189, 140, 88, 0.02)"></stop>
                       </linearGradient>
                     </defs>
+                    <g class="analytics-y-axis">
+                      <line v-for="tick in analyticsYAxisTicks" :key="`grid-${tick.value}`" x1="20" :y1="tick.y" x2="300" :y2="tick.y"></line>
+                      <text v-for="tick in analyticsYAxisTicks" :key="`label-${tick.value}`" x="4" :y="tick.y + 4">{{ tick.label }}</text>
+                    </g>
                     <path :d="analyticsLineAreaPath" fill="url(#analyticsAreaGradient)"></path>
                     <path :d="analyticsLinePath" class="analytics-line-path"></path>
                     <circle
@@ -1421,10 +1465,19 @@
         </div>
         <div class="modal-body post-onboarding-body">
           <span class="post-onboarding-kicker">Step {{ onboardingStepIndex + 1 }} of {{ onboardingSteps.length }}</span>
+          <div class="post-onboarding-step-label">{{ onboardingStepContent.stepLabel }}</div>
           <p>{{ onboardingStepContent.body }}</p>
           <ul v-if="onboardingStepContent.points?.length" class="post-onboarding-points">
             <li v-for="item in onboardingStepContent.points" :key="item">{{ item }}</li>
           </ul>
+          <div v-if="onboardingStepContent.duas?.length" class="dua-onboarding-grid">
+            <article v-for="dua in onboardingStepContent.duas" :key="dua.title" class="dua-onboarding-card">
+              <span class="dua-onboarding-title">{{ dua.title }}</span>
+              <p class="dua-onboarding-arabic" dir="rtl" lang="ar">{{ dua.arabic }}</p>
+              <p class="dua-onboarding-translation">{{ dua.translation }}</p>
+              <small class="dua-onboarding-source">{{ dua.source }}</small>
+            </article>
+          </div>
           <div class="post-onboarding-progress">
             <span v-for="dot in onboardingSteps.length" :key="`ob-dot-${dot}`" :class="{ active: onboardingStepIndex === dot - 1 }"></span>
           </div>
@@ -1711,47 +1764,64 @@ export default {
       onboardingSteps: [
         {
           title: 'Welcome to Mutqin',
-          body: 'Mutqin helps you memorise Quran with calm, session-based structure.',
-          points: []
+          stepLabel: 'Big picture',
+          body: 'Mutqin is built around short memorisation sessions. Pick a small range, listen with structure, then return for recall and review.',
+          points: ['Short sessions', 'Clear repetition', 'Simple review']
         },
         {
-          title: 'Session Setup',
-          body: 'Start here to choose the surah, range, reciter, and repetition pattern.',
-          points: ['Select the surah', 'Set the ayah range', 'Choose the reciter']
+          title: 'How Sessions Work',
+          stepLabel: 'Step 1',
+          body: 'Each session starts with a surah, a focused ayah range, and the reciter you want to work with.',
+          points: ['Choose the surah', 'Keep the range small', 'Start with intention']
         },
         {
-          title: 'Audio',
-          body: 'This section controls playback speed and automatic progression.',
-          points: ['Playback speed', 'Auto advance', 'Session rhythm']
+          title: 'Repetition System',
+          stepLabel: 'Step 2',
+          body: 'Repetition gives the session its rhythm. Set a realistic repeat count and let the audio pace stay calm and accurate.',
+          points: ['Choose a realistic repeat count', 'Use speed only when needed', 'Let the rhythm stay steady']
         },
         {
-          title: 'Focus Mode',
-          body: 'Use focus mode to keep attention on the active ayah.',
-          points: ['Reduce distractions', 'Read with clarity']
+          title: 'Memorisation Flow',
+          stepLabel: 'Step 3',
+          body: 'Move from listening, to repeating, to reciting from memory. Techniques like Focus, Blur, and Chaining only support that flow.',
+          points: ['Listen first', 'Repeat with attention', 'Use techniques only when helpful']
         },
         {
-          title: 'Blur Mode',
-          body: 'Blur supports recall by hiding upcoming ayahs until you need them.',
-          points: ['Blur upcoming ayahs', 'Peek when ready']
-        },
-        {
-          title: 'Chaining',
-          body: 'Chaining builds longer memorisation runs using linking or cumulative flow.',
-          points: ['Linking', 'Cumulative']
-        },
-        {
-          title: 'Anchor Mode',
-          body: 'Anchor mode adds simple memory cues to help you recall the ayah.',
-          points: ['Highlight key words', 'Keep recall simple']
+          title: 'Self-Check',
+          stepLabel: 'Step 4',
+          body: 'Self-check is simple: recite first, then confirm. Blur Mode helps you hide support until you actually need it.',
+          points: ['Recite before revealing', 'Use Blur for recall', 'Return gently to weak spots']
         },
         {
           title: 'Before you recite',
-          body: 'The only specific opener before reciting is seeking refuge in Allah. These Qur\'anic supplications are safe, established, and widely taught before study and recitation.',
-          points: [
-            'A\'udhu billahi min ash-shaytan ir-rajim. I seek refuge in Allah from the accursed Shaytan.',
-            'Bismillahir-Rahmanir-Rahim. In the name of Allah, the Most Compassionate, the Most Merciful.',
-            'Rabbi zidni ilma. My Lord, increase me in knowledge.',
-            'Rabbi ishrah li sadri wa yassir li amri. My Lord, expand my chest and make my task easy.'
+          stepLabel: 'Before reciting',
+          body: 'Begin simply. Seek refuge in Allah, start with Bismillah, then use a short dua if it helps you settle into the session.',
+          points: [],
+          duas: [
+            {
+              title: 'Seeking refuge',
+              arabic: 'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ',
+              translation: 'I seek refuge in Allah from the accursed Shaytan.',
+              source: 'Qur\'an 16:98'
+            },
+            {
+              title: 'Bismillah',
+              arabic: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+              translation: 'In the name of Allah, the Most Compassionate, the Most Merciful.',
+              source: 'Qur\'an 1:1'
+            },
+            {
+              title: 'Increase me in knowledge',
+              arabic: 'رَبِّ زِدْنِي عِلْمًا',
+              translation: 'My Lord, increase me in knowledge.',
+              source: 'Qur\'an 20:114'
+            },
+            {
+              title: 'Ease my task',
+              arabic: 'رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي',
+              translation: 'My Lord, expand my chest and make my task easy.',
+              source: 'Qur\'an 20:25-26'
+            }
           ]
         }
       ],
@@ -1765,7 +1835,8 @@ export default {
         confirmLabel: 'Confirm',
         cancelLabel: 'Cancel',
         tone: 'default',
-        action: ''
+        action: '',
+        data: null
       },
       plannerConfig: {
         surahId: 1,
@@ -1862,10 +1933,13 @@ export default {
       exportSessionState: {
         activeSessionId: '',
         activeFormat: '',
+        successSessionId: '',
+        successFormat: '',
         errorSessionId: '',
         errorFormat: '',
         errorMessage: ''
       },
+      loadingSessionId: '',
       showSessionAnalyticsModal: false,
       analyticsModalLoaded: false,
       analyticsModalRecordId: '',
@@ -2112,6 +2186,15 @@ export default {
       }
       return items
     },
+    activeTechniqueBadges() {
+      return this.activePracticeTechniques.map(item => ({
+        key: item.key,
+        icon: item.icon,
+        label: item.label
+          .replace(' Chaining', '')
+          .replace(' Mode', ' Mode')
+      }))
+    },
     appStyleVars() {
       return {
         '--ui-scale': this.uiScale,
@@ -2244,7 +2327,6 @@ export default {
       return [
         { key: 'verses', label: 'Ayahs reviewed', value: `${data.metrics.verses_read}`, description: 'Distinct ayahs covered in this session.' },
         { key: 'time', label: 'Time memorising', value: this.formatTime(data.metrics.time_spent_seconds), description: 'Focused study time recorded for this session.' },
-        { key: 'session_plays', label: 'Session plays', value: `${data.metrics.session_play_count || 0}`, description: 'How often this session was started or resumed.' },
         { key: 'verse_plays', label: 'Verse plays', value: `${data.metrics.total_verse_play_count || 0}`, description: 'Total ayah audio starts across the selected range.' }
       ]
     },
@@ -2297,8 +2379,27 @@ export default {
       const last = dots[dots.length - 1]
       return `${this.analyticsLinePath} L ${last.x} 132 L ${first.x} 132 Z`
     },
+    analyticsYAxisTicks() {
+      const series = this.analyticsVerseSeries
+      const maxValue = Math.max(1, ...series.map(item => Number(item.value || 0)))
+      const steps = 4
+      return Array.from({ length: steps + 1 }).map((_, index) => {
+        const value = Math.round((maxValue * (steps - index)) / steps)
+        const y = 20 + ((112 * index) / steps)
+        return { value, y, label: `${value}` }
+      })
+    },
     analyticsHeatmapCells() {
       return this.analyticsModalData?.heatmap || []
+    },
+    sliderRepetitionValue() {
+      return Math.min(10, Math.max(1, Number(this.repetitionsPerStep || 1)))
+    },
+    usingCustomRepetitions() {
+      return Number(this.repetitionsPerStep || 1) > 10
+    },
+    repetitionDisplayValue() {
+      return this.usingCustomRepetitions ? `${this.repetitionsPerStep}x custom` : `${this.repetitionsPerStep}x`
     },
     sessionPlayCountValue() {
       return Math.max(0, Number(this.mutqinState?.sessionState?.play_count || 0))
@@ -2411,9 +2512,7 @@ export default {
       return this.isSessionLive
     },
     isSessionLive() {
-      const mutqinActive = !!this.mutqinState?.sessionState?.active
-      const localActive = !!this.sessionStartedAt || !!this.isPlaying || !!this.playerVisible
-      return this.hasSessionFeedback && (mutqinActive || localActive)
+      return !!this.mutqinState?.sessionState?.active && this.hasSessionFeedback && !this.sessionCompleted
     },
     resumeFeedback() {
       const payload = this.continueSessionPayload
@@ -3810,66 +3909,158 @@ export default {
       this.showBanner('Session saved', 'success', 1500)
     },
 
-    // Update loadSavedSession method
-    loadSavedSession(sessionId) {
+    setRepetitionsFromSlider(value) {
+      this.repetitionsPerStep = Math.max(1, Math.min(10, Number(value || 1)))
+    },
+
+    toggleCustomRepetitions() {
+      if (this.usingCustomRepetitions) {
+        this.repetitionsPerStep = 10
+        return
+      }
+      this.repetitionsPerStep = Math.max(11, Number(this.repetitionsPerStep || 11))
+    },
+
+    setCustomRepetitions(value) {
+      const parsed = Math.max(11, Math.min(50, Number(value || 11)))
+      this.repetitionsPerStep = parsed
+    },
+
+    isLoadingSession(sessionId) {
+      return this.loadingSessionId === sessionId
+    },
+
+    isSessionExportSuccessful(sessionId, format) {
+      return this.exportSessionState.successSessionId === sessionId && this.exportSessionState.successFormat === format
+    },
+
+    getSessionExportIcon(sessionId, format, fallbackIcon) {
+      if (this.isExportingSession(sessionId, format)) return 'bi-arrow-repeat spin'
+      if (this.isSessionExportSuccessful(sessionId, format)) return 'bi-check2-circle'
+      return fallbackIcon
+    },
+
+    getSessionExportLabel(sessionId, format, fallbackLabel) {
+      if (this.isExportingSession(sessionId, format)) return 'Preparing…'
+      if (this.isSessionExportSuccessful(sessionId, format)) return 'Ready'
+      return fallbackLabel
+    },
+
+    buildSessionResumeSummary(session) {
+      const stats = this.normalizeSessionStats(session?.stats || {}, session?.config || {})
+      const verse = session?.config?.activeVerseKey ? String(session.config.activeVerseKey).split(':')[1] : (session?.config?.rangeStart || 1)
+      const reads = Math.max(0, Number(stats.verses_read || 0))
+      return `Resume from ayah ${verse} · ${reads} ayah${reads === 1 ? '' : 's'} covered`
+    },
+
+    getSavedSessionState(session) {
+      if (this.isLoadingSession(session?.id)) return { label: 'Opening', tone: 'loading' }
+      if (this.sessionMatchesCurrentLiveConfig(session)) {
+        return this.isPlaying
+          ? { label: 'Playing', tone: 'active' }
+          : { label: 'Paused', tone: 'paused' }
+      }
+      if (session?.archived) return { label: 'Auto-saved', tone: 'muted' }
+      return { label: 'Ready to resume', tone: 'idle' }
+    },
+
+    async hydrateSessionFromPayload(payload, options = {}) {
+      if (!payload?.config?.chapterId) return false
+      const mode = payload.mode || this.currentMode || 'beginner'
+      const target = mode === 'beginner' ? 'beginner' : 'advanced'
+
+      this.currentMode = mode
+      this.tab = 'tools'
+      this.applySessionConfig({ ...(payload.config || {}), mode })
+      this[target] = {
+        ...(target === 'beginner' ? createBeginnerState() : createAdvancedState()),
+        ...this.cloneModeState(payload.config || {})
+      }
+
+      await this.loadChapter(mode)
+      this.buildQueue(mode)
+
+      const store = this.getModeStore(mode)
+      const targetKey = payload.activeVerseKey || payload.activeKey || payload.config?.activeVerseKey || null
+      let restoredQueueIndex = Math.max(0, Number(payload.queueIndex ?? payload.config?.queueIndex ?? 0))
+
+      if (targetKey) {
+        const exactIndex = store.queue?.findIndex(item => (item?.verse?.key || item?.key) === targetKey)
+        if (exactIndex >= 0) restoredQueueIndex = exactIndex
+      }
+
+      store.queueIndex = Math.min(restoredQueueIndex, Math.max((store.queue?.length || 1) - 1, 0))
+      this.queueIndex = store.queueIndex
+      this.syncMutqinAyahs(store.verses || this.verses)
+      this.syncMutqinSession(store.queue || [], mode)
+      moveMutqinSession(this.mutqinState, this.queueIndex + 1)
+
+      const restoredKey = store.queue?.[this.queueIndex]?.verse?.key || store.queue?.[this.queueIndex]?.key || targetKey
+      if (restoredKey) {
+        this.setActiveVerse(restoredKey, { mode, queueIndex: this.queueIndex, scroll: false })
+      }
+
+      this.sessionCompleted = false
+      this.sessionStartedAt = Date.now()
+      this.playerVisible = payload.playerVisible ?? payload.config?.playerVisible ?? true
+      const shouldResumePlayback = options.forcePlayback ?? payload.isPlaying ?? true
+      this.restoredAudioState = {
+        src: payload.audioSrc || payload.config?.audioSrc || '',
+        currentTime: Number(payload.currentTime ?? payload.config?.currentTime ?? 0),
+        playerVisible: !!(payload.playerVisible ?? payload.config?.playerVisible ?? true),
+        speed: Number(payload.config?.speed || this.speed || 1),
+        isPlaying: !!shouldResumePlayback
+      }
+      this.$nextTick(() => {
+        if (this.restoredAudioState?.src) {
+          this.applyRestoredAudioState()
+          return
+        }
+        if (shouldResumePlayback) {
+          const entry = store.queue?.[this.queueIndex]
+          if (entry) this.playQueueEntry(entry, { force: true, queueIndex: this.queueIndex })
+        }
+      })
+      this.persistAllState()
+      if (options.banner !== false) this.showBanner(options.bannerText || 'Session restored', 'success', 2200)
+      return true
+    },
+
+    async loadSavedSession(sessionId) {
       const session = this.savedSessions.find(s => s.id === sessionId)
       if (!session) return
-
-      // Apply session config
-      this.chapterId = session.config.chapterId
-      this.rangeStart = session.config.rangeStart
-      this.rangeEnd = session.config.rangeEnd
-      this.reciterId = session.config.reciterId
-      this.speed = session.config.speed
-      this.playMode = session.config.playMode
-      this.chainingEnabled = session.config.chainingEnabled
-      this.chainingMethod = session.config.chainingMethod
-      this.chainingRepetitions = session.config.chainingRepetitions
-      this.tajweedEnabled = session.config.tajweedEnabled
-      this.showTranslation = session.config.showTranslation
-      this.showTransliteration = session.config.showTransliteration
-      this.showWordByWord = session.config.showWordByWord
-      this.wordByWordAudioEnabled = session.config.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
-      this.focusModeEnabled = !!session.config.focusModeEnabled
-      this.blurModeEnabled = !!session.config.blurModeEnabled
-      this.blurIntensity = Number(session.config.blurIntensity || this.blurIntensity || 10)
-      this.anchorModeEnabled = !!session.config.anchorModeEnabled
-      this.anchorCount = Number(session.config.anchorCount || this.anchorCount || 2)
-      this.quranFont = session.config.quranFont || this.quranFont
-
-      // Load verses and start session
-      this.applyWorkspaceControls({ reason: 'load-session' })
-      this.showTools = false
-      this.showBanner(`Loaded: ${session.name}`, 'success', 2000)
-
-      this.$nextTick(() => {
-        ;(async () => {
-          await this.startSession()
-          if (!session.config.activeVerseKey) return
-          const restoredIndex = Math.max(0, Number(session.config.queueIndex || 0))
-          this.setActiveVerse(session.config.activeVerseKey, { queueIndex: restoredIndex, scroll: false })
-          this.restoredAudioState = {
-            src: session.config.audioSrc || '',
-            currentTime: Number(session.config.currentTime || 0),
-            playerVisible: !!session.config.playerVisible,
-            speed: Number(session.config.speed || this.speed || 1),
+      this.loadingSessionId = sessionId
+      try {
+        const restorePayload = session.restore?.continueSession
+          ? { ...session.restore.continueSession, config: { ...(session.config || {}), ...(session.restore.continueSession.config || {}) } }
+          : {
+            mode: session.restore?.currentMode || this.currentMode,
+            config: session.config || {},
+            activeVerseKey: session.config?.activeVerseKey || null,
+            queueIndex: Number(session.config?.queueIndex || 0),
+            currentTime: Number(session.config?.currentTime || 0),
+            audioSrc: session.config?.audioSrc || '',
+            playerVisible: !!session.config?.playerVisible,
             isPlaying: false
           }
-          this.applyRestoredAudioState()
-        })()
-      })
+        await this.hydrateSessionFromPayload(restorePayload, { bannerText: `Loaded: ${session.name}`, forcePlayback: true })
+        this.showTools = false
+      } finally {
+        this.loadingSessionId = ''
+      }
     },
 
     // Update deleteSavedSession method
     deleteSavedSession(sessionId) {
-      if (confirm('Delete this saved session? This action cannot be undone.')) {
-        this.savedSessions = this.savedSessions.filter(s => s.id !== sessionId)
-        if (this.selectedStatsSessionId === sessionId) {
-          this.selectedStatsSessionId = this.savedSessions[0]?.id || ''
-        }
-        this.persistSavedSessions()
-        this.showBanner('Session deleted', 'info', 1500)
-      }
+      this.openConfirmModal({
+        title: 'Delete saved session?',
+        message: 'This saved session and its export snapshot will be removed from this device.',
+        confirmLabel: 'Delete session',
+        cancelLabel: 'Keep session',
+        tone: 'danger',
+        action: 'delete-saved-session',
+        data: { sessionId }
+      })
     },
 
     performDeleteSavedSession(sessionId) {
@@ -4190,10 +4381,7 @@ export default {
         { tab: 'tools', section: 'advanced_setup' },
         { tab: 'tools', section: 'advanced_setup' },
         { tab: 'tools', section: 'advanced_playback' },
-        { tab: 'techniques', section: 'focus_mode' },
         { tab: 'techniques', section: 'blur_mode' },
-        { tab: 'techniques', section: 'chaining' },
-        { tab: 'techniques', section: 'anchor_mode' },
         { tab: 'tools', section: null }
       ][step] || { tab: 'tools', section: 'advanced_setup' }
       this.tab = stepConfig.tab
@@ -4315,7 +4503,7 @@ export default {
         },
         heatmap: verseSeries.map(item => ({
           ...item,
-          intensity: Math.max(0.08, Math.min(1, Number(item.value || 0) / maxHeatValue))
+          intensity: item.value <= 0 ? 0.06 : Math.max(0.18, Math.min(1, Math.pow(Number(item.value || 0) / maxHeatValue, 0.72)))
         }))
       }
     },
@@ -4402,9 +4590,7 @@ export default {
         { key: 'verses_read', label: 'Ayahs you reviewed', value: `${stats.verses_read}`, icon: 'bi-book' },
         { key: 'time_spent', label: 'Time memorising', value: this.formatTime(stats.time_spent_seconds), icon: 'bi-clock-history' },
         { key: 'repetitions_completed', label: 'Repeats completed', value: `${stats.repetitions_completed}`, icon: 'bi-arrow-repeat' },
-        { key: 'sessions_completed', label: 'Runs completed', value: `${stats.sessions_completed}`, icon: 'bi-check2-circle' },
-        { key: 'session_plays', label: 'Session plays', value: `${Number(stats.session_play_count || 0)}`, icon: 'bi-play-circle' },
-        { key: 'verse_plays_total', label: 'Total verse plays', value: `${Number(stats.total_verse_play_count || 0)}`, icon: 'bi-music-note-list' }
+        { key: 'sessions_completed', label: 'Runs completed', value: `${stats.sessions_completed}`, icon: 'bi-check2-circle' }
       ]
     },
 
@@ -4653,6 +4839,8 @@ export default {
         this.exportSessionState = {
           activeSessionId: '',
           activeFormat: '',
+          successSessionId: '',
+          successFormat: '',
           errorSessionId: sessionId,
           errorFormat: format,
           errorMessage: validation.message
@@ -4664,6 +4852,8 @@ export default {
       this.exportSessionState = {
         activeSessionId: sessionId,
         activeFormat: format,
+        successSessionId: '',
+        successFormat: '',
         errorSessionId: '',
         errorFormat: '',
         errorMessage: ''
@@ -4682,6 +4872,8 @@ export default {
         this.exportSessionState = {
           activeSessionId: '',
           activeFormat: '',
+          successSessionId: sessionId,
+          successFormat: format,
           errorSessionId: '',
           errorFormat: '',
           errorMessage: ''
@@ -4692,6 +4884,8 @@ export default {
         this.exportSessionState = {
           activeSessionId: '',
           activeFormat: '',
+          successSessionId: '',
+          successFormat: '',
           errorSessionId: sessionId,
           errorFormat: format,
           errorMessage: 'Something went wrong. Please retry.'
@@ -4728,13 +4922,14 @@ export default {
 
     runConfirmAction() {
       const action = this.confirmModal.action
+      const actionData = this.confirmModal.data
       this.closeConfirmModal()
       if (action === 'reset-session') this.performResetControls()
       if (action === 'switch-mode') this.performToggleMode()
       if (action === 'delete-offline' && this.pendingDeleteId) this.performDeleteOffline()
       if (action === 'discard-continue') this.clearContinueSession()
-      if (action === 'delete-saved-session' && this.confirmModal.data?.sessionId)
-        this.performDeleteSavedSession(this.confirmModal.data.sessionId)
+      if (action === 'delete-saved-session' && actionData?.sessionId)
+        this.performDeleteSavedSession(actionData.sessionId)
     },
 
 
@@ -5520,49 +5715,7 @@ export default {
         this.clearContinueSession()
         return
       }
-      this.currentMode = payload.mode || 'beginner'
-      this.tab = payload.tab || this.currentMode
-      const target = this.currentMode === 'beginner' ? 'beginner' : 'advanced'
-      this[target] = {
-        ...(target === 'beginner' ? createBeginnerState() : createAdvancedState()),
-        ...this.cloneModeState(payload.config || {})
-      }
-      // Chaining removed.
-      this.applySessionConfig(this.buildSessionConfig(this.currentMode))
-      await this.loadChapter()
-      this.buildQueue(this.currentMode)
-      const store = this.getModeStore(this.currentMode)
-      const canonicalIndex = Number.isFinite(Number(payload.mutqinSessionIndex)) ? Number(payload.mutqinSessionIndex) : null
-      if (canonicalIndex !== null) moveMutqinSession(this.mutqinState, canonicalIndex)
-      const canonicalItem = canonicalIndex !== null ? this.mutqinState.sessionState?.queue?.[canonicalIndex] : null
-      const targetKey = payload.activeVerseKey || payload.activeKey || canonicalItem?.ayahId || null
-      let restoredQueueIndex = Math.max(0, Number(payload.queueIndex || 0))
-      if (targetKey) {
-        const currentQueueKey = store.queue?.[restoredQueueIndex]?.verse?.key || store.queue?.[restoredQueueIndex]?.key
-        if (currentQueueKey !== targetKey) {
-          const exactIndex = store.queue?.findIndex(item => (item?.verse?.key || item?.key) === targetKey)
-          if (exactIndex >= 0) restoredQueueIndex = exactIndex
-        }
-      }
-      store.queueIndex = restoredQueueIndex
-      const restoredKey = store.queue?.[restoredQueueIndex]?.verse?.key || store.queue?.[restoredQueueIndex]?.key || targetKey
-      if (restoredKey) {
-        this.setActiveVerse(restoredKey, { mode: this.currentMode, queueIndex: restoredQueueIndex, scroll: false })
-      } else {
-        this.syncActiveVerseState(this.currentMode, targetKey)
-      }
-      this.playerVisible = !!payload.playerVisible
-      this.restoredAudioState = {
-        src: payload.audioSrc || '',
-        currentTime: Number(payload.currentTime || 0),
-        playerVisible: !!payload.playerVisible,
-        speed: Number(payload.config?.speed || this.speed || 1),
-        isPlaying: !!payload.isPlaying
-      }
-      this.applyRestoredAudioState()
-      // Advanced auto-open used to be driven by chaining/loop settings. Removed.
-      this.persistAllState()
-      this.showBanner('Session restored', 'success', 2200)
+      await this.hydrateSessionFromPayload(payload, { bannerText: 'Session restored' })
       this.$nextTick(() => {
         if (this.effectiveActiveVerseKey) {
           const el = document.querySelector(`.verse-card[data-verse-key="${this.effectiveActiveVerseKey}"]`)
@@ -5719,9 +5872,12 @@ export default {
       this.currentTime = 0
       this.duration = 0
       this.sessionStartedAt = 0
+      this.sessionCompleted = false
 
       if (this.mutqinState?.sessionState) {
         this.mutqinState.sessionState.active = false
+        this.mutqinState.sessionState.queue = []
+        this.mutqinState.sessionState.current_index = 0
       }
 
       this.clearExitSessionStorage()
@@ -5759,7 +5915,8 @@ export default {
         confirmLabel: options.confirmLabel || 'Confirm',
         cancelLabel: options.cancelLabel || 'Cancel',
         tone: options.tone || 'default',
-        action: options.action || ''
+        action: options.action || '',
+        data: options.data || null
       }
       this.showPlannerModal = false
       this.showResumeModal = false
@@ -5770,16 +5927,19 @@ export default {
     closeConfirmModal() {
       this.showConfirmModal = false
       this.confirmModal.action = ''
+      this.confirmModal.data = null
       this.pendingDeleteId = ''
     },
 
     runConfirmAction() {
       const action = this.confirmModal.action
+      const actionData = this.confirmModal.data
       this.closeConfirmModal()
       if (action === 'reset-session') this.performResetControls()
       if (action === 'switch-mode') this.performToggleMode()
       if (action === 'delete-offline' && this.pendingDeleteId) this.performDeleteOffline()
       if (action === 'discard-continue') this.clearContinueSession()
+      if (action === 'delete-saved-session' && actionData?.sessionId) this.performDeleteSavedSession(actionData.sessionId)
     },
 
     confirmDiscardContinueSession() {
@@ -14023,11 +14183,338 @@ export default {
   gap: 6px;
 }
 
-.session-actions {
+.workspace-shell-techniques,
+.saved-techniques-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.saved-continue-banner {
+  margin-bottom: 16px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(154, 103, 56, 0.16);
+  background: rgba(255, 248, 239, 0.04);
+  display: grid;
+  gap: 12px;
+}
+
+.saved-continue-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.saved-continue-kicker {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.saved-continue-copy strong {
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.saved-continue-copy small {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.saved-continue-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.session-setup-techniques {
+  margin-bottom: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.session-setup-techniques-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.session-setup-techniques-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.workspace-shell-technique-badge,
+.saved-technique-chip {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(154, 103, 56, 0.08);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.slider-markers-compact span {
+  min-width: 0;
+}
+
+.repetition-custom-row {
   margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.repetition-custom-toggle {
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.repetition-custom-toggle.active {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  color: var(--accent-strong);
+}
+
+.repetition-custom-input {
+  display: grid;
+  gap: 6px;
+  flex: 1 1 180px;
+}
+
+.repetition-custom-input span {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.session-item {
+  align-items: stretch;
+  gap: 14px;
+}
+
+.session-item-active {
+  border-color: rgba(154, 103, 56, 0.28);
+  box-shadow: 0 12px 26px rgba(122, 83, 46, 0.12);
+}
+
+.session-live-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(79, 157, 138, 0.14);
+  color: #4f9d8a;
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.session-status-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.session-status-active {
+  background: rgba(79, 157, 138, 0.16);
+  color: #4f9d8a;
+}
+
+.session-status-paused,
+.session-status-idle {
+  background: rgba(154, 103, 56, 0.1);
+  color: var(--accent-strong);
+  border-color: rgba(154, 103, 56, 0.14);
+}
+
+.session-status-loading {
+  background: rgba(86, 124, 184, 0.14);
+  color: #6e95d2;
+}
+
+.session-status-muted {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+.session-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+.session-details span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.session-primary-action {
+  display: grid;
+}
+
+.session-secondary-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.session-resume-btn,
+.session-delete-btn {
+  min-height: 42px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.session-resume-btn {
+  border: 1px solid rgba(154, 103, 56, 0.16);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  padding: 0 16px;
+  box-shadow: 0 10px 22px rgba(154, 103, 56, 0.18);
+}
+
+.session-delete-btn {
+  border: 1px solid rgba(168, 87, 68, 0.2);
+  color: #a85744;
+  background: rgba(255, 246, 243, 0.86);
+  padding: 0 14px;
+  min-width: 144px;
+  width: auto;
+  height: auto;
+  margin-right: 0;
+  flex-shrink: 0;
+}
+
+.session-delete-btn-quiet {
+  min-width: 112px;
+}
+
+.session-export-btn.success {
+  border-color: rgba(79, 157, 138, 0.3);
+  background: rgba(79, 157, 138, 0.12);
+  color: #2d7f6e;
+}
+
+.session-export-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.session-export-btn {
+  min-height: 42px;
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0 14px;
+  border-radius: 12px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.session-export-btn-pdf {
+  border-color: rgba(196, 148, 72, 0.18);
+}
+
+.session-export-btn-word {
+  border-color: rgba(120, 149, 196, 0.2);
+}
+
+.post-onboarding-step-label {
+  margin-bottom: 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #8fc5b5;
+}
+
+.dua-onboarding-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.dua-onboarding-card {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(104, 160, 143, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  display: grid;
+  gap: 8px;
+}
+
+.dua-onboarding-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #97c9ba;
+}
+
+.dua-onboarding-arabic {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.85;
+  color: #f1f7f4;
+}
+
+.dua-onboarding-translation {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #d3ddd9;
+}
+
+.dua-onboarding-source {
+  color: #9cb6af;
+  font-size: 0.74rem;
+}
+
+.session-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .stats-detail-head {
@@ -14075,6 +14562,10 @@ export default {
     justify-content: flex-start;
     flex-wrap: wrap;
   }
+
+  .dua-onboarding-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
@@ -14086,18 +14577,41 @@ export default {
 
   .session-actions {
     width: 100%;
-    justify-content: space-between;
-    align-items: center;
+    align-items: stretch;
   }
 
   .session-export-group {
-    flex: 1 1 auto;
-    justify-content: flex-start;
+    grid-template-columns: 1fr 1fr;
   }
 
-  .session-export-btn {
-    flex: 1 1 calc(33.333% - 6px);
-    min-width: 86px;
+  .session-secondary-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .session-delete-btn {
+    width: 100%;
+  }
+
+  .saved-continue-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .action-buttons-group {
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+
+  .action-btn-primary,
+  .action-btn-secondary,
+  .action-btn-exit {
+    flex: 1 1 calc(50% - 8px);
+  }
+
+  .workspace-shell-icon-actions {
+    width: 100%;
+    justify-content: flex-end;
   }
 }
 
@@ -19637,6 +20151,16 @@ html {
   height: 160px;
 }
 
+.analytics-y-axis line {
+  stroke: rgba(154, 103, 56, 0.14);
+  stroke-width: 1;
+}
+
+.analytics-y-axis text {
+  fill: var(--text-muted);
+  font-size: 10px;
+}
+
 .analytics-line-path {
   fill: none;
   stroke: #bd8c58;
@@ -19670,8 +20194,8 @@ html {
   border-radius: 12px;
   border: 1px solid rgba(154, 103, 56, 0.12);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, calc(0.92 - (var(--cell-intensity, 0.08) * 0.26))), rgba(243, 232, 219, calc(0.74 + (var(--cell-intensity, 0.08) * 0.12)))),
-    rgba(189, 140, 88, calc(var(--cell-intensity, 0.08) * 0.18));
+    linear-gradient(180deg, rgba(250, 241, 223, calc(0.84 - (var(--cell-intensity, 0.06) * 0.18))), rgba(112, 70, 38, calc(0.12 + (var(--cell-intensity, 0.06) * 0.46)))),
+    rgba(196, 148, 72, calc(0.12 + (var(--cell-intensity, 0.06) * 0.24)));
   padding: 10px;
   display: grid;
   gap: 3px;
@@ -21557,7 +22081,9 @@ html {
 [data-theme="dark"] .setup-metric-list-empty,
 [data-theme="dark"] .analytics-progress-stat,
 [data-theme="dark"] .analytics-heatmap-cell,
-[data-theme="dark"] .workspace-shell-compact-meta span {
+[data-theme="dark"] .workspace-shell-compact-meta span,
+[data-theme="dark"] .workspace-shell-technique-badge,
+[data-theme="dark"] .saved-technique-chip {
   background: rgba(255, 247, 236, 0.045);
   border-color: rgba(255, 236, 216, 0.14);
   color: var(--text-muted);
@@ -21577,11 +22103,15 @@ html {
 [data-theme="light"] .analytics-progress-stat,
 [data-theme="light"] .analytics-heatmap-cell,
 [data-theme="light"] .workspace-shell-compact-meta span,
+[data-theme="light"] .workspace-shell-technique-badge,
+[data-theme="light"] .saved-technique-chip,
 [data-theme="sepia"] .setup-metric-list-row,
 [data-theme="sepia"] .setup-metric-list-empty,
 [data-theme="sepia"] .analytics-progress-stat,
 [data-theme="sepia"] .analytics-heatmap-cell,
-[data-theme="sepia"] .workspace-shell-compact-meta span {
+[data-theme="sepia"] .workspace-shell-compact-meta span,
+[data-theme="sepia"] .workspace-shell-technique-badge,
+[data-theme="sepia"] .saved-technique-chip {
   background: rgba(154, 103, 56, 0.08);
   color: var(--text-muted);
 }

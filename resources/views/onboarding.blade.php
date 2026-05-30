@@ -159,13 +159,13 @@
         <article class="guest-onboarding-card">
             <span class="guest-onboarding-kicker">Memorisation Companion</span>
             <h1>Mutqin helps you memorise Quran through calm, session-based repetition.</h1>
-            <p>Build your hifz with focused sessions, structured recall, and progress reflection without distraction.</p>
+            <p>Choose a small ayah range, repeat with structure, then return for recall, self-check, and review without overload.</p>
 
             <ul class="guest-onboarding-list" aria-label="Key features">
-                <li>Session-based memorisation</li>
-                <li>Smart repetition loops</li>
-                <li>Progress tracking</li>
-                <li>Self-check and review</li>
+                <li>Build around short, focused sessions</li>
+                <li>Use repetition that matches a real memorisation sitting</li>
+                <li>Switch from listening to recall and self-check</li>
+                <li>Return later with saved progress and review context</li>
             </ul>
 
             <div class="guest-onboarding-actions">
