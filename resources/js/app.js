@@ -10,3 +10,11 @@ app.component('homepage', Homepage);
 app.component('memorisation', Memorisation);
 
 app.mount('#app');
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch((error) => {
+            console.warn('Failed to register service worker:', error);
+        });
+    });
+}

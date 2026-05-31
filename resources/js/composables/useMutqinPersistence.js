@@ -1,9 +1,21 @@
 import { computed, reactive, toRaw, toRefs, watch } from 'vue'
 
 export const MUTQIN_STATE_KEY = 'mutqin_state'
-const MUTQIN_STATE_BACKUP_KEY = `${MUTQIN_STATE_KEY}:backup`
+const MUTQIN_DEFAULT_OWNER = 'guest'
 let lastSavedSnapshot = ''
 const activeWatchers = new WeakMap()
+
+function ownerKey(owner = MUTQIN_DEFAULT_OWNER) {
+  return owner ? String(owner) : MUTQIN_DEFAULT_OWNER
+}
+
+function stateStorageKey(owner = MUTQIN_DEFAULT_OWNER) {
+  return `${MUTQIN_STATE_KEY}:${ownerKey(owner)}`
+}
+
+function backupStorageKey(owner = MUTQIN_DEFAULT_OWNER) {
+  return `${stateStorageKey(owner)}:backup`
+}
 
 function localDateKey(date = new Date()) {
   if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}/.test(date)) return date.slice(0, 10)
@@ -131,15 +143,20 @@ function mergeState(saved) {
   }
 }
 
-export function loadMutqinState() {
+export function loadMutqinState(owner = MUTQIN_DEFAULT_OWNER) {
   try {
-    const raw = localStorage.getItem(MUTQIN_STATE_KEY)
+    const primaryKey = stateStorageKey(owner)
+    const raw = ownerKey(owner) === MUTQIN_DEFAULT_OWNER
+      ? (localStorage.getItem(MUTQIN_STATE_KEY) ?? localStorage.getItem(primaryKey))
+      : (localStorage.getItem(primaryKey) ?? localStorage.getItem(MUTQIN_STATE_KEY))
     const merged = mergeState(raw ? JSON.parse(raw) : null)
     lastSavedSnapshot = JSON.stringify(clone(merged))
     return reactive(merged)
   } catch {
     try {
-      const backup = localStorage.getItem(MUTQIN_STATE_BACKUP_KEY)
+      const backup = ownerKey(owner) === MUTQIN_DEFAULT_OWNER
+        ? (localStorage.getItem(`${MUTQIN_STATE_KEY}:backup`) ?? localStorage.getItem(backupStorageKey(owner)))
+        : (localStorage.getItem(backupStorageKey(owner)) ?? localStorage.getItem(`${MUTQIN_STATE_KEY}:backup`))
       const merged = mergeState(backup ? JSON.parse(backup) : null)
       lastSavedSnapshot = JSON.stringify(clone(merged))
       return reactive(merged)
@@ -160,11 +177,14 @@ export function useMutqinPersistence() {
   }
 }
 
-export function watchMutqinState(state) {
+export function watchMutqinState(state, owner = MUTQIN_DEFAULT_OWNER, onSaved = null) {
   if (activeWatchers.has(state)) return activeWatchers.get(state)
   const stop = watch(
     state,
-    () => saveMutqinState(state),
+    () => {
+      const changed = saveMutqinState(state, owner)
+      if (changed && typeof onSaved === 'function') onSaved()
+    },
     { deep: true, flush: 'post' }
   )
   const guardedStop = () => {
@@ -175,13 +195,19 @@ export function watchMutqinState(state) {
   return guardedStop
 }
 
-export function saveMutqinState(state) {
+export function saveMutqinState(state, owner = MUTQIN_DEFAULT_OWNER) {
   try {
     const snapshot = JSON.stringify(clone(state))
     if (snapshot === lastSavedSnapshot) return false
-    const previous = localStorage.getItem(MUTQIN_STATE_KEY)
-    if (previous) localStorage.setItem(MUTQIN_STATE_BACKUP_KEY, previous)
-    localStorage.setItem(MUTQIN_STATE_KEY, snapshot)
+    const primaryKey = stateStorageKey(owner)
+    const previous = localStorage.getItem(primaryKey)
+    if (previous) localStorage.setItem(backupStorageKey(owner), previous)
+    localStorage.setItem(primaryKey, snapshot)
+    if (ownerKey(owner) === MUTQIN_DEFAULT_OWNER) {
+      const legacyPrevious = localStorage.getItem(MUTQIN_STATE_KEY)
+      if (legacyPrevious) localStorage.setItem(`${MUTQIN_STATE_KEY}:backup`, legacyPrevious)
+      localStorage.setItem(MUTQIN_STATE_KEY, snapshot)
+    }
     lastSavedSnapshot = snapshot
     return true
   } catch (error) {
@@ -195,6 +221,18 @@ export function mutateMutqinState(state, mutator) {
   state.sessionState.updated_at = new Date().toISOString()
   recomputeMutqinStats(state)
   return result
+}
+
+export function replaceMutqinState(targetState, nextState) {
+  const merged = mergeState(nextState)
+  Object.keys(targetState).forEach(key => {
+    if (!(key in merged)) delete targetState[key]
+  })
+  Object.entries(merged).forEach(([key, value]) => {
+    targetState[key] = value
+  })
+  lastSavedSnapshot = JSON.stringify(clone(targetState))
+  return targetState
 }
 
 export function recomputeMutqinStats(state, today = localDateKey()) {

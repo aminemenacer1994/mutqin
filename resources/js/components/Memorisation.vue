@@ -1420,48 +1420,7 @@
         </div>
 
         <div class="modal-body self-check-modal-body">
-          <section class="self-check-modal-stage">
-            <div class="self-check-modal-tools">
-              <div class="self-check-modal-tool-group">
-                <span class="self-check-modal-tool-label">Font size</span>
-                <div class="self-check-modal-font-controls">
-                  <button type="button" class="self-check-modal-tool-btn" @click="adjustSelfCheckFont(-8)" aria-label="Decrease ayah font size">
-                    <i class="bi bi-dash-lg"></i>
-                  </button>
-                  <span class="self-check-modal-font-value">{{ selfCheckFontSize }}%</span>
-                  <button type="button" class="self-check-modal-tool-btn" @click="adjustSelfCheckFont(8)" aria-label="Increase ayah font size">
-                    <i class="bi bi-plus-lg"></i>
-                  </button>
-                </div>
-              </div>
-
-              <div class="self-check-modal-tool-group self-check-modal-memory-tools">
-                <button
-                  type="button"
-                  class="self-check-modal-memory-btn"
-                  :class="{ active: selfCheckBlurEnabled }"
-                  @click="toggleSelfCheckBlurMode"
-                >
-                  <i class="bi" :class="selfCheckBlurEnabled ? 'bi-eye-slash' : 'bi-eye'"></i>
-                  <span>{{ selfCheckBlurEnabled ? 'Blur On' : 'Blur Off' }}</span>
-                </button>
-                <button
-                  v-if="selfCheckBlurEnabled"
-                  type="button"
-                  class="self-check-modal-memory-btn self-check-modal-memory-btn-peek"
-                  :class="{ active: selfCheckPeekActive }"
-                  @mousedown.prevent="startSelfCheckPeek"
-                  @mouseup="stopSelfCheckPeek"
-                  @mouseleave="stopSelfCheckPeek"
-                  @touchstart.passive="startSelfCheckPeek"
-                  @touchend.passive="stopSelfCheckPeek"
-                  @touchcancel.passive="stopSelfCheckPeek"
-                >
-                  <i class="bi bi-stars"></i>
-                  <span>{{ selfCheckPeekActive ? 'Peeking' : 'Hold to Peek' }}</span>
-                </button>
-              </div>
-            </div>
+          <section>
 
             <div class="self-check-modal-ayah-shell" :class="{ 'is-blurred': selfCheckBlurEnabled && !selfCheckPeekActive }">
               <div
