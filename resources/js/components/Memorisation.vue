@@ -1412,7 +1412,7 @@
           <div class="self-check-modal-head-copy">
             <div class="modal-context-badge">Per-ayah recorder</div>
             <h2 id="selfCheckModalTitle">Self-Check for Ayah {{ selfCheckModalVerse.number }}</h2>
-            <p>{{ selfCheckModalVerse.chapterName || currentChapter?.name_simple || activeChapterName || 'Current surah' }} · Session range {{ rangeStart }}-{{ rangeEnd }}</p>
+            <p>Record your recitation, rate your confidence, and build a personal archive for {{ selfCheckModalVerse.chapterName || currentChapter?.name_simple || activeChapterName || 'this surah' }} · Session range {{ rangeStart }}-{{ rangeEnd }}</p>
           </div>
           <button class="modal-close-btn" @click="closeSelfCheckModal" aria-label="Close self-check">
             <i class="bi bi-x-lg"></i>
@@ -1420,9 +1420,41 @@
         </div>
 
         <div class="modal-body self-check-modal-body">
-          <section>
+          <section class="self-check-modal-stage">
+            <header class="self-check-section-head">
+              <div>
+                <span class="self-check-kicker">Ayah display</span>
+                <strong class="self-check-section-title">Recite from memory</strong>
+                <p class="self-check-section-desc">Use blur to hide the text while you recite aloud. Adjust the font size for comfortable reading when you need to check yourself.</p>
+              </div>
+            </header>
 
-            <div class="self-check-modal-ayah-shell" :class="{ 'is-blurred': selfCheckBlurEnabled && !selfCheckPeekActive }">
+            
+
+            <div
+              v-if="selfCheckBlurEnabled"
+              class="technique-peek-hint"
+              @mousedown="startSelfCheckPeek"
+              @mouseup="stopSelfCheckPeek"
+              @mouseleave="stopSelfCheckPeek"
+              @touchstart.prevent="startSelfCheckPeek"
+              @touchend="stopSelfCheckPeek"
+              @touchcancel="stopSelfCheckPeek"
+            >
+              <i class="bi bi-hand-index"></i>
+              <span>Press and hold the ayah below to peek · release to hide again</span>
+            </div>
+
+            <div
+              class="self-check-modal-ayah-shell"
+              :class="{ 'is-blurred': selfCheckBlurEnabled && !selfCheckPeekActive, 'is-peekable': selfCheckBlurEnabled }"
+              @mousedown="startSelfCheckPeek"
+              @mouseup="stopSelfCheckPeek"
+              @mouseleave="stopSelfCheckPeek"
+              @touchstart.prevent="startSelfCheckPeek"
+              @touchend="stopSelfCheckPeek"
+              @touchcancel="stopSelfCheckPeek"
+            >
               <div
                 class="self-check-modal-ayah"
                 dir="rtl"
@@ -1433,6 +1465,7 @@
                 v-html="getSelfCheckModalArabic(selfCheckModalVerse)"
               ></div>
             </div>
+
           </section>
 
           <section class="self-check-modal-recorder-grid">
@@ -1441,8 +1474,9 @@
                 <div>
                   <span class="self-check-kicker">Recording</span>
                   <strong>{{ isSelfCheckRecording ? 'Recording in progress' : selfCheckActiveDraft ? 'Review before saving' : 'Ready when you are' }}</strong>
+                  <p class="self-check-card-desc">{{ getSelfCheckRecorderDescription() }}</p>
                 </div>
-                <button class="self-check-library-link" type="button" @click="openRecordingsLibraryFromSelfCheck">
+                <button class="self-check-library-link" type="button" @click="openRecordingsLibraryFromSelfCheck" title="Browse all saved recordings for this session">
                   <i class="bi bi-collection-play"></i>
                   <span>{{ selfCheckModalAttempts.length ? 'Open Library' : 'Library' }}</span>
                 </button>
@@ -1472,7 +1506,7 @@
                 <div class="self-check-live-stage">
                   <div class="self-check-live-copy">
                     <strong>Recording now</strong>
-                    <span>{{ getSelfCheckLiveDurationLabel() }}</span>
+                    <span>{{ getSelfCheckLiveDurationLabel() }} elapsed · speak clearly, then tap stop when finished</span>
                   </div>
                   <div class="self-check-live-pulse" aria-hidden="true">
                     <span></span><span></span><span></span>
@@ -1500,6 +1534,7 @@
                   <div>
                     <strong>Review this attempt</strong>
                     <span>{{ formatRecordingDate(selfCheckActiveDraft.recordedAt) }} · {{ formatRecordingDuration(selfCheckActiveDraft.durationSeconds) }}</span>
+                    <p class="self-check-card-desc">Listen back, compare with the ayah above, then tag how confident you felt.</p>
                   </div>
                   <button class="player-btn self-check-preview-btn" type="button" @click="toggleSelfCheckPreview(selfCheckModalVerse.key)">
                     <i class="bi" :class="activeSelfCheckPreviewKey === selfCheckModalVerse.key ? 'bi-pause-fill' : 'bi-play-fill'"></i>
@@ -1507,17 +1542,25 @@
                   </button>
                 </div>
 
-                <div class="self-check-result-group" role="group" aria-label="Choose self-check result">
-                  <button
-                    v-for="option in ['Excellent', 'Good', 'Needs Review']"
-                    :key="option"
-                    type="button"
-                    class="self-check-result-btn"
-                    :class="[getRecordingResultTone(option), { active: selfCheckActiveDraft.result === option }]"
-                    @click="setSelfCheckDraftResult(option)"
-                  >
-                    {{ option }}
-                  </button>
+                <div class="self-check-result-block">
+                  <div class="self-check-result-label">
+                    <span class="self-check-kicker">Self-rating</span>
+                    <p class="self-check-tool-hint">Your rating helps track which ayahs need more review over time.</p>
+                  </div>
+                  <div class="self-check-result-group" role="group" aria-label="Choose self-check result">
+                    <button
+                      v-for="option in ['Excellent', 'Good', 'Needs Review']"
+                      :key="option"
+                      type="button"
+                      class="self-check-result-btn"
+                      :class="[getRecordingResultTone(option), { active: selfCheckActiveDraft.result === option }]"
+                      :title="getSelfCheckResultHint(option)"
+                      @click="setSelfCheckDraftResult(option)"
+                    >
+                      <span class="self-check-result-btn-label">{{ option }}</span>
+                      <span class="self-check-result-btn-hint">{{ getSelfCheckResultHint(option) }}</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div class="self-check-review-actions">
@@ -1553,8 +1596,9 @@
                 <div>
                   <span class="self-check-kicker">Saved attempts</span>
                   <strong>Recent review history</strong>
+                  <p class="self-check-card-desc">Every saved attempt for this ayah appears here. Replay past recordings to compare your progress.</p>
                 </div>
-                <span class="self-check-attempts-count">{{ selfCheckModalAttempts.length }}</span>
+                <span class="self-check-attempts-count" :title="`${selfCheckModalAttempts.length} saved recording${selfCheckModalAttempts.length === 1 ? '' : 's'}`">{{ selfCheckModalAttempts.length }}</span>
               </div>
 
               <div v-if="selfCheckModalAttempts.length" class="self-check-attempts-list">
@@ -1568,6 +1612,7 @@
                     <div class="self-check-attempt-copy">
                       <strong>Attempt {{ recording.attemptNumber }}</strong>
                       <span>{{ formatRecordingDate(recording.recordedAt) }} · {{ formatRecordingTimestamp(recording.recordedAt) }}</span>
+                      <p class="self-check-attempt-note">Self-rated · {{ recording.result }}</p>
                     </div>
                     <span class="recording-result-pill" :class="getRecordingResultTone(recording.result)">
                       {{ recording.result }}
@@ -1604,7 +1649,7 @@
                   <i class="bi bi-mic"></i>
                 </div>
                 <h3>No recordings yet</h3>
-                <p>Record your first recitation using Self-Check.</p>
+                <p>Start a recording on the left to capture your first recitation. Saved attempts will appear here so you can replay and track improvement.</p>
               </div>
             </aside>
           </section>
@@ -1618,7 +1663,7 @@
           <div class="recordings-library-head-copy">
             <div class="modal-context-badge">Personal archive</div>
             <h2 id="recordingsLibraryTitle">Recordings Library</h2>
-            <p>Browse recorded ayahs, replay past attempts, and keep self-check review in one place.</p>
+            <p>Browse every ayah you have recorded in this session. Replay attempts, review self-ratings, and keep your memorisation progress in one archive.</p>
           </div>
           <button class="modal-close-btn" @click="closeRecordingsLibrary" aria-label="Close recordings library">
             <i class="bi bi-x-lg"></i>
@@ -1636,7 +1681,7 @@
               <i class="bi bi-mic"></i>
             </div>
             <h3>No recordings yet</h3>
-            <p>Record your first recitation using Self-Check. Each attempt will be saved under its ayah, then surfaced here inside the wider session range.</p>
+            <p>Open Self-Check on any ayah in your session, record your recitation, and save the attempt. Every saved recording will appear here, grouped by surah and ayah.</p>
           </div>
 
           <div v-else class="recordings-library-shell">
@@ -1645,6 +1690,7 @@
                 <div>
                   <span class="recordings-library-nav-kicker">Recorded ayahs</span>
                   <strong>{{ filteredRecordingsAyahCount }} ayah{{ filteredRecordingsAyahCount === 1 ? '' : 's' }}</strong>
+                  <p class="recordings-library-section-desc">Select an ayah to replay attempts, review ratings, and manage your archive.</p>
                 </div>
                 <button class="recordings-library-nav-toggle" type="button" @click="toggleRecordingsNav">
                   <span>{{ recordingsNavExpanded ? 'Hide list' : 'Show list' }}</span>
@@ -1653,13 +1699,16 @@
               </div>
 
               <div class="recordings-library-search">
-                <i class="bi bi-search"></i>
-                <input
-                  v-model.trim="recordingsLibrarySearch"
-                  type="search"
-                  placeholder="Search surah or ayah"
-                  aria-label="Search recorded ayahs"
-                >
+                <div class="recordings-library-search-field">
+                  <i class="bi bi-search"></i>
+                  <input
+                    v-model.trim="recordingsLibrarySearch"
+                    type="search"
+                    placeholder="Search surah or ayah number"
+                    aria-label="Search recorded ayahs"
+                  >
+                </div>
+                <p class="recordings-library-search-hint">Filter by surah name or ayah number within your saved archive.</p>
               </div>
 
               <div v-show="recordingsNavExpanded" class="recordings-library-nav-scroll">
@@ -1685,6 +1734,10 @@
                 <div>
                   <span class="recordings-library-detail-kicker">{{ selectedRecordingsAyahGroup.chapterName }}</span>
                   <h3>Ayah {{ selectedRecordingsAyahGroup.ayahNumber }}</h3>
+                  <p v-if="getAyahTranslation(selectedRecordingsAyahGroup.ayahKey)" class="recordings-library-ayah-translation">
+                    {{ getAyahTranslation(selectedRecordingsAyahGroup.ayahKey) }}
+                  </p>
+                  <p class="recordings-library-section-desc">Replay each attempt, check your self-rating, and remove recordings you no longer need.</p>
                 </div>
                 <div class="recordings-library-detail-count">
                   {{ selectedRecordingsAyahGroup.recordings.length }} attempt{{ selectedRecordingsAyahGroup.recordings.length === 1 ? '' : 's' }}
@@ -1702,6 +1755,7 @@
                     <div class="recording-history-copy">
                       <strong>Attempt {{ recording.attemptNumber }}</strong>
                       <span>{{ formatRecordingTimestamp(recording.recordedAt) }}</span>
+                      <p class="recording-history-note">Self-rated as {{ recording.result.toLowerCase() }} · tap play to listen back</p>
                     </div>
                     <span class="recording-result-pill" :class="getRecordingResultTone(recording.result)">
                       {{ recording.result }}
@@ -1738,8 +1792,8 @@
                 <div class="recordings-library-empty-icon">
                   <i class="bi bi-journal-music"></i>
                 </div>
-                <h3>No matching ayah</h3>
-                <p>Adjust the search or choose another recorded ayah from the list.</p>
+                <h3>{{ recordingsLibrarySearch ? 'No matching ayah' : 'Choose an ayah' }}</h3>
+                <p>{{ recordingsLibrarySearch ? 'Try a different surah name or ayah number, or clear the search to see all recorded ayahs.' : 'Pick an ayah from the list on the left to view its saved attempts and playback history.' }}</p>
               </div>
             </section>
           </div>
@@ -5762,6 +5816,34 @@ export default {
       if (result === 'Excellent') return 'tone-excellent'
       if (result === 'Good') return 'tone-good'
       return 'tone-review'
+    },
+    getSelfCheckResultHint(option) {
+      const hints = {
+        Excellent: 'Confident and accurate from memory',
+        Good: 'Mostly correct with minor hesitation',
+        'Needs Review': 'Revisit this ayah before moving on'
+      }
+      return hints[option] || ''
+    },
+    getSelfCheckRecorderDescription() {
+      if (this.isSelfCheckRecording) {
+        return 'Your microphone is active. Recite the ayah aloud, then stop when you are finished.'
+      }
+      if (this.selfCheckActiveDraft) {
+        return 'Listen to your recording, rate your confidence, then save it to your library or try again.'
+      }
+      if (this.selfCheckPreparing) {
+        return 'Setting up microphone access for a clear recording.'
+      }
+      if (!this.supportsSelfCheckRecording()) {
+        return 'Recording requires a browser with microphone support.'
+      }
+      return 'Record yourself reciting this ayah, then compare your attempt against the text above.'
+    },
+    getAyahTranslation(ayahKey) {
+      if (!ayahKey) return ''
+      const verse = this.verses.find(item => item.key === ayahKey)
+      return verse?.translation || ''
     },
     formatRecordingDuration(seconds) {
       return this.formatTime(Number(seconds || 0))
@@ -13400,40 +13482,61 @@ export default {
 
 .self-check-modal-stage {
   display: grid;
-  grid-template-rows: auto minmax(220px, 1fr);
   gap: 16px;
-  padding: 18px;
+  padding: 20px;
   border-radius: 24px;
 }
 
-.self-check-modal-tools,
-.self-check-recorder-head,
-.self-check-recorder-meta,
-.self-check-review-head,
-.self-check-review-actions,
-.self-check-live-actions,
-.self-check-idle-actions,
-.self-check-attempt-top,
-.self-check-attempt-actions {
+.self-check-section-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
 }
 
-.self-check-modal-tools {
-  flex-wrap: wrap;
+.self-check-section-title {
+  display: block;
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 1.02rem;
+  font-weight: 700;
 }
+
+.self-check-section-desc,
+.self-check-card-desc,
+.self-check-tool-hint,
+.recordings-library-section-desc,
+.recordings-library-search-hint,
+.recording-history-note,
+.self-check-attempt-note {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  font-weight: 500;
+}
+
+.self-check-card-desc {
+  max-width: 34rem;
+}
+
+.self-check-tool-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+
 
 .self-check-modal-tool-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  display: grid;
+  gap: 10px;
+  flex: 1 1 220px;
 }
 
 .self-check-modal-memory-tools {
   margin-left: auto;
+  justify-items: end;
 }
 
 .self-check-modal-tool-label {
@@ -13500,7 +13603,19 @@ export default {
     radial-gradient(circle at top, rgba(212, 176, 133, 0.14), transparent 55%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 241, 233, 0.9));
   overflow: hidden;
+  transition: box-shadow 0.22s ease, border-color 0.22s ease;
 }
+
+.self-check-modal-ayah-shell.is-peekable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.self-check-modal-ayah-shell.is-peekable.is-blurred:hover {
+  box-shadow: inset 0 0 0 1px rgba(154, 103, 56, 0.16);
+}
+
+
 
 .self-check-modal-ayah {
   width: min(100%, 760px);
@@ -13553,6 +13668,27 @@ export default {
   color: var(--text-muted);
 }
 
+.self-check-recorder-head,
+.self-check-recorder-meta,
+.self-check-review-head,
+.self-check-review-actions,
+.self-check-live-actions,
+.self-check-idle-actions,
+.self-check-attempt-top,
+.self-check-attempt-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.self-check-recorder-head > div:first-child,
+.self-check-review-head > div:first-child,
+.self-check-attempt-copy {
+  flex: 1;
+  min-width: 0;
+}
+
 .self-check-recorder-head strong,
 .self-check-attempts-head strong,
 .self-check-live-copy strong,
@@ -13560,6 +13696,7 @@ export default {
 .self-check-attempt-copy strong {
   color: var(--text);
   font-size: 0.96rem;
+  display: block;
 }
 
 .self-check-live-copy span,
@@ -13695,22 +13832,47 @@ export default {
   50% { transform: scaleY(1.1); opacity: 1; }
 }
 
+.self-check-result-block {
+  display: grid;
+  gap: 12px;
+}
+
+.self-check-result-label {
+  display: grid;
+  gap: 2px;
+}
+
 .self-check-result-group {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
 .self-check-result-btn {
-  min-height: 36px;
-  padding: 0 12px;
-  border-radius: 999px;
+  min-height: auto;
+  padding: 12px;
+  border-radius: 16px;
   border: 1px solid transparent;
   background: rgba(255, 255, 255, 0.74);
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: grid;
+  gap: 4px;
+  text-align: left;
+}
+
+.self-check-result-btn-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.self-check-result-btn-hint {
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.45;
+  opacity: 0.82;
 }
 
 .self-check-result-btn.active {
@@ -13790,11 +13952,17 @@ export default {
   gap: 10px;
   text-align: center;
   color: var(--text-muted);
+  padding: 12px;
 }
 
 .self-check-empty h3,
 .self-check-empty p {
   margin: 0;
+}
+
+.self-check-empty p {
+  max-width: 280px;
+  line-height: 1.6;
 }
 
 .self-check-empty-icon {
@@ -24006,11 +24174,16 @@ html {
 
 .recordings-library-nav-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   padding: 18px 18px 12px;
   border-bottom: 1px solid rgba(154, 103, 56, 0.08);
+}
+
+.recordings-library-nav-head > div:first-child {
+  flex: 1;
+  min-width: 0;
 }
 
 .recordings-library-nav-kicker,
@@ -24046,13 +24219,32 @@ html {
 }
 
 .recordings-library-search {
-  position: relative;
   padding: 14px 18px 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.recordings-library-search-field {
+  position: relative;
+}
+
+.recordings-library-search-hint {
+  margin: 0;
+  padding-left: 2px;
+}
+
+.recordings-library-ayah-translation {
+  margin: 8px 0 0;
+  max-width: 38rem;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  line-height: 1.6;
+  font-style: italic;
 }
 
 .recordings-library-search i {
   position: absolute;
-  left: 30px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-muted);
@@ -24152,6 +24344,11 @@ html {
   border-bottom: 1px solid rgba(154, 103, 56, 0.08);
 }
 
+.recordings-library-detail-head > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
 .recordings-library-detail-head h3 {
   margin: 0;
   color: var(--text);
@@ -24196,6 +24393,12 @@ html {
 .recording-history-copy {
   display: grid;
   gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.recording-history-note {
+  margin-top: 2px;
 }
 
 .recording-history-copy strong {
@@ -24322,6 +24525,8 @@ html {
     linear-gradient(180deg, rgba(53, 46, 41, 0.9), rgba(37, 32, 29, 0.88));
 }
 
+
+
 [data-theme="dark"] .self-check-recorder-meta span,
 [data-theme="dark"] .self-check-library-link,
 [data-theme="dark"] .self-check-modal-font-controls,
@@ -24438,26 +24643,18 @@ html {
     border-radius: 20px;
   }
 
-  .self-check-modal-tools,
-  .self-check-recorder-head,
-  .self-check-recorder-meta,
-  .self-check-review-head,
-  .self-check-review-actions,
-  .self-check-live-actions,
-  .self-check-idle-actions,
-  .self-check-attempt-top,
-  .self-check-attempt-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
 
   .self-check-modal-memory-tools {
     margin-left: 0;
+    justify-items: stretch;
   }
 
   .self-check-modal-tool-group {
     width: 100%;
-    justify-content: space-between;
+  }
+
+  .self-check-result-group {
+    grid-template-columns: 1fr;
   }
 
   .self-check-modal-font-controls {
