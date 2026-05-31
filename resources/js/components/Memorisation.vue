@@ -109,18 +109,10 @@
                 <div class="workspace-shell-title-row">
                   <h1>{{ currentChapter ? currentChapter.name_simple : activeChapterName }}</h1>
                 </div>
-                <p>{{ currentActionLabel }}</p>
+                <p>{{ currentPosition }} of {{ totalVerses }} ayahs · {{ progressPercent }}% complete<span v-if="etaLabel"> · {{ etaLabel }} left</span></p>
                 <div v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
-                  <span>Ayah {{ currentPosition }} of {{ totalVerses }}</span>
-                  <span>{{ progressPercent }}% complete</span>
-                  <span v-if="etaLabel">{{ etaLabel }} left</span>
-                  <span v-if="chainingEnabled && hasSessionFeedback">{{ chainingMethodLabel }}</span>
-                </div>
-                <div v-if="activeTechniqueBadges.length" v-show="!mainCardCollapsed" class="workspace-shell-techniques" aria-label="Active techniques">
-                  <span v-for="badge in activeTechniqueBadges" :key="badge.key" class="workspace-shell-technique-badge">
-                    <i class="bi" :class="badge.icon"></i>
-                    <span>{{ badge.label }}</span>
-                  </span>
+                  <span>{{ currentLearningPrompt }}</span>
+                  <span v-if="reviewPriorityLabel">{{ reviewPriorityLabel }}</span>
                 </div>
               </div>
               <div class="workspace-shell-actions">
@@ -129,6 +121,11 @@
                     :disabled="!isPlaying && !canStartSession">
                     <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
                     <span>{{ isPlaying ? 'Pause' : 'Start Session' }}</span>
+                  </button>
+                  <button class="action-btn action-btn-secondary action-btn-recordings" type="button" @click="openRecordingsLibrary"
+                    title="Open recordings library">
+                    <i class="bi bi-collection-play"></i>
+                    <span>View All Recordings</span>
                   </button>
                   <button class="action-btn action-btn-secondary" type="button" @click="openAdvancedControls"
                     title="Open session controls">
@@ -302,6 +299,17 @@
                       <i class="bi bi-download"></i>
                     </button>
 
+                    <button
+                      class="verse-self-check-btn"
+                      :class="{ active: selfCheckVerseKey === verse.key }"
+                      @click.stop="toggleSelfCheckPanel(verse)"
+                      :title="selfCheckVerseKey === verse.key ? 'Close self-check' : 'Open self-check recorder'"
+                    >
+                      <i class="bi" :class="selfCheckVerseKey === verse.key ? 'bi-mic-fill' : 'bi-mic'"></i>
+                      <span>Self-Check</span>
+                      <em v-if="getAyahRecordingCount(verse.key)">{{ getAyahRecordingCount(verse.key) }}</em>
+                    </button>
+
                     <span v-if="!hasSessionFeedback" class="verse-preview-label">Preview</span>
                   </div>
                 </div>
@@ -343,6 +351,122 @@
                       type="button"
                       @click.stop="playWordAudio(word.audio, verse, wi)">
                       <i class="bi bi-volume-up"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div v-if="selfCheckVerseKey === verse.key" class="self-check-panel" @click.stop>
+                  <div class="self-check-panel-head">
+                    <div class="self-check-panel-title">
+                      <span class="self-check-kicker">Per-ayah recorder</span>
+                      <strong>Self-Check for Ayah {{ verse.number }}</strong>
+                    </div>
+                    <button class="self-check-library-link" type="button" @click="openRecordingsLibrary({ ayahKey: verse.key })">
+                      <i class="bi bi-collection-play"></i>
+                      <span>View Recordings</span>
+                    </button>
+                  </div>
+
+                  <p class="self-check-panel-copy">
+                    Record your recitation for this ayah. The session range stays as context, but each saved attempt belongs to this individual ayah.
+                  </p>
+
+                  <div class="self-check-panel-meta">
+                    <span>{{ getAyahRecordingCount(verse.key) }} saved attempt{{ getAyahRecordingCount(verse.key) === 1 ? '' : 's' }}</span>
+                    <span v-if="getLatestRecordingForAyah(verse.key)">
+                      Latest: {{ getLatestRecordingForAyah(verse.key).result }} · {{ formatDate(getLatestRecordingForAyah(verse.key).recordedAt) }}
+                    </span>
+                  </div>
+
+                  <div v-if="selfCheckLastSavedAyahKey === verse.key" class="self-check-status self-check-status-success">
+                    <i class="bi bi-check2-circle"></i>
+                    <span>Saved to the recordings library for this ayah.</span>
+                  </div>
+
+                  <div v-if="selfCheckError && selfCheckVerseKey === verse.key" class="self-check-status self-check-status-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <span>{{ selfCheckError }}</span>
+                  </div>
+
+                  <div v-if="!supportsSelfCheckRecording()" class="self-check-status self-check-status-warning">
+                    <i class="bi bi-mic-mute"></i>
+                    <span>Recording is not available in this browser.</span>
+                  </div>
+
+                  <div v-else-if="isSelfCheckRecording" class="self-check-live-card">
+                    <div class="self-check-live-copy">
+                      <strong>Recording now</strong>
+                      <span>{{ getSelfCheckLiveDurationLabel() }}</span>
+                    </div>
+                    <div class="self-check-live-pulse" aria-hidden="true">
+                      <span></span><span></span><span></span>
+                    </div>
+                    <div class="self-check-live-actions">
+                      <button class="btn-secondary self-check-action-btn" type="button" @click="discardSelfCheckRecording">
+                        <i class="bi bi-x-circle"></i>
+                        <span>Discard</span>
+                      </button>
+                      <button class="btn-primary self-check-action-btn" type="button" @click="stopSelfCheckRecording">
+                        <i class="bi bi-stop-circle"></i>
+                        <span>Stop Recording</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div v-else-if="selfCheckPreparing" class="self-check-status self-check-status-info">
+                    <i class="bi bi-hourglass-split"></i>
+                    <span>{{ selfCheckPreparingLabel }}</span>
+                  </div>
+
+                  <div v-else-if="getSelfCheckDraftForVerse(verse.key)" class="self-check-review-card">
+                    <div class="self-check-review-head">
+                      <div>
+                        <strong>Review this attempt</strong>
+                        <span>{{ formatRecordingDate(getSelfCheckDraftForVerse(verse.key).recordedAt) }} · {{ formatRecordingDuration(getSelfCheckDraftForVerse(verse.key).durationSeconds) }}</span>
+                      </div>
+                      <button class="player-btn self-check-preview-btn" type="button" @click="toggleSelfCheckPreview(verse.key)">
+                        <i class="bi" :class="activeSelfCheckPreviewKey === verse.key ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                        <span>{{ activeSelfCheckPreviewKey === verse.key ? 'Pause' : 'Play' }}</span>
+                      </button>
+                    </div>
+
+                    <div class="self-check-result-group" role="group" aria-label="Choose self-check result">
+                      <button
+                        v-for="option in ['Excellent', 'Good', 'Needs Review']"
+                        :key="option"
+                        type="button"
+                        class="self-check-result-btn"
+                        :class="[getRecordingResultTone(option), { active: getSelfCheckDraftForVerse(verse.key).result === option }]"
+                        @click="setSelfCheckDraftResult(option)"
+                      >
+                        {{ option }}
+                      </button>
+                    </div>
+
+                    <div class="self-check-review-actions">
+                      <button class="btn-secondary self-check-action-btn" type="button" @click="discardSelfCheckRecording">
+                        <i class="bi bi-trash3"></i>
+                        <span>Discard</span>
+                      </button>
+                      <button class="btn-secondary self-check-action-btn" type="button" @click="restartSelfCheckRecording(verse)">
+                        <i class="bi bi-arrow-repeat"></i>
+                        <span>Record Again</span>
+                      </button>
+                      <button class="btn-primary self-check-action-btn" type="button" @click="saveSelfCheckRecording(verse)">
+                        <i class="bi bi-save2"></i>
+                        <span>Save Attempt</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div v-else class="self-check-idle-actions">
+                    <button class="btn-primary self-check-action-btn" type="button" @click="startSelfCheckRecording(verse)">
+                      <i class="bi bi-mic-fill"></i>
+                      <span>Start Recording</span>
+                    </button>
+                    <button class="btn-secondary self-check-action-btn" type="button" @click="openRecordingsLibrary({ ayahKey: verse.key })">
+                      <i class="bi bi-clock-history"></i>
+                      <span>{{ getAyahRecordingCount(verse.key) ? 'Review Saved Attempts' : 'Open Library' }}</span>
                     </button>
                   </div>
                 </div>
@@ -420,15 +544,6 @@
                     class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.advanced_setup">
-                <div v-if="activeTechniqueBadges.length" class="session-setup-techniques" aria-label="Active memorisation techniques">
-                  <span class="session-setup-techniques-label">Active techniques</span>
-                  <div class="session-setup-techniques-row">
-                    <span v-for="badge in activeTechniqueBadges" :key="`setup-${badge.key}`" class="saved-technique-chip">
-                      <i class="bi" :class="badge.icon"></i>
-                      <span>{{ badge.label }}</span>
-                    </span>
-                  </div>
-                </div>
                 <div class="field-stack field-stack-compact">
                   <div class="field">
                     <label>Surah</label>
@@ -479,16 +594,6 @@
                     </div>
                     <div class="slider-markers slider-markers-compact">
                       <span>1x</span><span>3x</span><span>5x</span><span>7x</span><span>10x</span>
-                    </div>
-                    <div class="repetition-custom-row">
-                      <button type="button" class="repetition-custom-toggle" :class="{ active: usingCustomRepetitions }" @click="toggleCustomRepetitions">
-                        <i class="bi" :class="usingCustomRepetitions ? 'bi-sliders2-vertical' : 'bi-plus-circle'"></i>
-                        <span>Custom</span>
-                      </button>
-                      <label v-if="usingCustomRepetitions" class="repetition-custom-input">
-                        <span>Higher repeat count</span>
-                        <input type="number" min="11" max="50" :value="repetitionsPerStep" @input="setCustomRepetitions($event.target.value)" class="input">
-                      </label>
                     </div>
                     <small class="field-hint">Repeat each verse {{ repetitionsPerStep }} time{{ repetitionsPerStep === 1 ? '' : 's' }} before moving on.</small>
                   </div>
@@ -744,16 +849,7 @@
                   <strong>{{ continueSessionLabel }}</strong>
                   <small>{{ continueSessionMeta }}</small>
                 </div>
-                <div class="saved-continue-actions">
-                  <button class="session-resume-btn" type="button" @click="continueLastSession">
-                    <i class="bi bi-play-fill"></i>
-                    <span>Resume Previous Session</span>
-                  </button>
-                  <button class="delete-btn session-delete-btn session-delete-btn-quiet" type="button" @click="confirmDiscardContinueSession" title="Dismiss previous session snapshot">
-                    <i class="bi bi-x-lg"></i>
-                    <span>Dismiss</span>
-                  </button>
-                </div>
+                
               </div>
               <div v-if="savedSessions.length === 0" class="empty-state">
                 <i class="bi bi-journal-bookmark"></i>
@@ -789,13 +885,25 @@
                       <div class="session-export-group" role="group" :aria-label="`Export actions for ${session.name || getSessionPrimaryLabel(session)}`">
                         <button
                           type="button"
+                          class="session-export-btn session-export-btn-csv"
+                          :class="{ success: isSessionExportSuccessful(session.id, 'csv') }"
+                          :disabled="isExportingSession(session.id)"
+                          @click.stop="exportSavedSession(session.id, 'csv')"
+                          title="Export CSV"
+                        >
+                          <i class="bi" :class="getSessionExportIcon(session.id, 'csv', 'bi-filetype-csv')"></i>
+                          <span>{{ getSessionExportLabel(session.id, 'csv', 'CSV') }}</span>
+                        </button>
+                        <button
+                          type="button"
                           class="session-export-btn session-export-btn-pdf"
                           :class="{ success: isSessionExportSuccessful(session.id, 'pdf') }"
                           :disabled="isExportingSession(session.id)"
                           @click.stop="exportSavedSession(session.id, 'pdf')"
+                          title="Export PDF"
                         >
                           <i class="bi" :class="getSessionExportIcon(session.id, 'pdf', 'bi-filetype-pdf')"></i>
-                          <span>{{ getSessionExportLabel(session.id, 'pdf', 'PDF Export') }}</span>
+                          <span>{{ getSessionExportLabel(session.id, 'pdf', 'PDF') }}</span>
                         </button>
                         <button
                           type="button"
@@ -803,9 +911,10 @@
                           :class="{ success: isSessionExportSuccessful(session.id, 'word') }"
                           :disabled="isExportingSession(session.id)"
                           @click.stop="exportSavedSession(session.id, 'word')"
+                          title="Export Word"
                         >
                           <i class="bi" :class="getSessionExportIcon(session.id, 'word', 'bi-file-earmark-word')"></i>
-                          <span>{{ getSessionExportLabel(session.id, 'word', 'Word Export') }}</span>
+                          <span>{{ getSessionExportLabel(session.id, 'word', 'Word') }}</span>
                         </button>
                       </div>
                       <button
@@ -814,7 +923,7 @@
                         title="Delete session"
                       >
                         <i class="bi bi-trash3"></i>
-                        <span>Delete Session</span>
+                        <span>Delete</span>
                       </button>
                     </div>
                   </div>
@@ -1094,87 +1203,34 @@
             </aside>
           </section>
 
-          <section class="guest-section guest-section-row">
+          <section class="guest-section guest-section-row guest-section-row-simplified">
             <div class="guest-section-head guest-section-head-side">
-              <span class="guest-section-kicker">Core experience</span>
-              <h2>Built around real memorisation sessions</h2>
-              <p>Everything stays centred on recitation, recall, and repetition instead of a dashboard-heavy workflow.</p>
+              <span class="guest-section-kicker">How Mutqin stays focused</span>
+              <h2>Everything centres on one calm memorisation session at a time</h2>
+              <p>Choose a small range, repeat with structure, then return for recall and review without dashboard clutter.</p>
             </div>
             <div class="guest-feature-grid">
               <article class="guest-feature-card">
                 <i class="bi bi-layers"></i>
-                <strong>Session-based memorisation</strong>
-                <p>Choose a focused ayah range and work through it with a clear beginning and end.</p>
+                <strong>Focused ayah ranges</strong>
+                <p>Work in smaller sections that are easier to repeat well.</p>
               </article>
               <article class="guest-feature-card">
                 <i class="bi bi-arrow-repeat"></i>
-                <strong>Smart repetition loops</strong>
-                <p>Repeat ayahs cleanly or use chaining methods when transitions need more work.</p>
+                <strong>Clear repetition</strong>
+                <p>Keep your session steady instead of guessing how many times to repeat.</p>
               </article>
               <article class="guest-feature-card">
                 <i class="bi bi-ear"></i>
                 <strong>Recall with less clutter</strong>
-                <p>Turn on only the reading aids and support tools that help the current session.</p>
+                <p>Use only the aids and techniques that support the current passage.</p>
               </article>
               <article class="guest-feature-card">
                 <i class="bi bi-graph-up-arrow"></i>
-                <strong>Progress you can return to</strong>
-                <p>Saved sessions, insights, and resume history remain ready after login.</p>
+                <strong>Progress you can revisit</strong>
+                <p>Saved sessions and compact insights stay ready when you come back.</p>
               </article>
             </div>
-          </section>
-
-          <section class="guest-section guest-section-split">
-            <article class="guest-panel">
-              <div class="guest-panel-head">
-                <span class="guest-section-kicker">Session flow</span>
-                <h3>How a memorisation session moves</h3>
-              </div>
-              <div class="guest-flow-list">
-                <div class="guest-flow-item">
-                  <span>01</span>
-                  <p>Select a surah, define a short ayah range, and choose your reciter.</p>
-                </div>
-                <div class="guest-flow-item">
-                  <span>02</span>
-                  <p>Listen and repeat with the number of plays and pacing that suits your level.</p>
-                </div>
-                <div class="guest-flow-item">
-                  <span>03</span>
-                  <p>Switch into recall with fewer aids, then review weak points without losing context.</p>
-                </div>
-              </div>
-            </article>
-
-            <article class="guest-panel">
-              <div class="guest-panel-head">
-                <span class="guest-section-kicker">After login</span>
-                <h3>What you keep</h3>
-              </div>
-              <div class="guest-benefit-list">
-                <div class="guest-benefit-item">
-                  <i class="bi bi-save2"></i>
-                  <div>
-                    <strong>Saved sessions</strong>
-                    <p>Keep named memorisation sessions ready for later review.</p>
-                  </div>
-                </div>
-                <div class="guest-benefit-item">
-                  <i class="bi bi-play-circle"></i>
-                  <div>
-                    <strong>Resume history</strong>
-                    <p>Return to the exact ayah, queue position, and playback context.</p>
-                  </div>
-                </div>
-                <div class="guest-benefit-item">
-                  <i class="bi bi-bar-chart-line"></i>
-                  <div>
-                    <strong>Session insights</strong>
-                    <p>See ayahs reviewed, time spent, play counts, and compact analytics.</p>
-                  </div>
-                </div>
-              </div>
-            </article>
           </section>
         </div>
       </div>
@@ -1429,28 +1485,174 @@
                 <div v-else class="analytics-empty-panel">Play ayah audio to populate the activity chart.</div>
               </article>
             </section>
-            <section class="session-analytics-section">
+            <section class="session-analytics-section session-analytics-two-col">
               <article class="session-analytics-panel">
                 <header>
-                  <h3>Ayah heatmap</h3>
-                  <p>Darker cells show more audio replay on that ayah.</p>
+                  <h3>Most Replayed Ayahs</h3>
+                  <p>Quick view of where repetition is concentrating.</p>
                 </header>
-                <div v-if="analyticsHeatmapCells.length" class="analytics-heatmap-grid">
-                  <div
-                    v-for="cell in analyticsHeatmapCells"
-                    :key="cell.key"
-                    class="analytics-heatmap-cell"
-                    :style="{ '--cell-intensity': cell.intensity }"
-                    :title="`${cell.label}: ${cell.value} play${cell.value === 1 ? '' : 's'}`"
-                  >
-                    <span>{{ cell.shortLabel }}</span>
-                    <strong>{{ cell.value }}</strong>
+                <div v-if="analyticsReplayLeaders.length" class="analytics-bar-list">
+                  <div v-for="item in analyticsReplayLeaders" :key="item.key" class="analytics-bar-row">
+                    <span>{{ item.label }}</span>
+                    <div class="analytics-bar-track">
+                      <div class="analytics-bar-fill" :style="{ width: `${item.percent}%` }"></div>
+                    </div>
+                    <strong>{{ item.value }}</strong>
                   </div>
                 </div>
-                <div v-else class="analytics-empty-panel">No verse play data available yet.</div>
+                <div v-else class="analytics-empty-panel">No ayah replay data available yet.</div>
+              </article>
+              <article class="session-analytics-panel">
+                <header>
+                  <h3>Session Playback Balance</h3>
+                  <p>See how evenly audio attention is spread across the selected range.</p>
+                </header>
+                <div v-if="analyticsPlaybackBuckets.length" class="analytics-bucket-grid">
+                  <div v-for="bucket in analyticsPlaybackBuckets" :key="bucket.key" class="analytics-bucket-card">
+                    <span>{{ bucket.label }}</span>
+                    <strong>{{ bucket.value }}</strong>
+                    <small>{{ bucket.description }}</small>
+                  </div>
+                </div>
+                <div v-else class="analytics-empty-panel">Playback balance appears after ayah audio starts.</div>
               </article>
             </section>
           </template>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showRecordingsLibrary" class="modal-overlay recordings-library-overlay" @click.self="closeRecordingsLibrary">
+      <div class="modal-content recordings-library-modal" role="dialog" aria-modal="true" aria-labelledby="recordingsLibraryTitle">
+        <div class="modal-header recordings-library-header">
+          <div class="recordings-library-head-copy">
+            <div class="modal-context-badge">Personal archive</div>
+            <h2 id="recordingsLibraryTitle">Recordings Library</h2>
+            <p>Browse recorded ayahs, replay past attempts, and keep self-check review in one place.</p>
+          </div>
+          <button class="modal-close-btn" @click="closeRecordingsLibrary" aria-label="Close recordings library">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <div class="modal-body recordings-library-body">
+          <div v-if="isRecordingsLibraryLoading" class="recordings-library-loading">
+            <i class="bi bi-hourglass-split"></i>
+            <span>Loading recordings…</span>
+          </div>
+
+          <div v-else-if="!hasRecordingsLibraryEntries" class="recordings-library-empty">
+            <div class="recordings-library-empty-icon">
+              <i class="bi bi-mic"></i>
+            </div>
+            <h3>No recordings yet</h3>
+            <p>Record your first recitation using Self-Check. Each attempt will be saved under its ayah, then surfaced here inside the wider session range.</p>
+          </div>
+
+          <div v-else class="recordings-library-shell">
+            <aside class="recordings-library-nav">
+              <div class="recordings-library-nav-head">
+                <div>
+                  <span class="recordings-library-nav-kicker">Recorded ayahs</span>
+                  <strong>{{ filteredRecordingsAyahCount }} ayah{{ filteredRecordingsAyahCount === 1 ? '' : 's' }}</strong>
+                </div>
+                <button class="recordings-library-nav-toggle" type="button" @click="toggleRecordingsNav">
+                  <span>{{ recordingsNavExpanded ? 'Hide list' : 'Show list' }}</span>
+                  <i class="bi" :class="recordingsNavExpanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                </button>
+              </div>
+
+              <div class="recordings-library-search">
+                <i class="bi bi-search"></i>
+                <input
+                  v-model.trim="recordingsLibrarySearch"
+                  type="search"
+                  placeholder="Search surah or ayah"
+                  aria-label="Search recorded ayahs"
+                >
+              </div>
+
+              <div v-show="recordingsNavExpanded" class="recordings-library-nav-scroll">
+                <div v-for="surahGroup in filteredRecordingsAyahGroups" :key="surahGroup.chapterId || surahGroup.chapterName" class="recordings-library-surah-group">
+                  <div class="recordings-library-surah-title">{{ surahGroup.chapterName }}</div>
+                  <button
+                    v-for="ayahGroup in surahGroup.ayahs"
+                    :key="ayahGroup.ayahKey"
+                    type="button"
+                    class="recordings-library-ayah-item"
+                    :class="{ active: ayahGroup.ayahKey === selectedRecordingsAyahKey }"
+                    @click="selectRecordingsAyah(ayahGroup.ayahKey)"
+                  >
+                    <span class="recordings-library-ayah-label">Ayah {{ ayahGroup.ayahNumber }}</span>
+                    <span class="recordings-library-ayah-count">{{ ayahGroup.recordings.length }} recording{{ ayahGroup.recordings.length === 1 ? '' : 's' }}</span>
+                  </button>
+                </div>
+              </div>
+            </aside>
+
+            <section class="recordings-library-detail">
+              <div v-if="selectedRecordingsAyahGroup" class="recordings-library-detail-head">
+                <div>
+                  <span class="recordings-library-detail-kicker">{{ selectedRecordingsAyahGroup.chapterName }}</span>
+                  <h3>Ayah {{ selectedRecordingsAyahGroup.ayahNumber }}</h3>
+                </div>
+                <div class="recordings-library-detail-count">
+                  {{ selectedRecordingsAyahGroup.recordings.length }} attempt{{ selectedRecordingsAyahGroup.recordings.length === 1 ? '' : 's' }}
+                </div>
+              </div>
+
+              <div v-if="selectedRecordingsAyahGroup" class="recordings-library-history">
+                <article
+                  v-for="recording in selectedRecordingsAyahHistory"
+                  :key="recording.id"
+                  class="recording-history-card"
+                  :class="{ playing: recording.id === activeRecordingPlaybackId }"
+                >
+                  <div class="recording-history-top">
+                    <div class="recording-history-copy">
+                      <strong>Attempt {{ recording.attemptNumber }}</strong>
+                      <span>{{ formatRecordingTimestamp(recording.recordedAt) }}</span>
+                    </div>
+                    <span class="recording-result-pill" :class="getRecordingResultTone(recording.result)">
+                      {{ recording.result }}
+                    </span>
+                  </div>
+
+                  <div class="recording-history-meta">
+                    <span><i class="bi bi-clock-history"></i> {{ formatRecordingDuration(recording.durationSeconds) }}</span>
+                    <span><i class="bi bi-calendar3"></i> {{ formatRecordingDate(recording.recordedAt) }}</span>
+                  </div>
+
+                  <div class="recording-history-actions">
+                    <button class="player-btn recording-history-action" type="button" @click="toggleRecordingPlayback(recording)">
+                      <i class="bi" :class="recording.id === activeRecordingPlaybackId ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                      <span>{{ recording.id === activeRecordingPlaybackId ? 'Pause' : 'Play' }}</span>
+                    </button>
+                    <button class="player-btn recording-history-action recording-history-action-delete" type="button" @click="promptDeleteRecording(recording.id)">
+                      <i class="bi bi-trash3"></i>
+                      <span>Delete</span>
+                    </button>
+                  </div>
+
+                  <div v-if="pendingRecordingDeleteId === recording.id" class="recording-delete-confirm">
+                    <span>Delete this recording?</span>
+                    <div class="recording-delete-confirm-actions">
+                      <button class="btn-secondary recording-inline-btn" type="button" @click="cancelDeleteRecording">Cancel</button>
+                      <button class="btn-primary btn-danger recording-inline-btn" type="button" @click="deleteRecording(recording.id)">Delete</button>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <div v-else class="recordings-library-empty recordings-library-empty-panel">
+                <div class="recordings-library-empty-icon">
+                  <i class="bi bi-journal-music"></i>
+                </div>
+                <h3>No matching ayah</h3>
+                <p>Adjust the search or choose another recorded ayah from the list.</p>
+              </div>
+            </section>
+          </div>
         </div>
       </div>
     </div>
@@ -1485,7 +1687,7 @@
         <div class="modal-footer post-onboarding-footer">
           <button class="btn-secondary" @click="skipOnboarding">Skip</button>
           <button v-if="onboardingStepIndex < onboardingSteps.length - 1" class="btn-primary" @click="nextOnboardingStep">Next</button>
-          <button v-else class="btn-primary" @click="completeOnboardingAndStart">Finish and start</button>
+          <button v-else class="btn-primary" @click="completeOnboardingAndStart">Finish</button>
         </div>
       </div>
     </div>
@@ -1536,6 +1738,7 @@
 
     <!-- Audio System -->
     <audio ref="audio" style="display:none"></audio>
+    <audio ref="recordingsAudio" style="display:none"></audio>
 
   </div>
 </template>
@@ -1603,6 +1806,111 @@ function slugifySessionFilePart(value) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 60) || 'session'
+}
+
+function parseRecordingDurationSeconds(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) return Math.max(0, value)
+  if (typeof value !== 'string') return 0
+
+  const raw = value.trim()
+  if (!raw) return 0
+
+  if (/^\d+(\.\d+)?$/.test(raw)) {
+    return Math.max(0, Number(raw))
+  }
+
+  const parts = raw.split(':').map(part => Number(part))
+  if (parts.some(part => !Number.isFinite(part))) return 0
+
+  if (parts.length === 2) return Math.max(0, (parts[0] * 60) + parts[1])
+  if (parts.length === 3) return Math.max(0, (parts[0] * 3600) + (parts[1] * 60) + parts[2])
+  return 0
+}
+
+function normalizeRecordingResult(value) {
+  const raw = String(value || '').trim().toLowerCase()
+  if (!raw) return 'Needs Review'
+  if (raw.includes('excellent')) return 'Excellent'
+  if (raw.includes('good')) return 'Good'
+  if (raw.includes('pass')) return 'Good'
+  return 'Needs Review'
+}
+
+function parseRecordingDate(value) {
+  if (!value && value !== 0) return new Date().toISOString()
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return new Date().toISOString()
+  return date.toISOString()
+}
+
+function looksLikeRecordingEntry(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  return Boolean(
+    value.audioSrc ||
+    value.audioUrl ||
+    value.url ||
+    value.src ||
+    value.blobUrl ||
+    value.dataUrl ||
+    value.recordedAt ||
+    value.timestamp ||
+    value.createdAt
+  )
+}
+
+function collectRecordingEntries(payload, context = {}) {
+  if (!payload) return []
+
+  if (Array.isArray(payload)) {
+    return payload.flatMap(item => collectRecordingEntries(item, context))
+  }
+
+  if (looksLikeRecordingEntry(payload)) {
+    return [{ ...context, ...payload }]
+  }
+
+  if (typeof payload !== 'object') return []
+
+  if (Array.isArray(payload.recordings)) {
+    const nextContext = {
+      ...context,
+      chapterId: payload.chapterId || payload.surahId || context.chapterId || null,
+      chapterName: payload.chapterName || payload.surahName || context.chapterName || '',
+      ayahKey: payload.ayahKey || payload.verseKey || context.ayahKey || '',
+      ayahNumber: payload.ayahNumber || payload.verseNumber || context.ayahNumber || null
+    }
+    return collectRecordingEntries(payload.recordings, nextContext)
+  }
+
+  return Object.entries(payload).flatMap(([key, value]) => {
+    let nextContext = { ...context }
+    const ayahMatch = key.match(/^(\d+):(\d+)$/)
+    const surahMatch = key.match(/^surah[-_: ]?(\d+)$/i)
+    const plainAyahMatch = key.match(/^ayah[-_: ]?(\d+)$/i)
+
+    if (ayahMatch) {
+      nextContext = {
+        ...nextContext,
+        chapterId: Number(ayahMatch[1]),
+        ayahNumber: Number(ayahMatch[2]),
+        ayahKey: key
+      }
+    } else if (surahMatch) {
+      nextContext = {
+        ...nextContext,
+        chapterId: Number(surahMatch[1])
+      }
+    } else if (plainAyahMatch && nextContext.chapterId) {
+      const ayahNumber = Number(plainAyahMatch[1])
+      nextContext = {
+        ...nextContext,
+        ayahNumber,
+        ayahKey: `${nextContext.chapterId}:${ayahNumber}`
+      }
+    }
+
+    return collectRecordingEntries(value, nextContext)
+  })
 }
 
 function createCentralSessionState() {
@@ -1951,6 +2259,30 @@ export default {
       },
       selectedSessionId: '',
       sessionName: '',
+      showRecordingsLibrary: false,
+      isRecordingsLibraryLoading: false,
+      recordingsLibrary: [],
+      recordingsLibrarySearch: '',
+      selectedRecordingsAyahKey: '',
+      recordingsNavExpanded: true,
+      pendingRecordingDeleteId: '',
+      activeRecordingPlaybackId: '',
+      recordingsAudioElement: null,
+      recordingsAudioBound: false,
+      selfCheckVerseKey: '',
+      selfCheckPreparing: false,
+      selfCheckPreparingLabel: '',
+      isSelfCheckRecording: false,
+      selfCheckPermissionState: 'idle',
+      selfCheckError: '',
+      selfCheckMediaRecorder: null,
+      selfCheckMediaStream: null,
+      selfCheckChunks: [],
+      selfCheckStartedAt: 0,
+      selfCheckDraft: null,
+      selfCheckDiscardOnStop: false,
+      activeSelfCheckPreviewKey: '',
+      selfCheckLastSavedAyahKey: '',
 
       // Analytics
       sm2: {},
@@ -2186,15 +2518,6 @@ export default {
       }
       return items
     },
-    activeTechniqueBadges() {
-      return this.activePracticeTechniques.map(item => ({
-        key: item.key,
-        icon: item.icon,
-        label: item.label
-          .replace(' Chaining', '')
-          .replace(' Mode', ' Mode')
-      }))
-    },
     appStyleVars() {
       return {
         '--ui-scale': this.uiScale,
@@ -2274,6 +2597,76 @@ export default {
         return rightTs - leftTs
       })
     },
+    hasRecordingsLibraryEntries() {
+      return this.recordingsLibrary.length > 0
+    },
+    filteredRecordingsAyahGroups() {
+      const grouped = new Map()
+      const query = String(this.recordingsLibrarySearch || '').trim().toLowerCase()
+
+      this.recordingsLibrary.forEach(recording => {
+        if (!recording?.ayahKey) return
+        const searchHaystack = [
+          recording.chapterName,
+          `ayah ${recording.ayahNumber}`,
+          `${recording.chapterId}:${recording.ayahNumber}`
+        ].join(' ').toLowerCase()
+        if (query && !searchHaystack.includes(query)) return
+
+        if (!grouped.has(recording.ayahKey)) {
+          grouped.set(recording.ayahKey, {
+            ayahKey: recording.ayahKey,
+            ayahNumber: recording.ayahNumber,
+            chapterId: recording.chapterId,
+            chapterName: recording.chapterName,
+            recordings: []
+          })
+        }
+
+        grouped.get(recording.ayahKey).recordings.push(recording)
+      })
+
+      const chapterMap = new Map()
+      Array.from(grouped.values())
+        .sort((left, right) => {
+          if (Number(left.chapterId || 0) !== Number(right.chapterId || 0)) {
+            return Number(left.chapterId || 0) - Number(right.chapterId || 0)
+          }
+          return Number(left.ayahNumber || 0) - Number(right.ayahNumber || 0)
+        })
+        .forEach(group => {
+          if (!chapterMap.has(group.chapterId)) {
+            chapterMap.set(group.chapterId, {
+              chapterId: group.chapterId,
+              chapterName: group.chapterName,
+              ayahs: []
+            })
+          }
+          chapterMap.get(group.chapterId).ayahs.push(group)
+        })
+
+      return Array.from(chapterMap.values())
+    },
+    filteredRecordingsAyahCount() {
+      return this.filteredRecordingsAyahGroups.reduce((sum, group) => sum + group.ayahs.length, 0)
+    },
+    selectedRecordingsAyahGroup() {
+      for (const surahGroup of this.filteredRecordingsAyahGroups) {
+        const match = surahGroup.ayahs.find(ayah => ayah.ayahKey === this.selectedRecordingsAyahKey)
+        if (match) return match
+      }
+      return null
+    },
+    selectedRecordingsAyahHistory() {
+      const group = this.selectedRecordingsAyahGroup
+      if (!group) return []
+      const sorted = [...group.recordings].sort((left, right) => Date.parse(right.recordedAt) - Date.parse(left.recordedAt))
+      const total = sorted.length
+      return sorted.map((recording, index) => ({
+        ...recording,
+        attemptNumber: total - index
+      }))
+    },
     getSessionPrimaryLabel() {
       return (session = {}) => {
         const config = session?.config || {}
@@ -2327,7 +2720,8 @@ export default {
       return [
         { key: 'verses', label: 'Ayahs reviewed', value: `${data.metrics.verses_read}`, description: 'Distinct ayahs covered in this session.' },
         { key: 'time', label: 'Time memorising', value: this.formatTime(data.metrics.time_spent_seconds), description: 'Focused study time recorded for this session.' },
-        { key: 'verse_plays', label: 'Verse plays', value: `${data.metrics.total_verse_play_count || 0}`, description: 'Total ayah audio starts across the selected range.' }
+        { key: 'verse_plays', label: 'Verse plays', value: `${data.metrics.total_verse_play_count || 0}`, description: 'Total ayah audio starts across the selected range.' },
+        { key: 'recall_strength', label: 'Recall strength', value: `${data.metrics.recall_strength || 'Low'}`, description: 'Simple snapshot of how strong this session felt overall.' }
       ]
     },
     analyticsTotalAyahs() {
@@ -2389,17 +2783,55 @@ export default {
         return { value, y, label: `${value}` }
       })
     },
-    analyticsHeatmapCells() {
-      return this.analyticsModalData?.heatmap || []
+    analyticsReplayLeaders() {
+      const series = this.analyticsVerseSeries.filter(item => Number(item.value || 0) > 0)
+      const maxValue = Math.max(1, ...series.map(item => Number(item.value || 0)))
+      return series
+        .sort((a, b) => Number(b.value || 0) - Number(a.value || 0))
+        .slice(0, 6)
+        .map(item => ({
+          ...item,
+          percent: Math.max(12, Math.round((Number(item.value || 0) / maxValue) * 100))
+        }))
+    },
+    analyticsPlaybackBuckets() {
+      const series = this.analyticsVerseSeries
+      if (!series.length) return []
+      const played = series.filter(item => Number(item.value || 0) > 0)
+      const strong = series.filter(item => Number(item.value || 0) >= 3)
+      const maxValue = Math.max(0, ...series.map(item => Number(item.value || 0)))
+      return [
+        {
+          key: 'played',
+          label: 'Ayahs touched',
+          value: `${played.length}/${series.length}`,
+          description: 'Ayahs that received at least one play.'
+        },
+        {
+          key: 'repeat-heavy',
+          label: 'Repeat-heavy ayahs',
+          value: `${strong.length}`,
+          description: 'Ayahs receiving deeper repetition.'
+        },
+        {
+          key: 'peak',
+          label: 'Highest replay',
+          value: `${maxValue}x`,
+          description: 'Most repeated ayah in this saved session.'
+        },
+        {
+          key: 'average',
+          label: 'Average plays',
+          value: `${played.length ? (series.reduce((sum, item) => sum + Number(item.value || 0), 0) / played.length).toFixed(1) : '0.0'}x`,
+          description: 'Average plays across ayahs that were used.'
+        }
+      ]
     },
     sliderRepetitionValue() {
       return Math.min(10, Math.max(1, Number(this.repetitionsPerStep || 1)))
     },
-    usingCustomRepetitions() {
-      return Number(this.repetitionsPerStep || 1) > 10
-    },
     repetitionDisplayValue() {
-      return this.usingCustomRepetitions ? `${this.repetitionsPerStep}x custom` : `${this.repetitionsPerStep}x`
+      return `${this.repetitionsPerStep}x`
     },
     sessionPlayCountValue() {
       return Math.max(0, Number(this.mutqinState?.sessionState?.play_count || 0))
@@ -3020,6 +3452,7 @@ export default {
     this.loadContinueSessionPrompt()
     this.updateMasteredWeekly()
     this.loadSavedSessions()
+    this.loadRecordingsLibrary()
 
     if (this.isLoggedIn && this.hasContinueSession) {
       // One clear entry point for returning users.
@@ -3081,6 +3514,12 @@ export default {
     if (this.segmentPlaybackTimer) clearTimeout(this.segmentPlaybackTimer)
     this.flushPlaybackTime()
     this.stopWordHighlighting()
+    this.stopRecordingsPlayback({ clearSource: true })
+    if (this.selfCheckMediaRecorder && this.selfCheckMediaRecorder.state === 'recording') {
+      this.selfCheckDiscardOnStop = true
+      try { this.selfCheckMediaRecorder.stop() } catch {}
+    }
+    this.cleanupSelfCheckMedia()
     this.persistAllState()
     saveMutqinState(this.mutqinState)
     if (this.unwatchMutqinState) this.unwatchMutqinState()
@@ -3913,19 +4352,6 @@ export default {
       this.repetitionsPerStep = Math.max(1, Math.min(10, Number(value || 1)))
     },
 
-    toggleCustomRepetitions() {
-      if (this.usingCustomRepetitions) {
-        this.repetitionsPerStep = 10
-        return
-      }
-      this.repetitionsPerStep = Math.max(11, Number(this.repetitionsPerStep || 11))
-    },
-
-    setCustomRepetitions(value) {
-      const parsed = Math.max(11, Math.min(50, Number(value || 11)))
-      this.repetitionsPerStep = parsed
-    },
-
     isLoadingSession(sessionId) {
       return this.loadingSessionId === sessionId
     },
@@ -3942,7 +4368,6 @@ export default {
 
     getSessionExportLabel(sessionId, format, fallbackLabel) {
       if (this.isExportingSession(sessionId, format)) return 'Preparing…'
-      if (this.isSessionExportSuccessful(sessionId, format)) return 'Ready'
       return fallbackLabel
     },
 
@@ -4052,9 +4477,11 @@ export default {
 
     // Update deleteSavedSession method
     deleteSavedSession(sessionId) {
+      const session = this.savedSessions.find(s => s.id === sessionId)
+      const label = session ? (session.name || this.getSessionPrimaryLabel(session)) : 'this session'
       this.openConfirmModal({
         title: 'Delete saved session?',
-        message: 'This saved session and its export snapshot will be removed from this device.',
+        message: `This will permanently remove "${label}" and its export snapshot from this device.`,
         confirmLabel: 'Delete session',
         cancelLabel: 'Keep session',
         tone: 'danger',
@@ -4289,8 +4716,7 @@ export default {
       this.showPostLoginOnboarding = false
       this.onboardingStepIndex = 0
       this.applyOnboardingStep(this.onboardingSteps.length - 1)
-      this.restoreOnboardingDemo({ keepCurrentSession: true })
-      this.startSession()
+      this.restoreOnboardingDemo()
     },
     prepareOnboardingDemo() {
       const snapshot = {
@@ -4919,6 +5345,557 @@ export default {
         year: 'numeric'
       })
     },
+    recordingsLibraryStorageKey() {
+      return this.userStorageKey('recordings')
+    },
+    recordingsLibraryCandidateKeys() {
+      const uid = this.auth?.id || 'guest'
+      return [...new Set([
+        this.recordingsLibraryStorageKey(),
+        this.userStorageKey('recordingsLibrary'),
+        `telawa.recordings.${uid}`,
+        `telawa.recordingsLibrary.${uid}`,
+        'telawa.recordings',
+        'telawa.recordingsLibrary'
+      ])]
+    },
+    normalizeRecordingEntry(entry, index = 0) {
+      if (!entry || typeof entry !== 'object') return null
+
+      const directAyahKey = entry.ayahKey || entry.verseKey || entry.key || ''
+      const keyParts = String(directAyahKey).match(/^(\d+):(\d+)$/)
+      const chapterId = Number(
+        entry.chapterId ||
+        entry.surahId ||
+        entry.chapter_id ||
+        entry.surah_id ||
+        entry.chapter?.id ||
+        keyParts?.[1] ||
+        0
+      )
+      const ayahNumber = Number(
+        entry.ayahNumber ||
+        entry.verseNumber ||
+        entry.numberInSurah ||
+        entry.ayah_index ||
+        keyParts?.[2] ||
+        0
+      )
+      const ayahKey = chapterId > 0 && ayahNumber > 0 ? `${chapterId}:${ayahNumber}` : ''
+      const chapterName = entry.chapterName ||
+        entry.surahName ||
+        entry.chapter_name ||
+        entry.surah_name ||
+        entry.chapter?.name_simple ||
+        this.chapters.find(chapter => Number(chapter.id) === chapterId)?.name_simple ||
+        (chapterId ? `Surah ${chapterId}` : 'Surah')
+      const audioSrc = String(
+        entry.audioSrc ||
+        entry.audioUrl ||
+        entry.audio_url ||
+        entry.url ||
+        entry.src ||
+        entry.blobUrl ||
+        entry.dataUrl ||
+        ''
+      ).trim()
+
+      if (!ayahKey || !audioSrc) return null
+
+      const recordedAt = parseRecordingDate(entry.recordedAt || entry.createdAt || entry.timestamp || entry.date)
+      const durationSeconds = parseRecordingDurationSeconds(
+        entry.durationSeconds ??
+        entry.duration_seconds ??
+        entry.duration ??
+        entry.length_seconds ??
+        entry.length
+      )
+
+      return {
+        id: String(entry.id || `${ayahKey}-${Date.parse(recordedAt) || Date.now()}-${index}`),
+        chapterId,
+        chapterName,
+        ayahNumber,
+        ayahKey,
+        recordedAt,
+        durationSeconds,
+        result: normalizeRecordingResult(entry.result || entry.selfCheckResult || entry.checkResult || entry.status || entry.score),
+        audioSrc
+      }
+    },
+    persistRecordingsLibrary() {
+      try {
+        localStorage.setItem(this.recordingsLibraryStorageKey(), JSON.stringify(this.recordingsLibrary))
+      } catch (error) {
+        console.error('Failed to persist recordings library:', error)
+      }
+    },
+    ensureSelectedRecordingsAyah() {
+      const matches = this.filteredRecordingsAyahGroups.flatMap(group => group.ayahs)
+      if (matches.some(item => item.ayahKey === this.selectedRecordingsAyahKey)) return
+      this.selectedRecordingsAyahKey = matches[0]?.ayahKey || ''
+    },
+    loadRecordingsLibrary() {
+      const entries = []
+      const seen = new Set()
+
+      this.recordingsLibraryCandidateKeys().forEach((key, keyIndex) => {
+        try {
+          const raw = localStorage.getItem(key)
+          if (!raw) return
+          const parsed = JSON.parse(raw)
+          const collected = collectRecordingEntries(parsed)
+          collected.forEach((item, itemIndex) => {
+            const normalized = this.normalizeRecordingEntry(item, (keyIndex * 10000) + itemIndex)
+            if (!normalized) return
+            const signature = `${normalized.ayahKey}:${normalized.recordedAt}:${normalized.audioSrc}`
+            if (seen.has(signature)) return
+            seen.add(signature)
+            entries.push(normalized)
+          })
+        } catch (error) {
+          console.warn(`Failed to read recordings from ${key}:`, error)
+        }
+      })
+
+      this.recordingsLibrary = entries.sort((left, right) => Date.parse(right.recordedAt) - Date.parse(left.recordedAt))
+      this.ensureSelectedRecordingsAyah()
+    },
+    openRecordingsLibrary(options = {}) {
+      const targetAyahKey = options?.ayahKey || this.selfCheckVerseKey || this.effectiveActiveVerseKey || ''
+      const isCompactViewport = typeof window !== 'undefined'
+        && typeof window.matchMedia === 'function'
+        && window.matchMedia('(max-width: 768px)').matches
+      const schedule = typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function'
+        ? window.requestAnimationFrame.bind(window)
+        : callback => callback()
+      this.showTools = false
+      this.showConfirmModal = false
+      this.showSessionExitModal = false
+      this.showResumeModal = false
+      if (this.audioElement && !this.audioElement.paused) {
+        this.audioElement.pause()
+        this.isPlaying = false
+      }
+      this.recordingsLibrarySearch = ''
+      this.pendingRecordingDeleteId = ''
+      this.recordingsNavExpanded = !isCompactViewport
+      this.showRecordingsLibrary = true
+      this.isRecordingsLibraryLoading = true
+      this.syncBodyScrollLock(true)
+
+      schedule(() => {
+        this.loadRecordingsLibrary()
+        if (targetAyahKey) {
+          this.selectedRecordingsAyahKey = targetAyahKey
+          this.ensureSelectedRecordingsAyah()
+        }
+        this.isRecordingsLibraryLoading = false
+      })
+    },
+    closeRecordingsLibrary() {
+      this.pendingRecordingDeleteId = ''
+      this.recordingsLibrarySearch = ''
+      this.showRecordingsLibrary = false
+      this.stopRecordingsPlayback({ clearSource: true })
+      this.syncBodyScrollLock(false)
+    },
+    toggleRecordingsNav() {
+      this.recordingsNavExpanded = !this.recordingsNavExpanded
+    },
+    selectRecordingsAyah(ayahKey) {
+      this.selectedRecordingsAyahKey = ayahKey
+      this.pendingRecordingDeleteId = ''
+      if (typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 768px)').matches) {
+        this.recordingsNavExpanded = false
+      }
+    },
+    initRecordingsAudio() {
+      if (this.recordingsAudioBound || !this.recordingsAudioElement) return
+      this.recordingsAudioElement.addEventListener('pause', () => {
+        if (!this.recordingsAudioElement?.ended) {
+          this.activeRecordingPlaybackId = ''
+          this.activeSelfCheckPreviewKey = ''
+        }
+      })
+      this.recordingsAudioElement.addEventListener('ended', () => {
+        this.activeRecordingPlaybackId = ''
+        this.activeSelfCheckPreviewKey = ''
+      })
+      this.recordingsAudioElement.addEventListener('error', error => {
+        console.error('Recordings playback error:', error)
+        this.activeRecordingPlaybackId = ''
+        this.activeSelfCheckPreviewKey = ''
+        this.showBanner('Unable to play this recording right now.', 'error', 2200)
+      })
+      this.recordingsAudioBound = true
+    },
+    ensureRecordingsAudioElement() {
+      if (!this.recordingsAudioElement) {
+        this.recordingsAudioElement = this.$refs.recordingsAudio || null
+      }
+      this.initRecordingsAudio()
+      return this.recordingsAudioElement
+    },
+    stopRecordingsPlayback(options = {}) {
+      const { clearSource = false } = options
+      const audio = this.ensureRecordingsAudioElement()
+      if (!audio) return
+      try {
+        audio.pause()
+        if (clearSource) {
+          audio.removeAttribute('src')
+          audio.load()
+        }
+      } catch (error) {
+        console.warn('Failed to stop recordings playback:', error)
+      }
+      this.activeRecordingPlaybackId = ''
+      this.activeSelfCheckPreviewKey = ''
+    },
+    async toggleRecordingPlayback(recording) {
+      if (!recording?.audioSrc) return
+
+      const audio = this.ensureRecordingsAudioElement()
+      if (!audio) {
+        this.showBanner('Audio system not ready', 'error', 2200)
+        return
+      }
+
+      if (this.activeRecordingPlaybackId === recording.id && !audio.paused) {
+        audio.pause()
+        this.activeRecordingPlaybackId = ''
+        this.activeSelfCheckPreviewKey = ''
+        return
+      }
+
+      this.pendingRecordingDeleteId = ''
+      if (this.audioElement && !this.audioElement.paused) {
+        this.audioElement.pause()
+        this.isPlaying = false
+      }
+
+      if (audio.currentSrc !== recording.audioSrc) {
+        audio.src = recording.audioSrc
+        audio.load()
+      }
+
+      try {
+        await audio.play()
+        this.activeRecordingPlaybackId = recording.id
+        this.activeSelfCheckPreviewKey = ''
+      } catch (error) {
+        console.error('Failed to play recording:', error)
+        this.activeRecordingPlaybackId = ''
+        this.showBanner('Unable to play this recording right now.', 'error', 2200)
+      }
+    },
+    promptDeleteRecording(recordingId) {
+      this.pendingRecordingDeleteId = recordingId
+    },
+    cancelDeleteRecording() {
+      this.pendingRecordingDeleteId = ''
+    },
+    deleteRecording(recordingId) {
+      if (!recordingId) return
+      const target = this.recordingsLibrary.find(recording => recording.id === recordingId) || null
+      if (this.activeRecordingPlaybackId === recordingId) {
+        this.stopRecordingsPlayback({ clearSource: true })
+      }
+      this.recordingsLibrary = this.recordingsLibrary.filter(recording => recording.id !== recordingId)
+      this.persistRecordingsLibrary()
+      this.pendingRecordingDeleteId = ''
+      this.ensureSelectedRecordingsAyah()
+      if (!this.recordingsLibrary.length) {
+        this.selectedRecordingsAyahKey = ''
+      }
+      this.showBanner(
+        target ? `Deleted ayah ${target.ayahNumber} recording` : 'Recording deleted',
+        'info',
+        1600
+      )
+    },
+    getRecordingResultTone(result) {
+      if (result === 'Excellent') return 'tone-excellent'
+      if (result === 'Good') return 'tone-good'
+      return 'tone-review'
+    },
+    formatRecordingDuration(seconds) {
+      return this.formatTime(Number(seconds || 0))
+    },
+    formatRecordingDate(value) {
+      const date = new Date(value)
+      if (Number.isNaN(date.getTime())) return ''
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      })
+    },
+    formatRecordingTimestamp(value) {
+      const date = new Date(value)
+      if (Number.isNaN(date.getTime())) return ''
+      return date.toLocaleTimeString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    },
+    supportsSelfCheckRecording() {
+      return typeof navigator !== 'undefined'
+        && !!navigator.mediaDevices?.getUserMedia
+        && typeof MediaRecorder !== 'undefined'
+    },
+    getAyahRecordingHistory(ayahKey) {
+      return this.recordingsLibrary
+        .filter(recording => recording.ayahKey === ayahKey)
+        .sort((left, right) => Date.parse(right.recordedAt) - Date.parse(left.recordedAt))
+    },
+    getAyahRecordingCount(ayahKey) {
+      if (!ayahKey) return 0
+      return this.recordingsLibrary.filter(recording => recording.ayahKey === ayahKey).length
+    },
+    getLatestRecordingForAyah(ayahKey) {
+      return this.getAyahRecordingHistory(ayahKey)[0] || null
+    },
+    toggleSelfCheckPanel(verse) {
+      if (!verse?.key) return
+      if (this.isSelfCheckRecording && this.selfCheckVerseKey && this.selfCheckVerseKey !== verse.key) {
+        this.showBanner('Stop the current self-check before moving to another ayah.', 'info', 2200)
+        return
+      }
+      if (this.selfCheckDraft?.ayahKey && this.selfCheckDraft.ayahKey !== verse.key) {
+        this.showBanner('Save or discard the current self-check attempt before switching ayahs.', 'info', 2400)
+        return
+      }
+      if (this.selfCheckVerseKey === verse.key) {
+        this.selfCheckVerseKey = ''
+        this.selfCheckError = ''
+        this.selfCheckLastSavedAyahKey = ''
+        return
+      }
+      this.selfCheckVerseKey = verse.key
+      this.selfCheckError = ''
+      this.selfCheckLastSavedAyahKey = ''
+      this.loadRecordingsLibrary()
+    },
+    getSelfCheckDraftForVerse(verseKey) {
+      return this.selfCheckDraft?.ayahKey === verseKey ? this.selfCheckDraft : null
+    },
+    getSelfCheckLiveDurationLabel() {
+      if (!this.selfCheckStartedAt) return '00:00'
+      const seconds = Math.max(0, Math.round((Number(this.statsTick || Date.now()) - Number(this.selfCheckStartedAt || 0)) / 1000))
+      return this.formatRecordingDuration(seconds)
+    },
+    chooseRecorderMimeType() {
+      if (typeof MediaRecorder === 'undefined' || typeof MediaRecorder.isTypeSupported !== 'function') return ''
+      const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus']
+      return candidates.find(type => MediaRecorder.isTypeSupported(type)) || ''
+    },
+    async blobToDataUrl(blob) {
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onloadend = () => resolve(String(reader.result || ''))
+        reader.onerror = () => reject(reader.error || new Error('FileReader failed'))
+        reader.readAsDataURL(blob)
+      })
+    },
+    cleanupSelfCheckMedia() {
+      if (this.selfCheckMediaStream) {
+        try {
+          this.selfCheckMediaStream.getTracks().forEach(track => track.stop())
+        } catch (error) {
+          console.warn('Failed to stop self-check media tracks:', error)
+        }
+      }
+      this.selfCheckMediaStream = null
+      this.selfCheckMediaRecorder = null
+      this.selfCheckChunks = []
+      this.selfCheckStartedAt = 0
+    },
+    async startSelfCheckRecording(verse) {
+      if (!verse?.key) return
+      if (!this.supportsSelfCheckRecording()) {
+        this.selfCheckError = 'Recording is not supported in this browser.'
+        return
+      }
+      if (this.isSelfCheckRecording) return
+
+      this.loadRecordingsLibrary()
+      this.selfCheckVerseKey = verse.key
+      this.selfCheckError = ''
+      this.selfCheckLastSavedAyahKey = ''
+      this.selfCheckPreparing = true
+      this.selfCheckPreparingLabel = 'Preparing microphone…'
+      this.selfCheckPermissionState = 'prompt'
+      this.selfCheckDiscardOnStop = false
+      this.stopRecordingsPlayback({ clearSource: true })
+      if (this.audioElement && !this.audioElement.paused) {
+        this.audioElement.pause()
+        this.isPlaying = false
+      }
+
+      try {
+        if (this.selfCheckDraft?.ayahKey === verse.key) {
+          this.selfCheckDraft = null
+        }
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        const mimeType = this.chooseRecorderMimeType()
+        const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream)
+        this.selfCheckMediaStream = stream
+        this.selfCheckMediaRecorder = recorder
+        this.selfCheckChunks = []
+        this.selfCheckPermissionState = 'granted'
+
+        recorder.ondataavailable = event => {
+          if (event.data?.size) this.selfCheckChunks.push(event.data)
+        }
+        recorder.onerror = () => {
+          this.selfCheckError = 'The microphone stopped unexpectedly.'
+          this.selfCheckPreparing = false
+          this.isSelfCheckRecording = false
+          this.cleanupSelfCheckMedia()
+        }
+        recorder.onstop = async () => {
+          const durationSeconds = Math.max(1, Math.round((Date.now() - Number(this.selfCheckStartedAt || Date.now())) / 1000))
+          const chunks = [...this.selfCheckChunks]
+          const discard = this.selfCheckDiscardOnStop
+          this.selfCheckPreparing = false
+          this.isSelfCheckRecording = false
+          this.selfCheckDiscardOnStop = false
+
+          try {
+            if (!discard && chunks.length) {
+              this.selfCheckPreparing = true
+              this.selfCheckPreparingLabel = 'Processing recording…'
+              const blob = new Blob(chunks, { type: recorder.mimeType || mimeType || 'audio/webm' })
+              const dataUrl = await this.blobToDataUrl(blob)
+              this.selfCheckDraft = {
+                id: `draft-${verse.key}-${Date.now()}`,
+                ayahKey: verse.key,
+                ayahNumber: verse.number,
+                chapterId: verse.chapterId,
+                chapterName: this.currentChapter?.name_simple || this.activeChapterName || `Surah ${verse.chapterId}`,
+                recordedAt: new Date().toISOString(),
+                durationSeconds,
+                result: 'Needs Review',
+                audioSrc: dataUrl
+              }
+              this.showBanner(`Recording ready for Ayah ${verse.number}`, 'success', 1800)
+            }
+          } catch (error) {
+            console.error('Failed to process self-check recording:', error)
+            this.selfCheckError = 'The recording could not be prepared for review.'
+          } finally {
+            this.selfCheckPreparing = false
+            this.selfCheckPreparingLabel = ''
+            this.cleanupSelfCheckMedia()
+          }
+        }
+
+        recorder.start()
+        this.selfCheckStartedAt = Date.now()
+        this.isSelfCheckRecording = true
+        this.selfCheckPreparing = false
+        this.selfCheckPreparingLabel = ''
+      } catch (error) {
+        console.error('Failed to start self-check recording:', error)
+        this.selfCheckPermissionState = 'denied'
+        this.selfCheckPreparing = false
+        this.selfCheckPreparingLabel = ''
+        this.selfCheckError = 'Microphone access was blocked. Allow microphone permission, then try again.'
+        this.cleanupSelfCheckMedia()
+      }
+    },
+    stopSelfCheckRecording() {
+      if (!this.selfCheckMediaRecorder || this.selfCheckMediaRecorder.state !== 'recording') return
+      this.selfCheckPreparing = true
+      this.selfCheckPreparingLabel = 'Finalising recording…'
+      this.selfCheckMediaRecorder.stop()
+    },
+    discardSelfCheckRecording() {
+      if (this.isSelfCheckRecording && this.selfCheckMediaRecorder) {
+        this.selfCheckDiscardOnStop = true
+        this.selfCheckPreparing = true
+        this.selfCheckPreparingLabel = 'Discarding recording…'
+        this.selfCheckMediaRecorder.stop()
+        return
+      }
+      if (this.selfCheckDraft?.ayahKey && this.activeSelfCheckPreviewKey === this.selfCheckDraft.ayahKey) {
+        this.stopRecordingsPlayback({ clearSource: true })
+      }
+      this.selfCheckDraft = null
+      this.selfCheckError = ''
+      this.selfCheckPreparing = false
+      this.selfCheckPreparingLabel = ''
+    },
+    restartSelfCheckRecording(verse) {
+      this.discardSelfCheckRecording()
+      window.setTimeout(() => {
+        this.startSelfCheckRecording(verse)
+      }, 40)
+    },
+    setSelfCheckDraftResult(result) {
+      if (!this.selfCheckDraft) return
+      this.selfCheckDraft = {
+        ...this.selfCheckDraft,
+        result: normalizeRecordingResult(result)
+      }
+    },
+    async toggleSelfCheckPreview(verseKey) {
+      const draft = this.getSelfCheckDraftForVerse(verseKey)
+      if (!draft?.audioSrc) return
+
+      const audio = this.ensureRecordingsAudioElement()
+      if (!audio) {
+        this.showBanner('Audio system not ready', 'error', 2200)
+        return
+      }
+
+      if (this.activeSelfCheckPreviewKey === verseKey && !audio.paused) {
+        audio.pause()
+        this.activeSelfCheckPreviewKey = ''
+        return
+      }
+
+      this.stopRecordingsPlayback({ clearSource: true })
+      if (this.audioElement && !this.audioElement.paused) {
+        this.audioElement.pause()
+        this.isPlaying = false
+      }
+
+      audio.src = draft.audioSrc
+      audio.load()
+
+      try {
+        await audio.play()
+        this.activeSelfCheckPreviewKey = verseKey
+      } catch (error) {
+        console.error('Failed to preview self-check recording:', error)
+        this.activeSelfCheckPreviewKey = ''
+        this.showBanner('Unable to play this recording right now.', 'error', 2200)
+      }
+    },
+    saveSelfCheckRecording(verse) {
+      const draft = this.getSelfCheckDraftForVerse(verse?.key)
+      if (!draft) return
+
+      this.loadRecordingsLibrary()
+      const savedEntry = {
+        ...draft,
+        id: `recording-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        sessionRangeStart: Number(this.rangeStart || verse?.number || 1),
+        sessionRangeEnd: Number(this.rangeEnd || verse?.number || 1),
+        reciterId: this.reciterId,
+        source: 'self-check'
+      }
+
+      this.recordingsLibrary = [savedEntry, ...this.recordingsLibrary]
+      this.persistRecordingsLibrary()
+      this.selfCheckLastSavedAyahKey = savedEntry.ayahKey
+      this.selfCheckDraft = null
+      this.ensureSelectedRecordingsAyah()
+      this.showBanner(`Saved self-check for Ayah ${savedEntry.ayahNumber}`, 'success', 1800)
+    },
 
     runConfirmAction() {
       const action = this.confirmModal.action
@@ -5507,6 +6484,11 @@ export default {
         this.blurPeekHoldingSpace = false
         this.clearTouchPeek()
         this.hoverPeekVerseKey = null
+        if (this.showRecordingsLibrary) {
+          event.preventDefault()
+          this.closeRecordingsLibrary()
+          return
+        }
         if (this.showTools) {
           event.preventDefault()
           this.closeToolsPanel()
@@ -6036,6 +7018,7 @@ export default {
       }
       if (this.tab === 'saved') {
         this.loadSavedSessions()
+        this.loadRecordingsLibrary()
       }
       if (this.tab === 'stats') {
         this.loadSavedSessions()
@@ -7226,6 +8209,7 @@ export default {
     async playVerse(verse, options = {}) {
       if (this.playRequestLocked && !options.force) return
       this.playRequestLocked = true
+      this.stopRecordingsPlayback({ clearSource: true })
       if (this.segmentPlaybackTimer) {
         clearTimeout(this.segmentPlaybackTimer)
         this.segmentPlaybackTimer = null
@@ -12091,6 +13075,256 @@ export default {
   color: var(--accent);
 }
 
+.verse-self-check-btn {
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(154, 103, 56, 0.14);
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.verse-self-check-btn:hover {
+  border-color: rgba(154, 103, 56, 0.28);
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.verse-self-check-btn.active {
+  background: linear-gradient(135deg, rgba(154, 103, 56, 0.15), rgba(154, 103, 56, 0.05));
+  border-color: rgba(154, 103, 56, 0.26);
+  color: var(--accent);
+}
+
+.verse-self-check-btn em {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(154, 103, 56, 0.12);
+  color: inherit;
+  font-size: 0.66rem;
+  font-style: normal;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.self-check-panel {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(154, 103, 56, 0.16);
+  background: linear-gradient(180deg, rgba(255, 252, 247, 0.94), rgba(250, 244, 236, 0.9));
+  display: grid;
+  gap: 14px;
+}
+
+.self-check-panel-head,
+.self-check-panel-meta,
+.self-check-review-head,
+.self-check-review-actions,
+.self-check-live-actions,
+.self-check-idle-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.self-check-panel-title {
+  display: grid;
+  gap: 4px;
+}
+
+.self-check-kicker {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.self-check-panel-title strong,
+.self-check-live-copy strong,
+.self-check-review-head strong {
+  color: var(--text);
+  font-size: 0.96rem;
+}
+
+.self-check-panel-copy,
+.self-check-live-copy span,
+.self-check-review-head span {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.self-check-panel-meta {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.self-check-panel-meta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.self-check-library-link {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.self-check-library-link:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+  border-color: rgba(154, 103, 56, 0.24);
+}
+
+.self-check-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.self-check-status-success {
+  background: rgba(89, 138, 96, 0.1);
+  border-color: rgba(89, 138, 96, 0.16);
+  color: #43684a;
+}
+
+.self-check-status-warning {
+  background: rgba(166, 121, 72, 0.12);
+  border-color: rgba(166, 121, 72, 0.18);
+  color: #7d5d37;
+}
+
+.self-check-status-info {
+  background: rgba(154, 103, 56, 0.08);
+  border-color: rgba(154, 103, 56, 0.14);
+  color: var(--text);
+}
+
+.self-check-live-card,
+.self-check-review-card {
+  display: grid;
+  gap: 14px;
+}
+
+.self-check-live-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.self-check-live-pulse {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.self-check-live-pulse span {
+  width: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  animation: selfCheckPulse 0.9s ease-in-out infinite;
+}
+
+.self-check-live-pulse span:nth-child(1) {
+  height: 14px;
+}
+
+.self-check-live-pulse span:nth-child(2) {
+  height: 22px;
+  animation-delay: 0.12s;
+}
+
+.self-check-live-pulse span:nth-child(3) {
+  height: 16px;
+  animation-delay: 0.24s;
+}
+
+@keyframes selfCheckPulse {
+  0%, 100% { transform: scaleY(0.7); opacity: 0.72; }
+  50% { transform: scaleY(1.1); opacity: 1; }
+}
+
+.self-check-result-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.self-check-result-btn {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.74);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.self-check-result-btn.active {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+}
+
+.self-check-result-btn.tone-excellent {
+  color: #43684a;
+  border-color: rgba(89, 138, 96, 0.18);
+  background: rgba(89, 138, 96, 0.08);
+}
+
+.self-check-result-btn.tone-good {
+  color: #6c5638;
+  border-color: rgba(122, 95, 58, 0.14);
+  background: rgba(122, 95, 58, 0.06);
+}
+
+.self-check-result-btn.tone-review {
+  color: #8b653b;
+  border-color: rgba(166, 121, 72, 0.16);
+  background: rgba(166, 121, 72, 0.08);
+}
+
+.self-check-action-btn,
+.self-check-preview-btn {
+  min-height: 40px;
+}
+
 /* Add to your style section */
 .countdown-overlay {
   position: fixed;
@@ -12936,8 +14170,6 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 16px;
-  max-height: 320px;
   overflow-y: auto;
 }
 
@@ -14183,14 +15415,6 @@ export default {
   gap: 6px;
 }
 
-.workspace-shell-techniques,
-.saved-techniques-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-}
-
 .saved-continue-banner {
   margin-bottom: 16px;
   padding: 14px;
@@ -14231,82 +15455,8 @@ export default {
   gap: 10px;
 }
 
-.session-setup-techniques {
-  margin-bottom: 16px;
-  display: grid;
-  gap: 8px;
-}
-
-.session-setup-techniques-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.session-setup-techniques-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.workspace-shell-technique-badge,
-.saved-technique-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 30px;
-  padding: 0 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: rgba(154, 103, 56, 0.08);
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 650;
-}
-
 .slider-markers-compact span {
   min-width: 0;
-}
-
-.repetition-custom-row {
-  margin-top: 10px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: flex-end;
-}
-
-.repetition-custom-toggle {
-  min-height: 38px;
-  padding: 0 12px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.74);
-  color: var(--text);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.76rem;
-  font-weight: 650;
-}
-
-.repetition-custom-toggle.active {
-  border-color: var(--accent);
-  background: var(--accent-light);
-  color: var(--accent-strong);
-}
-
-.repetition-custom-input {
-  display: grid;
-  gap: 6px;
-  flex: 1 1 180px;
-}
-
-.repetition-custom-input span {
-  font-size: 0.72rem;
-  color: var(--text-muted);
 }
 
 .session-item {
@@ -14317,6 +15467,12 @@ export default {
 .session-item-active {
   border-color: rgba(154, 103, 56, 0.28);
   box-shadow: 0 12px 26px rgba(122, 83, 46, 0.12);
+}
+
+.session-item .session-info,
+.session-item .session-actions {
+  position: relative;
+  z-index: 1;
 }
 
 .session-live-badge {
@@ -14381,16 +15537,27 @@ export default {
   display: grid;
 }
 
+.saved-sessions-container .session-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  width: 100%;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  align-items: stretch;
+  justify-content: stretch;
+}
+
 .session-secondary-actions {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
+  gap: 12px;
   align-items: stretch;
 }
 
 .session-resume-btn,
 .session-delete-btn {
-  min-height: 42px;
   border-radius: 12px;
   display: inline-flex;
   align-items: center;
@@ -14398,13 +15565,15 @@ export default {
   gap: 8px;
   font-size: 0.78rem;
   font-weight: 700;
+  padding: 10px 14px;
+  line-height: 1.1;
 }
 
 .session-resume-btn {
   border: 1px solid rgba(154, 103, 56, 0.16);
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: #fff;
-  padding: 0 16px;
+  padding: 12px 16px;
   box-shadow: 0 10px 22px rgba(154, 103, 56, 0.18);
 }
 
@@ -14412,8 +15581,8 @@ export default {
   border: 1px solid rgba(168, 87, 68, 0.2);
   color: #a85744;
   background: rgba(255, 246, 243, 0.86);
-  padding: 0 14px;
-  min-width: 144px;
+  padding: 10px 14px;
+  min-width: 0;
   width: auto;
   height: auto;
   margin-right: 0;
@@ -14431,20 +15600,94 @@ export default {
 }
 
 .session-export-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+}
+
+.saved-sessions-container .session-export-btn {
+  min-height: 0;
+  height: auto;
+}
+
+.session-export-btn {
+  width: auto;
+  justify-content: center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.06);
+  line-height: 1.1;
+}
+
+.analytics-bar-list {
+  display: grid;
+  gap: 10px;
+}
+
+.analytics-bar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 72px) minmax(0, 1fr) 34px;
+  gap: 10px;
+  align-items: center;
+}
+
+.analytics-bar-row span,
+.analytics-bar-row strong {
+  font-size: 0.76rem;
+  color: var(--text);
+}
+
+.analytics-bar-row strong {
+  text-align: right;
+  color: var(--text-muted);
+}
+
+.analytics-bar-track {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(154, 103, 56, 0.1);
+  overflow: hidden;
+}
+
+.analytics-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #d8ac6b, #8d5a34);
+}
+
+.analytics-bucket-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
-.session-export-btn {
-  min-height: 42px;
-  width: 100%;
-  justify-content: flex-start;
-  padding: 0 14px;
-  border-radius: 12px;
-  font-size: 0.76rem;
-  font-weight: 700;
-  background: rgba(255, 255, 255, 0.06);
+.analytics-bucket-card {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.analytics-bucket-card span {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.analytics-bucket-card strong {
+  font-size: 1.2rem;
+  color: var(--text);
+}
+
+.analytics-bucket-card small {
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: var(--text-muted);
 }
 
 .session-export-btn-pdf {
@@ -14453,6 +15696,10 @@ export default {
 
 .session-export-btn-word {
   border-color: rgba(120, 149, 196, 0.2);
+}
+
+.session-export-btn-csv {
+  border-color: rgba(124, 170, 148, 0.18);
 }
 
 .post-onboarding-step-label {
@@ -14575,13 +15822,13 @@ export default {
     gap: 12px;
   }
 
-  .session-actions {
+  .saved-sessions-container .session-actions {
     width: 100%;
     align-items: stretch;
   }
 
   .session-export-group {
-    grid-template-columns: 1fr 1fr;
+    width: 100%;
   }
 
   .session-secondary-actions {
@@ -14669,7 +15916,7 @@ export default {
 }
 
 .session-load-btn,
-.session-delete-btn {
+.session-delete-btn-icon {
   width: 32px;
   height: 32px;
   border-radius: 8px;
@@ -17895,15 +19142,15 @@ html {
 .workspace-shell-compact-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
-  margin-top: 2px;
+  gap: 6px;
+  margin-top: 6px;
 }
 
 .workspace-shell-compact-meta span {
   display: inline-flex;
   align-items: center;
-  min-height: 26px;
-  padding: 4px 8px;
+  min-height: 24px;
+  padding: 3px 8px;
   border-radius: 999px;
   border: 1px solid rgba(154, 103, 56, 0.14);
   background: rgba(255, 255, 255, 0.72);
@@ -19822,6 +21069,7 @@ html {
 [data-theme="dark"] .modal-close-btn,
 [data-theme="dark"] .btn-icon,
 [data-theme="dark"] .verse-small-play-btn,
+[data-theme="dark"] .verse-self-check-btn,
 [data-theme="dark"] .verse-download-btn,
 [data-theme="dark"] .player-btn {
   background: rgba(255, 255, 255, 0.06);
@@ -22081,9 +23329,7 @@ html {
 [data-theme="dark"] .setup-metric-list-empty,
 [data-theme="dark"] .analytics-progress-stat,
 [data-theme="dark"] .analytics-heatmap-cell,
-[data-theme="dark"] .workspace-shell-compact-meta span,
-[data-theme="dark"] .workspace-shell-technique-badge,
-[data-theme="dark"] .saved-technique-chip {
+[data-theme="dark"] .workspace-shell-compact-meta span {
   background: rgba(255, 247, 236, 0.045);
   border-color: rgba(255, 236, 216, 0.14);
   color: var(--text-muted);
@@ -22103,15 +23349,11 @@ html {
 [data-theme="light"] .analytics-progress-stat,
 [data-theme="light"] .analytics-heatmap-cell,
 [data-theme="light"] .workspace-shell-compact-meta span,
-[data-theme="light"] .workspace-shell-technique-badge,
-[data-theme="light"] .saved-technique-chip,
 [data-theme="sepia"] .setup-metric-list-row,
 [data-theme="sepia"] .setup-metric-list-empty,
 [data-theme="sepia"] .analytics-progress-stat,
 [data-theme="sepia"] .analytics-heatmap-cell,
-[data-theme="sepia"] .workspace-shell-compact-meta span,
-[data-theme="sepia"] .workspace-shell-technique-badge,
-[data-theme="sepia"] .saved-technique-chip {
+[data-theme="sepia"] .workspace-shell-compact-meta span {
   background: rgba(154, 103, 56, 0.08);
   color: var(--text-muted);
 }
@@ -22179,6 +23421,561 @@ html {
 [data-theme="sepia"] .comparison-item {
   background: rgba(255, 255, 255, 0.72);
   border-color: rgba(160, 120, 76, 0.14);
+}
+
+.action-buttons-group {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.action-btn-recordings {
+  min-width: 188px;
+}
+
+.recordings-library-modal {
+  width: min(1120px, 96vw);
+  max-height: 90vh;
+}
+
+.recordings-library-header {
+  align-items: flex-start;
+}
+
+.recordings-library-head-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.recordings-library-head-copy p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.recordings-library-body {
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
+.recordings-library-loading,
+.recordings-library-empty {
+  min-height: 360px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 12px;
+  color: var(--text-muted);
+}
+
+.recordings-library-empty h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.2rem;
+}
+
+.recordings-library-empty p {
+  margin: 0;
+  max-width: 420px;
+  line-height: 1.6;
+}
+
+.recordings-library-empty-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  color: var(--accent);
+  background: rgba(154, 103, 56, 0.08);
+  border: 1px solid rgba(154, 103, 56, 0.16);
+}
+
+.recordings-library-shell {
+  display: grid;
+  grid-template-columns: minmax(280px, 320px) minmax(0, 1fr);
+  gap: 18px;
+  min-height: 0;
+}
+
+.recordings-library-nav,
+.recordings-library-detail {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.6);
+  min-height: 0;
+}
+
+.recordings-library-nav {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.recordings-library-nav-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 18px 12px;
+  border-bottom: 1px solid rgba(154, 103, 56, 0.08);
+}
+
+.recordings-library-nav-kicker,
+.recordings-library-detail-kicker {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.recordings-library-nav-head strong,
+.recordings-library-detail-count {
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+.recordings-library-nav-toggle {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text);
+  padding: 9px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.recordings-library-search {
+  position: relative;
+  padding: 14px 18px 12px;
+}
+
+.recordings-library-search i {
+  position: absolute;
+  left: 30px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.recordings-library-search input {
+  width: 100%;
+  min-height: 42px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text);
+  padding: 0 14px 0 40px;
+  font-size: 0.88rem;
+}
+
+.recordings-library-search input:focus {
+  outline: none;
+  border-color: rgba(154, 103, 56, 0.32);
+  box-shadow: 0 0 0 3px rgba(154, 103, 56, 0.08);
+}
+
+.recordings-library-nav-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 12px 14px 18px;
+}
+
+.recordings-library-surah-group {
+  display: grid;
+  gap: 8px;
+  padding: 10px 0 14px;
+}
+
+.recordings-library-surah-group + .recordings-library-surah-group {
+  border-top: 1px solid rgba(154, 103, 56, 0.08);
+}
+
+.recordings-library-surah-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.recordings-library-ayah-item {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: rgba(154, 103, 56, 0.05);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.recordings-library-ayah-item:hover {
+  transform: translateY(-1px);
+  border-color: rgba(154, 103, 56, 0.18);
+  background: rgba(154, 103, 56, 0.09);
+}
+
+.recordings-library-ayah-item.active {
+  border-color: rgba(154, 103, 56, 0.28);
+  background: linear-gradient(135deg, rgba(154, 103, 56, 0.14), rgba(154, 103, 56, 0.06));
+  box-shadow: 0 10px 24px rgba(154, 103, 56, 0.1);
+}
+
+.recordings-library-ayah-label {
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.recordings-library-ayah-count {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.recordings-library-detail {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.recordings-library-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid rgba(154, 103, 56, 0.08);
+}
+
+.recordings-library-detail-head h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.2rem;
+}
+
+.recordings-library-history {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 20px 20px;
+  display: grid;
+  gap: 14px;
+}
+
+.recording-history-card {
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.74);
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.recording-history-card.playing {
+  border-color: rgba(154, 103, 56, 0.3);
+  box-shadow: 0 14px 30px rgba(154, 103, 56, 0.12);
+  transform: translateY(-1px);
+}
+
+.recording-history-top,
+.recording-history-actions,
+.recording-delete-confirm,
+.recording-delete-confirm-actions,
+.recording-history-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.recording-history-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.recording-history-copy strong {
+  color: var(--text);
+  font-size: 0.96rem;
+}
+
+.recording-history-copy span,
+.recording-history-meta span {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.recording-history-meta {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.recording-history-actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.recording-history-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.recording-history-action {
+  min-width: 112px;
+  width: auto;
+  padding: 0 14px;
+  gap: 8px;
+}
+
+.recording-history-action-delete {
+  color: #8b4f39;
+}
+
+.recording-history-action span {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.recording-result-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.recording-result-pill.tone-excellent {
+  background: rgba(89, 138, 96, 0.12);
+  border-color: rgba(89, 138, 96, 0.18);
+  color: #43684a;
+}
+
+.recording-result-pill.tone-good {
+  background: rgba(122, 95, 58, 0.1);
+  border-color: rgba(122, 95, 58, 0.14);
+  color: #6c5638;
+}
+
+.recording-result-pill.tone-review {
+  background: rgba(166, 121, 72, 0.12);
+  border-color: rgba(166, 121, 72, 0.18);
+  color: #8b653b;
+}
+
+.recording-delete-confirm {
+  border-top: 1px solid rgba(154, 103, 56, 0.08);
+  padding-top: 12px;
+  flex-wrap: wrap;
+}
+
+.recording-delete-confirm span {
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.recording-delete-confirm-actions {
+  justify-content: flex-end;
+}
+
+.recording-inline-btn {
+  min-height: 38px;
+  padding: 9px 14px;
+  flex: initial;
+}
+
+.recordings-library-empty-panel {
+  flex: 1;
+  min-height: 280px;
+}
+
+[data-theme="dark"] .recordings-library-nav,
+[data-theme="dark"] .recordings-library-detail,
+[data-theme="dark"] .recording-history-card {
+  background: rgba(40, 34, 30, 0.76);
+  border-color: rgba(216, 185, 150, 0.14);
+}
+
+[data-theme="dark"] .self-check-panel {
+  background: linear-gradient(180deg, rgba(40, 34, 30, 0.88), rgba(29, 25, 23, 0.84));
+  border-color: rgba(216, 185, 150, 0.16);
+}
+
+[data-theme="dark"] .self-check-panel-meta span,
+[data-theme="dark"] .self-check-library-link {
+  background: rgba(255, 247, 236, 0.06);
+  border-color: rgba(255, 236, 216, 0.14);
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .self-check-status-info {
+  background: rgba(255, 247, 236, 0.06);
+  border-color: rgba(255, 236, 216, 0.14);
+}
+
+[data-theme="dark"] .self-check-status-success {
+  background: rgba(95, 156, 106, 0.14);
+  border-color: rgba(95, 156, 106, 0.22);
+  color: #aed7b5;
+}
+
+[data-theme="dark"] .self-check-status-warning {
+  background: rgba(194, 149, 102, 0.14);
+  border-color: rgba(194, 149, 102, 0.2);
+  color: #f0d0a7;
+}
+
+[data-theme="dark"] .self-check-result-btn {
+  background: rgba(255, 247, 236, 0.05);
+}
+
+[data-theme="dark"] .recordings-library-search input,
+[data-theme="dark"] .recordings-library-nav-toggle,
+[data-theme="dark"] .recordings-library-ayah-item {
+  background: rgba(255, 247, 236, 0.05);
+  border-color: rgba(255, 236, 216, 0.14);
+  color: var(--text);
+}
+
+[data-theme="dark"] .recordings-library-ayah-item.active {
+  background: linear-gradient(135deg, rgba(208, 160, 107, 0.18), rgba(255, 255, 255, 0.04));
+  border-color: rgba(208, 160, 107, 0.28);
+}
+
+[data-theme="dark"] .recordings-library-empty-icon {
+  background: rgba(208, 160, 107, 0.12);
+  border-color: rgba(208, 160, 107, 0.18);
+  color: var(--accent-strong);
+}
+
+[data-theme="dark"] .recording-result-pill.tone-excellent {
+  background: rgba(95, 156, 106, 0.16);
+  border-color: rgba(95, 156, 106, 0.22);
+  color: #aed7b5;
+}
+
+[data-theme="dark"] .recording-result-pill.tone-good {
+  background: rgba(208, 160, 107, 0.14);
+  border-color: rgba(208, 160, 107, 0.18);
+  color: #edd1ad;
+}
+
+[data-theme="dark"] .recording-result-pill.tone-review {
+  background: rgba(194, 149, 102, 0.14);
+  border-color: rgba(194, 149, 102, 0.2);
+  color: #f0d0a7;
+}
+
+@media (max-width: 768px) {
+  .action-buttons-group .action-btn span {
+    display: inline-block;
+  }
+
+  .action-btn-recordings {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .recordings-library-modal {
+    width: 100vw;
+    max-height: 100dvh;
+    height: 100dvh;
+    border-radius: 0;
+  }
+
+  .recordings-library-body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .recordings-library-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .recordings-library-nav-toggle {
+    display: inline-flex;
+  }
+
+  .recordings-library-nav-scroll {
+    max-height: 42vh;
+    padding-right: 10px;
+  }
+
+  .recordings-library-detail-head,
+  .recording-history-top,
+  .recording-history-actions,
+  .recording-delete-confirm,
+  .self-check-panel-head,
+  .self-check-review-head,
+  .self-check-review-actions,
+  .self-check-live-actions,
+  .self-check-idle-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .recording-history-action {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .recording-delete-confirm-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .recording-inline-btn {
+    flex: 1;
+  }
+
+  .self-check-action-btn,
+  .self-check-preview-btn,
+  .self-check-library-link {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .action-buttons-group .action-btn {
+    width: 100%;
+    padding: 0 12px;
+  }
+
+  .action-buttons-group .action-btn i {
+    margin: 0;
+  }
+
+  .recordings-library-nav-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .recordings-library-ayah-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 @media (max-width: 900px) {
