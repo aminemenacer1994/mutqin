@@ -301,11 +301,11 @@
 
                     <button
                       class="verse-self-check-btn"
-                      :class="{ active: selfCheckVerseKey === verse.key }"
-                      @click.stop="toggleSelfCheckPanel(verse)"
-                      :title="selfCheckVerseKey === verse.key ? 'Close self-check' : 'Open self-check recorder'"
+                      :class="{ active: showSelfCheckModal && selfCheckVerseKey === verse.key }"
+                      @click.stop="openSelfCheckModal(verse)"
+                      :title="showSelfCheckModal && selfCheckVerseKey === verse.key ? 'Self-check is open' : 'Open self-check recorder'"
                     >
-                      <i class="bi" :class="selfCheckVerseKey === verse.key ? 'bi-mic-fill' : 'bi-mic'"></i>
+                      <i class="bi" :class="showSelfCheckModal && selfCheckVerseKey === verse.key ? 'bi-mic-fill' : 'bi-mic'"></i>
                       <span>Self-Check</span>
                       <em v-if="getAyahRecordingCount(verse.key)">{{ getAyahRecordingCount(verse.key) }}</em>
                     </button>
@@ -351,122 +351,6 @@
                       type="button"
                       @click.stop="playWordAudio(word.audio, verse, wi)">
                       <i class="bi bi-volume-up"></i>
-                    </button>
-                  </div>
-                </div>
-
-                <div v-if="selfCheckVerseKey === verse.key" class="self-check-panel" @click.stop>
-                  <div class="self-check-panel-head">
-                    <div class="self-check-panel-title">
-                      <span class="self-check-kicker">Per-ayah recorder</span>
-                      <strong>Self-Check for Ayah {{ verse.number }}</strong>
-                    </div>
-                    <button class="self-check-library-link" type="button" @click="openRecordingsLibrary({ ayahKey: verse.key })">
-                      <i class="bi bi-collection-play"></i>
-                      <span>View Recordings</span>
-                    </button>
-                  </div>
-
-                  <p class="self-check-panel-copy">
-                    Record your recitation for this ayah. The session range stays as context, but each saved attempt belongs to this individual ayah.
-                  </p>
-
-                  <div class="self-check-panel-meta">
-                    <span>{{ getAyahRecordingCount(verse.key) }} saved attempt{{ getAyahRecordingCount(verse.key) === 1 ? '' : 's' }}</span>
-                    <span v-if="getLatestRecordingForAyah(verse.key)">
-                      Latest: {{ getLatestRecordingForAyah(verse.key).result }} · {{ formatDate(getLatestRecordingForAyah(verse.key).recordedAt) }}
-                    </span>
-                  </div>
-
-                  <div v-if="selfCheckLastSavedAyahKey === verse.key" class="self-check-status self-check-status-success">
-                    <i class="bi bi-check2-circle"></i>
-                    <span>Saved to the recordings library for this ayah.</span>
-                  </div>
-
-                  <div v-if="selfCheckError && selfCheckVerseKey === verse.key" class="self-check-status self-check-status-warning">
-                    <i class="bi bi-exclamation-triangle"></i>
-                    <span>{{ selfCheckError }}</span>
-                  </div>
-
-                  <div v-if="!supportsSelfCheckRecording()" class="self-check-status self-check-status-warning">
-                    <i class="bi bi-mic-mute"></i>
-                    <span>Recording is not available in this browser.</span>
-                  </div>
-
-                  <div v-else-if="isSelfCheckRecording" class="self-check-live-card">
-                    <div class="self-check-live-copy">
-                      <strong>Recording now</strong>
-                      <span>{{ getSelfCheckLiveDurationLabel() }}</span>
-                    </div>
-                    <div class="self-check-live-pulse" aria-hidden="true">
-                      <span></span><span></span><span></span>
-                    </div>
-                    <div class="self-check-live-actions">
-                      <button class="btn-secondary self-check-action-btn" type="button" @click="discardSelfCheckRecording">
-                        <i class="bi bi-x-circle"></i>
-                        <span>Discard</span>
-                      </button>
-                      <button class="btn-primary self-check-action-btn" type="button" @click="stopSelfCheckRecording">
-                        <i class="bi bi-stop-circle"></i>
-                        <span>Stop Recording</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div v-else-if="selfCheckPreparing" class="self-check-status self-check-status-info">
-                    <i class="bi bi-hourglass-split"></i>
-                    <span>{{ selfCheckPreparingLabel }}</span>
-                  </div>
-
-                  <div v-else-if="getSelfCheckDraftForVerse(verse.key)" class="self-check-review-card">
-                    <div class="self-check-review-head">
-                      <div>
-                        <strong>Review this attempt</strong>
-                        <span>{{ formatRecordingDate(getSelfCheckDraftForVerse(verse.key).recordedAt) }} · {{ formatRecordingDuration(getSelfCheckDraftForVerse(verse.key).durationSeconds) }}</span>
-                      </div>
-                      <button class="player-btn self-check-preview-btn" type="button" @click="toggleSelfCheckPreview(verse.key)">
-                        <i class="bi" :class="activeSelfCheckPreviewKey === verse.key ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-                        <span>{{ activeSelfCheckPreviewKey === verse.key ? 'Pause' : 'Play' }}</span>
-                      </button>
-                    </div>
-
-                    <div class="self-check-result-group" role="group" aria-label="Choose self-check result">
-                      <button
-                        v-for="option in ['Excellent', 'Good', 'Needs Review']"
-                        :key="option"
-                        type="button"
-                        class="self-check-result-btn"
-                        :class="[getRecordingResultTone(option), { active: getSelfCheckDraftForVerse(verse.key).result === option }]"
-                        @click="setSelfCheckDraftResult(option)"
-                      >
-                        {{ option }}
-                      </button>
-                    </div>
-
-                    <div class="self-check-review-actions">
-                      <button class="btn-secondary self-check-action-btn" type="button" @click="discardSelfCheckRecording">
-                        <i class="bi bi-trash3"></i>
-                        <span>Discard</span>
-                      </button>
-                      <button class="btn-secondary self-check-action-btn" type="button" @click="restartSelfCheckRecording(verse)">
-                        <i class="bi bi-arrow-repeat"></i>
-                        <span>Record Again</span>
-                      </button>
-                      <button class="btn-primary self-check-action-btn" type="button" @click="saveSelfCheckRecording(verse)">
-                        <i class="bi bi-save2"></i>
-                        <span>Save Attempt</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div v-else class="self-check-idle-actions">
-                    <button class="btn-primary self-check-action-btn" type="button" @click="startSelfCheckRecording(verse)">
-                      <i class="bi bi-mic-fill"></i>
-                      <span>Start Recording</span>
-                    </button>
-                    <button class="btn-secondary self-check-action-btn" type="button" @click="openRecordingsLibrary({ ayahKey: verse.key })">
-                      <i class="bi bi-clock-history"></i>
-                      <span>{{ getAyahRecordingCount(verse.key) ? 'Review Saved Attempts' : 'Open Library' }}</span>
                     </button>
                   </div>
                 </div>
@@ -1522,6 +1406,253 @@
       </div>
     </div>
 
+    <div v-if="showSelfCheckModal && selfCheckModalVerse" class="modal-overlay self-check-modal-overlay" @click.self="closeSelfCheckModal">
+      <div class="modal-content self-check-modal" role="dialog" aria-modal="true" aria-labelledby="selfCheckModalTitle">
+        <div class="modal-header self-check-modal-header">
+          <div class="self-check-modal-head-copy">
+            <div class="modal-context-badge">Per-ayah recorder</div>
+            <h2 id="selfCheckModalTitle">Self-Check for Ayah {{ selfCheckModalVerse.number }}</h2>
+            <p>{{ selfCheckModalVerse.chapterName || currentChapter?.name_simple || activeChapterName || 'Current surah' }} · Session range {{ rangeStart }}-{{ rangeEnd }}</p>
+          </div>
+          <button class="modal-close-btn" @click="closeSelfCheckModal" aria-label="Close self-check">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <div class="modal-body self-check-modal-body">
+          <section class="self-check-modal-stage">
+            <div class="self-check-modal-tools">
+              <div class="self-check-modal-tool-group">
+                <span class="self-check-modal-tool-label">Font size</span>
+                <div class="self-check-modal-font-controls">
+                  <button type="button" class="self-check-modal-tool-btn" @click="adjustSelfCheckFont(-8)" aria-label="Decrease ayah font size">
+                    <i class="bi bi-dash-lg"></i>
+                  </button>
+                  <span class="self-check-modal-font-value">{{ selfCheckFontSize }}%</span>
+                  <button type="button" class="self-check-modal-tool-btn" @click="adjustSelfCheckFont(8)" aria-label="Increase ayah font size">
+                    <i class="bi bi-plus-lg"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="self-check-modal-tool-group self-check-modal-memory-tools">
+                <button
+                  type="button"
+                  class="self-check-modal-memory-btn"
+                  :class="{ active: selfCheckBlurEnabled }"
+                  @click="toggleSelfCheckBlurMode"
+                >
+                  <i class="bi" :class="selfCheckBlurEnabled ? 'bi-eye-slash' : 'bi-eye'"></i>
+                  <span>{{ selfCheckBlurEnabled ? 'Blur On' : 'Blur Off' }}</span>
+                </button>
+                <button
+                  v-if="selfCheckBlurEnabled"
+                  type="button"
+                  class="self-check-modal-memory-btn self-check-modal-memory-btn-peek"
+                  :class="{ active: selfCheckPeekActive }"
+                  @mousedown.prevent="startSelfCheckPeek"
+                  @mouseup="stopSelfCheckPeek"
+                  @mouseleave="stopSelfCheckPeek"
+                  @touchstart.passive="startSelfCheckPeek"
+                  @touchend.passive="stopSelfCheckPeek"
+                  @touchcancel.passive="stopSelfCheckPeek"
+                >
+                  <i class="bi bi-stars"></i>
+                  <span>{{ selfCheckPeekActive ? 'Peeking' : 'Hold to Peek' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="self-check-modal-ayah-shell" :class="{ 'is-blurred': selfCheckBlurEnabled && !selfCheckPeekActive }">
+              <div
+                class="self-check-modal-ayah"
+                dir="rtl"
+                :style="{
+                  'font-family': quranFontFamily,
+                  'font-size': (selfCheckFontSize / 100) + 'rem'
+                }"
+                v-html="getSelfCheckModalArabic(selfCheckModalVerse)"
+              ></div>
+            </div>
+          </section>
+
+          <section class="self-check-modal-recorder-grid">
+            <article class="self-check-recorder-card" :class="{ recording: isSelfCheckRecording, reviewing: !!selfCheckActiveDraft }">
+              <div class="self-check-recorder-head">
+                <div>
+                  <span class="self-check-kicker">Recording</span>
+                  <strong>{{ isSelfCheckRecording ? 'Recording in progress' : selfCheckActiveDraft ? 'Review before saving' : 'Ready when you are' }}</strong>
+                </div>
+                <button class="self-check-library-link" type="button" @click="openRecordingsLibraryFromSelfCheck">
+                  <i class="bi bi-collection-play"></i>
+                  <span>{{ selfCheckModalAttempts.length ? 'Open Library' : 'Library' }}</span>
+                </button>
+              </div>
+
+              <div class="self-check-recorder-meta">
+                <span>{{ selfCheckModalAttempts.length }} saved attempt{{ selfCheckModalAttempts.length === 1 ? '' : 's' }}</span>
+                <span v-if="selfCheckLatestAttempt">Latest: {{ selfCheckLatestAttempt.result }} · {{ formatRecordingDate(selfCheckLatestAttempt.recordedAt) }}</span>
+              </div>
+
+              <div v-if="selfCheckLastSavedAyahKey === selfCheckModalVerse.key" class="self-check-status self-check-status-success">
+                <i class="bi bi-check2-circle"></i>
+                <span>Saved to your recordings library for this ayah.</span>
+              </div>
+
+              <div v-if="selfCheckError && selfCheckVerseKey === selfCheckModalVerse.key" class="self-check-status self-check-status-warning">
+                <i class="bi bi-exclamation-triangle"></i>
+                <span>{{ selfCheckError }}</span>
+              </div>
+
+              <div v-if="!supportsSelfCheckRecording()" class="self-check-status self-check-status-warning">
+                <i class="bi bi-mic-mute"></i>
+                <span>Recording is not available in this browser.</span>
+              </div>
+
+              <div v-else-if="isSelfCheckRecording" class="self-check-live-card">
+                <div class="self-check-live-stage">
+                  <div class="self-check-live-copy">
+                    <strong>Recording now</strong>
+                    <span>{{ getSelfCheckLiveDurationLabel() }}</span>
+                  </div>
+                  <div class="self-check-live-pulse" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                  </div>
+                </div>
+                <div class="self-check-live-actions">
+                  <button class="btn-secondary self-check-action-btn" type="button" @click="discardSelfCheckRecording">
+                    <i class="bi bi-x-circle"></i>
+                    <span>Discard</span>
+                  </button>
+                  <button class="btn-primary self-check-action-btn" type="button" @click="stopSelfCheckRecording">
+                    <i class="bi bi-stop-circle"></i>
+                    <span>Stop Recording</span>
+                  </button>
+                </div>
+              </div>
+
+              <div v-else-if="selfCheckPreparing" class="self-check-status self-check-status-info">
+                <i class="bi bi-hourglass-split"></i>
+                <span>{{ selfCheckPreparingLabel }}</span>
+              </div>
+
+              <div v-else-if="selfCheckActiveDraft" class="self-check-review-card">
+                <div class="self-check-review-head">
+                  <div>
+                    <strong>Review this attempt</strong>
+                    <span>{{ formatRecordingDate(selfCheckActiveDraft.recordedAt) }} · {{ formatRecordingDuration(selfCheckActiveDraft.durationSeconds) }}</span>
+                  </div>
+                  <button class="player-btn self-check-preview-btn" type="button" @click="toggleSelfCheckPreview(selfCheckModalVerse.key)">
+                    <i class="bi" :class="activeSelfCheckPreviewKey === selfCheckModalVerse.key ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                    <span>{{ activeSelfCheckPreviewKey === selfCheckModalVerse.key ? 'Pause' : 'Play' }}</span>
+                  </button>
+                </div>
+
+                <div class="self-check-result-group" role="group" aria-label="Choose self-check result">
+                  <button
+                    v-for="option in ['Excellent', 'Good', 'Needs Review']"
+                    :key="option"
+                    type="button"
+                    class="self-check-result-btn"
+                    :class="[getRecordingResultTone(option), { active: selfCheckActiveDraft.result === option }]"
+                    @click="setSelfCheckDraftResult(option)"
+                  >
+                    {{ option }}
+                  </button>
+                </div>
+
+                <div class="self-check-review-actions">
+                  <button class="btn-secondary self-check-action-btn" type="button" @click="discardSelfCheckRecording">
+                    <i class="bi bi-trash3"></i>
+                    <span>Discard</span>
+                  </button>
+                  <button class="btn-secondary self-check-action-btn" type="button" @click="restartSelfCheckRecording(selfCheckModalVerse)">
+                    <i class="bi bi-arrow-repeat"></i>
+                    <span>Record Again</span>
+                  </button>
+                  <button class="btn-primary self-check-action-btn" type="button" @click="saveSelfCheckRecording(selfCheckModalVerse)">
+                    <i class="bi bi-save2"></i>
+                    <span>Save Attempt</span>
+                  </button>
+                </div>
+              </div>
+
+              <div v-else class="self-check-idle-actions">
+                <button class="btn-primary self-check-action-btn" type="button" @click="startSelfCheckRecording(selfCheckModalVerse)">
+                  <i class="bi bi-mic-fill"></i>
+                  <span>Start Recording</span>
+                </button>
+                <button class="btn-secondary self-check-action-btn" type="button" @click="openRecordingsLibraryFromSelfCheck">
+                  <i class="bi bi-clock-history"></i>
+                  <span>{{ selfCheckModalAttempts.length ? 'Review Saved Attempts' : 'Open Library' }}</span>
+                </button>
+              </div>
+            </article>
+
+            <aside class="self-check-attempts-card">
+              <div class="self-check-attempts-head">
+                <div>
+                  <span class="self-check-kicker">Saved attempts</span>
+                  <strong>Recent review history</strong>
+                </div>
+                <span class="self-check-attempts-count">{{ selfCheckModalAttempts.length }}</span>
+              </div>
+
+              <div v-if="selfCheckModalAttempts.length" class="self-check-attempts-list">
+                <article
+                  v-for="recording in selfCheckModalAttempts"
+                  :key="recording.id"
+                  class="self-check-attempt-card"
+                  :class="{ playing: recording.id === activeRecordingPlaybackId }"
+                >
+                  <div class="self-check-attempt-top">
+                    <div class="self-check-attempt-copy">
+                      <strong>Attempt {{ recording.attemptNumber }}</strong>
+                      <span>{{ formatRecordingDate(recording.recordedAt) }} · {{ formatRecordingTimestamp(recording.recordedAt) }}</span>
+                    </div>
+                    <span class="recording-result-pill" :class="getRecordingResultTone(recording.result)">
+                      {{ recording.result }}
+                    </span>
+                  </div>
+
+                  <div class="self-check-attempt-meta">
+                    <span><i class="bi bi-clock-history"></i> {{ formatRecordingDuration(recording.durationSeconds) }}</span>
+                  </div>
+
+                  <div class="self-check-attempt-actions">
+                    <button class="player-btn recording-history-action" type="button" @click="toggleRecordingPlayback(recording)">
+                      <i class="bi" :class="recording.id === activeRecordingPlaybackId ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                      <span>{{ recording.id === activeRecordingPlaybackId ? 'Pause' : 'Play' }}</span>
+                    </button>
+                    <button class="player-btn recording-history-action recording-history-action-delete" type="button" @click="promptDeleteRecording(recording.id)">
+                      <i class="bi bi-trash3"></i>
+                      <span>Delete</span>
+                    </button>
+                  </div>
+
+                  <div v-if="pendingRecordingDeleteId === recording.id" class="recording-delete-confirm">
+                    <span>Delete this recording?</span>
+                    <div class="recording-delete-confirm-actions">
+                      <button class="btn-secondary recording-inline-btn" type="button" @click="cancelDeleteRecording">Cancel</button>
+                      <button class="btn-primary btn-danger recording-inline-btn" type="button" @click="deleteRecording(recording.id)">Delete</button>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <div v-else class="self-check-empty">
+                <div class="self-check-empty-icon">
+                  <i class="bi bi-mic"></i>
+                </div>
+                <h3>No recordings yet</h3>
+                <p>Record your first recitation using Self-Check.</p>
+              </div>
+            </aside>
+          </section>
+        </div>
+      </div>
+    </div>
+
     <div v-if="showRecordingsLibrary" class="modal-overlay recordings-library-overlay" @click.self="closeRecordingsLibrary">
       <div class="modal-content recordings-library-modal" role="dialog" aria-modal="true" aria-labelledby="recordingsLibraryTitle">
         <div class="modal-header recordings-library-header">
@@ -2269,7 +2400,12 @@ export default {
       activeRecordingPlaybackId: '',
       recordingsAudioElement: null,
       recordingsAudioBound: false,
+      showSelfCheckModal: false,
+      selfCheckVerseRef: null,
       selfCheckVerseKey: '',
+      selfCheckFontSize: 240,
+      selfCheckBlurEnabled: false,
+      selfCheckPeekActive: false,
       selfCheckPreparing: false,
       selfCheckPreparingLabel: '',
       isSelfCheckRecording: false,
@@ -2666,6 +2802,37 @@ export default {
         ...recording,
         attemptNumber: total - index
       }))
+    },
+    selfCheckModalVerse() {
+      if (!this.selfCheckVerseKey) return null
+      const liveVerse = this.verses.find(verse => verse.key === this.selfCheckVerseKey) || null
+      if (liveVerse) {
+        return {
+          ...this.selfCheckVerseRef,
+          ...liveVerse,
+          chapterName: liveVerse.chapterName
+            || this.selfCheckVerseRef?.chapterName
+            || this.currentChapter?.name_simple
+            || this.activeChapterName
+            || `Surah ${liveVerse.chapterId || ''}`.trim()
+        }
+      }
+      return this.selfCheckVerseRef || null
+    },
+    selfCheckActiveDraft() {
+      return this.selfCheckVerseKey ? this.getSelfCheckDraftForVerse(this.selfCheckVerseKey) : null
+    },
+    selfCheckModalAttempts() {
+      if (!this.selfCheckVerseKey) return []
+      const sorted = this.getAyahRecordingHistory(this.selfCheckVerseKey)
+      const total = sorted.length
+      return sorted.map((recording, index) => ({
+        ...recording,
+        attemptNumber: total - index
+      }))
+    },
+    selfCheckLatestAttempt() {
+      return this.selfCheckModalAttempts[0] || null
     },
     getSessionPrimaryLabel() {
       return (session = {}) => {
@@ -3699,7 +3866,18 @@ export default {
     syncBodyScrollLock(locked) {
       if (typeof document === 'undefined') return
       document.body.classList.toggle('tools-panel-open', !!locked)
-      document.body.style.overflow = locked ? 'hidden' : ''
+      const shouldLock = !!locked
+        || this.showTools
+        || this.showRecordingsLibrary
+        || this.showSelfCheckModal
+        || this.showConfirmModal
+        || this.showSessionExitModal
+        || this.showResumeModal
+        || this.showPlannerModal
+        || this.showSessionAnalyticsModal
+        || this.showPostLoginOnboarding
+      document.body.classList.toggle('tools-panel-open', shouldLock)
+      document.body.style.overflow = shouldLock ? 'hidden' : ''
     },
 
     focusToolsPanel() {
@@ -5462,7 +5640,10 @@ export default {
       this.ensureSelectedRecordingsAyah()
     },
     openRecordingsLibrary(options = {}) {
-      const targetAyahKey = options?.ayahKey || this.selfCheckVerseKey || this.effectiveActiveVerseKey || ''
+      const targetAyahKey = options?.ayahKey
+        || (this.showSelfCheckModal ? this.selfCheckVerseKey : '')
+        || this.effectiveActiveVerseKey
+        || ''
       const isCompactViewport = typeof window !== 'undefined'
         && typeof window.matchMedia === 'function'
         && window.matchMedia('(max-width: 768px)').matches
@@ -5473,6 +5654,9 @@ export default {
       this.showConfirmModal = false
       this.showSessionExitModal = false
       this.showResumeModal = false
+      this.showSelfCheckModal = false
+      this.selfCheckPeekActive = false
+      this.stopRecordingsPlayback({ clearSource: true })
       if (this.audioElement && !this.audioElement.paused) {
         this.audioElement.pause()
         this.isPlaying = false
@@ -5640,6 +5824,99 @@ export default {
         minute: '2-digit'
       })
     },
+    buildSelfCheckVerseRef(verse) {
+      if (!verse?.key) return null
+      return {
+        ...verse,
+        chapterName: verse.chapterName
+          || this.currentChapter?.name_simple
+          || this.activeChapterName
+          || (verse.chapterId ? `Surah ${verse.chapterId}` : 'Current surah')
+      }
+    },
+    getSelfCheckInitialFontSize(verse) {
+      const verseFont = Number(this.getVerseFontSize(verse?.key) || this.defaultFontSize || 120)
+      return Math.max(220, Math.min(320, verseFont + 120))
+    },
+    openSelfCheckModal(verse) {
+      if (!verse?.key) return
+      if (this.isSelfCheckRecording && this.selfCheckVerseKey && this.selfCheckVerseKey !== verse.key) {
+        this.showBanner('Stop the current self-check before moving to another ayah.', 'info', 2200)
+        return
+      }
+      if (this.selfCheckDraft?.ayahKey && this.selfCheckDraft.ayahKey !== verse.key) {
+        this.showBanner('Save or discard the current self-check attempt before switching ayahs.', 'info', 2400)
+        return
+      }
+
+      this.loadRecordingsLibrary()
+      this.showTools = false
+      this.selfCheckVerseRef = this.buildSelfCheckVerseRef(verse)
+      this.selfCheckVerseKey = verse.key
+      this.selfCheckFontSize = this.getSelfCheckInitialFontSize(verse)
+      this.showSelfCheckModal = true
+      this.selfCheckError = ''
+      this.selfCheckLastSavedAyahKey = ''
+      this.pendingRecordingDeleteId = ''
+      this.selfCheckPeekActive = false
+      this.syncBodyScrollLock(true)
+    },
+    closeSelfCheckModal() {
+      if (this.isSelfCheckRecording) {
+        this.showBanner('Stop or discard the current recording before closing Self-Check.', 'info', 2200)
+        return
+      }
+      this.showSelfCheckModal = false
+      this.selfCheckPeekActive = false
+      this.pendingRecordingDeleteId = ''
+      this.selfCheckError = ''
+      this.selfCheckLastSavedAyahKey = ''
+      this.stopRecordingsPlayback({ clearSource: true })
+      this.selfCheckVerseRef = null
+      this.selfCheckVerseKey = ''
+      this.syncBodyScrollLock(false)
+    },
+    openRecordingsLibraryFromSelfCheck() {
+      const ayahKey = this.selfCheckVerseKey || this.selfCheckModalVerse?.key || ''
+      if (!ayahKey && !this.hasRecordingsLibraryEntries) {
+        this.showBanner('Select an ayah before opening the recordings library.', 'info', 2200)
+        return
+      }
+      if (this.isSelfCheckRecording) {
+        this.showBanner('Stop the current recording before opening the recordings library.', 'info', 2200)
+        return
+      }
+      this.showSelfCheckModal = false
+      this.selfCheckPeekActive = false
+      this.pendingRecordingDeleteId = ''
+      this.stopRecordingsPlayback({ clearSource: true })
+      this.syncBodyScrollLock(false)
+      this.openRecordingsLibrary({ ayahKey })
+    },
+    adjustSelfCheckFont(delta) {
+      const next = Math.max(120, Math.min(220, Number(this.selfCheckFontSize || 160) + Number(delta || 0)))
+      this.selfCheckFontSize = next
+    },
+    toggleSelfCheckBlurMode() {
+      this.selfCheckBlurEnabled = !this.selfCheckBlurEnabled
+      if (!this.selfCheckBlurEnabled) {
+        this.selfCheckPeekActive = false
+      }
+    },
+    startSelfCheckPeek() {
+      if (!this.selfCheckBlurEnabled) return
+      this.selfCheckPeekActive = true
+    },
+    stopSelfCheckPeek() {
+      this.selfCheckPeekActive = false
+    },
+    getSelfCheckModalArabic(verse) {
+      if (!verse?.arabic) return ''
+      if (this.tajweedEnabled && verse.arabic_tajweed) {
+        return this.normalizeTajweedMarkup(verse.arabic_tajweed)
+      }
+      return this.stripTajweedMarkup(verse.arabic)
+    },
     supportsSelfCheckRecording() {
       return typeof navigator !== 'undefined'
         && !!navigator.mediaDevices?.getUserMedia
@@ -5656,27 +5933,6 @@ export default {
     },
     getLatestRecordingForAyah(ayahKey) {
       return this.getAyahRecordingHistory(ayahKey)[0] || null
-    },
-    toggleSelfCheckPanel(verse) {
-      if (!verse?.key) return
-      if (this.isSelfCheckRecording && this.selfCheckVerseKey && this.selfCheckVerseKey !== verse.key) {
-        this.showBanner('Stop the current self-check before moving to another ayah.', 'info', 2200)
-        return
-      }
-      if (this.selfCheckDraft?.ayahKey && this.selfCheckDraft.ayahKey !== verse.key) {
-        this.showBanner('Save or discard the current self-check attempt before switching ayahs.', 'info', 2400)
-        return
-      }
-      if (this.selfCheckVerseKey === verse.key) {
-        this.selfCheckVerseKey = ''
-        this.selfCheckError = ''
-        this.selfCheckLastSavedAyahKey = ''
-        return
-      }
-      this.selfCheckVerseKey = verse.key
-      this.selfCheckError = ''
-      this.selfCheckLastSavedAyahKey = ''
-      this.loadRecordingsLibrary()
     },
     getSelfCheckDraftForVerse(verseKey) {
       return this.selfCheckDraft?.ayahKey === verseKey ? this.selfCheckDraft : null
@@ -5721,13 +5977,17 @@ export default {
       if (this.isSelfCheckRecording) return
 
       this.loadRecordingsLibrary()
+      this.selfCheckVerseRef = this.buildSelfCheckVerseRef(verse)
       this.selfCheckVerseKey = verse.key
+      this.selfCheckFontSize = this.getSelfCheckInitialFontSize(verse)
+      this.showSelfCheckModal = true
       this.selfCheckError = ''
       this.selfCheckLastSavedAyahKey = ''
       this.selfCheckPreparing = true
       this.selfCheckPreparingLabel = 'Preparing microphone…'
       this.selfCheckPermissionState = 'prompt'
       this.selfCheckDiscardOnStop = false
+      this.selfCheckPeekActive = false
       this.stopRecordingsPlayback({ clearSource: true })
       if (this.audioElement && !this.audioElement.paused) {
         this.audioElement.pause()
@@ -5827,6 +6087,7 @@ export default {
       this.selfCheckError = ''
       this.selfCheckPreparing = false
       this.selfCheckPreparingLabel = ''
+      this.pendingRecordingDeleteId = ''
     },
     restartSelfCheckRecording(verse) {
       this.discardSelfCheckRecording()
@@ -5880,6 +6141,9 @@ export default {
       if (!draft) return
 
       this.loadRecordingsLibrary()
+      if (this.activeSelfCheckPreviewKey === verse?.key) {
+        this.stopRecordingsPlayback({ clearSource: true })
+      }
       const savedEntry = {
         ...draft,
         id: `recording-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -6484,6 +6748,11 @@ export default {
         this.blurPeekHoldingSpace = false
         this.clearTouchPeek()
         this.hoverPeekVerseKey = null
+        if (this.showSelfCheckModal) {
+          event.preventDefault()
+          this.closeSelfCheckModal()
+          return
+        }
         if (this.showRecordingsLibrary) {
           event.preventDefault()
           this.closeRecordingsLibrary()
@@ -13117,31 +13386,204 @@ export default {
   justify-content: center;
 }
 
-.self-check-panel {
-  margin-top: 16px;
-  padding: 16px;
-  border-radius: 18px;
-  border: 1px solid rgba(154, 103, 56, 0.16);
-  background: linear-gradient(180deg, rgba(255, 252, 247, 0.94), rgba(250, 244, 236, 0.9));
-  display: grid;
-  gap: 14px;
+.self-check-modal {
+  width: min(1120px, calc(100vw - 32px));
+  max-height: min(92vh, 980px);
+  padding: 0;
+  overflow: hidden;
+  animation: selfCheckModalIn 180ms ease;
 }
 
-.self-check-panel-head,
-.self-check-panel-meta,
+.self-check-modal-overlay {
+  z-index: 12100;
+}
+
+@keyframes selfCheckModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.self-check-modal-header {
+  align-items: flex-start;
+}
+
+.self-check-modal-head-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.self-check-modal-head-copy p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+}
+
+.self-check-modal-body {
+  display: grid;
+  gap: 18px;
+  padding: 20px 24px 24px;
+}
+
+.self-check-modal-stage,
+.self-check-recorder-card,
+.self-check-attempts-card,
+.self-check-attempt-card {
+  border: 1px solid rgba(154, 103, 56, 0.14);
+  background: linear-gradient(180deg, rgba(255, 252, 247, 0.96), rgba(250, 244, 236, 0.9));
+  box-shadow: 0 18px 40px rgba(85, 55, 26, 0.08);
+}
+
+.self-check-modal-stage {
+  display: grid;
+  grid-template-rows: auto minmax(220px, 1fr);
+  gap: 16px;
+  padding: 18px;
+  border-radius: 24px;
+}
+
+.self-check-modal-tools,
+.self-check-recorder-head,
+.self-check-recorder-meta,
 .self-check-review-head,
 .self-check-review-actions,
 .self-check-live-actions,
-.self-check-idle-actions {
+.self-check-idle-actions,
+.self-check-attempt-top,
+.self-check-attempt-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-.self-check-panel-title {
+.self-check-modal-tools {
+  flex-wrap: wrap;
+}
+
+.self-check-modal-tool-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.self-check-modal-memory-tools {
+  margin-left: auto;
+}
+
+.self-check-modal-tool-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.self-check-modal-font-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.self-check-modal-tool-btn,
+.self-check-modal-memory-btn {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.self-check-modal-tool-btn:hover,
+.self-check-modal-memory-btn:hover,
+.self-check-modal-memory-btn.active {
+  border-color: rgba(154, 103, 56, 0.26);
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.self-check-modal-font-value {
+  min-width: 58px;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.self-check-modal-ayah-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  min-height: 250px;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top, rgba(212, 176, 133, 0.14), transparent 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 241, 233, 0.9));
+  overflow: hidden;
+}
+
+.self-check-modal-ayah {
+  width: min(100%, 760px);
+  text-align: center;
+  line-height: 2.35;
+  color: var(--text);
+  font-weight: 500;
+  transition: filter 0.22s ease, transform 0.22s ease, opacity 0.22s ease;
+}
+
+.self-check-modal-ayah-shell.is-blurred .self-check-modal-ayah {
+  filter: blur(18px);
+  transform: scale(1.025);
+  opacity: 0.88;
+}
+
+.self-check-modal-recorder-grid {
   display: grid;
-  gap: 4px;
+  grid-template-columns: minmax(0, 1.22fr) minmax(320px, 0.92fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.self-check-recorder-card,
+.self-check-attempts-card {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 22px;
+}
+
+.self-check-recorder-card.recording {
+  animation: selfCheckRecorderGlow 1.8s ease-in-out infinite;
+}
+
+@keyframes selfCheckRecorderGlow {
+  0%, 100% {
+    box-shadow: 0 18px 40px rgba(85, 55, 26, 0.08);
+  }
+  50% {
+    box-shadow: 0 22px 46px rgba(154, 103, 56, 0.14);
+  }
 }
 
 .self-check-kicker {
@@ -13152,28 +13594,31 @@ export default {
   color: var(--text-muted);
 }
 
-.self-check-panel-title strong,
+.self-check-recorder-head strong,
+.self-check-attempts-head strong,
 .self-check-live-copy strong,
-.self-check-review-head strong {
+.self-check-review-head strong,
+.self-check-attempt-copy strong {
   color: var(--text);
   font-size: 0.96rem;
 }
 
-.self-check-panel-copy,
 .self-check-live-copy span,
-.self-check-review-head span {
+.self-check-review-head span,
+.self-check-attempt-copy span {
   margin: 0;
   color: var(--text-muted);
   font-size: 0.8rem;
   line-height: 1.55;
 }
 
-.self-check-panel-meta {
+.self-check-recorder-meta {
   justify-content: flex-start;
   flex-wrap: wrap;
 }
 
-.self-check-panel-meta span {
+.self-check-recorder-meta span,
+.self-check-attempts-count {
   display: inline-flex;
   align-items: center;
   min-height: 28px;
@@ -13187,18 +13632,19 @@ export default {
 }
 
 .self-check-library-link {
-  min-height: 34px;
-  padding: 0 12px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.76);
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  background: rgba(255, 255, 255, 0.78);
   color: var(--text);
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.76rem;
+  font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .self-check-library-link:hover {
@@ -13234,6 +13680,17 @@ export default {
   background: rgba(154, 103, 56, 0.08);
   border-color: rgba(154, 103, 56, 0.14);
   color: var(--text);
+}
+
+.self-check-live-stage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(154, 103, 56, 0.12);
 }
 
 .self-check-live-card,
@@ -13320,9 +13777,83 @@ export default {
   background: rgba(166, 121, 72, 0.08);
 }
 
+.self-check-attempts-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.self-check-attempts-list {
+  display: grid;
+  gap: 12px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.self-check-attempt-card {
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  box-shadow: none;
+}
+
+.self-check-attempt-card.playing {
+  border-color: rgba(154, 103, 56, 0.22);
+  box-shadow: 0 16px 32px rgba(154, 103, 56, 0.12);
+}
+
+.self-check-attempt-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.self-check-attempt-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.self-check-attempt-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.self-check-empty {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.self-check-empty h3,
+.self-check-empty p {
+  margin: 0;
+}
+
+.self-check-empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  background: rgba(154, 103, 56, 0.08);
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
 .self-check-action-btn,
 .self-check-preview-btn {
-  min-height: 40px;
+  min-height: 42px;
 }
 
 /* Add to your style section */
@@ -23817,16 +24348,40 @@ html {
   border-color: rgba(216, 185, 150, 0.14);
 }
 
-[data-theme="dark"] .self-check-panel {
-  background: linear-gradient(180deg, rgba(40, 34, 30, 0.88), rgba(29, 25, 23, 0.84));
+[data-theme="dark"] .self-check-modal,
+[data-theme="dark"] .self-check-modal-stage,
+[data-theme="dark"] .self-check-recorder-card,
+[data-theme="dark"] .self-check-attempts-card,
+[data-theme="dark"] .self-check-attempt-card {
+  background: linear-gradient(180deg, rgba(40, 34, 30, 0.9), rgba(29, 25, 23, 0.86));
   border-color: rgba(216, 185, 150, 0.16);
 }
 
-[data-theme="dark"] .self-check-panel-meta span,
-[data-theme="dark"] .self-check-library-link {
+[data-theme="dark"] .self-check-modal-ayah-shell {
+  background:
+    radial-gradient(circle at top, rgba(208, 160, 107, 0.12), transparent 54%),
+    linear-gradient(180deg, rgba(53, 46, 41, 0.9), rgba(37, 32, 29, 0.88));
+}
+
+[data-theme="dark"] .self-check-recorder-meta span,
+[data-theme="dark"] .self-check-library-link,
+[data-theme="dark"] .self-check-modal-font-controls,
+[data-theme="dark"] .self-check-modal-tool-btn,
+[data-theme="dark"] .self-check-modal-memory-btn,
+[data-theme="dark"] .self-check-attempts-count,
+[data-theme="dark"] .self-check-live-stage {
   background: rgba(255, 247, 236, 0.06);
   border-color: rgba(255, 236, 216, 0.14);
-  color: var(--text-muted);
+  color: var(--text);
+}
+
+[data-theme="dark"] .self-check-modal-tool-btn:hover,
+[data-theme="dark"] .self-check-modal-memory-btn:hover,
+[data-theme="dark"] .self-check-modal-memory-btn.active,
+[data-theme="dark"] .self-check-library-link:hover {
+  background: rgba(208, 160, 107, 0.14);
+  border-color: rgba(208, 160, 107, 0.22);
+  color: var(--accent-strong);
 }
 
 [data-theme="dark"] .self-check-status-info {
@@ -23887,6 +24442,16 @@ html {
   color: #f0d0a7;
 }
 
+@media (max-width: 1024px) {
+  .self-check-modal-recorder-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .self-check-attempts-list {
+    max-height: 300px;
+  }
+}
+
 @media (max-width: 768px) {
   .action-buttons-group .action-btn span {
     display: inline-block;
@@ -23895,6 +24460,64 @@ html {
   .action-btn-recordings {
     grid-column: 1 / -1;
     min-width: 0;
+  }
+
+  .self-check-modal {
+    width: 100vw;
+    max-height: 100dvh;
+    height: 100dvh;
+    border-radius: 0;
+  }
+
+  .self-check-modal-body {
+    padding: 16px;
+  }
+
+  .self-check-modal-stage,
+  .self-check-recorder-card,
+  .self-check-attempts-card {
+    border-radius: 20px;
+  }
+
+  .self-check-modal-tools,
+  .self-check-recorder-head,
+  .self-check-recorder-meta,
+  .self-check-review-head,
+  .self-check-review-actions,
+  .self-check-live-actions,
+  .self-check-idle-actions,
+  .self-check-attempt-top,
+  .self-check-attempt-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .self-check-modal-memory-tools {
+    margin-left: 0;
+  }
+
+  .self-check-modal-tool-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .self-check-modal-font-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .self-check-modal-tool-btn,
+  .self-check-modal-memory-btn,
+  .self-check-library-link,
+  .self-check-action-btn,
+  .self-check-preview-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .self-check-modal-ayah-shell {
+    min-height: 220px;
+    padding: 18px;
   }
 
   .recordings-library-modal {
@@ -23925,12 +24548,7 @@ html {
   .recordings-library-detail-head,
   .recording-history-top,
   .recording-history-actions,
-  .recording-delete-confirm,
-  .self-check-panel-head,
-  .self-check-review-head,
-  .self-check-review-actions,
-  .self-check-live-actions,
-  .self-check-idle-actions {
+  .recording-delete-confirm {
     flex-direction: column;
     align-items: stretch;
   }
@@ -23948,13 +24566,6 @@ html {
   .recording-inline-btn {
     flex: 1;
   }
-
-  .self-check-action-btn,
-  .self-check-preview-btn,
-  .self-check-library-link {
-    width: 100%;
-    justify-content: center;
-  }
 }
 
 @media (max-width: 480px) {
@@ -23965,6 +24576,16 @@ html {
 
   .action-buttons-group .action-btn i {
     margin: 0;
+  }
+
+  .self-check-modal-body {
+    padding: 14px;
+  }
+
+  .self-check-modal-stage,
+  .self-check-recorder-card,
+  .self-check-attempts-card {
+    padding: 16px;
   }
 
   .recordings-library-nav-head {
