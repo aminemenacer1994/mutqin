@@ -47,7 +47,7 @@
             </div>
             <button class="cta cta-primary setup-primary" type="button" aria-controls="memorisationToolsPanel"
               :aria-expanded="showTools ? 'true' : 'false'" @click="openToolsPanel()" title="Open controls">
-              <i class="bi bi-toggles2"></i> {{ t('home.openControls') }}
+              <i class="bi bi-toggles2"></i>
             </button>
             <p class="offcanvas-launcher-copy">
               {{ t('home.controlsHint') }}
@@ -120,7 +120,6 @@
                 </div>
                 <p>{{ currentPosition }} of {{ totalVerses }} ayahs · {{ progressPercent }}% complete<span v-if="etaLabel"> · {{ etaLabel }} left</span></p>
                 <div v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
-                  <span>{{ currentLearningPrompt }}</span>
                   <span v-if="reviewPriorityLabel">{{ reviewPriorityLabel }}</span>
                 </div>
               </div>
@@ -233,35 +232,29 @@
               </div>
             </div>
             <div v-show="!mainCardCollapsed" class="workspace-quick-controls" aria-label="Quick reading controls">
-              <details class="quick-pill-group">
-                <summary>
-                  <span>Reading aids</span>
-                  <i class="bi bi-chevron-down quick-pill-summary-icon"></i>
-                </summary>
-                <div class="quick-pill-group-list">
-                  <button class="toolbar-chip" :class="{ active: showTranslation }" @click="toggleReadingOption('translation')" type="button">Translation</button>
-                  <button class="toolbar-chip" :class="{ active: showTransliteration }" @click="toggleReadingOption('transliteration')" type="button">Transliteration</button>
-                  <button class="toolbar-chip" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')" type="button">Word by word</button>
-                  <button class="toolbar-chip" :class="{ active: wordByWordAudioEnabled }" @click="toggleWordAudio()" type="button">Word audio</button>
-                  <button class="toolbar-chip" :class="{ active: tajweedEnabled }" @click="toggleTajweed" type="button">Tajweed</button>
-                  <div class="font-dropdown quick-font-dropdown">
-                    <button class="toolbar-chip font-dropdown-trigger" @click.stop="toggleFontDropdown" type="button" title="Change Quran font">
-                      <span>Font: {{ getCurrentFontLabel() }}</span>
-                      <i class="bi" :class="fontDropdownOpen ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
-                    </button>
-                    <transition name="dropdown-fade">
-                      <div v-if="fontDropdownOpen" class="font-dropdown-menu quick-font-menu">
-                        <button v-for="font in quranFontOptions" :key="font.value" class="font-option"
-                          :class="{ active: quranFont === font.value }" @click="selectFont(font.value)">
-                          <i class="bi" :class="getFontIcon(font.value)"></i>
-                          <span>{{ font.label }}</span>
-                          <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon"></i>
-                        </button>
-                      </div>
-                    </transition>
-                  </div>
+              <div class="quick-pill-group-list">
+                <button class="toolbar-chip toolbar-chip-sm" :class="{ active: showTranslation }" @click="toggleReadingOption('translation')" type="button">Translation</button>
+                <button class="toolbar-chip toolbar-chip-sm" :class="{ active: showTransliteration }" @click="toggleReadingOption('transliteration')" type="button">Transliteration</button>
+                <button class="toolbar-chip toolbar-chip-sm" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')" type="button">Word by word</button>
+                <button class="toolbar-chip toolbar-chip-sm" :class="{ active: wordByWordAudioEnabled }" @click="toggleWordAudio()" type="button">Word audio</button>
+                <button class="toolbar-chip toolbar-chip-sm" :class="{ active: tajweedEnabled }" @click="toggleTajweed" type="button">Tajweed</button>
+                <div class="font-dropdown quick-font-dropdown">
+                  <button class="toolbar-chip toolbar-chip-sm font-dropdown-trigger" @click.stop="toggleFontDropdown" type="button" title="Change Quran font">
+                    <span>Font: {{ getCurrentFontLabel() }}</span>
+                    <i class="bi" :class="fontDropdownOpen ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                  </button>
+                  <transition name="dropdown-fade">
+                    <div v-if="fontDropdownOpen" class="font-dropdown-menu quick-font-menu">
+                      <button v-for="font in quranFontOptions" :key="font.value" class="font-option"
+                        :class="{ active: quranFont === font.value }" @click="selectFont(font.value)">
+                        <i class="bi" :class="getFontIcon(font.value)"></i>
+                        <span>{{ font.label }}</span>
+                        <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon"></i>
+                      </button>
+                    </div>
+                  </transition>
                 </div>
-              </details>
+              </div>
             </div>
           </section>
 
@@ -3464,6 +3457,25 @@ export default {
     currentSessionExplanation() {
       const modeLabel = this.currentMode === 'advanced' ? 'Advanced' : 'Beginner'
       return `${modeLabel} session using ${this.chainingMethodLabel.toLowerCase()}.`
+    },
+    currentControlInfo() {
+      const labels = []
+      labels.push(`Font ${this.getCurrentFontLabel()}`)
+      if (this.showTranslation) labels.push('Translation on')
+      if (this.showTransliteration) labels.push('Transliteration on')
+      if (this.showWordByWord) labels.push('Word-by-word on')
+      if (this.wordByWordAudioEnabled) labels.push('Word audio on')
+      if (this.tajweedEnabled) labels.push('Tajweed on')
+      return labels.length ? labels.join(' • ') : 'No reading aids active'
+    },
+    appliedFeaturePills() {
+      const pills = [`${this.guidedPhaseLabel} mode`, `Font: ${this.getCurrentFontLabel()}`]
+      if (this.showTranslation) pills.push('Translation')
+      if (this.showTransliteration) pills.push('Transliteration')
+      if (this.showWordByWord) pills.push('Word by word')
+      if (this.wordByWordAudioEnabled) pills.push('Word audio')
+      if (this.tajweedEnabled) pills.push('Tajweed')
+      return pills
     },
 
     setupReadinessHint() {
@@ -15435,11 +15447,11 @@ export default {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 42px;
-  padding: 0 18px;
+  height: 36px;
+  padding: 0 14px;
   border-radius: 12px;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
@@ -19849,9 +19861,9 @@ html {
 }
 
 .workspace-shell {
-  width: min(100%, 920px);
+  width: min(100%, 1420px);
   gap: 10px;
-  padding: 12px 14px;
+  padding: 14px 18px;
 }
 
 .workspace-shell-head {
@@ -20516,22 +20528,23 @@ html {
   bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
   left: 50%;
   transform: translateX(-50%);
-  width: min(calc(100vw - 32px), 960px);
-  max-width: 960px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(255, 248, 240, 0.97)),
-    radial-gradient(circle at top, rgba(154, 103, 56, 0.12), transparent 55%);
-  border: 1px solid rgba(154, 103, 56, 0.18);
+  width: min(calc(100vw - 24px), 1320px);
+  max-width: 1320px;
+  background: #fffdf9;
+  border: 2px solid rgba(120, 78, 40, 0.44);
   border-radius: 24px;
-  box-shadow: 0 26px 60px rgba(63, 39, 18, 0.18), 0 0 0 1px rgba(154, 103, 56, 0.05);
+  box-shadow:
+    0 34px 84px rgba(29, 17, 7, 0.34),
+    0 0 0 2px rgba(255, 255, 255, 0.95),
+    0 0 0 6px rgba(120, 78, 40, 0.16);
   z-index: 1000;
-  padding: 12px 20px;
+  padding: 14px 22px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   /* Avoid iOS Safari compositing artifacts (black bands) from backdrop-filter on fixed elements. */
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   transition: transform 0.22s ease, opacity 0.22s ease, padding 0.22s ease;
 }
 
@@ -20542,7 +20555,7 @@ html {
 
 .player-main {
   display: grid;
-  grid-template-columns: minmax(150px, 1.1fr) auto minmax(200px, 0.95fr) minmax(180px, 1fr) auto;
+  grid-template-columns: minmax(200px, 1fr) auto minmax(460px, 2fr) auto;
   align-items: center;
   gap: clamp(10px, 1.6vw, 20px);
   min-width: 0;
@@ -20554,15 +20567,15 @@ html {
 
 .player-chapter {
   font-weight: 700;
-  font-size: 0.98rem;
+  font-size: 1.05rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .player-verse {
-  font-size: 0.8rem;
-  opacity: 0.82;
+  font-size: 0.88rem;
+  opacity: 0.94;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -20639,8 +20652,8 @@ html {
 
 
 .player-btn {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 12px;
   border: none;
   background: none;
@@ -20661,8 +20674,8 @@ html {
 .player-play {
   background: var(--accent);
   color: white;
-  width: 52px;
-  height: 52px;
+  width: 56px;
+  height: 56px;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(139, 94, 60, 0.3);
 }
@@ -20676,12 +20689,12 @@ html {
 .player-progress-wrap {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   min-width: 0;
 }
 
 .player-time {
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   font-variant-numeric: tabular-nums;
   opacity: 0.7;
   min-width: 40px;
@@ -20689,11 +20702,12 @@ html {
 
 .player-progress-bg {
   flex: 1;
-  height: 6px;
-  background: var(--bg-elevated);
-  border-radius: 3px;
+  height: 10px;
+  background: rgba(52, 35, 20, 0.26);
+  border-radius: 999px;
   position: relative;
   cursor: pointer;
+  border: 1px solid rgba(120, 78, 40, 0.35);
 }
 
 .player-progress-fill {
@@ -20702,7 +20716,8 @@ html {
   top: 0;
   height: 100%;
   background: var(--accent);
-  border-radius: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #9a6738, #b9834f);
   transition: width 0.1s linear;
 }
 
@@ -21776,7 +21791,8 @@ html {
 [data-theme="dark"] .player-progress-bg,
 [data-theme="dark"] .progress-bar-track,
 [data-theme="dark"] .form-range {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(208, 160, 107, 0.3);
 }
 
 [data-theme="dark"] .banner {
@@ -21792,11 +21808,12 @@ html {
 }
 
 [data-theme="dark"] .player-bar {
-  background:
-    linear-gradient(180deg, rgba(38, 33, 29, 0.98), rgba(24, 20, 18, 0.98)),
-    radial-gradient(circle at top, rgba(208, 160, 107, 0.18), transparent 58%);
-  border-color: rgba(208, 160, 107, 0.24);
-  box-shadow: 0 26px 66px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(208, 160, 107, 0.08);
+  background: #18120f;
+  border-color: rgba(224, 180, 126, 0.62);
+  box-shadow:
+    0 34px 86px rgba(0, 0, 0, 0.62),
+    0 0 0 1px rgba(255, 235, 208, 0.22),
+    0 0 0 6px rgba(224, 180, 126, 0.12);
 }
 
 [data-theme="dark"] .banner-x,
@@ -21810,6 +21827,10 @@ html {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 236, 216, 0.14);
   color: var(--text);
+}
+
+[data-theme="dark"] .player-progress-fill {
+  background: linear-gradient(90deg, #e2b171, #c98a47);
 }
 
 [data-theme="dark"] .modal-footer,
@@ -23808,31 +23829,6 @@ html {
   padding: 0 10px 10px;
 }
 
-.quick-pill-group {
-  width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.42);
-  padding: 5px;
-}
-
-.quick-pill-group > summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  list-style: none;
-  cursor: pointer;
-  padding: 4px 7px;
-  font-size: 0.76rem;
-  font-weight: 700;
-  color: var(--text-muted);
-}
-
-.quick-pill-group > summary::-webkit-details-marker {
-  display: none;
-}
-
 .quick-pill-group-list {
   display: flex;
   gap: 6px;
@@ -23840,12 +23836,54 @@ html {
   align-items: center;
 }
 
-.quick-pill-summary-icon {
-  transition: transform 0.18s ease;
+.toolbar-chip-sm {
+  min-height: 28px;
+  padding: 3px 9px;
+  font-size: 0.72rem;
+  border-radius: 999px;
 }
 
-.quick-pill-group[open] .quick-pill-summary-icon {
-  transform: rotate(180deg);
+.workspace-control-live {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(154, 103, 56, 0.08);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.workspace-control-live-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.workspace-control-live strong {
+  font-size: 0.78rem;
+  color: var(--text);
+}
+
+.workspace-applied-pills {
+  margin-top: 8px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.workspace-applied-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(160, 120, 76, 0.22);
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
 }
 
 .quick-font-dropdown,
@@ -23990,13 +24028,9 @@ html {
     padding: 0;
   }
 
-  .quick-pill-group {
-    width: 100%;
-  }
-
   .quick-pill-group-list .toolbar-chip {
     flex: 1 1 calc(50% - 6px);
-    min-height: 42px;
+    min-height: 34px;
   }
 
   .workspace-quick-controls .toolbar-chip,
@@ -24042,15 +24076,11 @@ html {
   overflow-x: clip;
 }
 
-[data-theme="dark"] .quick-pill-group {
-  background: rgba(255, 255, 255, 0.035);
-  border-color: rgba(216, 185, 150, 0.18);
-}
-
-[data-theme="light"] .quick-pill-group,
-[data-theme="sepia"] .quick-pill-group {
-  background: rgba(255, 255, 255, 0.68);
-  border-color: rgba(160, 120, 76, 0.16);
+[data-theme="dark"] .workspace-control-live,
+[data-theme="dark"] .workspace-applied-pill {
+  background: rgba(255, 247, 236, 0.055);
+  border-color: rgba(255, 236, 216, 0.14);
+  color: var(--text);
 }
 
 [data-theme="dark"] .quick-font-dropdown .font-dropdown-trigger,
