@@ -322,8 +322,7 @@
                     'verse-mastered': isMasteredAyah(verse.key)
                   }" :style="{
                     '--verse-font-percent': getVerseFontSize(verse.key),
-                    'font-family': quranFontFamily,
-                    'font-size': (getVerseFontSize(verse.key) / 100) + 'rem'
+                    'font-family': quranFontFamily
                   }">
                 </div>
 
@@ -2668,6 +2667,7 @@ export default {
       return {
         '--ui-scale': this.uiScale,
         '--en-scale': this.enScale,
+        '--text-scale': this.fontScale,
         '--recall-blur': `${this.blurIntensity}px`,
         '--focus-dim-opacity': `${Math.max(0.25, Math.min(0.85, Number(this.focusDimPercent || 54) / 100))}`
       }
@@ -16820,11 +16820,13 @@ body.has-navbar .tools-top {
 }
 
 .verse-arabic {
-  --verse-font-percent: 100;
-  --verse-font-size: clamp(2rem, calc(var(--verse-font-percent, 120) * 0.02rem), 3.8rem);
+  /* Force Arabic ayah text to be comfortably large by default. */
+  --verse-font-percent: 120;
+  --verse-font-size: clamp(2.2rem, calc(var(--verse-font-percent, 120) * 0.02rem), 4rem);
   font-family: var(--font-ar);
-  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));
-  line-height: 2;
+  /* `--text-scale` is controlled by the text size slider; apply it to Arabic too. */
+  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1) * var(--text-scale, 1));
+  line-height: 2.1;
   text-align: right;
   direction: rtl;
   unicode-bidi: isolate;
@@ -18245,11 +18247,12 @@ html {
 
 /* Verse Arabic styling */
 .verse-arabic {
-  --verse-font-percent: 100;
-  --verse-font-size: clamp(1.5rem, calc(var(--verse-font-percent, 150) * 0.0175rem), 3.25rem);
+  /* Force Arabic ayah text to be comfortably large by default. */
+  --verse-font-percent: 120;
+  --verse-font-size: clamp(2.2rem, calc(var(--verse-font-percent, 120) * 0.02rem), 4rem);
   font-family: var(--font-ar);
-  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1));
-  line-height: 1.8;
+  font-size: calc(var(--verse-font-size) * var(--ui-scale, 1) * var(--text-scale, 1));
+  line-height: 2.1;
   text-align: right;
   direction: rtl;
   unicode-bidi: isolate;

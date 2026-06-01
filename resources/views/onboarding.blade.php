@@ -27,6 +27,8 @@
             --accent-light: rgba(79, 157, 138, 0.14);
             --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.28);
             --shadow-lg: 0 28px 60px rgba(0, 0, 0, 0.34);
+            --radius-xl: 26px;
+            --radius-lg: 20px;
         }
 
         * {
@@ -55,13 +57,20 @@
         }
 
         .guest-onboarding-card {
-            width: min(820px, 100%);
-            padding: clamp(24px, 4.5vw, 48px);
-            border-radius: 24px;
+            width: min(1040px, 100%);
+            padding: clamp(24px, 4.5vw, 54px);
+            border-radius: var(--radius-xl);
             background: linear-gradient(180deg, var(--surface), var(--surface-strong));
             border: 1px solid var(--border);
             box-shadow: var(--shadow-lg);
             animation: onboardingFade 260ms ease-out;
+        }
+
+        .guest-onboarding-grid {
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            gap: clamp(22px, 4vw, 54px);
+            align-items: start;
         }
 
         .guest-onboarding-kicker {
@@ -96,15 +105,19 @@
         }
 
         .guest-onboarding-list {
-            margin: 22px 0 0;
-            padding-left: 20px;
+            margin: 26px 0 0;
+            padding-left: 18px;
             display: grid;
-            gap: 10px;
+            gap: 12px;
             color: #d7e3de;
         }
 
+        .guest-onboarding-list li {
+            line-height: 1.55;
+        }
+
         .guest-onboarding-actions {
-            margin-top: 28px;
+            margin-top: 34px;
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
@@ -112,8 +125,8 @@
 
         .guest-onboarding-btn {
             min-height: 46px;
-            padding: 0 16px;
-            border-radius: 14px;
+            padding: 0 18px;
+            border-radius: 16px;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
@@ -138,9 +151,42 @@
             transform: translateY(-1px);
         }
 
+        .guest-onboarding-example {
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(109, 160, 145, 0.22);
+            background: rgba(255, 255, 255, 0.03);
+            box-shadow: var(--shadow-md);
+            overflow: clip;
+        }
+
+        .guest-onboarding-example img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .guest-onboarding-example-caption {
+            padding: 14px 16px 16px;
+            border-top: 1px solid rgba(109, 160, 145, 0.14);
+            color: rgba(237, 243, 240, 0.86);
+            font-size: 0.93rem;
+            line-height: 1.5;
+        }
+
+        .guest-onboarding-example-caption strong {
+            color: var(--text);
+            font-weight: 650;
+        }
+
         @keyframes onboardingFade {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 900px) {
+            .guest-onboarding-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 640px) {
@@ -157,20 +203,31 @@
 <body>
     <main class="guest-onboarding-shell">
         <article class="guest-onboarding-card">
-            <span class="guest-onboarding-kicker">Memorisation Companion</span>
-            <h1>Mutqin helps you memorise Quran through calm, session-based repetition.</h1>
-            <p>Choose a small ayah range, repeat with structure, then return for recall, self-check, and review without overload.</p>
+            <div class="guest-onboarding-grid">
+                <section>
+                    <span class="guest-onboarding-kicker">Memorisation Companion</span>
+                    <h1>Preserve your hifz with calm, session-based repetition.</h1>
+                    <p>Pick a small ayah range, repeat with structure, then switch into recall, self-check, and review. Mutqin keeps the flow simple so you can show up consistently.</p>
 
-            <ul class="guest-onboarding-list" aria-label="Key features">
-                <li>Build around short, focused sessions</li>
-                <li>Use repetition that matches a real memorisation sitting</li>
-                <li>Switch from listening to recall and self-check</li>
-                <li>Return later with saved progress and review context</li>
-            </ul>
+                    <ul class="guest-onboarding-list" aria-label="Key features">
+                        <li>Short sessions that feel like a real memorisation sitting</li>
+                        <li>Clear steps: listen, repeat, then recall and self-check</li>
+                        <li>Saved progress so you can pause and resume without friction</li>
+                        <li>Review context that helps you return later with confidence</li>
+                    </ul>
 
-            <div class="guest-onboarding-actions">
-                <a href="{{ route('register') }}" class="guest-onboarding-btn guest-onboarding-btn-primary">Get Started</a>
-                <a href="{{ route('login') }}" class="guest-onboarding-btn guest-onboarding-btn-soft">Login</a>
+                    <div class="guest-onboarding-actions">
+                        <a href="{{ route('register') }}" class="guest-onboarding-btn guest-onboarding-btn-primary">Get Started</a>
+                        <a href="{{ route('login') }}" class="guest-onboarding-btn guest-onboarding-btn-soft">Login</a>
+                    </div>
+                </section>
+
+                <aside class="guest-onboarding-example" aria-label="Example session">
+                    <img src="/images/onboarding-example.png" alt="Example Mutqin memorisation session with listen, repeat, and recall steps">
+                    <div class="guest-onboarding-example-caption">
+                        <strong>Example session:</strong> choose a range, set repeats, then transition into recall. The goal is steady progress, not overload.
+                    </div>
+                </aside>
             </div>
         </article>
     </main>

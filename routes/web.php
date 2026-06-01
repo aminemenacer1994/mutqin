@@ -51,8 +51,20 @@ Route::post('/logout', function () {
 
 // Public routes
 Route::get('/', function () {
-    return redirect()->route('memorisation');
+    if (Auth::check()) {
+        return redirect()->route('memorisation');
+    }
+
+    return view('onboarding');
 })->name('onboarding');
+
+Route::get('/onboarding', function () {
+    if (Auth::check()) {
+        return redirect()->route('memorisation');
+    }
+
+    return view('onboarding');
+})->name('onboarding.page');
 
 Route::get('/memorisation', function () {
     return view('memorisation');
