@@ -1,6 +1,1659 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "./node_modules/@intlify/message-compiler/dist/message-compiler.esm-browser.js":
+/*!*************************************************************************************!*\
+  !*** ./node_modules/@intlify/message-compiler/dist/message-compiler.esm-browser.js ***!
+  \*************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CompileErrorCodes: () => (/* binding */ CompileErrorCodes),
+/* harmony export */   CompileWarnCodes: () => (/* binding */ CompileWarnCodes),
+/* harmony export */   ERROR_DOMAIN: () => (/* binding */ ERROR_DOMAIN$2),
+/* harmony export */   LOCATION_STUB: () => (/* binding */ LOCATION_STUB),
+/* harmony export */   baseCompile: () => (/* binding */ baseCompile),
+/* harmony export */   createCompileError: () => (/* binding */ createCompileError),
+/* harmony export */   createCompileWarn: () => (/* binding */ createCompileWarn),
+/* harmony export */   createLocation: () => (/* binding */ createLocation),
+/* harmony export */   createParser: () => (/* binding */ createParser),
+/* harmony export */   createPosition: () => (/* binding */ createPosition),
+/* harmony export */   defaultOnError: () => (/* binding */ defaultOnError),
+/* harmony export */   detectHtmlTag: () => (/* binding */ detectHtmlTag),
+/* harmony export */   errorMessages: () => (/* binding */ errorMessages),
+/* harmony export */   warnMessages: () => (/* binding */ warnMessages)
+/* harmony export */ });
+/*!
+  * message-compiler v9.14.5
+  * (c) 2025 kazuya kawaguchi
+  * Released under the MIT License.
+  */
+const LOCATION_STUB = {
+    start: { line: 1, column: 1, offset: 0 },
+    end: { line: 1, column: 1, offset: 0 }
+};
+function createPosition(line, column, offset) {
+    return { line, column, offset };
+}
+function createLocation(start, end, source) {
+    const loc = { start, end };
+    if (source != null) {
+        loc.source = source;
+    }
+    return loc;
+}
+
+/**
+ * Original Utilities
+ * written by kazuya kawaguchi
+ */
+const RE_ARGS = /\{([0-9a-zA-Z]+)\}/g;
+/* eslint-disable */
+function format(message, ...args) {
+    if (args.length === 1 && isObject(args[0])) {
+        args = args[0];
+    }
+    if (!args || !args.hasOwnProperty) {
+        args = {};
+    }
+    return message.replace(RE_ARGS, (match, identifier) => {
+        return args.hasOwnProperty(identifier) ? args[identifier] : '';
+    });
+}
+const assign = Object.assign;
+const isString = (val) => typeof val === 'string';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const isObject = (val) => val !== null && typeof val === 'object';
+function join(items, separator = '') {
+    return items.reduce((str, item, index) => (index === 0 ? str + item : str + separator + item), '');
+}
+
+const CompileWarnCodes = {
+    USE_MODULO_SYNTAX: 1,
+    __EXTEND_POINT__: 2
+};
+/** @internal */
+const warnMessages = {
+    [CompileWarnCodes.USE_MODULO_SYNTAX]: `Use modulo before '{{0}}'.`
+};
+function createCompileWarn(code, loc, ...args) {
+    const msg = format(warnMessages[code] || '', ...(args || [])) ;
+    const message = { message: String(msg), code };
+    if (loc) {
+        message.location = loc;
+    }
+    return message;
+}
+
+const CompileErrorCodes = {
+    // tokenizer error codes
+    EXPECTED_TOKEN: 1,
+    INVALID_TOKEN_IN_PLACEHOLDER: 2,
+    UNTERMINATED_SINGLE_QUOTE_IN_PLACEHOLDER: 3,
+    UNKNOWN_ESCAPE_SEQUENCE: 4,
+    INVALID_UNICODE_ESCAPE_SEQUENCE: 5,
+    UNBALANCED_CLOSING_BRACE: 6,
+    UNTERMINATED_CLOSING_BRACE: 7,
+    EMPTY_PLACEHOLDER: 8,
+    NOT_ALLOW_NEST_PLACEHOLDER: 9,
+    INVALID_LINKED_FORMAT: 10,
+    // parser error codes
+    MUST_HAVE_MESSAGES_IN_PLURAL: 11,
+    UNEXPECTED_EMPTY_LINKED_MODIFIER: 12,
+    UNEXPECTED_EMPTY_LINKED_KEY: 13,
+    UNEXPECTED_LEXICAL_ANALYSIS: 14,
+    // generator error codes
+    UNHANDLED_CODEGEN_NODE_TYPE: 15,
+    // minifier error codes
+    UNHANDLED_MINIFIER_NODE_TYPE: 16,
+    // Special value for higher-order compilers to pick up the last code
+    // to avoid collision of error codes. This should always be kept as the last
+    // item.
+    __EXTEND_POINT__: 17
+};
+/** @internal */
+const errorMessages = {
+    // tokenizer error messages
+    [CompileErrorCodes.EXPECTED_TOKEN]: `Expected token: '{0}'`,
+    [CompileErrorCodes.INVALID_TOKEN_IN_PLACEHOLDER]: `Invalid token in placeholder: '{0}'`,
+    [CompileErrorCodes.UNTERMINATED_SINGLE_QUOTE_IN_PLACEHOLDER]: `Unterminated single quote in placeholder`,
+    [CompileErrorCodes.UNKNOWN_ESCAPE_SEQUENCE]: `Unknown escape sequence: \\{0}`,
+    [CompileErrorCodes.INVALID_UNICODE_ESCAPE_SEQUENCE]: `Invalid unicode escape sequence: {0}`,
+    [CompileErrorCodes.UNBALANCED_CLOSING_BRACE]: `Unbalanced closing brace`,
+    [CompileErrorCodes.UNTERMINATED_CLOSING_BRACE]: `Unterminated closing brace`,
+    [CompileErrorCodes.EMPTY_PLACEHOLDER]: `Empty placeholder`,
+    [CompileErrorCodes.NOT_ALLOW_NEST_PLACEHOLDER]: `Not allowed nest placeholder`,
+    [CompileErrorCodes.INVALID_LINKED_FORMAT]: `Invalid linked format`,
+    // parser error messages
+    [CompileErrorCodes.MUST_HAVE_MESSAGES_IN_PLURAL]: `Plural must have messages`,
+    [CompileErrorCodes.UNEXPECTED_EMPTY_LINKED_MODIFIER]: `Unexpected empty linked modifier`,
+    [CompileErrorCodes.UNEXPECTED_EMPTY_LINKED_KEY]: `Unexpected empty linked key`,
+    [CompileErrorCodes.UNEXPECTED_LEXICAL_ANALYSIS]: `Unexpected lexical analysis in token: '{0}'`,
+    // generator error messages
+    [CompileErrorCodes.UNHANDLED_CODEGEN_NODE_TYPE]: `unhandled codegen node type: '{0}'`,
+    // minimizer error messages
+    [CompileErrorCodes.UNHANDLED_MINIFIER_NODE_TYPE]: `unhandled mimifier node type: '{0}'`
+};
+function createCompileError(code, loc, options = {}) {
+    const { domain, messages, args } = options;
+    const msg = format((messages || errorMessages)[code] || '', ...(args || []))
+        ;
+    const error = new SyntaxError(String(msg));
+    error.code = code;
+    if (loc) {
+        error.location = loc;
+    }
+    error.domain = domain;
+    return error;
+}
+/** @internal */
+function defaultOnError(error) {
+    throw error;
+}
+
+// eslint-disable-next-line no-useless-escape
+const RE_HTML_TAG = /<\/?[\w\s="/.':;#-\/]+>/;
+const detectHtmlTag = (source) => RE_HTML_TAG.test(source);
+
+const CHAR_SP = ' ';
+const CHAR_CR = '\r';
+const CHAR_LF = '\n';
+const CHAR_LS = String.fromCharCode(0x2028);
+const CHAR_PS = String.fromCharCode(0x2029);
+function createScanner(str) {
+    const _buf = str;
+    let _index = 0;
+    let _line = 1;
+    let _column = 1;
+    let _peekOffset = 0;
+    const isCRLF = (index) => _buf[index] === CHAR_CR && _buf[index + 1] === CHAR_LF;
+    const isLF = (index) => _buf[index] === CHAR_LF;
+    const isPS = (index) => _buf[index] === CHAR_PS;
+    const isLS = (index) => _buf[index] === CHAR_LS;
+    const isLineEnd = (index) => isCRLF(index) || isLF(index) || isPS(index) || isLS(index);
+    const index = () => _index;
+    const line = () => _line;
+    const column = () => _column;
+    const peekOffset = () => _peekOffset;
+    const charAt = (offset) => isCRLF(offset) || isPS(offset) || isLS(offset) ? CHAR_LF : _buf[offset];
+    const currentChar = () => charAt(_index);
+    const currentPeek = () => charAt(_index + _peekOffset);
+    function next() {
+        _peekOffset = 0;
+        if (isLineEnd(_index)) {
+            _line++;
+            _column = 0;
+        }
+        if (isCRLF(_index)) {
+            _index++;
+        }
+        _index++;
+        _column++;
+        return _buf[_index];
+    }
+    function peek() {
+        if (isCRLF(_index + _peekOffset)) {
+            _peekOffset++;
+        }
+        _peekOffset++;
+        return _buf[_index + _peekOffset];
+    }
+    function reset() {
+        _index = 0;
+        _line = 1;
+        _column = 1;
+        _peekOffset = 0;
+    }
+    function resetPeek(offset = 0) {
+        _peekOffset = offset;
+    }
+    function skipToPeek() {
+        const target = _index + _peekOffset;
+        // eslint-disable-next-line no-unmodified-loop-condition
+        while (target !== _index) {
+            next();
+        }
+        _peekOffset = 0;
+    }
+    return {
+        index,
+        line,
+        column,
+        peekOffset,
+        charAt,
+        currentChar,
+        currentPeek,
+        next,
+        peek,
+        reset,
+        resetPeek,
+        skipToPeek
+    };
+}
+
+const EOF = undefined;
+const DOT = '.';
+const LITERAL_DELIMITER = "'";
+const ERROR_DOMAIN$3 = 'tokenizer';
+function createTokenizer(source, options = {}) {
+    const location = options.location !== false;
+    const _scnr = createScanner(source);
+    const currentOffset = () => _scnr.index();
+    const currentPosition = () => createPosition(_scnr.line(), _scnr.column(), _scnr.index());
+    const _initLoc = currentPosition();
+    const _initOffset = currentOffset();
+    const _context = {
+        currentType: 14 /* TokenTypes.EOF */,
+        offset: _initOffset,
+        startLoc: _initLoc,
+        endLoc: _initLoc,
+        lastType: 14 /* TokenTypes.EOF */,
+        lastOffset: _initOffset,
+        lastStartLoc: _initLoc,
+        lastEndLoc: _initLoc,
+        braceNest: 0,
+        inLinked: false,
+        text: ''
+    };
+    const context = () => _context;
+    const { onError } = options;
+    function emitError(code, pos, offset, ...args) {
+        const ctx = context();
+        pos.column += offset;
+        pos.offset += offset;
+        if (onError) {
+            const loc = location ? createLocation(ctx.startLoc, pos) : null;
+            const err = createCompileError(code, loc, {
+                domain: ERROR_DOMAIN$3,
+                args
+            });
+            onError(err);
+        }
+    }
+    function getToken(context, type, value) {
+        context.endLoc = currentPosition();
+        context.currentType = type;
+        const token = { type };
+        if (location) {
+            token.loc = createLocation(context.startLoc, context.endLoc);
+        }
+        if (value != null) {
+            token.value = value;
+        }
+        return token;
+    }
+    const getEndToken = (context) => getToken(context, 14 /* TokenTypes.EOF */);
+    function eat(scnr, ch) {
+        if (scnr.currentChar() === ch) {
+            scnr.next();
+            return ch;
+        }
+        else {
+            emitError(CompileErrorCodes.EXPECTED_TOKEN, currentPosition(), 0, ch);
+            return '';
+        }
+    }
+    function peekSpaces(scnr) {
+        let buf = '';
+        while (scnr.currentPeek() === CHAR_SP || scnr.currentPeek() === CHAR_LF) {
+            buf += scnr.currentPeek();
+            scnr.peek();
+        }
+        return buf;
+    }
+    function skipSpaces(scnr) {
+        const buf = peekSpaces(scnr);
+        scnr.skipToPeek();
+        return buf;
+    }
+    function isIdentifierStart(ch) {
+        if (ch === EOF) {
+            return false;
+        }
+        const cc = ch.charCodeAt(0);
+        return ((cc >= 97 && cc <= 122) || // a-z
+            (cc >= 65 && cc <= 90) || // A-Z
+            cc === 95 // _
+        );
+    }
+    function isNumberStart(ch) {
+        if (ch === EOF) {
+            return false;
+        }
+        const cc = ch.charCodeAt(0);
+        return cc >= 48 && cc <= 57; // 0-9
+    }
+    function isNamedIdentifierStart(scnr, context) {
+        const { currentType } = context;
+        if (currentType !== 2 /* TokenTypes.BraceLeft */) {
+            return false;
+        }
+        peekSpaces(scnr);
+        const ret = isIdentifierStart(scnr.currentPeek());
+        scnr.resetPeek();
+        return ret;
+    }
+    function isListIdentifierStart(scnr, context) {
+        const { currentType } = context;
+        if (currentType !== 2 /* TokenTypes.BraceLeft */) {
+            return false;
+        }
+        peekSpaces(scnr);
+        const ch = scnr.currentPeek() === '-' ? scnr.peek() : scnr.currentPeek();
+        const ret = isNumberStart(ch);
+        scnr.resetPeek();
+        return ret;
+    }
+    function isLiteralStart(scnr, context) {
+        const { currentType } = context;
+        if (currentType !== 2 /* TokenTypes.BraceLeft */) {
+            return false;
+        }
+        peekSpaces(scnr);
+        const ret = scnr.currentPeek() === LITERAL_DELIMITER;
+        scnr.resetPeek();
+        return ret;
+    }
+    function isLinkedDotStart(scnr, context) {
+        const { currentType } = context;
+        if (currentType !== 8 /* TokenTypes.LinkedAlias */) {
+            return false;
+        }
+        peekSpaces(scnr);
+        const ret = scnr.currentPeek() === "." /* TokenChars.LinkedDot */;
+        scnr.resetPeek();
+        return ret;
+    }
+    function isLinkedModifierStart(scnr, context) {
+        const { currentType } = context;
+        if (currentType !== 9 /* TokenTypes.LinkedDot */) {
+            return false;
+        }
+        peekSpaces(scnr);
+        const ret = isIdentifierStart(scnr.currentPeek());
+        scnr.resetPeek();
+        return ret;
+    }
+    function isLinkedDelimiterStart(scnr, context) {
+        const { currentType } = context;
+        if (!(currentType === 8 /* TokenTypes.LinkedAlias */ ||
+            currentType === 12 /* TokenTypes.LinkedModifier */)) {
+            return false;
+        }
+        peekSpaces(scnr);
+        const ret = scnr.currentPeek() === ":" /* TokenChars.LinkedDelimiter */;
+        scnr.resetPeek();
+        return ret;
+    }
+    function isLinkedReferStart(scnr, context) {
+        const { currentType } = context;
+        if (currentType !== 10 /* TokenTypes.LinkedDelimiter */) {
+            return false;
+        }
+        const fn = () => {
+            const ch = scnr.currentPeek();
+            if (ch === "{" /* TokenChars.BraceLeft */) {
+                return isIdentifierStart(scnr.peek());
+            }
+            else if (ch === "@" /* TokenChars.LinkedAlias */ ||
+                ch === "%" /* TokenChars.Modulo */ ||
+                ch === "|" /* TokenChars.Pipe */ ||
+                ch === ":" /* TokenChars.LinkedDelimiter */ ||
+                ch === "." /* TokenChars.LinkedDot */ ||
+                ch === CHAR_SP ||
+                !ch) {
+                return false;
+            }
+            else if (ch === CHAR_LF) {
+                scnr.peek();
+                return fn();
+            }
+            else {
+                // other characters
+                return isTextStart(scnr, false);
+            }
+        };
+        const ret = fn();
+        scnr.resetPeek();
+        return ret;
+    }
+    function isPluralStart(scnr) {
+        peekSpaces(scnr);
+        const ret = scnr.currentPeek() === "|" /* TokenChars.Pipe */;
+        scnr.resetPeek();
+        return ret;
+    }
+    function detectModuloStart(scnr) {
+        const spaces = peekSpaces(scnr);
+        const ret = scnr.currentPeek() === "%" /* TokenChars.Modulo */ &&
+            scnr.peek() === "{" /* TokenChars.BraceLeft */;
+        scnr.resetPeek();
+        return {
+            isModulo: ret,
+            hasSpace: spaces.length > 0
+        };
+    }
+    function isTextStart(scnr, reset = true) {
+        const fn = (hasSpace = false, prev = '', detectModulo = false) => {
+            const ch = scnr.currentPeek();
+            if (ch === "{" /* TokenChars.BraceLeft */) {
+                return prev === "%" /* TokenChars.Modulo */ ? false : hasSpace;
+            }
+            else if (ch === "@" /* TokenChars.LinkedAlias */ || !ch) {
+                return prev === "%" /* TokenChars.Modulo */ ? true : hasSpace;
+            }
+            else if (ch === "%" /* TokenChars.Modulo */) {
+                scnr.peek();
+                return fn(hasSpace, "%" /* TokenChars.Modulo */, true);
+            }
+            else if (ch === "|" /* TokenChars.Pipe */) {
+                return prev === "%" /* TokenChars.Modulo */ || detectModulo
+                    ? true
+                    : !(prev === CHAR_SP || prev === CHAR_LF);
+            }
+            else if (ch === CHAR_SP) {
+                scnr.peek();
+                return fn(true, CHAR_SP, detectModulo);
+            }
+            else if (ch === CHAR_LF) {
+                scnr.peek();
+                return fn(true, CHAR_LF, detectModulo);
+            }
+            else {
+                return true;
+            }
+        };
+        const ret = fn();
+        reset && scnr.resetPeek();
+        return ret;
+    }
+    function takeChar(scnr, fn) {
+        const ch = scnr.currentChar();
+        if (ch === EOF) {
+            return EOF;
+        }
+        if (fn(ch)) {
+            scnr.next();
+            return ch;
+        }
+        return null;
+    }
+    function isIdentifier(ch) {
+        const cc = ch.charCodeAt(0);
+        return ((cc >= 97 && cc <= 122) || // a-z
+            (cc >= 65 && cc <= 90) || // A-Z
+            (cc >= 48 && cc <= 57) || // 0-9
+            cc === 95 || // _
+            cc === 36 // $
+        );
+    }
+    function takeIdentifierChar(scnr) {
+        return takeChar(scnr, isIdentifier);
+    }
+    function isNamedIdentifier(ch) {
+        const cc = ch.charCodeAt(0);
+        return ((cc >= 97 && cc <= 122) || // a-z
+            (cc >= 65 && cc <= 90) || // A-Z
+            (cc >= 48 && cc <= 57) || // 0-9
+            cc === 95 || // _
+            cc === 36 || // $
+            cc === 45 // -
+        );
+    }
+    function takeNamedIdentifierChar(scnr) {
+        return takeChar(scnr, isNamedIdentifier);
+    }
+    function isDigit(ch) {
+        const cc = ch.charCodeAt(0);
+        return cc >= 48 && cc <= 57; // 0-9
+    }
+    function takeDigit(scnr) {
+        return takeChar(scnr, isDigit);
+    }
+    function isHexDigit(ch) {
+        const cc = ch.charCodeAt(0);
+        return ((cc >= 48 && cc <= 57) || // 0-9
+            (cc >= 65 && cc <= 70) || // A-F
+            (cc >= 97 && cc <= 102)); // a-f
+    }
+    function takeHexDigit(scnr) {
+        return takeChar(scnr, isHexDigit);
+    }
+    function getDigits(scnr) {
+        let ch = '';
+        let num = '';
+        while ((ch = takeDigit(scnr))) {
+            num += ch;
+        }
+        return num;
+    }
+    function readModulo(scnr) {
+        skipSpaces(scnr);
+        const ch = scnr.currentChar();
+        if (ch !== "%" /* TokenChars.Modulo */) {
+            emitError(CompileErrorCodes.EXPECTED_TOKEN, currentPosition(), 0, ch);
+        }
+        scnr.next();
+        return "%" /* TokenChars.Modulo */;
+    }
+    function readText(scnr) {
+        let buf = '';
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+            const ch = scnr.currentChar();
+            if (ch === "{" /* TokenChars.BraceLeft */ ||
+                ch === "}" /* TokenChars.BraceRight */ ||
+                ch === "@" /* TokenChars.LinkedAlias */ ||
+                ch === "|" /* TokenChars.Pipe */ ||
+                !ch) {
+                break;
+            }
+            else if (ch === "%" /* TokenChars.Modulo */) {
+                if (isTextStart(scnr)) {
+                    buf += ch;
+                    scnr.next();
+                }
+                else {
+                    break;
+                }
+            }
+            else if (ch === CHAR_SP || ch === CHAR_LF) {
+                if (isTextStart(scnr)) {
+                    buf += ch;
+                    scnr.next();
+                }
+                else if (isPluralStart(scnr)) {
+                    break;
+                }
+                else {
+                    buf += ch;
+                    scnr.next();
+                }
+            }
+            else {
+                buf += ch;
+                scnr.next();
+            }
+        }
+        return buf;
+    }
+    function readNamedIdentifier(scnr) {
+        skipSpaces(scnr);
+        let ch = '';
+        let name = '';
+        while ((ch = takeNamedIdentifierChar(scnr))) {
+            name += ch;
+        }
+        if (scnr.currentChar() === EOF) {
+            emitError(CompileErrorCodes.UNTERMINATED_CLOSING_BRACE, currentPosition(), 0);
+        }
+        return name;
+    }
+    function readListIdentifier(scnr) {
+        skipSpaces(scnr);
+        let value = '';
+        if (scnr.currentChar() === '-') {
+            scnr.next();
+            value += `-${getDigits(scnr)}`;
+        }
+        else {
+            value += getDigits(scnr);
+        }
+        if (scnr.currentChar() === EOF) {
+            emitError(CompileErrorCodes.UNTERMINATED_CLOSING_BRACE, currentPosition(), 0);
+        }
+        return value;
+    }
+    function isLiteral(ch) {
+        return ch !== LITERAL_DELIMITER && ch !== CHAR_LF;
+    }
+    function readLiteral(scnr) {
+        skipSpaces(scnr);
+        // eslint-disable-next-line no-useless-escape
+        eat(scnr, `\'`);
+        let ch = '';
+        let literal = '';
+        while ((ch = takeChar(scnr, isLiteral))) {
+            if (ch === '\\') {
+                literal += readEscapeSequence(scnr);
+            }
+            else {
+                literal += ch;
+            }
+        }
+        const current = scnr.currentChar();
+        if (current === CHAR_LF || current === EOF) {
+            emitError(CompileErrorCodes.UNTERMINATED_SINGLE_QUOTE_IN_PLACEHOLDER, currentPosition(), 0);
+            // TODO: Is it correct really?
+            if (current === CHAR_LF) {
+                scnr.next();
+                // eslint-disable-next-line no-useless-escape
+                eat(scnr, `\'`);
+            }
+            return literal;
+        }
+        // eslint-disable-next-line no-useless-escape
+        eat(scnr, `\'`);
+        return literal;
+    }
+    function readEscapeSequence(scnr) {
+        const ch = scnr.currentChar();
+        switch (ch) {
+            case '\\':
+            case `\'`: // eslint-disable-line no-useless-escape
+                scnr.next();
+                return `\\${ch}`;
+            case 'u':
+                return readUnicodeEscapeSequence(scnr, ch, 4);
+            case 'U':
+                return readUnicodeEscapeSequence(scnr, ch, 6);
+            default:
+                emitError(CompileErrorCodes.UNKNOWN_ESCAPE_SEQUENCE, currentPosition(), 0, ch);
+                return '';
+        }
+    }
+    function readUnicodeEscapeSequence(scnr, unicode, digits) {
+        eat(scnr, unicode);
+        let sequence = '';
+        for (let i = 0; i < digits; i++) {
+            const ch = takeHexDigit(scnr);
+            if (!ch) {
+                emitError(CompileErrorCodes.INVALID_UNICODE_ESCAPE_SEQUENCE, currentPosition(), 0, `\\${unicode}${sequence}${scnr.currentChar()}`);
+                break;
+            }
+            sequence += ch;
+        }
+        return `\\${unicode}${sequence}`;
+    }
+    function isInvalidIdentifier(ch) {
+        return (ch !== "{" /* TokenChars.BraceLeft */ &&
+            ch !== "}" /* TokenChars.BraceRight */ &&
+            ch !== CHAR_SP &&
+            ch !== CHAR_LF);
+    }
+    function readInvalidIdentifier(scnr) {
+        skipSpaces(scnr);
+        let ch = '';
+        let identifiers = '';
+        while ((ch = takeChar(scnr, isInvalidIdentifier))) {
+            identifiers += ch;
+        }
+        return identifiers;
+    }
+    function readLinkedModifier(scnr) {
+        let ch = '';
+        let name = '';
+        while ((ch = takeIdentifierChar(scnr))) {
+            name += ch;
+        }
+        return name;
+    }
+    function readLinkedRefer(scnr) {
+        const fn = (buf) => {
+            const ch = scnr.currentChar();
+            if (ch === "{" /* TokenChars.BraceLeft */ ||
+                ch === "%" /* TokenChars.Modulo */ ||
+                ch === "@" /* TokenChars.LinkedAlias */ ||
+                ch === "|" /* TokenChars.Pipe */ ||
+                ch === "(" /* TokenChars.ParenLeft */ ||
+                ch === ")" /* TokenChars.ParenRight */ ||
+                !ch) {
+                return buf;
+            }
+            else if (ch === CHAR_SP) {
+                return buf;
+            }
+            else if (ch === CHAR_LF || ch === DOT) {
+                buf += ch;
+                scnr.next();
+                return fn(buf);
+            }
+            else {
+                buf += ch;
+                scnr.next();
+                return fn(buf);
+            }
+        };
+        return fn('');
+    }
+    function readPlural(scnr) {
+        skipSpaces(scnr);
+        const plural = eat(scnr, "|" /* TokenChars.Pipe */);
+        skipSpaces(scnr);
+        return plural;
+    }
+    // TODO: We need refactoring of token parsing ...
+    function readTokenInPlaceholder(scnr, context) {
+        let token = null;
+        const ch = scnr.currentChar();
+        switch (ch) {
+            case "{" /* TokenChars.BraceLeft */:
+                if (context.braceNest >= 1) {
+                    emitError(CompileErrorCodes.NOT_ALLOW_NEST_PLACEHOLDER, currentPosition(), 0);
+                }
+                scnr.next();
+                token = getToken(context, 2 /* TokenTypes.BraceLeft */, "{" /* TokenChars.BraceLeft */);
+                skipSpaces(scnr);
+                context.braceNest++;
+                return token;
+            case "}" /* TokenChars.BraceRight */:
+                if (context.braceNest > 0 &&
+                    context.currentType === 2 /* TokenTypes.BraceLeft */) {
+                    emitError(CompileErrorCodes.EMPTY_PLACEHOLDER, currentPosition(), 0);
+                }
+                scnr.next();
+                token = getToken(context, 3 /* TokenTypes.BraceRight */, "}" /* TokenChars.BraceRight */);
+                context.braceNest--;
+                context.braceNest > 0 && skipSpaces(scnr);
+                if (context.inLinked && context.braceNest === 0) {
+                    context.inLinked = false;
+                }
+                return token;
+            case "@" /* TokenChars.LinkedAlias */:
+                if (context.braceNest > 0) {
+                    emitError(CompileErrorCodes.UNTERMINATED_CLOSING_BRACE, currentPosition(), 0);
+                }
+                token = readTokenInLinked(scnr, context) || getEndToken(context);
+                context.braceNest = 0;
+                return token;
+            default: {
+                let validNamedIdentifier = true;
+                let validListIdentifier = true;
+                let validLiteral = true;
+                if (isPluralStart(scnr)) {
+                    if (context.braceNest > 0) {
+                        emitError(CompileErrorCodes.UNTERMINATED_CLOSING_BRACE, currentPosition(), 0);
+                    }
+                    token = getToken(context, 1 /* TokenTypes.Pipe */, readPlural(scnr));
+                    // reset
+                    context.braceNest = 0;
+                    context.inLinked = false;
+                    return token;
+                }
+                if (context.braceNest > 0 &&
+                    (context.currentType === 5 /* TokenTypes.Named */ ||
+                        context.currentType === 6 /* TokenTypes.List */ ||
+                        context.currentType === 7 /* TokenTypes.Literal */)) {
+                    emitError(CompileErrorCodes.UNTERMINATED_CLOSING_BRACE, currentPosition(), 0);
+                    context.braceNest = 0;
+                    return readToken(scnr, context);
+                }
+                if ((validNamedIdentifier = isNamedIdentifierStart(scnr, context))) {
+                    token = getToken(context, 5 /* TokenTypes.Named */, readNamedIdentifier(scnr));
+                    skipSpaces(scnr);
+                    return token;
+                }
+                if ((validListIdentifier = isListIdentifierStart(scnr, context))) {
+                    token = getToken(context, 6 /* TokenTypes.List */, readListIdentifier(scnr));
+                    skipSpaces(scnr);
+                    return token;
+                }
+                if ((validLiteral = isLiteralStart(scnr, context))) {
+                    token = getToken(context, 7 /* TokenTypes.Literal */, readLiteral(scnr));
+                    skipSpaces(scnr);
+                    return token;
+                }
+                if (!validNamedIdentifier && !validListIdentifier && !validLiteral) {
+                    // TODO: we should be re-designed invalid cases, when we will extend message syntax near the future ...
+                    token = getToken(context, 13 /* TokenTypes.InvalidPlace */, readInvalidIdentifier(scnr));
+                    emitError(CompileErrorCodes.INVALID_TOKEN_IN_PLACEHOLDER, currentPosition(), 0, token.value);
+                    skipSpaces(scnr);
+                    return token;
+                }
+                break;
+            }
+        }
+        return token;
+    }
+    // TODO: We need refactoring of token parsing ...
+    function readTokenInLinked(scnr, context) {
+        const { currentType } = context;
+        let token = null;
+        const ch = scnr.currentChar();
+        if ((currentType === 8 /* TokenTypes.LinkedAlias */ ||
+            currentType === 9 /* TokenTypes.LinkedDot */ ||
+            currentType === 12 /* TokenTypes.LinkedModifier */ ||
+            currentType === 10 /* TokenTypes.LinkedDelimiter */) &&
+            (ch === CHAR_LF || ch === CHAR_SP)) {
+            emitError(CompileErrorCodes.INVALID_LINKED_FORMAT, currentPosition(), 0);
+        }
+        switch (ch) {
+            case "@" /* TokenChars.LinkedAlias */:
+                scnr.next();
+                token = getToken(context, 8 /* TokenTypes.LinkedAlias */, "@" /* TokenChars.LinkedAlias */);
+                context.inLinked = true;
+                return token;
+            case "." /* TokenChars.LinkedDot */:
+                skipSpaces(scnr);
+                scnr.next();
+                return getToken(context, 9 /* TokenTypes.LinkedDot */, "." /* TokenChars.LinkedDot */);
+            case ":" /* TokenChars.LinkedDelimiter */:
+                skipSpaces(scnr);
+                scnr.next();
+                return getToken(context, 10 /* TokenTypes.LinkedDelimiter */, ":" /* TokenChars.LinkedDelimiter */);
+            default:
+                if (isPluralStart(scnr)) {
+                    token = getToken(context, 1 /* TokenTypes.Pipe */, readPlural(scnr));
+                    // reset
+                    context.braceNest = 0;
+                    context.inLinked = false;
+                    return token;
+                }
+                if (isLinkedDotStart(scnr, context) ||
+                    isLinkedDelimiterStart(scnr, context)) {
+                    skipSpaces(scnr);
+                    return readTokenInLinked(scnr, context);
+                }
+                if (isLinkedModifierStart(scnr, context)) {
+                    skipSpaces(scnr);
+                    return getToken(context, 12 /* TokenTypes.LinkedModifier */, readLinkedModifier(scnr));
+                }
+                if (isLinkedReferStart(scnr, context)) {
+                    skipSpaces(scnr);
+                    if (ch === "{" /* TokenChars.BraceLeft */) {
+                        // scan the placeholder
+                        return readTokenInPlaceholder(scnr, context) || token;
+                    }
+                    else {
+                        return getToken(context, 11 /* TokenTypes.LinkedKey */, readLinkedRefer(scnr));
+                    }
+                }
+                if (currentType === 8 /* TokenTypes.LinkedAlias */) {
+                    emitError(CompileErrorCodes.INVALID_LINKED_FORMAT, currentPosition(), 0);
+                }
+                context.braceNest = 0;
+                context.inLinked = false;
+                return readToken(scnr, context);
+        }
+    }
+    // TODO: We need refactoring of token parsing ...
+    function readToken(scnr, context) {
+        let token = { type: 14 /* TokenTypes.EOF */ };
+        if (context.braceNest > 0) {
+            return readTokenInPlaceholder(scnr, context) || getEndToken(context);
+        }
+        if (context.inLinked) {
+            return readTokenInLinked(scnr, context) || getEndToken(context);
+        }
+        const ch = scnr.currentChar();
+        switch (ch) {
+            case "{" /* TokenChars.BraceLeft */:
+                return readTokenInPlaceholder(scnr, context) || getEndToken(context);
+            case "}" /* TokenChars.BraceRight */:
+                emitError(CompileErrorCodes.UNBALANCED_CLOSING_BRACE, currentPosition(), 0);
+                scnr.next();
+                return getToken(context, 3 /* TokenTypes.BraceRight */, "}" /* TokenChars.BraceRight */);
+            case "@" /* TokenChars.LinkedAlias */:
+                return readTokenInLinked(scnr, context) || getEndToken(context);
+            default: {
+                if (isPluralStart(scnr)) {
+                    token = getToken(context, 1 /* TokenTypes.Pipe */, readPlural(scnr));
+                    // reset
+                    context.braceNest = 0;
+                    context.inLinked = false;
+                    return token;
+                }
+                const { isModulo, hasSpace } = detectModuloStart(scnr);
+                if (isModulo) {
+                    return hasSpace
+                        ? getToken(context, 0 /* TokenTypes.Text */, readText(scnr))
+                        : getToken(context, 4 /* TokenTypes.Modulo */, readModulo(scnr));
+                }
+                if (isTextStart(scnr)) {
+                    return getToken(context, 0 /* TokenTypes.Text */, readText(scnr));
+                }
+                break;
+            }
+        }
+        return token;
+    }
+    function nextToken() {
+        const { currentType, offset, startLoc, endLoc } = _context;
+        _context.lastType = currentType;
+        _context.lastOffset = offset;
+        _context.lastStartLoc = startLoc;
+        _context.lastEndLoc = endLoc;
+        _context.offset = currentOffset();
+        _context.startLoc = currentPosition();
+        if (_scnr.currentChar() === EOF) {
+            return getToken(_context, 14 /* TokenTypes.EOF */);
+        }
+        return readToken(_scnr, _context);
+    }
+    return {
+        nextToken,
+        currentOffset,
+        currentPosition,
+        context
+    };
+}
+
+const ERROR_DOMAIN$2 = 'parser';
+// Backslash backslash, backslash quote, uHHHH, UHHHHHH.
+const KNOWN_ESCAPES = /(?:\\\\|\\'|\\u([0-9a-fA-F]{4})|\\U([0-9a-fA-F]{6}))/g;
+function fromEscapeSequence(match, codePoint4, codePoint6) {
+    switch (match) {
+        case `\\\\`:
+            return `\\`;
+        // eslint-disable-next-line no-useless-escape
+        case `\\\'`:
+            // eslint-disable-next-line no-useless-escape
+            return `\'`;
+        default: {
+            const codePoint = parseInt(codePoint4 || codePoint6, 16);
+            if (codePoint <= 0xd7ff || codePoint >= 0xe000) {
+                return String.fromCodePoint(codePoint);
+            }
+            // invalid ...
+            // Replace them with U+FFFD REPLACEMENT CHARACTER.
+            return '�';
+        }
+    }
+}
+function createParser(options = {}) {
+    const location = options.location !== false;
+    const { onError, onWarn } = options;
+    function emitError(tokenzer, code, start, offset, ...args) {
+        const end = tokenzer.currentPosition();
+        end.offset += offset;
+        end.column += offset;
+        if (onError) {
+            const loc = location ? createLocation(start, end) : null;
+            const err = createCompileError(code, loc, {
+                domain: ERROR_DOMAIN$2,
+                args
+            });
+            onError(err);
+        }
+    }
+    function emitWarn(tokenzer, code, start, offset, ...args) {
+        const end = tokenzer.currentPosition();
+        end.offset += offset;
+        end.column += offset;
+        if (onWarn) {
+            const loc = location ? createLocation(start, end) : null;
+            onWarn(createCompileWarn(code, loc, args));
+        }
+    }
+    function startNode(type, offset, loc) {
+        const node = { type };
+        if (location) {
+            node.start = offset;
+            node.end = offset;
+            node.loc = { start: loc, end: loc };
+        }
+        return node;
+    }
+    function endNode(node, offset, pos, type) {
+        if (type) {
+            node.type = type;
+        }
+        if (location) {
+            node.end = offset;
+            if (node.loc) {
+                node.loc.end = pos;
+            }
+        }
+    }
+    function parseText(tokenizer, value) {
+        const context = tokenizer.context();
+        const node = startNode(3 /* NodeTypes.Text */, context.offset, context.startLoc);
+        node.value = value;
+        endNode(node, tokenizer.currentOffset(), tokenizer.currentPosition());
+        return node;
+    }
+    function parseList(tokenizer, index) {
+        const context = tokenizer.context();
+        const { lastOffset: offset, lastStartLoc: loc } = context; // get brace left loc
+        const node = startNode(5 /* NodeTypes.List */, offset, loc);
+        node.index = parseInt(index, 10);
+        tokenizer.nextToken(); // skip brach right
+        endNode(node, tokenizer.currentOffset(), tokenizer.currentPosition());
+        return node;
+    }
+    function parseNamed(tokenizer, key, modulo) {
+        const context = tokenizer.context();
+        const { lastOffset: offset, lastStartLoc: loc } = context; // get brace left loc
+        const node = startNode(4 /* NodeTypes.Named */, offset, loc);
+        node.key = key;
+        if (modulo === true) {
+            node.modulo = true;
+        }
+        tokenizer.nextToken(); // skip brach right
+        endNode(node, tokenizer.currentOffset(), tokenizer.currentPosition());
+        return node;
+    }
+    function parseLiteral(tokenizer, value) {
+        const context = tokenizer.context();
+        const { lastOffset: offset, lastStartLoc: loc } = context; // get brace left loc
+        const node = startNode(9 /* NodeTypes.Literal */, offset, loc);
+        node.value = value.replace(KNOWN_ESCAPES, fromEscapeSequence);
+        tokenizer.nextToken(); // skip brach right
+        endNode(node, tokenizer.currentOffset(), tokenizer.currentPosition());
+        return node;
+    }
+    function parseLinkedModifier(tokenizer) {
+        const token = tokenizer.nextToken();
+        const context = tokenizer.context();
+        const { lastOffset: offset, lastStartLoc: loc } = context; // get linked dot loc
+        const node = startNode(8 /* NodeTypes.LinkedModifier */, offset, loc);
+        if (token.type !== 12 /* TokenTypes.LinkedModifier */) {
+            // empty modifier
+            emitError(tokenizer, CompileErrorCodes.UNEXPECTED_EMPTY_LINKED_MODIFIER, context.lastStartLoc, 0);
+            node.value = '';
+            endNode(node, offset, loc);
+            return {
+                nextConsumeToken: token,
+                node
+            };
+        }
+        // check token
+        if (token.value == null) {
+            emitError(tokenizer, CompileErrorCodes.UNEXPECTED_LEXICAL_ANALYSIS, context.lastStartLoc, 0, getTokenCaption(token));
+        }
+        node.value = token.value || '';
+        endNode(node, tokenizer.currentOffset(), tokenizer.currentPosition());
+        return {
+            node
+        };
+    }
+    function parseLinkedKey(tokenizer, value) {
+        const context = tokenizer.context();
+        const node = startNode(7 /* NodeTypes.LinkedKey */, context.offset, context.startLoc);
+        node.value = value;
+        endNode(node, tokenizer.currentOffset(), tokenizer.currentPosition());
+        return node;
+    }
+    function parseLinked(tokenizer) {
+        const context = tokenizer.context();
+        const linkedNode = startNode(6 /* NodeTypes.Linked */, context.offset, context.startLoc);
+        let token = tokenizer.nextToken();
+        if (token.type === 9 /* TokenTypes.LinkedDot */) {
+            const parsed = parseLinkedModifier(tokenizer);
+            linkedNode.modifier = parsed.node;
+            token = parsed.nextConsumeToken || tokenizer.nextToken();
+        }
+        // asset check token
+        if (token.type !== 10 /* TokenTypes.LinkedDelimiter */) {
+            emitError(tokenizer, CompileErrorCodes.UNEXPECTED_LEXICAL_ANALYSIS, context.lastStartLoc, 0, getTokenCaption(token));
+        }
+        token = tokenizer.nextToken();
+        // skip brace left
+        if (token.type === 2 /* TokenTypes.BraceLeft */) {
+            token = tokenizer.nextToken();
+        }
+        switch (token.type) {
+            case 11 /* TokenTypes.LinkedKey */:
+                if (token.value == null) {
+                    emitError(tokenizer, CompileErrorCodes.UNEXPECTED_LEXICAL_ANALYSIS, context.lastStartLoc, 0, getTokenCaption(token));
+                }
+                linkedNode.key = parseLinkedKey(tokenizer, token.value || '');
+                break;
+            case 5 /* TokenTypes.Named */:
+                if (token.value == null) {
+                    emitError(tokenizer, CompileErrorCodes.UNEXPECTED_LEXICAL_ANALYSIS, context.lastStartLoc, 0, getTokenCaption(token));
+                }
+                linkedNode.key = parseNamed(tokenizer, token.value || '');
+                break;
+            case 6 /* TokenTypes.List */:
+                if (token.value == null) {
+                    emitError(tokenizer, CompileErrorCodes.UNEXPECTED_LEXICAL_ANALYSIS, context.lastStartLoc, 0, getTokenCaption(token));
+                }
+                linkedNode.key = parseList(tokenizer, token.value || '');
+                break;
+            case 7 /* TokenTypes.Literal */:
+                if (token.value == null) {
+                    emitError(tokenizer, CompileErrorCodes.UNEXPECTED_LEXICAL_ANALYSIS, context.lastStartLoc, 0, getTokenCaption(token));
+                }
+                linkedNode.key = parseLiteral(tokenizer, token.value || '');
+                break;
+            default: {
+                // empty key
+                emitError(tokenizer, CompileErrorCodes.UNEXPECTED_EMPTY_LINKED_KEY, context.lastStartLoc, 0);
+                const nextContext = tokenizer.context();
+                const emptyLinkedKeyNode = startNode(7 /* NodeTypes.LinkedKey */, nextContext.offset, nextContext.startLoc);
+                emptyLinkedKeyNode.value = '';
+                endNode(emptyLinkedKeyNode, nextContext.offset, nextContext.startLoc);
+                linkedNode.key = emptyLinkedKeyNode;
+                endNode(linkedNode, nextContext.offset, nextContext.startLoc);
+                return {
+                    nextConsumeToken: token,
+                    node: linkedNode
+                };
+            }
+        }
+        endNode(linkedNode, tokenizer.currentOffset(), tokenizer.currentPosition());
+        return {
+            node: linkedNode
+        };
+    }
+    function parseMessage(tokenizer) {
+        const context = tokenizer.context();
+        const startOffset = context.currentType === 1 /* TokenTypes.Pipe */
+            ? tokenizer.currentOffset()
+            : context.offset;
+        const startLoc = context.currentType === 1 /* TokenTypes.Pipe */
+            ? context.endLoc
+            : context.startLoc;
+        const node = startNode(2 /* NodeTypes.Message */, startOffset, startLoc);
+        node.items = [];
+        let nextToken = null;
+        let modulo = null;
+        do {
+            const token = nextToken || tokenizer.nextToken();
+            nextToken = null;
+            switch (token.type) {
+                case 0 /* TokenTypes.Text */:
+                    if (token.value == null) {
+                        emitError(tokenizer, CompileErrorCodes.UNEXPECTED_LEXICAL_ANALYSIS, context.lastStartLoc, 0, getTokenCaption(token));
+                    }
+                    node.items.push(parseText(tokenizer, token.value || ''));
+                    break;
+                case 6 /* TokenTypes.List */:
+                    if (token.value == null) {
+                        emitError(tokenizer, CompileErrorCodes.UNEXPECTED_LEXICAL_ANALYSIS, context.lastStartLoc, 0, getTokenCaption(token));
+                    }
+                    node.items.push(parseList(tokenizer, token.value || ''));
+                    break;
+                case 4 /* TokenTypes.Modulo */:
+                    modulo = true;
+                    break;
+                case 5 /* TokenTypes.Named */:
+                    if (token.value == null) {
+                        emitError(tokenizer, CompileErrorCodes.UNEXPECTED_LEXICAL_ANALYSIS, context.lastStartLoc, 0, getTokenCaption(token));
+                    }
+                    node.items.push(parseNamed(tokenizer, token.value || '', !!modulo));
+                    if (modulo) {
+                        emitWarn(tokenizer, CompileWarnCodes.USE_MODULO_SYNTAX, context.lastStartLoc, 0, getTokenCaption(token));
+                        modulo = null;
+                    }
+                    break;
+                case 7 /* TokenTypes.Literal */:
+                    if (token.value == null) {
+                        emitError(tokenizer, CompileErrorCodes.UNEXPECTED_LEXICAL_ANALYSIS, context.lastStartLoc, 0, getTokenCaption(token));
+                    }
+                    node.items.push(parseLiteral(tokenizer, token.value || ''));
+                    break;
+                case 8 /* TokenTypes.LinkedAlias */: {
+                    const parsed = parseLinked(tokenizer);
+                    node.items.push(parsed.node);
+                    nextToken = parsed.nextConsumeToken || null;
+                    break;
+                }
+            }
+        } while (context.currentType !== 14 /* TokenTypes.EOF */ &&
+            context.currentType !== 1 /* TokenTypes.Pipe */);
+        // adjust message node loc
+        const endOffset = context.currentType === 1 /* TokenTypes.Pipe */
+            ? context.lastOffset
+            : tokenizer.currentOffset();
+        const endLoc = context.currentType === 1 /* TokenTypes.Pipe */
+            ? context.lastEndLoc
+            : tokenizer.currentPosition();
+        endNode(node, endOffset, endLoc);
+        return node;
+    }
+    function parsePlural(tokenizer, offset, loc, msgNode) {
+        const context = tokenizer.context();
+        let hasEmptyMessage = msgNode.items.length === 0;
+        const node = startNode(1 /* NodeTypes.Plural */, offset, loc);
+        node.cases = [];
+        node.cases.push(msgNode);
+        do {
+            const msg = parseMessage(tokenizer);
+            if (!hasEmptyMessage) {
+                hasEmptyMessage = msg.items.length === 0;
+            }
+            node.cases.push(msg);
+        } while (context.currentType !== 14 /* TokenTypes.EOF */);
+        if (hasEmptyMessage) {
+            emitError(tokenizer, CompileErrorCodes.MUST_HAVE_MESSAGES_IN_PLURAL, loc, 0);
+        }
+        endNode(node, tokenizer.currentOffset(), tokenizer.currentPosition());
+        return node;
+    }
+    function parseResource(tokenizer) {
+        const context = tokenizer.context();
+        const { offset, startLoc } = context;
+        const msgNode = parseMessage(tokenizer);
+        if (context.currentType === 14 /* TokenTypes.EOF */) {
+            return msgNode;
+        }
+        else {
+            return parsePlural(tokenizer, offset, startLoc, msgNode);
+        }
+    }
+    function parse(source) {
+        const tokenizer = createTokenizer(source, assign({}, options));
+        const context = tokenizer.context();
+        const node = startNode(0 /* NodeTypes.Resource */, context.offset, context.startLoc);
+        if (location && node.loc) {
+            node.loc.source = source;
+        }
+        node.body = parseResource(tokenizer);
+        if (options.onCacheKey) {
+            node.cacheKey = options.onCacheKey(source);
+        }
+        // assert whether achieved to EOF
+        if (context.currentType !== 14 /* TokenTypes.EOF */) {
+            emitError(tokenizer, CompileErrorCodes.UNEXPECTED_LEXICAL_ANALYSIS, context.lastStartLoc, 0, source[context.offset] || '');
+        }
+        endNode(node, tokenizer.currentOffset(), tokenizer.currentPosition());
+        return node;
+    }
+    return { parse };
+}
+function getTokenCaption(token) {
+    if (token.type === 14 /* TokenTypes.EOF */) {
+        return 'EOF';
+    }
+    const name = (token.value || '').replace(/\r?\n/gu, '\\n');
+    return name.length > 10 ? name.slice(0, 9) + '…' : name;
+}
+
+function createTransformer(ast, options = {} // eslint-disable-line
+) {
+    const _context = {
+        ast,
+        helpers: new Set()
+    };
+    const context = () => _context;
+    const helper = (name) => {
+        _context.helpers.add(name);
+        return name;
+    };
+    return { context, helper };
+}
+function traverseNodes(nodes, transformer) {
+    for (let i = 0; i < nodes.length; i++) {
+        traverseNode(nodes[i], transformer);
+    }
+}
+function traverseNode(node, transformer) {
+    // TODO: if we need pre-hook of transform, should be implemented to here
+    switch (node.type) {
+        case 1 /* NodeTypes.Plural */:
+            traverseNodes(node.cases, transformer);
+            transformer.helper("plural" /* HelperNameMap.PLURAL */);
+            break;
+        case 2 /* NodeTypes.Message */:
+            traverseNodes(node.items, transformer);
+            break;
+        case 6 /* NodeTypes.Linked */: {
+            const linked = node;
+            traverseNode(linked.key, transformer);
+            transformer.helper("linked" /* HelperNameMap.LINKED */);
+            transformer.helper("type" /* HelperNameMap.TYPE */);
+            break;
+        }
+        case 5 /* NodeTypes.List */:
+            transformer.helper("interpolate" /* HelperNameMap.INTERPOLATE */);
+            transformer.helper("list" /* HelperNameMap.LIST */);
+            break;
+        case 4 /* NodeTypes.Named */:
+            transformer.helper("interpolate" /* HelperNameMap.INTERPOLATE */);
+            transformer.helper("named" /* HelperNameMap.NAMED */);
+            break;
+    }
+    // TODO: if we need post-hook of transform, should be implemented to here
+}
+// transform AST
+function transform(ast, options = {} // eslint-disable-line
+) {
+    const transformer = createTransformer(ast);
+    transformer.helper("normalize" /* HelperNameMap.NORMALIZE */);
+    // traverse
+    ast.body && traverseNode(ast.body, transformer);
+    // set meta information
+    const context = transformer.context();
+    ast.helpers = Array.from(context.helpers);
+}
+
+function optimize(ast) {
+    const body = ast.body;
+    if (body.type === 2 /* NodeTypes.Message */) {
+        optimizeMessageNode(body);
+    }
+    else {
+        body.cases.forEach(c => optimizeMessageNode(c));
+    }
+    return ast;
+}
+function optimizeMessageNode(message) {
+    if (message.items.length === 1) {
+        const item = message.items[0];
+        if (item.type === 3 /* NodeTypes.Text */ || item.type === 9 /* NodeTypes.Literal */) {
+            message.static = item.value;
+            delete item.value; // optimization for size
+        }
+    }
+    else {
+        const values = [];
+        for (let i = 0; i < message.items.length; i++) {
+            const item = message.items[i];
+            if (!(item.type === 3 /* NodeTypes.Text */ || item.type === 9 /* NodeTypes.Literal */)) {
+                break;
+            }
+            if (item.value == null) {
+                break;
+            }
+            values.push(item.value);
+        }
+        if (values.length === message.items.length) {
+            message.static = join(values);
+            for (let i = 0; i < message.items.length; i++) {
+                const item = message.items[i];
+                if (item.type === 3 /* NodeTypes.Text */ || item.type === 9 /* NodeTypes.Literal */) {
+                    delete item.value; // optimization for size
+                }
+            }
+        }
+    }
+}
+
+const ERROR_DOMAIN$1 = 'minifier';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function minify(node) {
+    node.t = node.type;
+    switch (node.type) {
+        case 0 /* NodeTypes.Resource */: {
+            const resource = node;
+            minify(resource.body);
+            resource.b = resource.body;
+            delete resource.body;
+            break;
+        }
+        case 1 /* NodeTypes.Plural */: {
+            const plural = node;
+            const cases = plural.cases;
+            for (let i = 0; i < cases.length; i++) {
+                minify(cases[i]);
+            }
+            plural.c = cases;
+            delete plural.cases;
+            break;
+        }
+        case 2 /* NodeTypes.Message */: {
+            const message = node;
+            const items = message.items;
+            for (let i = 0; i < items.length; i++) {
+                minify(items[i]);
+            }
+            message.i = items;
+            delete message.items;
+            if (message.static) {
+                message.s = message.static;
+                delete message.static;
+            }
+            break;
+        }
+        case 3 /* NodeTypes.Text */:
+        case 9 /* NodeTypes.Literal */:
+        case 8 /* NodeTypes.LinkedModifier */:
+        case 7 /* NodeTypes.LinkedKey */: {
+            const valueNode = node;
+            if (valueNode.value) {
+                valueNode.v = valueNode.value;
+                delete valueNode.value;
+            }
+            break;
+        }
+        case 6 /* NodeTypes.Linked */: {
+            const linked = node;
+            minify(linked.key);
+            linked.k = linked.key;
+            delete linked.key;
+            if (linked.modifier) {
+                minify(linked.modifier);
+                linked.m = linked.modifier;
+                delete linked.modifier;
+            }
+            break;
+        }
+        case 5 /* NodeTypes.List */: {
+            const list = node;
+            list.i = list.index;
+            delete list.index;
+            break;
+        }
+        case 4 /* NodeTypes.Named */: {
+            const named = node;
+            named.k = named.key;
+            delete named.key;
+            break;
+        }
+        default:
+            {
+                throw createCompileError(CompileErrorCodes.UNHANDLED_MINIFIER_NODE_TYPE, null, {
+                    domain: ERROR_DOMAIN$1,
+                    args: [node.type]
+                });
+            }
+    }
+    delete node.type;
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+/// <reference types="source-map-js" />
+const ERROR_DOMAIN = 'parser';
+function createCodeGenerator(ast, options) {
+    const { sourceMap, filename, breakLineCode, needIndent: _needIndent } = options;
+    const location = options.location !== false;
+    const _context = {
+        filename,
+        code: '',
+        column: 1,
+        line: 1,
+        offset: 0,
+        map: undefined,
+        breakLineCode,
+        needIndent: _needIndent,
+        indentLevel: 0
+    };
+    if (location && ast.loc) {
+        _context.source = ast.loc.source;
+    }
+    const context = () => _context;
+    function push(code, node) {
+        _context.code += code;
+    }
+    function _newline(n, withBreakLine = true) {
+        const _breakLineCode = withBreakLine ? breakLineCode : '';
+        push(_needIndent ? _breakLineCode + `  `.repeat(n) : _breakLineCode);
+    }
+    function indent(withNewLine = true) {
+        const level = ++_context.indentLevel;
+        withNewLine && _newline(level);
+    }
+    function deindent(withNewLine = true) {
+        const level = --_context.indentLevel;
+        withNewLine && _newline(level);
+    }
+    function newline() {
+        _newline(_context.indentLevel);
+    }
+    const helper = (key) => `_${key}`;
+    const needIndent = () => _context.needIndent;
+    return {
+        context,
+        push,
+        indent,
+        deindent,
+        newline,
+        helper,
+        needIndent
+    };
+}
+function generateLinkedNode(generator, node) {
+    const { helper } = generator;
+    generator.push(`${helper("linked" /* HelperNameMap.LINKED */)}(`);
+    generateNode(generator, node.key);
+    if (node.modifier) {
+        generator.push(`, `);
+        generateNode(generator, node.modifier);
+        generator.push(`, _type`);
+    }
+    else {
+        generator.push(`, undefined, _type`);
+    }
+    generator.push(`)`);
+}
+function generateMessageNode(generator, node) {
+    const { helper, needIndent } = generator;
+    generator.push(`${helper("normalize" /* HelperNameMap.NORMALIZE */)}([`);
+    generator.indent(needIndent());
+    const length = node.items.length;
+    for (let i = 0; i < length; i++) {
+        generateNode(generator, node.items[i]);
+        if (i === length - 1) {
+            break;
+        }
+        generator.push(', ');
+    }
+    generator.deindent(needIndent());
+    generator.push('])');
+}
+function generatePluralNode(generator, node) {
+    const { helper, needIndent } = generator;
+    if (node.cases.length > 1) {
+        generator.push(`${helper("plural" /* HelperNameMap.PLURAL */)}([`);
+        generator.indent(needIndent());
+        const length = node.cases.length;
+        for (let i = 0; i < length; i++) {
+            generateNode(generator, node.cases[i]);
+            if (i === length - 1) {
+                break;
+            }
+            generator.push(', ');
+        }
+        generator.deindent(needIndent());
+        generator.push(`])`);
+    }
+}
+function generateResource(generator, node) {
+    if (node.body) {
+        generateNode(generator, node.body);
+    }
+    else {
+        generator.push('null');
+    }
+}
+function generateNode(generator, node) {
+    const { helper } = generator;
+    switch (node.type) {
+        case 0 /* NodeTypes.Resource */:
+            generateResource(generator, node);
+            break;
+        case 1 /* NodeTypes.Plural */:
+            generatePluralNode(generator, node);
+            break;
+        case 2 /* NodeTypes.Message */:
+            generateMessageNode(generator, node);
+            break;
+        case 6 /* NodeTypes.Linked */:
+            generateLinkedNode(generator, node);
+            break;
+        case 8 /* NodeTypes.LinkedModifier */:
+            generator.push(JSON.stringify(node.value), node);
+            break;
+        case 7 /* NodeTypes.LinkedKey */:
+            generator.push(JSON.stringify(node.value), node);
+            break;
+        case 5 /* NodeTypes.List */:
+            generator.push(`${helper("interpolate" /* HelperNameMap.INTERPOLATE */)}(${helper("list" /* HelperNameMap.LIST */)}(${node.index}))`, node);
+            break;
+        case 4 /* NodeTypes.Named */:
+            generator.push(`${helper("interpolate" /* HelperNameMap.INTERPOLATE */)}(${helper("named" /* HelperNameMap.NAMED */)}(${JSON.stringify(node.key)}))`, node);
+            break;
+        case 9 /* NodeTypes.Literal */:
+            generator.push(JSON.stringify(node.value), node);
+            break;
+        case 3 /* NodeTypes.Text */:
+            generator.push(JSON.stringify(node.value), node);
+            break;
+        default:
+            {
+                throw createCompileError(CompileErrorCodes.UNHANDLED_CODEGEN_NODE_TYPE, null, {
+                    domain: ERROR_DOMAIN,
+                    args: [node.type]
+                });
+            }
+    }
+}
+// generate code from AST
+const generate = (ast, options = {} // eslint-disable-line
+) => {
+    const mode = isString(options.mode) ? options.mode : 'normal';
+    const filename = isString(options.filename)
+        ? options.filename
+        : 'message.intl';
+    const sourceMap = !!options.sourceMap;
+    // prettier-ignore
+    const breakLineCode = options.breakLineCode != null
+        ? options.breakLineCode
+        : mode === 'arrow'
+            ? ';'
+            : '\n';
+    const needIndent = options.needIndent ? options.needIndent : mode !== 'arrow';
+    const helpers = ast.helpers || [];
+    const generator = createCodeGenerator(ast, {
+        mode,
+        filename,
+        sourceMap,
+        breakLineCode,
+        needIndent
+    });
+    generator.push(mode === 'normal' ? `function __msg__ (ctx) {` : `(ctx) => {`);
+    generator.indent(needIndent);
+    if (helpers.length > 0) {
+        generator.push(`const { ${join(helpers.map(s => `${s}: _${s}`), ', ')} } = ctx`);
+        generator.newline();
+    }
+    generator.push(`return `);
+    generateNode(generator, ast);
+    generator.deindent(needIndent);
+    generator.push(`}`);
+    delete ast.helpers;
+    const { code, map } = generator.context();
+    return {
+        ast,
+        code,
+        map: map ? map.toJSON() : undefined // eslint-disable-line @typescript-eslint/no-explicit-any
+    };
+};
+
+function baseCompile(source, options = {}) {
+    const assignedOptions = assign({}, options);
+    const jit = !!assignedOptions.jit;
+    const enalbeMinify = !!assignedOptions.minify;
+    const enambeOptimize = assignedOptions.optimize == null ? true : assignedOptions.optimize;
+    // parse source codes
+    const parser = createParser(assignedOptions);
+    const ast = parser.parse(source);
+    if (!jit) {
+        // transform ASTs
+        transform(ast, assignedOptions);
+        // generate javascript codes
+        return generate(ast, assignedOptions);
+    }
+    else {
+        // optimize ASTs
+        enambeOptimize && optimize(ast);
+        // minimize ASTs
+        enalbeMinify && minify(ast);
+        // In JIT mode, no ast transform, no code generation.
+        return { ast, code: '' };
+    }
+}
+
+
+
+
+/***/ }),
+
 /***/ "./node_modules/@popperjs/core/lib/createPopper.js":
 /*!*********************************************************!*\
   !*** ./node_modules/@popperjs/core/lib/createPopper.js ***!
@@ -9870,6 +11523,264 @@ function parse(template, options = {}) {
 }
 
 
+
+
+/***/ }),
+
+/***/ "./node_modules/@vue/devtools-api/lib/esm/const.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/@vue/devtools-api/lib/esm/const.js ***!
+  \*********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   HOOK_PLUGIN_SETTINGS_SET: () => (/* binding */ HOOK_PLUGIN_SETTINGS_SET),
+/* harmony export */   HOOK_SETUP: () => (/* binding */ HOOK_SETUP)
+/* harmony export */ });
+const HOOK_SETUP = 'devtools-plugin:setup';
+const HOOK_PLUGIN_SETTINGS_SET = 'plugin:settings:set';
+
+
+/***/ }),
+
+/***/ "./node_modules/@vue/devtools-api/lib/esm/env.js":
+/*!*******************************************************!*\
+  !*** ./node_modules/@vue/devtools-api/lib/esm/env.js ***!
+  \*******************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   getDevtoolsGlobalHook: () => (/* binding */ getDevtoolsGlobalHook),
+/* harmony export */   getTarget: () => (/* binding */ getTarget),
+/* harmony export */   isProxyAvailable: () => (/* binding */ isProxyAvailable)
+/* harmony export */ });
+function getDevtoolsGlobalHook() {
+    return getTarget().__VUE_DEVTOOLS_GLOBAL_HOOK__;
+}
+function getTarget() {
+    // @ts-expect-error navigator and windows are not available in all environments
+    return (typeof navigator !== 'undefined' && typeof window !== 'undefined')
+        ? window
+        : typeof globalThis !== 'undefined'
+            ? globalThis
+            : {};
+}
+const isProxyAvailable = typeof Proxy === 'function';
+
+
+/***/ }),
+
+/***/ "./node_modules/@vue/devtools-api/lib/esm/index.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/@vue/devtools-api/lib/esm/index.js ***!
+  \*********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   isPerformanceSupported: () => (/* reexport safe */ _time_js__WEBPACK_IMPORTED_MODULE_0__.isPerformanceSupported),
+/* harmony export */   now: () => (/* reexport safe */ _time_js__WEBPACK_IMPORTED_MODULE_0__.now),
+/* harmony export */   setupDevtoolsPlugin: () => (/* binding */ setupDevtoolsPlugin)
+/* harmony export */ });
+/* harmony import */ var _env_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./env.js */ "./node_modules/@vue/devtools-api/lib/esm/env.js");
+/* harmony import */ var _const_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./const.js */ "./node_modules/@vue/devtools-api/lib/esm/const.js");
+/* harmony import */ var _proxy_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./proxy.js */ "./node_modules/@vue/devtools-api/lib/esm/proxy.js");
+/* harmony import */ var _time_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./time.js */ "./node_modules/@vue/devtools-api/lib/esm/time.js");
+
+
+
+
+
+
+function setupDevtoolsPlugin(pluginDescriptor, setupFn) {
+    const descriptor = pluginDescriptor;
+    const target = (0,_env_js__WEBPACK_IMPORTED_MODULE_1__.getTarget)();
+    const hook = (0,_env_js__WEBPACK_IMPORTED_MODULE_1__.getDevtoolsGlobalHook)();
+    const enableProxy = _env_js__WEBPACK_IMPORTED_MODULE_1__.isProxyAvailable && descriptor.enableEarlyProxy;
+    if (hook && (target.__VUE_DEVTOOLS_PLUGIN_API_AVAILABLE__ || !enableProxy)) {
+        hook.emit(_const_js__WEBPACK_IMPORTED_MODULE_2__.HOOK_SETUP, pluginDescriptor, setupFn);
+    }
+    else {
+        const proxy = enableProxy ? new _proxy_js__WEBPACK_IMPORTED_MODULE_3__.ApiProxy(descriptor, hook) : null;
+        const list = target.__VUE_DEVTOOLS_PLUGINS__ = target.__VUE_DEVTOOLS_PLUGINS__ || [];
+        list.push({
+            pluginDescriptor: descriptor,
+            setupFn,
+            proxy,
+        });
+        if (proxy) {
+            setupFn(proxy.proxiedTarget);
+        }
+    }
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/@vue/devtools-api/lib/esm/proxy.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/@vue/devtools-api/lib/esm/proxy.js ***!
+  \*********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   ApiProxy: () => (/* binding */ ApiProxy)
+/* harmony export */ });
+/* harmony import */ var _const_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./const.js */ "./node_modules/@vue/devtools-api/lib/esm/const.js");
+/* harmony import */ var _time_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./time.js */ "./node_modules/@vue/devtools-api/lib/esm/time.js");
+
+
+class ApiProxy {
+    constructor(plugin, hook) {
+        this.target = null;
+        this.targetQueue = [];
+        this.onQueue = [];
+        this.plugin = plugin;
+        this.hook = hook;
+        const defaultSettings = {};
+        if (plugin.settings) {
+            for (const id in plugin.settings) {
+                const item = plugin.settings[id];
+                defaultSettings[id] = item.defaultValue;
+            }
+        }
+        const localSettingsSaveId = `__vue-devtools-plugin-settings__${plugin.id}`;
+        let currentSettings = Object.assign({}, defaultSettings);
+        try {
+            const raw = localStorage.getItem(localSettingsSaveId);
+            const data = JSON.parse(raw);
+            Object.assign(currentSettings, data);
+        }
+        catch (e) {
+            // noop
+        }
+        this.fallbacks = {
+            getSettings() {
+                return currentSettings;
+            },
+            setSettings(value) {
+                try {
+                    localStorage.setItem(localSettingsSaveId, JSON.stringify(value));
+                }
+                catch (e) {
+                    // noop
+                }
+                currentSettings = value;
+            },
+            now() {
+                return (0,_time_js__WEBPACK_IMPORTED_MODULE_0__.now)();
+            },
+        };
+        if (hook) {
+            hook.on(_const_js__WEBPACK_IMPORTED_MODULE_1__.HOOK_PLUGIN_SETTINGS_SET, (pluginId, value) => {
+                if (pluginId === this.plugin.id) {
+                    this.fallbacks.setSettings(value);
+                }
+            });
+        }
+        this.proxiedOn = new Proxy({}, {
+            get: (_target, prop) => {
+                if (this.target) {
+                    return this.target.on[prop];
+                }
+                else {
+                    return (...args) => {
+                        this.onQueue.push({
+                            method: prop,
+                            args,
+                        });
+                    };
+                }
+            },
+        });
+        this.proxiedTarget = new Proxy({}, {
+            get: (_target, prop) => {
+                if (this.target) {
+                    return this.target[prop];
+                }
+                else if (prop === 'on') {
+                    return this.proxiedOn;
+                }
+                else if (Object.keys(this.fallbacks).includes(prop)) {
+                    return (...args) => {
+                        this.targetQueue.push({
+                            method: prop,
+                            args,
+                            resolve: () => { },
+                        });
+                        return this.fallbacks[prop](...args);
+                    };
+                }
+                else {
+                    return (...args) => {
+                        return new Promise((resolve) => {
+                            this.targetQueue.push({
+                                method: prop,
+                                args,
+                                resolve,
+                            });
+                        });
+                    };
+                }
+            },
+        });
+    }
+    async setRealTarget(target) {
+        this.target = target;
+        for (const item of this.onQueue) {
+            this.target.on[item.method](...item.args);
+        }
+        for (const item of this.targetQueue) {
+            item.resolve(await this.target[item.method](...item.args));
+        }
+    }
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/@vue/devtools-api/lib/esm/time.js":
+/*!********************************************************!*\
+  !*** ./node_modules/@vue/devtools-api/lib/esm/time.js ***!
+  \********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   isPerformanceSupported: () => (/* binding */ isPerformanceSupported),
+/* harmony export */   now: () => (/* binding */ now)
+/* harmony export */ });
+let supported;
+let perf;
+function isPerformanceSupported() {
+    var _a;
+    if (supported !== undefined) {
+        return supported;
+    }
+    if (typeof window !== 'undefined' && window.performance) {
+        supported = true;
+        perf = window.performance;
+    }
+    else if (typeof globalThis !== 'undefined' && ((_a = globalThis.perf_hooks) === null || _a === void 0 ? void 0 : _a.performance)) {
+        supported = true;
+        perf = globalThis.perf_hooks.performance;
+    }
+    else {
+        supported = false;
+    }
+    return supported;
+}
+function now() {
+    return isPerformanceSupported() ? perf.now() : Date.now();
+}
 
 
 /***/ }),
@@ -23957,6 +25868,17 @@ function createAdvancedState() {
       // UI State
       currentMode: 'beginner',
       theme: 'light',
+      activeLocale: 'en',
+      languageOptions: [{
+        value: 'en',
+        label: 'English'
+      }, {
+        value: 'ar',
+        label: 'العربية'
+      }, {
+        value: 'fr',
+        label: 'Français'
+      }],
       tab: 'tools',
       showTools: false,
       focusModeEnabled: false,
@@ -25286,12 +27208,19 @@ function createAdvancedState() {
   mounted: function mounted() {
     var _this1 = this;
     return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
+      var _this1$$i18n;
       return _regenerator().w(function (_context) {
         while (1) switch (_context.n) {
           case 0:
+            _this1.activeLocale = ((_this1$$i18n = _this1.$i18n) === null || _this1$$i18n === void 0 || (_this1$$i18n = _this1$$i18n.locale) === null || _this1$$i18n === void 0 ? void 0 : _this1$$i18n.value) || 'en';
+            _this1.handleLocaleChange = function (event) {
+              var _event$detail, _this1$$i18n2;
+              _this1.activeLocale = (event === null || event === void 0 || (_event$detail = event.detail) === null || _event$detail === void 0 ? void 0 : _event$detail.locale) || ((_this1$$i18n2 = _this1.$i18n) === null || _this1$$i18n2 === void 0 || (_this1$$i18n2 = _this1$$i18n2.locale) === null || _this1$$i18n2 === void 0 ? void 0 : _this1$$i18n2.value) || 'en';
+              _this1.$forceUpdate();
+            };
             _this1.handleGlobalThemeChange = function (event) {
-              var _event$detail;
-              var nextTheme = (event === null || event === void 0 || (_event$detail = event.detail) === null || _event$detail === void 0 ? void 0 : _event$detail.theme) || document.documentElement.getAttribute('data-theme') || 'light';
+              var _event$detail2;
+              var nextTheme = (event === null || event === void 0 || (_event$detail2 = event.detail) === null || _event$detail2 === void 0 ? void 0 : _event$detail2.theme) || document.documentElement.getAttribute('data-theme') || 'light';
               _this1.theme = nextTheme;
             };
             _this1.handleThemeStorageSync = function (event) {
@@ -25300,6 +27229,7 @@ function createAdvancedState() {
               _this1.theme = nextTheme;
             };
             window.addEventListener('mutqin:theme-change', _this1.handleGlobalThemeChange);
+            window.addEventListener('mutqin:locale-change', _this1.handleLocaleChange);
             window.addEventListener('storage', _this1.handleThemeStorageSync);
             _this1.watchActiveVerse();
             _this1.$nextTick(function () {
@@ -25421,6 +27351,7 @@ function createAdvancedState() {
     }
     window.removeEventListener('online', this.handleOnline);
     window.removeEventListener('offline', this.handleOffline);
+    window.removeEventListener('mutqin:locale-change', this.handleLocaleChange);
     window.removeEventListener('beforeunload', this.persistAllState);
     window.removeEventListener('keydown', this.handleGlobalKeydown);
     window.removeEventListener('keyup', this.handleGlobalKeyup);
@@ -25582,6 +27513,35 @@ function createAdvancedState() {
     if (this.showWordByWord) this.restoreWordScroll(newVal);
   }), "focusModeEnabled", 'persistControlState'), "blurModeEnabled", 'persistControlState'), _defineProperty(_defineProperty(_watch, "blurIntensity", 'persistControlState'), "defaultFontSize", 'persistUiState')),
   methods: (_methods = {
+    t: function t(key) {
+      var params = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      var translator = this.$t;
+      if (typeof translator !== 'function') return key;
+      return translator(key, params);
+    },
+    onLanguageChange: function onLanguageChange(locale) {
+      var _this10 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
+        var _this10$$i18n;
+        return _regenerator().w(function (_context2) {
+          while (1) switch (_context2.n) {
+            case 0:
+              if (_this10.$setLocale) {
+                _context2.n = 1;
+                break;
+              }
+              return _context2.a(2);
+            case 1:
+              _context2.n = 2;
+              return _this10.$setLocale(locale);
+            case 2:
+              _this10.activeLocale = ((_this10$$i18n = _this10.$i18n) === null || _this10$$i18n === void 0 || (_this10$$i18n = _this10$$i18n.locale) === null || _this10$$i18n === void 0 ? void 0 : _this10$$i18n.value) || locale;
+            case 3:
+              return _context2.a(2);
+          }
+        }, _callee2);
+      }))();
+    },
     syncBodyScrollLock: function syncBodyScrollLock(locked) {
       if (typeof document === 'undefined') return;
       document.body.classList.toggle('tools-panel-open', !!locked);
@@ -25590,9 +27550,9 @@ function createAdvancedState() {
       document.body.style.overflow = shouldLock ? 'hidden' : '';
     },
     focusToolsPanel: function focusToolsPanel() {
-      var _this10 = this;
+      var _this11 = this;
       this.$nextTick(function () {
-        var panel = _this10.$refs.toolsPanel;
+        var panel = _this11.$refs.toolsPanel;
         if (!panel) return;
         panel.scrollTop = 0;
         panel.focus({
@@ -25627,22 +27587,22 @@ function createAdvancedState() {
     },
     // Example method showing how to use repetitions in playback
     playVerseWithRepetitions: function playVerseWithRepetitions(verseIndex, verseDuration) {
-      var _this11 = this;
+      var _this12 = this;
       var currentRepetition = 0;
       var _repeatVerse = function repeatVerse() {
-        if (currentRepetition < _this11.repetitionsPerStep) {
+        if (currentRepetition < _this12.repetitionsPerStep) {
           // Play the verse
-          _this11.playVerse(verseIndex);
+          _this12.playVerse(verseIndex);
           currentRepetition++;
 
           // After verse finishes, apply gap delay
-          var gapDelay = _this11.getGapDurationForVerse(verseDuration);
+          var gapDelay = _this12.getGapDurationForVerse(verseDuration);
           setTimeout(function () {
             _repeatVerse();
           }, (verseDuration + gapDelay) * 1000);
         } else {
           // Move to next verse
-          _this11.nextVerse();
+          _this12.nextVerse();
         }
       };
       _repeatVerse();
@@ -25656,9 +27616,9 @@ function createAdvancedState() {
       if (this.nameError) this.nameError = '';
     },
     getReciterName: function getReciterName() {
-      var _this12 = this;
+      var _this13 = this;
       var reciter = this.reciters.find(function (r) {
-        return r.id === _this12.reciterId;
+        return r.id === _this13.reciterId;
       });
       return reciter ? reciter.name : 'Alafasy';
     },
@@ -25987,12 +27947,12 @@ function createAdvancedState() {
     },
     // Main function to apply anchor highlights to all verses
     applyAnchorHighlights: function applyAnchorHighlights() {
-      var _this13 = this;
+      var _this14 = this;
       if (!this.anchorModeEnabled) return;
       this.$nextTick(function () {
         var verseCards = document.querySelectorAll('.verse-card');
         verseCards.forEach(function (card) {
-          _this13.highlightAnchorsForCard(card);
+          _this14.highlightAnchorsForCard(card);
         });
       });
     },
@@ -26070,7 +28030,7 @@ function createAdvancedState() {
     },
     // Watch for DOM changes (verse navigation, new verses loading)
     setupAnchorObserver: function setupAnchorObserver() {
-      var _this14 = this;
+      var _this15 = this;
       if (this.anchorHighlightObserver) {
         this.anchorHighlightObserver.disconnect();
       }
@@ -26087,7 +28047,7 @@ function createAdvancedState() {
         });
         if (shouldReapply) {
           setTimeout(function () {
-            return _this14.applyAnchorHighlights();
+            return _this15.applyAnchorHighlights();
           }, 100);
         }
       });
@@ -26105,19 +28065,19 @@ function createAdvancedState() {
     },
     // Watch for active verse changes to highlight anchors in new content
     watchActiveVerse: function watchActiveVerse() {
-      var _this15 = this;
+      var _this16 = this;
       if (!this.anchorModeEnabled) return;
 
       // Re-apply highlights when active verse changes
       this.$watch('effectiveActiveVerseKey', function () {
-        _this15.applyAnchorHighlights();
+        _this16.applyAnchorHighlights();
       });
 
       // Also watch for verse data loading
       this.$watch('isDataReady', function (newVal) {
-        if (newVal && _this15.anchorModeEnabled) {
+        if (newVal && _this16.anchorModeEnabled) {
           setTimeout(function () {
-            return _this15.applyAnchorHighlights();
+            return _this16.applyAnchorHighlights();
           }, 200);
         }
       });
@@ -26125,27 +28085,27 @@ function createAdvancedState() {
     // Update the getDisplayArabic method to preserve anchor classes
     // Add this to your existing getDisplayArabic method or override
     preserveAnchorClasses: function preserveAnchorClasses() {
-      var _this16 = this;
+      var _this17 = this;
       // This ensures highlights persist when verses re-render
       if (this.anchorModeEnabled) {
         setTimeout(function () {
-          return _this16.applyAnchorHighlights();
+          return _this17.applyAnchorHighlights();
         }, 50);
       }
     },
     showCountdown: function showCountdown(callback) {
-      var _this17 = this;
+      var _this18 = this;
       this.showCountdownOverlay = true;
       this.countdownValue = 3;
       if (this.countdownInterval) {
         clearInterval(this.countdownInterval);
       }
       this.countdownInterval = setInterval(function () {
-        _this17.countdownValue--;
-        if (_this17.countdownValue < 0) {
-          clearInterval(_this17.countdownInterval);
-          _this17.countdownInterval = null;
-          _this17.showCountdownOverlay = false;
+        _this18.countdownValue--;
+        if (_this18.countdownValue < 0) {
+          clearInterval(_this18.countdownInterval);
+          _this18.countdownInterval = null;
+          _this18.showCountdownOverlay = false;
           if (callback) callback();
         }
       }, 1000);
@@ -26162,35 +28122,35 @@ function createAdvancedState() {
       });
     },
     startSessionAndClose: function startSessionAndClose() {
-      var _this18 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
-        return _regenerator().w(function (_context2) {
-          while (1) switch (_context2.n) {
+      var _this19 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
+        return _regenerator().w(function (_context3) {
+          while (1) switch (_context3.n) {
             case 0:
-              if (_this18.canStartSession) {
-                _context2.n = 1;
+              if (_this19.canStartSession) {
+                _context3.n = 1;
                 break;
               }
-              _this18.showTools = true;
-              _this18.showBanner('Please select a valid surah and ayah range first', 'info', 3600);
-              return _context2.a(2);
+              _this19.showTools = true;
+              _this19.showBanner('Please select a valid surah and ayah range first', 'info', 3600);
+              return _context3.a(2);
             case 1:
-              _this18.applySessionConfig(_this18.buildSessionConfig(_this18.currentMode));
-              _this18.persistUiState();
-              _this18.persistCentralSessionState();
-              _context2.n = 2;
-              return _this18.applyWorkspaceControls({
-                mode: _this18.currentMode
+              _this19.applySessionConfig(_this19.buildSessionConfig(_this19.currentMode));
+              _this19.persistUiState();
+              _this19.persistCentralSessionState();
+              _context3.n = 2;
+              return _this19.applyWorkspaceControls({
+                mode: _this19.currentMode
               });
             case 2:
-              _this18.closeToolsPanel();
+              _this19.closeToolsPanel();
               setTimeout(function () {
-                _this18.startSessionWithCountdown();
+                _this19.startSessionWithCountdown();
               }, 100);
             case 3:
-              return _context2.a(2);
+              return _context3.a(2);
           }
-        }, _callee2);
+        }, _callee3);
       }))();
     },
     handlePrimaryAction: function handlePrimaryAction() {
@@ -26294,33 +28254,33 @@ function createAdvancedState() {
     },
     hydrateSessionFromPayload: function hydrateSessionFromPayload(payload) {
       var _arguments = arguments,
-        _this19 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
+        _this20 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4() {
         var _payload$config2, _payload$config3, _ref4, _payload$queueIndex, _payload$config4, _store$queue2, _store$queue3, _store$queue4, _ref5, _payload$playerVisibl, _payload$config5, _ref6, _options$forcePlaybac, _payload$config6, _ref7, _payload$currentTime, _payload$config7, _ref8, _payload$playerVisibl2, _payload$config8, _payload$config9;
         var options, mode, target, store, targetKey, restoredQueueIndex, _store$queue, exactIndex, restoredKey, shouldResumePlayback;
-        return _regenerator().w(function (_context3) {
-          while (1) switch (_context3.n) {
+        return _regenerator().w(function (_context4) {
+          while (1) switch (_context4.n) {
             case 0:
               options = _arguments.length > 1 && _arguments[1] !== undefined ? _arguments[1] : {};
               if (payload !== null && payload !== void 0 && (_payload$config2 = payload.config) !== null && _payload$config2 !== void 0 && _payload$config2.chapterId) {
-                _context3.n = 1;
+                _context4.n = 1;
                 break;
               }
-              return _context3.a(2, false);
+              return _context4.a(2, false);
             case 1:
-              mode = payload.mode || _this19.currentMode || 'beginner';
+              mode = payload.mode || _this20.currentMode || 'beginner';
               target = mode === 'beginner' ? 'beginner' : 'advanced';
-              _this19.currentMode = mode;
-              _this19.tab = 'tools';
-              _this19.applySessionConfig(_objectSpread(_objectSpread({}, payload.config || {}), {}, {
+              _this20.currentMode = mode;
+              _this20.tab = 'tools';
+              _this20.applySessionConfig(_objectSpread(_objectSpread({}, payload.config || {}), {}, {
                 mode: mode
               }));
-              _this19[target] = _objectSpread(_objectSpread({}, target === 'beginner' ? createBeginnerState() : createAdvancedState()), _this19.cloneModeState(payload.config || {}));
-              _context3.n = 2;
-              return _this19.loadChapter(mode);
+              _this20[target] = _objectSpread(_objectSpread({}, target === 'beginner' ? createBeginnerState() : createAdvancedState()), _this20.cloneModeState(payload.config || {}));
+              _context4.n = 2;
+              return _this20.loadChapter(mode);
             case 2:
-              _this19.buildQueue(mode);
-              store = _this19.getModeStore(mode);
+              _this20.buildQueue(mode);
+              store = _this20.getModeStore(mode);
               targetKey = payload.activeVerseKey || payload.activeKey || ((_payload$config3 = payload.config) === null || _payload$config3 === void 0 ? void 0 : _payload$config3.activeVerseKey) || null;
               restoredQueueIndex = Math.max(0, Number((_ref4 = (_payload$queueIndex = payload.queueIndex) !== null && _payload$queueIndex !== void 0 ? _payload$queueIndex : (_payload$config4 = payload.config) === null || _payload$config4 === void 0 ? void 0 : _payload$config4.queueIndex) !== null && _ref4 !== void 0 ? _ref4 : 0));
               if (targetKey) {
@@ -26331,73 +28291,73 @@ function createAdvancedState() {
                 if (exactIndex >= 0) restoredQueueIndex = exactIndex;
               }
               store.queueIndex = Math.min(restoredQueueIndex, Math.max((((_store$queue2 = store.queue) === null || _store$queue2 === void 0 ? void 0 : _store$queue2.length) || 1) - 1, 0));
-              _this19.queueIndex = store.queueIndex;
-              _this19.syncMutqinAyahs(store.verses || _this19.verses);
-              _this19.syncMutqinSession(store.queue || [], mode);
-              (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this19.mutqinState, _this19.queueIndex + 1);
-              restoredKey = ((_store$queue3 = store.queue) === null || _store$queue3 === void 0 || (_store$queue3 = _store$queue3[_this19.queueIndex]) === null || _store$queue3 === void 0 || (_store$queue3 = _store$queue3.verse) === null || _store$queue3 === void 0 ? void 0 : _store$queue3.key) || ((_store$queue4 = store.queue) === null || _store$queue4 === void 0 || (_store$queue4 = _store$queue4[_this19.queueIndex]) === null || _store$queue4 === void 0 ? void 0 : _store$queue4.key) || targetKey;
+              _this20.queueIndex = store.queueIndex;
+              _this20.syncMutqinAyahs(store.verses || _this20.verses);
+              _this20.syncMutqinSession(store.queue || [], mode);
+              (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this20.mutqinState, _this20.queueIndex + 1);
+              restoredKey = ((_store$queue3 = store.queue) === null || _store$queue3 === void 0 || (_store$queue3 = _store$queue3[_this20.queueIndex]) === null || _store$queue3 === void 0 || (_store$queue3 = _store$queue3.verse) === null || _store$queue3 === void 0 ? void 0 : _store$queue3.key) || ((_store$queue4 = store.queue) === null || _store$queue4 === void 0 || (_store$queue4 = _store$queue4[_this20.queueIndex]) === null || _store$queue4 === void 0 ? void 0 : _store$queue4.key) || targetKey;
               if (restoredKey) {
-                _this19.setActiveVerse(restoredKey, {
+                _this20.setActiveVerse(restoredKey, {
                   mode: mode,
-                  queueIndex: _this19.queueIndex,
+                  queueIndex: _this20.queueIndex,
                   scroll: false
                 });
               }
-              _this19.sessionCompleted = false;
-              _this19.sessionStartedAt = Date.now();
-              _this19.playerVisible = (_ref5 = (_payload$playerVisibl = payload.playerVisible) !== null && _payload$playerVisibl !== void 0 ? _payload$playerVisibl : (_payload$config5 = payload.config) === null || _payload$config5 === void 0 ? void 0 : _payload$config5.playerVisible) !== null && _ref5 !== void 0 ? _ref5 : true;
+              _this20.sessionCompleted = false;
+              _this20.sessionStartedAt = Date.now();
+              _this20.playerVisible = (_ref5 = (_payload$playerVisibl = payload.playerVisible) !== null && _payload$playerVisibl !== void 0 ? _payload$playerVisibl : (_payload$config5 = payload.config) === null || _payload$config5 === void 0 ? void 0 : _payload$config5.playerVisible) !== null && _ref5 !== void 0 ? _ref5 : true;
               shouldResumePlayback = (_ref6 = (_options$forcePlaybac = options.forcePlayback) !== null && _options$forcePlaybac !== void 0 ? _options$forcePlaybac : payload.isPlaying) !== null && _ref6 !== void 0 ? _ref6 : true;
-              _this19.restoredAudioState = {
+              _this20.restoredAudioState = {
                 src: payload.audioSrc || ((_payload$config6 = payload.config) === null || _payload$config6 === void 0 ? void 0 : _payload$config6.audioSrc) || '',
                 currentTime: Number((_ref7 = (_payload$currentTime = payload.currentTime) !== null && _payload$currentTime !== void 0 ? _payload$currentTime : (_payload$config7 = payload.config) === null || _payload$config7 === void 0 ? void 0 : _payload$config7.currentTime) !== null && _ref7 !== void 0 ? _ref7 : 0),
                 playerVisible: !!((_ref8 = (_payload$playerVisibl2 = payload.playerVisible) !== null && _payload$playerVisibl2 !== void 0 ? _payload$playerVisibl2 : (_payload$config8 = payload.config) === null || _payload$config8 === void 0 ? void 0 : _payload$config8.playerVisible) !== null && _ref8 !== void 0 ? _ref8 : true),
-                speed: Number(((_payload$config9 = payload.config) === null || _payload$config9 === void 0 ? void 0 : _payload$config9.speed) || _this19.speed || 1),
+                speed: Number(((_payload$config9 = payload.config) === null || _payload$config9 === void 0 ? void 0 : _payload$config9.speed) || _this20.speed || 1),
                 isPlaying: !!shouldResumePlayback
               };
-              _this19.$nextTick(function () {
-                var _this19$restoredAudio;
-                if ((_this19$restoredAudio = _this19.restoredAudioState) !== null && _this19$restoredAudio !== void 0 && _this19$restoredAudio.src) {
-                  _this19.applyRestoredAudioState();
+              _this20.$nextTick(function () {
+                var _this20$restoredAudio;
+                if ((_this20$restoredAudio = _this20.restoredAudioState) !== null && _this20$restoredAudio !== void 0 && _this20$restoredAudio.src) {
+                  _this20.applyRestoredAudioState();
                   return;
                 }
                 if (shouldResumePlayback) {
                   var _store$queue5;
-                  var entry = (_store$queue5 = store.queue) === null || _store$queue5 === void 0 ? void 0 : _store$queue5[_this19.queueIndex];
-                  if (entry) _this19.playQueueEntry(entry, {
+                  var entry = (_store$queue5 = store.queue) === null || _store$queue5 === void 0 ? void 0 : _store$queue5[_this20.queueIndex];
+                  if (entry) _this20.playQueueEntry(entry, {
                     force: true,
-                    queueIndex: _this19.queueIndex
+                    queueIndex: _this20.queueIndex
                   });
                 }
               });
-              _this19.persistAllState();
-              if (options.banner !== false) _this19.showBanner(options.bannerText || 'Session restored', 'success', 2200);
-              return _context3.a(2, true);
+              _this20.persistAllState();
+              if (options.banner !== false) _this20.showBanner(options.bannerText || 'Session restored', 'success', 2200);
+              return _context4.a(2, true);
           }
-        }, _callee3);
+        }, _callee4);
       }))();
     },
     loadSavedSession: function loadSavedSession(sessionId) {
-      var _this20 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4() {
+      var _this21 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5() {
         var session, _session$restore, _session$restore2, _session$config3, _session$config4, _session$config5, _session$config6, _session$config7, restorePayload;
-        return _regenerator().w(function (_context4) {
-          while (1) switch (_context4.p = _context4.n) {
+        return _regenerator().w(function (_context5) {
+          while (1) switch (_context5.p = _context5.n) {
             case 0:
-              session = _this20.savedSessions.find(function (s) {
+              session = _this21.savedSessions.find(function (s) {
                 return s.id === sessionId;
               });
               if (session) {
-                _context4.n = 1;
+                _context5.n = 1;
                 break;
               }
-              return _context4.a(2);
+              return _context5.a(2);
             case 1:
-              _this20.loadingSessionId = sessionId;
-              _context4.p = 2;
+              _this21.loadingSessionId = sessionId;
+              _context5.p = 2;
               restorePayload = (_session$restore = session.restore) !== null && _session$restore !== void 0 && _session$restore.continueSession ? _objectSpread(_objectSpread({}, session.restore.continueSession), {}, {
                 config: _objectSpread(_objectSpread({}, session.config || {}), session.restore.continueSession.config || {})
               }) : {
-                mode: ((_session$restore2 = session.restore) === null || _session$restore2 === void 0 ? void 0 : _session$restore2.currentMode) || _this20.currentMode,
+                mode: ((_session$restore2 = session.restore) === null || _session$restore2 === void 0 ? void 0 : _session$restore2.currentMode) || _this21.currentMode,
                 config: session.config || {},
                 activeVerseKey: ((_session$config3 = session.config) === null || _session$config3 === void 0 ? void 0 : _session$config3.activeVerseKey) || null,
                 queueIndex: Number(((_session$config4 = session.config) === null || _session$config4 === void 0 ? void 0 : _session$config4.queueIndex) || 0),
@@ -26406,21 +28366,21 @@ function createAdvancedState() {
                 playerVisible: !!((_session$config7 = session.config) !== null && _session$config7 !== void 0 && _session$config7.playerVisible),
                 isPlaying: false
               };
-              _context4.n = 3;
-              return _this20.hydrateSessionFromPayload(restorePayload, {
+              _context5.n = 3;
+              return _this21.hydrateSessionFromPayload(restorePayload, {
                 bannerText: "Loaded: ".concat(session.name),
                 forcePlayback: true
               });
             case 3:
-              _this20.showTools = false;
+              _this21.showTools = false;
             case 4:
-              _context4.p = 4;
-              _this20.loadingSessionId = '';
-              return _context4.f(4);
+              _context5.p = 4;
+              _this21.loadingSessionId = '';
+              return _context5.f(4);
             case 5:
-              return _context4.a(2);
+              return _context5.a(2);
           }
-        }, _callee4, null, [[2,, 4, 5]]);
+        }, _callee5, null, [[2,, 4, 5]]);
       }))();
     },
     // Update deleteSavedSession method
@@ -26588,16 +28548,16 @@ function createAdvancedState() {
       }
     },
     loadSavedSessions: function loadSavedSessions() {
-      var _this21 = this;
+      var _this22 = this;
       try {
         this.ensureSeededSavedSessions();
         var saved = localStorage.getItem(this.savedSessionsStorageKey());
         if (saved) {
           this.savedSessions = JSON.parse(saved).map(function (session) {
-            return _this21.normalizeSavedSessionRecord(session);
+            return _this22.normalizeSavedSessionRecord(session);
           }).filter(Boolean);
           if (!this.savedSessions.some(function (session) {
-            return session.id === _this21.selectedStatsSessionId;
+            return session.id === _this22.selectedStatsSessionId;
           })) {
             var _this$savedSessions$3;
             this.selectedStatsSessionId = ((_this$savedSessions$3 = this.savedSessions[0]) === null || _this$savedSessions$3 === void 0 ? void 0 : _this$savedSessions$3.id) || '';
@@ -26630,7 +28590,7 @@ function createAdvancedState() {
       } catch (_unused4) {}
     },
     openOnboardingModal: function openOnboardingModal() {
-      var _this22 = this;
+      var _this23 = this;
       var force = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
       if (!this.isLoggedIn && !force) return;
       this.onboardingStepIndex = 0;
@@ -26639,8 +28599,8 @@ function createAdvancedState() {
       this.showTools = true;
       this.tab = 'tools';
       window.setTimeout(function () {
-        _this22.showPostLoginOnboarding = true;
-        _this22.applyOnboardingStep(0);
+        _this23.showPostLoginOnboarding = true;
+        _this23.applyOnboardingStep(0);
       }, 50);
     },
     nextOnboardingStep: function nextOnboardingStep() {
@@ -26748,7 +28708,7 @@ function createAdvancedState() {
       this.persistUiState();
     },
     applyOnboardingStep: function applyOnboardingStep(stepIndex) {
-      var _this23 = this;
+      var _this24 = this;
       if (!this.onboardingDemoActive) return;
       var step = Math.max(0, Math.min(this.onboardingSteps.length - 1, Number(stepIndex || 0)));
       var stepConfig = [{
@@ -26782,13 +28742,13 @@ function createAdvancedState() {
           anchor_mode: false
         };
         Object.keys(openMap).forEach(function (key) {
-          if (_this23.sectionOpen[key] !== undefined) _this23.sectionOpen[key] = false;
+          if (_this24.sectionOpen[key] !== undefined) _this24.sectionOpen[key] = false;
         });
         if (this.sectionOpen[stepConfig.section] !== undefined) this.sectionOpen[stepConfig.section] = true;
       }
       this.$nextTick(function () {
-        var _this23$$refs$toolsBo, _this23$$refs$toolsBo2;
-        var section = ((_this23$$refs$toolsBo = _this23.$refs.toolsBody) === null || _this23$$refs$toolsBo === void 0 || (_this23$$refs$toolsBo2 = _this23$$refs$toolsBo.querySelector) === null || _this23$$refs$toolsBo2 === void 0 ? void 0 : _this23$$refs$toolsBo2.call(_this23$$refs$toolsBo, ".sheet-section .sheet-toggle")) || null;
+        var _this24$$refs$toolsBo, _this24$$refs$toolsBo2;
+        var section = ((_this24$$refs$toolsBo = _this24.$refs.toolsBody) === null || _this24$$refs$toolsBo === void 0 || (_this24$$refs$toolsBo2 = _this24$$refs$toolsBo.querySelector) === null || _this24$$refs$toolsBo2 === void 0 ? void 0 : _this24$$refs$toolsBo2.call(_this24$$refs$toolsBo, ".sheet-section .sheet-toggle")) || null;
         if (section !== null && section !== void 0 && section.scrollIntoView) section.scrollIntoView({
           behavior: 'smooth',
           block: 'center'
@@ -26796,7 +28756,7 @@ function createAdvancedState() {
       });
     },
     openSessionAnalyticsModal: function openSessionAnalyticsModal(session) {
-      var _this24 = this;
+      var _this25 = this;
       if (!(session !== null && session !== void 0 && session.id)) return;
       this.analyticsModalRecordId = session.id;
       this.analyticsModalLoaded = false;
@@ -26808,7 +28768,7 @@ function createAdvancedState() {
       };
       this.showSessionAnalyticsModal = true;
       window.requestAnimationFrame(function () {
-        _this24.refreshAnalyticsModalData(session);
+        _this25.refreshAnalyticsModalData(session);
       });
     },
     closeSessionAnalyticsModal: function closeSessionAnalyticsModal() {
@@ -26842,7 +28802,7 @@ function createAdvancedState() {
     buildSessionAnalyticsDataset: function buildSessionAnalyticsDataset(session) {
       var _session$config8,
         _session$config9,
-        _this25 = this;
+        _this26 = this;
       var stats = this.getAnalyticsSessionStats(session);
       var rangeStart = Math.max(1, Number((session === null || session === void 0 || (_session$config8 = session.config) === null || _session$config8 === void 0 ? void 0 : _session$config8.rangeStart) || 1));
       var rangeEnd = Math.max(rangeStart, Number((session === null || session === void 0 || (_session$config9 = session.config) === null || _session$config9 === void 0 ? void 0 : _session$config9.rangeEnd) || rangeStart));
@@ -26860,7 +28820,7 @@ function createAdvancedState() {
       }).map(function (_, index) {
         var _session$config0;
         var ayahNumber = rangeStart + index;
-        var verseKey = "".concat(Number((session === null || session === void 0 || (_session$config0 = session.config) === null || _session$config0 === void 0 ? void 0 : _session$config0.chapterId) || _this25.chapterId || 0), ":").concat(ayahNumber);
+        var verseKey = "".concat(Number((session === null || session === void 0 || (_session$config0 = session.config) === null || _session$config0 === void 0 ? void 0 : _session$config0.chapterId) || _this26.chapterId || 0), ":").concat(ayahNumber);
         var inferredValue = ayahNumber < rangeStart + versesRead ? 1 : 0;
         var value = Math.max(0, Number(versePlayCounts[verseKey] || inferredValue));
         return {
@@ -26938,25 +28898,25 @@ function createAdvancedState() {
       };
     },
     downloadSessionAnalyticsReport: function downloadSessionAnalyticsReport() {
-      var _this26 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5() {
-        var _this26$analyticsModa, _this26$analyticsModa2, _this26$analyticsModa3, _this26$analyticsModa4, _this26$analyticsModa5, _this26$analyticsModa6, _this26$analyticsModa7, reportPayload, validation, safeName, stamp, filename, blob, url, anchor, _t;
-        return _regenerator().w(function (_context5) {
-          while (1) switch (_context5.p = _context5.n) {
+      var _this27 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6() {
+        var _this27$analyticsModa, _this27$analyticsModa2, _this27$analyticsModa3, _this27$analyticsModa4, _this27$analyticsModa5, _this27$analyticsModa6, _this27$analyticsModa7, reportPayload, validation, safeName, stamp, filename, blob, url, anchor, _t;
+        return _regenerator().w(function (_context6) {
+          while (1) switch (_context6.p = _context6.n) {
             case 0:
-              if (!(!_this26.analyticsModalRecord || !_this26.analyticsModalData)) {
-                _context5.n = 1;
+              if (!(!_this27.analyticsModalRecord || !_this27.analyticsModalData)) {
+                _context6.n = 1;
                 break;
               }
-              return _context5.a(2);
+              return _context6.a(2);
             case 1:
-              _this26.analyticsReportState = {
+              _this27.analyticsReportState = {
                 loading: true,
                 success: false,
                 error: ''
               };
-              _context5.p = 2;
-              _context5.n = 3;
+              _context6.p = 2;
+              _context6.n = 3;
               return new Promise(function (resolve) {
                 return window.setTimeout(resolve, 120);
               });
@@ -26966,53 +28926,53 @@ function createAdvancedState() {
                 app: 'mutqin',
                 exportedAt: new Date().toISOString(),
                 summary: {
-                  title: _this26.analyticsModalData.session.label,
-                  saved_on: _this26.analyticsModalData.session.savedAt,
-                  duration: _this26.formatTime(_this26.analyticsModalData.metrics.time_spent_seconds),
-                  ayahs_reviewed: _this26.analyticsModalData.metrics.verses_read,
-                  repeats_completed: _this26.analyticsModalData.metrics.repetitions_completed,
-                  session_plays: _this26.analyticsModalData.metrics.session_play_count || 0,
-                  verse_plays: _this26.analyticsModalData.metrics.total_verse_play_count || 0,
-                  recall_strength: _this26.analyticsModalData.metrics.recall_strength
+                  title: _this27.analyticsModalData.session.label,
+                  saved_on: _this27.analyticsModalData.session.savedAt,
+                  duration: _this27.formatTime(_this27.analyticsModalData.metrics.time_spent_seconds),
+                  ayahs_reviewed: _this27.analyticsModalData.metrics.verses_read,
+                  repeats_completed: _this27.analyticsModalData.metrics.repetitions_completed,
+                  session_plays: _this27.analyticsModalData.metrics.session_play_count || 0,
+                  verse_plays: _this27.analyticsModalData.metrics.total_verse_play_count || 0,
+                  recall_strength: _this27.analyticsModalData.metrics.recall_strength
                 },
                 session: {
-                  id: _this26.analyticsModalData.session.id,
-                  name: _this26.analyticsModalData.session.name,
-                  label: _this26.analyticsModalData.session.label,
-                  savedAt: _this26.analyticsModalData.session.savedAt
+                  id: _this27.analyticsModalData.session.id,
+                  name: _this27.analyticsModalData.session.name,
+                  label: _this27.analyticsModalData.session.label,
+                  savedAt: _this27.analyticsModalData.session.savedAt
                 },
                 metadata: {
-                  date: _this26.analyticsModalData.session.savedAt,
-                  duration: _this26.formatTime(_this26.analyticsModalData.metrics.time_spent_seconds),
-                  session_name: _this26.analyticsModalData.session.name,
-                  surah: ((_this26$analyticsModa = _this26.analyticsModalData.session.config) === null || _this26$analyticsModa === void 0 ? void 0 : _this26$analyticsModa.chapterName) || '',
-                  ayah_range: "".concat(((_this26$analyticsModa2 = _this26.analyticsModalData.session.config) === null || _this26$analyticsModa2 === void 0 ? void 0 : _this26$analyticsModa2.rangeStart) || '', "-").concat(((_this26$analyticsModa3 = _this26.analyticsModalData.session.config) === null || _this26$analyticsModa3 === void 0 ? void 0 : _this26$analyticsModa3.rangeEnd) || '')
+                  date: _this27.analyticsModalData.session.savedAt,
+                  duration: _this27.formatTime(_this27.analyticsModalData.metrics.time_spent_seconds),
+                  session_name: _this27.analyticsModalData.session.name,
+                  surah: ((_this27$analyticsModa = _this27.analyticsModalData.session.config) === null || _this27$analyticsModa === void 0 ? void 0 : _this27$analyticsModa.chapterName) || '',
+                  ayah_range: "".concat(((_this27$analyticsModa2 = _this27.analyticsModalData.session.config) === null || _this27$analyticsModa2 === void 0 ? void 0 : _this27$analyticsModa2.rangeStart) || '', "-").concat(((_this27$analyticsModa3 = _this27.analyticsModalData.session.config) === null || _this27$analyticsModa3 === void 0 ? void 0 : _this27$analyticsModa3.rangeEnd) || '')
                 },
                 metrics: {
-                  verses_read: _this26.analyticsModalData.metrics.verses_read,
-                  total_ayahs: _this26.analyticsModalData.metrics.total_ayahs || 0,
-                  time_spent_seconds: _this26.analyticsModalData.metrics.time_spent_seconds,
-                  repetitions_completed: _this26.analyticsModalData.metrics.repetitions_completed,
-                  session_play_count: _this26.analyticsModalData.metrics.session_play_count || 0,
-                  total_verse_play_count: _this26.analyticsModalData.metrics.total_verse_play_count || 0,
-                  weak_verses: _this26.analyticsModalData.metrics.weak_verses,
-                  recall_strength: _this26.analyticsModalData.metrics.recall_strength
+                  verses_read: _this27.analyticsModalData.metrics.verses_read,
+                  total_ayahs: _this27.analyticsModalData.metrics.total_ayahs || 0,
+                  time_spent_seconds: _this27.analyticsModalData.metrics.time_spent_seconds,
+                  repetitions_completed: _this27.analyticsModalData.metrics.repetitions_completed,
+                  session_play_count: _this27.analyticsModalData.metrics.session_play_count || 0,
+                  total_verse_play_count: _this27.analyticsModalData.metrics.total_verse_play_count || 0,
+                  weak_verses: _this27.analyticsModalData.metrics.weak_verses,
+                  recall_strength: _this27.analyticsModalData.metrics.recall_strength
                 },
-                verse_play_counts: _this26.analyticsModalData.metrics.verse_play_counts || {},
+                verse_play_counts: _this27.analyticsModalData.metrics.verse_play_counts || {},
                 charts: {
-                  verse_series: ((_this26$analyticsModa4 = _this26.analyticsModalData.charts) === null || _this26$analyticsModa4 === void 0 ? void 0 : _this26$analyticsModa4.verseSeries) || []
+                  verse_series: ((_this27$analyticsModa4 = _this27.analyticsModalData.charts) === null || _this27$analyticsModa4 === void 0 ? void 0 : _this27$analyticsModa4.verseSeries) || []
                 },
-                heatmap: _this26.analyticsModalData.heatmap || []
+                heatmap: _this27.analyticsModalData.heatmap || []
               };
-              validation = _this26.validateAnalyticsReportPayload(reportPayload);
+              validation = _this27.validateAnalyticsReportPayload(reportPayload);
               if (validation.ok) {
-                _context5.n = 4;
+                _context6.n = 4;
                 break;
               }
               throw new Error(validation.message);
             case 4:
-              safeName = slugifySessionFilePart(((_this26$analyticsModa5 = _this26.analyticsModalData.session) === null || _this26$analyticsModa5 === void 0 ? void 0 : _this26$analyticsModa5.name) || ((_this26$analyticsModa6 = _this26.analyticsModalData.session) === null || _this26$analyticsModa6 === void 0 ? void 0 : _this26$analyticsModa6.label) || 'session');
-              stamp = new Date(((_this26$analyticsModa7 = _this26.analyticsModalData.session) === null || _this26$analyticsModa7 === void 0 ? void 0 : _this26$analyticsModa7.savedAt) || Date.now()).toISOString().slice(0, 10);
+              safeName = slugifySessionFilePart(((_this27$analyticsModa5 = _this27.analyticsModalData.session) === null || _this27$analyticsModa5 === void 0 ? void 0 : _this27$analyticsModa5.name) || ((_this27$analyticsModa6 = _this27.analyticsModalData.session) === null || _this27$analyticsModa6 === void 0 ? void 0 : _this27$analyticsModa6.label) || 'session');
+              stamp = new Date(((_this27$analyticsModa7 = _this27.analyticsModalData.session) === null || _this27$analyticsModa7 === void 0 ? void 0 : _this27$analyticsModa7.savedAt) || Date.now()).toISOString().slice(0, 10);
               filename = "mutqin-session_".concat(safeName, "_").concat(stamp, ".json");
               blob = new Blob([JSON.stringify(reportPayload, null, 2)], {
                 type: 'application/json'
@@ -27027,26 +28987,26 @@ function createAdvancedState() {
               window.setTimeout(function () {
                 return URL.revokeObjectURL(url);
               }, 500);
-              _this26.analyticsReportState = {
+              _this27.analyticsReportState = {
                 loading: false,
                 success: true,
                 error: ''
               };
-              _context5.n = 6;
+              _context6.n = 6;
               break;
             case 5:
-              _context5.p = 5;
-              _t = _context5.v;
+              _context6.p = 5;
+              _t = _context6.v;
               console.error('Analytics report export failed:', _t);
-              _this26.analyticsReportState = {
+              _this27.analyticsReportState = {
                 loading: false,
                 success: false,
                 error: String((_t === null || _t === void 0 ? void 0 : _t.message) || 'Export failed')
               };
             case 6:
-              return _context5.a(2);
+              return _context6.a(2);
           }
-        }, _callee5, null, [[2, 5]]);
+        }, _callee6, null, [[2, 5]]);
       }))();
     },
     buildStatsBreakdown: function buildStatsBreakdown(session) {
@@ -27221,7 +29181,7 @@ function createAdvancedState() {
       return String(value || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
     },
     buildSessionExportHtml: function buildSessionExportHtml(payload) {
-      var _this27 = this;
+      var _this28 = this;
       var session = (payload === null || payload === void 0 ? void 0 : payload.session) || {};
       var config = (session === null || session === void 0 ? void 0 : session.config) || {};
       var stats = this.normalizeSessionStats((session === null || session === void 0 ? void 0 : session.stats) || {}, config);
@@ -27263,37 +29223,37 @@ function createAdvancedState() {
         return r.value;
       });
       var rowsHtml = rows.map(function (r) {
-        return "<tr><td>".concat(_this27.escapeHtml(r.label), "</td><td>").concat(_this27.escapeHtml(r.value), "</td></tr>");
+        return "<tr><td>".concat(_this28.escapeHtml(r.label), "</td><td>").concat(_this28.escapeHtml(r.value), "</td></tr>");
       }).join('');
       var metaHtml = meta.map(function (r) {
-        return "<span><strong>".concat(_this27.escapeHtml(r.label), ":</strong> ").concat(_this27.escapeHtml(r.value), "</span>");
+        return "<span><strong>".concat(_this28.escapeHtml(r.label), ":</strong> ").concat(_this28.escapeHtml(r.value), "</span>");
       }).join('');
       return "<!doctype html>\n<html>\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>{{__TITLE__}}</title>\n    <style>\n      :root { color-scheme: light; }\n      body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin: 32px; color: #1d1d1d; }\n      h1 { margin: 0; font-size: 22px; letter-spacing: -0.01em; }\n      p { margin: 6px 0 0 0; color: #555; }\n      .meta { margin-top: 10px; color: #666; font-size: 12px; display: flex; gap: 12px; flex-wrap: wrap; }\n      .card { margin-top: 18px; border: 1px solid #e7e1d9; border-radius: 14px; padding: 16px; background: #fffaf3; }\n      table { width: 100%; border-collapse: collapse; margin-top: 6px; }\n      td { padding: 10px 8px; border-bottom: 1px solid #eee7df; vertical-align: top; }\n      td:first-child { width: 55%; color: #444; }\n      td:last-child { text-align: right; font-weight: 600; }\n      .foot { margin-top: 18px; font-size: 11px; color: #777; }\n      @media print { body { margin: 14mm; } .foot { display: none; } }\n    </style>\n  </head>\n  <body>\n    <h1>".concat(title, "</h1>\n    ").concat(subtitle ? "<p>".concat(subtitle, "</p>") : '', "\n    ").concat(metaHtml ? "<div class=\"meta\">".concat(metaHtml, "</div>") : '', "\n    <div class=\"card\">\n      <table aria-label=\"Session stats\">\n        <tbody>\n          ").concat(rowsHtml, "\n        </tbody>\n      </table>\n    </div>\n    <div class=\"foot\">Mutqin session export</div>\n  </body>\n</html>");
     },
     exportSavedSession: function exportSavedSession(sessionId) {
       var _arguments2 = arguments,
-        _this28 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6() {
+        _this29 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7() {
         var format, session, validation, payload, _t2;
-        return _regenerator().w(function (_context6) {
-          while (1) switch (_context6.p = _context6.n) {
+        return _regenerator().w(function (_context7) {
+          while (1) switch (_context7.p = _context7.n) {
             case 0:
               format = _arguments2.length > 1 && _arguments2[1] !== undefined ? _arguments2[1] : 'csv';
-              session = _this28.savedSessions.find(function (item) {
+              session = _this29.savedSessions.find(function (item) {
                 return item.id === sessionId;
               });
               if (session) {
-                _context6.n = 1;
+                _context7.n = 1;
                 break;
               }
-              return _context6.a(2);
+              return _context7.a(2);
             case 1:
-              validation = _this28.validateSessionForExport(session);
+              validation = _this29.validateSessionForExport(session);
               if (validation.ok) {
-                _context6.n = 2;
+                _context7.n = 2;
                 break;
               }
-              _this28.exportSessionState = {
+              _this29.exportSessionState = {
                 activeSessionId: '',
                 activeFormat: '',
                 successSessionId: '',
@@ -27302,10 +29262,10 @@ function createAdvancedState() {
                 errorFormat: format,
                 errorMessage: validation.message
               };
-              _this28.showBanner('Session export blocked: incomplete session data.', 'error', 2600);
-              return _context6.a(2);
+              _this29.showBanner('Session export blocked: incomplete session data.', 'error', 2600);
+              return _context7.a(2);
             case 2:
-              _this28.exportSessionState = {
+              _this29.exportSessionState = {
                 activeSessionId: sessionId,
                 activeFormat: format,
                 successSessionId: '',
@@ -27314,21 +29274,21 @@ function createAdvancedState() {
                 errorFormat: '',
                 errorMessage: ''
               };
-              _context6.p = 3;
-              _context6.n = 4;
+              _context7.p = 3;
+              _context7.n = 4;
               return new Promise(function (resolve) {
                 return window.setTimeout(resolve, 120);
               });
             case 4:
-              payload = _this28.buildSessionExportPayload(session);
+              payload = _this29.buildSessionExportPayload(session);
               if (format === 'word') {
-                _this28.triggerWordDownload(_this28.buildSessionExportFilename(session, 'word'), payload);
+                _this29.triggerWordDownload(_this29.buildSessionExportFilename(session, 'word'), payload);
               } else if (format === 'pdf') {
-                _this28.triggerPdfExport(_this28.buildSessionExportFilename(session, 'pdf'), payload);
+                _this29.triggerPdfExport(_this29.buildSessionExportFilename(session, 'pdf'), payload);
               } else {
-                _this28.triggerCsvDownload(_this28.buildSessionExportFilename(session, 'csv'), payload);
+                _this29.triggerCsvDownload(_this29.buildSessionExportFilename(session, 'csv'), payload);
               }
-              _this28.exportSessionState = {
+              _this29.exportSessionState = {
                 activeSessionId: '',
                 activeFormat: '',
                 successSessionId: sessionId,
@@ -27337,14 +29297,14 @@ function createAdvancedState() {
                 errorFormat: '',
                 errorMessage: ''
               };
-              _this28.showBanner('Download ready ✓', 'success', 1800);
-              _context6.n = 6;
+              _this29.showBanner('Download ready ✓', 'success', 1800);
+              _context7.n = 6;
               break;
             case 5:
-              _context6.p = 5;
-              _t2 = _context6.v;
+              _context7.p = 5;
+              _t2 = _context7.v;
               console.error('Failed to export session:', _t2);
-              _this28.exportSessionState = {
+              _this29.exportSessionState = {
                 activeSessionId: '',
                 activeFormat: '',
                 successSessionId: '',
@@ -27353,11 +29313,11 @@ function createAdvancedState() {
                 errorFormat: format,
                 errorMessage: 'Something went wrong. Please retry.'
               };
-              _this28.showBanner('Export failed, retry', 'error', 2600);
+              _this29.showBanner('Export failed, retry', 'error', 2600);
             case 6:
-              return _context6.a(2);
+              return _context7.a(2);
           }
-        }, _callee6, null, [[3, 5]]);
+        }, _callee7, null, [[3, 5]]);
       }))();
     },
     retryFailedExport: function retryFailedExport() {
@@ -27426,18 +29386,18 @@ function createAdvancedState() {
       }
     },
     ensureSelectedRecordingsAyah: function ensureSelectedRecordingsAyah() {
-      var _this29 = this,
+      var _this30 = this,
         _matches$;
       var matches = this.filteredRecordingsAyahGroups.flatMap(function (group) {
         return group.ayahs;
       });
       if (matches.some(function (item) {
-        return item.ayahKey === _this29.selectedRecordingsAyahKey;
+        return item.ayahKey === _this30.selectedRecordingsAyahKey;
       })) return;
       this.selectedRecordingsAyahKey = ((_matches$ = matches[0]) === null || _matches$ === void 0 ? void 0 : _matches$.ayahKey) || '';
     },
     loadRecordingsLibrary: function loadRecordingsLibrary() {
-      var _this30 = this;
+      var _this31 = this;
       var entries = [];
       var seen = new Set();
       this.recordingsLibraryCandidateKeys().forEach(function (key, keyIndex) {
@@ -27447,7 +29407,7 @@ function createAdvancedState() {
           var parsed = JSON.parse(raw);
           var collected = collectRecordingEntries(parsed);
           collected.forEach(function (item, itemIndex) {
-            var normalized = _this30.normalizeRecordingEntry(item, keyIndex * 10000 + itemIndex);
+            var normalized = _this31.normalizeRecordingEntry(item, keyIndex * 10000 + itemIndex);
             if (!normalized) return;
             var signature = "".concat(normalized.ayahKey, ":").concat(normalized.recordedAt, ":").concat(normalized.audioSrc);
             if (seen.has(signature)) return;
@@ -27464,7 +29424,7 @@ function createAdvancedState() {
       this.ensureSelectedRecordingsAyah();
     },
     openRecordingsLibrary: function openRecordingsLibrary() {
-      var _this31 = this;
+      var _this32 = this;
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var targetAyahKey = (options === null || options === void 0 ? void 0 : options.ayahKey) || (this.showSelfCheckModal ? this.selfCheckVerseKey : '') || this.effectiveActiveVerseKey || '';
       var isCompactViewport = typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 768px)').matches;
@@ -27491,12 +29451,12 @@ function createAdvancedState() {
       this.isRecordingsLibraryLoading = true;
       this.syncBodyScrollLock(true);
       schedule(function () {
-        _this31.loadRecordingsLibrary();
+        _this32.loadRecordingsLibrary();
         if (targetAyahKey) {
-          _this31.selectedRecordingsAyahKey = targetAyahKey;
-          _this31.ensureSelectedRecordingsAyah();
+          _this32.selectedRecordingsAyahKey = targetAyahKey;
+          _this32.ensureSelectedRecordingsAyah();
         }
-        _this31.isRecordingsLibraryLoading = false;
+        _this32.isRecordingsLibraryLoading = false;
       });
     },
     closeRecordingsLibrary: function closeRecordingsLibrary() {
@@ -27519,24 +29479,24 @@ function createAdvancedState() {
       }
     },
     initRecordingsAudio: function initRecordingsAudio() {
-      var _this32 = this;
+      var _this33 = this;
       if (this.recordingsAudioBound || !this.recordingsAudioElement) return;
       this.recordingsAudioElement.addEventListener('pause', function () {
-        var _this32$recordingsAud;
-        if (!((_this32$recordingsAud = _this32.recordingsAudioElement) !== null && _this32$recordingsAud !== void 0 && _this32$recordingsAud.ended)) {
-          _this32.activeRecordingPlaybackId = '';
-          _this32.activeSelfCheckPreviewKey = '';
+        var _this33$recordingsAud;
+        if (!((_this33$recordingsAud = _this33.recordingsAudioElement) !== null && _this33$recordingsAud !== void 0 && _this33$recordingsAud.ended)) {
+          _this33.activeRecordingPlaybackId = '';
+          _this33.activeSelfCheckPreviewKey = '';
         }
       });
       this.recordingsAudioElement.addEventListener('ended', function () {
-        _this32.activeRecordingPlaybackId = '';
-        _this32.activeSelfCheckPreviewKey = '';
+        _this33.activeRecordingPlaybackId = '';
+        _this33.activeSelfCheckPreviewKey = '';
       });
       this.recordingsAudioElement.addEventListener('error', function (error) {
         console.error('Recordings playback error:', error);
-        _this32.activeRecordingPlaybackId = '';
-        _this32.activeSelfCheckPreviewKey = '';
-        _this32.showBanner('Unable to play this recording right now.', 'error', 2200);
+        _this33.activeRecordingPlaybackId = '';
+        _this33.activeSelfCheckPreviewKey = '';
+        _this33.showBanner('Unable to play this recording right now.', 'error', 2200);
       });
       this.recordingsAudioBound = true;
     },
@@ -27566,62 +29526,62 @@ function createAdvancedState() {
       this.activeSelfCheckPreviewKey = '';
     },
     toggleRecordingPlayback: function toggleRecordingPlayback(recording) {
-      var _this33 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7() {
+      var _this34 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee8() {
         var audio, _t3;
-        return _regenerator().w(function (_context7) {
-          while (1) switch (_context7.p = _context7.n) {
+        return _regenerator().w(function (_context8) {
+          while (1) switch (_context8.p = _context8.n) {
             case 0:
               if (recording !== null && recording !== void 0 && recording.audioSrc) {
-                _context7.n = 1;
+                _context8.n = 1;
                 break;
               }
-              return _context7.a(2);
+              return _context8.a(2);
             case 1:
-              audio = _this33.ensureRecordingsAudioElement();
+              audio = _this34.ensureRecordingsAudioElement();
               if (audio) {
-                _context7.n = 2;
+                _context8.n = 2;
                 break;
               }
-              _this33.showBanner('Audio system not ready', 'error', 2200);
-              return _context7.a(2);
+              _this34.showBanner('Audio system not ready', 'error', 2200);
+              return _context8.a(2);
             case 2:
-              if (!(_this33.activeRecordingPlaybackId === recording.id && !audio.paused)) {
-                _context7.n = 3;
+              if (!(_this34.activeRecordingPlaybackId === recording.id && !audio.paused)) {
+                _context8.n = 3;
                 break;
               }
               audio.pause();
-              _this33.activeRecordingPlaybackId = '';
-              _this33.activeSelfCheckPreviewKey = '';
-              return _context7.a(2);
+              _this34.activeRecordingPlaybackId = '';
+              _this34.activeSelfCheckPreviewKey = '';
+              return _context8.a(2);
             case 3:
-              _this33.pendingRecordingDeleteId = '';
-              if (_this33.audioElement && !_this33.audioElement.paused) {
-                _this33.audioElement.pause();
-                _this33.isPlaying = false;
+              _this34.pendingRecordingDeleteId = '';
+              if (_this34.audioElement && !_this34.audioElement.paused) {
+                _this34.audioElement.pause();
+                _this34.isPlaying = false;
               }
               if (audio.currentSrc !== recording.audioSrc) {
                 audio.src = recording.audioSrc;
                 audio.load();
               }
-              _context7.p = 4;
-              _context7.n = 5;
+              _context8.p = 4;
+              _context8.n = 5;
               return audio.play();
             case 5:
-              _this33.activeRecordingPlaybackId = recording.id;
-              _this33.activeSelfCheckPreviewKey = '';
-              _context7.n = 7;
+              _this34.activeRecordingPlaybackId = recording.id;
+              _this34.activeSelfCheckPreviewKey = '';
+              _context8.n = 7;
               break;
             case 6:
-              _context7.p = 6;
-              _t3 = _context7.v;
+              _context8.p = 6;
+              _t3 = _context8.v;
               console.error('Failed to play recording:', _t3);
-              _this33.activeRecordingPlaybackId = '';
-              _this33.showBanner('Unable to play this recording right now.', 'error', 2200);
+              _this34.activeRecordingPlaybackId = '';
+              _this34.showBanner('Unable to play this recording right now.', 'error', 2200);
             case 7:
-              return _context7.a(2);
+              return _context8.a(2);
           }
-        }, _callee7, null, [[4, 6]]);
+        }, _callee8, null, [[4, 6]]);
       }))();
     },
     promptDeleteRecording: function promptDeleteRecording(recordingId) {
@@ -27840,11 +29800,11 @@ function createAdvancedState() {
       }) || '';
     },
     blobToDataUrl: function blobToDataUrl(blob) {
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee8() {
-        return _regenerator().w(function (_context8) {
-          while (1) switch (_context8.n) {
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee9() {
+        return _regenerator().w(function (_context9) {
+          while (1) switch (_context9.n) {
             case 0:
-              _context8.n = 1;
+              _context9.n = 1;
               return new Promise(function (resolve, reject) {
                 var reader = new FileReader();
                 reader.onloadend = function () {
@@ -27856,9 +29816,9 @@ function createAdvancedState() {
                 reader.readAsDataURL(blob);
               });
             case 1:
-              return _context8.a(2, _context8.v);
+              return _context9.a(2, _context9.v);
           }
-        }, _callee8);
+        }, _callee9);
       }))();
     },
     cleanupSelfCheckMedia: function cleanupSelfCheckMedia() {
@@ -27877,154 +29837,154 @@ function createAdvancedState() {
       this.selfCheckStartedAt = 0;
     },
     startSelfCheckRecording: function startSelfCheckRecording(verse) {
-      var _this34 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee0() {
-        var _this34$selfCheckDraf, stream, mimeType, recorder, _t5;
-        return _regenerator().w(function (_context0) {
-          while (1) switch (_context0.p = _context0.n) {
+      var _this35 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
+        var _this35$selfCheckDraf, stream, mimeType, recorder, _t5;
+        return _regenerator().w(function (_context1) {
+          while (1) switch (_context1.p = _context1.n) {
             case 0:
               if (verse !== null && verse !== void 0 && verse.key) {
-                _context0.n = 1;
+                _context1.n = 1;
                 break;
               }
-              return _context0.a(2);
+              return _context1.a(2);
             case 1:
-              if (_this34.supportsSelfCheckRecording()) {
-                _context0.n = 2;
+              if (_this35.supportsSelfCheckRecording()) {
+                _context1.n = 2;
                 break;
               }
-              _this34.selfCheckError = 'Recording is not supported in this browser.';
-              return _context0.a(2);
+              _this35.selfCheckError = 'Recording is not supported in this browser.';
+              return _context1.a(2);
             case 2:
-              if (!_this34.isSelfCheckRecording) {
-                _context0.n = 3;
+              if (!_this35.isSelfCheckRecording) {
+                _context1.n = 3;
                 break;
               }
-              return _context0.a(2);
+              return _context1.a(2);
             case 3:
-              _this34.loadRecordingsLibrary();
-              _this34.selfCheckVerseRef = _this34.buildSelfCheckVerseRef(verse);
-              _this34.selfCheckVerseKey = verse.key;
-              _this34.selfCheckFontSize = _this34.getSelfCheckInitialFontSize(verse);
-              _this34.showSelfCheckModal = true;
-              _this34.selfCheckError = '';
-              _this34.selfCheckLastSavedAyahKey = '';
-              _this34.selfCheckPreparing = true;
-              _this34.selfCheckPreparingLabel = 'Preparing microphone…';
-              _this34.selfCheckPermissionState = 'prompt';
-              _this34.selfCheckDiscardOnStop = false;
-              _this34.selfCheckPeekActive = false;
-              _this34.stopRecordingsPlayback({
+              _this35.loadRecordingsLibrary();
+              _this35.selfCheckVerseRef = _this35.buildSelfCheckVerseRef(verse);
+              _this35.selfCheckVerseKey = verse.key;
+              _this35.selfCheckFontSize = _this35.getSelfCheckInitialFontSize(verse);
+              _this35.showSelfCheckModal = true;
+              _this35.selfCheckError = '';
+              _this35.selfCheckLastSavedAyahKey = '';
+              _this35.selfCheckPreparing = true;
+              _this35.selfCheckPreparingLabel = 'Preparing microphone…';
+              _this35.selfCheckPermissionState = 'prompt';
+              _this35.selfCheckDiscardOnStop = false;
+              _this35.selfCheckPeekActive = false;
+              _this35.stopRecordingsPlayback({
                 clearSource: true
               });
-              if (_this34.audioElement && !_this34.audioElement.paused) {
-                _this34.audioElement.pause();
-                _this34.isPlaying = false;
+              if (_this35.audioElement && !_this35.audioElement.paused) {
+                _this35.audioElement.pause();
+                _this35.isPlaying = false;
               }
-              _context0.p = 4;
-              if (((_this34$selfCheckDraf = _this34.selfCheckDraft) === null || _this34$selfCheckDraf === void 0 ? void 0 : _this34$selfCheckDraf.ayahKey) === verse.key) {
-                _this34.selfCheckDraft = null;
+              _context1.p = 4;
+              if (((_this35$selfCheckDraf = _this35.selfCheckDraft) === null || _this35$selfCheckDraf === void 0 ? void 0 : _this35$selfCheckDraf.ayahKey) === verse.key) {
+                _this35.selfCheckDraft = null;
               }
-              _context0.n = 5;
+              _context1.n = 5;
               return navigator.mediaDevices.getUserMedia({
                 audio: true
               });
             case 5:
-              stream = _context0.v;
-              mimeType = _this34.chooseRecorderMimeType();
+              stream = _context1.v;
+              mimeType = _this35.chooseRecorderMimeType();
               recorder = mimeType ? new MediaRecorder(stream, {
                 mimeType: mimeType
               }) : new MediaRecorder(stream);
-              _this34.selfCheckMediaStream = stream;
-              _this34.selfCheckMediaRecorder = recorder;
-              _this34.selfCheckChunks = [];
-              _this34.selfCheckPermissionState = 'granted';
+              _this35.selfCheckMediaStream = stream;
+              _this35.selfCheckMediaRecorder = recorder;
+              _this35.selfCheckChunks = [];
+              _this35.selfCheckPermissionState = 'granted';
               recorder.ondataavailable = function (event) {
                 var _event$data;
-                if ((_event$data = event.data) !== null && _event$data !== void 0 && _event$data.size) _this34.selfCheckChunks.push(event.data);
+                if ((_event$data = event.data) !== null && _event$data !== void 0 && _event$data.size) _this35.selfCheckChunks.push(event.data);
               };
               recorder.onerror = function () {
-                _this34.selfCheckError = 'The microphone stopped unexpectedly.';
-                _this34.selfCheckPreparing = false;
-                _this34.isSelfCheckRecording = false;
-                _this34.cleanupSelfCheckMedia();
+                _this35.selfCheckError = 'The microphone stopped unexpectedly.';
+                _this35.selfCheckPreparing = false;
+                _this35.isSelfCheckRecording = false;
+                _this35.cleanupSelfCheckMedia();
               };
-              recorder.onstop = /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee9() {
-                var durationSeconds, chunks, discard, _this34$currentChapte, blob, dataUrl, _t4;
-                return _regenerator().w(function (_context9) {
-                  while (1) switch (_context9.p = _context9.n) {
+              recorder.onstop = /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee0() {
+                var durationSeconds, chunks, discard, _this35$currentChapte, blob, dataUrl, _t4;
+                return _regenerator().w(function (_context0) {
+                  while (1) switch (_context0.p = _context0.n) {
                     case 0:
-                      durationSeconds = Math.max(1, Math.round((Date.now() - Number(_this34.selfCheckStartedAt || Date.now())) / 1000));
-                      chunks = _toConsumableArray(_this34.selfCheckChunks);
-                      discard = _this34.selfCheckDiscardOnStop;
-                      _this34.selfCheckPreparing = false;
-                      _this34.isSelfCheckRecording = false;
-                      _this34.selfCheckDiscardOnStop = false;
-                      _context9.p = 1;
+                      durationSeconds = Math.max(1, Math.round((Date.now() - Number(_this35.selfCheckStartedAt || Date.now())) / 1000));
+                      chunks = _toConsumableArray(_this35.selfCheckChunks);
+                      discard = _this35.selfCheckDiscardOnStop;
+                      _this35.selfCheckPreparing = false;
+                      _this35.isSelfCheckRecording = false;
+                      _this35.selfCheckDiscardOnStop = false;
+                      _context0.p = 1;
                       if (!(!discard && chunks.length)) {
-                        _context9.n = 3;
+                        _context0.n = 3;
                         break;
                       }
-                      _this34.selfCheckPreparing = true;
-                      _this34.selfCheckPreparingLabel = 'Processing recording…';
+                      _this35.selfCheckPreparing = true;
+                      _this35.selfCheckPreparingLabel = 'Processing recording…';
                       blob = new Blob(chunks, {
                         type: recorder.mimeType || mimeType || 'audio/webm'
                       });
-                      _context9.n = 2;
-                      return _this34.blobToDataUrl(blob);
+                      _context0.n = 2;
+                      return _this35.blobToDataUrl(blob);
                     case 2:
-                      dataUrl = _context9.v;
-                      _this34.selfCheckDraft = {
+                      dataUrl = _context0.v;
+                      _this35.selfCheckDraft = {
                         id: "draft-".concat(verse.key, "-").concat(Date.now()),
                         ayahKey: verse.key,
                         ayahNumber: verse.number,
                         chapterId: verse.chapterId,
-                        chapterName: ((_this34$currentChapte = _this34.currentChapter) === null || _this34$currentChapte === void 0 ? void 0 : _this34$currentChapte.name_simple) || _this34.activeChapterName || "Surah ".concat(verse.chapterId),
+                        chapterName: ((_this35$currentChapte = _this35.currentChapter) === null || _this35$currentChapte === void 0 ? void 0 : _this35$currentChapte.name_simple) || _this35.activeChapterName || "Surah ".concat(verse.chapterId),
                         recordedAt: new Date().toISOString(),
                         durationSeconds: durationSeconds,
                         result: 'Needs Review',
                         audioSrc: dataUrl
                       };
-                      _this34.showBanner("Recording ready for Ayah ".concat(verse.number), 'success', 1800);
+                      _this35.showBanner("Recording ready for Ayah ".concat(verse.number), 'success', 1800);
                     case 3:
-                      _context9.n = 5;
+                      _context0.n = 5;
                       break;
                     case 4:
-                      _context9.p = 4;
-                      _t4 = _context9.v;
+                      _context0.p = 4;
+                      _t4 = _context0.v;
                       console.error('Failed to process self-check recording:', _t4);
-                      _this34.selfCheckError = 'The recording could not be prepared for review.';
+                      _this35.selfCheckError = 'The recording could not be prepared for review.';
                     case 5:
-                      _context9.p = 5;
-                      _this34.selfCheckPreparing = false;
-                      _this34.selfCheckPreparingLabel = '';
-                      _this34.cleanupSelfCheckMedia();
-                      return _context9.f(5);
+                      _context0.p = 5;
+                      _this35.selfCheckPreparing = false;
+                      _this35.selfCheckPreparingLabel = '';
+                      _this35.cleanupSelfCheckMedia();
+                      return _context0.f(5);
                     case 6:
-                      return _context9.a(2);
+                      return _context0.a(2);
                   }
-                }, _callee9, null, [[1, 4, 5, 6]]);
+                }, _callee0, null, [[1, 4, 5, 6]]);
               }));
               recorder.start();
-              _this34.selfCheckStartedAt = Date.now();
-              _this34.isSelfCheckRecording = true;
-              _this34.selfCheckPreparing = false;
-              _this34.selfCheckPreparingLabel = '';
-              _context0.n = 7;
+              _this35.selfCheckStartedAt = Date.now();
+              _this35.isSelfCheckRecording = true;
+              _this35.selfCheckPreparing = false;
+              _this35.selfCheckPreparingLabel = '';
+              _context1.n = 7;
               break;
             case 6:
-              _context0.p = 6;
-              _t5 = _context0.v;
+              _context1.p = 6;
+              _t5 = _context1.v;
               console.error('Failed to start self-check recording:', _t5);
-              _this34.selfCheckPermissionState = 'denied';
-              _this34.selfCheckPreparing = false;
-              _this34.selfCheckPreparingLabel = '';
-              _this34.selfCheckError = 'Microphone access was blocked. Allow microphone permission, then try again.';
-              _this34.cleanupSelfCheckMedia();
+              _this35.selfCheckPermissionState = 'denied';
+              _this35.selfCheckPreparing = false;
+              _this35.selfCheckPreparingLabel = '';
+              _this35.selfCheckError = 'Microphone access was blocked. Allow microphone permission, then try again.';
+              _this35.cleanupSelfCheckMedia();
             case 7:
-              return _context0.a(2);
+              return _context1.a(2);
           }
-        }, _callee0, null, [[4, 6]]);
+        }, _callee1, null, [[4, 6]]);
       }))();
     },
     stopSelfCheckRecording: function stopSelfCheckRecording() {
@@ -28054,10 +30014,10 @@ function createAdvancedState() {
       this.pendingRecordingDeleteId = '';
     },
     restartSelfCheckRecording: function restartSelfCheckRecording(verse) {
-      var _this35 = this;
+      var _this36 = this;
       this.discardSelfCheckRecording();
       window.setTimeout(function () {
-        _this35.startSelfCheckRecording(verse);
+        _this36.startSelfCheckRecording(verse);
       }, 40);
     },
     setSelfCheckDraftResult: function setSelfCheckDraftResult(result) {
@@ -28067,61 +30027,61 @@ function createAdvancedState() {
       });
     },
     toggleSelfCheckPreview: function toggleSelfCheckPreview(verseKey) {
-      var _this36 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
+      var _this37 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee10() {
         var draft, audio, _t6;
-        return _regenerator().w(function (_context1) {
-          while (1) switch (_context1.p = _context1.n) {
+        return _regenerator().w(function (_context10) {
+          while (1) switch (_context10.p = _context10.n) {
             case 0:
-              draft = _this36.getSelfCheckDraftForVerse(verseKey);
+              draft = _this37.getSelfCheckDraftForVerse(verseKey);
               if (draft !== null && draft !== void 0 && draft.audioSrc) {
-                _context1.n = 1;
+                _context10.n = 1;
                 break;
               }
-              return _context1.a(2);
+              return _context10.a(2);
             case 1:
-              audio = _this36.ensureRecordingsAudioElement();
+              audio = _this37.ensureRecordingsAudioElement();
               if (audio) {
-                _context1.n = 2;
+                _context10.n = 2;
                 break;
               }
-              _this36.showBanner('Audio system not ready', 'error', 2200);
-              return _context1.a(2);
+              _this37.showBanner('Audio system not ready', 'error', 2200);
+              return _context10.a(2);
             case 2:
-              if (!(_this36.activeSelfCheckPreviewKey === verseKey && !audio.paused)) {
-                _context1.n = 3;
+              if (!(_this37.activeSelfCheckPreviewKey === verseKey && !audio.paused)) {
+                _context10.n = 3;
                 break;
               }
               audio.pause();
-              _this36.activeSelfCheckPreviewKey = '';
-              return _context1.a(2);
+              _this37.activeSelfCheckPreviewKey = '';
+              return _context10.a(2);
             case 3:
-              _this36.stopRecordingsPlayback({
+              _this37.stopRecordingsPlayback({
                 clearSource: true
               });
-              if (_this36.audioElement && !_this36.audioElement.paused) {
-                _this36.audioElement.pause();
-                _this36.isPlaying = false;
+              if (_this37.audioElement && !_this37.audioElement.paused) {
+                _this37.audioElement.pause();
+                _this37.isPlaying = false;
               }
               audio.src = draft.audioSrc;
               audio.load();
-              _context1.p = 4;
-              _context1.n = 5;
+              _context10.p = 4;
+              _context10.n = 5;
               return audio.play();
             case 5:
-              _this36.activeSelfCheckPreviewKey = verseKey;
-              _context1.n = 7;
+              _this37.activeSelfCheckPreviewKey = verseKey;
+              _context10.n = 7;
               break;
             case 6:
-              _context1.p = 6;
-              _t6 = _context1.v;
+              _context10.p = 6;
+              _t6 = _context10.v;
               console.error('Failed to preview self-check recording:', _t6);
-              _this36.activeSelfCheckPreviewKey = '';
-              _this36.showBanner('Unable to play this recording right now.', 'error', 2200);
+              _this37.activeSelfCheckPreviewKey = '';
+              _this37.showBanner('Unable to play this recording right now.', 'error', 2200);
             case 7:
-              return _context1.a(2);
+              return _context10.a(2);
           }
-        }, _callee1, null, [[4, 6]]);
+        }, _callee10, null, [[4, 6]]);
       }))();
     },
     saveSelfCheckRecording: function saveSelfCheckRecording(verse) {
@@ -28158,22 +30118,22 @@ function createAdvancedState() {
       if (action === 'delete-saved-session' && actionData !== null && actionData !== void 0 && actionData.sessionId) this.performDeleteSavedSession(actionData.sessionId);
     },
     downloadVerseAudio: function downloadVerseAudio(verse) {
-      var _this37 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee10() {
+      var _this38 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee11() {
         var audioUrl, filename, downloadUrl, anchor;
-        return _regenerator().w(function (_context10) {
-          while (1) switch (_context10.n) {
+        return _regenerator().w(function (_context11) {
+          while (1) switch (_context11.n) {
             case 0:
-              audioUrl = _this37.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
+              audioUrl = _this38.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
               if (audioUrl) {
-                _context10.n = 1;
+                _context11.n = 1;
                 break;
               }
-              _this37.showBanner('Audio not available for this ayah', 'info', 2200);
-              return _context10.a(2);
+              _this38.showBanner('Audio not available for this ayah', 'info', 2200);
+              return _context11.a(2);
             case 1:
               try {
-                filename = "surah-".concat(_this37.chapterId, "-ayah-").concat(verse.number, ".mp3");
+                filename = "surah-".concat(_this38.chapterId, "-ayah-").concat(verse.number, ".mp3");
                 downloadUrl = "/memorisation/audio-download?url=".concat(encodeURIComponent(audioUrl), "&filename=").concat(encodeURIComponent(filename));
                 anchor = document.createElement('a');
                 anchor.href = downloadUrl;
@@ -28181,15 +30141,15 @@ function createAdvancedState() {
                 document.body.appendChild(anchor);
                 anchor.click();
                 anchor.remove();
-                _this37.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
+                _this38.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
               } catch (error) {
                 console.error('Verse download failed:', error);
-                _this37.showBanner('Failed to download ayah audio', 'error', 2600);
+                _this38.showBanner('Failed to download ayah audio', 'error', 2600);
               }
             case 2:
-              return _context10.a(2);
+              return _context11.a(2);
           }
-        }, _callee10);
+        }, _callee11);
       }))();
     },
     syncSettingsDraft: function syncSettingsDraft() {
@@ -28239,7 +30199,7 @@ function createAdvancedState() {
       return this.setActiveVerse(verseKey, options);
     },
     openToolsPanel: function openToolsPanel() {
-      var _this38 = this;
+      var _this39 = this;
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var _options$verseKey = options.verseKey,
         verseKey = _options$verseKey === void 0 ? null : _options$verseKey,
@@ -28263,9 +30223,9 @@ function createAdvancedState() {
       this.showTools = true;
       this.persistUiState();
       this.$nextTick(function () {
-        var panelBody = _this38.$refs.toolsBody;
+        var panelBody = _this39.$refs.toolsBody;
         if (panelBody) panelBody.scrollTop = 0;
-        _this38.focusToolsPanel();
+        _this39.focusToolsPanel();
       });
     },
     closeToolsPanel: function closeToolsPanel() {
@@ -28326,7 +30286,7 @@ function createAdvancedState() {
     },
     onVerseTouchStart: function onVerseTouchStart(event) {
       var _event$changedTouches,
-        _this39 = this;
+        _this40 = this;
       var verseKey = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
       var touch = event === null || event === void 0 || (_event$changedTouches = event.changedTouches) === null || _event$changedTouches === void 0 ? void 0 : _event$changedTouches[0];
       if (!touch) return;
@@ -28335,13 +30295,13 @@ function createAdvancedState() {
       this.clearTouchPeek();
       if (!this.blurModeEnabled || !this.isVerseBlurred(verseKey)) return;
       this.longPressPeekTimer = window.setTimeout(function () {
-        _this39.longPressPeekTriggered = true;
-        _this39.touchPeekVerseKey = verseKey;
+        _this40.longPressPeekTriggered = true;
+        _this40.touchPeekVerseKey = verseKey;
       }, 320);
     },
     onVerseTouchEnd: function onVerseTouchEnd(event) {
       var _event$changedTouches2,
-        _this40 = this;
+        _this41 = this;
       var verseKey = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
       var touch = event === null || event === void 0 || (_event$changedTouches2 = event.changedTouches) === null || _event$changedTouches2 === void 0 ? void 0 : _event$changedTouches2[0];
       if (!touch) return;
@@ -28352,7 +30312,7 @@ function createAdvancedState() {
       if (longPressTriggered) {
         this.suppressNextVerseClick = true;
         window.setTimeout(function () {
-          _this40.suppressNextVerseClick = false;
+          _this41.suppressNextVerseClick = false;
         }, 260);
         return;
       }
@@ -28482,15 +30442,15 @@ function createAdvancedState() {
       } catch (e) {}
     },
     scheduleLoadVerses: function scheduleLoadVerses() {
-      var _this41 = this;
+      var _this42 = this;
       var mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.currentMode;
       if (this.loadVersesTimer) clearTimeout(this.loadVersesTimer);
       this.loadVersesTimer = setTimeout(function () {
-        _this41.loadVerses(mode);
+        _this42.loadVerses(mode);
       }, 200);
     },
     syncWorkspaceFromControls: function syncWorkspaceFromControls() {
-      var _this42 = this;
+      var _this43 = this;
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       if (this.isBootstrapping) return;
       var mode = options.mode || this.currentMode;
@@ -28515,37 +30475,37 @@ function createAdvancedState() {
         return;
       }
       this.workspaceSyncTimer = setTimeout(function () {
-        _this42.loadVerses(mode);
+        _this43.loadVerses(mode);
       }, 160);
     },
     applyWorkspaceControls: function applyWorkspaceControls() {
       var _arguments3 = arguments,
-        _this43 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee11() {
+        _this44 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee12() {
         var options, mode;
-        return _regenerator().w(function (_context11) {
-          while (1) switch (_context11.n) {
+        return _regenerator().w(function (_context12) {
+          while (1) switch (_context12.n) {
             case 0:
               options = _arguments3.length > 0 && _arguments3[0] !== undefined ? _arguments3[0] : {};
-              if (!_this43.isBootstrapping) {
-                _context11.n = 1;
+              if (!_this44.isBootstrapping) {
+                _context12.n = 1;
                 break;
               }
-              return _context11.a(2);
+              return _context12.a(2);
             case 1:
-              mode = options.mode || _this43.currentMode;
-              if (_this43.workspaceSyncTimer) clearTimeout(_this43.workspaceSyncTimer);
-              _this43.persistUiState();
-              _this43.syncWorkspaceFromControls(_objectSpread(_objectSpread({}, options), {}, {
+              mode = options.mode || _this44.currentMode;
+              if (_this44.workspaceSyncTimer) clearTimeout(_this44.workspaceSyncTimer);
+              _this44.persistUiState();
+              _this44.syncWorkspaceFromControls(_objectSpread(_objectSpread({}, options), {}, {
                 mode: mode,
                 immediate: true
               }));
-              _context11.n = 2;
-              return _this43.$nextTick();
+              _context12.n = 2;
+              return _this44.$nextTick();
             case 2:
-              return _context11.a(2);
+              return _context12.a(2);
           }
-        }, _callee11);
+        }, _callee12);
       }))();
     },
     clampControlRange: function clampControlRange() {
@@ -28971,36 +30931,36 @@ function createAdvancedState() {
       }
     },
     continueLastSession: function continueLastSession() {
-      var _this44 = this;
-      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee12() {
+      var _this45 = this;
+      return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee13() {
         var _payload$config1;
         var payload;
-        return _regenerator().w(function (_context12) {
-          while (1) switch (_context12.n) {
+        return _regenerator().w(function (_context13) {
+          while (1) switch (_context13.n) {
             case 0:
-              payload = _this44.continueSessionPayload;
+              payload = _this45.continueSessionPayload;
               if (payload) {
-                _context12.n = 1;
+                _context13.n = 1;
                 break;
               }
-              return _context12.a(2);
+              return _context13.a(2);
             case 1:
-              _this44.hasContinueSession = false;
+              _this45.hasContinueSession = false;
               if ((_payload$config1 = payload.config) !== null && _payload$config1 !== void 0 && _payload$config1.chapterId) {
-                _context12.n = 2;
+                _context13.n = 2;
                 break;
               }
-              _this44.clearContinueSession();
-              return _context12.a(2);
+              _this45.clearContinueSession();
+              return _context13.a(2);
             case 2:
-              _context12.n = 3;
-              return _this44.hydrateSessionFromPayload(payload, {
+              _context13.n = 3;
+              return _this45.hydrateSessionFromPayload(payload, {
                 bannerText: 'Session restored'
               });
             case 3:
-              _this44.$nextTick(function () {
-                if (_this44.effectiveActiveVerseKey) {
-                  var el = document.querySelector(".verse-card[data-verse-key=\"".concat(_this44.effectiveActiveVerseKey, "\"]"));
+              _this45.$nextTick(function () {
+                if (_this45.effectiveActiveVerseKey) {
+                  var el = document.querySelector(".verse-card[data-verse-key=\"".concat(_this45.effectiveActiveVerseKey, "\"]"));
                   if (el) el.scrollIntoView({
                     behavior: 'smooth',
                     block: 'center'
@@ -29008,9 +30968,9 @@ function createAdvancedState() {
                 }
               });
             case 4:
-              return _context12.a(2);
+              return _context13.a(2);
           }
-        }, _callee12);
+        }, _callee13);
       }))();
     },
     restoreAudioState: function restoreAudioState() {
@@ -29022,7 +30982,7 @@ function createAdvancedState() {
     },
     applyRestoredAudioState: function applyRestoredAudioState() {
       var _this$activeVerseRef,
-        _this45 = this;
+        _this46 = this;
       var state = this.restoredAudioState;
       if (!state || !this.audioElement || !state.src) return;
       var activeAudio = (_this$activeVerseRef = this.activeVerseRef) !== null && _this$activeVerseRef !== void 0 && _this$activeVerseRef.audio ? this.normalizeAudioUrl(this.activeVerseRef.audio) : '';
@@ -29035,15 +30995,15 @@ function createAdvancedState() {
       this.speed = Number(state.speed || this.speed || 1);
       var _seekOnLoad = function seekOnLoad() {
         try {
-          _this45.audioElement.currentTime = Number(state.currentTime || 0);
-          _this45.audioElement.playbackRate = Number(state.speed || _this45.speed || 1);
+          _this46.audioElement.currentTime = Number(state.currentTime || 0);
+          _this46.audioElement.playbackRate = Number(state.speed || _this46.speed || 1);
           if (state.isPlaying) {
-            _this45.audioElement.play().then(function () {
-              _this45.isPlaying = true;
+            _this46.audioElement.play().then(function () {
+              _this46.isPlaying = true;
             })["catch"](function () {});
           }
         } catch (e) {}
-        _this45.audioElement.removeEventListener('loadedmetadata', _seekOnLoad);
+        _this46.audioElement.removeEventListener('loadedmetadata', _seekOnLoad);
       };
       this.audioElement.addEventListener('loadedmetadata', _seekOnLoad);
     },
@@ -29082,7 +31042,7 @@ function createAdvancedState() {
       this.isPlaying = false;
     },
     restoreSessionExitSnapshot: function restoreSessionExitSnapshot() {
-      var _this46 = this;
+      var _this47 = this;
       var snapshot = this.sessionExitSnapshot;
       if (!snapshot) return;
       this.currentMode = snapshot.mode || this.currentMode;
@@ -29110,7 +31070,7 @@ function createAdvancedState() {
         isPlaying: !!snapshot.isPlaying
       };
       this.$nextTick(function () {
-        _this46.applyRestoredAudioState();
+        _this47.applyRestoredAudioState();
       });
     },
     closeSessionExitModal: function closeSessionExitModal() {
@@ -29304,7 +31264,7 @@ function createAdvancedState() {
     this.persistCentralSessionState();
     this.showBanner("Speed changed to ".concat(safeSpeed, "x"), 'info', 1000);
   }), "setActiveTab", function setActiveTab(tabName) {
-    var _this47 = this;
+    var _this48 = this;
     // Validate tab name
     var validTabs = ['tools', 'techniques', 'saved', 'stats', 'settings'];
     if (!validTabs.includes(tabName)) {
@@ -29339,7 +31299,7 @@ function createAdvancedState() {
 
     // Scroll to top of panel content
     this.$nextTick(function () {
-      var panelBody = _this47.$refs.toolsBody;
+      var panelBody = _this48.$refs.toolsBody;
       if (panelBody) {
         panelBody.scrollTop = 0;
       }
@@ -29427,11 +31387,11 @@ function createAdvancedState() {
     this.$forceUpdate();
     this.showBanner(this.tajweedEnabled ? 'Tajweed colors enabled' : 'Tajweed colors disabled', 'info', 1500);
   }), "cycleQuranFontPill", function cycleQuranFontPill() {
-    var _this48 = this;
+    var _this49 = this;
     var options = this.quranFontOptions || [];
     if (!options.length) return;
     var currentIndex = Math.max(0, options.findIndex(function (f) {
-      return f.value === _this48.quranFont;
+      return f.value === _this49.quranFont;
     }));
     var next = options[(currentIndex + 1) % options.length];
     this.selectFont(next.value);
@@ -29447,7 +31407,7 @@ function createAdvancedState() {
     this.persistUiState();
     this.$forceUpdate();
   }), "setupWordClickHandler", function setupWordClickHandler() {
-    var _this49 = this;
+    var _this50 = this;
     document.addEventListener('click', function (e) {
       var wordElement = e.target.closest('.wbw-word');
       if (wordElement) {
@@ -29455,27 +31415,27 @@ function createAdvancedState() {
         var wordIndex = parseInt(wordElement.dataset.wordIndex);
         var wordAudio = wordElement.dataset.wordAudio;
         if (wordAudio) {
-          var _verse = _this49.verses.find(function (item) {
+          var _verse = _this50.verses.find(function (item) {
             return item.key === verseKey;
           });
-          _this49.playWordAudio(wordAudio, _verse, wordIndex);
+          _this50.playWordAudio(wordAudio, _verse, wordIndex);
           return;
         }
-        var verse = _this49.verses.find(function (item) {
+        var verse = _this50.verses.find(function (item) {
           return item.key === verseKey;
         });
-        _this49.playWordAudio('', verse, wordIndex);
+        _this50.playWordAudio('', verse, wordIndex);
       }
     });
   }), "getRemainingTimeDetails", function getRemainingTimeDetails() {
-    var _this50 = this;
+    var _this51 = this;
     var remainingItems = (this.queue || []).slice(this.queueIndex);
     if (!remainingItems.length) return null;
     var reviewTimePerAyah = 5;
     var totalAudioSeconds = 0;
     var totalReviewSeconds = 0;
     remainingItems.forEach(function (item, index) {
-      totalAudioSeconds += _this50.getQueueItemAudioSeconds(item, index === 0);
+      totalAudioSeconds += _this51.getQueueItemAudioSeconds(item, index === 0);
       totalReviewSeconds += reviewTimePerAyah;
     });
     var totalSeconds = totalAudioSeconds + totalReviewSeconds;
@@ -29500,9 +31460,9 @@ function createAdvancedState() {
     this.fontDropdownOpen = false;
     this.persistUiState();
   }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "getCurrentFontLabel", function getCurrentFontLabel() {
-    var _this51 = this;
+    var _this52 = this;
     var font = this.quranFontOptions.find(function (f) {
-      return f.value === _this51.quranFont;
+      return f.value === _this52.quranFont;
     });
     return font ? font.label : 'Font';
   }), "increaseTextScale", function increaseTextScale(event) {
@@ -29618,49 +31578,49 @@ function createAdvancedState() {
     var verseNumber = parseInt(verseParts[1]);
     return Math.abs(verseNumber - targetNumber) === 1;
   }), "downloadOfflineVerses", function downloadOfflineVerses() {
-    var _this52 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee13() {
-      var _this52$currentChapte, _this52$verses$, surahId, surahName, found, storageKey, offlineData, catalogKey, catalog, entry, filtered, _t7;
-      return _regenerator().w(function (_context13) {
-        while (1) switch (_context13.p = _context13.n) {
+    var _this53 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee14() {
+      var _this53$currentChapte, _this53$verses$, surahId, surahName, found, storageKey, offlineData, catalogKey, catalog, entry, filtered, _t7;
+      return _regenerator().w(function (_context14) {
+        while (1) switch (_context14.p = _context14.n) {
           case 0:
-            if (!(!_this52.verses || !_this52.verses.length)) {
-              _context13.n = 1;
+            if (!(!_this53.verses || !_this53.verses.length)) {
+              _context14.n = 1;
               break;
             }
-            _this52.showBanner('Load a surah first before downloading', 'info', 3000);
-            _this52.showTools = true;
-            return _context13.a(2);
+            _this53.showBanner('Load a surah first before downloading', 'info', 3000);
+            _this53.showTools = true;
+            return _context14.a(2);
           case 1:
-            _context13.p = 1;
-            surahId = _this52.chapterId;
-            surahName = (_this52$currentChapte = _this52.currentChapter) === null || _this52$currentChapte === void 0 ? void 0 : _this52$currentChapte.name_simple;
-            if (!surahId && (_this52$verses$ = _this52.verses[0]) !== null && _this52$verses$ !== void 0 && _this52$verses$.key) {
-              surahId = parseInt(_this52.verses[0].key.split(':')[0]);
-              found = _this52.chapters.find(function (c) {
+            _context14.p = 1;
+            surahId = _this53.chapterId;
+            surahName = (_this53$currentChapte = _this53.currentChapter) === null || _this53$currentChapte === void 0 ? void 0 : _this53$currentChapte.name_simple;
+            if (!surahId && (_this53$verses$ = _this53.verses[0]) !== null && _this53$verses$ !== void 0 && _this53$verses$.key) {
+              surahId = parseInt(_this53.verses[0].key.split(':')[0]);
+              found = _this53.chapters.find(function (c) {
                 return c.id === surahId;
               });
               surahName = (found === null || found === void 0 ? void 0 : found.name_simple) || 'Selected surah';
             }
             if (surahId) {
-              _context13.n = 2;
+              _context14.n = 2;
               break;
             }
-            _this52.showBanner('Could not identify surah', 'error', 3000);
-            return _context13.a(2);
+            _this53.showBanner('Could not identify surah', 'error', 3000);
+            return _context14.a(2);
           case 2:
-            storageKey = "offline_surah_".concat(surahId, "_").concat(_this52.rangeStart, "_").concat(_this52.rangeEnd);
+            storageKey = "offline_surah_".concat(surahId, "_").concat(_this53.rangeStart, "_").concat(_this53.rangeEnd);
             offlineData = {
               metadata: {
                 surah: surahName,
                 surahId: surahId,
-                rangeStart: _this52.rangeStart,
-                rangeEnd: _this52.rangeEnd,
-                reciterId: _this52.reciterId,
+                rangeStart: _this53.rangeStart,
+                rangeEnd: _this53.rangeEnd,
+                reciterId: _this53.reciterId,
                 downloadedAt: new Date().toISOString(),
-                totalVerses: _this52.verses.length
+                totalVerses: _this53.verses.length
               },
-              verses: _this52.verses
+              verses: _this53.verses
             };
             localStorage.setItem(storageKey, JSON.stringify(offlineData));
 
@@ -29676,8 +31636,8 @@ function createAdvancedState() {
               id: storageKey,
               surah: surahName,
               surahId: surahId,
-              range: "".concat(_this52.rangeStart, "-").concat(_this52.rangeEnd),
-              count: _this52.verses.length,
+              range: "".concat(_this53.rangeStart, "-").concat(_this53.rangeEnd),
+              count: _this53.verses.length,
               date: new Date().toLocaleDateString()
             };
             filtered = catalog.filter(function (c) {
@@ -29685,19 +31645,19 @@ function createAdvancedState() {
             });
             filtered.push(entry);
             localStorage.setItem(catalogKey, JSON.stringify(filtered));
-            _this52.offlineSurahs = filtered;
-            _this52.showBanner("Saved ".concat(_this52.verses.length, " verses from ").concat(surahName, " for offline reading."), 'success', 3000);
-            _context13.n = 4;
+            _this53.offlineSurahs = filtered;
+            _this53.showBanner("Saved ".concat(_this53.verses.length, " verses from ").concat(surahName, " for offline reading."), 'success', 3000);
+            _context14.n = 4;
             break;
           case 3:
-            _context13.p = 3;
-            _t7 = _context13.v;
+            _context14.p = 3;
+            _t7 = _context14.v;
             console.error('Download failed:', _t7);
-            _this52.showBanner('Failed to download verses', 'error', 3000);
+            _this53.showBanner('Failed to download verses', 'error', 3000);
           case 4:
-            return _context13.a(2);
+            return _context14.a(2);
         }
-      }, _callee13, null, [[1, 3]]);
+      }, _callee14, null, [[1, 3]]);
     }))();
   }), "loadOfflineCatalog", function loadOfflineCatalog() {
     try {
@@ -29753,22 +31713,22 @@ function createAdvancedState() {
     this.pendingDeleteId = '';
     this.showBanner('Offline surah removed', 'info', 2000);
   }), "downloadVerseAudio", function downloadVerseAudio(verse) {
-    var _this53 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee14() {
+    var _this54 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee15() {
       var audioUrl, filename, downloadUrl, anchor;
-      return _regenerator().w(function (_context14) {
-        while (1) switch (_context14.n) {
+      return _regenerator().w(function (_context15) {
+        while (1) switch (_context15.n) {
           case 0:
-            audioUrl = _this53.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
+            audioUrl = _this54.normalizeAudioUrl((verse === null || verse === void 0 ? void 0 : verse.audio) || '');
             if (audioUrl) {
-              _context14.n = 1;
+              _context15.n = 1;
               break;
             }
-            _this53.showBanner('Audio not available for this ayah', 'info', 2200);
-            return _context14.a(2);
+            _this54.showBanner('Audio not available for this ayah', 'info', 2200);
+            return _context15.a(2);
           case 1:
             try {
-              filename = "surah-".concat(_this53.chapterId, "-ayah-").concat(verse.number, ".mp3");
+              filename = "surah-".concat(_this54.chapterId, "-ayah-").concat(verse.number, ".mp3");
               downloadUrl = "/memorisation/audio-download?url=".concat(encodeURIComponent(audioUrl), "&filename=").concat(encodeURIComponent(filename));
               anchor = document.createElement('a');
               anchor.href = downloadUrl;
@@ -29776,15 +31736,15 @@ function createAdvancedState() {
               document.body.appendChild(anchor);
               anchor.click();
               anchor.remove();
-              _this53.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
+              _this54.showBanner("Downloaded ayah ".concat(verse.number, " audio"), 'success', 1800);
             } catch (error) {
               console.error('Verse download failed:', error);
-              _this53.showBanner('Failed to download ayah audio', 'error', 2600);
+              _this54.showBanner('Failed to download ayah audio', 'error', 2600);
             }
           case 2:
-            return _context14.a(2);
+            return _context15.a(2);
         }
-      }, _callee14);
+      }, _callee15);
     }))();
   }), "getDisplayArabic", function getDisplayArabic(verse) {
     if (!(verse !== null && verse !== void 0 && verse.arabic)) return '';
@@ -29811,36 +31771,36 @@ function createAdvancedState() {
     clone.innerHTML = innerHtml;
     return clone.outerHTML;
   }), "extractTajweedCharUnits", function extractTajweedCharUnits(node) {
-    var _this54 = this;
+    var _this55 = this;
     if (!node) return [];
     if (node.nodeType === Node.TEXT_NODE) {
       return Array.from(node.textContent || '').map(function (_char) {
         return {
           text: _char,
-          html: _this54.escapeHtml(_char)
+          html: _this55.escapeHtml(_char)
         };
       });
     }
     if (node.nodeType !== Node.ELEMENT_NODE) return [];
     var childUnits = Array.from(node.childNodes).flatMap(function (child) {
-      return _this54.extractTajweedCharUnits(child);
+      return _this55.extractTajweedCharUnits(child);
     });
     if (node.tagName === 'SPAN') {
       return childUnits.map(function (unit) {
         return {
           text: unit.text,
-          html: _this54.wrapHtmlWithElement(node, unit.html)
+          html: _this55.wrapHtmlWithElement(node, unit.html)
         };
       });
     }
     return childUnits;
   }), "buildTajweedWordTokens", function buildTajweedWordTokens(verse, tajweedHtml) {
-    var _this55 = this;
+    var _this56 = this;
     if (!tajweedHtml) return '';
     var tempDiv = document.createElement('div');
     tempDiv.innerHTML = tajweedHtml;
     var units = Array.from(tempDiv.childNodes).flatMap(function (node) {
-      return _this55.extractTajweedCharUnits(node);
+      return _this56.extractTajweedCharUnits(node);
     });
     var words = Array.isArray(verse.words) && verse.words.length ? verse.words : tokenizeArabicText(verse.arabic || '').map(function (ar) {
       return {
@@ -29878,7 +31838,7 @@ function createAdvancedState() {
         innerHtml += unit.html;
         collected += 1;
       }
-      html += _this55.buildWordTokenHtml(verse, word, idx, innerHtml);
+      html += _this56.buildWordTokenHtml(verse, word, idx, innerHtml);
     });
     while (cursor < units.length) {
       html += units[cursor].html;
@@ -29969,7 +31929,7 @@ function createAdvancedState() {
   }), "escapeRegex", function escapeRegex(str) {
     return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }), "splitArabicIntoWords", function splitArabicIntoWords(verse) {
-    var _this56 = this;
+    var _this57 = this;
     if (!verse || !verse.arabic) return '';
 
     // Get words from the verse object or tokenize
@@ -29998,24 +31958,24 @@ function createAdvancedState() {
     // Regular mode (without tajweed)
     words.forEach(function (word, idx) {
       var wordText = typeof word === 'string' ? word : word.ar;
-      html += "".concat(_this56.buildWordTokenHtml(verse, word, idx, _this56.escapeHtml(wordText)), " ");
+      html += "".concat(_this57.buildWordTokenHtml(verse, word, idx, _this57.escapeHtml(wordText)), " ");
     });
     return html;
   }), "getWordTimings", function getWordTimings(verse) {
     var _arguments4 = arguments,
-      _this57 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee15() {
+      _this58 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee16() {
       var actualDuration, sourceWords, arabicText, safeDuration, cacheKey, cleanedWords, weightedUnits, totalUnits, timestamps, currentTime;
-      return _regenerator().w(function (_context15) {
-        while (1) switch (_context15.n) {
+      return _regenerator().w(function (_context16) {
+        while (1) switch (_context16.n) {
           case 0:
             actualDuration = _arguments4.length > 1 && _arguments4[1] !== undefined ? _arguments4[1] : null;
             if (!(!verse || !verse.key)) {
-              _context15.n = 1;
+              _context16.n = 1;
               break;
             }
             console.warn('getWordTimings: no verse');
-            return _context15.a(2, []);
+            return _context16.a(2, []);
           case 1:
             // Get words from the verse object directly (not from HTML)
             sourceWords = [];
@@ -30029,11 +31989,11 @@ function createAdvancedState() {
               sourceWords = tokenizeArabicText(arabicText);
             }
             if (sourceWords.length) {
-              _context15.n = 2;
+              _context16.n = 2;
               break;
             }
             console.warn('getWordTimings: no words for verse', verse.key);
-            return _context15.a(2, []);
+            return _context16.a(2, []);
           case 2:
             // Get actual audio duration or estimate
             safeDuration = 0;
@@ -30042,16 +32002,16 @@ function createAdvancedState() {
             } else if (verse.duration && Number(verse.duration) > 0) {
               safeDuration = Number(verse.duration);
             } else {
-              safeDuration = _this57.estimateVerseDuration(verse);
+              safeDuration = _this58.estimateVerseDuration(verse);
             }
 
             // Keep timestamps in media-time because audioElement.currentTime is also media-time.
-            cacheKey = "".concat(verse.key, "_").concat(_this57.reciterId, "_").concat(Math.round(safeDuration * 10));
-            if (!_this57.wordTimestampsMap.has(cacheKey)) {
-              _context15.n = 3;
+            cacheKey = "".concat(verse.key, "_").concat(_this58.reciterId, "_").concat(Math.round(safeDuration * 10));
+            if (!_this58.wordTimestampsMap.has(cacheKey)) {
+              _context16.n = 3;
               break;
             }
-            return _context15.a(2, _this57.wordTimestampsMap.get(cacheKey));
+            return _context16.a(2, _this58.wordTimestampsMap.get(cacheKey));
           case 3:
             // Build a normalized timing track so highlight end time always matches audio end time.
             cleanedWords = sourceWords.map(function (word) {
@@ -30077,13 +32037,13 @@ function createAdvancedState() {
               });
               currentTime += wordDuration;
             });
-            _this57.wordTimestampsMap.set(cacheKey, timestamps);
-            return _context15.a(2, timestamps);
+            _this58.wordTimestampsMap.set(cacheKey, timestamps);
+            return _context16.a(2, timestamps);
         }
-      }, _callee15);
+      }, _callee16);
     }))();
   }), "calculateWordTimings", function calculateWordTimings(verse) {
-    var _this58 = this;
+    var _this59 = this;
     var audioDuration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     return new Promise(function (resolve) {
       if (!verse.words || verse.words.length === 0) {
@@ -30091,7 +32051,7 @@ function createAdvancedState() {
         return;
       }
       var wordCount = verse.words.length;
-      var totalDuration = audioDuration || _this58.estimateVerseDuration(verse);
+      var totalDuration = audioDuration || _this59.estimateVerseDuration(verse);
       var durationPerWord = totalDuration / wordCount;
       var timestamps = [];
       var currentTime = 0;
@@ -30113,34 +32073,34 @@ function createAdvancedState() {
     return baseDuration;
   }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "startWordHighlighting", function startWordHighlighting(verse) {
     var _arguments5 = arguments,
-      _this59 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee16() {
+      _this60 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee17() {
       var options, timestamps;
-      return _regenerator().w(function (_context16) {
-        while (1) switch (_context16.n) {
+      return _regenerator().w(function (_context17) {
+        while (1) switch (_context17.n) {
           case 0:
             options = _arguments5.length > 1 && _arguments5[1] !== undefined ? _arguments5[1] : {};
-            if (!(!(verse !== null && verse !== void 0 && verse.key) || !_this59.wordByWordAudioEnabled)) {
-              _context16.n = 1;
+            if (!(!(verse !== null && verse !== void 0 && verse.key) || !_this60.wordByWordAudioEnabled)) {
+              _context17.n = 1;
               break;
             }
-            return _context16.a(2);
+            return _context17.a(2);
           case 1:
-            _context16.n = 2;
-            return _this59.ensureWordHighlightTrack(verse, options);
+            _context17.n = 2;
+            return _this60.ensureWordHighlightTrack(verse, options);
           case 2:
-            timestamps = _context16.v;
+            timestamps = _context17.v;
             if (timestamps.length) {
-              _context16.n = 3;
+              _context17.n = 3;
               break;
             }
-            return _context16.a(2);
+            return _context17.a(2);
           case 3:
-            _this59.queueWordHighlightFrame(verse);
+            _this60.queueWordHighlightFrame(verse);
           case 4:
-            return _context16.a(2);
+            return _context17.a(2);
         }
-      }, _callee16);
+      }, _callee17);
     }))();
   }), "updateWordHighlight", function updateWordHighlight(verseKey, activeIndex) {
     this.currentHighlightedVerseKey = verseKey || null;
@@ -30194,66 +32154,66 @@ function createAdvancedState() {
     }
     return -1;
   }), "queueWordHighlightFrame", function queueWordHighlightFrame() {
-    var _this60 = this;
+    var _this61 = this;
     var verse = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.activeVerseRef;
     if (this.wordHighlightFrame) window.cancelAnimationFrame(this.wordHighlightFrame);
     this.wordHighlightFrame = null;
     if (!(verse !== null && verse !== void 0 && verse.key) || !this.audioElement || this.audioElement.paused || this.audioElement.ended) return;
     var _tick = function tick() {
-      if (!_this60.audioElement || _this60.audioElement.paused || _this60.audioElement.ended) {
-        _this60.wordHighlightFrame = null;
+      if (!_this61.audioElement || _this61.audioElement.paused || _this61.audioElement.ended) {
+        _this61.wordHighlightFrame = null;
         return;
       }
-      _this60.syncWordHighlightFromAudio(verse);
-      _this60.wordHighlightFrame = window.requestAnimationFrame(_tick);
+      _this61.syncWordHighlightFromAudio(verse);
+      _this61.wordHighlightFrame = window.requestAnimationFrame(_tick);
     };
     this.wordHighlightFrame = window.requestAnimationFrame(_tick);
   }), "ensureWordHighlightTrack", function ensureWordHighlightTrack(verse) {
     var _arguments6 = arguments,
-      _this61 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee17() {
-      var _this61$wordHighlight, _this61$audioElement;
+      _this62 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee18() {
+      var _this62$wordHighlight, _this62$audioElement;
       var options, _options$force, force, requestId, duration, timestamps;
-      return _regenerator().w(function (_context17) {
-        while (1) switch (_context17.n) {
+      return _regenerator().w(function (_context18) {
+        while (1) switch (_context18.n) {
           case 0:
             options = _arguments6.length > 1 && _arguments6[1] !== undefined ? _arguments6[1] : {};
             _options$force = options.force, force = _options$force === void 0 ? false : _options$force;
-            if (!(!(verse !== null && verse !== void 0 && verse.key) || !_this61.wordByWordAudioEnabled)) {
-              _context17.n = 1;
+            if (!(!(verse !== null && verse !== void 0 && verse.key) || !_this62.wordByWordAudioEnabled)) {
+              _context18.n = 1;
               break;
             }
-            return _context17.a(2, []);
+            return _context18.a(2, []);
           case 1:
-            if (!(!force && _this61.currentHighlightedVerseKey === verse.key && (_this61$wordHighlight = _this61.wordHighlightTimestamps) !== null && _this61$wordHighlight !== void 0 && _this61$wordHighlight.length)) {
-              _context17.n = 2;
+            if (!(!force && _this62.currentHighlightedVerseKey === verse.key && (_this62$wordHighlight = _this62.wordHighlightTimestamps) !== null && _this62$wordHighlight !== void 0 && _this62$wordHighlight.length)) {
+              _context18.n = 2;
               break;
             }
-            return _context17.a(2, _this61.wordHighlightTimestamps);
+            return _context18.a(2, _this62.wordHighlightTimestamps);
           case 2:
-            requestId = ++_this61.wordHighlightRequestId;
-            _this61.wordHighlightLoading = true;
-            _this61.currentHighlightedVerseKey = verse.key;
-            _this61.currentWordIndex = -1;
-            _this61.currentPhraseIndex = -1;
-            duration = Number((_this61$audioElement = _this61.audioElement) === null || _this61$audioElement === void 0 ? void 0 : _this61$audioElement.duration);
-            _context17.n = 3;
-            return _this61.getWordTimings(verse, Number.isFinite(duration) && duration > 0 ? duration : null);
+            requestId = ++_this62.wordHighlightRequestId;
+            _this62.wordHighlightLoading = true;
+            _this62.currentHighlightedVerseKey = verse.key;
+            _this62.currentWordIndex = -1;
+            _this62.currentPhraseIndex = -1;
+            duration = Number((_this62$audioElement = _this62.audioElement) === null || _this62$audioElement === void 0 ? void 0 : _this62$audioElement.duration);
+            _context18.n = 3;
+            return _this62.getWordTimings(verse, Number.isFinite(duration) && duration > 0 ? duration : null);
           case 3:
-            timestamps = _context17.v;
-            if (!(requestId !== _this61.wordHighlightRequestId)) {
-              _context17.n = 4;
+            timestamps = _context18.v;
+            if (!(requestId !== _this62.wordHighlightRequestId)) {
+              _context18.n = 4;
               break;
             }
-            return _context17.a(2, []);
+            return _context18.a(2, []);
           case 4:
-            _this61.wordHighlightLoading = false;
-            _this61.wordHighlightTimestamps = Array.isArray(timestamps) ? timestamps : [];
-            _this61.syncWordHighlightFromAudio(verse);
-            _this61.$forceUpdate();
-            return _context17.a(2, _this61.wordHighlightTimestamps);
+            _this62.wordHighlightLoading = false;
+            _this62.wordHighlightTimestamps = Array.isArray(timestamps) ? timestamps : [];
+            _this62.syncWordHighlightFromAudio(verse);
+            _this62.$forceUpdate();
+            return _context18.a(2, _this62.wordHighlightTimestamps);
         }
-      }, _callee17);
+      }, _callee18);
     }))();
   }), "syncWordHighlightFromAudio", function syncWordHighlightFromAudio() {
     var _this$wordHighlightTi;
@@ -30265,12 +32225,12 @@ function createAdvancedState() {
       this.updateWordHighlight(verse.key, activeIndex);
     }
   }), "restoreWordScroll", function restoreWordScroll(verseKey) {
-    var _this62 = this;
+    var _this63 = this;
     this.$nextTick(function () {
       if (!verseKey) return;
       var verseCard = document.querySelector(".verse-card[data-verse-key=\"".concat(verseKey, "\"]"));
       var wordsWrap = verseCard === null || verseCard === void 0 ? void 0 : verseCard.querySelector('.verse-words');
-      var remembered = _this62.verseScrollMemory[verseKey];
+      var remembered = _this63.verseScrollMemory[verseKey];
       if (!wordsWrap || !remembered) return;
       wordsWrap.scrollTop = Number(remembered.top || 0);
       wordsWrap.scrollLeft = Number(remembered.left || 0);
@@ -30297,7 +32257,7 @@ function createAdvancedState() {
     this.wordHighlightTimestamps = [];
     this.$forceUpdate();
   }), "initAudio", function initAudio() {
-    var _this63 = this;
+    var _this64 = this;
     this.audioElement = this.$refs.audio;
     if (!this.audioElement) return;
     this.audioElement.removeEventListener('timeupdate', this.audioTimeUpdate);
@@ -30310,112 +32270,112 @@ function createAdvancedState() {
     this.audioElement.removeEventListener('ratechange', this.audioRateChange);
     this.audioElement.removeEventListener('loadstart', this.audioLoadStart);
     this.audioTimeUpdate = function () {
-      _this63.currentTime = _this63.audioElement.currentTime;
-      _this63.duration = _this63.audioElement.duration;
-      _this63.centralSession.audio.currentTime = Number(_this63.currentTime || 0);
-      _this63.centralSession.audio.speed = Number(_this63.speed || 1);
-      if (_this63.segmentEndTime > 0 && Number(_this63.currentTime || 0) >= _this63.segmentEndTime - 0.04) {
-        _this63.handleSegmentBoundary();
+      _this64.currentTime = _this64.audioElement.currentTime;
+      _this64.duration = _this64.audioElement.duration;
+      _this64.centralSession.audio.currentTime = Number(_this64.currentTime || 0);
+      _this64.centralSession.audio.speed = Number(_this64.speed || 1);
+      if (_this64.segmentEndTime > 0 && Number(_this64.currentTime || 0) >= _this64.segmentEndTime - 0.04) {
+        _this64.handleSegmentBoundary();
         return;
       }
-      if (_this63.wordByWordAudioEnabled) {
-        var _verse2 = _this63.activeVerseRef;
+      if (_this64.wordByWordAudioEnabled) {
+        var _verse2 = _this64.activeVerseRef;
         if (_verse2 && _verse2.key) {
-          var _this63$wordHighlight;
-          if ((!((_this63$wordHighlight = _this63.wordHighlightTimestamps) !== null && _this63$wordHighlight !== void 0 && _this63$wordHighlight.length) || _this63.currentHighlightedVerseKey !== _verse2.key) && !_this63.wordHighlightLoading) {
-            _this63.startWordHighlighting(_verse2);
-          } else if (!_this63.wordHighlightLoading) {
-            _this63.syncWordHighlightFromAudio(_verse2);
+          var _this64$wordHighlight;
+          if ((!((_this64$wordHighlight = _this64.wordHighlightTimestamps) !== null && _this64$wordHighlight !== void 0 && _this64$wordHighlight.length) || _this64.currentHighlightedVerseKey !== _verse2.key) && !_this64.wordHighlightLoading) {
+            _this64.startWordHighlighting(_verse2);
+          } else if (!_this64.wordHighlightLoading) {
+            _this64.syncWordHighlightFromAudio(_verse2);
           }
         }
       }
 
       // Waveform - separate from word highlighting (works even if word-by-word is off)
-      var verse = _this63.activeVerseRef;
-      if (verse && verse.key !== _this63.currentWaveVerseKey) {
-        _this63.currentWaveVerseKey = verse.key;
+      var verse = _this64.activeVerseRef;
+      if (verse && verse.key !== _this64.currentWaveVerseKey) {
+        _this64.currentWaveVerseKey = verse.key;
       }
     };
     this.audioEnded = function () {
-      if (_this63.advanceLocked) return;
-      _this63.advanceLocked = true;
-      _this63.isPlaying = false;
-      _this63.stopWordHighlighting();
-      if (_this63.guidedUiStep === 'learn') {
-        _this63.flowListenPlays += 1;
-        _this63.persistUiState();
+      if (_this64.advanceLocked) return;
+      _this64.advanceLocked = true;
+      _this64.isPlaying = false;
+      _this64.stopWordHighlighting();
+      if (_this64.guidedUiStep === 'learn') {
+        _this64.flowListenPlays += 1;
+        _this64.persistUiState();
       }
-      var gapSeconds = _this63.getCurrentPlaybackGapSeconds();
+      var gapSeconds = _this64.getCurrentPlaybackGapSeconds();
       var gapDelayMs = Math.max(0, gapSeconds * 1000);
-      if (_this63.playMode === 'auto') {
-        if (!_this63.chainingEnabled && _this63.selectedLoopCount === 'infinite' && _this63.activeQueueEntry) {
+      if (_this64.playMode === 'auto') {
+        if (!_this64.chainingEnabled && _this64.selectedLoopCount === 'infinite' && _this64.activeQueueEntry) {
           window.setTimeout(function () {
-            var entry = _this63.activeQueueEntry;
-            _this63.advanceLocked = false;
+            var entry = _this64.activeQueueEntry;
+            _this64.advanceLocked = false;
             if (entry) {
-              _this63.playQueueEntry(entry, {
+              _this64.playQueueEntry(entry, {
                 force: true,
-                queueIndex: _this63.queueIndex
+                queueIndex: _this64.queueIndex
               });
             }
           }, gapDelayMs);
           return;
         }
         window.setTimeout(function () {
-          _this63.advanceLocked = false;
-          _this63.next();
+          _this64.advanceLocked = false;
+          _this64.next();
         }, gapDelayMs);
       } else {
-        _this63.advanceLocked = false;
+        _this64.advanceLocked = false;
       }
     };
     this.audioSeeking = function () {
-      if (_this63.wordHighlightFrame) window.cancelAnimationFrame(_this63.wordHighlightFrame);
-      _this63.wordHighlightFrame = null;
-      if (_this63.currentHighlightedVerseKey) _this63.updateWordHighlight(_this63.currentHighlightedVerseKey, -1);
+      if (_this64.wordHighlightFrame) window.cancelAnimationFrame(_this64.wordHighlightFrame);
+      _this64.wordHighlightFrame = null;
+      if (_this64.currentHighlightedVerseKey) _this64.updateWordHighlight(_this64.currentHighlightedVerseKey, -1);
     };
     this.audioSeeked = function () {
-      var verse = _this63.activeVerseRef;
+      var verse = _this64.activeVerseRef;
       if (!verse) return;
-      if (_this63.wordByWordAudioEnabled) {
-        _this63.ensureWordHighlightTrack(verse).then(function () {
-          var _this63$audioElement;
-          _this63.syncWordHighlightFromAudio(verse);
-          if (!((_this63$audioElement = _this63.audioElement) !== null && _this63$audioElement !== void 0 && _this63$audioElement.paused)) _this63.queueWordHighlightFrame(verse);
+      if (_this64.wordByWordAudioEnabled) {
+        _this64.ensureWordHighlightTrack(verse).then(function () {
+          var _this64$audioElement;
+          _this64.syncWordHighlightFromAudio(verse);
+          if (!((_this64$audioElement = _this64.audioElement) !== null && _this64$audioElement !== void 0 && _this64$audioElement.paused)) _this64.queueWordHighlightFrame(verse);
         });
       }
     };
     this.audioPaused = function () {
-      _this63.isPlaying = false;
-      if (_this63.wordHighlightFrame) window.cancelAnimationFrame(_this63.wordHighlightFrame);
-      _this63.wordHighlightFrame = null;
+      _this64.isPlaying = false;
+      if (_this64.wordHighlightFrame) window.cancelAnimationFrame(_this64.wordHighlightFrame);
+      _this64.wordHighlightFrame = null;
     };
     this.audioPlaying = function () {
-      _this63.isPlaying = true;
-      var verse = _this63.activeVerseRef;
-      if (verse && _this63.wordByWordAudioEnabled) {
-        _this63.startWordHighlighting(verse);
+      _this64.isPlaying = true;
+      var verse = _this64.activeVerseRef;
+      if (verse && _this64.wordByWordAudioEnabled) {
+        _this64.startWordHighlighting(verse);
       }
     };
     this.audioRateChange = function () {
-      var _this63$audioElement2, _this63$wordHighlight2;
-      _this63.centralSession.audio.speed = Number(((_this63$audioElement2 = _this63.audioElement) === null || _this63$audioElement2 === void 0 ? void 0 : _this63$audioElement2.playbackRate) || _this63.speed || 1);
-      var verse = _this63.activeVerseRef;
-      if (verse && _this63.wordByWordAudioEnabled && (_this63$wordHighlight2 = _this63.wordHighlightTimestamps) !== null && _this63$wordHighlight2 !== void 0 && _this63$wordHighlight2.length) {
-        var _this63$audioElement3;
-        _this63.syncWordHighlightFromAudio(verse);
-        if (!((_this63$audioElement3 = _this63.audioElement) !== null && _this63$audioElement3 !== void 0 && _this63$audioElement3.paused)) _this63.queueWordHighlightFrame(verse);
+      var _this64$audioElement2, _this64$wordHighlight2;
+      _this64.centralSession.audio.speed = Number(((_this64$audioElement2 = _this64.audioElement) === null || _this64$audioElement2 === void 0 ? void 0 : _this64$audioElement2.playbackRate) || _this64.speed || 1);
+      var verse = _this64.activeVerseRef;
+      if (verse && _this64.wordByWordAudioEnabled && (_this64$wordHighlight2 = _this64.wordHighlightTimestamps) !== null && _this64$wordHighlight2 !== void 0 && _this64$wordHighlight2.length) {
+        var _this64$audioElement3;
+        _this64.syncWordHighlightFromAudio(verse);
+        if (!((_this64$audioElement3 = _this64.audioElement) !== null && _this64$audioElement3 !== void 0 && _this64$audioElement3.paused)) _this64.queueWordHighlightFrame(verse);
       }
     };
     this.audioLoadStart = function () {
-      _this63.stopWordHighlighting();
+      _this64.stopWordHighlighting();
     };
     this.audioError = function (e) {
       console.error('Audio error:', e);
-      _this63.isPlaying = false;
-      _this63.sessionErrorCount += 1;
-      _this63.stopWordHighlighting();
-      _this63.showBanner('Audio playback error', 'error', 3000);
+      _this64.isPlaying = false;
+      _this64.sessionErrorCount += 1;
+      _this64.stopWordHighlighting();
+      _this64.showBanner('Audio playback error', 'error', 3000);
     };
     this.audioElement.addEventListener('timeupdate', this.audioTimeUpdate);
     this.audioElement.addEventListener('ended', this.audioEnded);
@@ -30428,168 +32388,168 @@ function createAdvancedState() {
     this.audioElement.addEventListener('loadstart', this.audioLoadStart);
   }), "playVerse", function playVerse(verse) {
     var _arguments7 = arguments,
-      _this64 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee20() {
-      var _this64$audioElement;
+      _this65 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee21() {
+      var _this65$audioElement;
       var options, audioUrl, currentSrc, isSameSource;
-      return _regenerator().w(function (_context20) {
-        while (1) switch (_context20.n) {
+      return _regenerator().w(function (_context21) {
+        while (1) switch (_context21.n) {
           case 0:
             options = _arguments7.length > 1 && _arguments7[1] !== undefined ? _arguments7[1] : {};
-            if (!(_this64.playRequestLocked && !options.force)) {
-              _context20.n = 1;
+            if (!(_this65.playRequestLocked && !options.force)) {
+              _context21.n = 1;
               break;
             }
-            return _context20.a(2);
+            return _context21.a(2);
           case 1:
-            _this64.playRequestLocked = true;
-            _this64.stopRecordingsPlayback({
+            _this65.playRequestLocked = true;
+            _this65.stopRecordingsPlayback({
               clearSource: true
             });
-            if (_this64.segmentPlaybackTimer) {
-              clearTimeout(_this64.segmentPlaybackTimer);
-              _this64.segmentPlaybackTimer = null;
+            if (_this65.segmentPlaybackTimer) {
+              clearTimeout(_this65.segmentPlaybackTimer);
+              _this65.segmentPlaybackTimer = null;
             }
-            _this64.segmentEndTime = 0;
-            _this64.segmentPlaybackKind = '';
+            _this65.segmentEndTime = 0;
+            _this65.segmentPlaybackKind = '';
             if (verse) {
-              _context20.n = 2;
+              _context21.n = 2;
               break;
             }
             console.error('No verse provided');
-            _this64.playRequestLocked = false;
-            return _context20.a(2);
+            _this65.playRequestLocked = false;
+            return _context21.a(2);
           case 2:
             if (verse.audio) {
-              _context20.n = 3;
+              _context21.n = 3;
               break;
             }
-            _this64.showBanner("Audio not available for verse ".concat(verse.number), 'info', 2000);
-            _this64.playRequestLocked = false;
-            return _context20.a(2);
+            _this65.showBanner("Audio not available for verse ".concat(verse.number), 'info', 2000);
+            _this65.playRequestLocked = false;
+            return _context21.a(2);
           case 3:
-            audioUrl = _this64.normalizeAudioUrl(verse.audio);
-            currentSrc = (_this64$audioElement = _this64.audioElement) !== null && _this64$audioElement !== void 0 && _this64$audioElement.currentSrc ? _this64.normalizeAudioUrl(_this64.audioElement.currentSrc) : '';
+            audioUrl = _this65.normalizeAudioUrl(verse.audio);
+            currentSrc = (_this65$audioElement = _this65.audioElement) !== null && _this65$audioElement !== void 0 && _this65$audioElement.currentSrc ? _this65.normalizeAudioUrl(_this65.audioElement.currentSrc) : '';
             isSameSource = !!currentSrc && currentSrc === audioUrl; // Toggle if same verse is playing
-            if (!(!options.force && _this64.activeKey === verse.key && isSameSource)) {
-              _context20.n = 4;
+            if (!(!options.force && _this65.activeKey === verse.key && isSameSource)) {
+              _context21.n = 4;
               break;
             }
-            _this64.togglePlay();
-            _this64.playRequestLocked = false;
-            return _context20.a(2);
+            _this65.togglePlay();
+            _this65.playRequestLocked = false;
+            return _context21.a(2);
           case 4:
             // Stop current playback and highlighting
-            _this64.stopWordHighlighting();
-            if (_this64.audioElement) {
+            _this65.stopWordHighlighting();
+            if (_this65.audioElement) {
               try {
-                _this64.audioElement.pause();
+                _this65.audioElement.pause();
               } catch (e) {
                 console.warn('Error pausing audio:', e);
               }
             }
-            _this64.setActiveVerse(verse.key, {
+            _this65.setActiveVerse(verse.key, {
               scroll: false,
               queueIndex: Number.isFinite(options.queueIndex) ? Number(options.queueIndex) : undefined
             });
-            if (_this64.audioElement) {
-              _context20.n = 6;
+            if (_this65.audioElement) {
+              _context21.n = 6;
               break;
             }
-            _this64.audioElement = _this64.$refs.audio;
-            if (_this64.audioElement) {
-              _context20.n = 5;
+            _this65.audioElement = _this65.$refs.audio;
+            if (_this65.audioElement) {
+              _context21.n = 5;
               break;
             }
-            _this64.showBanner('Audio system not ready', 'error', 3000);
-            _this64.playRequestLocked = false;
-            return _context20.a(2);
+            _this65.showBanner('Audio system not ready', 'error', 3000);
+            _this65.playRequestLocked = false;
+            return _context21.a(2);
           case 5:
-            _this64.initAudio();
+            _this65.initAudio();
           case 6:
             if (!isSameSource) {
-              _this64.audioElement.src = audioUrl;
-              _this64.audioElement.load();
+              _this65.audioElement.src = audioUrl;
+              _this65.audioElement.load();
             }
-            _this64.playerVisible = true;
-            return _context20.a(2, new Promise(function (resolve, reject) {
+            _this65.playerVisible = true;
+            return _context21.a(2, new Promise(function (resolve, reject) {
               var timeout = setTimeout(function () {
                 reject(new Error('Audio load timeout'));
               }, 10000);
               var startPlayback = /*#__PURE__*/function () {
-                var _ref13 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee18() {
+                var _ref13 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee19() {
                   var segment, segmentTotal, segmentIndex, segmentEnd, duration, segmentStart, _t8;
-                  return _regenerator().w(function (_context18) {
-                    while (1) switch (_context18.p = _context18.n) {
+                  return _regenerator().w(function (_context19) {
+                    while (1) switch (_context19.p = _context19.n) {
                       case 0:
                         clearTimeout(timeout);
-                        _this64.audioElement.playbackRate = _this64.speed;
+                        _this65.audioElement.playbackRate = _this65.speed;
                         segment = options.segment || null;
                         segmentTotal = Math.max(1, Number((segment === null || segment === void 0 ? void 0 : segment.sequenceTotal) || (segment === null || segment === void 0 ? void 0 : segment.total) || 1));
                         segmentIndex = Math.max(0, Math.min(segmentTotal - 1, Number((segment === null || segment === void 0 ? void 0 : segment.index) || 0)));
                         segmentEnd = 0;
-                        if (segment && Number.isFinite(_this64.audioElement.duration) && _this64.audioElement.duration > 0 && segmentTotal > 1) {
-                          duration = Number(_this64.audioElement.duration || 0);
+                        if (segment && Number.isFinite(_this65.audioElement.duration) && _this65.audioElement.duration > 0 && segmentTotal > 1) {
+                          duration = Number(_this65.audioElement.duration || 0);
                           segmentStart = Math.max(0, duration * (segmentIndex / segmentTotal));
                           segmentEnd = Math.min(duration, duration * ((segmentIndex + 1) / segmentTotal));
-                          _this64.segmentEndTime = segmentEnd;
-                          _this64.audioElement.currentTime = segmentStart;
+                          _this65.segmentEndTime = segmentEnd;
+                          _this65.audioElement.currentTime = segmentStart;
                         }
-                        _context18.p = 1;
-                        _context18.n = 2;
-                        return _this64.audioElement.play();
+                        _context19.p = 1;
+                        _context19.n = 2;
+                        return _this65.audioElement.play();
                       case 2:
-                        _this64.incrementVersePlayCount(verse.key);
-                        _this64.markPlaybackStart();
-                        _this64.addActivityEvent({
+                        _this65.incrementVersePlayCount(verse.key);
+                        _this65.markPlaybackStart();
+                        _this65.addActivityEvent({
                           ts: Date.now(),
                           type: 'play',
                           verseKey: verse.key
                         });
-                        _this64.recomputeAnalytics();
-                        if (_this64.wordByWordAudioEnabled) {
-                          _this64.ensureWordHighlightTrack(verse, {
+                        _this65.recomputeAnalytics();
+                        if (_this65.wordByWordAudioEnabled) {
+                          _this65.ensureWordHighlightTrack(verse, {
                             force: true
                           }).then(function () {
-                            var _this64$audioElement2;
-                            _this64.syncWordHighlightFromAudio(verse);
-                            if (!((_this64$audioElement2 = _this64.audioElement) !== null && _this64$audioElement2 !== void 0 && _this64$audioElement2.paused)) _this64.queueWordHighlightFrame(verse);
+                            var _this65$audioElement2;
+                            _this65.syncWordHighlightFromAudio(verse);
+                            if (!((_this65$audioElement2 = _this65.audioElement) !== null && _this65$audioElement2 !== void 0 && _this65$audioElement2.paused)) _this65.queueWordHighlightFrame(verse);
                           })["catch"](function (err) {
                             console.warn('Word highlight bootstrap failed:', err);
                           });
                         }
-                        _this64.playRequestLocked = false;
+                        _this65.playRequestLocked = false;
                         resolve();
-                        _context18.n = 4;
+                        _context19.n = 4;
                         break;
                       case 3:
-                        _context18.p = 3;
-                        _t8 = _context18.v;
-                        _this64.isPlaying = false;
-                        _this64.playRequestLocked = false;
+                        _context19.p = 3;
+                        _t8 = _context19.v;
+                        _this65.isPlaying = false;
+                        _this65.playRequestLocked = false;
                         reject(_t8);
                       case 4:
-                        return _context18.a(2);
+                        return _context19.a(2);
                     }
-                  }, _callee18, null, [[1, 3]]);
+                  }, _callee19, null, [[1, 3]]);
                 }));
                 return function startPlayback() {
                   return _ref13.apply(this, arguments);
                 };
               }();
               var _canPlayHandler = /*#__PURE__*/function () {
-                var _ref14 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee19() {
-                  return _regenerator().w(function (_context19) {
-                    while (1) switch (_context19.n) {
+                var _ref14 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee20() {
+                  return _regenerator().w(function (_context20) {
+                    while (1) switch (_context20.n) {
                       case 0:
-                        _context19.n = 1;
+                        _context20.n = 1;
                         return startPlayback();
                       case 1:
-                        _this64.audioElement.removeEventListener('canplay', _canPlayHandler);
+                        _this65.audioElement.removeEventListener('canplay', _canPlayHandler);
                       case 2:
-                        return _context19.a(2);
+                        return _context20.a(2);
                     }
-                  }, _callee19);
+                  }, _callee20);
                 }));
                 return function canPlayHandler() {
                   return _ref14.apply(this, arguments);
@@ -30597,27 +32557,27 @@ function createAdvancedState() {
               }();
               var _errorHandler = function errorHandler(err) {
                 clearTimeout(timeout);
-                _this64.isPlaying = false;
-                _this64.playRequestLocked = false;
+                _this65.isPlaying = false;
+                _this65.playRequestLocked = false;
                 reject(err);
-                _this64.audioElement.removeEventListener('error', _errorHandler);
+                _this65.audioElement.removeEventListener('error', _errorHandler);
               };
-              _this64.audioElement.addEventListener('error', _errorHandler, {
+              _this65.audioElement.addEventListener('error', _errorHandler, {
                 once: true
               });
-              if (isSameSource && _this64.audioElement.readyState >= 2) {
+              if (isSameSource && _this65.audioElement.readyState >= 2) {
                 startPlayback();
               } else {
-                _this64.audioElement.addEventListener('canplay', _canPlayHandler);
+                _this65.audioElement.addEventListener('canplay', _canPlayHandler);
               }
             })["catch"](function (err) {
               console.error('playVerse failed:', err);
-              _this64.isPlaying = false;
-              _this64.playRequestLocked = false;
-              _this64.showBanner('Failed to play audio', 'error', 3000);
+              _this65.isPlaying = false;
+              _this65.playRequestLocked = false;
+              _this65.showBanner('Failed to play audio', 'error', 3000);
             }));
         }
-      }, _callee20);
+      }, _callee21);
     }))();
   }), "playQueueEntry", function playQueueEntry(entry) {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -30644,26 +32604,26 @@ function createAdvancedState() {
     this.isPlaying = false;
   }), "togglePlay", function togglePlay() {
     var _this$audioElement0,
-      _this65 = this;
+      _this66 = this;
     if (!((_this$audioElement0 = this.audioElement) !== null && _this$audioElement0 !== void 0 && _this$audioElement0.src)) return;
     if (this.audioElement.paused) {
       this.audioElement.play().then(function () {
-        _this65.isPlaying = true;
-        var verse = _this65.activeVerseRef;
-        if (verse && _this65.wordByWordAudioEnabled) {
-          _this65.ensureWordHighlightTrack(verse, {
+        _this66.isPlaying = true;
+        var verse = _this66.activeVerseRef;
+        if (verse && _this66.wordByWordAudioEnabled) {
+          _this66.ensureWordHighlightTrack(verse, {
             force: true
           }).then(function () {
-            var _this65$audioElement;
-            _this65.syncWordHighlightFromAudio(verse);
-            if (!((_this65$audioElement = _this65.audioElement) !== null && _this65$audioElement !== void 0 && _this65$audioElement.paused)) _this65.queueWordHighlightFrame(verse);
+            var _this66$audioElement;
+            _this66.syncWordHighlightFromAudio(verse);
+            if (!((_this66$audioElement = _this66.audioElement) !== null && _this66$audioElement !== void 0 && _this66$audioElement.paused)) _this66.queueWordHighlightFrame(verse);
           })["catch"](function (err) {
             console.warn('Word highlight resume failed:', err);
           });
         }
       })["catch"](function (err) {
         console.error('Failed to play:', err);
-        _this65.showBanner('Playback failed', 'error', 2000);
+        _this66.showBanner('Playback failed', 'error', 2000);
       });
     } else {
       this.audioElement.pause();
@@ -30672,7 +32632,7 @@ function createAdvancedState() {
   }), "applySpeed", function applySpeed() {
     if (this.audioElement) this.audioElement.playbackRate = this.speed;
   }), "next", function next() {
-    var _this66 = this;
+    var _this67 = this;
     if (this.advanceLocked) return;
     this.advanceLocked = true;
     if (this.canNext) {
@@ -30690,7 +32650,7 @@ function createAdvancedState() {
           queueIndex: this.queueIndex
         });
         this.$nextTick(function () {
-          return _this66.$forceUpdate();
+          return _this67.$forceUpdate();
         });
       }
       var v = this.queue[this.queueIndex];
@@ -30699,7 +32659,7 @@ function createAdvancedState() {
           force: true,
           queueIndex: this.queueIndex
         })["finally"](function () {
-          _this66.advanceLocked = false;
+          _this67.advanceLocked = false;
         });
       } else {
         this.advanceLocked = false;
@@ -30710,7 +32670,7 @@ function createAdvancedState() {
     this.handleSessionComplete();
   }), "prev", function prev() {
     var _entry$verse2,
-      _this67 = this;
+      _this68 = this;
     if (!this.canPrev) return;
     if (this.advanceLocked) return;
     this.advanceLocked = true;
@@ -30728,7 +32688,7 @@ function createAdvancedState() {
         queueIndex: this.queueIndex
       });
       this.$nextTick(function () {
-        return _this67.$forceUpdate();
+        return _this68.$forceUpdate();
       });
     }
     var v = this.queue[this.queueIndex];
@@ -30737,7 +32697,7 @@ function createAdvancedState() {
         force: true,
         queueIndex: this.queueIndex
       })["finally"](function () {
-        _this67.advanceLocked = false;
+        _this68.advanceLocked = false;
       });
     } else {
       this.advanceLocked = false;
@@ -30763,61 +32723,61 @@ function createAdvancedState() {
     this.persistAudioState();
   }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "loadVerses", function loadVerses() {
     var _arguments8 = arguments,
-      _this68 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee21() {
+      _this69 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee22() {
       var mode, target, chapterId, rangeStart, rangeEnd, reciterId, requestId, targetConfig, _cached$verses, _audioRes$data, _translationRes$data, _translitRes$data, _arabicRes$data, _tajweedRes$data, cached, _yield$Promise$all, _yield$Promise$all2, audioRes, translationRes, translitRes, arabicRes, tajweedRes, audioSurah, translationSurah, translitSurah, arabicSurah, tajweedEdition, audioAyahs, arabicByNumber, translationByNumber, translitByNumber, tajweedByNumber, start, end, mappedVerses, _t9;
-      return _regenerator().w(function (_context21) {
-        while (1) switch (_context21.p = _context21.n) {
+      return _regenerator().w(function (_context22) {
+        while (1) switch (_context22.p = _context22.n) {
           case 0:
-            mode = _arguments8.length > 0 && _arguments8[0] !== undefined ? _arguments8[0] : _this68.currentMode;
-            target = mode === 'beginner' ? _this68.beginner : _this68.advanced;
+            mode = _arguments8.length > 0 && _arguments8[0] !== undefined ? _arguments8[0] : _this69.currentMode;
+            target = mode === 'beginner' ? _this69.beginner : _this69.advanced;
             chapterId = Number(target.chapterId || 0);
             if (chapterId) {
-              _context21.n = 1;
+              _context22.n = 1;
               break;
             }
-            return _context21.a(2);
+            return _context22.a(2);
           case 1:
             rangeStart = Number(target.rangeStart || 1);
             rangeEnd = Number(target.rangeEnd || rangeStart || 1);
             reciterId = target.reciterId || DEFAULT_ALQURAN_RECITER;
-            requestId = ++_this68.verseRequestId;
-            targetConfig = _this68.buildSessionConfig(mode);
-            _this68.isDataReady = false;
-            _context21.p = 2;
-            cached = _this68.getCachedVerses(mode, targetConfig);
+            requestId = ++_this69.verseRequestId;
+            targetConfig = _this69.buildSessionConfig(mode);
+            _this69.isDataReady = false;
+            _context22.p = 2;
+            cached = _this69.getCachedVerses(mode, targetConfig);
             if (!(cached !== null && cached !== void 0 && (_cached$verses = cached.verses) !== null && _cached$verses !== void 0 && _cached$verses.length)) {
-              _context21.n = 3;
+              _context22.n = 3;
               break;
             }
             if (mode === 'beginner') {
-              _this68.beginner.verses = cached.verses;
-              _this68.beginner.loadedConfig = cached.loadedConfig;
+              _this69.beginner.verses = cached.verses;
+              _this69.beginner.loadedConfig = cached.loadedConfig;
             } else {
-              _this68.advanced.verses = cached.verses;
-              _this68.advanced.loadedConfig = cached.loadedConfig;
+              _this69.advanced.verses = cached.verses;
+              _this69.advanced.loadedConfig = cached.loadedConfig;
             }
-            _this68.buildQueue(mode);
-            _this68.syncActiveVerseState(mode);
-            _this68.syncMutqinAyahs(cached.verses);
-            _this68.isDataReady = true;
-            return _context21.a(2);
+            _this69.buildQueue(mode);
+            _this69.syncActiveVerseState(mode);
+            _this69.syncMutqinAyahs(cached.verses);
+            _this69.isDataReady = true;
+            return _context22.a(2);
           case 3:
-            _context21.n = 4;
+            _context22.n = 4;
             return Promise.all([(0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEdition)(chapterId, reciterId), (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEdition)(chapterId, 'en.asad'), (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEdition)(chapterId, 'en.transliteration'), (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEdition)(chapterId, 'quran-uthmani'), (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getSurahEditions)(chapterId, reciterId)]);
           case 4:
-            _yield$Promise$all = _context21.v;
+            _yield$Promise$all = _context22.v;
             _yield$Promise$all2 = _slicedToArray(_yield$Promise$all, 5);
             audioRes = _yield$Promise$all2[0];
             translationRes = _yield$Promise$all2[1];
             translitRes = _yield$Promise$all2[2];
             arabicRes = _yield$Promise$all2[3];
             tajweedRes = _yield$Promise$all2[4];
-            if (!(requestId !== _this68.verseRequestId)) {
-              _context21.n = 5;
+            if (!(requestId !== _this69.verseRequestId)) {
+              _context22.n = 5;
               break;
             }
-            return _context21.a(2);
+            return _context22.a(2);
           case 5:
             audioSurah = (_audioRes$data = audioRes.data) === null || _audioRes$data === void 0 ? void 0 : _audioRes$data.data;
             translationSurah = (_translationRes$data = translationRes.data) === null || _translationRes$data === void 0 ? void 0 : _translationRes$data.data;
@@ -30850,8 +32810,8 @@ function createAdvancedState() {
               var tajweed = tajweedByNumber.get(ayah.numberInSurah) || '';
 
               // Remove Basmala from Arabic text
-              arabic = _this68.removeBasmala(arabic);
-              tajweed = _this68.removeBasmala(tajweed);
+              arabic = _this69.removeBasmala(arabic);
+              tajweed = _this69.removeBasmala(tajweed);
               var transliteration = translitByNumber.get(ayah.numberInSurah) || '';
               var translation = translationByNumber.get(ayah.numberInSurah) || '';
               var arabicWords = tokenizeArabicText(arabic);
@@ -30863,9 +32823,9 @@ function createAdvancedState() {
                 chapterId: chapterId,
                 arabic: arabic,
                 arabic_tajweed: tajweed,
-                translation: _this68.cleanTranslationText(translation),
+                translation: _this69.cleanTranslationText(translation),
                 transliteration: transliteration,
-                audio: _this68.resolveAyahAudioUrl(ayah),
+                audio: _this69.resolveAyahAudioUrl(ayah),
                 words: arabicWords.map(function (word, index) {
                   return {
                     ar: word,
@@ -30877,48 +32837,48 @@ function createAdvancedState() {
               };
             });
             if (mode === 'beginner') {
-              _this68.beginner.verses = mappedVerses;
-              _this68.beginner.loadedConfig = {
+              _this69.beginner.verses = mappedVerses;
+              _this69.beginner.loadedConfig = {
                 chapterId: chapterId,
                 rangeStart: start,
                 rangeEnd: end,
                 reciterId: reciterId,
-                showWordByWord: _this68.showWordByWord,
-                tajweedEnabled: _this68.tajweedEnabled
+                showWordByWord: _this69.showWordByWord,
+                tajweedEnabled: _this69.tajweedEnabled
               };
             } else {
-              _this68.advanced.verses = mappedVerses;
-              _this68.advanced.loadedConfig = {
+              _this69.advanced.verses = mappedVerses;
+              _this69.advanced.loadedConfig = {
                 chapterId: chapterId,
                 rangeStart: start,
                 rangeEnd: end,
                 reciterId: reciterId,
-                showWordByWord: _this68.showWordByWord,
-                tajweedEnabled: _this68.tajweedEnabled
+                showWordByWord: _this69.showWordByWord,
+                tajweedEnabled: _this69.tajweedEnabled
               };
             }
-            _this68.syncMutqinAyahs(mappedVerses);
-            _this68.setCachedVerses(mode, targetConfig, {
+            _this69.syncMutqinAyahs(mappedVerses);
+            _this69.setCachedVerses(mode, targetConfig, {
               verses: mappedVerses,
-              loadedConfig: mode === 'beginner' ? _this68.beginner.loadedConfig : _this68.advanced.loadedConfig
+              loadedConfig: mode === 'beginner' ? _this69.beginner.loadedConfig : _this69.advanced.loadedConfig
             });
-            _this68.buildQueue(mode);
-            _this68.syncActiveVerseState(mode);
+            _this69.buildQueue(mode);
+            _this69.syncActiveVerseState(mode);
 
             // Set ready after data loads
-            _this68.isDataReady = true;
-            _context21.n = 7;
+            _this69.isDataReady = true;
+            _context22.n = 7;
             break;
           case 6:
-            _context21.p = 6;
-            _t9 = _context21.v;
+            _context22.p = 6;
+            _t9 = _context22.v;
             console.error('Error loading verses:', _t9);
-            _this68.showBanner('Failed to load verses', 'error', 3000);
-            _this68.isDataReady = true;
+            _this69.showBanner('Failed to load verses', 'error', 3000);
+            _this69.isDataReady = true;
           case 7:
-            return _context21.a(2);
+            return _context22.a(2);
         }
-      }, _callee21, null, [[2, 6]]);
+      }, _callee22, null, [[2, 6]]);
     }))();
   }), "cleanTranslationText", function cleanTranslationText(text) {
     if (!text) return '';
@@ -31171,110 +33131,110 @@ function createAdvancedState() {
       console.error("Failed to persist ".concat(mode, " mode state:"), e);
     }
   }), "startSession", function startSession() {
-    var _this69 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee22() {
+    var _this70 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee23() {
       var config, mode, currentVerses, modeNeedsReload, updatedVerses, builtQueue, sessionState, canonicalIndex, playbackIndex, nextCanonicalIndex, first, chainingStatus;
-      return _regenerator().w(function (_context22) {
-        while (1) switch (_context22.n) {
+      return _regenerator().w(function (_context23) {
+        while (1) switch (_context23.n) {
           case 0:
-            config = _this69.sessionConfig;
-            mode = config.mode || _this69.currentMode;
+            config = _this70.sessionConfig;
+            mode = config.mode || _this70.currentMode;
             if (!(!config.chapterId || config.chapterId === 0)) {
-              _context22.n = 1;
+              _context23.n = 1;
               break;
             }
-            _this69.showTools = true;
-            _this69.showBanner('Please select a surah first', 'info', 3600);
-            return _context22.a(2);
+            _this70.showTools = true;
+            _this70.showBanner('Please select a surah first', 'info', 3600);
+            return _context23.a(2);
           case 1:
-            if (_this69.validateSettings()) {
-              _context22.n = 2;
+            if (_this70.validateSettings()) {
+              _context23.n = 2;
               break;
             }
-            return _context22.a(2);
+            return _context23.a(2);
           case 2:
-            _this69.applySessionConfig(config);
-            _this69.persistModeState(mode);
-            _this69.persistUiState();
-            _this69.sessionCompleted = false;
-            _this69.sessionStartedAt = Date.now();
-            _this69.sessionErrorCount = 0;
-            _this69.statsTick = Date.now();
-            currentVerses = mode === 'beginner' ? _this69.beginner.verses : _this69.advanced.verses;
-            modeNeedsReload = !currentVerses || !currentVerses.length || !_this69.modeDataMatchesConfig(mode, config);
+            _this70.applySessionConfig(config);
+            _this70.persistModeState(mode);
+            _this70.persistUiState();
+            _this70.sessionCompleted = false;
+            _this70.sessionStartedAt = Date.now();
+            _this70.sessionErrorCount = 0;
+            _this70.statsTick = Date.now();
+            currentVerses = mode === 'beginner' ? _this70.beginner.verses : _this70.advanced.verses;
+            modeNeedsReload = !currentVerses || !currentVerses.length || !_this70.modeDataMatchesConfig(mode, config);
             if (!modeNeedsReload) {
-              _context22.n = 3;
+              _context23.n = 3;
               break;
             }
-            _context22.n = 3;
-            return _this69.loadVerses(mode);
+            _context23.n = 3;
+            return _this70.loadVerses(mode);
           case 3:
-            updatedVerses = mode === 'beginner' ? _this69.beginner.verses : _this69.advanced.verses;
+            updatedVerses = mode === 'beginner' ? _this70.beginner.verses : _this70.advanced.verses;
             if (!(!updatedVerses || updatedVerses.length === 0)) {
-              _context22.n = 4;
+              _context23.n = 4;
               break;
             }
-            _this69.showBanner('No verses loaded. Check your network connection.', 'error');
-            return _context22.a(2);
+            _this70.showBanner('No verses loaded. Check your network connection.', 'error');
+            return _context23.a(2);
           case 4:
-            if (!_this69.audioElement) {
-              _this69.initAudio();
+            if (!_this70.audioElement) {
+              _this70.initAudio();
             }
 
             // Rebuild queue with current chaining settings
             console.log('[startSession] Building queue with settings:', {
-              enabled: _this69.chainingEnabled,
-              method: _this69.chainingMethod,
-              repetitions: _this69.chainingRepetitions
+              enabled: _this70.chainingEnabled,
+              method: _this70.chainingMethod,
+              repetitions: _this70.chainingRepetitions
             });
-            _this69.buildQueue(mode);
-            builtQueue = mode === 'beginner' ? _this69.beginner.queue : _this69.advanced.queue;
+            _this70.buildQueue(mode);
+            builtQueue = mode === 'beginner' ? _this70.beginner.queue : _this70.advanced.queue;
             if (!(!builtQueue || builtQueue.length === 0)) {
-              _context22.n = 5;
+              _context23.n = 5;
               break;
             }
-            _this69.showBanner('Nothing to play. Check the selected range.', 'error');
-            return _context22.a(2);
+            _this70.showBanner('Nothing to play. Check the selected range.', 'error');
+            return _context23.a(2);
           case 5:
-            _this69.syncMutqinAyahs(updatedVerses);
-            sessionState = _this69.syncMutqinSession(builtQueue, mode);
-            _this69.incrementSessionPlayCount();
+            _this70.syncMutqinAyahs(updatedVerses);
+            sessionState = _this70.syncMutqinSession(builtQueue, mode);
+            _this70.incrementSessionPlayCount();
             canonicalIndex = Math.max(0, Number((sessionState === null || sessionState === void 0 ? void 0 : sessionState.current_index) || 0));
             playbackIndex = canonicalIndex > 0 ? Math.min(canonicalIndex - 1, builtQueue.length - 1) : 0;
-            _this69.queueIndex = playbackIndex;
-            _this69.getModeStore(mode).queueIndex = playbackIndex;
+            _this70.queueIndex = playbackIndex;
+            _this70.getModeStore(mode).queueIndex = playbackIndex;
             nextCanonicalIndex = canonicalIndex > 0 ? canonicalIndex : 1;
-            (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this69.mutqinState, nextCanonicalIndex);
+            (0,_composables_useSessionEngine__WEBPACK_IMPORTED_MODULE_4__.moveMutqinSession)(_this70.mutqinState, nextCanonicalIndex);
             first = builtQueue[playbackIndex];
             if (!(first && first.verse)) {
-              _context22.n = 7;
+              _context23.n = 7;
               break;
             }
-            _this69.setActiveVerse(first.verse.key, {
+            _this70.setActiveVerse(first.verse.key, {
               mode: mode,
               queueIndex: playbackIndex,
               scroll: false
             });
-            _context22.n = 6;
-            return _this69.$nextTick();
+            _context23.n = 6;
+            return _this70.$nextTick();
           case 6:
-            if (_this69.audioElement) {
-              _this69.audioElement.playbackRate = _this69.speed;
+            if (_this70.audioElement) {
+              _this70.audioElement.playbackRate = _this70.speed;
             }
-            _context22.n = 7;
-            return _this69.playQueueEntry(first, {
+            _context23.n = 7;
+            return _this70.playQueueEntry(first, {
               force: true,
               queueIndex: playbackIndex
             });
           case 7:
-            _this69.showTools = false;
-            _this69.flowStep = 'learn';
-            chainingStatus = _this69.chainingEnabled ? "".concat(_this69.chainingMethod, " chaining (").concat(_this69.chainingRepetitions, "x)") : 'no chaining';
-            _this69.showBanner("Session started with ".concat(builtQueue.length, " guided repetitions using ").concat(chainingStatus), 'success', 3000);
+            _this70.showTools = false;
+            _this70.flowStep = 'learn';
+            chainingStatus = _this70.chainingEnabled ? "".concat(_this70.chainingMethod, " chaining (").concat(_this70.chainingRepetitions, "x)") : 'no chaining';
+            _this70.showBanner("Session started with ".concat(builtQueue.length, " guided repetitions using ").concat(chainingStatus), 'success', 3000);
           case 8:
-            return _context22.a(2);
+            return _context23.a(2);
         }
-      }, _callee22);
+      }, _callee23);
     }))();
   }), "formatTime", function formatTime(sec) {
     var t = Math.max(0, Math.floor(sec || 0));
@@ -31309,7 +33269,7 @@ function createAdvancedState() {
     var arabicLength = String(verse.arabic || verse.text || '').replace(/[^ء-ي]/g, '').length || 80;
     return Math.max(5, Math.min(45, arabicLength * 0.12)) / speedFactor;
   }), "showBanner", function showBanner(message) {
-    var _this70 = this;
+    var _this71 = this;
     var kind = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'info';
     var ttlMs = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 3500;
     var action = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
@@ -31322,7 +33282,7 @@ function createAdvancedState() {
       actionLabel: (action === null || action === void 0 ? void 0 : action.label) || ''
     };
     this.bannerTimer = setTimeout(function () {
-      if (_this70.banner && Date.now() - _this70.banner.at >= ttlMs) _this70.banner = null;
+      if (_this71.banner && Date.now() - _this71.banner.at >= ttlMs) _this71.banner = null;
     }, ttlMs + 50);
   }), "runBannerAction", function runBannerAction() {
     var _this$banner;
@@ -31340,7 +33300,7 @@ function createAdvancedState() {
     if (!Array.isArray(verses) || !verses.length) return;
     (0,_composables_useAyahState__WEBPACK_IMPORTED_MODULE_3__.seedAyahs)(this.mutqinState, verses);
   }), "syncMutqinSession", function syncMutqinSession() {
-    var _this71 = this;
+    var _this72 = this;
     var queue = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.queue;
     var mode = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.currentMode;
     var playbackQueue = (queue || []).map(function (item) {
@@ -31369,18 +33329,18 @@ function createAdvancedState() {
     var planner = (0,_composables_useDailyPlanner__WEBPACK_IMPORTED_MODULE_5__.createDailyPlan)(this.mutqinState, uniqueVerses, {
       repetitions: 1,
       audioDurations: uniqueVerses.reduce(function (map, verse) {
-        map[verse.key] = Number(verse.duration || _this71.duration || 0);
+        map[verse.key] = Number(verse.duration || _this72.duration || 0);
         return map;
       }, {}),
       reviewSeconds: 18
     });
     var plannerQueue = uniqueVerses.slice(0, 1).map(function (verse) {
-      var _this71$currentChapte;
+      var _this72$currentChapte;
       return {
         phase: 'Planner',
         ayahId: verse.key,
         verse: verse,
-        prompt: "".concat(((_this71$currentChapte = _this71.currentChapter) === null || _this71$currentChapte === void 0 ? void 0 : _this71$currentChapte.name_simple) || 'Session', " ayahs ").concat(_this71.rangeStart, "-").concat(_this71.rangeEnd)
+        prompt: "".concat(((_this72$currentChapte = _this72.currentChapter) === null || _this72$currentChapte === void 0 ? void 0 : _this72$currentChapte.name_simple) || 'Session', " ayahs ").concat(_this72.rangeStart, "-").concat(_this72.rangeEnd)
       };
     });
     var recallQueue = uniqueVerses.map(function (verse) {
@@ -31666,11 +33626,11 @@ function createAdvancedState() {
     document.documentElement.setAttribute('data-theme', this.theme);
     this.persistUiState();
   }), "toggleSection", function toggleSection(key) {
-    var _this72 = this;
+    var _this73 = this;
     var nextValue = !this.sectionOpen[key];
     Object.keys(this.sectionOpen).forEach(function (sectionKey) {
       if (['session_tools', 'live_stats'].includes(sectionKey)) {
-        _this72.sectionOpen[sectionKey] = false;
+        _this73.sectionOpen[sectionKey] = false;
       }
     });
     this.sectionOpen[key] = nextValue;
@@ -31814,7 +33774,7 @@ function createAdvancedState() {
       console.error(e);
     }
   }), "restoreSessionState", function restoreSessionState() {
-    var _this73 = this;
+    var _this74 = this;
     ;
     ['beginner', 'advanced'].forEach(function (mode) {
       var saved = localStorage.getItem(SESSION_STORAGE_KEYS[mode]);
@@ -31822,14 +33782,14 @@ function createAdvancedState() {
       try {
         var state = JSON.parse(saved);
         if (Date.now() - state.timestamp < 24 * 60 * 60 * 1000) {
-          var target = mode === 'beginner' ? _this73.beginner : _this73.advanced;
+          var target = mode === 'beginner' ? _this74.beginner : _this74.advanced;
           var restoredKey = state.activeVerseKey || state.activeKey || null;
           target.activeKey = restoredKey;
           target.queueIndex = Number(state.queueIndex || 0);
-          if (mode === _this73.currentMode) {
-            _this73.activeVerseKey = restoredKey;
-            _this73.activeKey = restoredKey;
-            _this73.queueIndex = target.queueIndex;
+          if (mode === _this74.currentMode) {
+            _this74.activeVerseKey = restoredKey;
+            _this74.activeKey = restoredKey;
+            _this74.queueIndex = target.queueIndex;
           }
         }
       } catch (e) {
@@ -31862,98 +33822,98 @@ function createAdvancedState() {
     this.persistSm2();
     (0,_composables_useMutqinPersistence__WEBPACK_IMPORTED_MODULE_2__.saveMutqinState)(this.mutqinState);
   }), "loadChapters", function loadChapters() {
-    var _this74 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee23() {
+    var _this75 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee24() {
       var _res$data, res, _t0;
-      return _regenerator().w(function (_context23) {
-        while (1) switch (_context23.p = _context23.n) {
+      return _regenerator().w(function (_context24) {
+        while (1) switch (_context24.p = _context24.n) {
           case 0:
-            _context23.p = 0;
-            _context23.n = 1;
+            _context24.p = 0;
+            _context24.n = 1;
             return axios__WEBPACK_IMPORTED_MODULE_8__["default"].get('https://api.quran.com/api/v4/chapters', {
               params: {
                 language: 'en'
               }
             });
           case 1:
-            res = _context23.v;
-            _this74.chapters = ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.chapters) || [];
-            if (!_this74.chapterId) {
-              _context23.n = 2;
+            res = _context24.v;
+            _this75.chapters = ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.chapters) || [];
+            if (!_this75.chapterId) {
+              _context24.n = 2;
               break;
             }
-            _context23.n = 2;
-            return _this74.loadChapter();
+            _context24.n = 2;
+            return _this75.loadChapter();
           case 2:
-            _context23.n = 4;
+            _context24.n = 4;
             break;
           case 3:
-            _context23.p = 3;
-            _t0 = _context23.v;
+            _context24.p = 3;
+            _t0 = _context24.v;
             console.error('Failed to load chapters:', _t0);
-            _this74.showBanner('Failed to load surah list', 'error', 3000);
+            _this75.showBanner('Failed to load surah list', 'error', 3000);
           case 4:
-            return _context23.a(2);
+            return _context24.a(2);
         }
-      }, _callee23, null, [[0, 3]]);
+      }, _callee24, null, [[0, 3]]);
     }))();
   }), _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_methods, "loadChapter", function loadChapter() {
     var _arguments9 = arguments,
-      _this75 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee24() {
-      var _this75$currentChapte;
+      _this76 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee25() {
+      var _this76$currentChapte;
       var mode, target, chapterId, max;
-      return _regenerator().w(function (_context24) {
-        while (1) switch (_context24.n) {
+      return _regenerator().w(function (_context25) {
+        while (1) switch (_context25.n) {
           case 0:
-            mode = _arguments9.length > 0 && _arguments9[0] !== undefined ? _arguments9[0] : _this75.currentMode;
-            target = mode === 'beginner' ? _this75.beginner : _this75.advanced;
+            mode = _arguments9.length > 0 && _arguments9[0] !== undefined ? _arguments9[0] : _this76.currentMode;
+            target = mode === 'beginner' ? _this76.beginner : _this76.advanced;
             chapterId = Number(target.chapterId || 0);
             if (chapterId) {
-              _context24.n = 1;
+              _context25.n = 1;
               break;
             }
-            _this75.currentChapter = null;
-            return _context24.a(2);
+            _this76.currentChapter = null;
+            return _context25.a(2);
           case 1:
-            _this75.currentChapter = _this75.chapters.find(function (c) {
+            _this76.currentChapter = _this76.chapters.find(function (c) {
               return c.id === chapterId;
             });
-            max = ((_this75$currentChapte = _this75.currentChapter) === null || _this75$currentChapte === void 0 ? void 0 : _this75$currentChapte.verses_count) || 286;
+            max = ((_this76$currentChapte = _this76.currentChapter) === null || _this76$currentChapte === void 0 ? void 0 : _this76$currentChapte.verses_count) || 286;
             if (mode === 'beginner') {
-              _this75.beginner.rangeEnd = Math.min(_this75.beginner.rangeEnd, max);
-              _this75.beginner.rangeStart = Math.max(1, _this75.beginner.rangeStart);
+              _this76.beginner.rangeEnd = Math.min(_this76.beginner.rangeEnd, max);
+              _this76.beginner.rangeStart = Math.max(1, _this76.beginner.rangeStart);
             } else {
-              _this75.advanced.rangeEnd = Math.min(_this75.advanced.rangeEnd, max);
-              _this75.advanced.rangeStart = Math.max(1, _this75.advanced.rangeStart);
+              _this76.advanced.rangeEnd = Math.min(_this76.advanced.rangeEnd, max);
+              _this76.advanced.rangeStart = Math.max(1, _this76.advanced.rangeStart);
             }
-            _context24.n = 2;
-            return _this75.loadVerses(mode);
+            _context25.n = 2;
+            return _this76.loadVerses(mode);
           case 2:
-            return _context24.a(2);
+            return _context25.a(2);
         }
-      }, _callee24);
+      }, _callee25);
     }))();
   }), "loadReciters", function loadReciters() {
-    var _this76 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee25() {
-      var _res$data2, res, list, allow, available, filtered, _this76$reciters$, _t1;
-      return _regenerator().w(function (_context25) {
-        while (1) switch (_context25.p = _context25.n) {
+    var _this77 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee26() {
+      var _res$data2, res, list, allow, available, filtered, _this77$reciters$, _t1;
+      return _regenerator().w(function (_context26) {
+        while (1) switch (_context26.p = _context26.n) {
           case 0:
-            _context25.p = 0;
-            _context25.n = 1;
+            _context26.p = 0;
+            _context26.n = 1;
             return (0,_lib_quranApis__WEBPACK_IMPORTED_MODULE_1__.getEditions)({
               format: 'audio'
             });
           case 1:
-            res = _context25.v;
+            res = _context26.v;
             list = ((_res$data2 = res.data) === null || _res$data2 === void 0 ? void 0 : _res$data2.data) || [];
             if (list.length) {
-              _context25.n = 2;
+              _context26.n = 2;
               break;
             }
-            return _context25.a(2);
+            return _context26.a(2);
           case 2:
             allow = [{
               id: 'ar.alafasy',
@@ -31988,7 +33948,7 @@ function createAdvancedState() {
                 name: entry.label
               };
             });
-            _this76.reciters = filtered.length ? filtered : list.filter(function (edition) {
+            _this77.reciters = filtered.length ? filtered : list.filter(function (edition) {
               return edition.format === 'audio';
             }).map(function (edition) {
               return {
@@ -31996,31 +33956,31 @@ function createAdvancedState() {
                 name: edition.englishName || edition.name || edition.identifier
               };
             });
-            if (!_this76.reciters.some(function (reciter) {
-              return reciter.id === _this76.reciterId;
+            if (!_this77.reciters.some(function (reciter) {
+              return reciter.id === _this77.reciterId;
             })) {
-              _this76.reciterId = ((_this76$reciters$ = _this76.reciters[0]) === null || _this76$reciters$ === void 0 ? void 0 : _this76$reciters$.id) || DEFAULT_ALQURAN_RECITER;
+              _this77.reciterId = ((_this77$reciters$ = _this77.reciters[0]) === null || _this77$reciters$ === void 0 ? void 0 : _this77$reciters$.id) || DEFAULT_ALQURAN_RECITER;
             }
-            _context25.n = 4;
+            _context26.n = 4;
             break;
           case 3:
-            _context25.p = 3;
-            _t1 = _context25.v;
+            _context26.p = 3;
+            _t1 = _context26.v;
             console.error(_t1);
           case 4:
-            return _context25.a(2);
+            return _context26.a(2);
         }
-      }, _callee25, null, [[0, 3]]);
+      }, _callee26, null, [[0, 3]]);
     }))();
   }), "loadSavedSessions", function loadSavedSessions() {
-    var _this77 = this;
+    var _this78 = this;
     try {
       this.ensureSeededSavedSessions();
       this.savedSessions = JSON.parse(localStorage.getItem(this.savedSessionsStorageKey()) || '[]').map(function (session) {
-        return _this77.normalizeSavedSessionRecord(session);
+        return _this78.normalizeSavedSessionRecord(session);
       }).filter(Boolean);
       if (!this.savedSessions.some(function (session) {
-        return session.id === _this77.selectedStatsSessionId;
+        return session.id === _this78.selectedStatsSessionId;
       })) {
         var _this$savedSessions$5;
         this.selectedStatsSessionId = ((_this$savedSessions$5 = this.savedSessions[0]) === null || _this$savedSessions$5 === void 0 ? void 0 : _this$savedSessions$5.id) || '';
@@ -32332,149 +34292,149 @@ function createAdvancedState() {
     this.nextQuizCard();
   }), "playWordAudio", function playWordAudio(url) {
     var _arguments0 = arguments,
-      _this78 = this;
-    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee26() {
+      _this79 = this;
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee27() {
       var verse, wordIndex, directUrl, targetVerse, targetIndex, verseAudioUrl, currentSrc, timestamps, timing, segmentStart, segmentEnd, _t10, _t11;
-      return _regenerator().w(function (_context26) {
-        while (1) switch (_context26.p = _context26.n) {
+      return _regenerator().w(function (_context27) {
+        while (1) switch (_context27.p = _context27.n) {
           case 0:
             verse = _arguments0.length > 1 && _arguments0[1] !== undefined ? _arguments0[1] : null;
             wordIndex = _arguments0.length > 2 && _arguments0[2] !== undefined ? _arguments0[2] : null;
-            directUrl = _this78.normalizeAudioUrl(typeof url === 'string' ? url : '');
-            targetVerse = verse !== null && verse !== void 0 && verse.key ? verse : _this78.activeVerseRef || null;
+            directUrl = _this79.normalizeAudioUrl(typeof url === 'string' ? url : '');
+            targetVerse = verse !== null && verse !== void 0 && verse.key ? verse : _this79.activeVerseRef || null;
             targetIndex = Number.isFinite(Number(wordIndex)) ? Number(wordIndex) : -1;
-            if (_this78.wordByWordAudioEnabled) {
-              _context26.n = 1;
+            if (_this79.wordByWordAudioEnabled) {
+              _context27.n = 1;
               break;
             }
-            _this78.showBanner('Enable Word audio to preview individual words.', 'info', 1600);
-            return _context26.a(2);
+            _this79.showBanner('Enable Word audio to preview individual words.', 'info', 1600);
+            return _context27.a(2);
           case 1:
-            if (!_this78.audioElement) {
-              _this78.audioElement = _this78.$refs.audio;
+            if (!_this79.audioElement) {
+              _this79.audioElement = _this79.$refs.audio;
             }
             if (!directUrl) {
-              _context26.n = 7;
+              _context27.n = 7;
               break;
             }
-            _context26.p = 2;
-            if (!_this78.audioElement) {
-              _context26.n = 4;
+            _context27.p = 2;
+            if (!_this79.audioElement) {
+              _context27.n = 4;
               break;
             }
-            _this78.segmentEndTime = 0;
-            _this78.segmentPlaybackKind = '';
-            _this78.audioElement.pause();
-            _this78.audioElement.src = directUrl;
-            _this78.audioElement.currentTime = 0;
-            _this78.audioElement.playbackRate = _this78.speed;
-            _context26.n = 3;
-            return _this78.audioElement.play();
+            _this79.segmentEndTime = 0;
+            _this79.segmentPlaybackKind = '';
+            _this79.audioElement.pause();
+            _this79.audioElement.src = directUrl;
+            _this79.audioElement.currentTime = 0;
+            _this79.audioElement.playbackRate = _this79.speed;
+            _context27.n = 3;
+            return _this79.audioElement.play();
           case 3:
-            _this78.playerVisible = true;
-            _this78.isPlaying = true;
-            _this78.markPlaybackStart();
-            return _context26.a(2);
+            _this79.playerVisible = true;
+            _this79.isPlaying = true;
+            _this79.markPlaybackStart();
+            return _context27.a(2);
           case 4:
-            _context26.n = 6;
+            _context27.n = 6;
             break;
           case 5:
-            _context26.p = 5;
-            _t10 = _context26.v;
+            _context27.p = 5;
+            _t10 = _context27.v;
           case 6:
             new Audio(directUrl).play()["catch"](function () {});
-            return _context26.a(2);
+            return _context27.a(2);
           case 7:
             if (!(!(targetVerse !== null && targetVerse !== void 0 && targetVerse.audio) || targetIndex < 0)) {
-              _context26.n = 8;
+              _context27.n = 8;
               break;
             }
-            _this78.showBanner('Word audio is not available for this word.', 'info', 1800);
-            return _context26.a(2);
+            _this79.showBanner('Word audio is not available for this word.', 'info', 1800);
+            return _context27.a(2);
           case 8:
-            verseAudioUrl = _this78.normalizeAudioUrl(targetVerse.audio);
-            if (!(!verseAudioUrl || !_this78.audioElement)) {
-              _context26.n = 9;
+            verseAudioUrl = _this79.normalizeAudioUrl(targetVerse.audio);
+            if (!(!verseAudioUrl || !_this79.audioElement)) {
+              _context27.n = 9;
               break;
             }
-            _this78.showBanner('Audio system not ready', 'error', 2200);
-            return _context26.a(2);
+            _this79.showBanner('Audio system not ready', 'error', 2200);
+            return _context27.a(2);
           case 9:
-            currentSrc = _this78.audioElement.currentSrc ? _this78.normalizeAudioUrl(_this78.audioElement.currentSrc) : '';
-            _context26.p = 10;
-            _this78.segmentEndTime = 0;
-            _this78.segmentPlaybackKind = '';
-            _this78.stopWordHighlighting();
-            _this78.setActiveVerse(targetVerse.key, {
+            currentSrc = _this79.audioElement.currentSrc ? _this79.normalizeAudioUrl(_this79.audioElement.currentSrc) : '';
+            _context27.p = 10;
+            _this79.segmentEndTime = 0;
+            _this79.segmentPlaybackKind = '';
+            _this79.stopWordHighlighting();
+            _this79.setActiveVerse(targetVerse.key, {
               scroll: false
             });
-            _this78.playerVisible = true;
+            _this79.playerVisible = true;
             if (!(currentSrc !== verseAudioUrl)) {
-              _context26.n = 11;
+              _context27.n = 11;
               break;
             }
-            _this78.audioElement.pause();
-            _this78.audioElement.src = verseAudioUrl;
-            _this78.audioElement.load();
-            _context26.n = 11;
+            _this79.audioElement.pause();
+            _this79.audioElement.src = verseAudioUrl;
+            _this79.audioElement.load();
+            _context27.n = 11;
             return new Promise(function (resolve, reject) {
               var _onLoaded = function onLoaded() {
-                _this78.audioElement.removeEventListener('loadedmetadata', _onLoaded);
-                _this78.audioElement.removeEventListener('error', _onError);
+                _this79.audioElement.removeEventListener('loadedmetadata', _onLoaded);
+                _this79.audioElement.removeEventListener('error', _onError);
                 resolve();
               };
               var _onError = function onError() {
-                _this78.audioElement.removeEventListener('loadedmetadata', _onLoaded);
-                _this78.audioElement.removeEventListener('error', _onError);
+                _this79.audioElement.removeEventListener('loadedmetadata', _onLoaded);
+                _this79.audioElement.removeEventListener('error', _onError);
                 reject(new Error('word-audio-load-failed'));
               };
-              _this78.audioElement.addEventListener('loadedmetadata', _onLoaded, {
+              _this79.audioElement.addEventListener('loadedmetadata', _onLoaded, {
                 once: true
               });
-              _this78.audioElement.addEventListener('error', _onError, {
+              _this79.audioElement.addEventListener('error', _onError, {
                 once: true
               });
             });
           case 11:
-            _context26.n = 12;
-            return _this78.ensureWordHighlightTrack(targetVerse, {
+            _context27.n = 12;
+            return _this79.ensureWordHighlightTrack(targetVerse, {
               force: true
             });
           case 12:
-            timestamps = _context26.v;
+            timestamps = _context27.v;
             timing = Array.isArray(timestamps) ? timestamps[targetIndex] : null;
             if (timing) {
-              _context26.n = 13;
+              _context27.n = 13;
               break;
             }
-            _this78.showBanner('Word timing unavailable for this ayah.', 'info', 1800);
-            return _context26.a(2);
+            _this79.showBanner('Word timing unavailable for this ayah.', 'info', 1800);
+            return _context27.a(2);
           case 13:
             segmentStart = Math.max(0, Number(timing.start || 0));
             segmentEnd = Math.max(segmentStart + 0.12, Number(timing.end || timing.start || 0));
-            _this78.segmentPlaybackKind = 'word';
-            _this78.segmentEndTime = segmentEnd;
-            _this78.audioElement.currentTime = segmentStart;
-            _this78.audioElement.playbackRate = _this78.speed;
-            _this78.updateWordHighlight(targetVerse.key, targetIndex);
-            _context26.n = 14;
-            return _this78.audioElement.play();
+            _this79.segmentPlaybackKind = 'word';
+            _this79.segmentEndTime = segmentEnd;
+            _this79.audioElement.currentTime = segmentStart;
+            _this79.audioElement.playbackRate = _this79.speed;
+            _this79.updateWordHighlight(targetVerse.key, targetIndex);
+            _context27.n = 14;
+            return _this79.audioElement.play();
           case 14:
-            _this78.isPlaying = true;
-            _this78.markPlaybackStart();
-            _context26.n = 16;
+            _this79.isPlaying = true;
+            _this79.markPlaybackStart();
+            _context27.n = 16;
             break;
           case 15:
-            _context26.p = 15;
-            _t11 = _context26.v;
+            _context27.p = 15;
+            _t11 = _context27.v;
             console.error('Word playback failed:', _t11);
-            _this78.segmentEndTime = 0;
-            _this78.segmentPlaybackKind = '';
-            _this78.showBanner('Unable to play this word right now.', 'error', 2200);
+            _this79.segmentEndTime = 0;
+            _this79.segmentPlaybackKind = '';
+            _this79.showBanner('Unable to play this word right now.', 'error', 2200);
           case 16:
-            return _context26.a(2);
+            return _context27.a(2);
         }
-      }, _callee26, null, [[10, 15], [2, 5]]);
+      }, _callee27, null, [[10, 15], [2, 5]]);
     }))();
   }))
 });
@@ -32736,1091 +34696,1268 @@ var _hoisted_7 = {
 var _hoisted_8 = {
   "class": "offcanvas-launcher-card"
 };
-var _hoisted_9 = ["aria-expanded"];
+var _hoisted_9 = {
+  "class": "offcanvas-launcher-head"
+};
 var _hoisted_10 = {
+  "class": "offcanvas-launcher-kicker"
+};
+var _hoisted_11 = {
+  "class": "offcanvas-launcher-title"
+};
+var _hoisted_12 = {
+  "class": "offcanvas-launcher-steps",
+  "aria-label": "Session setup steps"
+};
+var _hoisted_13 = ["aria-expanded"];
+var _hoisted_14 = {
+  "class": "offcanvas-launcher-copy"
+};
+var _hoisted_15 = {
   key: 1,
   "class": "reading-toolbar"
 };
-var _hoisted_11 = {
+var _hoisted_16 = {
   "class": "reading-toolbar-group"
 };
-var _hoisted_12 = {
+var _hoisted_17 = {
   "class": "reading-toolbar-group"
 };
-var _hoisted_13 = {
+var _hoisted_18 = {
   "class": "font-dropdown"
 };
-var _hoisted_14 = {
+var _hoisted_19 = {
   key: 0,
   "class": "font-dropdown-menu"
 };
-var _hoisted_15 = ["onClick"];
-var _hoisted_16 = {
+var _hoisted_20 = ["onClick"];
+var _hoisted_21 = {
   key: 0,
   "class": "bi bi-check-lg check-icon"
 };
-var _hoisted_17 = {
+var _hoisted_22 = {
   key: 2,
   "class": "loading-spinner"
 };
-var _hoisted_18 = {
+var _hoisted_23 = {
   key: 3,
   "class": "workspace"
 };
-var _hoisted_19 = {
+var _hoisted_24 = {
   "class": "workspace-shell-head"
 };
-var _hoisted_20 = {
+var _hoisted_25 = {
   "class": "workspace-shell-copy"
 };
-var _hoisted_21 = {
+var _hoisted_26 = {
   "class": "workspace-shell-kicker"
 };
-var _hoisted_22 = {
+var _hoisted_27 = {
   "class": "workspace-shell-title-row"
 };
-var _hoisted_23 = {
+var _hoisted_28 = {
   key: 0
 };
-var _hoisted_24 = {
+var _hoisted_29 = {
   "class": "workspace-shell-compact-meta"
 };
-var _hoisted_25 = {
+var _hoisted_30 = {
   key: 0
 };
-var _hoisted_26 = {
+var _hoisted_31 = {
   "class": "workspace-shell-actions"
 };
-var _hoisted_27 = {
+var _hoisted_32 = {
   "class": "action-buttons-group"
 };
-var _hoisted_28 = ["disabled"];
-var _hoisted_29 = {
+var _hoisted_33 = ["disabled"];
+var _hoisted_34 = {
   "class": "workspace-shell-icon-actions"
 };
-var _hoisted_30 = {
+var _hoisted_35 = {
   "class": "shortcuts-modal"
 };
-var _hoisted_31 = {
+var _hoisted_36 = {
   "class": "shortcuts-modal-header"
 };
-var _hoisted_32 = {
+var _hoisted_37 = {
   "class": "workspace-quick-controls",
   "aria-label": "Quick reading controls"
 };
-var _hoisted_33 = {
+var _hoisted_38 = {
   "class": "quick-pill-group"
 };
-var _hoisted_34 = {
+var _hoisted_39 = {
   "class": "quick-pill-group-list"
 };
-var _hoisted_35 = {
+var _hoisted_40 = {
   "class": "font-dropdown quick-font-dropdown"
 };
-var _hoisted_36 = {
+var _hoisted_41 = {
   key: 0,
   "class": "font-dropdown-menu quick-font-menu"
 };
-var _hoisted_37 = ["onClick"];
-var _hoisted_38 = {
+var _hoisted_42 = ["onClick"];
+var _hoisted_43 = {
   key: 0,
   "class": "bi bi-check-lg check-icon"
 };
-var _hoisted_39 = {
+var _hoisted_44 = {
   id: "memorisationWorkspaceMain",
   ref: "workspaceMain",
   "class": "workspace-main",
   "aria-label": "Memorisation workspace"
 };
-var _hoisted_40 = {
+var _hoisted_45 = {
   "class": "verses-grid"
 };
-var _hoisted_41 = ["data-verse-key", "onClick", "onMouseenter", "onMouseleave", "onTouchstartPassive", "onTouchendPassive", "onKeydown"];
-var _hoisted_42 = {
+var _hoisted_46 = ["data-verse-key", "onClick", "onMouseenter", "onMouseleave", "onTouchstartPassive", "onTouchendPassive", "onKeydown"];
+var _hoisted_47 = {
   "class": "verse-header"
 };
-var _hoisted_43 = {
+var _hoisted_48 = {
   "class": "verse-badges"
 };
-var _hoisted_44 = {
+var _hoisted_49 = {
   "class": "verse-number"
 };
-var _hoisted_45 = {
+var _hoisted_50 = {
   key: 0,
   "class": "verse-status-badge verse-status-badge-review"
 };
-var _hoisted_46 = {
+var _hoisted_51 = {
   key: 1,
   "class": "verse-status-badge"
 };
-var _hoisted_47 = {
+var _hoisted_52 = {
   "class": "verse-actions"
 };
-var _hoisted_48 = {
+var _hoisted_53 = {
   "class": "verse-font-inline-value"
 };
-var _hoisted_49 = ["onClick", "title"];
-var _hoisted_50 = ["onClick", "disabled"];
-var _hoisted_51 = ["onClick", "title"];
-var _hoisted_52 = {
+var _hoisted_54 = ["onClick", "title"];
+var _hoisted_55 = ["onClick", "disabled"];
+var _hoisted_56 = ["onClick", "title"];
+var _hoisted_57 = {
   key: 0
 };
-var _hoisted_53 = {
+var _hoisted_58 = {
   key: 0,
   "class": "verse-preview-label"
 };
-var _hoisted_54 = ["innerHTML"];
-var _hoisted_55 = {
+var _hoisted_59 = ["innerHTML"];
+var _hoisted_60 = {
   key: 1,
   "class": "verse-aid-block"
 };
-var _hoisted_56 = {
+var _hoisted_61 = {
   "class": "verse-transliteration verse-aid"
 };
-var _hoisted_57 = {
+var _hoisted_62 = {
   key: 2,
   "class": "verse-aid-block"
 };
-var _hoisted_58 = {
+var _hoisted_63 = {
   "class": "verse-translation verse-aid"
 };
-var _hoisted_59 = ["onScroll"];
-var _hoisted_60 = {
+var _hoisted_64 = ["onScroll"];
+var _hoisted_65 = {
   "class": "word-arabic",
   dir: "rtl"
 };
-var _hoisted_61 = {
+var _hoisted_66 = {
   "class": "word-meaning"
 };
-var _hoisted_62 = ["onClick"];
-var _hoisted_63 = ["aria-hidden"];
-var _hoisted_64 = {
+var _hoisted_67 = ["onClick"];
+var _hoisted_68 = ["aria-hidden"];
+var _hoisted_69 = {
   "class": "tools-top"
 };
-var _hoisted_65 = {
+var _hoisted_70 = {
   "class": "tools-topbar"
 };
-var _hoisted_66 = {
+var _hoisted_71 = {
   "class": "tools-tabs",
   role: "tablist",
   "aria-label": "Controls tabs"
 };
-var _hoisted_67 = {
+var _hoisted_72 = {
   ref: "toolsBody",
   "class": "tools-body compact"
 };
-var _hoisted_68 = {
+var _hoisted_73 = {
   key: 0,
   "class": "sheet"
 };
-var _hoisted_69 = {
+var _hoisted_74 = {
   "class": "sheet-section sheet-section-compact"
 };
-var _hoisted_70 = {
-  "class": "sheet-content"
-};
-var _hoisted_71 = {
-  "class": "field-stack field-stack-compact"
-};
-var _hoisted_72 = {
-  "class": "field"
-};
-var _hoisted_73 = ["value"];
-var _hoisted_74 = ["value"];
 var _hoisted_75 = {
-  "class": "setup-metric-list",
-  "aria-label": "Verse play counts"
+  "class": "st-left"
 };
 var _hoisted_76 = {
-  key: 1,
-  "class": "setup-metric-list-empty"
+  "class": "st-txt"
 };
 var _hoisted_77 = {
-  "class": "field"
+  "class": "st-title"
 };
 var _hoisted_78 = {
-  "class": "range range-single"
+  "class": "st-sub"
 };
 var _hoisted_79 = {
-  "class": "field"
+  "class": "sheet-content"
 };
-var _hoisted_80 = ["value"];
+var _hoisted_80 = {
+  "class": "field-stack field-stack-compact"
+};
 var _hoisted_81 = {
   "class": "field"
 };
-var _hoisted_82 = {
-  "class": "field-header"
-};
+var _hoisted_82 = ["value"];
 var _hoisted_83 = {
-  "class": "range-value-pill"
+  value: 0
 };
-var _hoisted_84 = {
-  "class": "range-control"
-};
-var _hoisted_85 = ["value"];
-var _hoisted_86 = {
+var _hoisted_84 = ["value"];
+var _hoisted_85 = {
   "class": "field-hint"
 };
+var _hoisted_86 = {
+  "class": "setup-metric-list",
+  "aria-label": "Verse play counts"
+};
 var _hoisted_87 = {
-  "class": "sheet-section sheet-section-compact"
+  key: 1,
+  "class": "setup-metric-list-empty"
 };
 var _hoisted_88 = {
-  "class": "sheet-content"
+  "class": "field"
 };
 var _hoisted_89 = {
-  "class": "field-stack field-stack-compact"
+  "class": "range range-single"
 };
 var _hoisted_90 = {
-  "class": "field"
+  "class": "field-hint"
 };
 var _hoisted_91 = {
-  "class": "radio-group radio-group-tight"
-};
-var _hoisted_92 = ["value", "checked", "onChange"];
-var _hoisted_93 = {
   "class": "field"
 };
+var _hoisted_92 = ["value"];
+var _hoisted_93 = {
+  "class": "field-hint"
+};
 var _hoisted_94 = {
-  "class": "radio-group radio-group-tight"
+  "class": "field"
 };
 var _hoisted_95 = {
-  "class": "radio"
+  "class": "field-header"
 };
 var _hoisted_96 = {
-  "class": "radio"
+  "class": "range-value-pill"
 };
 var _hoisted_97 = {
-  "class": "sheet"
+  "class": "range-control"
 };
-var _hoisted_98 = {
-  "class": "sheet-section"
-};
+var _hoisted_98 = ["value"];
 var _hoisted_99 = {
-  "class": "st-right-group"
+  "class": "field-hint"
 };
-var _hoisted_100 = ["aria-pressed"];
+var _hoisted_100 = {
+  "class": "sheet-section sheet-section-compact"
+};
 var _hoisted_101 = {
   "class": "sheet-content"
 };
 var _hoisted_102 = {
-  "class": "field-stack"
+  "class": "field-stack field-stack-compact"
 };
 var _hoisted_103 = {
-  key: 0,
   "class": "field"
 };
 var _hoisted_104 = {
-  "class": "range-control"
+  "class": "radio-group radio-group-tight"
 };
-var _hoisted_105 = {
-  "class": "inline-setting-pill"
-};
+var _hoisted_105 = ["value", "checked", "onChange"];
 var _hoisted_106 = {
-  "class": "sheet-section"
+  "class": "field"
 };
 var _hoisted_107 = {
-  "class": "st-right-group"
+  "class": "radio-group radio-group-tight"
 };
-var _hoisted_108 = ["aria-pressed"];
+var _hoisted_108 = {
+  "class": "radio"
+};
 var _hoisted_109 = {
-  "class": "sheet-content"
+  "class": "radio"
 };
 var _hoisted_110 = {
-  "class": "field-stack"
-};
-var _hoisted_111 = {
-  key: 0,
   "class": "field"
 };
+var _hoisted_111 = ["value"];
 var _hoisted_112 = {
-  "class": "range-control"
+  "class": "sheet"
 };
 var _hoisted_113 = {
-  "class": "inline-setting-pill"
-};
-var _hoisted_114 = {
   "class": "sheet-section"
 };
-var _hoisted_115 = {
-  "class": "st-left"
-};
-var _hoisted_116 = {
-  "class": "st-txt"
-};
-var _hoisted_117 = {
-  "class": "st-sub"
-};
-var _hoisted_118 = {
+var _hoisted_114 = {
   "class": "st-right-group"
 };
-var _hoisted_119 = ["aria-pressed"];
-var _hoisted_120 = {
+var _hoisted_115 = ["aria-pressed"];
+var _hoisted_116 = {
   "class": "sheet-content"
 };
-var _hoisted_121 = {
+var _hoisted_117 = {
   "class": "field-stack"
 };
-var _hoisted_122 = {
-  "class": "field"
-};
-var _hoisted_123 = {
-  "class": "technique-description"
-};
-var _hoisted_124 = {
+var _hoisted_118 = {
   key: 0,
   "class": "field"
 };
-var _hoisted_125 = {
-  "class": "radio-group"
-};
-var _hoisted_126 = {
-  "class": "radio"
-};
-var _hoisted_127 = {
-  "class": "radio"
-};
-var _hoisted_128 = {
-  "class": "field-hint"
-};
-var _hoisted_129 = {
-  key: 1,
-  "class": "field"
-};
-var _hoisted_130 = {
+var _hoisted_119 = {
   "class": "range-control"
 };
-var _hoisted_131 = ["value"];
-var _hoisted_132 = {
+var _hoisted_120 = {
   "class": "inline-setting-pill"
 };
-var _hoisted_133 = {
-  key: 2,
-  "class": "technique-preview-block"
-};
-var _hoisted_134 = {
+var _hoisted_121 = {
   "class": "sheet-section"
 };
-var _hoisted_135 = {
+var _hoisted_122 = {
   "class": "st-right-group"
 };
-var _hoisted_136 = ["aria-pressed"];
-var _hoisted_137 = {
+var _hoisted_123 = ["aria-pressed"];
+var _hoisted_124 = {
   "class": "sheet-content"
 };
-var _hoisted_138 = {
+var _hoisted_125 = {
   "class": "field-stack"
+};
+var _hoisted_126 = {
+  key: 0,
+  "class": "field"
+};
+var _hoisted_127 = {
+  "class": "range-control"
+};
+var _hoisted_128 = {
+  "class": "inline-setting-pill"
+};
+var _hoisted_129 = {
+  "class": "sheet-section"
+};
+var _hoisted_130 = {
+  "class": "st-left"
+};
+var _hoisted_131 = {
+  "class": "st-txt"
+};
+var _hoisted_132 = {
+  "class": "st-sub"
+};
+var _hoisted_133 = {
+  "class": "st-right-group"
+};
+var _hoisted_134 = ["aria-pressed"];
+var _hoisted_135 = {
+  "class": "sheet-content"
+};
+var _hoisted_136 = {
+  "class": "field-stack"
+};
+var _hoisted_137 = {
+  "class": "field"
+};
+var _hoisted_138 = {
+  "class": "technique-description"
 };
 var _hoisted_139 = {
   key: 0,
   "class": "field"
 };
 var _hoisted_140 = {
-  "class": "field-hint"
+  "class": "radio-group"
 };
 var _hoisted_141 = {
-  "class": "sheet"
+  "class": "radio"
 };
 var _hoisted_142 = {
-  "class": "saved-sessions-container"
+  "class": "radio"
 };
 var _hoisted_143 = {
+  "class": "field-hint"
+};
+var _hoisted_144 = {
+  key: 1,
+  "class": "field"
+};
+var _hoisted_145 = {
+  "class": "range-control"
+};
+var _hoisted_146 = ["value"];
+var _hoisted_147 = {
+  "class": "inline-setting-pill"
+};
+var _hoisted_148 = {
+  key: 2,
+  "class": "technique-preview-block"
+};
+var _hoisted_149 = {
+  "class": "sheet-section"
+};
+var _hoisted_150 = {
+  "class": "st-right-group"
+};
+var _hoisted_151 = ["aria-pressed"];
+var _hoisted_152 = {
+  "class": "sheet-content"
+};
+var _hoisted_153 = {
+  "class": "field-stack"
+};
+var _hoisted_154 = {
+  key: 0,
+  "class": "field"
+};
+var _hoisted_155 = {
+  "class": "field-hint"
+};
+var _hoisted_156 = {
+  "class": "sheet"
+};
+var _hoisted_157 = {
+  "class": "saved-sessions-container"
+};
+var _hoisted_158 = {
   key: 0,
   "class": "saved-continue-banner"
 };
-var _hoisted_144 = {
+var _hoisted_159 = {
   "class": "saved-continue-copy"
 };
-var _hoisted_145 = {
+var _hoisted_160 = {
   key: 1,
   "class": "empty-state"
 };
-var _hoisted_146 = {
+var _hoisted_161 = {
   key: 2,
   "class": "sessions-list"
 };
-var _hoisted_147 = ["onClick"];
-var _hoisted_148 = {
+var _hoisted_162 = ["onClick"];
+var _hoisted_163 = {
   "class": "session-name"
 };
-var _hoisted_149 = {
+var _hoisted_164 = {
   key: 0,
   "class": "session-archive-badge"
 };
-var _hoisted_150 = {
+var _hoisted_165 = {
   key: 1,
   "class": "session-live-badge"
 };
-var _hoisted_151 = {
+var _hoisted_166 = {
   key: 0,
   "class": "session-subtitle"
 };
-var _hoisted_152 = {
+var _hoisted_167 = {
   "class": "session-details"
 };
-var _hoisted_153 = {
+var _hoisted_168 = {
   "class": "session-actions"
 };
-var _hoisted_154 = {
+var _hoisted_169 = {
   "class": "session-primary-action"
 };
-var _hoisted_155 = ["onClick", "disabled"];
-var _hoisted_156 = {
+var _hoisted_170 = ["onClick", "disabled"];
+var _hoisted_171 = {
   "class": "session-secondary-actions"
 };
-var _hoisted_157 = ["aria-label"];
-var _hoisted_158 = ["disabled", "onClick"];
-var _hoisted_159 = ["disabled", "onClick"];
-var _hoisted_160 = ["disabled", "onClick"];
-var _hoisted_161 = ["onClick"];
-var _hoisted_162 = {
+var _hoisted_172 = ["aria-label"];
+var _hoisted_173 = ["disabled", "onClick"];
+var _hoisted_174 = ["disabled", "onClick"];
+var _hoisted_175 = ["disabled", "onClick"];
+var _hoisted_176 = ["onClick"];
+var _hoisted_177 = {
   key: 3,
   "class": "export-error-card"
 };
-var _hoisted_163 = {
+var _hoisted_178 = {
   key: 4,
   "class": "save-section"
 };
-var _hoisted_164 = {
+var _hoisted_179 = {
   "class": "current-info"
 };
-var _hoisted_165 = {
+var _hoisted_180 = {
   key: 3,
   "class": "sheet"
 };
-var _hoisted_166 = {
+var _hoisted_181 = {
   "class": "stats-sessions-container"
 };
-var _hoisted_167 = {
+var _hoisted_182 = {
   key: 0,
   "class": "empty-state"
 };
-var _hoisted_168 = {
+var _hoisted_183 = {
   key: 1,
   "class": "stats-panel"
 };
-var _hoisted_169 = {
+var _hoisted_184 = {
   key: 0,
   "class": "stats-detail"
 };
-var _hoisted_170 = {
+var _hoisted_185 = {
   "class": "stats-detail-head stats-detail-head-hero"
 };
-var _hoisted_171 = {
+var _hoisted_186 = {
   key: 0
 };
-var _hoisted_172 = {
+var _hoisted_187 = {
   "class": "stats-summary"
 };
-var _hoisted_173 = {
+var _hoisted_188 = {
   key: 1,
   "class": "stats-session-select-wrap"
 };
-var _hoisted_174 = ["value"];
-var _hoisted_175 = ["value"];
-var _hoisted_176 = {
+var _hoisted_189 = ["value"];
+var _hoisted_190 = ["value"];
+var _hoisted_191 = {
   "class": "stats-detail-actions stats-detail-actions-prominent"
 };
-var _hoisted_177 = {
+var _hoisted_192 = {
   "class": "stats-grid stats-grid-hero"
 };
-var _hoisted_178 = {
+var _hoisted_193 = {
   "class": "stats-card-value"
 };
-var _hoisted_179 = {
+var _hoisted_194 = {
   "class": "stats-detail-footer"
 };
-var _hoisted_180 = {
+var _hoisted_195 = {
   key: 0
 };
-var _hoisted_181 = {
+var _hoisted_196 = {
   key: 1
 };
-var _hoisted_182 = {
+var _hoisted_197 = {
   "class": "sheet"
 };
-var _hoisted_183 = {
+var _hoisted_198 = {
   "class": "sheet-section"
 };
-var _hoisted_184 = {
+var _hoisted_199 = {
+  "class": "st-left"
+};
+var _hoisted_200 = {
+  "class": "st-txt"
+};
+var _hoisted_201 = {
+  "class": "st-title"
+};
+var _hoisted_202 = {
+  "class": "st-sub"
+};
+var _hoisted_203 = {
   "class": "sheet-content"
 };
-var _hoisted_185 = {
+var _hoisted_204 = {
+  "class": "setting-item"
+};
+var _hoisted_205 = {
+  "class": "setting-info"
+};
+var _hoisted_206 = {
+  "class": "setting-label"
+};
+var _hoisted_207 = {
+  "class": "setting-description"
+};
+var _hoisted_208 = {
   "class": "setting-item setting-item-range"
 };
-var _hoisted_186 = {
+var _hoisted_209 = {
+  "class": "setting-info"
+};
+var _hoisted_210 = {
+  "class": "setting-label"
+};
+var _hoisted_211 = {
+  "class": "setting-description"
+};
+var _hoisted_212 = {
   "class": "range-control-compact"
 };
-var _hoisted_187 = {
+var _hoisted_213 = {
   "class": "range-value-badge"
 };
-var _hoisted_188 = {
+var _hoisted_214 = {
+  "class": "setting-item"
+};
+var _hoisted_215 = {
+  "class": "setting-info"
+};
+var _hoisted_216 = {
+  "class": "setting-label"
+};
+var _hoisted_217 = ["value"];
+var _hoisted_218 = ["value"];
+var _hoisted_219 = {
   "class": "sheet-section"
 };
-var _hoisted_189 = {
+var _hoisted_220 = {
+  "class": "st-left"
+};
+var _hoisted_221 = {
+  "class": "st-txt"
+};
+var _hoisted_222 = {
+  "class": "st-title"
+};
+var _hoisted_223 = {
+  "class": "st-sub"
+};
+var _hoisted_224 = {
   "class": "sheet-content"
 };
-var _hoisted_190 = {
+var _hoisted_225 = {
   "class": "setting-item"
 };
-var _hoisted_191 = {
+var _hoisted_226 = {
+  "class": "setting-info"
+};
+var _hoisted_227 = {
+  "class": "setting-description"
+};
+var _hoisted_228 = {
   "class": "setting-item"
 };
-var _hoisted_192 = {
+var _hoisted_229 = {
+  "class": "setting-info"
+};
+var _hoisted_230 = {
+  "class": "setting-label"
+};
+var _hoisted_231 = {
+  "class": "setting-description"
+};
+var _hoisted_232 = {
   "class": "setting-item"
 };
-var _hoisted_193 = {
+var _hoisted_233 = {
+  "class": "setting-info"
+};
+var _hoisted_234 = {
+  "class": "setting-label"
+};
+var _hoisted_235 = {
+  "class": "setting-description"
+};
+var _hoisted_236 = {
   "class": "setting-item"
 };
-var _hoisted_194 = {
+var _hoisted_237 = {
+  "class": "setting-info"
+};
+var _hoisted_238 = {
+  "class": "setting-label"
+};
+var _hoisted_239 = {
+  "class": "setting-description"
+};
+var _hoisted_240 = {
   key: 2,
   "class": "main container"
 };
-var _hoisted_195 = {
+var _hoisted_241 = {
+  "class": "login-hero"
+};
+var _hoisted_242 = {
+  "class": "guest-shell"
+};
+var _hoisted_243 = {
+  "class": "guest-hero"
+};
+var _hoisted_244 = {
+  "class": "guest-hero-copy"
+};
+var _hoisted_245 = {
+  "class": "guest-kicker"
+};
+var _hoisted_246 = {
+  "class": "guest-copy-stack"
+};
+var _hoisted_247 = {
+  "class": "guest-subtitle"
+};
+var _hoisted_248 = {
+  "class": "guest-copy-support"
+};
+var _hoisted_249 = {
+  "class": "guest-action-row"
+};
+var _hoisted_250 = {
+  href: "/login",
+  "class": "login-btn guest-primary-btn",
+  style: {
+    "text-decoration": "none"
+  }
+};
+var _hoisted_251 = {
+  href: "/register",
+  "class": "guest-secondary-btn",
+  style: {
+    "text-decoration": "none"
+  }
+};
+var _hoisted_252 = {
+  "class": "guest-cta-note"
+};
+var _hoisted_253 = {
   "class": "modal-content save-name-modal",
   role: "dialog",
   "aria-modal": "true",
   "aria-labelledby": "saveModalTitle"
 };
-var _hoisted_196 = {
+var _hoisted_254 = {
   "class": "modal-header"
 };
-var _hoisted_197 = {
+var _hoisted_255 = {
   "class": "modal-header-text"
 };
-var _hoisted_198 = {
+var _hoisted_256 = {
   "class": "modal-context-badge"
 };
-var _hoisted_199 = {
+var _hoisted_257 = {
   "class": "modal-body"
 };
-var _hoisted_200 = {
+var _hoisted_258 = {
   "class": "session-preview-card"
 };
-var _hoisted_201 = {
+var _hoisted_259 = {
   "class": "preview-surah"
 };
-var _hoisted_202 = {
+var _hoisted_260 = {
   "class": "preview-range"
 };
-var _hoisted_203 = {
+var _hoisted_261 = {
   "class": "preview-stats"
 };
-var _hoisted_204 = {
+var _hoisted_262 = {
   "class": "preview-stat"
 };
-var _hoisted_205 = {
+var _hoisted_263 = {
   "class": "preview-stat"
 };
-var _hoisted_206 = {
+var _hoisted_264 = {
   "class": "input-hint"
 };
-var _hoisted_207 = {
+var _hoisted_265 = {
   "class": "char-count"
 };
-var _hoisted_208 = {
+var _hoisted_266 = {
   key: 0,
   "class": "error-message"
 };
-var _hoisted_209 = {
+var _hoisted_267 = {
   "class": "quick-suggestions"
 };
-var _hoisted_210 = {
+var _hoisted_268 = {
   "class": "suggestion-chips"
 };
-var _hoisted_211 = ["onClick"];
-var _hoisted_212 = {
+var _hoisted_269 = ["onClick"];
+var _hoisted_270 = {
   "class": "info-note"
 };
-var _hoisted_213 = {
+var _hoisted_271 = {
   "class": "info-text"
 };
-var _hoisted_214 = {
+var _hoisted_272 = {
   "class": "modal-footer"
 };
-var _hoisted_215 = ["disabled"];
-var _hoisted_216 = {
+var _hoisted_273 = ["disabled"];
+var _hoisted_274 = {
   "class": "modal-content confirm-modal",
   role: "dialog",
   "aria-modal": "true"
 };
-var _hoisted_217 = {
+var _hoisted_275 = {
   "class": "modal-header"
 };
-var _hoisted_218 = {
+var _hoisted_276 = {
   "class": "modal-header-text"
 };
-var _hoisted_219 = {
+var _hoisted_277 = {
   "class": "modal-context-badge"
 };
-var _hoisted_220 = {
+var _hoisted_278 = {
   "class": "modal-body"
 };
-var _hoisted_221 = {
+var _hoisted_279 = {
   "class": "confirm-copy"
 };
-var _hoisted_222 = {
+var _hoisted_280 = {
   "class": "modal-footer"
 };
-var _hoisted_223 = {
+var _hoisted_281 = {
   "class": "modal-content confirm-modal session-exit-modal",
   role: "dialog",
   "aria-modal": "true",
   "aria-labelledby": "sessionExitTitle"
 };
-var _hoisted_224 = {
+var _hoisted_282 = {
   "class": "modal-header"
 };
-var _hoisted_225 = {
+var _hoisted_283 = {
   "class": "modal-header-text"
 };
-var _hoisted_226 = {
+var _hoisted_284 = {
   "class": "modal-context-badge"
 };
-var _hoisted_227 = {
+var _hoisted_285 = {
   "class": "modal-body"
 };
-var _hoisted_228 = {
+var _hoisted_286 = {
   "class": "session-exit-recap"
 };
-var _hoisted_229 = {
+var _hoisted_287 = {
   "class": "session-exit-autosave"
 };
-var _hoisted_230 = {
+var _hoisted_288 = {
   "class": "modal-footer"
 };
-var _hoisted_231 = {
+var _hoisted_289 = {
   key: 6,
   "class": "countdown-overlay"
 };
-var _hoisted_232 = {
+var _hoisted_290 = {
   "class": "countdown-modal"
 };
-var _hoisted_233 = {
+var _hoisted_291 = {
   "class": "countdown-number"
 };
-var _hoisted_234 = {
+var _hoisted_292 = {
   "class": "modal-content session-analytics-modal",
   role: "dialog",
   "aria-modal": "true",
   "aria-labelledby": "sessionAnalyticsTitle"
 };
-var _hoisted_235 = {
+var _hoisted_293 = {
   "class": "modal-header session-analytics-header"
 };
-var _hoisted_236 = {
+var _hoisted_294 = {
   "class": "session-analytics-head-copy"
 };
-var _hoisted_237 = {
+var _hoisted_295 = {
   key: 0
 };
-var _hoisted_238 = {
+var _hoisted_296 = {
   key: 1
 };
-var _hoisted_239 = {
+var _hoisted_297 = {
   "class": "session-analytics-head-actions"
 };
-var _hoisted_240 = ["disabled"];
-var _hoisted_241 = {
+var _hoisted_298 = ["disabled"];
+var _hoisted_299 = {
   "class": "modal-body session-analytics-body"
 };
-var _hoisted_242 = {
+var _hoisted_300 = {
   key: 0,
   "class": "analytics-loading"
 };
-var _hoisted_243 = {
+var _hoisted_301 = {
   "class": "session-analytics-section"
 };
-var _hoisted_244 = {
+var _hoisted_302 = {
   "class": "session-analytics-summary-grid"
 };
-var _hoisted_245 = {
+var _hoisted_303 = {
   "class": "session-analytics-section session-analytics-two-col"
 };
-var _hoisted_246 = {
+var _hoisted_304 = {
   "class": "session-analytics-panel"
 };
-var _hoisted_247 = {
+var _hoisted_305 = {
   "class": "analytics-progress-split"
 };
-var _hoisted_248 = {
+var _hoisted_306 = {
   "class": "analytics-progress-stat"
 };
-var _hoisted_249 = {
+var _hoisted_307 = {
   "class": "analytics-progress-stat"
 };
-var _hoisted_250 = {
+var _hoisted_308 = {
   "class": "analytics-progress-bar"
 };
-var _hoisted_251 = {
+var _hoisted_309 = {
   "class": "session-analytics-panel"
 };
-var _hoisted_252 = {
+var _hoisted_310 = {
   key: 0,
   "class": "analytics-line-chart"
 };
-var _hoisted_253 = {
+var _hoisted_311 = {
   viewBox: "0 0 320 160",
   role: "img",
   "aria-label": "Ayah activity chart"
 };
-var _hoisted_254 = {
+var _hoisted_312 = {
   "class": "analytics-y-axis"
 };
-var _hoisted_255 = ["y1", "y2"];
-var _hoisted_256 = ["y"];
-var _hoisted_257 = ["d"];
-var _hoisted_258 = ["d"];
-var _hoisted_259 = ["cx", "cy"];
-var _hoisted_260 = {
+var _hoisted_313 = ["y1", "y2"];
+var _hoisted_314 = ["y"];
+var _hoisted_315 = ["d"];
+var _hoisted_316 = ["d"];
+var _hoisted_317 = ["cx", "cy"];
+var _hoisted_318 = {
   "class": "analytics-line-labels"
 };
-var _hoisted_261 = {
+var _hoisted_319 = {
   key: 1,
   "class": "analytics-empty-panel"
 };
-var _hoisted_262 = {
+var _hoisted_320 = {
   "class": "session-analytics-section session-analytics-two-col"
 };
-var _hoisted_263 = {
+var _hoisted_321 = {
   "class": "session-analytics-panel"
 };
-var _hoisted_264 = {
+var _hoisted_322 = {
   key: 0,
   "class": "analytics-bar-list"
 };
-var _hoisted_265 = {
+var _hoisted_323 = {
   "class": "analytics-bar-track"
 };
-var _hoisted_266 = {
+var _hoisted_324 = {
   key: 1,
   "class": "analytics-empty-panel"
 };
-var _hoisted_267 = {
+var _hoisted_325 = {
   "class": "session-analytics-panel"
 };
-var _hoisted_268 = {
+var _hoisted_326 = {
   key: 0,
   "class": "analytics-bucket-grid"
 };
-var _hoisted_269 = {
+var _hoisted_327 = {
   key: 1,
   "class": "analytics-empty-panel"
 };
-var _hoisted_270 = {
+var _hoisted_328 = {
   "class": "modal-content self-check-modal",
   role: "dialog",
   "aria-modal": "true",
   "aria-labelledby": "selfCheckModalTitle"
 };
-var _hoisted_271 = {
+var _hoisted_329 = {
   "class": "modal-header self-check-modal-header"
 };
-var _hoisted_272 = {
+var _hoisted_330 = {
   "class": "self-check-modal-head-copy"
 };
-var _hoisted_273 = {
+var _hoisted_331 = {
   id: "selfCheckModalTitle"
 };
-var _hoisted_274 = {
+var _hoisted_332 = {
   "class": "modal-body self-check-modal-body"
 };
-var _hoisted_275 = {
+var _hoisted_333 = {
   "class": "self-check-modal-stage"
 };
-var _hoisted_276 = ["innerHTML"];
-var _hoisted_277 = {
+var _hoisted_334 = ["innerHTML"];
+var _hoisted_335 = {
   "class": "self-check-modal-recorder-grid"
 };
-var _hoisted_278 = {
+var _hoisted_336 = {
   "class": "self-check-recorder-head"
 };
-var _hoisted_279 = {
+var _hoisted_337 = {
   "class": "self-check-card-desc"
 };
-var _hoisted_280 = {
+var _hoisted_338 = {
   "class": "self-check-recorder-meta"
 };
-var _hoisted_281 = {
+var _hoisted_339 = {
   key: 0
 };
-var _hoisted_282 = {
+var _hoisted_340 = {
   key: 0,
   "class": "self-check-status self-check-status-success"
 };
-var _hoisted_283 = {
+var _hoisted_341 = {
   key: 1,
   "class": "self-check-status self-check-status-warning"
 };
-var _hoisted_284 = {
+var _hoisted_342 = {
   key: 2,
   "class": "self-check-status self-check-status-warning"
 };
-var _hoisted_285 = {
+var _hoisted_343 = {
   key: 3,
   "class": "self-check-live-card"
 };
-var _hoisted_286 = {
+var _hoisted_344 = {
   "class": "self-check-live-stage"
 };
-var _hoisted_287 = {
+var _hoisted_345 = {
   "class": "self-check-live-copy"
 };
-var _hoisted_288 = {
+var _hoisted_346 = {
   "class": "self-check-live-actions"
 };
-var _hoisted_289 = {
+var _hoisted_347 = {
   key: 4,
   "class": "self-check-status self-check-status-info"
 };
-var _hoisted_290 = {
+var _hoisted_348 = {
   key: 5,
   "class": "self-check-review-card"
 };
-var _hoisted_291 = {
+var _hoisted_349 = {
   "class": "self-check-review-head"
 };
-var _hoisted_292 = {
+var _hoisted_350 = {
   "class": "self-check-result-block"
 };
-var _hoisted_293 = {
+var _hoisted_351 = {
   "class": "self-check-result-group",
   role: "group",
   "aria-label": "Choose self-check result"
 };
-var _hoisted_294 = ["title", "onClick"];
-var _hoisted_295 = {
+var _hoisted_352 = ["title", "onClick"];
+var _hoisted_353 = {
   "class": "self-check-result-btn-label"
 };
-var _hoisted_296 = {
+var _hoisted_354 = {
   "class": "self-check-result-btn-hint"
 };
-var _hoisted_297 = {
+var _hoisted_355 = {
   "class": "self-check-review-actions"
 };
-var _hoisted_298 = {
+var _hoisted_356 = {
   key: 6,
   "class": "self-check-idle-actions"
 };
-var _hoisted_299 = {
+var _hoisted_357 = {
   "class": "self-check-attempts-card"
 };
-var _hoisted_300 = {
+var _hoisted_358 = {
   "class": "self-check-attempts-head"
 };
-var _hoisted_301 = ["title"];
-var _hoisted_302 = {
+var _hoisted_359 = ["title"];
+var _hoisted_360 = {
   key: 0,
   "class": "self-check-attempts-list"
 };
-var _hoisted_303 = {
+var _hoisted_361 = {
   "class": "self-check-attempt-top"
 };
-var _hoisted_304 = {
+var _hoisted_362 = {
   "class": "self-check-attempt-copy"
 };
-var _hoisted_305 = {
+var _hoisted_363 = {
   "class": "self-check-attempt-note"
 };
-var _hoisted_306 = {
+var _hoisted_364 = {
   "class": "self-check-attempt-meta"
 };
-var _hoisted_307 = {
+var _hoisted_365 = {
   "class": "self-check-attempt-actions"
 };
-var _hoisted_308 = ["onClick"];
-var _hoisted_309 = ["onClick"];
-var _hoisted_310 = {
+var _hoisted_366 = ["onClick"];
+var _hoisted_367 = ["onClick"];
+var _hoisted_368 = {
   key: 0,
   "class": "recording-delete-confirm"
 };
-var _hoisted_311 = {
+var _hoisted_369 = {
   "class": "recording-delete-confirm-actions"
 };
-var _hoisted_312 = ["onClick"];
-var _hoisted_313 = {
+var _hoisted_370 = ["onClick"];
+var _hoisted_371 = {
   key: 1,
   "class": "self-check-empty"
 };
-var _hoisted_314 = {
+var _hoisted_372 = {
   "class": "modal-content recordings-library-modal",
   role: "dialog",
   "aria-modal": "true",
   "aria-labelledby": "recordingsLibraryTitle"
 };
-var _hoisted_315 = {
+var _hoisted_373 = {
   "class": "modal-header recordings-library-header"
 };
-var _hoisted_316 = {
+var _hoisted_374 = {
   "class": "modal-body recordings-library-body"
 };
-var _hoisted_317 = {
+var _hoisted_375 = {
   key: 0,
   "class": "recordings-library-loading"
 };
-var _hoisted_318 = {
+var _hoisted_376 = {
   key: 1,
   "class": "recordings-library-empty"
 };
-var _hoisted_319 = {
+var _hoisted_377 = {
   key: 2,
   "class": "recordings-library-shell"
 };
-var _hoisted_320 = {
+var _hoisted_378 = {
   "class": "recordings-library-nav"
 };
-var _hoisted_321 = {
+var _hoisted_379 = {
   "class": "recordings-library-nav-head"
 };
-var _hoisted_322 = {
+var _hoisted_380 = {
   "class": "recordings-library-search"
 };
-var _hoisted_323 = {
+var _hoisted_381 = {
   "class": "recordings-library-search-field"
 };
-var _hoisted_324 = {
+var _hoisted_382 = {
   "class": "recordings-library-nav-scroll"
 };
-var _hoisted_325 = {
+var _hoisted_383 = {
   "class": "recordings-library-surah-title"
 };
-var _hoisted_326 = ["onClick"];
-var _hoisted_327 = {
+var _hoisted_384 = ["onClick"];
+var _hoisted_385 = {
   "class": "recordings-library-ayah-label"
 };
-var _hoisted_328 = {
+var _hoisted_386 = {
   "class": "recordings-library-ayah-count"
 };
-var _hoisted_329 = {
+var _hoisted_387 = {
   "class": "recordings-library-detail"
 };
-var _hoisted_330 = {
+var _hoisted_388 = {
   key: 0,
   "class": "recordings-library-detail-head"
 };
-var _hoisted_331 = {
+var _hoisted_389 = {
   "class": "recordings-library-detail-kicker"
 };
-var _hoisted_332 = {
+var _hoisted_390 = {
   key: 0,
   "class": "recordings-library-ayah-translation"
 };
-var _hoisted_333 = {
+var _hoisted_391 = {
   "class": "recordings-library-detail-count"
 };
-var _hoisted_334 = {
+var _hoisted_392 = {
   key: 1,
   "class": "recordings-library-history"
 };
-var _hoisted_335 = {
+var _hoisted_393 = {
   "class": "recording-history-top"
 };
-var _hoisted_336 = {
+var _hoisted_394 = {
   "class": "recording-history-copy"
 };
-var _hoisted_337 = {
+var _hoisted_395 = {
   "class": "recording-history-note"
 };
-var _hoisted_338 = {
+var _hoisted_396 = {
   "class": "recording-history-meta"
 };
-var _hoisted_339 = {
+var _hoisted_397 = {
   "class": "recording-history-actions"
 };
-var _hoisted_340 = ["onClick"];
-var _hoisted_341 = ["onClick"];
-var _hoisted_342 = {
+var _hoisted_398 = ["onClick"];
+var _hoisted_399 = ["onClick"];
+var _hoisted_400 = {
   key: 0,
   "class": "recording-delete-confirm"
 };
-var _hoisted_343 = {
+var _hoisted_401 = {
   "class": "recording-delete-confirm-actions"
 };
-var _hoisted_344 = ["onClick"];
-var _hoisted_345 = {
+var _hoisted_402 = ["onClick"];
+var _hoisted_403 = {
   key: 2,
   "class": "recordings-library-empty recordings-library-empty-panel"
 };
-var _hoisted_346 = {
+var _hoisted_404 = {
   "class": "modal-content post-onboarding-modal",
   role: "dialog",
   "aria-modal": "true",
   "aria-labelledby": "postOnboardingTitle"
 };
-var _hoisted_347 = {
+var _hoisted_405 = {
   "class": "modal-header post-onboarding-header"
 };
-var _hoisted_348 = {
+var _hoisted_406 = {
   id: "postOnboardingTitle"
 };
-var _hoisted_349 = {
+var _hoisted_407 = {
   "class": "modal-body post-onboarding-body"
 };
-var _hoisted_350 = {
+var _hoisted_408 = {
   "class": "post-onboarding-kicker"
 };
-var _hoisted_351 = {
+var _hoisted_409 = {
   "class": "post-onboarding-step-label"
 };
-var _hoisted_352 = {
+var _hoisted_410 = {
   key: 0,
   "class": "post-onboarding-points"
 };
-var _hoisted_353 = {
+var _hoisted_411 = {
   key: 1,
   "class": "dua-onboarding-grid"
 };
-var _hoisted_354 = {
+var _hoisted_412 = {
   "class": "dua-onboarding-title"
 };
-var _hoisted_355 = {
+var _hoisted_413 = {
   "class": "dua-onboarding-arabic",
   dir: "rtl",
   lang: "ar"
 };
-var _hoisted_356 = {
+var _hoisted_414 = {
   "class": "dua-onboarding-translation"
 };
-var _hoisted_357 = {
+var _hoisted_415 = {
   "class": "dua-onboarding-source"
 };
-var _hoisted_358 = {
+var _hoisted_416 = {
   "class": "post-onboarding-progress"
 };
-var _hoisted_359 = {
+var _hoisted_417 = {
   "class": "modal-footer post-onboarding-footer"
 };
-var _hoisted_360 = {
+var _hoisted_418 = {
   "class": "player-main"
 };
-var _hoisted_361 = {
+var _hoisted_419 = {
   "class": "player-info"
 };
-var _hoisted_362 = {
+var _hoisted_420 = {
   "class": "player-chapter"
 };
-var _hoisted_363 = {
+var _hoisted_421 = {
   "class": "player-verse"
 };
-var _hoisted_364 = ["title"];
-var _hoisted_365 = {
+var _hoisted_422 = ["title"];
+var _hoisted_423 = {
   "class": "player-controls"
 };
-var _hoisted_366 = {
+var _hoisted_424 = {
   "class": "player-progress-wrap"
 };
-var _hoisted_367 = {
+var _hoisted_425 = {
   "class": "player-time"
 };
-var _hoisted_368 = {
+var _hoisted_426 = {
   "class": "player-time"
 };
-var _hoisted_369 = {
+var _hoisted_427 = {
   ref: "audio",
   style: {
     "display": "none"
   }
 };
-var _hoisted_370 = {
+var _hoisted_428 = {
   ref: "recordingsAudio",
   style: {
     "display": "none"
@@ -33847,7 +35984,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $data.banner = null;
     }),
     "aria-label": "Dismiss"
-  }, _toConsumableArray(_cache[144] || (_cache[144] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[146] || (_cache[146] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */)])))])], 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Main Content "), $data.appReady && $options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 1,
@@ -33859,23 +35996,31 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       'flow-practice': $options.guidedUiStep === 'practice',
       'flow-recall': $options.guidedUiStep === 'recall'
     }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [!$options.hasVerses && !$options.currentConfig.chapterId ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [$data.hasContinueSession ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [_cache[145] || (_cache[145] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [!$options.hasVerses && !$options.currentConfig.chapterId ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_4, [$data.hasContinueSession ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [_cache[147] || (_cache[147] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "continue-session-kicker"
   }, "Continue where you left off", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.continueSessionLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.continueSessionMeta), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-primary continue-session-btn",
     onClick: _cache[2] || (_cache[2] = function () {
       return $options.continueLastSession && $options.continueLastSession.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[146] || (_cache[146] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[148] || (_cache[148] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-fill"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Continue Session ", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-ghost continue-session-dismiss",
     onClick: _cache[3] || (_cache[3] = function () {
       return $options.confirmDiscardContinueSession && $options.confirmDiscardContinueSession.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[147] || (_cache[147] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[149] || (_cache[149] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [_cache[149] || (_cache[149] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"offcanvas-launcher-head\"><span class=\"offcanvas-launcher-kicker\"><i class=\"bi bi-compass\"></i> Start a new session</span><strong class=\"offcanvas-launcher-title\">Choose a surah, set your range, then practise.</strong></div><div class=\"offcanvas-launcher-steps\" aria-label=\"Session setup steps\"><span><i class=\"bi bi-journal-text\"></i> Select surah</span><span><i class=\"bi bi-bounding-box\"></i> Pick range</span><span><i class=\"bi bi-arrow-repeat\"></i> Set repeats</span></div>", 2)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)])))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_9, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_10, [_cache[150] || (_cache[150] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-compass"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('home.startKicker')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", _hoisted_11, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('home.startTitle')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_12, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[151] || (_cache[151] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-journal-text"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('home.selectSurah')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[152] || (_cache[152] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-bounding-box"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('home.pickRange')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[153] || (_cache[153] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-arrow-repeat"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('home.setRepeats')), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "cta cta-primary setup-primary",
     type: "button",
     "aria-controls": "memorisationToolsPanel",
@@ -33884,18 +36029,16 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.openToolsPanel();
     }),
     title: "Open controls"
-  }, _toConsumableArray(_cache[148] || (_cache[148] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [_cache[154] || (_cache[154] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-toggles2"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Open Session Controls ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_9), _cache[150] || (_cache[150] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
-    "class": "offcanvas-launcher-copy"
-  }, " You can tweak audio, focus tools, and saved sessions any time. ", -1 /* CACHED */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true),  false ? (0) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Grid "), !$data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_17, _toConsumableArray(_cache[158] || (_cache[158] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('home.openControls')), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_13), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_14, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('home.controlsHint')), 1 /* TEXT */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true),  false ? (0) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Verses Grid "), !$data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_22, _toConsumableArray(_cache[162] || (_cache[162] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-hourglass-split"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Loading...", -1 /* CACHED */)])))) : $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_18, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Loading...", -1 /* CACHED */)])))) : $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_23, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["workspace-shell", {
       collapsed: $data.mainCardCollapsed
     }]),
     "aria-label": "Session overview"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_19, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_20, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_21, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.hasSessionStarted ? 'Active session' : 'Session ready'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_22, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h1", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.currentChapter ? $data.currentChapter.name_simple : $options.activeChapterName), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + " of " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses) + " ayahs · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "% complete", 1 /* TEXT */), $options.etaLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_23, " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel) + " left", 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_24, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentLearningPrompt), 1 /* TEXT */), $options.reviewPriorityLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_25, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.reviewPriorityLabel), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.mainCardCollapsed]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_24, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_26, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.hasSessionStarted ? 'Active session' : 'Session ready'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h1", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.currentChapter ? $data.currentChapter.name_simple : $options.activeChapterName), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + " of " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses) + " ayahs · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.progressPercent) + "% complete", 1 /* TEXT */), $options.etaLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_28, " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel) + " left", 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_29, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentLearningPrompt), 1 /* TEXT */), $options.reviewPriorityLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_30, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.reviewPriorityLabel), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.mainCardCollapsed]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_31, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_32, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "action-btn action-btn-primary",
     type: "button",
     onClick: _cache[11] || (_cache[11] = function () {
@@ -33904,14 +36047,14 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     disabled: !$data.isPlaying && !$options.canStartSession
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
-  }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.isPlaying ? 'Pause' : 'Start Session'), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_28), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.isPlaying ? $options.t('common.pause') : $options.t('common.startSession')), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_33), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "action-btn action-btn-secondary action-btn-recordings",
     type: "button",
     onClick: _cache[12] || (_cache[12] = function () {
       return $options.openRecordingsLibrary && $options.openRecordingsLibrary.apply($options, arguments);
     }),
     title: "Open recordings library"
-  }, _toConsumableArray(_cache[159] || (_cache[159] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[163] || (_cache[163] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-collection-play"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "View All Recordings", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "action-btn action-btn-secondary",
@@ -33920,7 +36063,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.openAdvancedControls && $options.openAdvancedControls.apply($options, arguments);
     }),
     title: "Open session controls"
-  }, _toConsumableArray(_cache[160] || (_cache[160] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[164] || (_cache[164] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Controls", -1 /* CACHED */)]))), $options.hasSessionStarted ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
     key: 0,
@@ -33930,15 +36073,15 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.openSessionExitModal && $options.openSessionExitModal.apply($options, arguments);
     }),
     title: "End session"
-  }, _toConsumableArray(_cache[161] || (_cache[161] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[165] || (_cache[165] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-box-arrow-right"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "End Session", -1 /* CACHED */)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_29, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "End Session", -1 /* CACHED */)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_34, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "action-icon-btn",
     onClick: _cache[15] || (_cache[15] = function () {
       return $options.toggleKeyboardShortcuts && $options.toggleKeyboardShortcuts.apply($options, arguments);
     }),
     title: "Keyboard shortcuts"
-  }, _toConsumableArray(_cache[162] || (_cache[162] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[166] || (_cache[166] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-keyboard"
   }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "action-icon-btn",
@@ -33946,7 +36089,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.openOnboardingModal(true);
     }),
     title: "How Mutqin works"
-  }, _toConsumableArray(_cache[163] || (_cache[163] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[167] || (_cache[167] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-question-circle"
   }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "action-icon-btn",
@@ -33954,7 +36097,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.toggleFullScreen && $options.toggleFullScreen.apply($options, arguments);
     }),
     title: "Full screen mode"
-  }, _toConsumableArray(_cache[164] || (_cache[164] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[168] || (_cache[168] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrows-fullscreen"
   }, null, -1 /* CACHED */)])))])])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Keyboard Shortcuts Modal "), $data.showKeyboardShortcuts ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 0,
@@ -33962,18 +36105,18 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onClick: _cache[19] || (_cache[19] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
       return $data.showKeyboardShortcuts = false;
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_30, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_31, [_cache[166] || (_cache[166] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_35, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_36, [_cache[170] || (_cache[170] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-keyboard"
   }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Keyboard Shortcuts")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "shortcuts-modal-close",
     onClick: _cache[18] || (_cache[18] = function ($event) {
       return $data.showKeyboardShortcuts = false;
     })
-  }, _toConsumableArray(_cache[165] || (_cache[165] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[169] || (_cache[169] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), _cache[167] || (_cache[167] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"shortcuts-modal-body\"><div class=\"shortcuts-grid\"><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Navigation</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↑</kbd></div><span>Previous verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↓</kbd></div><span>Next verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>←</kbd> / <kbd>J</kbd></div><span>Previous in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>→</kbd> / <kbd>K</kbd></div><span>Next in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Home</kbd></div><span>First verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>End</kbd></div><span>Last verse</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Playback</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Hold</kbd> <kbd>Space</kbd></div><span>Peek blurred upcoming ayahs</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Enter</kbd></div><span>Play current verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>P</kbd></div><span>Play / Pause audio</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Session</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Ctrl</kbd> + <kbd>S</kbd></div><span>Save session</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Esc</kbd></div><span>Close modals</span></div></div></div></div>", 1))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_32, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("details", _hoisted_33, [_cache[168] || (_cache[168] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("summary", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Reading aids"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)])))]), _cache[171] || (_cache[171] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"shortcuts-modal-body\"><div class=\"shortcuts-grid\"><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Navigation</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↑</kbd></div><span>Previous verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>↓</kbd></div><span>Next verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>←</kbd> / <kbd>J</kbd></div><span>Previous in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>→</kbd> / <kbd>K</kbd></div><span>Next in queue</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Home</kbd></div><span>First verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>End</kbd></div><span>Last verse</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Playback</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Hold</kbd> <kbd>Space</kbd></div><span>Peek blurred upcoming ayahs</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Enter</kbd></div><span>Play current verse</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>P</kbd></div><span>Play / Pause audio</span></div></div><div class=\"shortcut-card\"><div class=\"shortcut-card-title\">Session</div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Ctrl</kbd> + <kbd>S</kbd></div><span>Save session</span></div><div class=\"shortcut-row\"><div class=\"shortcut-keys\"><kbd>Esc</kbd></div><span>Close modals</span></div></div></div></div>", 1))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_37, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("details", _hoisted_38, [_cache[172] || (_cache[172] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("summary", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Reading aids"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down quick-pill-summary-icon"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_34, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_39, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toolbar-chip", {
       active: $data.showTranslation
     }]),
@@ -34013,7 +36156,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.toggleTajweed && $options.toggleTajweed.apply($options, arguments);
     }),
     type: "button"
-  }, "Tajweed", 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_35, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Tajweed", 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_40, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "toolbar-chip font-dropdown-trigger",
     onClick: _cache[25] || (_cache[25] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.toggleFontDropdown && $options.toggleFontDropdown.apply($options, arguments);
@@ -34026,7 +36169,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     name: "dropdown-fade"
   }, {
     "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-      return [$data.fontDropdownOpen ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_36, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quranFontOptions, function (font) {
+      return [$data.fontDropdownOpen ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_41, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.quranFontOptions, function (font) {
         return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
           key: font.value,
           "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["font-option", {
@@ -34037,11 +36180,11 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
           }
         }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
           "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $options.getFontIcon(font.value)])
-        }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(font.label), 1 /* TEXT */), $data.quranFont === font.value ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", _hoisted_38)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 10 /* CLASS, PROPS */, _hoisted_37);
+        }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(font.label), 1 /* TEXT */), $data.quranFont === font.value ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", _hoisted_43)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 10 /* CLASS, PROPS */, _hoisted_42);
       }), 128 /* KEYED_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)];
     }),
     _: 1 /* STABLE */
-  })])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.mainCardCollapsed]])], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("main", _hoisted_39, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_40, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.verses, function (verse) {
+  })])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, !$data.mainCardCollapsed]])], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("main", _hoisted_44, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_45, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.verses, function (verse) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: verse.key,
       "data-verse-key": verse.key,
@@ -34074,7 +36217,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       onKeydown: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)((0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
         return $options.onVerseCardClick(verse);
       }, ["prevent"]), ["enter"])
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_42, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_43, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_44, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.number), 1 /* TEXT */), $options.isReviewPriorityAyah(verse.key) ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_45, "Review Due")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.effectiveActiveVerseKey === verse.key ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_46, "Active Ayah")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_47, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_47, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_48, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_49, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.number), 1 /* TEXT */), $options.isReviewPriorityAyah(verse.key) ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_50, "Review Due")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.effectiveActiveVerseKey === verse.key ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_51, "Active Ayah")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_52, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
       "class": "verse-font-inline-controls",
       onClick: _cache[28] || (_cache[28] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
     }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
@@ -34083,15 +36226,15 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         return $options.decreaseTextScale($event);
       }),
       title: "Decrease text size"
-    }, _toConsumableArray(_cache[169] || (_cache[169] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[173] || (_cache[173] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-dash-lg"
-    }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_48, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getTextScalePercent()) + "%", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_53, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getTextScalePercent()) + "%", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "verse-font-inline-btn",
       onClick: _cache[27] || (_cache[27] = function ($event) {
         return $options.increaseTextScale($event);
       }),
       title: "Increase text size"
-    }, _toConsumableArray(_cache[170] || (_cache[170] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[174] || (_cache[174] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-plus-lg"
     }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Small play button next to play pill "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "verse-small-play-btn",
@@ -34101,16 +36244,16 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       title: $options.hasSessionFeedback ? $data.activeVerseKey === verse.key && $data.isPlaying ? 'Pause' : 'Play current ayah' : 'Preview this ayah (does not start a session)'
     }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.activeVerseKey === verse.key && $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
-    }, null, 2 /* CLASS */)], 8 /* PROPS */, _hoisted_49), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Download button for every verse "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, 2 /* CLASS */)], 8 /* PROPS */, _hoisted_54), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Download button for every verse "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "verse-download-btn",
       onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
         return $options.downloadVerseAudio(verse);
       }, ["stop"]),
       disabled: !verse.audio,
       title: "Download audio for offline listening"
-    }, _toConsumableArray(_cache[171] || (_cache[171] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[175] || (_cache[175] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-download"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_50), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_55), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["verse-self-check-btn", {
         active: $data.showSelfCheckModal && $data.selfCheckVerseKey === verse.key
       }]),
@@ -34120,7 +36263,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       title: $data.showSelfCheckModal && $data.selfCheckVerseKey === verse.key ? 'Self-check is open' : 'Open self-check recorder'
     }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.showSelfCheckModal && $data.selfCheckVerseKey === verse.key ? 'bi-mic-fill' : 'bi-mic'])
-    }, null, 2 /* CLASS */), _cache[172] || (_cache[172] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Self-Check", -1 /* CACHED */)), $options.getAyahRecordingCount(verse.key) ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("em", _hoisted_52, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getAyahRecordingCount(verse.key)), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 10 /* CLASS, PROPS */, _hoisted_51), !$options.hasSessionFeedback ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_53, "Preview")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), verse.arabic && $data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+    }, null, 2 /* CLASS */), _cache[176] || (_cache[176] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Self-Check", -1 /* CACHED */)), $options.getAyahRecordingCount(verse.key) ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("em", _hoisted_57, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getAyahRecordingCount(verse.key)), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 10 /* CLASS, PROPS */, _hoisted_56), !$options.hasSessionFeedback ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_58, "Preview")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), verse.arabic && $data.isDataReady ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: 0,
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["verse-arabic verse-arabic-primary", {
         'tajweed-enabled': $data.tajweedEnabled,
@@ -34134,11 +36277,11 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         '--verse-font-percent': $options.getVerseFontSize(verse.key),
         'font-family': $options.quranFontFamily
       })
-    }, null, 14 /* CLASS, STYLE, PROPS */, _hoisted_54)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Keep in-workspace aids available, but visually quieter "), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_55, [_cache[173] || (_cache[173] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    }, null, 14 /* CLASS, STYLE, PROPS */, _hoisted_59)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Keep in-workspace aids available, but visually quieter "), $data.showTransliteration && verse.transliteration ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_60, [_cache[177] || (_cache[177] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
       "class": "verse-aid-title"
-    }, "Transliteration", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_56, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_57, [_cache[174] || (_cache[174] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    }, "Transliteration", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_61, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.transliteration), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showTranslation && verse.translation ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_62, [_cache[178] || (_cache[178] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
       "class": "verse-aid-title"
-    }, "Translation", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_58, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.translation), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showWordByWord && verse.words && verse.words.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+    }, "Translation", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_63, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(verse.translation), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showWordByWord && verse.words && verse.words.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: 3,
       "class": "verse-words verse-aid",
       onScroll: function onScroll($event) {
@@ -34152,17 +36295,17 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
           'phrase-highlighted': $data.currentHighlightedVerseKey === verse.key && $data.currentPhraseIndex === wi
         }]),
         tabindex: "-1"
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_60, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.ar), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_61, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.en), 1 /* TEXT */), word.audio && $data.wordByWordAudioEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_65, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.ar), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_66, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(word.en), 1 /* TEXT */), word.audio && $data.wordByWordAudioEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
         key: 0,
         "class": "word-audio-btn",
         type: "button",
         onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
           return $options.playWordAudio(word.audio, verse, wi);
         }, ["stop"])
-      }, _toConsumableArray(_cache[175] || (_cache[175] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[179] || (_cache[179] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-volume-up"
-      }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_62)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */);
-    }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_59)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 42 /* CLASS, PROPS, NEED_HYDRATION */, _hoisted_41);
+      }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_67)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */);
+    }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_64)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 42 /* CLASS, PROPS, NEED_HYDRATION */, _hoisted_46);
   }), 128 /* KEYED_FRAGMENT */))])], 512 /* NEED_PATCH */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Advanced Controls Drawer "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["tools-backdrop", {
       open: $data.showTools
@@ -34177,16 +36320,16 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["tools offcanvas-section", {
       'open': $data.showTools
     }]),
-    onClick: _cache[83] || (_cache[83] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"])),
+    onClick: _cache[85] || (_cache[85] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"])),
     role: "dialog",
     "aria-modal": "true",
     "aria-labelledby": "memorisationToolsTitle",
     "aria-hidden": $data.showTools ? 'false' : 'true',
     tabindex: "-1",
-    onKeydown: _cache[84] || (_cache[84] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)((0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onKeydown: _cache[86] || (_cache[86] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)((0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.closeToolsPanel && $options.closeToolsPanel.apply($options, arguments);
     }, ["prevent"]), ["esc"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_64, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_65, [_cache[177] || (_cache[177] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_69, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_70, [_cache[181] || (_cache[181] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     id: "memorisationToolsTitle",
     "class": "tools-title"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("b", null, "Controls")])], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
@@ -34196,10 +36339,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     }),
     "aria-label": "Close panel",
     type: "button"
-  }, _toConsumableArray(_cache[176] || (_cache[176] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, _toConsumableArray(_cache[180] || (_cache[180] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "tools-x-glyph",
     "aria-hidden": "true"
-  }, "×", -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_66, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "×", -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_71, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
       active: $data.tab === 'tools'
     }),
@@ -34208,7 +36351,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     }, ["prevent"])),
     title: "Session tools",
     type: "button"
-  }, _toConsumableArray(_cache[178] || (_cache[178] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[182] || (_cache[182] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-sliders"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Session ", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
@@ -34219,7 +36362,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     }, ["prevent"])),
     title: "Practice presets",
     type: "button"
-  }, _toConsumableArray(_cache[179] || (_cache[179] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[183] || (_cache[183] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-stars"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Practice ", -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
@@ -34230,7 +36373,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     }, ["prevent"])),
     title: "Saved sessions",
     type: "button"
-  }, _toConsumableArray(_cache[180] || (_cache[180] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[184] || (_cache[184] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-clock-history"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Saved ", -1 /* CACHED */)])), 2 /* CLASS */), $options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
     key: 0,
@@ -34242,47 +36385,47 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     }, ["prevent"])),
     title: "Session insights",
     type: "button"
-  }, _toConsumableArray(_cache[181] || (_cache[181] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[185] || (_cache[185] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-bar-chart-line"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Insights ", -1 /* CACHED */)])), 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button :class=\"{ active: tab === 'settings' }\" @click.prevent=\"setActiveTab('settings')\" type=\"button\">\n              <i class=\"bi bi-gear\"></i> Settings\n            </button> ")])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_67, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" TOOLS TAB "), $data.tab === 'tools' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_68, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_69, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Insights ", -1 /* CACHED */)])), 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <button :class=\"{ active: tab === 'settings' }\" @click.prevent=\"setActiveTab('settings')\" type=\"button\">\n              <i class=\"bi bi-gear\"></i> Settings\n            </button> ")])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_72, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" TOOLS TAB "), $data.tab === 'tools' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_73, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_74, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
     onClick: _cache[36] || (_cache[36] = function ($event) {
       return $options.toggleSection('advanced_setup');
     }),
     type: "button"
-  }, [_cache[183] || (_cache[183] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-journal-text\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Session Setup</span><span class=\"st-sub\">Choose what you memorise</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_75, [_cache[186] || (_cache[186] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "st-ico"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-journal-text"
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_76, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_77, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.title')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_78, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.subtitle')), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_setup
     }])
-  }, _toConsumableArray(_cache[182] || (_cache[182] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[187] || (_cache[187] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_70, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_71, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_72, [_cache[185] || (_cache[185] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_79, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_80, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_81, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [_cache[188] || (_cache[188] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-journal-text"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Surah")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.surah')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     value: $options.chapterId,
     onChange: _cache[37] || (_cache[37] = function () {
       return $options.onChapterChange && $options.onChapterChange.apply($options, arguments);
     }),
     "class": "select"
-  }, [_cache[184] || (_cache[184] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
-    value: 0
-  }, "Choose a surah...", -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (c) {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", _hoisted_83, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.chooseSurah')), 1 /* TEXT */), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chapters, function (c) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: c.id,
       value: c.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_74);
-  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_73), _cache[186] || (_cache[186] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
-    "class": "field-hint"
-  }, "Pick the surah you want to work on.", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_75, [$options.sessionVersePlaySummary.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(c.name_simple), 9 /* TEXT, PROPS */, _hoisted_84);
+  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_82), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_85, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.surahHint')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_86, [$options.sessionVersePlaySummary.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 0
   }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.sessionVersePlaySummary, function (item) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: item.key,
       "class": "setup-metric-list-row"
     }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.label), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.count) + " play" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.count === 1 ? '' : 's'), 1 /* TEXT */)]);
-  }), 128 /* KEYED_FRAGMENT */)) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_76, "No ayah audio played yet for this session."))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_77, [_cache[188] || (_cache[188] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }), 128 /* KEYED_FRAGMENT */)) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_87, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.noAudioPlayed')), 1 /* TEXT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_88, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [_cache[189] || (_cache[189] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-bounding-box"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Ayah range")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_78, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.ayahRange')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_89, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
     "onUpdate:modelValue": _cache[38] || (_cache[38] = function ($event) {
@@ -34294,7 +36437,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     min: "1"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeStart, void 0, {
     number: true
-  }]]), _cache[187] || (_cache[187] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "to", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.to')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "number",
     "class": "input",
     "onUpdate:modelValue": _cache[40] || (_cache[40] = function ($event) {
@@ -34306,11 +36449,9 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     min: "1"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $options.rangeEnd, void 0, {
     number: true
-  }]])]), _cache[189] || (_cache[189] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
-    "class": "field-hint"
-  }, "Keep ranges small for focused memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_79, [_cache[190] || (_cache[190] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_90, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.rangeHint')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_91, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [_cache[190] || (_cache[190] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-mic-fill"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Reciter")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.reciter')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     "onUpdate:modelValue": _cache[42] || (_cache[42] = function ($event) {
       return $options.reciterId = $event;
     }),
@@ -34322,12 +36463,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: r.id,
       value: r.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_80);
-  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]]), _cache[191] || (_cache[191] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
-    "class": "field-hint"
-  }, "Changes the audio voice for the session.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_81, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_82, [_cache[192] || (_cache[192] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.name), 9 /* TEXT, PROPS */, _hoisted_92);
+  }), 128 /* KEYED_FRAGMENT */))], 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.reciterId]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_93, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.reciterHint')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_94, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_95, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [_cache[191] || (_cache[191] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-repeat"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Repetitions")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_83, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.repetitionDisplayValue), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_84, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.repetitions')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_96, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.repetitionDisplayValue), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_97, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     value: $options.sliderRepetitionValue,
     onInput: _cache[44] || (_cache[44] = function ($event) {
@@ -34337,21 +36476,23 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     max: "10",
     step: "1",
     "class": "input technique-range"
-  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_85)]), _cache[193] || (_cache[193] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_98)]), _cache[192] || (_cache[192] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "slider-markers slider-markers-compact"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "1x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "3x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "5x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "7x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "10x")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_86, "Repeat each verse " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.repetitionsPerStep) + " time" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.repetitionsPerStep === 1 ? '' : 's') + " before moving on.", 1 /* TEXT */)])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_87, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "1x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "3x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "5x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "7x"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "10x")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_99, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.repeatHint', {
+    count: $data.repetitionsPerStep
+  })), 1 /* TEXT */)])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_setup]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_100, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
     onClick: _cache[45] || (_cache[45] = function ($event) {
       return $options.toggleSection('advanced_playback');
     }),
     type: "button"
-  }, [_cache[195] || (_cache[195] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Audio</span><span class=\"st-sub\">Playback settings</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [_cache[194] || (_cache[194] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-mic\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Audio</span><span class=\"st-sub\">Playback settings</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.advanced_playback
     }])
-  }, _toConsumableArray(_cache[194] || (_cache[194] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[193] || (_cache[193] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_88, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_89, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_90, [_cache[196] || (_cache[196] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_91, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.speedOptions, function (option) {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_101, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_102, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_103, [_cache[195] || (_cache[195] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Speed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_104, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.speedOptions, function (option) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("label", {
       "class": "radio",
       key: "tool-speed-".concat(option)
@@ -34362,34 +36503,50 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       onChange: function onChange($event) {
         return $options.setPlaybackSpeed(option);
       }
-    }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_92), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(option) + "x ", 1 /* TEXT */)]);
-  }), 128 /* KEYED_FRAGMENT */))]), _cache[197] || (_cache[197] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_105), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(option) + "x ", 1 /* TEXT */)]);
+  }), 128 /* KEYED_FRAGMENT */))]), _cache[196] || (_cache[196] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Use slower speed for early memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_93, [_cache[200] || (_cache[200] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_94, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_95, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "Use slower speed for early memorisation.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_106, [_cache[199] || (_cache[199] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Auto-advance", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_107, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_108, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "auto",
     "onUpdate:modelValue": _cache[46] || (_cache[46] = function ($event) {
       return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[198] || (_cache[198] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_96, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[197] || (_cache[197] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Yes", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_109, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "manual",
     "onUpdate:modelValue": _cache[47] || (_cache[47] = function ($event) {
       return $options.playMode = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[199] || (_cache[199] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No", -1 /* CACHED */))])]), _cache[201] || (_cache[201] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $options.playMode]]), _cache[198] || (_cache[198] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" No", -1 /* CACHED */))])]), _cache[200] || (_cache[200] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Auto moves to the next queue item when audio ends.", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_playback]])])])) : $data.tab === 'techniques' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+  }, "Auto moves to the next queue item when audio ends.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_110, [_cache[201] || (_cache[201] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-hourglass-split"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Delay between recitations (secs)")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[48] || (_cache[48] = function ($event) {
+      return $options.delay = $event;
+    }),
+    "class": "select"
+  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.delayOptions, function (option) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
+      key: "tool-delay-".concat(option),
+      value: option
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(option) + "s", 9 /* TEXT, PROPS */, _hoisted_111);
+  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $options.delay, void 0, {
+    number: true
+  }]]), _cache[202] || (_cache[202] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+    "class": "field-hint"
+  }, "Pause before each next repetition/recitation in auto mode.", -1 /* CACHED */))])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.advanced_playback]])])])) : $data.tab === 'techniques' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 1
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" TECHNIQUES TAB "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_97, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_98, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" TECHNIQUES TAB "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_112, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_113, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[50] || (_cache[50] = function ($event) {
+    onClick: _cache[51] || (_cache[51] = function ($event) {
       return $options.toggleSection('focus_mode');
     }),
     type: "button"
-  }, [_cache[203] || (_cache[203] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-bullseye\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Focus Mode</span><span class=\"st-sub\">Reduce distractions around the active ayah</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_99, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [_cache[204] || (_cache[204] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-bullseye\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Focus Mode</span><span class=\"st-sub\">Reduce distractions around the active ayah</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_114, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "mode-radio-group",
-    onClick: _cache[49] || (_cache[49] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
+    onClick: _cache[50] || (_cache[50] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     type: "button",
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["mode-radio", {
@@ -34397,40 +36554,40 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     }]),
     "aria-pressed": $data.focusModeEnabled ? 'true' : 'false',
     "aria-label": "Use focus mode",
-    onClick: _cache[48] || (_cache[48] = function () {
+    onClick: _cache[49] || (_cache[49] = function () {
       return $options.toggleFocusModeRadio && $options.toggleFocusModeRadio.apply($options, arguments);
     })
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["mode-radio-icon bi", $data.focusModeEnabled ? 'bi-check-circle-fill' : 'bi-circle']),
     "aria-hidden": "true"
-  }, null, 2 /* CLASS */)], 10 /* CLASS, PROPS */, _hoisted_100)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, 2 /* CLASS */)], 10 /* CLASS, PROPS */, _hoisted_115)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.focus_mode
     }])
-  }, _toConsumableArray(_cache[202] || (_cache[202] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[203] || (_cache[203] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_101, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_102, [_cache[206] || (_cache[206] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"field\"><div class=\"technique-description\"><i class=\"bi bi-info-circle-fill\"></i><span>Focus Mode dims all non-active verses, helping you concentrate on the current ayah without distractions.</span></div><div class=\"technique-best\"><i class=\"bi bi-check-circle-fill\"></i><span>Best for: Deep memorisation sessions</span></div></div>", 1)), $data.focusModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_103, [_cache[204] || (_cache[204] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Focus strength", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_104, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_116, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_117, [_cache[207] || (_cache[207] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"field\"><div class=\"technique-description\"><i class=\"bi bi-info-circle-fill\"></i><span>Focus Mode dims all non-active verses, helping you concentrate on the current ayah without distractions.</span></div><div class=\"technique-best\"><i class=\"bi bi-check-circle-fill\"></i><span>Best for: Deep memorisation sessions</span></div></div>", 1)), $data.focusModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_118, [_cache[205] || (_cache[205] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Focus strength", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_119, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     min: "30",
     max: "75",
     step: "5",
-    "onUpdate:modelValue": _cache[51] || (_cache[51] = function ($event) {
+    "onUpdate:modelValue": _cache[52] || (_cache[52] = function ($event) {
       return $data.focusDimPercent = $event;
     }),
     "class": "input"
   }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.focusDimPercent, void 0, {
     number: true
-  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_105, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.focusDimPercent) + "%", 1 /* TEXT */)]), _cache[205] || (_cache[205] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_120, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.focusDimPercent) + "%", 1 /* TEXT */)]), _cache[206] || (_cache[206] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Higher values dim non-active verses more aggressively.", -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.focus_mode]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_106, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Higher values dim non-active verses more aggressively.", -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.focus_mode]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_121, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[54] || (_cache[54] = function ($event) {
+    onClick: _cache[55] || (_cache[55] = function ($event) {
       return $options.toggleSection('blur_mode');
     }),
     type: "button"
-  }, [_cache[208] || (_cache[208] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-cloud-haze2\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Blur Mode</span><span class=\"st-sub\">Progressive concealment for active recall</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_107, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [_cache[209] || (_cache[209] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-cloud-haze2\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Blur Mode</span><span class=\"st-sub\">Progressive concealment for active recall</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_122, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "mode-radio-group",
-    onClick: _cache[53] || (_cache[53] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
+    onClick: _cache[54] || (_cache[54] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     type: "button",
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["mode-radio", {
@@ -34438,46 +36595,46 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     }]),
     "aria-pressed": $data.blurModeEnabled ? 'true' : 'false',
     "aria-label": "Use blur mode",
-    onClick: _cache[52] || (_cache[52] = function () {
+    onClick: _cache[53] || (_cache[53] = function () {
       return $options.toggleBlurModeRadio && $options.toggleBlurModeRadio.apply($options, arguments);
     })
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["mode-radio-icon bi", $data.blurModeEnabled ? 'bi-check-circle-fill' : 'bi-circle']),
     "aria-hidden": "true"
-  }, null, 2 /* CLASS */)], 10 /* CLASS, PROPS */, _hoisted_108)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, 2 /* CLASS */)], 10 /* CLASS, PROPS */, _hoisted_123)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.blur_mode
     }])
-  }, _toConsumableArray(_cache[207] || (_cache[207] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[208] || (_cache[208] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_109, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_110, [_cache[211] || (_cache[211] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"field\"><div class=\"technique-description\"><i class=\"bi bi-info-circle-fill\"></i><span>Blurs upcoming verses, requiring you to recall them before revealing.</span></div><div class=\"technique-best\"><i class=\"bi bi-check-circle-fill\"></i><span>Best for: Active recall testing</span></div></div>", 1)), $data.blurModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_111, [_cache[209] || (_cache[209] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Blur Intensity", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_112, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_124, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_125, [_cache[212] || (_cache[212] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"field\"><div class=\"technique-description\"><i class=\"bi bi-info-circle-fill\"></i><span>Blurs upcoming verses, requiring you to recall them before revealing.</span></div><div class=\"technique-best\"><i class=\"bi bi-check-circle-fill\"></i><span>Best for: Active recall testing</span></div></div>", 1)), $data.blurModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_126, [_cache[210] || (_cache[210] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Blur Intensity", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_127, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     min: "4",
     max: "18",
     step: "1",
-    "onUpdate:modelValue": _cache[55] || (_cache[55] = function ($event) {
+    "onUpdate:modelValue": _cache[56] || (_cache[56] = function ($event) {
       return $data.blurIntensity = $event;
     }),
     "class": "input"
   }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.blurIntensity, void 0, {
     number: true
-  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_113, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.blurIntensity) + "px", 1 /* TEXT */)]), _cache[210] || (_cache[210] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_128, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.blurIntensity) + "px", 1 /* TEXT */)]), _cache[211] || (_cache[211] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Hold "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("kbd", null, "Space"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(", hover, or long-press to peek temporarily")], -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.blur_mode]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_114, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Hold "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("kbd", null, "Space"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(", hover, or long-press to peek temporarily")], -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.blur_mode]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_129, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[58] || (_cache[58] = function ($event) {
+    onClick: _cache[59] || (_cache[59] = function ($event) {
       return $options.toggleSection('chaining');
     }),
     type: "button"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_115, [_cache[213] || (_cache[213] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_130, [_cache[214] || (_cache[214] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "st-ico"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-link-45deg"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_116, [_cache[212] || (_cache[212] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_131, [_cache[213] || (_cache[213] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "st-title"
-  }, "Chaining", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_117, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodDescription), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_118, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, "Chaining", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_132, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodDescription), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_133, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "mode-radio-group",
-    onClick: _cache[57] || (_cache[57] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
+    onClick: _cache[58] || (_cache[58] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     type: "button",
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["mode-radio", {
@@ -34485,65 +36642,65 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     }]),
     "aria-pressed": $data.chainingEnabled ? 'true' : 'false',
     "aria-label": "Use chaining",
-    onClick: _cache[56] || (_cache[56] = function () {
+    onClick: _cache[57] || (_cache[57] = function () {
       return $options.toggleChainingRadio && $options.toggleChainingRadio.apply($options, arguments);
     })
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["mode-radio-icon bi", $data.chainingEnabled ? 'bi-check-circle-fill' : 'bi-circle']),
     "aria-hidden": "true"
-  }, null, 2 /* CLASS */)], 10 /* CLASS, PROPS */, _hoisted_119)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, 2 /* CLASS */)], 10 /* CLASS, PROPS */, _hoisted_134)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.chaining
     }])
-  }, _toConsumableArray(_cache[214] || (_cache[214] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[215] || (_cache[215] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_120, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_121, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_122, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_123, [_cache[215] || (_cache[215] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_135, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_136, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_137, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_138, [_cache[216] || (_cache[216] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-info-circle-fill"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'cumulative' ? 'Build longer runs by adding one ayah at a time.' : 'Strengthen transitions between neighbouring ayahs.'), 1 /* TEXT */)]), _cache[216] || (_cache[216] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'cumulative' ? 'Build longer runs by adding one ayah at a time.' : 'Strengthen transitions between neighbouring ayahs.'), 1 /* TEXT */)]), _cache[217] || (_cache[217] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "technique-best"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-check-circle-fill"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Best for: Building long passages")], -1 /* CACHED */))]), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_124, [_cache[219] || (_cache[219] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Method", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_125, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_126, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Best for: Building long passages")], -1 /* CACHED */))]), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_139, [_cache[220] || (_cache[220] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Method", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_140, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_141, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "linking",
-    "onUpdate:modelValue": _cache[59] || (_cache[59] = function ($event) {
+    "onUpdate:modelValue": _cache[60] || (_cache[60] = function ($event) {
       return $data.chainingMethod = $event;
     }),
-    onChange: _cache[60] || (_cache[60] = function ($event) {
+    onChange: _cache[61] || (_cache[61] = function ($event) {
       return $options.setChainingMethod('linking');
     })
-  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.chainingMethod]]), _cache[217] || (_cache[217] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Linking ", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_127, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.chainingMethod]]), _cache[218] || (_cache[218] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Linking ", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_142, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "radio",
     value: "cumulative",
-    "onUpdate:modelValue": _cache[61] || (_cache[61] = function ($event) {
+    "onUpdate:modelValue": _cache[62] || (_cache[62] = function ($event) {
       return $data.chainingMethod = $event;
     }),
-    onChange: _cache[62] || (_cache[62] = function ($event) {
+    onChange: _cache[63] || (_cache[63] = function ($event) {
       return $options.setChainingMethod('cumulative');
     })
-  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.chainingMethod]]), _cache[218] || (_cache[218] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Cumulative ", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_128, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'linking' ? 'Practice ayahs individually, then in pairs.' : 'Start with first ayah, then add one more each time.'), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_129, [_cache[220] || (_cache[220] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repeats per step", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_130, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelRadio, $data.chainingMethod]]), _cache[219] || (_cache[219] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Cumulative ", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_143, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingMethod === 'linking' ? 'Practice ayahs individually, then in pairs.' : 'Start with first ayah, then add one more each time.'), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_144, [_cache[221] || (_cache[221] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Repeats per step", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_145, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     min: "1",
     max: "5",
     step: "1",
     value: $data.chainingRepetitions,
-    onInput: _cache[63] || (_cache[63] = function ($event) {
+    onInput: _cache[64] || (_cache[64] = function ($event) {
       return $options.setChainingRepetitions(Number($event.target.value));
     }),
     "class": "input"
-  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_131), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_132, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions), 1 /* TEXT */)]), _cache[221] || (_cache[221] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+  }, null, 40 /* PROPS, NEED_HYDRATION */, _hoisted_146), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_147, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingRepetitions), 1 /* TEXT */)]), _cache[222] || (_cache[222] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
     "class": "field-hint"
-  }, "Number of times to repeat each chaining step", -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_133, [_cache[222] || (_cache[222] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, "Number of times to repeat each chaining step", -1 /* CACHED */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.chainingEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_148, [_cache[223] || (_cache[223] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-eye"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodPreview), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.chaining]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_134, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.chainingMethodPreview), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.chaining]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_149, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[66] || (_cache[66] = function ($event) {
+    onClick: _cache[67] || (_cache[67] = function ($event) {
       return $options.toggleSection('anchor_mode');
     }),
     type: "button"
-  }, [_cache[224] || (_cache[224] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-pin-angle-fill\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Anchor Mode</span><span class=\"st-sub\">Mental hooks using key words</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_135, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [_cache[225] || (_cache[225] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-pin-angle-fill\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Anchor Mode</span><span class=\"st-sub\">Mental hooks using key words</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_150, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "mode-radio-group",
-    onClick: _cache[65] || (_cache[65] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
+    onClick: _cache[66] || (_cache[66] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {}, ["stop"]))
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     type: "button",
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["mode-radio", {
@@ -34551,43 +36708,43 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     }]),
     "aria-pressed": $data.anchorModeEnabled ? 'true' : 'false',
     "aria-label": "Use anchor mode",
-    onClick: _cache[64] || (_cache[64] = function () {
+    onClick: _cache[65] || (_cache[65] = function () {
       return $options.toggleAnchorModeRadio && $options.toggleAnchorModeRadio.apply($options, arguments);
     })
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["mode-radio-icon bi", $data.anchorModeEnabled ? 'bi-check-circle-fill' : 'bi-circle']),
     "aria-hidden": "true"
-  }, null, 2 /* CLASS */)], 10 /* CLASS, PROPS */, _hoisted_136)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, 2 /* CLASS */)], 10 /* CLASS, PROPS */, _hoisted_151)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.anchor_mode
     }])
-  }, _toConsumableArray(_cache[223] || (_cache[223] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[224] || (_cache[224] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_137, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_138, [_cache[227] || (_cache[227] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"field\"><div class=\"technique-description\"><i class=\"bi bi-info-circle-fill\"></i><span>Highlights key words as memory anchors to help recall the entire ayah.</span></div><div class=\"technique-best\"><i class=\"bi bi-check-circle-fill\"></i><span>Best for: Memorising key vocabulary</span></div></div>", 1)), $data.anchorModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_139, [_cache[226] || (_cache[226] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Anchor points per ayah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
-    "onUpdate:modelValue": _cache[67] || (_cache[67] = function ($event) {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_152, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_153, [_cache[228] || (_cache[228] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"field\"><div class=\"technique-description\"><i class=\"bi bi-info-circle-fill\"></i><span>Highlights key words as memory anchors to help recall the entire ayah.</span></div><div class=\"technique-best\"><i class=\"bi bi-check-circle-fill\"></i><span>Best for: Memorising key vocabulary</span></div></div>", 1)), $data.anchorModeEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_154, [_cache[227] || (_cache[227] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", null, "Anchor points per ayah", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "onUpdate:modelValue": _cache[68] || (_cache[68] = function ($event) {
       return $data.anchorCount = $event;
     }),
-    onChange: _cache[68] || (_cache[68] = function () {
+    onChange: _cache[69] || (_cache[69] = function () {
       return $options.onAnchorCountChange && $options.onAnchorCountChange.apply($options, arguments);
     }),
     "class": "select"
-  }, _toConsumableArray(_cache[225] || (_cache[225] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
+  }, _toConsumableArray(_cache[226] || (_cache[226] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: 1
   }, "1 anchor (center word)", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
     value: 2
   }, "2 anchors (first + last)", -1 /* CACHED */)])), 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $data.anchorCount, void 0, {
     number: true
-  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_140, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.anchorModeDescription), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.anchor_mode]])])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : $data.tab === 'saved' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+  }]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_155, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.anchorModeDescription), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.anchor_mode]])])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : $data.tab === 'saved' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 2
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" SAVED TAB "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_141, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_142, [_cache[239] || (_cache[239] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" SAVED TAB "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_156, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_157, [_cache[240] || (_cache[240] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "saved-header"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-bookmark-check"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Saved Sessions")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Your memorisation sessions, ready to resume")], -1 /* CACHED */)), $data.hasContinueSession ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_143, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_144, [_cache[228] || (_cache[228] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Saved Sessions")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Your memorisation sessions, ready to resume")], -1 /* CACHED */)), $data.hasContinueSession ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_158, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_159, [_cache[229] || (_cache[229] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "saved-continue-kicker"
-  }, "Resume previous session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.continueSessionLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.continueSessionMeta), 1 /* TEXT */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.savedSessions.length === 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_145, _toConsumableArray(_cache[229] || (_cache[229] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, "Resume previous session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.continueSessionLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.continueSessionMeta), 1 /* TEXT */)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.savedSessions.length === 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_160, _toConsumableArray(_cache[230] || (_cache[230] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-journal-bookmark"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "No saved sessions yet", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Save your current session to get started", -1 /* CACHED */)])))) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_146, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.savedSessions, function (session) {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "No saved sessions yet", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Save your current session to get started", -1 /* CACHED */)])))) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_161, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.savedSessions, function (session) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: session.id,
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["session-item", {
@@ -34598,15 +36755,15 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       onClick: function onClick($event) {
         return $options.loadSavedSession(session.id);
       }
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_148, [_cache[230] || (_cache[230] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_163, [_cache[231] || (_cache[231] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-bookmark-fill"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSessionPrimaryLabel(session)), 1 /* TEXT */), session.archived ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_149, "Archived")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.sessionMatchesCurrentLiveConfig(session) ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_150, "Active now")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSessionPrimaryLabel(session)), 1 /* TEXT */), session.archived ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_164, "Archived")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.sessionMatchesCurrentLiveConfig(session) ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_165, "Active now")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["session-status-badge", "session-status-".concat($options.getSavedSessionState(session).tone)])
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSavedSessionState(session).label), 3 /* TEXT, CLASS */)]), session.name && session.name !== $options.getSessionPrimaryLabel(session) ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_151, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(session.name), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_152, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[231] || (_cache[231] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSavedSessionState(session).label), 3 /* TEXT, CLASS */)]), session.name && session.name !== $options.getSessionPrimaryLabel(session) ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_166, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(session.name), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_167, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[232] || (_cache[232] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-clock"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Saved " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatDate(session.savedAt)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[232] || (_cache[232] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Saved " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatDate(session.savedAt)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[233] || (_cache[233] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-arrow-repeat"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.buildSessionResumeSummary(session)), 1 /* TEXT */)])])], 8 /* PROPS */, _hoisted_147), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_153, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_154, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.buildSessionResumeSummary(session)), 1 /* TEXT */)])])], 8 /* PROPS */, _hoisted_162), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_168, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_169, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "session-resume-btn",
       onClick: function onClick($event) {
         return $options.loadSavedSession(session.id);
@@ -34615,7 +36772,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       disabled: $options.isLoadingSession(session.id)
     }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $options.isLoadingSession(session.id) ? 'bi-arrow-repeat spin' : 'bi-play-fill'])
-    }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.isLoadingSession(session.id) ? 'Resuming…' : 'Resume Session'), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_155)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_156, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.isLoadingSession(session.id) ? 'Resuming…' : 'Resume Session'), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_170)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_171, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
       "class": "session-export-group",
       role: "group",
       "aria-label": "Export actions for ".concat(session.name || $options.getSessionPrimaryLabel(session))
@@ -34631,7 +36788,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       title: "Export CSV"
     }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $options.getSessionExportIcon(session.id, 'csv', 'bi-filetype-csv')])
-    }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSessionExportLabel(session.id, 'csv', 'CSV')), 1 /* TEXT */)], 10 /* CLASS, PROPS */, _hoisted_158), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSessionExportLabel(session.id, 'csv', 'CSV')), 1 /* TEXT */)], 10 /* CLASS, PROPS */, _hoisted_173), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       type: "button",
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["session-export-btn session-export-btn-pdf", {
         success: $options.isSessionExportSuccessful(session.id, 'pdf')
@@ -34643,7 +36800,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       title: "Export PDF"
     }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $options.getSessionExportIcon(session.id, 'pdf', 'bi-filetype-pdf')])
-    }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSessionExportLabel(session.id, 'pdf', 'PDF')), 1 /* TEXT */)], 10 /* CLASS, PROPS */, _hoisted_159), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSessionExportLabel(session.id, 'pdf', 'PDF')), 1 /* TEXT */)], 10 /* CLASS, PROPS */, _hoisted_174), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       type: "button",
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["session-export-btn session-export-btn-word", {
         success: $options.isSessionExportSuccessful(session.id, 'word')
@@ -34655,253 +36812,250 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       title: "Export Word"
     }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $options.getSessionExportIcon(session.id, 'word', 'bi-file-earmark-word')])
-    }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSessionExportLabel(session.id, 'word', 'Word')), 1 /* TEXT */)], 10 /* CLASS, PROPS */, _hoisted_160)], 8 /* PROPS */, _hoisted_157), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSessionExportLabel(session.id, 'word', 'Word')), 1 /* TEXT */)], 10 /* CLASS, PROPS */, _hoisted_175)], 8 /* PROPS */, _hoisted_172), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "delete-btn session-delete-btn",
       onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
         return $options.deleteSavedSession(session.id);
       }, ["stop"]),
       title: "Delete session"
-    }, _toConsumableArray(_cache[233] || (_cache[233] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[234] || (_cache[234] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-trash3"
-    }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Delete", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_161)])])], 2 /* CLASS */);
-  }), 128 /* KEYED_FRAGMENT */))])), $options.activeExportErrorSessionId ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_162, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[234] || (_cache[234] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Export failed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.exportErrorMessage), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Delete", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_176)])])], 2 /* CLASS */);
+  }), 128 /* KEYED_FRAGMENT */))])), $options.activeExportErrorSessionId ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_177, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[235] || (_cache[235] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Export failed", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.exportErrorMessage), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     type: "button",
     "class": "session-export-btn",
-    onClick: _cache[69] || (_cache[69] = function () {
+    onClick: _cache[70] || (_cache[70] = function () {
       return $options.retryFailedExport && $options.retryFailedExport.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[235] || (_cache[235] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[236] || (_cache[236] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-repeat"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Retry", -1 /* CACHED */)])))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_163, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_164, [_cache[237] || (_cache[237] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Retry", -1 /* CACHED */)])))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.hasVerses ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_178, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_179, [_cache[238] || (_cache[238] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-circle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[236] || (_cache[236] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Current Session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter = $data.currentChapter) === null || _$data$currentChapter === void 0 ? void 0 : _$data$currentChapter.name_simple) || 'No surah') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[237] || (_cache[237] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Current Session", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter = $data.currentChapter) === null || _$data$currentChapter === void 0 ? void 0 : _$data$currentChapter.name_simple) || 'No surah') + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "save-btn",
-    onClick: _cache[70] || (_cache[70] = function ($event) {
+    onClick: _cache[71] || (_cache[71] = function ($event) {
       return $options.saveCurrentSessionWithName();
     })
-  }, _toConsumableArray(_cache[238] || (_cache[238] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[239] || (_cache[239] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-save"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Save ", -1 /* CACHED */)])))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : $options.isLoggedIn && $data.tab === 'stats' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_165, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_166, [_cache[243] || (_cache[243] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Save ", -1 /* CACHED */)])))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : $options.isLoggedIn && $data.tab === 'stats' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_180, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_181, [_cache[244] || (_cache[244] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "saved-header"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-bar-chart-line"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Insights")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Quick, calm insights from your saved memorisation sessions")], -1 /* CACHED */)), $data.savedSessions.length === 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_167, _toConsumableArray(_cache[240] || (_cache[240] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Insights")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Quick, calm insights from your saved memorisation sessions")], -1 /* CACHED */)), $data.savedSessions.length === 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_182, _toConsumableArray(_cache[241] || (_cache[241] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-activity"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "No insights yet", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Save a session and you’ll see a simple summary here.", -1 /* CACHED */)])))) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_168, [$options.selectedStatsSessionRecord ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_169, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_170, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h4", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSessionPrimaryLabel($options.selectedStatsSessionRecord)), 1 /* TEXT */), $options.selectedStatsSessionRecord.name && $options.selectedStatsSessionRecord.name !== $options.getSessionPrimaryLabel($options.selectedStatsSessionRecord) ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_171, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selectedStatsSessionRecord.name), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_172, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.buildStatsSummary($options.selectedStatsSessionRecord)), 1 /* TEXT */), $options.sortedSavedSessions.length > 1 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_173, [_cache[241] || (_cache[241] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "No insights yet", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Save a session and you’ll see a simple summary here.", -1 /* CACHED */)])))) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_183, [$options.selectedStatsSessionRecord ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_184, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_185, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h4", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSessionPrimaryLabel($options.selectedStatsSessionRecord)), 1 /* TEXT */), $options.selectedStatsSessionRecord.name && $options.selectedStatsSessionRecord.name !== $options.getSessionPrimaryLabel($options.selectedStatsSessionRecord) ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_186, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selectedStatsSessionRecord.name), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_187, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.buildStatsSummary($options.selectedStatsSessionRecord)), 1 /* TEXT */), $options.sortedSavedSessions.length > 1 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_188, [_cache[242] || (_cache[242] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
     "class": "stats-session-select-label",
     "for": "statsSessionSelect"
   }, "Saved sessions", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
     id: "statsSessionSelect",
     "class": "stats-session-select",
     value: $options.selectedStatsSessionRecord.id,
-    onChange: _cache[71] || (_cache[71] = function ($event) {
+    onChange: _cache[72] || (_cache[72] = function ($event) {
       return $options.selectStatsSession($event.target.value);
     })
   }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.sortedSavedSessions, function (session) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
       key: "stats-".concat(session.id),
       value: session.id
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSessionPrimaryLabel(session)) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatDate(session.savedAt)), 9 /* TEXT, PROPS */, _hoisted_175);
-  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_174)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_176, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSessionPrimaryLabel(session)) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatDate(session.savedAt)), 9 /* TEXT, PROPS */, _hoisted_190);
+  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_189)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_191, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     type: "button",
     "class": "session-export-btn stats-full-analytics-btn",
-    onClick: _cache[72] || (_cache[72] = function ($event) {
+    onClick: _cache[73] || (_cache[73] = function ($event) {
       return $options.openSessionAnalyticsModal($options.selectedStatsSessionRecord);
     })
-  }, _toConsumableArray(_cache[242] || (_cache[242] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[243] || (_cache[243] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-graph-up-arrow"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "View Full Analytics", -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_177, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.buildStatsBreakdown($options.selectedStatsSessionRecord), function (item) {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "View Full Analytics", -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_192, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.buildStatsBreakdown($options.selectedStatsSessionRecord), function (item) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: item.key,
       "class": "stats-card"
     }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi stats-card-icon", item.icon])
-    }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("em", _hoisted_178, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.value), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.label), 1 /* TEXT */)]);
-  }), 128 /* KEYED_FRAGMENT */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_179, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Saved " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatDate($options.selectedStatsSessionRecord.savedAt)), 1 /* TEXT */), $options.selectedStatsSessionRecord.archived ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_180, "Archived auto-save")) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_181, "Manual save"))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]))])])) : $data.tab === 'settings' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+    }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("em", _hoisted_193, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.value), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.label), 1 /* TEXT */)]);
+  }), 128 /* KEYED_FRAGMENT */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_194, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Saved " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatDate($options.selectedStatsSessionRecord.savedAt)), 1 /* TEXT */), $options.selectedStatsSessionRecord.archived ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_195, "Archived auto-save")) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_196, "Manual save"))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]))])])) : $data.tab === 'settings' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 4
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" SETTINGS TAB - Same layout as Techniques tab "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_182, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Display Settings Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_183, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" SETTINGS TAB - Same layout as Techniques tab "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_197, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Display Settings Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_198, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[73] || (_cache[73] = function ($event) {
+    onClick: _cache[74] || (_cache[74] = function ($event) {
       return $options.toggleSection('display_settings');
     }),
     type: "button"
-  }, [_cache[245] || (_cache[245] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-display\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Display</span><span class=\"st-sub\">Customize how the Quran appears</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_199, [_cache[245] || (_cache[245] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "st-ico"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-display"
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_200, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_201, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.display')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_202, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.displaySub')), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.display_settings
     }])
-  }, _toConsumableArray(_cache[244] || (_cache[244] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[246] || (_cache[246] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_184, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Tajweed "), _cache[247] || (_cache[247] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "setting-item"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "setting-info"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "setting-label"
-  }, "Tajweed"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "setting-description"
-  }, "Recitation color rules (Idgham, Ikhfa, Madd, etc.)")])], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Font Size "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_185, [_cache[246] || (_cache[246] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "setting-info"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "setting-label"
-  }, "Font size"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "setting-description"
-  }, "Adjust the Arabic text size for better readability")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_186, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_187, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.defaultFontSize) + "%", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_203, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Tajweed "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_204, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_205, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_206, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.tajweed')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_207, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.tajweedDesc')), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Font Size "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_208, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_209, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_210, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.fontSize')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_211, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.fontSizeDesc')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_212, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_213, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.defaultFontSize) + "%", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "range",
     min: "80",
     max: "200",
     step: "5",
-    "onUpdate:modelValue": _cache[74] || (_cache[74] = function ($event) {
+    "onUpdate:modelValue": _cache[75] || (_cache[75] = function ($event) {
       return $data.defaultFontSize = $event;
     }),
-    onInput: _cache[75] || (_cache[75] = function () {
+    onInput: _cache[76] || (_cache[76] = function () {
       return $options.updateDefaultFontSize && $options.updateDefaultFontSize.apply($options, arguments);
     }),
     "class": "input range-slider"
   }, null, 544 /* NEED_HYDRATION, NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.defaultFontSize, void 0, {
     number: true
-  }]])])])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.display_settings]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Reading Aids Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_188, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }]])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_214, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_215, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_216, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('common.language')), 1 /* TEXT */), _cache[247] || (_cache[247] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "setting-description"
+  }, "English, Arabic, or French UI", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("select", {
+    "class": "select language-select",
+    value: $data.activeLocale,
+    onChange: _cache[77] || (_cache[77] = function ($event) {
+      return $options.onLanguageChange($event.target.value);
+    })
+  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.languageOptions, function (option) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
+      key: option.value,
+      value: option.value
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(option.label), 9 /* TEXT, PROPS */, _hoisted_218);
+  }), 128 /* KEYED_FRAGMENT */))], 40 /* PROPS, NEED_HYDRATION */, _hoisted_217)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.display_settings]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Reading Aids Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_219, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "sheet-toggle",
-    onClick: _cache[76] || (_cache[76] = function ($event) {
+    onClick: _cache[78] || (_cache[78] = function ($event) {
       return $options.toggleSection('reading_settings');
     }),
     type: "button"
-  }, [_cache[249] || (_cache[249] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<span class=\"st-left\"><span class=\"st-ico\"><i class=\"bi bi-book-half\"></i></span><span class=\"st-txt\"><span class=\"st-title\">Reading Aids</span><span class=\"st-sub\">Translations and word helpers</span></span></span>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_220, [_cache[248] || (_cache[248] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "st-ico"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-book-half"
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_221, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_222, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.readingAids')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_223, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.readingAidsSub')), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["st-chev", {
       open: $data.sectionOpen.reading_settings
     }])
-  }, _toConsumableArray(_cache[248] || (_cache[248] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[249] || (_cache[249] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-chevron-down"
-  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_189, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Translation "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_190, [_cache[250] || (_cache[250] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "setting-info"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_224, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Translation "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_225, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_226, [_cache[250] || (_cache[250] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "setting-label"
-  }, "Translation"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "setting-description"
-  }, "English meaning of each verse")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Translation", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_227, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.translationDesc')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip", {
       active: $data.showTranslation
     }]),
-    onClick: _cache[77] || (_cache[77] = function ($event) {
+    onClick: _cache[79] || (_cache[79] = function ($event) {
       return $options.toggleReadingOption('translation');
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showTranslation ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Transliteration "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_191, [_cache[251] || (_cache[251] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "setting-info"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "setting-label"
-  }, "Transliteration"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "setting-description"
-  }, "Latin script pronunciation aid")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showTranslation ? $options.t('common.on') : $options.t('common.off')), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Transliteration "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_228, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_229, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_230, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.transliteration')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_231, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.transliterationDesc')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip", {
       active: $data.showTransliteration
     }]),
-    onClick: _cache[78] || (_cache[78] = function ($event) {
+    onClick: _cache[80] || (_cache[80] = function ($event) {
       return $options.toggleReadingOption('transliteration');
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showTransliteration ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Word by Word "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_192, [_cache[252] || (_cache[252] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "setting-info"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "setting-label"
-  }, "Word by word"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "setting-description"
-  }, "Individual word chips with meanings")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showTransliteration ? $options.t('common.on') : $options.t('common.off')), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Word by Word "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_232, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_233, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_234, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.wordByWord')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_235, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.wordByWordDesc')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip", {
       active: $data.showWordByWord
     }]),
-    onClick: _cache[79] || (_cache[79] = function ($event) {
+    onClick: _cache[81] || (_cache[81] = function ($event) {
       return $options.toggleReadingOption('wbw');
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showWordByWord ? 'On' : 'Off'), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Word Audio "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_193, [_cache[253] || (_cache[253] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "setting-info"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "setting-label"
-  }, "Word audio"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "setting-description"
-  }, "Audio playback with word highlighting")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.showWordByWord ? $options.t('common.on') : $options.t('common.off')), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Word Audio "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_236, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_237, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_238, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.wordAudio')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_239, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('sessionSetup.wordAudioDesc')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toggle-chip", {
       active: $data.wordByWordAudioEnabled
     }]),
-    onClick: _cache[80] || (_cache[80] = function ($event) {
+    onClick: _cache[82] || (_cache[82] = function ($event) {
       return $data.wordByWordAudioEnabled = !$data.wordByWordAudioEnabled;
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.wordByWordAudioEnabled ? 'On' : 'Off'), 3 /* TEXT, CLASS */)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.reading_settings]])])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.wordByWordAudioEnabled ? $options.t('common.on') : $options.t('common.off')), 3 /* TEXT, CLASS */)])], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.sectionOpen.reading_settings]])])])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["tools-footer", {
       'settings-footer': $data.tab === 'settings'
     }])
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-btn tools-btn-ghost tools-btn-soft",
-    onClick: _cache[81] || (_cache[81] = function () {
+    onClick: _cache[83] || (_cache[83] = function () {
       return $options.resetControls && $options.resetControls.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[254] || (_cache[254] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [_cache[251] || (_cache[251] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-counterclockwise"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Reset", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('common.reset')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "tools-btn tools-btn-primary tools-btn-soft",
-    onClick: _cache[82] || (_cache[82] = function () {
+    onClick: _cache[84] || (_cache[84] = function () {
       return $options.startSessionAndClose && $options.startSessionAndClose.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[255] || (_cache[255] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [_cache[252] || (_cache[252] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-play-fill"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Start Session", -1 /* CACHED */)])))], 2 /* CLASS */)], 42 /* CLASS, PROPS, NEED_HYDRATION */, _hoisted_63)], 2 /* CLASS */)) : $data.appReady && !$options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_194, _toConsumableArray(_cache[256] || (_cache[256] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"login-hero\"><div class=\"guest-shell\"><section class=\"guest-hero\"><div class=\"guest-hero-copy\"><span class=\"guest-kicker\">Calm Quran memorisation</span><h1>Memorise with a quieter, more deliberate session flow.</h1><div class=\"guest-copy-stack\"><p class=\"guest-subtitle\"> Build each session around a small ayah range, steady repetition, and clear recall. </p><p class=\"guest-copy-support\"> Mutqin keeps the Quran central while playback, progress, and saved sessions stay quietly organised around it. </p></div><div class=\"guest-action-row\"><a href=\"/login\" class=\"login-btn guest-primary-btn\" style=\"text-decoration:none;\"><i class=\"bi bi-box-arrow-in-right\"></i><span>Start with your account</span></a><a href=\"/register\" class=\"guest-secondary-btn\" style=\"text-decoration:none;\"><i class=\"bi bi-person-plus\"></i><span>Create a new account</span></a></div><p class=\"guest-cta-note\">Login keeps your sessions, insights, and exact memorisation position in sync.</p><div class=\"guest-proof-row\"><span><i class=\"bi bi-cloud-check\"></i> Sync progress</span><span><i class=\"bi bi-arrow-repeat\"></i> Structured repetition</span><span><i class=\"bi bi-clock-history\"></i> Resume exactly</span></div></div><aside class=\"guest-hero-panel\"><div class=\"guest-preview-card\"><div class=\"guest-preview-icon\"><i class=\"bi bi-book-half\"></i></div><div class=\"guest-preview-copy\"><strong>What a Mutqin session feels like</strong><p>Short enough to stay focused. Structured enough to make long-term memorisation easier to revisit.</p></div><div class=\"guest-preview-steps\"><div class=\"guest-preview-step\"><span>1</span><div><strong>Choose your ayahs</strong><small>Pick the surah, range, and reciter.</small></div></div><div class=\"guest-preview-step\"><span>2</span><div><strong>Repeat with structure</strong><small>Use playback, chaining, focus, and blur tools.</small></div></div><div class=\"guest-preview-step\"><span>3</span><div><strong>Recall and review</strong><small>Track what was covered and return later with clarity.</small></div></div></div></div></aside></section><section class=\"guest-section guest-section-row guest-section-row-simplified\"><div class=\"guest-section-head guest-section-head-side\"><span class=\"guest-section-kicker\">How Mutqin stays focused</span><h2>Everything centres on one calm memorisation session at a time</h2><p>Choose a small range, repeat with structure, then return for recall and review without dashboard clutter.</p></div><div class=\"guest-feature-grid\"><article class=\"guest-feature-card\"><i class=\"bi bi-layers\"></i><strong>Focused ayah ranges</strong><p>Work in smaller sections that are easier to repeat well.</p></article><article class=\"guest-feature-card\"><i class=\"bi bi-arrow-repeat\"></i><strong>Clear repetition</strong><p>Keep your session steady instead of guessing how many times to repeat.</p></article><article class=\"guest-feature-card\"><i class=\"bi bi-ear\"></i><strong>Recall with less clutter</strong><p>Use only the aids and techniques that support the current passage.</p></article><article class=\"guest-feature-card\"><i class=\"bi bi-graph-up-arrow\"></i><strong>Progress you can revisit</strong><p>Saved sessions and compact insights stay ready when you come back.</p></article></div></section></div></div>", 1)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Save Session Name Modal - Clean & Updated Version "), $data.showSaveNameModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('common.startSession')), 1 /* TEXT */)])], 2 /* CLASS */)], 42 /* CLASS, PROPS, NEED_HYDRATION */, _hoisted_68)], 2 /* CLASS */)) : $data.appReady && !$options.isLoggedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_240, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_241, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_242, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_243, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_244, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_245, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('home.guestKicker')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h1", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('home.guestTitle')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_246, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_247, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('home.guestSubtitle')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_248, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('home.guestSupport')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_249, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", _hoisted_250, [_cache[253] || (_cache[253] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-box-arrow-in-right"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('common.login')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", _hoisted_251, [_cache[254] || (_cache[254] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-person-plus"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('common.register')), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_252, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.t('home.guestNote')), 1 /* TEXT */), _cache[255] || (_cache[255] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "guest-proof-row"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-cloud-check"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Sync progress")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-arrow-repeat"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Structured repetition")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-clock-history"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Resume exactly")])], -1 /* CACHED */))]), _cache[256] || (_cache[256] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<aside class=\"guest-hero-panel\"><div class=\"guest-preview-card\"><div class=\"guest-preview-icon\"><i class=\"bi bi-book-half\"></i></div><div class=\"guest-preview-copy\"><strong>What a Mutqin session feels like</strong><p>Short enough to stay focused. Structured enough to make long-term memorisation easier to revisit.</p></div><div class=\"guest-preview-steps\"><div class=\"guest-preview-step\"><span>1</span><div><strong>Choose your ayahs</strong><small>Pick the surah, range, and reciter.</small></div></div><div class=\"guest-preview-step\"><span>2</span><div><strong>Repeat with structure</strong><small>Use playback, chaining, focus, and blur tools.</small></div></div><div class=\"guest-preview-step\"><span>3</span><div><strong>Recall and review</strong><small>Track what was covered and return later with clarity.</small></div></div></div></div></aside>", 1))]), _cache[257] || (_cache[257] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section class=\"guest-section guest-section-row guest-section-row-simplified\"><div class=\"guest-section-head guest-section-head-side\"><span class=\"guest-section-kicker\">How Mutqin stays focused</span><h2>Everything centres on one calm memorisation session at a time</h2><p>Choose a small range, repeat with structure, then return for recall and review without dashboard clutter.</p></div><div class=\"guest-feature-grid\"><article class=\"guest-feature-card\"><i class=\"bi bi-layers\"></i><strong>Focused ayah ranges</strong><p>Work in smaller sections that are easier to repeat well.</p></article><article class=\"guest-feature-card\"><i class=\"bi bi-arrow-repeat\"></i><strong>Clear repetition</strong><p>Keep your session steady instead of guessing how many times to repeat.</p></article><article class=\"guest-feature-card\"><i class=\"bi bi-ear\"></i><strong>Recall with less clutter</strong><p>Use only the aids and techniques that support the current passage.</p></article><article class=\"guest-feature-card\"><i class=\"bi bi-graph-up-arrow\"></i><strong>Progress you can revisit</strong><p>Saved sessions and compact insights stay ready when you come back.</p></article></div></section>", 1))])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Save Session Name Modal - Clean & Updated Version "), $data.showSaveNameModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 3,
     "class": "modal-overlay",
-    onClick: _cache[91] || (_cache[91] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onClick: _cache[93] || (_cache[93] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.closeSaveModal && $options.closeSaveModal.apply($options, arguments);
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_195, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_196, [_cache[260] || (_cache[260] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_253, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_254, [_cache[261] || (_cache[261] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "modal-header-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-bookmark-plus-fill"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_197, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_198, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionContextBadge), 1 /* TEXT */), _cache[257] || (_cache[257] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", {
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_255, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_256, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionContextBadge), 1 /* TEXT */), _cache[258] || (_cache[258] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", {
     id: "saveModalTitle"
-  }, "Save Memorisation Session", -1 /* CACHED */)), _cache[258] || (_cache[258] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Name your session to easily find and resume it later", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Save Memorisation Session", -1 /* CACHED */)), _cache[259] || (_cache[259] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Name your session to easily find and resume it later", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "modal-close-btn",
-    onClick: _cache[85] || (_cache[85] = function () {
+    onClick: _cache[87] || (_cache[87] = function () {
       return $options.closeSaveModal && $options.closeSaveModal.apply($options, arguments);
     }),
     "aria-label": "Close"
-  }, _toConsumableArray(_cache[259] || (_cache[259] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[260] || (_cache[260] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_199, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Session Preview Card "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_200, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_201, [_cache[261] || (_cache[261] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_257, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Session Preview Card "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_258, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_259, [_cache[262] || (_cache[262] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-book"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter2 = $data.currentChapter) === null || _$data$currentChapter2 === void 0 ? void 0 : _$data$currentChapter2.name_simple) || 'No surah selected'), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_202, [_cache[262] || (_cache[262] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter2 = $data.currentChapter) === null || _$data$currentChapter2 === void 0 ? void 0 : _$data$currentChapter2.name_simple) || 'No surah selected'), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_260, [_cache[263] || (_cache[263] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-text-paragraph"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Ayahs " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeStart) + " – " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_203, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_204, [_cache[263] || (_cache[263] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Ayahs " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeStart) + " – " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_261, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_262, [_cache[264] || (_cache[264] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-files"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd - $options.rangeStart + 1) + " verses ", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_205, [_cache[264] || (_cache[264] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd - $options.rangeStart + 1) + " verses ", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_263, [_cache[265] || (_cache[265] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-mic"
   }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getReciterName()), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Name Input Field "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["name-input-group", {
       'has-error': $data.nameError
     }])
-  }, [_cache[267] || (_cache[267] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+  }, [_cache[268] || (_cache[268] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
     "for": "sessionName"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-pencil-square"
   }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Session Name ")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     id: "sessionName",
     type: "text",
-    "onUpdate:modelValue": _cache[86] || (_cache[86] = function ($event) {
+    "onUpdate:modelValue": _cache[88] || (_cache[88] = function ($event) {
       return $data.saveSessionName = $event;
     }),
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["name-input", {
       'error': $data.nameError
     }]),
     placeholder: "e.g., Al-Fatihah Focus, Evening Review, Week 1 Progress",
-    onKeyup: _cache[87] || (_cache[87] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)(function () {
+    onKeyup: _cache[89] || (_cache[89] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)(function () {
       return $options.confirmSaveSession && $options.confirmSaveSession.apply($options, arguments);
     }, ["enter"])),
-    onInput: _cache[88] || (_cache[88] = function () {
+    onInput: _cache[90] || (_cache[90] = function () {
       return $options.clearNameError && $options.clearNameError.apply($options, arguments);
     }),
     autofocus: "",
     maxlength: "50"
-  }, null, 34 /* CLASS, NEED_HYDRATION */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.saveSessionName]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_206, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_207, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.saveSessionName.length) + "/50", 1 /* TEXT */), _cache[265] || (_cache[265] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, 34 /* CLASS, NEED_HYDRATION */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.saveSessionName]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_264, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_265, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.saveSessionName.length) + "/50", 1 /* TEXT */), _cache[266] || (_cache[266] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "hint-text"
-  }, "Give it a memorable name", -1 /* CACHED */))]), $data.nameError ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_208, [_cache[266] || (_cache[266] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, "Give it a memorable name", -1 /* CACHED */))]), $data.nameError ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_266, [_cache[267] || (_cache[267] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-exclamation-circle-fill"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.nameError), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quick Name Suggestions "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_209, [_cache[268] || (_cache[268] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.nameError), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quick Name Suggestions "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_267, [_cache[269] || (_cache[269] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "suggestions-label"
-  }, "Quick suggestions:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_210, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.nameSuggestions, function (suggestion) {
+  }, "Quick suggestions:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_268, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.nameSuggestions, function (suggestion) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
       key: suggestion,
       "class": "suggestion-chip",
@@ -34909,134 +37063,134 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         return $data.saveSessionName = suggestion;
       },
       type: "button"
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(suggestion), 9 /* TEXT, PROPS */, _hoisted_211);
-  }), 128 /* KEYED_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Session Info Note "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_212, [_cache[270] || (_cache[270] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(suggestion), 9 /* TEXT, PROPS */, _hoisted_269);
+  }), 128 /* KEYED_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Session Info Note "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_270, [_cache[271] || (_cache[271] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-info-circle-fill"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_213, [_cache[269] || (_cache[269] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Saved with current settings:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingEnabled ? "".concat($data.chainingMethod, " chaining (").concat($data.chainingRepetitions, "x)") : 'Standard mode'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.tajweedEnabled ? '· Tajweed enabled' : ''), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_214, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_271, [_cache[270] || (_cache[270] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Saved with current settings:", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.chainingEnabled ? "".concat($data.chainingMethod, " chaining (").concat($data.chainingRepetitions, "x)") : 'Standard mode'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.tajweedEnabled ? '· Tajweed enabled' : ''), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_272, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary",
-    onClick: _cache[89] || (_cache[89] = function () {
+    onClick: _cache[91] || (_cache[91] = function () {
       return $options.closeSaveModal && $options.closeSaveModal.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[271] || (_cache[271] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[272] || (_cache[272] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Cancel ", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-primary",
-    onClick: _cache[90] || (_cache[90] = function () {
+    onClick: _cache[92] || (_cache[92] = function () {
       return $options.confirmSaveSession && $options.confirmSaveSession.apply($options, arguments);
     }),
     disabled: !$options.isValidSessionName
-  }, _toConsumableArray(_cache[272] || (_cache[272] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[273] || (_cache[273] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-save"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Save Session ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_215)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showConfirmModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Save Session ", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_273)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showConfirmModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 4,
     "class": "modal-overlay",
-    onClick: _cache[95] || (_cache[95] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onClick: _cache[97] || (_cache[97] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_216, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_217, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_218, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_219, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionContextBadge), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.title), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_274, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_275, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_276, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_277, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionContextBadge), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.title), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-icon",
-    onClick: _cache[92] || (_cache[92] = function () {
+    onClick: _cache[94] || (_cache[94] = function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[273] || (_cache[273] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[274] || (_cache[274] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_220, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_221, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.message), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_222, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_278, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_279, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.message), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_280, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary",
-    onClick: _cache[93] || (_cache[93] = function () {
+    onClick: _cache[95] || (_cache[95] = function () {
       return $options.closeConfirmModal && $options.closeConfirmModal.apply($options, arguments);
     })
   }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.cancelLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["btn-primary", {
       'btn-danger': $data.confirmModal.tone === 'danger'
     }]),
-    onClick: _cache[94] || (_cache[94] = function () {
+    onClick: _cache[96] || (_cache[96] = function () {
       return $options.runConfirmAction && $options.runConfirmAction.apply($options, arguments);
     })
   }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.confirmModal.confirmLabel), 3 /* TEXT, CLASS */)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showSessionExitModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 5,
     "class": "modal-overlay",
-    onClick: _cache[101] || (_cache[101] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onClick: _cache[103] || (_cache[103] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.closeSessionExitModal && $options.closeSessionExitModal.apply($options, arguments);
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_223, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_224, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_225, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_226, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionContextBadge), 1 /* TEXT */), _cache[274] || (_cache[274] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_281, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_282, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_283, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_284, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.sessionContextBadge), 1 /* TEXT */), _cache[275] || (_cache[275] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", {
     id: "sessionExitTitle"
   }, "End Session", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-icon",
-    onClick: _cache[96] || (_cache[96] = function () {
+    onClick: _cache[98] || (_cache[98] = function () {
       return $options.closeSessionExitModal && $options.closeSessionExitModal.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[275] || (_cache[275] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[276] || (_cache[276] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_227, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_228, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[276] || (_cache[276] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_285, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_286, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[277] || (_cache[277] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-book"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter3 = $data.currentChapter) === null || _$data$currentChapter3 === void 0 ? void 0 : _$data$currentChapter3.name_simple) || 'No surah'), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[277] || (_cache[277] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter3 = $data.currentChapter) === null || _$data$currentChapter3 === void 0 ? void 0 : _$data$currentChapter3.name_simple) || 'No surah'), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[278] || (_cache[278] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-text-paragraph"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + "/" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[278] || (_cache[278] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentPosition) + "/" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.totalVerses), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[279] || (_cache[279] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-clock"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime || 0)), 1 /* TEXT */)])]), _cache[280] || (_cache[280] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime || 0)), 1 /* TEXT */)])]), _cache[281] || (_cache[281] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
     "class": "confirm-copy"
-  }, "You can leave now, or save this session before exiting. Continuing will restore the exact ayah, playback position, and blur state.", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_229, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  }, "You can leave now, or save this session before exiting. Continuing will restore the exact ayah, playback position, and blur state.", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_287, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "checkbox",
-    "onUpdate:modelValue": _cache[97] || (_cache[97] = function ($event) {
+    "onUpdate:modelValue": _cache[99] || (_cache[99] = function ($event) {
       return $data.sessionExitAutoSave = $event;
     })
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $data.sessionExitAutoSave]]), _cache[279] || (_cache[279] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Auto-save before exit", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_230, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelCheckbox, $data.sessionExitAutoSave]]), _cache[280] || (_cache[280] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Auto-save before exit", -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_288, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary",
-    onClick: _cache[98] || (_cache[98] = function () {
+    onClick: _cache[100] || (_cache[100] = function () {
       return $options.closeSessionExitModal && $options.closeSessionExitModal.apply($options, arguments);
     })
   }, "Continue"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary",
-    onClick: _cache[99] || (_cache[99] = function () {
+    onClick: _cache[101] || (_cache[101] = function () {
       return $options.exitSessionAnyway && $options.exitSessionAnyway.apply($options, arguments);
     })
   }, "Exit Anyway"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-primary",
-    onClick: _cache[100] || (_cache[100] = function () {
+    onClick: _cache[102] || (_cache[102] = function () {
       return $options.confirmSessionExit && $options.confirmSessionExit.apply($options, arguments);
     })
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.sessionExitAutoSave ? 'Save & Exit' : 'End Session'), 1 /* TEXT */)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showCountdownOverlay ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_231, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_232, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_233, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.countdownValue), 1 /* TEXT */), _cache[281] || (_cache[281] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.sessionExitAutoSave ? 'Save & Exit' : 'End Session'), 1 /* TEXT */)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showCountdownOverlay ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_289, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_290, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_291, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.countdownValue), 1 /* TEXT */), _cache[282] || (_cache[282] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "countdown-text"
   }, "Prepare yourself", -1 /* CACHED */))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showSessionAnalyticsModal ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 7,
     "class": "modal-overlay session-analytics-overlay",
-    onClick: _cache[104] || (_cache[104] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onClick: _cache[106] || (_cache[106] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.closeSessionAnalyticsModal && $options.closeSessionAnalyticsModal.apply($options, arguments);
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_234, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_235, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_236, [_cache[282] || (_cache[282] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_292, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_293, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_294, [_cache[283] || (_cache[283] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", {
     id: "sessionAnalyticsTitle"
-  }, "Session Analytics Overview", -1 /* CACHED */)), $options.analyticsModalSessionLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_237, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.analyticsModalSessionLabel), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.analyticsModalSessionMeta ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("small", _hoisted_238, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.analyticsModalSessionMeta), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_239, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Session Analytics Overview", -1 /* CACHED */)), $options.analyticsModalSessionLabel ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_295, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.analyticsModalSessionLabel), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.analyticsModalSessionMeta ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("small", _hoisted_296, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.analyticsModalSessionMeta), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_297, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     type: "button",
     "class": "session-export-btn session-analytics-download",
     disabled: $data.analyticsReportState.loading || !$options.analyticsModalRecord,
-    onClick: _cache[102] || (_cache[102] = function () {
+    onClick: _cache[104] || (_cache[104] = function () {
       return $options.downloadSessionAnalyticsReport && $options.downloadSessionAnalyticsReport.apply($options, arguments);
     })
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $options.analyticsReportIcon])
-  }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.analyticsReportLabel), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_240), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.analyticsReportLabel), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_298), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "modal-close-btn",
-    onClick: _cache[103] || (_cache[103] = function () {
+    onClick: _cache[105] || (_cache[105] = function () {
       return $options.closeSessionAnalyticsModal && $options.closeSessionAnalyticsModal.apply($options, arguments);
     }),
     "aria-label": "Close"
-  }, _toConsumableArray(_cache[283] || (_cache[283] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[284] || (_cache[284] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_241, [!$data.analyticsModalLoaded ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_242, _toConsumableArray(_cache[284] || (_cache[284] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)])))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_299, [!$data.analyticsModalLoaded ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_300, _toConsumableArray(_cache[285] || (_cache[285] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-hourglass-split"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Preparing analytics...", -1 /* CACHED */)])))) : $data.analyticsModalData ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
     key: 1
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_243, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_244, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.analyticsSummaryCards, function (item) {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_301, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_302, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.analyticsSummaryCards, function (item) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("article", {
       key: item.key,
       "class": "session-analytics-summary-card"
     }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.label), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.value), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.description), 1 /* TEXT */)]);
-  }), 128 /* KEYED_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_245, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("article", _hoisted_246, [_cache[287] || (_cache[287] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("header", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Progress"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Simple coverage across the selected ayah range.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_247, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_248, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.analyticsCurrentProgressPercent) + "%", 1 /* TEXT */), _cache[285] || (_cache[285] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Current progress", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.analyticsProgressSummary), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_249, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.analyticsRemainingProgressPercent) + "%", 1 /* TEXT */), _cache[286] || (_cache[286] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Remaining progress", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.analyticsRemainingSummary), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_250, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }), 128 /* KEYED_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_303, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("article", _hoisted_304, [_cache[288] || (_cache[288] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("header", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Progress"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Simple coverage across the selected ayah range.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_305, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_306, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.analyticsCurrentProgressPercent) + "%", 1 /* TEXT */), _cache[286] || (_cache[286] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Current progress", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.analyticsProgressSummary), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_307, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.analyticsRemainingProgressPercent) + "%", 1 /* TEXT */), _cache[287] || (_cache[287] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Remaining progress", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.analyticsRemainingSummary), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_308, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "analytics-progress-bar-fill",
     style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
       width: "".concat($options.analyticsCurrentProgressPercent, "%")
     })
-  }, null, 4 /* STYLE */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("article", _hoisted_251, [_cache[289] || (_cache[289] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("header", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Ayah activity"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Verse plays across the selected range.")], -1 /* CACHED */)), $options.analyticsVerseSeries.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_252, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("svg", _hoisted_253, [_cache[288] || (_cache[288] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("defs", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("linearGradient", {
+  }, null, 4 /* STYLE */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("article", _hoisted_309, [_cache[290] || (_cache[290] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("header", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Ayah activity"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Verse plays across the selected range.")], -1 /* CACHED */)), $options.analyticsVerseSeries.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_310, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("svg", _hoisted_311, [_cache[289] || (_cache[289] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("defs", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("linearGradient", {
     id: "analyticsAreaGradient",
     x1: "0",
     x2: "0",
@@ -35048,70 +37202,70 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
   }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("stop", {
     offset: "100%",
     "stop-color": "rgba(189, 140, 88, 0.02)"
-  })])], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("g", _hoisted_254, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.analyticsYAxisTicks, function (tick) {
+  })])], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("g", _hoisted_312, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.analyticsYAxisTicks, function (tick) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("line", {
       key: "grid-".concat(tick.value),
       x1: "20",
       y1: tick.y,
       x2: "300",
       y2: tick.y
-    }, null, 8 /* PROPS */, _hoisted_255);
+    }, null, 8 /* PROPS */, _hoisted_313);
   }), 128 /* KEYED_FRAGMENT */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.analyticsYAxisTicks, function (tick) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("text", {
       key: "label-".concat(tick.value),
       x: "4",
       y: tick.y + 4
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(tick.label), 9 /* TEXT, PROPS */, _hoisted_256);
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(tick.label), 9 /* TEXT, PROPS */, _hoisted_314);
   }), 128 /* KEYED_FRAGMENT */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("path", {
     d: $options.analyticsLineAreaPath,
     fill: "url(#analyticsAreaGradient)"
-  }, null, 8 /* PROPS */, _hoisted_257), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("path", {
+  }, null, 8 /* PROPS */, _hoisted_315), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("path", {
     d: $options.analyticsLinePath,
     "class": "analytics-line-path"
-  }, null, 8 /* PROPS */, _hoisted_258), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.analyticsLineDots, function (point) {
+  }, null, 8 /* PROPS */, _hoisted_316), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.analyticsLineDots, function (point) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("circle", {
       key: point.key,
       cx: point.x,
       cy: point.y,
       r: "3.5",
       "class": "analytics-line-dot"
-    }, null, 8 /* PROPS */, _hoisted_259);
-  }), 128 /* KEYED_FRAGMENT */))])), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_260, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.analyticsVerseSeries, function (item) {
+    }, null, 8 /* PROPS */, _hoisted_317);
+  }), 128 /* KEYED_FRAGMENT */))])), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_318, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.analyticsVerseSeries, function (item) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
       key: "label-".concat(item.key)
     }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.shortLabel), 1 /* TEXT */);
-  }), 128 /* KEYED_FRAGMENT */))])])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_261, "Play ayah audio to populate the activity chart."))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_262, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("article", _hoisted_263, [_cache[290] || (_cache[290] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("header", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Most Replayed Ayahs"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Quick view of where repetition is concentrating.")], -1 /* CACHED */)), $options.analyticsReplayLeaders.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_264, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.analyticsReplayLeaders, function (item) {
+  }), 128 /* KEYED_FRAGMENT */))])])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_319, "Play ayah audio to populate the activity chart."))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_320, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("article", _hoisted_321, [_cache[291] || (_cache[291] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("header", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Most Replayed Ayahs"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Quick view of where repetition is concentrating.")], -1 /* CACHED */)), $options.analyticsReplayLeaders.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_322, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.analyticsReplayLeaders, function (item) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: item.key,
       "class": "analytics-bar-row"
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.label), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_265, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.label), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_323, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
       "class": "analytics-bar-fill",
       style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
         width: "".concat(item.percent, "%")
       })
     }, null, 4 /* STYLE */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.value), 1 /* TEXT */)]);
-  }), 128 /* KEYED_FRAGMENT */))])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_266, "No ayah replay data available yet."))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("article", _hoisted_267, [_cache[291] || (_cache[291] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("header", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Session Playback Balance"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "See how evenly audio attention is spread across the selected range.")], -1 /* CACHED */)), $options.analyticsPlaybackBuckets.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_268, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.analyticsPlaybackBuckets, function (bucket) {
+  }), 128 /* KEYED_FRAGMENT */))])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_324, "No ayah replay data available yet."))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("article", _hoisted_325, [_cache[292] || (_cache[292] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("header", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Session Playback Balance"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "See how evenly audio attention is spread across the selected range.")], -1 /* CACHED */)), $options.analyticsPlaybackBuckets.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_326, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.analyticsPlaybackBuckets, function (bucket) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: bucket.key,
       "class": "analytics-bucket-card"
     }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(bucket.label), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(bucket.value), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(bucket.description), 1 /* TEXT */)]);
-  }), 128 /* KEYED_FRAGMENT */))])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_269, "Playback balance appears after ayah audio starts."))])])], 64 /* STABLE_FRAGMENT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showSelfCheckModal && $options.selfCheckModalVerse ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+  }), 128 /* KEYED_FRAGMENT */))])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_327, "Playback balance appears after ayah audio starts."))])])], 64 /* STABLE_FRAGMENT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showSelfCheckModal && $options.selfCheckModalVerse ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 8,
     "class": "modal-overlay self-check-modal-overlay",
-    onClick: _cache[128] || (_cache[128] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onClick: _cache[130] || (_cache[130] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.closeSelfCheckModal && $options.closeSelfCheckModal.apply($options, arguments);
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_270, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_271, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_272, [_cache[292] || (_cache[292] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_328, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_329, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_330, [_cache[293] || (_cache[293] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "modal-context-badge"
-  }, "Per-ayah recorder", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", _hoisted_273, "Self-Check for Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selfCheckModalVerse.number), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Record your recitation, rate your confidence, and build a personal archive for " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selfCheckModalVerse.chapterName || ((_$data$currentChapter4 = $data.currentChapter) === null || _$data$currentChapter4 === void 0 ? void 0 : _$data$currentChapter4.name_simple) || $options.activeChapterName || 'this surah') + " · Session range " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Per-ayah recorder", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", _hoisted_331, "Self-Check for Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selfCheckModalVerse.number), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Record your recitation, rate your confidence, and build a personal archive for " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selfCheckModalVerse.chapterName || ((_$data$currentChapter4 = $data.currentChapter) === null || _$data$currentChapter4 === void 0 ? void 0 : _$data$currentChapter4.name_simple) || $options.activeChapterName || 'this surah') + " · Session range " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeStart) + "-" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.rangeEnd), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "modal-close-btn",
-    onClick: _cache[105] || (_cache[105] = function () {
+    onClick: _cache[107] || (_cache[107] = function () {
       return $options.closeSelfCheckModal && $options.closeSelfCheckModal.apply($options, arguments);
     }),
     "aria-label": "Close self-check"
-  }, _toConsumableArray(_cache[293] || (_cache[293] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[294] || (_cache[294] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_274, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_275, [_cache[295] || (_cache[295] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("header", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_332, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_333, [_cache[296] || (_cache[296] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("header", {
     "class": "self-check-section-head"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "self-check-kicker"
@@ -35122,47 +37276,47 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
   }, "Use blur to hide the text while you recite aloud. Adjust the font size for comfortable reading when you need to check yourself.")])], -1 /* CACHED */)), $data.selfCheckBlurEnabled ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 0,
     "class": "technique-peek-hint",
-    onMousedown: _cache[106] || (_cache[106] = function () {
+    onMousedown: _cache[108] || (_cache[108] = function () {
       return $options.startSelfCheckPeek && $options.startSelfCheckPeek.apply($options, arguments);
     }),
-    onMouseup: _cache[107] || (_cache[107] = function () {
+    onMouseup: _cache[109] || (_cache[109] = function () {
       return $options.stopSelfCheckPeek && $options.stopSelfCheckPeek.apply($options, arguments);
     }),
-    onMouseleave: _cache[108] || (_cache[108] = function () {
+    onMouseleave: _cache[110] || (_cache[110] = function () {
       return $options.stopSelfCheckPeek && $options.stopSelfCheckPeek.apply($options, arguments);
     }),
-    onTouchstart: _cache[109] || (_cache[109] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onTouchstart: _cache[111] || (_cache[111] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.startSelfCheckPeek && $options.startSelfCheckPeek.apply($options, arguments);
     }, ["prevent"])),
-    onTouchend: _cache[110] || (_cache[110] = function () {
+    onTouchend: _cache[112] || (_cache[112] = function () {
       return $options.stopSelfCheckPeek && $options.stopSelfCheckPeek.apply($options, arguments);
     }),
-    onTouchcancel: _cache[111] || (_cache[111] = function () {
+    onTouchcancel: _cache[113] || (_cache[113] = function () {
       return $options.stopSelfCheckPeek && $options.stopSelfCheckPeek.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[294] || (_cache[294] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[295] || (_cache[295] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-hand-index"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Press and hold the ayah below to peek · release to hide again", -1 /* CACHED */)])), 32 /* NEED_HYDRATION */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["self-check-modal-ayah-shell", {
       'is-blurred': $data.selfCheckBlurEnabled && !$data.selfCheckPeekActive,
       'is-peekable': $data.selfCheckBlurEnabled
     }]),
-    onMousedown: _cache[112] || (_cache[112] = function () {
+    onMousedown: _cache[114] || (_cache[114] = function () {
       return $options.startSelfCheckPeek && $options.startSelfCheckPeek.apply($options, arguments);
     }),
-    onMouseup: _cache[113] || (_cache[113] = function () {
+    onMouseup: _cache[115] || (_cache[115] = function () {
       return $options.stopSelfCheckPeek && $options.stopSelfCheckPeek.apply($options, arguments);
     }),
-    onMouseleave: _cache[114] || (_cache[114] = function () {
+    onMouseleave: _cache[116] || (_cache[116] = function () {
       return $options.stopSelfCheckPeek && $options.stopSelfCheckPeek.apply($options, arguments);
     }),
-    onTouchstart: _cache[115] || (_cache[115] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onTouchstart: _cache[117] || (_cache[117] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.startSelfCheckPeek && $options.startSelfCheckPeek.apply($options, arguments);
     }, ["prevent"])),
-    onTouchend: _cache[116] || (_cache[116] = function () {
+    onTouchend: _cache[118] || (_cache[118] = function () {
       return $options.stopSelfCheckPeek && $options.stopSelfCheckPeek.apply($options, arguments);
     }),
-    onTouchcancel: _cache[117] || (_cache[117] = function () {
+    onTouchcancel: _cache[119] || (_cache[119] = function () {
       return $options.stopSelfCheckPeek && $options.stopSelfCheckPeek.apply($options, arguments);
     })
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
@@ -35173,66 +37327,66 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       'font-size': $data.selfCheckFontSize / 100 + 'rem'
     }),
     innerHTML: $options.getSelfCheckModalArabic($options.selfCheckModalVerse)
-  }, null, 12 /* STYLE, PROPS */, _hoisted_276)], 34 /* CLASS, NEED_HYDRATION */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_277, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("article", {
+  }, null, 12 /* STYLE, PROPS */, _hoisted_334)], 34 /* CLASS, NEED_HYDRATION */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_335, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("article", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["self-check-recorder-card", {
       recording: $data.isSelfCheckRecording,
       reviewing: !!$options.selfCheckActiveDraft
     }])
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_278, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[296] || (_cache[296] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_336, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[297] || (_cache[297] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "self-check-kicker"
-  }, "Recording", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.isSelfCheckRecording ? 'Recording in progress' : $options.selfCheckActiveDraft ? 'Review before saving' : 'Ready when you are'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_279, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSelfCheckRecorderDescription()), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, "Recording", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.isSelfCheckRecording ? 'Recording in progress' : $options.selfCheckActiveDraft ? 'Review before saving' : 'Ready when you are'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_337, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSelfCheckRecorderDescription()), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "self-check-library-link",
     type: "button",
-    onClick: _cache[118] || (_cache[118] = function () {
+    onClick: _cache[120] || (_cache[120] = function () {
       return $options.openRecordingsLibraryFromSelfCheck && $options.openRecordingsLibraryFromSelfCheck.apply($options, arguments);
     }),
     title: "Browse all saved recordings for this session"
-  }, [_cache[297] || (_cache[297] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [_cache[298] || (_cache[298] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-collection-play"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selfCheckModalAttempts.length ? 'Open Library' : 'Library'), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_280, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selfCheckModalAttempts.length) + " saved attempt" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selfCheckModalAttempts.length === 1 ? '' : 's'), 1 /* TEXT */), $options.selfCheckLatestAttempt ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_281, "Latest: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selfCheckLatestAttempt.result) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatRecordingDate($options.selfCheckLatestAttempt.recordedAt)), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), $data.selfCheckLastSavedAyahKey === $options.selfCheckModalVerse.key ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_282, _toConsumableArray(_cache[298] || (_cache[298] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selfCheckModalAttempts.length ? 'Open Library' : 'Library'), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_338, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selfCheckModalAttempts.length) + " saved attempt" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selfCheckModalAttempts.length === 1 ? '' : 's'), 1 /* TEXT */), $options.selfCheckLatestAttempt ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_339, "Latest: " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selfCheckLatestAttempt.result) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatRecordingDate($options.selfCheckLatestAttempt.recordedAt)), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), $data.selfCheckLastSavedAyahKey === $options.selfCheckModalVerse.key ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_340, _toConsumableArray(_cache[299] || (_cache[299] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-check2-circle"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Saved to your recordings library for this ayah.", -1 /* CACHED */)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.selfCheckError && $data.selfCheckVerseKey === $options.selfCheckModalVerse.key ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_283, [_cache[299] || (_cache[299] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Saved to your recordings library for this ayah.", -1 /* CACHED */)])))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.selfCheckError && $data.selfCheckVerseKey === $options.selfCheckModalVerse.key ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_341, [_cache[300] || (_cache[300] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-exclamation-triangle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.selfCheckError), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), !$options.supportsSelfCheckRecording() ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_284, _toConsumableArray(_cache[300] || (_cache[300] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.selfCheckError), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), !$options.supportsSelfCheckRecording() ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_342, _toConsumableArray(_cache[301] || (_cache[301] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-mic-mute"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Recording is not available in this browser.", -1 /* CACHED */)])))) : $data.isSelfCheckRecording ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_285, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_286, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_287, [_cache[301] || (_cache[301] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Recording now", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSelfCheckLiveDurationLabel()) + " elapsed · speak clearly, then tap stop when finished", 1 /* TEXT */)]), _cache[302] || (_cache[302] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Recording is not available in this browser.", -1 /* CACHED */)])))) : $data.isSelfCheckRecording ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_343, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_344, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_345, [_cache[302] || (_cache[302] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Recording now", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSelfCheckLiveDurationLabel()) + " elapsed · speak clearly, then tap stop when finished", 1 /* TEXT */)]), _cache[303] || (_cache[303] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "self-check-live-pulse",
     "aria-hidden": "true"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span")], -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_288, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span")], -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_346, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary self-check-action-btn",
     type: "button",
-    onClick: _cache[119] || (_cache[119] = function () {
+    onClick: _cache[121] || (_cache[121] = function () {
       return $options.discardSelfCheckRecording && $options.discardSelfCheckRecording.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[303] || (_cache[303] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[304] || (_cache[304] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-circle"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Discard", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-primary self-check-action-btn",
     type: "button",
-    onClick: _cache[120] || (_cache[120] = function () {
+    onClick: _cache[122] || (_cache[122] = function () {
       return $options.stopSelfCheckRecording && $options.stopSelfCheckRecording.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[304] || (_cache[304] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[305] || (_cache[305] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-stop-circle"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Stop Recording", -1 /* CACHED */)])))])])) : $data.selfCheckPreparing ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_289, [_cache[305] || (_cache[305] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Stop Recording", -1 /* CACHED */)])))])])) : $data.selfCheckPreparing ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_347, [_cache[306] || (_cache[306] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-hourglass-split"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.selfCheckPreparingLabel), 1 /* TEXT */)])) : $options.selfCheckActiveDraft ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_290, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_291, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[306] || (_cache[306] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Review this attempt", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatRecordingDate($options.selfCheckActiveDraft.recordedAt)) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatRecordingDuration($options.selfCheckActiveDraft.durationSeconds)), 1 /* TEXT */), _cache[307] || (_cache[307] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.selfCheckPreparingLabel), 1 /* TEXT */)])) : $options.selfCheckActiveDraft ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_348, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_349, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[307] || (_cache[307] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Review this attempt", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatRecordingDate($options.selfCheckActiveDraft.recordedAt)) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatRecordingDuration($options.selfCheckActiveDraft.durationSeconds)), 1 /* TEXT */), _cache[308] || (_cache[308] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
     "class": "self-check-card-desc"
   }, "Listen back, compare with the ayah above, then tag how confident you felt.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "player-btn self-check-preview-btn",
     type: "button",
-    onClick: _cache[121] || (_cache[121] = function ($event) {
+    onClick: _cache[123] || (_cache[123] = function ($event) {
       return $options.toggleSelfCheckPreview($options.selfCheckModalVerse.key);
     })
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.activeSelfCheckPreviewKey === $options.selfCheckModalVerse.key ? 'bi-pause-fill' : 'bi-play-fill'])
-  }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.activeSelfCheckPreviewKey === $options.selfCheckModalVerse.key ? 'Pause' : 'Play'), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_292, [_cache[308] || (_cache[308] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.activeSelfCheckPreviewKey === $options.selfCheckModalVerse.key ? 'Pause' : 'Play'), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_350, [_cache[309] || (_cache[309] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "self-check-result-label"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "self-check-kicker"
   }, "Self-rating"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
     "class": "self-check-tool-hint"
-  }, "Your rating helps track which ayahs need more review over time.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_293, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(['Excellent', 'Good', 'Needs Review'], function (option) {
+  }, "Your rating helps track which ayahs need more review over time.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_351, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(['Excellent', 'Good', 'Needs Review'], function (option) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       key: option,
       type: "button",
@@ -35243,65 +37397,65 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       onClick: function onClick($event) {
         return $options.setSelfCheckDraftResult(option);
       }
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_295, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(option), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_296, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSelfCheckResultHint(option)), 1 /* TEXT */)], 10 /* CLASS, PROPS */, _hoisted_294);
-  }), 64 /* STABLE_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_297, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_353, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(option), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_354, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getSelfCheckResultHint(option)), 1 /* TEXT */)], 10 /* CLASS, PROPS */, _hoisted_352);
+  }), 64 /* STABLE_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_355, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary self-check-action-btn",
     type: "button",
-    onClick: _cache[122] || (_cache[122] = function () {
+    onClick: _cache[124] || (_cache[124] = function () {
       return $options.discardSelfCheckRecording && $options.discardSelfCheckRecording.apply($options, arguments);
     })
-  }, _toConsumableArray(_cache[309] || (_cache[309] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[310] || (_cache[310] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-trash3"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Discard", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary self-check-action-btn",
     type: "button",
-    onClick: _cache[123] || (_cache[123] = function ($event) {
+    onClick: _cache[125] || (_cache[125] = function ($event) {
       return $options.restartSelfCheckRecording($options.selfCheckModalVerse);
     })
-  }, _toConsumableArray(_cache[310] || (_cache[310] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[311] || (_cache[311] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-arrow-repeat"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Record Again", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-primary self-check-action-btn",
     type: "button",
-    onClick: _cache[124] || (_cache[124] = function ($event) {
+    onClick: _cache[126] || (_cache[126] = function ($event) {
       return $options.saveSelfCheckRecording($options.selfCheckModalVerse);
     })
-  }, _toConsumableArray(_cache[311] || (_cache[311] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[312] || (_cache[312] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-save2"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Save Attempt", -1 /* CACHED */)])))])])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_298, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Save Attempt", -1 /* CACHED */)])))])])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_356, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-primary self-check-action-btn",
     type: "button",
-    onClick: _cache[125] || (_cache[125] = function ($event) {
+    onClick: _cache[127] || (_cache[127] = function ($event) {
       return $options.startSelfCheckRecording($options.selfCheckModalVerse);
     })
-  }, _toConsumableArray(_cache[312] || (_cache[312] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[313] || (_cache[313] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-mic-fill"
   }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Start Recording", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary self-check-action-btn",
     type: "button",
-    onClick: _cache[126] || (_cache[126] = function () {
+    onClick: _cache[128] || (_cache[128] = function () {
       return $options.openRecordingsLibraryFromSelfCheck && $options.openRecordingsLibraryFromSelfCheck.apply($options, arguments);
     })
-  }, [_cache[313] || (_cache[313] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, [_cache[314] || (_cache[314] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-clock-history"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selfCheckModalAttempts.length ? 'Review Saved Attempts' : 'Open Library'), 1 /* TEXT */)])]))], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("aside", _hoisted_299, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_300, [_cache[314] || (_cache[314] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selfCheckModalAttempts.length ? 'Review Saved Attempts' : 'Open Library'), 1 /* TEXT */)])]))], 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("aside", _hoisted_357, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_358, [_cache[315] || (_cache[315] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "self-check-kicker"
   }, "Saved attempts"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Recent review history"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
     "class": "self-check-card-desc"
   }, "Every saved attempt for this ayah appears here. Replay past recordings to compare your progress.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "self-check-attempts-count",
     title: "".concat($options.selfCheckModalAttempts.length, " saved recording").concat($options.selfCheckModalAttempts.length === 1 ? '' : 's')
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selfCheckModalAttempts.length), 9 /* TEXT, PROPS */, _hoisted_301)]), $options.selfCheckModalAttempts.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_302, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.selfCheckModalAttempts, function (recording) {
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selfCheckModalAttempts.length), 9 /* TEXT, PROPS */, _hoisted_359)]), $options.selfCheckModalAttempts.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_360, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.selfCheckModalAttempts, function (recording) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("article", {
       key: recording.id,
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["self-check-attempt-card", {
         playing: recording.id === $data.activeRecordingPlaybackId
       }])
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_303, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_304, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Attempt " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(recording.attemptNumber), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatRecordingDate(recording.recordedAt)) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatRecordingTimestamp(recording.recordedAt)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_305, "Self-rated · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(recording.result), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_361, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_362, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Attempt " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(recording.attemptNumber), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatRecordingDate(recording.recordedAt)) + " · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatRecordingTimestamp(recording.recordedAt)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_363, "Self-rated · " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(recording.result), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["recording-result-pill", $options.getRecordingResultTone(recording.result)])
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(recording.result), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_306, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[315] || (_cache[315] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(recording.result), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_364, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[316] || (_cache[316] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-clock-history"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatRecordingDuration(recording.durationSeconds)), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_307, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatRecordingDuration(recording.durationSeconds)), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_365, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "player-btn recording-history-action",
       type: "button",
       onClick: function onClick($event) {
@@ -35309,18 +37463,18 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       }
     }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", recording.id === $data.activeRecordingPlaybackId ? 'bi-pause-fill' : 'bi-play-fill'])
-    }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(recording.id === $data.activeRecordingPlaybackId ? 'Pause' : 'Play'), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_308), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(recording.id === $data.activeRecordingPlaybackId ? 'Pause' : 'Play'), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_366), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "player-btn recording-history-action recording-history-action-delete",
       type: "button",
       onClick: function onClick($event) {
         return $options.promptDeleteRecording(recording.id);
       }
-    }, _toConsumableArray(_cache[316] || (_cache[316] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[317] || (_cache[317] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-trash3"
-    }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Delete", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_309)]), $data.pendingRecordingDeleteId === recording.id ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_310, [_cache[317] || (_cache[317] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Delete this recording?", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_311, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Delete", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_367)]), $data.pendingRecordingDeleteId === recording.id ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_368, [_cache[318] || (_cache[318] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Delete this recording?", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_369, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "btn-secondary recording-inline-btn",
       type: "button",
-      onClick: _cache[127] || (_cache[127] = function () {
+      onClick: _cache[129] || (_cache[129] = function () {
         return $options.cancelDeleteRecording && $options.cancelDeleteRecording.apply($options, arguments);
       })
     }, "Cancel"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
@@ -35329,49 +37483,49 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       onClick: function onClick($event) {
         return $options.deleteRecording(recording.id);
       }
-    }, "Delete", 8 /* PROPS */, _hoisted_312)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */);
-  }), 128 /* KEYED_FRAGMENT */))])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_313, _toConsumableArray(_cache[318] || (_cache[318] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    }, "Delete", 8 /* PROPS */, _hoisted_370)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */);
+  }), 128 /* KEYED_FRAGMENT */))])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_371, _toConsumableArray(_cache[319] || (_cache[319] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "self-check-empty-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-mic"
   })], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "No recordings yet", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Start a recording on the left to capture your first recitation. Saved attempts will appear here so you can replay and track improvement.", -1 /* CACHED */)]))))])])])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showRecordingsLibrary ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 9,
     "class": "modal-overlay recordings-library-overlay",
-    onClick: _cache[133] || (_cache[133] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onClick: _cache[135] || (_cache[135] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.closeRecordingsLibrary && $options.closeRecordingsLibrary.apply($options, arguments);
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_314, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_315, [_cache[320] || (_cache[320] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_372, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_373, [_cache[321] || (_cache[321] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "recordings-library-head-copy"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", {
     id: "recordingsLibraryTitle"
   }, "Recordings Library"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Browse every ayah you have recorded in this session. Replay attempts, review self-ratings, and keep your memorisation progress in one archive.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "modal-close-btn",
-    onClick: _cache[129] || (_cache[129] = function () {
+    onClick: _cache[131] || (_cache[131] = function () {
       return $options.closeRecordingsLibrary && $options.closeRecordingsLibrary.apply($options, arguments);
     }),
     "aria-label": "Close recordings library"
-  }, _toConsumableArray(_cache[319] || (_cache[319] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[320] || (_cache[320] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_316, [$data.isRecordingsLibraryLoading ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_317, _toConsumableArray(_cache[321] || (_cache[321] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_374, [$data.isRecordingsLibraryLoading ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_375, _toConsumableArray(_cache[322] || (_cache[322] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-hourglass-split"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Loading recordings…", -1 /* CACHED */)])))) : !$options.hasRecordingsLibraryEntries ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_318, _toConsumableArray(_cache[322] || (_cache[322] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Loading recordings…", -1 /* CACHED */)])))) : !$options.hasRecordingsLibraryEntries ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_376, _toConsumableArray(_cache[323] || (_cache[323] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "recordings-library-empty-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-mic"
-  })], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "No recordings yet", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Open Self-Check on any ayah in your session, record your recitation, and save the attempt. Every saved recording will appear here, grouped by surah and ayah.", -1 /* CACHED */)])))) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_319, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("aside", _hoisted_320, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_321, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[323] || (_cache[323] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+  })], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "No recordings yet", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Open Self-Check on any ayah in your session, record your recitation, and save the attempt. Every saved recording will appear here, grouped by surah and ayah.", -1 /* CACHED */)])))) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_377, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("aside", _hoisted_378, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_379, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [_cache[324] || (_cache[324] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "recordings-library-nav-kicker"
   }, "Recorded ayahs", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.filteredRecordingsAyahCount) + " ayah" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.filteredRecordingsAyahCount === 1 ? '' : 's'), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "recordings-library-nav-toggle",
     type: "button",
-    onClick: _cache[130] || (_cache[130] = function () {
+    onClick: _cache[132] || (_cache[132] = function () {
       return $options.toggleRecordingsNav && $options.toggleRecordingsNav.apply($options, arguments);
     })
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.recordingsNavExpanded ? 'Hide list' : 'Show list'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.recordingsNavExpanded ? 'bi-chevron-up' : 'bi-chevron-down'])
-  }, null, 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_322, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_323, [_cache[324] || (_cache[324] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, null, 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_380, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_381, [_cache[325] || (_cache[325] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-search"
   }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    "onUpdate:modelValue": _cache[131] || (_cache[131] = function ($event) {
+    "onUpdate:modelValue": _cache[133] || (_cache[133] = function ($event) {
       return $data.recordingsLibrarySearch = $event;
     }),
     type: "search",
@@ -35379,11 +37533,11 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "aria-label": "Search recorded ayahs"
   }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.recordingsLibrarySearch, void 0, {
     trim: true
-  }]])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_324, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.filteredRecordingsAyahGroups, function (surahGroup) {
+  }]])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_382, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.filteredRecordingsAyahGroups, function (surahGroup) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: surahGroup.chapterId || surahGroup.chapterName,
       "class": "recordings-library-surah-group"
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_325, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(surahGroup.chapterName), 1 /* TEXT */), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(surahGroup.ayahs, function (ayahGroup) {
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_383, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(surahGroup.chapterName), 1 /* TEXT */), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(surahGroup.ayahs, function (ayahGroup) {
       return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
         key: ayahGroup.ayahKey,
         type: "button",
@@ -35393,23 +37547,23 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         onClick: function onClick($event) {
           return $options.selectRecordingsAyah(ayahGroup.ayahKey);
         }
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_327, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ayahGroup.ayahNumber), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_328, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ayahGroup.recordings.length) + " recording" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ayahGroup.recordings.length === 1 ? '' : 's'), 1 /* TEXT */)], 10 /* CLASS, PROPS */, _hoisted_326);
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_385, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ayahGroup.ayahNumber), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_386, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ayahGroup.recordings.length) + " recording" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(ayahGroup.recordings.length === 1 ? '' : 's'), 1 /* TEXT */)], 10 /* CLASS, PROPS */, _hoisted_384);
     }), 128 /* KEYED_FRAGMENT */))]);
-  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.recordingsNavExpanded]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_329, [$options.selectedRecordingsAyahGroup ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_330, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_331, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selectedRecordingsAyahGroup.chapterName), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selectedRecordingsAyahGroup.ayahNumber), 1 /* TEXT */), $options.getAyahTranslation($options.selectedRecordingsAyahGroup.ayahKey) ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_332, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getAyahTranslation($options.selectedRecordingsAyahGroup.ayahKey)), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), _cache[325] || (_cache[325] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+  }), 128 /* KEYED_FRAGMENT */))], 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $data.recordingsNavExpanded]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_387, [$options.selectedRecordingsAyahGroup ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_388, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_389, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selectedRecordingsAyahGroup.chapterName), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Ayah " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selectedRecordingsAyahGroup.ayahNumber), 1 /* TEXT */), $options.getAyahTranslation($options.selectedRecordingsAyahGroup.ayahKey) ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_390, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.getAyahTranslation($options.selectedRecordingsAyahGroup.ayahKey)), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), _cache[326] || (_cache[326] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
     "class": "recordings-library-section-desc"
-  }, "Replay each attempt, check your self-rating, and remove recordings you no longer need.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_333, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selectedRecordingsAyahGroup.recordings.length) + " attempt" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selectedRecordingsAyahGroup.recordings.length === 1 ? '' : 's'), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.selectedRecordingsAyahGroup ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_334, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.selectedRecordingsAyahHistory, function (recording) {
+  }, "Replay each attempt, check your self-rating, and remove recordings you no longer need.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_391, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selectedRecordingsAyahGroup.recordings.length) + " attempt" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.selectedRecordingsAyahGroup.recordings.length === 1 ? '' : 's'), 1 /* TEXT */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.selectedRecordingsAyahGroup ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_392, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.selectedRecordingsAyahHistory, function (recording) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("article", {
       key: recording.id,
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["recording-history-card", {
         playing: recording.id === $data.activeRecordingPlaybackId
       }])
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_335, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_336, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Attempt " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(recording.attemptNumber), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatRecordingTimestamp(recording.recordedAt)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_337, "Self-rated as " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(recording.result.toLowerCase()) + " · tap play to listen back", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_393, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_394, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, "Attempt " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(recording.attemptNumber), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatRecordingTimestamp(recording.recordedAt)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_395, "Self-rated as " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(recording.result.toLowerCase()) + " · tap play to listen back", 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["recording-result-pill", $options.getRecordingResultTone(recording.result)])
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(recording.result), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_338, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[326] || (_cache[326] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(recording.result), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_396, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[327] || (_cache[327] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-clock-history"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatRecordingDuration(recording.durationSeconds)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[327] || (_cache[327] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatRecordingDuration(recording.durationSeconds)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, [_cache[328] || (_cache[328] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-calendar3"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatRecordingDate(recording.recordedAt)), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_339, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatRecordingDate(recording.recordedAt)), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_397, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "player-btn recording-history-action",
       type: "button",
       onClick: function onClick($event) {
@@ -35417,18 +37571,18 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       }
     }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", recording.id === $data.activeRecordingPlaybackId ? 'bi-pause-fill' : 'bi-play-fill'])
-    }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(recording.id === $data.activeRecordingPlaybackId ? 'Pause' : 'Play'), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_340), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(recording.id === $data.activeRecordingPlaybackId ? 'Pause' : 'Play'), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_398), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "player-btn recording-history-action recording-history-action-delete",
       type: "button",
       onClick: function onClick($event) {
         return $options.promptDeleteRecording(recording.id);
       }
-    }, _toConsumableArray(_cache[328] || (_cache[328] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[329] || (_cache[329] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-trash3"
-    }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Delete", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_341)]), $data.pendingRecordingDeleteId === recording.id ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_342, [_cache[329] || (_cache[329] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Delete this recording?", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_343, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Delete", -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_399)]), $data.pendingRecordingDeleteId === recording.id ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_400, [_cache[330] || (_cache[330] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Delete this recording?", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_401, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
       "class": "btn-secondary recording-inline-btn",
       type: "button",
-      onClick: _cache[132] || (_cache[132] = function () {
+      onClick: _cache[134] || (_cache[134] = function () {
         return $options.cancelDeleteRecording && $options.cancelDeleteRecording.apply($options, arguments);
       })
     }, "Cancel"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
@@ -35437,56 +37591,56 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       onClick: function onClick($event) {
         return $options.deleteRecording(recording.id);
       }
-    }, "Delete", 8 /* PROPS */, _hoisted_344)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */);
-  }), 128 /* KEYED_FRAGMENT */))])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_345, [_cache[330] || (_cache[330] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    }, "Delete", 8 /* PROPS */, _hoisted_402)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */);
+  }), 128 /* KEYED_FRAGMENT */))])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_403, [_cache[331] || (_cache[331] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "recordings-library-empty-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-journal-music"
   })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.recordingsLibrarySearch ? 'No matching ayah' : 'Choose an ayah'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.recordingsLibrarySearch ? 'Try a different surah name or ayah number, or clear the search to see all recorded ayahs.' : 'Pick an ayah from the list on the left to view its saved attempts and playback history.'), 1 /* TEXT */)]))])]))])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.showPostLoginOnboarding ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 10,
     "class": "modal-overlay post-onboarding-overlay",
-    onClick: _cache[138] || (_cache[138] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    onClick: _cache[140] || (_cache[140] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
       return $options.skipOnboarding && $options.skipOnboarding.apply($options, arguments);
     }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_346, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_347, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", _hoisted_348, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.onboardingStepContent.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_404, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_405, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", _hoisted_406, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.onboardingStepContent.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "modal-close-btn",
-    onClick: _cache[134] || (_cache[134] = function () {
+    onClick: _cache[136] || (_cache[136] = function () {
       return $options.skipOnboarding && $options.skipOnboarding.apply($options, arguments);
     }),
     "aria-label": "Skip onboarding"
-  }, _toConsumableArray(_cache[331] || (_cache[331] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  }, _toConsumableArray(_cache[332] || (_cache[332] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
     "class": "bi bi-x-lg"
-  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_349, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_350, "Step " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.onboardingStepIndex + 1) + " of " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.onboardingSteps.length), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_351, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.onboardingStepContent.stepLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.onboardingStepContent.body), 1 /* TEXT */), (_$options$onboardingS = $options.onboardingStepContent.points) !== null && _$options$onboardingS !== void 0 && _$options$onboardingS.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("ul", _hoisted_352, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.onboardingStepContent.points, function (item) {
+  }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_407, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_408, "Step " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.onboardingStepIndex + 1) + " of " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.onboardingSteps.length), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_409, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.onboardingStepContent.stepLabel), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.onboardingStepContent.body), 1 /* TEXT */), (_$options$onboardingS = $options.onboardingStepContent.points) !== null && _$options$onboardingS !== void 0 && _$options$onboardingS.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("ul", _hoisted_410, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.onboardingStepContent.points, function (item) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("li", {
       key: item
     }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item), 1 /* TEXT */);
-  }), 128 /* KEYED_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (_$options$onboardingS2 = $options.onboardingStepContent.duas) !== null && _$options$onboardingS2 !== void 0 && _$options$onboardingS2.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_353, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.onboardingStepContent.duas, function (dua) {
+  }), 128 /* KEYED_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (_$options$onboardingS2 = $options.onboardingStepContent.duas) !== null && _$options$onboardingS2 !== void 0 && _$options$onboardingS2.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_411, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.onboardingStepContent.duas, function (dua) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("article", {
       key: dua.title,
       "class": "dua-onboarding-card"
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_354, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(dua.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_355, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(dua.arabic), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_356, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(dua.translation), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_357, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(dua.source), 1 /* TEXT */)]);
-  }), 128 /* KEYED_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_358, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.onboardingSteps.length, function (dot) {
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_412, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(dua.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_413, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(dua.arabic), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_414, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(dua.translation), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", _hoisted_415, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(dua.source), 1 /* TEXT */)]);
+  }), 128 /* KEYED_FRAGMENT */))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_416, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.onboardingSteps.length, function (dot) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
       key: "ob-dot-".concat(dot),
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
         active: $data.onboardingStepIndex === dot - 1
       })
     }, null, 2 /* CLASS */);
-  }), 128 /* KEYED_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_359, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+  }), 128 /* KEYED_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_417, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn-secondary",
-    onClick: _cache[135] || (_cache[135] = function () {
+    onClick: _cache[137] || (_cache[137] = function () {
       return $options.skipOnboarding && $options.skipOnboarding.apply($options, arguments);
     })
   }, "Skip"), $data.onboardingStepIndex < $data.onboardingSteps.length - 1 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
     key: 0,
     "class": "btn-primary",
-    onClick: _cache[136] || (_cache[136] = function () {
+    onClick: _cache[138] || (_cache[138] = function () {
       return $options.nextOnboardingStep && $options.nextOnboardingStep.apply($options, arguments);
     })
   }, "Next")) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
     key: 1,
     "class": "btn-primary",
-    onClick: _cache[137] || (_cache[137] = function () {
+    onClick: _cache[139] || (_cache[139] = function () {
       return $options.completeOnboardingAndStart && $options.completeOnboardingAndStart.apply($options, arguments);
     })
   }, "Finish"))])])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Global Audio Player - Updated with Speed Controls "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(vue__WEBPACK_IMPORTED_MODULE_0__.Transition, {
@@ -35499,21 +37653,21 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["player-bar", {
           collapsed: $data.playerCollapsed
         }])
-      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_360, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_361, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_362, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter5 = $data.currentChapter) === null || _$data$currentChapter5 === void 0 ? void 0 : _$data$currentChapter5.name_simple) || 'Quran'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_363, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activeAyahLabel) + " ", 1 /* TEXT */), $options.etaLabel && $data.isPlaying ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_418, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_419, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_420, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(((_$data$currentChapter5 = $data.currentChapter) === null || _$data$currentChapter5 === void 0 ? void 0 : _$data$currentChapter5.name_simple) || 'Quran'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_421, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.activeAyahLabel) + " ", 1 /* TEXT */), $options.etaLabel && $data.isPlaying ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", {
         key: 0,
         "class": "player-eta",
         title: $options.getEtaTooltip()
-      }, " • " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel) + " remaining ", 9 /* TEXT, PROPS */, _hoisted_364)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_365, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      }, " • " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.etaLabel) + " remaining ", 9 /* TEXT, PROPS */, _hoisted_422)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_423, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[139] || (_cache[139] = function () {
+        onClick: _cache[141] || (_cache[141] = function () {
           return $options.prev && $options.prev.apply($options, arguments);
         }),
         title: "Previous"
-      }, _toConsumableArray(_cache[332] || (_cache[332] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[333] || (_cache[333] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-skip-start-fill"
       }, null, -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn player-play",
-        onClick: _cache[140] || (_cache[140] = function () {
+        onClick: _cache[142] || (_cache[142] = function () {
           return $options.togglePlay && $options.togglePlay.apply($options, arguments);
         }),
         title: "Play/Pause"
@@ -35521,15 +37675,15 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'])
       }, null, 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[141] || (_cache[141] = function () {
+        onClick: _cache[143] || (_cache[143] = function () {
           return $options.next && $options.next.apply($options, arguments);
         }),
         title: "Next"
-      }, _toConsumableArray(_cache[333] || (_cache[333] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[334] || (_cache[334] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-skip-end-fill"
-      }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_366, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_367, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      }, null, -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_424, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_425, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.currentTime)), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
         "class": "player-progress-bg",
-        onClick: _cache[142] || (_cache[142] = function () {
+        onClick: _cache[144] || (_cache[144] = function () {
           return _ctx.seek && _ctx.seek.apply(_ctx, arguments);
         }),
         ref: "progress"
@@ -35538,18 +37692,18 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
         style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
           width: $data.currentTime / ($data.duration || 1) * 100 + '%'
         })
-      }, null, 4 /* STYLE */)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_368, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.duration)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      }, null, 4 /* STYLE */)], 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_426, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.formatTime($data.duration)), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
         "class": "player-btn",
-        onClick: _cache[143] || (_cache[143] = function ($event) {
+        onClick: _cache[145] || (_cache[145] = function ($event) {
           return $data.playerVisible = false;
         }),
         title: "Close player"
-      }, _toConsumableArray(_cache[334] || (_cache[334] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      }, _toConsumableArray(_cache[335] || (_cache[335] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
         "class": "bi bi-x-lg"
       }, null, -1 /* CACHED */)])))])], 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)];
     }),
     _: 1 /* STABLE */
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio System "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_369, null, 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_370, null, 512 /* NEED_PATCH */)], 12 /* STYLE, PROPS */, _hoisted_1);
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Audio System "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_427, null, 512 /* NEED_PATCH */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("audio", _hoisted_428, null, 512 /* NEED_PATCH */)], 12 /* STYLE, PROPS */, _hoisted_1);
 }
 
 /***/ }),
@@ -35565,14 +37719,56 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
 /* harmony import */ var _components_Homepage_vue__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/Homepage.vue */ "./resources/js/components/Homepage.vue");
 /* harmony import */ var _components_Memorisation_vue__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./components/Memorisation.vue */ "./resources/js/components/Memorisation.vue");
+/* harmony import */ var _i18n__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./i18n */ "./resources/js/i18n.js");
+function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
+function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
+function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 __webpack_require__(/*! ./bootstrap.js */ "./resources/js/bootstrap.js");
 
 
 
-var app = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createApp)({});
-app.component('homepage', _components_Homepage_vue__WEBPACK_IMPORTED_MODULE_1__["default"]);
-app.component('memorisation', _components_Memorisation_vue__WEBPACK_IMPORTED_MODULE_2__["default"]);
-app.mount('#app');
+
+function bootstrapApp() {
+  return _bootstrapApp.apply(this, arguments);
+}
+function _bootstrapApp() {
+  _bootstrapApp = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
+    var app, i18n;
+    return _regenerator().w(function (_context) {
+      while (1) switch (_context.n) {
+        case 0:
+          app = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createApp)({});
+          _context.n = 1;
+          return (0,_i18n__WEBPACK_IMPORTED_MODULE_3__.setupI18n)();
+        case 1:
+          i18n = _context.v;
+          app.use(i18n);
+          app.config.globalProperties.$setLocale = function (locale) {
+            return (0,_i18n__WEBPACK_IMPORTED_MODULE_3__.setLocale)(i18n, locale);
+          };
+          window.mutqinSetLocale = function (locale) {
+            return (0,_i18n__WEBPACK_IMPORTED_MODULE_3__.setLocale)(i18n, locale);
+          };
+          window.mutqinGetLocale = function () {
+            return i18n.global.locale.value;
+          };
+          window.dispatchEvent(new CustomEvent('mutqin:i18n-ready', {
+            detail: {
+              locale: i18n.global.locale.value
+            }
+          }));
+          app.component('homepage', _components_Homepage_vue__WEBPACK_IMPORTED_MODULE_1__["default"]);
+          app.component('memorisation', _components_Memorisation_vue__WEBPACK_IMPORTED_MODULE_2__["default"]);
+          app.mount('#app');
+        case 2:
+          return _context.a(2);
+      }
+    }, _callee);
+  }));
+  return _bootstrapApp.apply(this, arguments);
+}
+bootstrapApp();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
     navigator.serviceWorker.register('/sw.js')["catch"](function (error) {
@@ -36484,6 +38680,131 @@ function completeTakrarStep(state, id) {
     ayah.last_review = new Date().toISOString();
     return ayah;
   });
+}
+
+/***/ }),
+
+/***/ "./resources/js/i18n.js":
+/*!******************************!*\
+  !*** ./resources/js/i18n.js ***!
+  \******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   SUPPORT_LOCALES: () => (/* binding */ SUPPORT_LOCALES),
+/* harmony export */   getSavedLocale: () => (/* binding */ getSavedLocale),
+/* harmony export */   loadLocaleMessages: () => (/* binding */ loadLocaleMessages),
+/* harmony export */   setLocale: () => (/* binding */ setLocale),
+/* harmony export */   setupI18n: () => (/* binding */ setupI18n)
+/* harmony export */ });
+/* harmony import */ var vue_i18n__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue-i18n */ "./node_modules/vue-i18n/dist/vue-i18n.mjs");
+function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
+function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
+function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
+
+var SUPPORT_LOCALES = ['en', 'ar', 'fr'];
+var STORAGE_KEY = 'mutqin.locale';
+function normalizeLocale(locale) {
+  return SUPPORT_LOCALES.includes(locale) ? locale : 'en';
+}
+function getSavedLocale() {
+  try {
+    return normalizeLocale(localStorage.getItem(STORAGE_KEY) || 'en');
+  } catch (e) {
+    return 'en';
+  }
+}
+function setDocumentLanguage(locale) {
+  var _document$body;
+  var normalized = normalizeLocale(locale);
+  var isArabic = normalized === 'ar';
+  document.documentElement.setAttribute('lang', normalized);
+  document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
+  (_document$body = document.body) === null || _document$body === void 0 || _document$body.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
+}
+function loadLocaleMessages(_x, _x2) {
+  return _loadLocaleMessages.apply(this, arguments);
+}
+function _loadLocaleMessages() {
+  _loadLocaleMessages = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee(i18n, locale) {
+    var normalized, messages;
+    return _regenerator().w(function (_context) {
+      while (1) switch (_context.n) {
+        case 0:
+          normalized = normalizeLocale(locale);
+          if (i18n.global.availableLocales.includes(normalized)) {
+            _context.n = 2;
+            break;
+          }
+          _context.n = 1;
+          return __webpack_require__("./resources/js/locales lazy recursive ^\\.\\/.*\\.json$")("./".concat(normalized, ".json"));
+        case 1:
+          messages = _context.v;
+          i18n.global.setLocaleMessage(normalized, messages["default"]);
+        case 2:
+          i18n.global.locale.value = normalized;
+          setDocumentLanguage(normalized);
+          return _context.a(2, normalized);
+      }
+    }, _callee);
+  }));
+  return _loadLocaleMessages.apply(this, arguments);
+}
+function setLocale(_x3, _x4) {
+  return _setLocale.apply(this, arguments);
+}
+function _setLocale() {
+  _setLocale = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2(i18n, locale) {
+    var normalized;
+    return _regenerator().w(function (_context2) {
+      while (1) switch (_context2.n) {
+        case 0:
+          _context2.n = 1;
+          return loadLocaleMessages(i18n, locale);
+        case 1:
+          normalized = _context2.v;
+          try {
+            localStorage.setItem(STORAGE_KEY, normalized);
+          } catch (e) {
+            // no-op: storage may be unavailable
+          }
+          window.dispatchEvent(new CustomEvent('mutqin:locale-change', {
+            detail: {
+              locale: normalized
+            }
+          }));
+          return _context2.a(2, normalized);
+      }
+    }, _callee2);
+  }));
+  return _setLocale.apply(this, arguments);
+}
+function setupI18n() {
+  return _setupI18n.apply(this, arguments);
+}
+function _setupI18n() {
+  _setupI18n = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
+    var i18n;
+    return _regenerator().w(function (_context3) {
+      while (1) switch (_context3.n) {
+        case 0:
+          i18n = (0,vue_i18n__WEBPACK_IMPORTED_MODULE_0__.createI18n)({
+            legacy: false,
+            locale: 'en',
+            fallbackLocale: 'en',
+            messages: {}
+          });
+          _context3.n = 1;
+          return loadLocaleMessages(i18n, getSavedLocale());
+        case 1:
+          return _context3.a(2, i18n);
+      }
+    }, _callee3);
+  }));
+  return _setupI18n.apply(this, arguments);
 }
 
 /***/ }),
@@ -44200,6 +46521,2383 @@ ${codeFrame}` : message);
 
 /***/ }),
 
+/***/ "./resources/js/locales lazy recursive ^\\.\\/.*\\.json$":
+/*!********************************************************************!*\
+  !*** ./resources/js/locales/ lazy ^\.\/.*\.json$ namespace object ***!
+  \********************************************************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+var map = {
+	"./ar.json": [
+		"./resources/js/locales/ar.json",
+		"resources_js_locales_ar_json"
+	],
+	"./en.json": [
+		"./resources/js/locales/en.json",
+		"resources_js_locales_en_json"
+	],
+	"./fr.json": [
+		"./resources/js/locales/fr.json",
+		"resources_js_locales_fr_json"
+	]
+};
+function webpackAsyncContext(req) {
+	if(!__webpack_require__.o(map, req)) {
+		return Promise.resolve().then(() => {
+			var e = new Error("Cannot find module '" + req + "'");
+			e.code = 'MODULE_NOT_FOUND';
+			throw e;
+		});
+	}
+
+	var ids = map[req], id = ids[0];
+	return __webpack_require__.e(ids[1]).then(() => {
+		return __webpack_require__.t(id, 3 | 16);
+	});
+}
+webpackAsyncContext.keys = () => (Object.keys(map));
+webpackAsyncContext.id = "./resources/js/locales lazy recursive ^\\.\\/.*\\.json$";
+module.exports = webpackAsyncContext;
+
+/***/ }),
+
+/***/ "./node_modules/@intlify/core-base/dist/core-base.mjs":
+/*!************************************************************!*\
+  !*** ./node_modules/@intlify/core-base/dist/core-base.mjs ***!
+  \************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   AST_NODE_PROPS_KEYS: () => (/* binding */ AST_NODE_PROPS_KEYS),
+/* harmony export */   CompileErrorCodes: () => (/* reexport safe */ _intlify_message_compiler__WEBPACK_IMPORTED_MODULE_0__.CompileErrorCodes),
+/* harmony export */   CoreErrorCodes: () => (/* binding */ CoreErrorCodes),
+/* harmony export */   CoreWarnCodes: () => (/* binding */ CoreWarnCodes),
+/* harmony export */   DATETIME_FORMAT_OPTIONS_KEYS: () => (/* binding */ DATETIME_FORMAT_OPTIONS_KEYS),
+/* harmony export */   DEFAULT_LOCALE: () => (/* binding */ DEFAULT_LOCALE),
+/* harmony export */   DEFAULT_MESSAGE_DATA_TYPE: () => (/* binding */ DEFAULT_MESSAGE_DATA_TYPE),
+/* harmony export */   MISSING_RESOLVE_VALUE: () => (/* binding */ MISSING_RESOLVE_VALUE),
+/* harmony export */   NOT_REOSLVED: () => (/* binding */ NOT_REOSLVED),
+/* harmony export */   NUMBER_FORMAT_OPTIONS_KEYS: () => (/* binding */ NUMBER_FORMAT_OPTIONS_KEYS),
+/* harmony export */   VERSION: () => (/* binding */ VERSION),
+/* harmony export */   clearCompileCache: () => (/* binding */ clearCompileCache),
+/* harmony export */   clearDateTimeFormat: () => (/* binding */ clearDateTimeFormat),
+/* harmony export */   clearNumberFormat: () => (/* binding */ clearNumberFormat),
+/* harmony export */   compile: () => (/* binding */ compile),
+/* harmony export */   compileToFunction: () => (/* binding */ compileToFunction),
+/* harmony export */   createCompileError: () => (/* reexport safe */ _intlify_message_compiler__WEBPACK_IMPORTED_MODULE_0__.createCompileError),
+/* harmony export */   createCoreContext: () => (/* binding */ createCoreContext),
+/* harmony export */   createCoreError: () => (/* binding */ createCoreError),
+/* harmony export */   createMessageContext: () => (/* binding */ createMessageContext),
+/* harmony export */   datetime: () => (/* binding */ datetime),
+/* harmony export */   fallbackWithLocaleChain: () => (/* binding */ fallbackWithLocaleChain),
+/* harmony export */   fallbackWithSimple: () => (/* binding */ fallbackWithSimple),
+/* harmony export */   getAdditionalMeta: () => (/* binding */ getAdditionalMeta),
+/* harmony export */   getDevToolsHook: () => (/* binding */ getDevToolsHook),
+/* harmony export */   getFallbackContext: () => (/* binding */ getFallbackContext),
+/* harmony export */   getLocale: () => (/* binding */ getLocale),
+/* harmony export */   getWarnMessage: () => (/* binding */ getWarnMessage),
+/* harmony export */   handleMissing: () => (/* binding */ handleMissing),
+/* harmony export */   initI18nDevTools: () => (/* binding */ initI18nDevTools),
+/* harmony export */   isAlmostSameLocale: () => (/* binding */ isAlmostSameLocale),
+/* harmony export */   isImplicitFallback: () => (/* binding */ isImplicitFallback),
+/* harmony export */   isMessageAST: () => (/* binding */ isMessageAST),
+/* harmony export */   isMessageFunction: () => (/* binding */ isMessageFunction),
+/* harmony export */   isTranslateFallbackWarn: () => (/* binding */ isTranslateFallbackWarn),
+/* harmony export */   isTranslateMissingWarn: () => (/* binding */ isTranslateMissingWarn),
+/* harmony export */   number: () => (/* binding */ number),
+/* harmony export */   parse: () => (/* binding */ parse),
+/* harmony export */   parseDateTimeArgs: () => (/* binding */ parseDateTimeArgs),
+/* harmony export */   parseNumberArgs: () => (/* binding */ parseNumberArgs),
+/* harmony export */   parseTranslateArgs: () => (/* binding */ parseTranslateArgs),
+/* harmony export */   registerLocaleFallbacker: () => (/* binding */ registerLocaleFallbacker),
+/* harmony export */   registerMessageCompiler: () => (/* binding */ registerMessageCompiler),
+/* harmony export */   registerMessageResolver: () => (/* binding */ registerMessageResolver),
+/* harmony export */   resolveLocale: () => (/* binding */ resolveLocale),
+/* harmony export */   resolveValue: () => (/* binding */ resolveValue),
+/* harmony export */   resolveWithKeyValue: () => (/* binding */ resolveWithKeyValue),
+/* harmony export */   setAdditionalMeta: () => (/* binding */ setAdditionalMeta),
+/* harmony export */   setDevToolsHook: () => (/* binding */ setDevToolsHook),
+/* harmony export */   setFallbackContext: () => (/* binding */ setFallbackContext),
+/* harmony export */   translate: () => (/* binding */ translate),
+/* harmony export */   translateDevTools: () => (/* binding */ translateDevTools),
+/* harmony export */   updateFallbackLocale: () => (/* binding */ updateFallbackLocale)
+/* harmony export */ });
+/* harmony import */ var _intlify_shared__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @intlify/shared */ "./node_modules/@intlify/shared/dist/shared.mjs");
+/* harmony import */ var _intlify_message_compiler__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @intlify/message-compiler */ "./node_modules/@intlify/message-compiler/dist/message-compiler.esm-browser.js");
+/*!
+  * core-base v9.14.5
+  * (c) 2025 kazuya kawaguchi
+  * Released under the MIT License.
+  */
+
+
+
+
+/**
+ * This is only called in esm-bundler builds.
+ * istanbul-ignore-next
+ */
+function initFeatureFlags() {
+    if (typeof __INTLIFY_PROD_DEVTOOLS__ !== 'boolean') {
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.getGlobalThis)().__INTLIFY_PROD_DEVTOOLS__ = false;
+    }
+    if (typeof __INTLIFY_JIT_COMPILATION__ !== 'boolean') {
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.getGlobalThis)().__INTLIFY_JIT_COMPILATION__ = false;
+    }
+    if (typeof __INTLIFY_DROP_MESSAGE_COMPILER__ !== 'boolean') {
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.getGlobalThis)().__INTLIFY_DROP_MESSAGE_COMPILER__ = false;
+    }
+}
+
+function isMessageAST(val) {
+    return ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(val) &&
+        resolveType(val) === 0 &&
+        ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.hasOwn)(val, 'b') || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.hasOwn)(val, 'body')));
+}
+const PROPS_BODY = ['b', 'body'];
+function resolveBody(node) {
+    return resolveProps(node, PROPS_BODY);
+}
+const PROPS_CASES = ['c', 'cases'];
+function resolveCases(node) {
+    return resolveProps(node, PROPS_CASES, []);
+}
+const PROPS_STATIC = ['s', 'static'];
+function resolveStatic(node) {
+    return resolveProps(node, PROPS_STATIC);
+}
+const PROPS_ITEMS = ['i', 'items'];
+function resolveItems(node) {
+    return resolveProps(node, PROPS_ITEMS, []);
+}
+const PROPS_TYPE = ['t', 'type'];
+function resolveType(node) {
+    return resolveProps(node, PROPS_TYPE);
+}
+const PROPS_VALUE = ['v', 'value'];
+function resolveValue$1(node, type) {
+    const resolved = resolveProps(node, PROPS_VALUE);
+    if (resolved != null) {
+        return resolved;
+    }
+    else {
+        throw createUnhandleNodeError(type);
+    }
+}
+const PROPS_MODIFIER = ['m', 'modifier'];
+function resolveLinkedModifier(node) {
+    return resolveProps(node, PROPS_MODIFIER);
+}
+const PROPS_KEY = ['k', 'key'];
+function resolveLinkedKey(node) {
+    const resolved = resolveProps(node, PROPS_KEY);
+    if (resolved) {
+        return resolved;
+    }
+    else {
+        throw createUnhandleNodeError(6 /* NodeTypes.Linked */);
+    }
+}
+function resolveProps(node, props, defaultValue) {
+    for (let i = 0; i < props.length; i++) {
+        const prop = props[i];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.hasOwn)(node, prop) && node[prop] != null) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return node[prop];
+        }
+    }
+    return defaultValue;
+}
+const AST_NODE_PROPS_KEYS = [
+    ...PROPS_BODY,
+    ...PROPS_CASES,
+    ...PROPS_STATIC,
+    ...PROPS_ITEMS,
+    ...PROPS_KEY,
+    ...PROPS_MODIFIER,
+    ...PROPS_VALUE,
+    ...PROPS_TYPE
+];
+function createUnhandleNodeError(type) {
+    return new Error(`unhandled node type: ${type}`);
+}
+
+const pathStateMachine =  [];
+pathStateMachine[0 /* States.BEFORE_PATH */] = {
+    ["w" /* PathCharTypes.WORKSPACE */]: [0 /* States.BEFORE_PATH */],
+    ["i" /* PathCharTypes.IDENT */]: [3 /* States.IN_IDENT */, 0 /* Actions.APPEND */],
+    ["[" /* PathCharTypes.LEFT_BRACKET */]: [4 /* States.IN_SUB_PATH */],
+    ["o" /* PathCharTypes.END_OF_FAIL */]: [7 /* States.AFTER_PATH */]
+};
+pathStateMachine[1 /* States.IN_PATH */] = {
+    ["w" /* PathCharTypes.WORKSPACE */]: [1 /* States.IN_PATH */],
+    ["." /* PathCharTypes.DOT */]: [2 /* States.BEFORE_IDENT */],
+    ["[" /* PathCharTypes.LEFT_BRACKET */]: [4 /* States.IN_SUB_PATH */],
+    ["o" /* PathCharTypes.END_OF_FAIL */]: [7 /* States.AFTER_PATH */]
+};
+pathStateMachine[2 /* States.BEFORE_IDENT */] = {
+    ["w" /* PathCharTypes.WORKSPACE */]: [2 /* States.BEFORE_IDENT */],
+    ["i" /* PathCharTypes.IDENT */]: [3 /* States.IN_IDENT */, 0 /* Actions.APPEND */],
+    ["0" /* PathCharTypes.ZERO */]: [3 /* States.IN_IDENT */, 0 /* Actions.APPEND */]
+};
+pathStateMachine[3 /* States.IN_IDENT */] = {
+    ["i" /* PathCharTypes.IDENT */]: [3 /* States.IN_IDENT */, 0 /* Actions.APPEND */],
+    ["0" /* PathCharTypes.ZERO */]: [3 /* States.IN_IDENT */, 0 /* Actions.APPEND */],
+    ["w" /* PathCharTypes.WORKSPACE */]: [1 /* States.IN_PATH */, 1 /* Actions.PUSH */],
+    ["." /* PathCharTypes.DOT */]: [2 /* States.BEFORE_IDENT */, 1 /* Actions.PUSH */],
+    ["[" /* PathCharTypes.LEFT_BRACKET */]: [4 /* States.IN_SUB_PATH */, 1 /* Actions.PUSH */],
+    ["o" /* PathCharTypes.END_OF_FAIL */]: [7 /* States.AFTER_PATH */, 1 /* Actions.PUSH */]
+};
+pathStateMachine[4 /* States.IN_SUB_PATH */] = {
+    ["'" /* PathCharTypes.SINGLE_QUOTE */]: [5 /* States.IN_SINGLE_QUOTE */, 0 /* Actions.APPEND */],
+    ["\"" /* PathCharTypes.DOUBLE_QUOTE */]: [6 /* States.IN_DOUBLE_QUOTE */, 0 /* Actions.APPEND */],
+    ["[" /* PathCharTypes.LEFT_BRACKET */]: [
+        4 /* States.IN_SUB_PATH */,
+        2 /* Actions.INC_SUB_PATH_DEPTH */
+    ],
+    ["]" /* PathCharTypes.RIGHT_BRACKET */]: [1 /* States.IN_PATH */, 3 /* Actions.PUSH_SUB_PATH */],
+    ["o" /* PathCharTypes.END_OF_FAIL */]: 8 /* States.ERROR */,
+    ["l" /* PathCharTypes.ELSE */]: [4 /* States.IN_SUB_PATH */, 0 /* Actions.APPEND */]
+};
+pathStateMachine[5 /* States.IN_SINGLE_QUOTE */] = {
+    ["'" /* PathCharTypes.SINGLE_QUOTE */]: [4 /* States.IN_SUB_PATH */, 0 /* Actions.APPEND */],
+    ["o" /* PathCharTypes.END_OF_FAIL */]: 8 /* States.ERROR */,
+    ["l" /* PathCharTypes.ELSE */]: [5 /* States.IN_SINGLE_QUOTE */, 0 /* Actions.APPEND */]
+};
+pathStateMachine[6 /* States.IN_DOUBLE_QUOTE */] = {
+    ["\"" /* PathCharTypes.DOUBLE_QUOTE */]: [4 /* States.IN_SUB_PATH */, 0 /* Actions.APPEND */],
+    ["o" /* PathCharTypes.END_OF_FAIL */]: 8 /* States.ERROR */,
+    ["l" /* PathCharTypes.ELSE */]: [6 /* States.IN_DOUBLE_QUOTE */, 0 /* Actions.APPEND */]
+};
+/**
+ * Check if an expression is a literal value.
+ */
+const literalValueRE = /^\s?(?:true|false|-?[\d.]+|'[^']*'|"[^"]*")\s?$/;
+function isLiteral(exp) {
+    return literalValueRE.test(exp);
+}
+/**
+ * Strip quotes from a string
+ */
+function stripQuotes(str) {
+    const a = str.charCodeAt(0);
+    const b = str.charCodeAt(str.length - 1);
+    return a === b && (a === 0x22 || a === 0x27) ? str.slice(1, -1) : str;
+}
+/**
+ * Determine the type of a character in a keypath.
+ */
+function getPathCharType(ch) {
+    if (ch === undefined || ch === null) {
+        return "o" /* PathCharTypes.END_OF_FAIL */;
+    }
+    const code = ch.charCodeAt(0);
+    switch (code) {
+        case 0x5b: // [
+        case 0x5d: // ]
+        case 0x2e: // .
+        case 0x22: // "
+        case 0x27: // '
+            return ch;
+        case 0x5f: // _
+        case 0x24: // $
+        case 0x2d: // -
+            return "i" /* PathCharTypes.IDENT */;
+        case 0x09: // Tab (HT)
+        case 0x0a: // Newline (LF)
+        case 0x0d: // Return (CR)
+        case 0xa0: // No-break space (NBSP)
+        case 0xfeff: // Byte Order Mark (BOM)
+        case 0x2028: // Line Separator (LS)
+        case 0x2029: // Paragraph Separator (PS)
+            return "w" /* PathCharTypes.WORKSPACE */;
+    }
+    return "i" /* PathCharTypes.IDENT */;
+}
+/**
+ * Format a subPath, return its plain form if it is
+ * a literal string or number. Otherwise prepend the
+ * dynamic indicator (*).
+ */
+function formatSubPath(path) {
+    const trimmed = path.trim();
+    // invalid leading 0
+    if (path.charAt(0) === '0' && isNaN(parseInt(path))) {
+        return false;
+    }
+    return isLiteral(trimmed)
+        ? stripQuotes(trimmed)
+        : "*" /* PathCharTypes.ASTARISK */ + trimmed;
+}
+/**
+ * Parse a string path into an array of segments
+ */
+function parse(path) {
+    const keys = [];
+    let index = -1;
+    let mode = 0 /* States.BEFORE_PATH */;
+    let subPathDepth = 0;
+    let c;
+    let key; // eslint-disable-line
+    let newChar;
+    let type;
+    let transition;
+    let action;
+    let typeMap;
+    const actions = [];
+    actions[0 /* Actions.APPEND */] = () => {
+        if (key === undefined) {
+            key = newChar;
+        }
+        else {
+            key += newChar;
+        }
+    };
+    actions[1 /* Actions.PUSH */] = () => {
+        if (key !== undefined) {
+            keys.push(key);
+            key = undefined;
+        }
+    };
+    actions[2 /* Actions.INC_SUB_PATH_DEPTH */] = () => {
+        actions[0 /* Actions.APPEND */]();
+        subPathDepth++;
+    };
+    actions[3 /* Actions.PUSH_SUB_PATH */] = () => {
+        if (subPathDepth > 0) {
+            subPathDepth--;
+            mode = 4 /* States.IN_SUB_PATH */;
+            actions[0 /* Actions.APPEND */]();
+        }
+        else {
+            subPathDepth = 0;
+            if (key === undefined) {
+                return false;
+            }
+            key = formatSubPath(key);
+            if (key === false) {
+                return false;
+            }
+            else {
+                actions[1 /* Actions.PUSH */]();
+            }
+        }
+    };
+    function maybeUnescapeQuote() {
+        const nextChar = path[index + 1];
+        if ((mode === 5 /* States.IN_SINGLE_QUOTE */ &&
+            nextChar === "'" /* PathCharTypes.SINGLE_QUOTE */) ||
+            (mode === 6 /* States.IN_DOUBLE_QUOTE */ &&
+                nextChar === "\"" /* PathCharTypes.DOUBLE_QUOTE */)) {
+            index++;
+            newChar = '\\' + nextChar;
+            actions[0 /* Actions.APPEND */]();
+            return true;
+        }
+    }
+    while (mode !== null) {
+        index++;
+        c = path[index];
+        if (c === '\\' && maybeUnescapeQuote()) {
+            continue;
+        }
+        type = getPathCharType(c);
+        typeMap = pathStateMachine[mode];
+        transition = typeMap[type] || typeMap["l" /* PathCharTypes.ELSE */] || 8 /* States.ERROR */;
+        // check parse error
+        if (transition === 8 /* States.ERROR */) {
+            return;
+        }
+        mode = transition[0];
+        if (transition[1] !== undefined) {
+            action = actions[transition[1]];
+            if (action) {
+                newChar = c;
+                if (action() === false) {
+                    return;
+                }
+            }
+        }
+        // check parse finish
+        if (mode === 7 /* States.AFTER_PATH */) {
+            return keys;
+        }
+    }
+}
+// path token cache
+const cache = new Map();
+/**
+ * key-value message resolver
+ *
+ * @remarks
+ * Resolves messages with the key-value structure. Note that messages with a hierarchical structure such as objects cannot be resolved
+ *
+ * @param obj - A target object to be resolved with path
+ * @param path - A {@link Path | path} to resolve the value of message
+ *
+ * @returns A resolved {@link PathValue | path value}
+ *
+ * @VueI18nGeneral
+ */
+function resolveWithKeyValue(obj, path) {
+    return (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(obj) ? obj[path] : null;
+}
+/**
+ * message resolver
+ *
+ * @remarks
+ * Resolves messages. messages with a hierarchical structure such as objects can be resolved. This resolver is used in VueI18n as default.
+ *
+ * @param obj - A target object to be resolved with path
+ * @param path - A {@link Path | path} to resolve the value of message
+ *
+ * @returns A resolved {@link PathValue | path value}
+ *
+ * @VueI18nGeneral
+ */
+function resolveValue(obj, path) {
+    // check object
+    if (!(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(obj)) {
+        return null;
+    }
+    // parse path
+    let hit = cache.get(path);
+    if (!hit) {
+        hit = parse(path);
+        if (hit) {
+            cache.set(path, hit);
+        }
+    }
+    // check hit
+    if (!hit) {
+        return null;
+    }
+    // resolve path value
+    const len = hit.length;
+    let last = obj;
+    let i = 0;
+    while (i < len) {
+        const key = hit[i];
+        /**
+         * NOTE:
+         * if `key` is intlify message format AST node key and `last` is intlify message format AST, skip it.
+         * because the AST node is not a key-value structure.
+         */
+        if (AST_NODE_PROPS_KEYS.includes(key) && isMessageAST(last)) {
+            return null;
+        }
+        const val = last[key];
+        if (val === undefined) {
+            return null;
+        }
+        if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(last)) {
+            return null;
+        }
+        last = val;
+        i++;
+    }
+    return last;
+}
+
+const DEFAULT_MODIFIER = (str) => str;
+const DEFAULT_MESSAGE = (ctx) => ''; // eslint-disable-line
+const DEFAULT_MESSAGE_DATA_TYPE = 'text';
+const DEFAULT_NORMALIZE = (values) => values.length === 0 ? '' : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.join)(values);
+const DEFAULT_INTERPOLATE = _intlify_shared__WEBPACK_IMPORTED_MODULE_1__.toDisplayString;
+function pluralDefault(choice, choicesLength) {
+    choice = Math.abs(choice);
+    if (choicesLength === 2) {
+        // prettier-ignore
+        return choice
+            ? choice > 1
+                ? 1
+                : 0
+            : 1;
+    }
+    return choice ? Math.min(choice, 2) : 0;
+}
+function getPluralIndex(options) {
+    // prettier-ignore
+    const index = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(options.pluralIndex)
+        ? options.pluralIndex
+        : -1;
+    // prettier-ignore
+    return options.named && ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(options.named.count) || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(options.named.n))
+        ? (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(options.named.count)
+            ? options.named.count
+            : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(options.named.n)
+                ? options.named.n
+                : index
+        : index;
+}
+function normalizeNamed(pluralIndex, props) {
+    if (!props.count) {
+        props.count = pluralIndex;
+    }
+    if (!props.n) {
+        props.n = pluralIndex;
+    }
+}
+function createMessageContext(options = {}) {
+    const locale = options.locale;
+    const pluralIndex = getPluralIndex(options);
+    const pluralRule = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(options.pluralRules) &&
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(locale) &&
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.pluralRules[locale])
+        ? options.pluralRules[locale]
+        : pluralDefault;
+    const orgPluralRule = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(options.pluralRules) &&
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(locale) &&
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.pluralRules[locale])
+        ? pluralDefault
+        : undefined;
+    const plural = (messages) => {
+        return messages[pluralRule(pluralIndex, messages.length, orgPluralRule)];
+    };
+    const _list = options.list || [];
+    const list = (index) => _list[index];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const _named = options.named || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)();
+    (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(options.pluralIndex) && normalizeNamed(pluralIndex, _named);
+    const named = (key) => _named[key];
+    function message(key) {
+        // prettier-ignore
+        const msg = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.messages)
+            ? options.messages(key)
+            : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(options.messages)
+                ? options.messages[key]
+                : false;
+        return !msg
+            ? options.parent
+                ? options.parent.message(key) // resolve from parent messages
+                : DEFAULT_MESSAGE
+            : msg;
+    }
+    const _modifier = (name) => options.modifiers
+        ? options.modifiers[name]
+        : DEFAULT_MODIFIER;
+    const normalize = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options.processor) && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.processor.normalize)
+        ? options.processor.normalize
+        : DEFAULT_NORMALIZE;
+    const interpolate = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options.processor) &&
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.processor.interpolate)
+        ? options.processor.interpolate
+        : DEFAULT_INTERPOLATE;
+    const type = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options.processor) && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(options.processor.type)
+        ? options.processor.type
+        : DEFAULT_MESSAGE_DATA_TYPE;
+    const linked = (key, ...args) => {
+        const [arg1, arg2] = args;
+        let type = 'text';
+        let modifier = '';
+        if (args.length === 1) {
+            if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(arg1)) {
+                modifier = arg1.modifier || modifier;
+                type = arg1.type || type;
+            }
+            else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(arg1)) {
+                modifier = arg1 || modifier;
+            }
+        }
+        else if (args.length === 2) {
+            if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(arg1)) {
+                modifier = arg1 || modifier;
+            }
+            if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(arg2)) {
+                type = arg2 || type;
+            }
+        }
+        const ret = message(key)(ctx);
+        const msg = 
+        // The message in vnode resolved with linked are returned as an array by processor.nomalize
+        type === 'vnode' && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(ret) && modifier
+            ? ret[0]
+            : ret;
+        return modifier ? _modifier(modifier)(msg, type) : msg;
+    };
+    const ctx = {
+        ["list" /* HelperNameMap.LIST */]: list,
+        ["named" /* HelperNameMap.NAMED */]: named,
+        ["plural" /* HelperNameMap.PLURAL */]: plural,
+        ["linked" /* HelperNameMap.LINKED */]: linked,
+        ["message" /* HelperNameMap.MESSAGE */]: message,
+        ["type" /* HelperNameMap.TYPE */]: type,
+        ["interpolate" /* HelperNameMap.INTERPOLATE */]: interpolate,
+        ["normalize" /* HelperNameMap.NORMALIZE */]: normalize,
+        ["values" /* HelperNameMap.VALUES */]: (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.assign)((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)(), _list, _named)
+    };
+    return ctx;
+}
+
+let devtools = null;
+function setDevToolsHook(hook) {
+    devtools = hook;
+}
+function getDevToolsHook() {
+    return devtools;
+}
+function initI18nDevTools(i18n, version, meta) {
+    // TODO: queue if devtools is undefined
+    devtools &&
+        devtools.emit("i18n:init" /* IntlifyDevToolsHooks.I18nInit */, {
+            timestamp: Date.now(),
+            i18n,
+            version,
+            meta
+        });
+}
+const translateDevTools = /* #__PURE__*/ createDevToolsHook("function:translate" /* IntlifyDevToolsHooks.FunctionTranslate */);
+function createDevToolsHook(hook) {
+    return (payloads) => devtools && devtools.emit(hook, payloads);
+}
+
+const code$1 = _intlify_message_compiler__WEBPACK_IMPORTED_MODULE_0__.CompileWarnCodes.__EXTEND_POINT__;
+const inc$1 = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.incrementer)(code$1);
+const CoreWarnCodes = {
+    NOT_FOUND_KEY: code$1, // 2
+    FALLBACK_TO_TRANSLATE: inc$1(), // 3
+    CANNOT_FORMAT_NUMBER: inc$1(), // 4
+    FALLBACK_TO_NUMBER_FORMAT: inc$1(), // 5
+    CANNOT_FORMAT_DATE: inc$1(), // 6
+    FALLBACK_TO_DATE_FORMAT: inc$1(), // 7
+    EXPERIMENTAL_CUSTOM_MESSAGE_COMPILER: inc$1(), // 8
+    __EXTEND_POINT__: inc$1() // 9
+};
+/** @internal */
+const warnMessages = {
+    [CoreWarnCodes.NOT_FOUND_KEY]: `Not found '{key}' key in '{locale}' locale messages.`,
+    [CoreWarnCodes.FALLBACK_TO_TRANSLATE]: `Fall back to translate '{key}' key with '{target}' locale.`,
+    [CoreWarnCodes.CANNOT_FORMAT_NUMBER]: `Cannot format a number value due to not supported Intl.NumberFormat.`,
+    [CoreWarnCodes.FALLBACK_TO_NUMBER_FORMAT]: `Fall back to number format '{key}' key with '{target}' locale.`,
+    [CoreWarnCodes.CANNOT_FORMAT_DATE]: `Cannot format a date value due to not supported Intl.DateTimeFormat.`,
+    [CoreWarnCodes.FALLBACK_TO_DATE_FORMAT]: `Fall back to datetime format '{key}' key with '{target}' locale.`,
+    [CoreWarnCodes.EXPERIMENTAL_CUSTOM_MESSAGE_COMPILER]: `This project is using Custom Message Compiler, which is an experimental feature. It may receive breaking changes or be removed in the future.`
+};
+function getWarnMessage(code, ...args) {
+    return (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.format)(warnMessages[code], ...args);
+}
+
+const code = _intlify_message_compiler__WEBPACK_IMPORTED_MODULE_0__.CompileErrorCodes.__EXTEND_POINT__;
+const inc = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.incrementer)(code);
+const CoreErrorCodes = {
+    INVALID_ARGUMENT: code, // 17
+    INVALID_DATE_ARGUMENT: inc(), // 18
+    INVALID_ISO_DATE_ARGUMENT: inc(), // 19
+    NOT_SUPPORT_NON_STRING_MESSAGE: inc(), // 20
+    NOT_SUPPORT_LOCALE_PROMISE_VALUE: inc(), // 21
+    NOT_SUPPORT_LOCALE_ASYNC_FUNCTION: inc(), // 22
+    NOT_SUPPORT_LOCALE_TYPE: inc(), // 23
+    __EXTEND_POINT__: inc() // 24
+};
+function createCoreError(code) {
+    return (0,_intlify_message_compiler__WEBPACK_IMPORTED_MODULE_0__.createCompileError)(code, null, ( true) ? { messages: errorMessages } : 0);
+}
+/** @internal */
+const errorMessages = {
+    [CoreErrorCodes.INVALID_ARGUMENT]: 'Invalid arguments',
+    [CoreErrorCodes.INVALID_DATE_ARGUMENT]: 'The date provided is an invalid Date object.' +
+        'Make sure your Date represents a valid date.',
+    [CoreErrorCodes.INVALID_ISO_DATE_ARGUMENT]: 'The argument provided is not a valid ISO date string',
+    [CoreErrorCodes.NOT_SUPPORT_NON_STRING_MESSAGE]: 'Not support non-string message',
+    [CoreErrorCodes.NOT_SUPPORT_LOCALE_PROMISE_VALUE]: 'cannot support promise value',
+    [CoreErrorCodes.NOT_SUPPORT_LOCALE_ASYNC_FUNCTION]: 'cannot support async function',
+    [CoreErrorCodes.NOT_SUPPORT_LOCALE_TYPE]: 'cannot support locale type'
+};
+
+/** @internal */
+function getLocale(context, options) {
+    return options.locale != null
+        ? resolveLocale(options.locale)
+        : resolveLocale(context.locale);
+}
+let _resolveLocale;
+/** @internal */
+function resolveLocale(locale) {
+    if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(locale)) {
+        return locale;
+    }
+    else {
+        if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(locale)) {
+            if (locale.resolvedOnce && _resolveLocale != null) {
+                return _resolveLocale;
+            }
+            else if (locale.constructor.name === 'Function') {
+                const resolve = locale();
+                if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPromise)(resolve)) {
+                    throw createCoreError(CoreErrorCodes.NOT_SUPPORT_LOCALE_PROMISE_VALUE);
+                }
+                return (_resolveLocale = resolve);
+            }
+            else {
+                throw createCoreError(CoreErrorCodes.NOT_SUPPORT_LOCALE_ASYNC_FUNCTION);
+            }
+        }
+        else {
+            throw createCoreError(CoreErrorCodes.NOT_SUPPORT_LOCALE_TYPE);
+        }
+    }
+}
+/**
+ * Fallback with simple implemenation
+ *
+ * @remarks
+ * A fallback locale function implemented with a simple fallback algorithm.
+ *
+ * Basically, it returns the value as specified in the `fallbackLocale` props, and is processed with the fallback inside intlify.
+ *
+ * @param ctx - A {@link CoreContext | context}
+ * @param fallback - A {@link FallbackLocale | fallback locale}
+ * @param start - A starting {@link Locale | locale}
+ *
+ * @returns Fallback locales
+ *
+ * @VueI18nGeneral
+ */
+function fallbackWithSimple(ctx, fallback, start // eslint-disable-line @typescript-eslint/no-unused-vars
+) {
+    // prettier-ignore
+    return [...new Set([
+            start,
+            ...((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(fallback)
+                ? fallback
+                : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(fallback)
+                    ? Object.keys(fallback)
+                    : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(fallback)
+                        ? [fallback]
+                        : [start])
+        ])];
+}
+/**
+ * Fallback with locale chain
+ *
+ * @remarks
+ * A fallback locale function implemented with a fallback chain algorithm. It's used in VueI18n as default.
+ *
+ * @param ctx - A {@link CoreContext | context}
+ * @param fallback - A {@link FallbackLocale | fallback locale}
+ * @param start - A starting {@link Locale | locale}
+ *
+ * @returns Fallback locales
+ *
+ * @VueI18nSee [Fallbacking](../guide/essentials/fallback)
+ *
+ * @VueI18nGeneral
+ */
+function fallbackWithLocaleChain(ctx, fallback, start) {
+    const startLocale = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(start) ? start : DEFAULT_LOCALE;
+    const context = ctx;
+    if (!context.__localeChainCache) {
+        context.__localeChainCache = new Map();
+    }
+    let chain = context.__localeChainCache.get(startLocale);
+    if (!chain) {
+        chain = [];
+        // first block defined by start
+        let block = [start];
+        // while any intervening block found
+        while ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(block)) {
+            block = appendBlockToChain(chain, block, fallback);
+        }
+        // prettier-ignore
+        // last block defined by default
+        const defaults = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(fallback) || !(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(fallback)
+            ? fallback
+            : fallback['default']
+                ? fallback['default']
+                : null;
+        // convert defaults to array
+        block = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(defaults) ? [defaults] : defaults;
+        if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(block)) {
+            appendBlockToChain(chain, block, false);
+        }
+        context.__localeChainCache.set(startLocale, chain);
+    }
+    return chain;
+}
+function appendBlockToChain(chain, block, blocks) {
+    let follow = true;
+    for (let i = 0; i < block.length && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(follow); i++) {
+        const locale = block[i];
+        if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(locale)) {
+            follow = appendLocaleToChain(chain, block[i], blocks);
+        }
+    }
+    return follow;
+}
+function appendLocaleToChain(chain, locale, blocks) {
+    let follow;
+    const tokens = locale.split('-');
+    do {
+        const target = tokens.join('-');
+        follow = appendItemToChain(chain, target, blocks);
+        tokens.splice(-1, 1);
+    } while (tokens.length && follow === true);
+    return follow;
+}
+function appendItemToChain(chain, target, blocks) {
+    let follow = false;
+    if (!chain.includes(target)) {
+        follow = true;
+        if (target) {
+            follow = target[target.length - 1] !== '!';
+            const locale = target.replace(/!/g, '');
+            chain.push(locale);
+            if (((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(blocks) || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(blocks)) &&
+                blocks[locale] // eslint-disable-line @typescript-eslint/no-explicit-any
+            ) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                follow = blocks[locale];
+            }
+        }
+    }
+    return follow;
+}
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * Intlify core-base version
+ * @internal
+ */
+const VERSION = '9.14.5';
+const NOT_REOSLVED = -1;
+const DEFAULT_LOCALE = 'en-US';
+const MISSING_RESOLVE_VALUE = '';
+const capitalize = (str) => `${str.charAt(0).toLocaleUpperCase()}${str.substr(1)}`;
+function getDefaultLinkedModifiers() {
+    return {
+        upper: (val, type) => {
+            // prettier-ignore
+            return type === 'text' && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(val)
+                ? val.toUpperCase()
+                : type === 'vnode' && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(val) && '__v_isVNode' in val
+                    ? val.children.toUpperCase()
+                    : val;
+        },
+        lower: (val, type) => {
+            // prettier-ignore
+            return type === 'text' && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(val)
+                ? val.toLowerCase()
+                : type === 'vnode' && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(val) && '__v_isVNode' in val
+                    ? val.children.toLowerCase()
+                    : val;
+        },
+        capitalize: (val, type) => {
+            // prettier-ignore
+            return (type === 'text' && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(val)
+                ? capitalize(val)
+                : type === 'vnode' && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(val) && '__v_isVNode' in val
+                    ? capitalize(val.children)
+                    : val);
+        }
+    };
+}
+let _compiler;
+function registerMessageCompiler(compiler) {
+    _compiler = compiler;
+}
+let _resolver;
+/**
+ * Register the message resolver
+ *
+ * @param resolver - A {@link MessageResolver} function
+ *
+ * @VueI18nGeneral
+ */
+function registerMessageResolver(resolver) {
+    _resolver = resolver;
+}
+let _fallbacker;
+/**
+ * Register the locale fallbacker
+ *
+ * @param fallbacker - A {@link LocaleFallbacker} function
+ *
+ * @VueI18nGeneral
+ */
+function registerLocaleFallbacker(fallbacker) {
+    _fallbacker = fallbacker;
+}
+// Additional Meta for Intlify DevTools
+let _additionalMeta =  null;
+/* #__NO_SIDE_EFFECTS__ */
+const setAdditionalMeta = (meta) => {
+    _additionalMeta = meta;
+};
+/* #__NO_SIDE_EFFECTS__ */
+const getAdditionalMeta = () => _additionalMeta;
+let _fallbackContext = null;
+const setFallbackContext = (context) => {
+    _fallbackContext = context;
+};
+const getFallbackContext = () => _fallbackContext;
+// ID for CoreContext
+let _cid = 0;
+function createCoreContext(options = {}) {
+    // setup options
+    const onWarn = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.onWarn) ? options.onWarn : _intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warn;
+    const version = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(options.version) ? options.version : VERSION;
+    const locale = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(options.locale) || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.locale)
+        ? options.locale
+        : DEFAULT_LOCALE;
+    const _locale = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(locale) ? DEFAULT_LOCALE : locale;
+    const fallbackLocale = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(options.fallbackLocale) ||
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options.fallbackLocale) ||
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(options.fallbackLocale) ||
+        options.fallbackLocale === false
+        ? options.fallbackLocale
+        : _locale;
+    const messages = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options.messages)
+        ? options.messages
+        : createResources(_locale);
+    const datetimeFormats = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options.datetimeFormats)
+            ? options.datetimeFormats
+            : createResources(_locale)
+        ;
+    const numberFormats = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options.numberFormats)
+            ? options.numberFormats
+            : createResources(_locale)
+        ;
+    const modifiers = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.assign)((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)(), options.modifiers, getDefaultLinkedModifiers());
+    const pluralRules = options.pluralRules || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)();
+    const missing = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.missing) ? options.missing : null;
+    const missingWarn = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.missingWarn) || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isRegExp)(options.missingWarn)
+        ? options.missingWarn
+        : true;
+    const fallbackWarn = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.fallbackWarn) || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isRegExp)(options.fallbackWarn)
+        ? options.fallbackWarn
+        : true;
+    const fallbackFormat = !!options.fallbackFormat;
+    const unresolving = !!options.unresolving;
+    const postTranslation = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.postTranslation)
+        ? options.postTranslation
+        : null;
+    const processor = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options.processor) ? options.processor : null;
+    const warnHtmlMessage = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.warnHtmlMessage)
+        ? options.warnHtmlMessage
+        : true;
+    const escapeParameter = !!options.escapeParameter;
+    const messageCompiler = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.messageCompiler)
+        ? options.messageCompiler
+        : _compiler;
+    if ( true &&
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.messageCompiler)) {
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warnOnce)(getWarnMessage(CoreWarnCodes.EXPERIMENTAL_CUSTOM_MESSAGE_COMPILER));
+    }
+    const messageResolver = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.messageResolver)
+        ? options.messageResolver
+        : _resolver || resolveWithKeyValue;
+    const localeFallbacker = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.localeFallbacker)
+        ? options.localeFallbacker
+        : _fallbacker || fallbackWithSimple;
+    const fallbackContext = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(options.fallbackContext)
+        ? options.fallbackContext
+        : undefined;
+    // setup internal options
+    const internalOptions = options;
+    const __datetimeFormatters = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(internalOptions.__datetimeFormatters)
+            ? internalOptions.__datetimeFormatters
+            : new Map()
+        ;
+    const __numberFormatters = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(internalOptions.__numberFormatters)
+            ? internalOptions.__numberFormatters
+            : new Map()
+        ;
+    const __meta = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(internalOptions.__meta) ? internalOptions.__meta : {};
+    _cid++;
+    const context = {
+        version,
+        cid: _cid,
+        locale,
+        fallbackLocale,
+        messages,
+        modifiers,
+        pluralRules,
+        missing,
+        missingWarn,
+        fallbackWarn,
+        fallbackFormat,
+        unresolving,
+        postTranslation,
+        processor,
+        warnHtmlMessage,
+        escapeParameter,
+        messageCompiler,
+        messageResolver,
+        localeFallbacker,
+        fallbackContext,
+        onWarn,
+        __meta
+    };
+    {
+        context.datetimeFormats = datetimeFormats;
+        context.numberFormats = numberFormats;
+        context.__datetimeFormatters = __datetimeFormatters;
+        context.__numberFormatters = __numberFormatters;
+    }
+    // for vue-devtools timeline event
+    if ((true)) {
+        context.__v_emitter =
+            internalOptions.__v_emitter != null
+                ? internalOptions.__v_emitter
+                : undefined;
+    }
+    // NOTE: experimental !!
+    if (true) {
+        initI18nDevTools(context, version, __meta);
+    }
+    return context;
+}
+const createResources = (locale) => ({ [locale]: (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)() });
+/** @internal */
+function isTranslateFallbackWarn(fallback, key) {
+    return fallback instanceof RegExp ? fallback.test(key) : fallback;
+}
+/** @internal */
+function isTranslateMissingWarn(missing, key) {
+    return missing instanceof RegExp ? missing.test(key) : missing;
+}
+/** @internal */
+function handleMissing(context, key, locale, missingWarn, type) {
+    const { missing, onWarn } = context;
+    // for vue-devtools timeline event
+    if ((true)) {
+        const emitter = context.__v_emitter;
+        if (emitter) {
+            emitter.emit("missing" /* VueDevToolsTimelineEvents.MISSING */, {
+                locale,
+                key,
+                type,
+                groupId: `${type}:${key}`
+            });
+        }
+    }
+    if (missing !== null) {
+        const ret = missing(context, locale, key, type);
+        return (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(ret) ? ret : key;
+    }
+    else {
+        if (( true) && isTranslateMissingWarn(missingWarn, key)) {
+            onWarn(getWarnMessage(CoreWarnCodes.NOT_FOUND_KEY, { key, locale }));
+        }
+        return key;
+    }
+}
+/** @internal */
+function updateFallbackLocale(ctx, locale, fallback) {
+    const context = ctx;
+    context.__localeChainCache = new Map();
+    ctx.localeFallbacker(ctx, fallback, locale);
+}
+/** @internal */
+function isAlmostSameLocale(locale, compareLocale) {
+    if (locale === compareLocale)
+        return false;
+    return locale.split('-')[0] === compareLocale.split('-')[0];
+}
+/** @internal */
+function isImplicitFallback(targetLocale, locales) {
+    const index = locales.indexOf(targetLocale);
+    if (index === -1) {
+        return false;
+    }
+    for (let i = index + 1; i < locales.length; i++) {
+        if (isAlmostSameLocale(targetLocale, locales[i])) {
+            return true;
+        }
+    }
+    return false;
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+function format(ast) {
+    const msg = (ctx) => formatParts(ctx, ast);
+    return msg;
+}
+function formatParts(ctx, ast) {
+    const body = resolveBody(ast);
+    if (body == null) {
+        throw createUnhandleNodeError(0 /* NodeTypes.Resource */);
+    }
+    const type = resolveType(body);
+    if (type === 1 /* NodeTypes.Plural */) {
+        const plural = body;
+        const cases = resolveCases(plural);
+        return ctx.plural(cases.reduce((messages, c) => [
+            ...messages,
+            formatMessageParts(ctx, c)
+        ], []));
+    }
+    else {
+        return formatMessageParts(ctx, body);
+    }
+}
+function formatMessageParts(ctx, node) {
+    const static_ = resolveStatic(node);
+    if (static_ != null) {
+        return ctx.type === 'text'
+            ? static_
+            : ctx.normalize([static_]);
+    }
+    else {
+        const messages = resolveItems(node).reduce((acm, c) => [...acm, formatMessagePart(ctx, c)], []);
+        return ctx.normalize(messages);
+    }
+}
+function formatMessagePart(ctx, node) {
+    const type = resolveType(node);
+    switch (type) {
+        case 3 /* NodeTypes.Text */: {
+            return resolveValue$1(node, type);
+        }
+        case 9 /* NodeTypes.Literal */: {
+            return resolveValue$1(node, type);
+        }
+        case 4 /* NodeTypes.Named */: {
+            const named = node;
+            if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.hasOwn)(named, 'k') && named.k) {
+                return ctx.interpolate(ctx.named(named.k));
+            }
+            if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.hasOwn)(named, 'key') && named.key) {
+                return ctx.interpolate(ctx.named(named.key));
+            }
+            throw createUnhandleNodeError(type);
+        }
+        case 5 /* NodeTypes.List */: {
+            const list = node;
+            if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.hasOwn)(list, 'i') && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(list.i)) {
+                return ctx.interpolate(ctx.list(list.i));
+            }
+            if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.hasOwn)(list, 'index') && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(list.index)) {
+                return ctx.interpolate(ctx.list(list.index));
+            }
+            throw createUnhandleNodeError(type);
+        }
+        case 6 /* NodeTypes.Linked */: {
+            const linked = node;
+            const modifier = resolveLinkedModifier(linked);
+            const key = resolveLinkedKey(linked);
+            return ctx.linked(formatMessagePart(ctx, key), modifier ? formatMessagePart(ctx, modifier) : undefined, ctx.type);
+        }
+        case 7 /* NodeTypes.LinkedKey */: {
+            return resolveValue$1(node, type);
+        }
+        case 8 /* NodeTypes.LinkedModifier */: {
+            return resolveValue$1(node, type);
+        }
+        default:
+            throw new Error(`unhandled node on format message part: ${type}`);
+    }
+}
+
+const WARN_MESSAGE = `Detected HTML in '{source}' message. Recommend not using HTML messages to avoid XSS.`;
+function checkHtmlMessage(source, warnHtmlMessage) {
+    if (warnHtmlMessage && (0,_intlify_message_compiler__WEBPACK_IMPORTED_MODULE_0__.detectHtmlTag)(source)) {
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warn)((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.format)(WARN_MESSAGE, { source }));
+    }
+}
+const defaultOnCacheKey = (message) => message;
+let compileCache = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)();
+function onCompileWarn(_warn) {
+    if (_warn.code === _intlify_message_compiler__WEBPACK_IMPORTED_MODULE_0__.CompileWarnCodes.USE_MODULO_SYNTAX) {
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warn)(`The use of named interpolation with modulo syntax is deprecated. ` +
+            `It will be removed in v10.\n` +
+            `reference: https://vue-i18n.intlify.dev/guide/essentials/syntax#rails-i18n-format \n` +
+            `(message compiler warning message: ${_warn.message})`);
+    }
+}
+function clearCompileCache() {
+    compileCache = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)();
+}
+function baseCompile(message, options = {}) {
+    // error detecting on compile
+    let detectError = false;
+    const onError = options.onError || _intlify_message_compiler__WEBPACK_IMPORTED_MODULE_0__.defaultOnError;
+    options.onError = (err) => {
+        detectError = true;
+        onError(err);
+    };
+    // compile with mesasge-compiler
+    return { ...(0,_intlify_message_compiler__WEBPACK_IMPORTED_MODULE_0__.baseCompile)(message, options), detectError };
+}
+/* #__NO_SIDE_EFFECTS__ */
+const compileToFunction = (message, context) => {
+    if (!(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(message)) {
+        throw createCoreError(CoreErrorCodes.NOT_SUPPORT_NON_STRING_MESSAGE);
+    }
+    // set onWarn
+    if ((true)) {
+        context.onWarn = onCompileWarn;
+    }
+    {
+        // check HTML message
+        const warnHtmlMessage = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(context.warnHtmlMessage)
+            ? context.warnHtmlMessage
+            : true;
+        ( true) && checkHtmlMessage(message, warnHtmlMessage);
+        // check caches
+        const onCacheKey = context.onCacheKey || defaultOnCacheKey;
+        const cacheKey = onCacheKey(message);
+        const cached = compileCache[cacheKey];
+        if (cached) {
+            return cached;
+        }
+        // compile
+        const { code, detectError } = baseCompile(message, context);
+        // evaluate function
+        const msg = new Function(`return ${code}`)();
+        // if occurred compile error, don't cache
+        return !detectError
+            ? (compileCache[cacheKey] = msg)
+            : msg;
+    }
+};
+function compile(message, context) {
+    // set onWarn
+    if ((true)) {
+        context.onWarn = onCompileWarn;
+    }
+    if (((__INTLIFY_JIT_COMPILATION__ && !__INTLIFY_DROP_MESSAGE_COMPILER__)) &&
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(message)) {
+        // check HTML message
+        const warnHtmlMessage = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(context.warnHtmlMessage)
+            ? context.warnHtmlMessage
+            : true;
+        ( true) && checkHtmlMessage(message, warnHtmlMessage);
+        // check caches
+        const onCacheKey = context.onCacheKey || defaultOnCacheKey;
+        const cacheKey = onCacheKey(message);
+        const cached = compileCache[cacheKey];
+        if (cached) {
+            return cached;
+        }
+        // compile with JIT mode
+        const { ast, detectError } = baseCompile(message, {
+            ...context,
+            location: ("development" !== 'production'),
+            jit: true
+        });
+        // compose message function from AST
+        const msg = format(ast);
+        // if occurred compile error, don't cache
+        return !detectError
+            ? (compileCache[cacheKey] = msg)
+            : msg;
+    }
+    else {
+        if (( true) && !isMessageAST(message)) {
+            (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warn)(`the message that is resolve with key '${context.key}' is not supported for jit compilation`);
+            return (() => message);
+        }
+        // AST case (passed from bundler)
+        const cacheKey = message.cacheKey;
+        if (cacheKey) {
+            const cached = compileCache[cacheKey];
+            if (cached) {
+                return cached;
+            }
+            // compose message function from message (AST)
+            return (compileCache[cacheKey] =
+                format(message));
+        }
+        else {
+            return format(message);
+        }
+    }
+}
+
+const NOOP_MESSAGE_FUNCTION = () => '';
+const isMessageFunction = (val) => (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(val);
+// implementation of `translate` function
+function translate(context, ...args) {
+    const { fallbackFormat, postTranslation, unresolving, messageCompiler, fallbackLocale, messages } = context;
+    const [key, options] = parseTranslateArgs(...args);
+    const missingWarn = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.missingWarn)
+        ? options.missingWarn
+        : context.missingWarn;
+    const fallbackWarn = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.fallbackWarn)
+        ? options.fallbackWarn
+        : context.fallbackWarn;
+    const escapeParameter = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.escapeParameter)
+        ? options.escapeParameter
+        : context.escapeParameter;
+    const resolvedMessage = !!options.resolvedMessage;
+    // prettier-ignore
+    const defaultMsgOrKey = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(options.default) || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.default) // default by function option
+        ? !(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.default)
+            ? options.default
+            : (!messageCompiler ? () => key : key)
+        : fallbackFormat // default by `fallbackFormat` option
+            ? (!messageCompiler ? () => key : key)
+            : '';
+    const enableDefaultMsg = fallbackFormat || defaultMsgOrKey !== '';
+    const locale = getLocale(context, options);
+    // escape params
+    escapeParameter && escapeParams(options);
+    // resolve message format
+    // eslint-disable-next-line prefer-const
+    let [formatScope, targetLocale, message] = !resolvedMessage
+        ? resolveMessageFormat(context, key, locale, fallbackLocale, fallbackWarn, missingWarn)
+        : [
+            key,
+            locale,
+            messages[locale] || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)()
+        ];
+    // NOTE:
+    //  Fix to work around `ssrTransfrom` bug in Vite.
+    //  https://github.com/vitejs/vite/issues/4306
+    //  To get around this, use temporary variables.
+    //  https://github.com/nuxt/framework/issues/1461#issuecomment-954606243
+    let format = formatScope;
+    // if you use default message, set it as message format!
+    let cacheBaseKey = key;
+    if (!resolvedMessage &&
+        !((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(format) ||
+            isMessageAST(format) ||
+            isMessageFunction(format))) {
+        if (enableDefaultMsg) {
+            format = defaultMsgOrKey;
+            cacheBaseKey = format;
+        }
+    }
+    // checking message format and target locale
+    if (!resolvedMessage &&
+        (!((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(format) ||
+            isMessageAST(format) ||
+            isMessageFunction(format)) ||
+            !(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(targetLocale))) {
+        return unresolving ? NOT_REOSLVED : key;
+    }
+    // TODO: refactor
+    if (( true) && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(format) && context.messageCompiler == null) {
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warn)(`The message format compilation is not supported in this build. ` +
+            `Because message compiler isn't included. ` +
+            `You need to pre-compilation all message format. ` +
+            `So translate function return '${key}'.`);
+        return key;
+    }
+    // setup compile error detecting
+    let occurred = false;
+    const onError = () => {
+        occurred = true;
+    };
+    // compile message format
+    const msg = !isMessageFunction(format)
+        ? compileMessageFormat(context, key, targetLocale, format, cacheBaseKey, onError)
+        : format;
+    // if occurred compile error, return the message format
+    if (occurred) {
+        return format;
+    }
+    // evaluate message with context
+    const ctxOptions = getMessageContextOptions(context, targetLocale, message, options);
+    const msgContext = createMessageContext(ctxOptions);
+    const messaged = evaluateMessage(context, msg, msgContext);
+    // if use post translation option, proceed it with handler
+    let ret = postTranslation
+        ? postTranslation(messaged, key)
+        : messaged;
+    // apply HTML sanitization for security
+    if (escapeParameter && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(ret)) {
+        ret = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.sanitizeTranslatedHtml)(ret);
+    }
+    // NOTE: experimental !!
+    if (true) {
+        // prettier-ignore
+        const payloads = {
+            timestamp: Date.now(),
+            key: (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(key)
+                ? key
+                : isMessageFunction(format)
+                    ? format.key
+                    : '',
+            locale: targetLocale || (isMessageFunction(format)
+                ? format.locale
+                : ''),
+            format: (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(format)
+                ? format
+                : isMessageFunction(format)
+                    ? format.source
+                    : '',
+            message: ret
+        };
+        payloads.meta = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.assign)({}, context.__meta, getAdditionalMeta() || {});
+        translateDevTools(payloads);
+    }
+    return ret;
+}
+function escapeParams(options) {
+    if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(options.list)) {
+        options.list = options.list.map(item => (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(item) ? (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.escapeHtml)(item) : item);
+    }
+    else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(options.named)) {
+        Object.keys(options.named).forEach(key => {
+            if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(options.named[key])) {
+                options.named[key] = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.escapeHtml)(options.named[key]);
+            }
+        });
+    }
+}
+function resolveMessageFormat(context, key, locale, fallbackLocale, fallbackWarn, missingWarn) {
+    const { messages, onWarn, messageResolver: resolveValue, localeFallbacker } = context;
+    const locales = localeFallbacker(context, fallbackLocale, locale); // eslint-disable-line @typescript-eslint/no-explicit-any
+    let message = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)();
+    let targetLocale;
+    let format = null;
+    let from = locale;
+    let to = null;
+    const type = 'translate';
+    for (let i = 0; i < locales.length; i++) {
+        targetLocale = to = locales[i];
+        if (( true) &&
+            locale !== targetLocale &&
+            !isAlmostSameLocale(locale, targetLocale) &&
+            isTranslateFallbackWarn(fallbackWarn, key)) {
+            onWarn(getWarnMessage(CoreWarnCodes.FALLBACK_TO_TRANSLATE, {
+                key,
+                target: targetLocale
+            }));
+        }
+        // for vue-devtools timeline event
+        if (( true) && locale !== targetLocale) {
+            const emitter = context.__v_emitter;
+            if (emitter) {
+                emitter.emit("fallback" /* VueDevToolsTimelineEvents.FALBACK */, {
+                    type,
+                    key,
+                    from,
+                    to,
+                    groupId: `${type}:${key}`
+                });
+            }
+        }
+        message =
+            messages[targetLocale] || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)();
+        // for vue-devtools timeline event
+        let start = null;
+        let startTag;
+        let endTag;
+        if (( true) && _intlify_shared__WEBPACK_IMPORTED_MODULE_1__.inBrowser) {
+            start = window.performance.now();
+            startTag = 'intlify-message-resolve-start';
+            endTag = 'intlify-message-resolve-end';
+            _intlify_shared__WEBPACK_IMPORTED_MODULE_1__.mark && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.mark)(startTag);
+        }
+        if ((format = resolveValue(message, key)) === null) {
+            // if null, resolve with object key path
+            format = message[key]; // eslint-disable-line @typescript-eslint/no-explicit-any
+        }
+        // for vue-devtools timeline event
+        if (( true) && _intlify_shared__WEBPACK_IMPORTED_MODULE_1__.inBrowser) {
+            const end = window.performance.now();
+            const emitter = context.__v_emitter;
+            if (emitter && start && format) {
+                emitter.emit("message-resolve" /* VueDevToolsTimelineEvents.MESSAGE_RESOLVE */, {
+                    type: "message-resolve" /* VueDevToolsTimelineEvents.MESSAGE_RESOLVE */,
+                    key,
+                    message: format,
+                    time: end - start,
+                    groupId: `${type}:${key}`
+                });
+            }
+            if (startTag && endTag && _intlify_shared__WEBPACK_IMPORTED_MODULE_1__.mark && _intlify_shared__WEBPACK_IMPORTED_MODULE_1__.measure) {
+                (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.mark)(endTag);
+                (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.measure)('intlify message resolve', startTag, endTag);
+            }
+        }
+        if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(format) || isMessageAST(format) || isMessageFunction(format)) {
+            break;
+        }
+        if (!isImplicitFallback(targetLocale, locales)) {
+            const missingRet = handleMissing(context, // eslint-disable-line @typescript-eslint/no-explicit-any
+            key, targetLocale, missingWarn, type);
+            if (missingRet !== key) {
+                format = missingRet;
+            }
+        }
+        from = to;
+    }
+    return [format, targetLocale, message];
+}
+function compileMessageFormat(context, key, targetLocale, format, cacheBaseKey, onError) {
+    const { messageCompiler, warnHtmlMessage } = context;
+    if (isMessageFunction(format)) {
+        const msg = format;
+        msg.locale = msg.locale || targetLocale;
+        msg.key = msg.key || key;
+        return msg;
+    }
+    if (messageCompiler == null) {
+        const msg = (() => format);
+        msg.locale = targetLocale;
+        msg.key = key;
+        return msg;
+    }
+    // for vue-devtools timeline event
+    let start = null;
+    let startTag;
+    let endTag;
+    if (( true) && _intlify_shared__WEBPACK_IMPORTED_MODULE_1__.inBrowser) {
+        start = window.performance.now();
+        startTag = 'intlify-message-compilation-start';
+        endTag = 'intlify-message-compilation-end';
+        _intlify_shared__WEBPACK_IMPORTED_MODULE_1__.mark && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.mark)(startTag);
+    }
+    const msg = messageCompiler(format, getCompileContext(context, targetLocale, cacheBaseKey, format, warnHtmlMessage, onError));
+    // for vue-devtools timeline event
+    if (( true) && _intlify_shared__WEBPACK_IMPORTED_MODULE_1__.inBrowser) {
+        const end = window.performance.now();
+        const emitter = context.__v_emitter;
+        if (emitter && start) {
+            emitter.emit("message-compilation" /* VueDevToolsTimelineEvents.MESSAGE_COMPILATION */, {
+                type: "message-compilation" /* VueDevToolsTimelineEvents.MESSAGE_COMPILATION */,
+                message: format,
+                time: end - start,
+                groupId: `${'translate'}:${key}`
+            });
+        }
+        if (startTag && endTag && _intlify_shared__WEBPACK_IMPORTED_MODULE_1__.mark && _intlify_shared__WEBPACK_IMPORTED_MODULE_1__.measure) {
+            (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.mark)(endTag);
+            (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.measure)('intlify message compilation', startTag, endTag);
+        }
+    }
+    msg.locale = targetLocale;
+    msg.key = key;
+    msg.source = format;
+    return msg;
+}
+function evaluateMessage(context, msg, msgCtx) {
+    // for vue-devtools timeline event
+    let start = null;
+    let startTag;
+    let endTag;
+    if (( true) && _intlify_shared__WEBPACK_IMPORTED_MODULE_1__.inBrowser) {
+        start = window.performance.now();
+        startTag = 'intlify-message-evaluation-start';
+        endTag = 'intlify-message-evaluation-end';
+        _intlify_shared__WEBPACK_IMPORTED_MODULE_1__.mark && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.mark)(startTag);
+    }
+    const messaged = msg(msgCtx);
+    // for vue-devtools timeline event
+    if (( true) && _intlify_shared__WEBPACK_IMPORTED_MODULE_1__.inBrowser) {
+        const end = window.performance.now();
+        const emitter = context.__v_emitter;
+        if (emitter && start) {
+            emitter.emit("message-evaluation" /* VueDevToolsTimelineEvents.MESSAGE_EVALUATION */, {
+                type: "message-evaluation" /* VueDevToolsTimelineEvents.MESSAGE_EVALUATION */,
+                value: messaged,
+                time: end - start,
+                groupId: `${'translate'}:${msg.key}`
+            });
+        }
+        if (startTag && endTag && _intlify_shared__WEBPACK_IMPORTED_MODULE_1__.mark && _intlify_shared__WEBPACK_IMPORTED_MODULE_1__.measure) {
+            (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.mark)(endTag);
+            (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.measure)('intlify message evaluation', startTag, endTag);
+        }
+    }
+    return messaged;
+}
+/** @internal */
+function parseTranslateArgs(...args) {
+    const [arg1, arg2, arg3] = args;
+    const options = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)();
+    if (!(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(arg1) &&
+        !(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(arg1) &&
+        !isMessageFunction(arg1) &&
+        !isMessageAST(arg1)) {
+        throw createCoreError(CoreErrorCodes.INVALID_ARGUMENT);
+    }
+    // prettier-ignore
+    const key = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(arg1)
+        ? String(arg1)
+        : isMessageFunction(arg1)
+            ? arg1
+            : arg1;
+    if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(arg2)) {
+        options.plural = arg2;
+    }
+    else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(arg2)) {
+        options.default = arg2;
+    }
+    else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(arg2) && !(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isEmptyObject)(arg2)) {
+        options.named = arg2;
+    }
+    else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(arg2)) {
+        options.list = arg2;
+    }
+    if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(arg3)) {
+        options.plural = arg3;
+    }
+    else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(arg3)) {
+        options.default = arg3;
+    }
+    else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(arg3)) {
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.assign)(options, arg3);
+    }
+    return [key, options];
+}
+function getCompileContext(context, locale, key, source, warnHtmlMessage, onError) {
+    return {
+        locale,
+        key,
+        warnHtmlMessage,
+        onError: (err) => {
+            onError && onError(err);
+            if ((true)) {
+                const _source = getSourceForCodeFrame(source);
+                const message = `Message compilation error: ${err.message}`;
+                const codeFrame = err.location &&
+                    _source &&
+                    (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.generateCodeFrame)(_source, err.location.start.offset, err.location.end.offset);
+                const emitter = context.__v_emitter;
+                if (emitter && _source) {
+                    emitter.emit("compile-error" /* VueDevToolsTimelineEvents.COMPILE_ERROR */, {
+                        message: _source,
+                        error: err.message,
+                        start: err.location && err.location.start.offset,
+                        end: err.location && err.location.end.offset,
+                        groupId: `${'translate'}:${key}`
+                    });
+                }
+                console.error(codeFrame ? `${message}\n${codeFrame}` : message);
+            }
+            else {}
+        },
+        onCacheKey: (source) => (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.generateFormatCacheKey)(locale, key, source)
+    };
+}
+function getSourceForCodeFrame(source) {
+    if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(source)) {
+        return source;
+    }
+    else {
+        if (source.loc && source.loc.source) {
+            return source.loc.source;
+        }
+    }
+}
+function getMessageContextOptions(context, locale, message, options) {
+    const { modifiers, pluralRules, messageResolver: resolveValue, fallbackLocale, fallbackWarn, missingWarn, fallbackContext } = context;
+    const resolveMessage = (key) => {
+        let val = resolveValue(message, key);
+        // fallback to root context
+        if (val == null && fallbackContext) {
+            const [, , message] = resolveMessageFormat(fallbackContext, key, locale, fallbackLocale, fallbackWarn, missingWarn);
+            val = resolveValue(message, key);
+        }
+        if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(val) || isMessageAST(val)) {
+            let occurred = false;
+            const onError = () => {
+                occurred = true;
+            };
+            const msg = compileMessageFormat(context, key, locale, val, key, onError);
+            return !occurred
+                ? msg
+                : NOOP_MESSAGE_FUNCTION;
+        }
+        else if (isMessageFunction(val)) {
+            return val;
+        }
+        else {
+            // TODO: should be implemented warning message
+            return NOOP_MESSAGE_FUNCTION;
+        }
+    };
+    const ctxOptions = {
+        locale,
+        modifiers,
+        pluralRules,
+        messages: resolveMessage
+    };
+    if (context.processor) {
+        ctxOptions.processor = context.processor;
+    }
+    if (options.list) {
+        ctxOptions.list = options.list;
+    }
+    if (options.named) {
+        ctxOptions.named = options.named;
+    }
+    if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(options.plural)) {
+        ctxOptions.pluralIndex = options.plural;
+    }
+    return ctxOptions;
+}
+
+const intlDefined = typeof Intl !== 'undefined';
+const Availabilities = {
+    dateTimeFormat: intlDefined && typeof Intl.DateTimeFormat !== 'undefined',
+    numberFormat: intlDefined && typeof Intl.NumberFormat !== 'undefined'
+};
+
+// implementation of `datetime` function
+function datetime(context, ...args) {
+    const { datetimeFormats, unresolving, fallbackLocale, onWarn, localeFallbacker } = context;
+    const { __datetimeFormatters } = context;
+    if (( true) && !Availabilities.dateTimeFormat) {
+        onWarn(getWarnMessage(CoreWarnCodes.CANNOT_FORMAT_DATE));
+        return MISSING_RESOLVE_VALUE;
+    }
+    const [key, value, options, overrides] = parseDateTimeArgs(...args);
+    const missingWarn = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.missingWarn)
+        ? options.missingWarn
+        : context.missingWarn;
+    const fallbackWarn = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.fallbackWarn)
+        ? options.fallbackWarn
+        : context.fallbackWarn;
+    const part = !!options.part;
+    const locale = getLocale(context, options);
+    const locales = localeFallbacker(context, // eslint-disable-line @typescript-eslint/no-explicit-any
+    fallbackLocale, locale);
+    if (!(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(key) || key === '') {
+        return new Intl.DateTimeFormat(locale, overrides).format(value);
+    }
+    // resolve format
+    let datetimeFormat = {};
+    let targetLocale;
+    let format = null;
+    let from = locale;
+    let to = null;
+    const type = 'datetime format';
+    for (let i = 0; i < locales.length; i++) {
+        targetLocale = to = locales[i];
+        if (( true) &&
+            locale !== targetLocale &&
+            isTranslateFallbackWarn(fallbackWarn, key)) {
+            onWarn(getWarnMessage(CoreWarnCodes.FALLBACK_TO_DATE_FORMAT, {
+                key,
+                target: targetLocale
+            }));
+        }
+        // for vue-devtools timeline event
+        if (( true) && locale !== targetLocale) {
+            const emitter = context.__v_emitter;
+            if (emitter) {
+                emitter.emit("fallback" /* VueDevToolsTimelineEvents.FALBACK */, {
+                    type,
+                    key,
+                    from,
+                    to,
+                    groupId: `${type}:${key}`
+                });
+            }
+        }
+        datetimeFormat =
+            datetimeFormats[targetLocale] || {};
+        format = datetimeFormat[key];
+        if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(format))
+            break;
+        handleMissing(context, key, targetLocale, missingWarn, type); // eslint-disable-line @typescript-eslint/no-explicit-any
+        from = to;
+    }
+    // checking format and target locale
+    if (!(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(format) || !(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(targetLocale)) {
+        return unresolving ? NOT_REOSLVED : key;
+    }
+    let id = `${targetLocale}__${key}`;
+    if (!(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isEmptyObject)(overrides)) {
+        id = `${id}__${JSON.stringify(overrides)}`;
+    }
+    let formatter = __datetimeFormatters.get(id);
+    if (!formatter) {
+        formatter = new Intl.DateTimeFormat(targetLocale, (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.assign)({}, format, overrides));
+        __datetimeFormatters.set(id, formatter);
+    }
+    return !part ? formatter.format(value) : formatter.formatToParts(value);
+}
+/** @internal */
+const DATETIME_FORMAT_OPTIONS_KEYS = [
+    'localeMatcher',
+    'weekday',
+    'era',
+    'year',
+    'month',
+    'day',
+    'hour',
+    'minute',
+    'second',
+    'timeZoneName',
+    'formatMatcher',
+    'hour12',
+    'timeZone',
+    'dateStyle',
+    'timeStyle',
+    'calendar',
+    'dayPeriod',
+    'numberingSystem',
+    'hourCycle',
+    'fractionalSecondDigits'
+];
+/** @internal */
+function parseDateTimeArgs(...args) {
+    const [arg1, arg2, arg3, arg4] = args;
+    const options = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)();
+    let overrides = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)();
+    let value;
+    if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(arg1)) {
+        // Only allow ISO strings - other date formats are often supported,
+        // but may cause different results in different browsers.
+        const matches = arg1.match(/(\d{4}-\d{2}-\d{2})(T|\s)?(.*)/);
+        if (!matches) {
+            throw createCoreError(CoreErrorCodes.INVALID_ISO_DATE_ARGUMENT);
+        }
+        // Some browsers can not parse the iso datetime separated by space,
+        // this is a compromise solution by replace the 'T'/' ' with 'T'
+        const dateTime = matches[3]
+            ? matches[3].trim().startsWith('T')
+                ? `${matches[1].trim()}${matches[3].trim()}`
+                : `${matches[1].trim()}T${matches[3].trim()}`
+            : matches[1].trim();
+        value = new Date(dateTime);
+        try {
+            // This will fail if the date is not valid
+            value.toISOString();
+        }
+        catch (e) {
+            throw createCoreError(CoreErrorCodes.INVALID_ISO_DATE_ARGUMENT);
+        }
+    }
+    else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isDate)(arg1)) {
+        if (isNaN(arg1.getTime())) {
+            throw createCoreError(CoreErrorCodes.INVALID_DATE_ARGUMENT);
+        }
+        value = arg1;
+    }
+    else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(arg1)) {
+        value = arg1;
+    }
+    else {
+        throw createCoreError(CoreErrorCodes.INVALID_ARGUMENT);
+    }
+    if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(arg2)) {
+        options.key = arg2;
+    }
+    else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(arg2)) {
+        Object.keys(arg2).forEach(key => {
+            if (DATETIME_FORMAT_OPTIONS_KEYS.includes(key)) {
+                overrides[key] = arg2[key];
+            }
+            else {
+                options[key] = arg2[key];
+            }
+        });
+    }
+    if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(arg3)) {
+        options.locale = arg3;
+    }
+    else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(arg3)) {
+        overrides = arg3;
+    }
+    if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(arg4)) {
+        overrides = arg4;
+    }
+    return [options.key || '', value, options, overrides];
+}
+/** @internal */
+function clearDateTimeFormat(ctx, locale, format) {
+    const context = ctx;
+    for (const key in format) {
+        const id = `${locale}__${key}`;
+        if (!context.__datetimeFormatters.has(id)) {
+            continue;
+        }
+        context.__datetimeFormatters.delete(id);
+    }
+}
+
+// implementation of `number` function
+function number(context, ...args) {
+    const { numberFormats, unresolving, fallbackLocale, onWarn, localeFallbacker } = context;
+    const { __numberFormatters } = context;
+    if (( true) && !Availabilities.numberFormat) {
+        onWarn(getWarnMessage(CoreWarnCodes.CANNOT_FORMAT_NUMBER));
+        return MISSING_RESOLVE_VALUE;
+    }
+    const [key, value, options, overrides] = parseNumberArgs(...args);
+    const missingWarn = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.missingWarn)
+        ? options.missingWarn
+        : context.missingWarn;
+    const fallbackWarn = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.fallbackWarn)
+        ? options.fallbackWarn
+        : context.fallbackWarn;
+    const part = !!options.part;
+    const locale = getLocale(context, options);
+    const locales = localeFallbacker(context, // eslint-disable-line @typescript-eslint/no-explicit-any
+    fallbackLocale, locale);
+    if (!(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(key) || key === '') {
+        return new Intl.NumberFormat(locale, overrides).format(value);
+    }
+    // resolve format
+    let numberFormat = {};
+    let targetLocale;
+    let format = null;
+    let from = locale;
+    let to = null;
+    const type = 'number format';
+    for (let i = 0; i < locales.length; i++) {
+        targetLocale = to = locales[i];
+        if (( true) &&
+            locale !== targetLocale &&
+            isTranslateFallbackWarn(fallbackWarn, key)) {
+            onWarn(getWarnMessage(CoreWarnCodes.FALLBACK_TO_NUMBER_FORMAT, {
+                key,
+                target: targetLocale
+            }));
+        }
+        // for vue-devtools timeline event
+        if (( true) && locale !== targetLocale) {
+            const emitter = context.__v_emitter;
+            if (emitter) {
+                emitter.emit("fallback" /* VueDevToolsTimelineEvents.FALBACK */, {
+                    type,
+                    key,
+                    from,
+                    to,
+                    groupId: `${type}:${key}`
+                });
+            }
+        }
+        numberFormat =
+            numberFormats[targetLocale] || {};
+        format = numberFormat[key];
+        if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(format))
+            break;
+        handleMissing(context, key, targetLocale, missingWarn, type); // eslint-disable-line @typescript-eslint/no-explicit-any
+        from = to;
+    }
+    // checking format and target locale
+    if (!(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(format) || !(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(targetLocale)) {
+        return unresolving ? NOT_REOSLVED : key;
+    }
+    let id = `${targetLocale}__${key}`;
+    if (!(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isEmptyObject)(overrides)) {
+        id = `${id}__${JSON.stringify(overrides)}`;
+    }
+    let formatter = __numberFormatters.get(id);
+    if (!formatter) {
+        formatter = new Intl.NumberFormat(targetLocale, (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.assign)({}, format, overrides));
+        __numberFormatters.set(id, formatter);
+    }
+    return !part ? formatter.format(value) : formatter.formatToParts(value);
+}
+/** @internal */
+const NUMBER_FORMAT_OPTIONS_KEYS = [
+    'localeMatcher',
+    'style',
+    'currency',
+    'currencyDisplay',
+    'currencySign',
+    'useGrouping',
+    'minimumIntegerDigits',
+    'minimumFractionDigits',
+    'maximumFractionDigits',
+    'minimumSignificantDigits',
+    'maximumSignificantDigits',
+    'compactDisplay',
+    'notation',
+    'signDisplay',
+    'unit',
+    'unitDisplay',
+    'roundingMode',
+    'roundingPriority',
+    'roundingIncrement',
+    'trailingZeroDisplay'
+];
+/** @internal */
+function parseNumberArgs(...args) {
+    const [arg1, arg2, arg3, arg4] = args;
+    const options = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)();
+    let overrides = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)();
+    if (!(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(arg1)) {
+        throw createCoreError(CoreErrorCodes.INVALID_ARGUMENT);
+    }
+    const value = arg1;
+    if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(arg2)) {
+        options.key = arg2;
+    }
+    else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(arg2)) {
+        Object.keys(arg2).forEach(key => {
+            if (NUMBER_FORMAT_OPTIONS_KEYS.includes(key)) {
+                overrides[key] = arg2[key];
+            }
+            else {
+                options[key] = arg2[key];
+            }
+        });
+    }
+    if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(arg3)) {
+        options.locale = arg3;
+    }
+    else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(arg3)) {
+        overrides = arg3;
+    }
+    if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(arg4)) {
+        overrides = arg4;
+    }
+    return [options.key || '', value, options, overrides];
+}
+/** @internal */
+function clearNumberFormat(ctx, locale, format) {
+    const context = ctx;
+    for (const key in format) {
+        const id = `${locale}__${key}`;
+        if (!context.__numberFormatters.has(id)) {
+            continue;
+        }
+        context.__numberFormatters.delete(id);
+    }
+}
+
+{
+    initFeatureFlags();
+}
+
+
+
+
+/***/ }),
+
+/***/ "./node_modules/@intlify/shared/dist/shared.mjs":
+/*!******************************************************!*\
+  !*** ./node_modules/@intlify/shared/dist/shared.mjs ***!
+  \******************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   assign: () => (/* binding */ assign),
+/* harmony export */   create: () => (/* binding */ create),
+/* harmony export */   createEmitter: () => (/* binding */ createEmitter),
+/* harmony export */   deepCopy: () => (/* binding */ deepCopy),
+/* harmony export */   escapeHtml: () => (/* binding */ escapeHtml),
+/* harmony export */   format: () => (/* binding */ format),
+/* harmony export */   friendlyJSONstringify: () => (/* binding */ friendlyJSONstringify),
+/* harmony export */   generateCodeFrame: () => (/* binding */ generateCodeFrame),
+/* harmony export */   generateFormatCacheKey: () => (/* binding */ generateFormatCacheKey),
+/* harmony export */   getGlobalThis: () => (/* binding */ getGlobalThis),
+/* harmony export */   hasOwn: () => (/* binding */ hasOwn),
+/* harmony export */   inBrowser: () => (/* binding */ inBrowser),
+/* harmony export */   incrementer: () => (/* binding */ incrementer),
+/* harmony export */   isArray: () => (/* binding */ isArray),
+/* harmony export */   isBoolean: () => (/* binding */ isBoolean),
+/* harmony export */   isDate: () => (/* binding */ isDate),
+/* harmony export */   isEmptyObject: () => (/* binding */ isEmptyObject),
+/* harmony export */   isFunction: () => (/* binding */ isFunction),
+/* harmony export */   isNumber: () => (/* binding */ isNumber),
+/* harmony export */   isObject: () => (/* binding */ isObject),
+/* harmony export */   isPlainObject: () => (/* binding */ isPlainObject),
+/* harmony export */   isPromise: () => (/* binding */ isPromise),
+/* harmony export */   isRegExp: () => (/* binding */ isRegExp),
+/* harmony export */   isString: () => (/* binding */ isString),
+/* harmony export */   isSymbol: () => (/* binding */ isSymbol),
+/* harmony export */   join: () => (/* binding */ join),
+/* harmony export */   makeSymbol: () => (/* binding */ makeSymbol),
+/* harmony export */   mark: () => (/* binding */ mark),
+/* harmony export */   measure: () => (/* binding */ measure),
+/* harmony export */   objectToString: () => (/* binding */ objectToString),
+/* harmony export */   sanitizeTranslatedHtml: () => (/* binding */ sanitizeTranslatedHtml),
+/* harmony export */   toDisplayString: () => (/* binding */ toDisplayString),
+/* harmony export */   toTypeString: () => (/* binding */ toTypeString),
+/* harmony export */   warn: () => (/* binding */ warn),
+/* harmony export */   warnOnce: () => (/* binding */ warnOnce)
+/* harmony export */ });
+/*!
+  * shared v9.14.5
+  * (c) 2025 kazuya kawaguchi
+  * Released under the MIT License.
+  */
+function warn(msg, err) {
+    if (typeof console !== 'undefined') {
+        console.warn(`[intlify] ` + msg);
+        /* istanbul ignore if */
+        if (err) {
+            console.warn(err.stack);
+        }
+    }
+}
+const hasWarned = {};
+function warnOnce(msg) {
+    if (!hasWarned[msg]) {
+        hasWarned[msg] = true;
+        warn(msg);
+    }
+}
+
+/**
+ * Original Utilities
+ * written by kazuya kawaguchi
+ */
+const inBrowser = typeof window !== 'undefined';
+let mark;
+let measure;
+if ((true)) {
+    const perf = inBrowser && window.performance;
+    if (perf &&
+        perf.mark &&
+        perf.measure &&
+        perf.clearMarks &&
+        // @ts-ignore browser compat
+        perf.clearMeasures) {
+        mark = (tag) => {
+            perf.mark(tag);
+        };
+        measure = (name, startTag, endTag) => {
+            perf.measure(name, startTag, endTag);
+            perf.clearMarks(startTag);
+            perf.clearMarks(endTag);
+        };
+    }
+}
+const RE_ARGS = /\{([0-9a-zA-Z]+)\}/g;
+/* eslint-disable */
+function format(message, ...args) {
+    if (args.length === 1 && isObject(args[0])) {
+        args = args[0];
+    }
+    if (!args || !args.hasOwnProperty) {
+        args = {};
+    }
+    return message.replace(RE_ARGS, (match, identifier) => {
+        return args.hasOwnProperty(identifier) ? args[identifier] : '';
+    });
+}
+const makeSymbol = (name, shareable = false) => !shareable ? Symbol(name) : Symbol.for(name);
+const generateFormatCacheKey = (locale, key, source) => friendlyJSONstringify({ l: locale, k: key, s: source });
+const friendlyJSONstringify = (json) => JSON.stringify(json)
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029')
+    .replace(/\u0027/g, '\\u0027');
+const isNumber = (val) => typeof val === 'number' && isFinite(val);
+const isDate = (val) => toTypeString(val) === '[object Date]';
+const isRegExp = (val) => toTypeString(val) === '[object RegExp]';
+const isEmptyObject = (val) => isPlainObject(val) && Object.keys(val).length === 0;
+const assign = Object.assign;
+const _create = Object.create;
+const create = (obj = null) => _create(obj);
+let _globalThis;
+const getGlobalThis = () => {
+    // prettier-ignore
+    return (_globalThis ||
+        (_globalThis =
+            typeof globalThis !== 'undefined'
+                ? globalThis
+                : typeof self !== 'undefined'
+                    ? self
+                    : typeof window !== 'undefined'
+                        ? window
+                        : typeof global !== 'undefined'
+                            ? global
+                            : create()));
+};
+function escapeHtml(rawText) {
+    return rawText
+        .replace(/&/g, '&amp;') // escape `&` first to avoid double escaping
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;')
+        .replace(/\//g, '&#x2F;') // escape `/` to prevent closing tags or JavaScript URLs
+        .replace(/=/g, '&#x3D;'); // escape `=` to prevent attribute injection
+}
+function escapeAttributeValue(value) {
+    return value
+        .replace(/&(?![a-zA-Z0-9#]{2,6};)/g, '&amp;') // escape unescaped `&`
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+function sanitizeTranslatedHtml(html) {
+    // Escape dangerous characters in attribute values
+    // Process attributes with double quotes
+    html = html.replace(/(\w+)\s*=\s*"([^"]*)"/g, (_, attrName, attrValue) => `${attrName}="${escapeAttributeValue(attrValue)}"`);
+    // Process attributes with single quotes
+    html = html.replace(/(\w+)\s*=\s*'([^']*)'/g, (_, attrName, attrValue) => `${attrName}='${escapeAttributeValue(attrValue)}'`);
+    // Detect and neutralize event handler attributes
+    const eventHandlerPattern = /\s*on\w+\s*=\s*["']?[^"'>]+["']?/gi;
+    if (eventHandlerPattern.test(html)) {
+        if ((true)) {
+            warn('Potentially dangerous event handlers detected in translation. ' +
+                'Consider removing onclick, onerror, etc. from your translation messages.');
+        }
+        // Neutralize event handler attributes by escaping 'on'
+        html = html.replace(/(\s+)(on)(\w+\s*=)/gi, '$1&#111;n$3');
+    }
+    // Disable javascript: URLs in various contexts
+    const javascriptUrlPattern = [
+        // In href, src, action, formaction attributes
+        /(\s+(?:href|src|action|formaction)\s*=\s*["']?)\s*javascript:/gi,
+        // In style attributes within url()
+        /(style\s*=\s*["'][^"']*url\s*\(\s*)javascript:/gi
+    ];
+    javascriptUrlPattern.forEach(pattern => {
+        html = html.replace(pattern, '$1javascript&#58;');
+    });
+    return html;
+}
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+function hasOwn(obj, key) {
+    return hasOwnProperty.call(obj, key);
+}
+/* eslint-enable */
+/**
+ * Useful Utilities By Evan you
+ * Modified by kazuya kawaguchi
+ * MIT License
+ * https://github.com/vuejs/vue-next/blob/master/packages/shared/src/index.ts
+ * https://github.com/vuejs/vue-next/blob/master/packages/shared/src/codeframe.ts
+ */
+const isArray = Array.isArray;
+const isFunction = (val) => typeof val === 'function';
+const isString = (val) => typeof val === 'string';
+const isBoolean = (val) => typeof val === 'boolean';
+const isSymbol = (val) => typeof val === 'symbol';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const isObject = (val) => val !== null && typeof val === 'object';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const isPromise = (val) => {
+    return isObject(val) && isFunction(val.then) && isFunction(val.catch);
+};
+const objectToString = Object.prototype.toString;
+const toTypeString = (value) => objectToString.call(value);
+const isPlainObject = (val) => {
+    if (!isObject(val))
+        return false;
+    const proto = Object.getPrototypeOf(val);
+    return proto === null || proto.constructor === Object;
+};
+// for converting list and named values to displayed strings.
+const toDisplayString = (val) => {
+    return val == null
+        ? ''
+        : isArray(val) || (isPlainObject(val) && val.toString === objectToString)
+            ? JSON.stringify(val, null, 2)
+            : String(val);
+};
+function join(items, separator = '') {
+    return items.reduce((str, item, index) => (index === 0 ? str + item : str + separator + item), '');
+}
+const RANGE = 2;
+function generateCodeFrame(source, start = 0, end = source.length) {
+    const lines = source.split(/\r?\n/);
+    let count = 0;
+    const res = [];
+    for (let i = 0; i < lines.length; i++) {
+        count += lines[i].length + 1;
+        if (count >= start) {
+            for (let j = i - RANGE; j <= i + RANGE || end > count; j++) {
+                if (j < 0 || j >= lines.length)
+                    continue;
+                const line = j + 1;
+                res.push(`${line}${' '.repeat(3 - String(line).length)}|  ${lines[j]}`);
+                const lineLength = lines[j].length;
+                if (j === i) {
+                    // push underline
+                    const pad = start - (count - lineLength) + 1;
+                    const length = Math.max(1, end > count ? lineLength - pad : end - start);
+                    res.push(`   |  ` + ' '.repeat(pad) + '^'.repeat(length));
+                }
+                else if (j > i) {
+                    if (end > count) {
+                        const length = Math.max(Math.min(end - count, lineLength), 1);
+                        res.push(`   |  ` + '^'.repeat(length));
+                    }
+                    count += lineLength + 1;
+                }
+            }
+            break;
+        }
+    }
+    return res.join('\n');
+}
+function incrementer(code) {
+    let current = code;
+    return () => ++current;
+}
+
+/**
+ * Event emitter, forked from the below:
+ * - original repository url: https://github.com/developit/mitt
+ * - code url: https://github.com/developit/mitt/blob/master/src/index.ts
+ * - author: Jason Miller (https://github.com/developit)
+ * - license: MIT
+ */
+/**
+ * Create a event emitter
+ *
+ * @returns An event emitter
+ */
+function createEmitter() {
+    const events = new Map();
+    const emitter = {
+        events,
+        on(event, handler) {
+            const handlers = events.get(event);
+            const added = handlers && handlers.push(handler);
+            if (!added) {
+                events.set(event, [handler]);
+            }
+        },
+        off(event, handler) {
+            const handlers = events.get(event);
+            if (handlers) {
+                handlers.splice(handlers.indexOf(handler) >>> 0, 1);
+            }
+        },
+        emit(event, payload) {
+            (events.get(event) || [])
+                .slice()
+                .map(handler => handler(payload));
+            (events.get('*') || [])
+                .slice()
+                .map(handler => handler(event, payload));
+        }
+    };
+    return emitter;
+}
+
+const isNotObjectOrIsArray = (val) => !isObject(val) || isArray(val);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+function deepCopy(src, des) {
+    // src and des should both be objects, and none of them can be a array
+    if (isNotObjectOrIsArray(src) || isNotObjectOrIsArray(des)) {
+        throw new Error('Invalid value');
+    }
+    const stack = [{ src, des }];
+    while (stack.length) {
+        const { src, des } = stack.pop();
+        // using `Object.keys` which skips prototype properties
+        Object.keys(src).forEach(key => {
+            if (key === '__proto__') {
+                return;
+            }
+            // if src[key] is an object/array, set des[key]
+            // to empty object/array to prevent setting by reference
+            if (isObject(src[key]) && !isObject(des[key])) {
+                des[key] = Array.isArray(src[key]) ? [] : create();
+            }
+            if (isNotObjectOrIsArray(des[key]) || isNotObjectOrIsArray(src[key])) {
+                // replace with src[key] when:
+                // src[key] or des[key] is not an object, or
+                // src[key] or des[key] is an array
+                des[key] = src[key];
+            }
+            else {
+                // src[key] and des[key] are both objects, merge them
+                stack.push({ src: src[key], des: des[key] });
+            }
+        });
+    }
+}
+
+
+
+
+/***/ }),
+
 /***/ "./node_modules/axios/lib/adapters/adapters.js":
 /*!*****************************************************!*\
   !*** ./node_modules/axios/lib/adapters/adapters.js ***!
@@ -49969,6 +54667,3014 @@ const isIterable = (thing) => thing != null && isFunction(thing[iterator]);
 });
 
 
+/***/ }),
+
+/***/ "./node_modules/vue-i18n/dist/vue-i18n.mjs":
+/*!*************************************************!*\
+  !*** ./node_modules/vue-i18n/dist/vue-i18n.mjs ***!
+  \*************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   DatetimeFormat: () => (/* binding */ DatetimeFormat),
+/* harmony export */   I18nD: () => (/* binding */ I18nD),
+/* harmony export */   I18nInjectionKey: () => (/* binding */ I18nInjectionKey),
+/* harmony export */   I18nN: () => (/* binding */ I18nN),
+/* harmony export */   I18nT: () => (/* binding */ I18nT),
+/* harmony export */   NumberFormat: () => (/* binding */ NumberFormat),
+/* harmony export */   Translation: () => (/* binding */ Translation),
+/* harmony export */   VERSION: () => (/* binding */ VERSION),
+/* harmony export */   castToVueI18n: () => (/* binding */ castToVueI18n),
+/* harmony export */   createI18n: () => (/* binding */ createI18n),
+/* harmony export */   useI18n: () => (/* binding */ useI18n),
+/* harmony export */   vTDirective: () => (/* binding */ vTDirective)
+/* harmony export */ });
+/* harmony import */ var _intlify_shared__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @intlify/shared */ "./node_modules/@intlify/shared/dist/shared.mjs");
+/* harmony import */ var _intlify_core_base__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @intlify/core-base */ "./node_modules/@intlify/core-base/dist/core-base.mjs");
+/* harmony import */ var _intlify_core_base__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @intlify/core-base */ "./node_modules/@intlify/message-compiler/dist/message-compiler.esm-browser.js");
+/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
+/* harmony import */ var _vue_devtools_api__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @vue/devtools-api */ "./node_modules/@vue/devtools-api/lib/esm/index.js");
+/*!
+  * vue-i18n v9.14.5
+  * (c) 2025 kazuya kawaguchi
+  * Released under the MIT License.
+  */
+
+
+
+
+
+/**
+ * Vue I18n Version
+ *
+ * @remarks
+ * Semver format. Same format as the package.json `version` field.
+ *
+ * @VueI18nGeneral
+ */
+const VERSION = '9.14.5';
+/**
+ * This is only called in esm-bundler builds.
+ * istanbul-ignore-next
+ */
+function initFeatureFlags() {
+    if (typeof __VUE_I18N_FULL_INSTALL__ !== 'boolean') {
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.getGlobalThis)().__VUE_I18N_FULL_INSTALL__ = true;
+    }
+    if (typeof __VUE_I18N_LEGACY_API__ !== 'boolean') {
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.getGlobalThis)().__VUE_I18N_LEGACY_API__ = true;
+    }
+    if (typeof __INTLIFY_JIT_COMPILATION__ !== 'boolean') {
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.getGlobalThis)().__INTLIFY_JIT_COMPILATION__ = false;
+    }
+    if (typeof __INTLIFY_DROP_MESSAGE_COMPILER__ !== 'boolean') {
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.getGlobalThis)().__INTLIFY_DROP_MESSAGE_COMPILER__ = false;
+    }
+    if (typeof __INTLIFY_PROD_DEVTOOLS__ !== 'boolean') {
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.getGlobalThis)().__INTLIFY_PROD_DEVTOOLS__ = false;
+    }
+}
+
+const code$1 = _intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.CoreWarnCodes.__EXTEND_POINT__;
+const inc$1 = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.incrementer)(code$1);
+const I18nWarnCodes = {
+    FALLBACK_TO_ROOT: code$1, // 9
+    NOT_SUPPORTED_PRESERVE: inc$1(), // 10
+    NOT_SUPPORTED_FORMATTER: inc$1(), // 11
+    NOT_SUPPORTED_PRESERVE_DIRECTIVE: inc$1(), // 12
+    NOT_SUPPORTED_GET_CHOICE_INDEX: inc$1(), // 13
+    COMPONENT_NAME_LEGACY_COMPATIBLE: inc$1(), // 14
+    NOT_FOUND_PARENT_SCOPE: inc$1(), // 15
+    IGNORE_OBJ_FLATTEN: inc$1(), // 16
+    NOTICE_DROP_ALLOW_COMPOSITION: inc$1(), // 17
+    NOTICE_DROP_TRANSLATE_EXIST_COMPATIBLE_FLAG: inc$1() // 18
+};
+const warnMessages = {
+    [I18nWarnCodes.FALLBACK_TO_ROOT]: `Fall back to {type} '{key}' with root locale.`,
+    [I18nWarnCodes.NOT_SUPPORTED_PRESERVE]: `Not supported 'preserve'.`,
+    [I18nWarnCodes.NOT_SUPPORTED_FORMATTER]: `Not supported 'formatter'.`,
+    [I18nWarnCodes.NOT_SUPPORTED_PRESERVE_DIRECTIVE]: `Not supported 'preserveDirectiveContent'.`,
+    [I18nWarnCodes.NOT_SUPPORTED_GET_CHOICE_INDEX]: `Not supported 'getChoiceIndex'.`,
+    [I18nWarnCodes.COMPONENT_NAME_LEGACY_COMPATIBLE]: `Component name legacy compatible: '{name}' -> 'i18n'`,
+    [I18nWarnCodes.NOT_FOUND_PARENT_SCOPE]: `Not found parent scope. use the global scope.`,
+    [I18nWarnCodes.IGNORE_OBJ_FLATTEN]: `Ignore object flatten: '{key}' key has an string value`,
+    [I18nWarnCodes.NOTICE_DROP_ALLOW_COMPOSITION]: `'allowComposition' option will be dropped in the next major version. For more information, please see 👉 https://tinyurl.com/2p97mcze`,
+    [I18nWarnCodes.NOTICE_DROP_TRANSLATE_EXIST_COMPATIBLE_FLAG]: `'translateExistCompatible' option will be dropped in the next major version.`
+};
+function getWarnMessage(code, ...args) {
+    return (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.format)(warnMessages[code], ...args);
+}
+
+const code = _intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.CoreErrorCodes.__EXTEND_POINT__;
+const inc = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.incrementer)(code);
+const I18nErrorCodes = {
+    // composer module errors
+    UNEXPECTED_RETURN_TYPE: code, // 24
+    // legacy module errors
+    INVALID_ARGUMENT: inc(), // 25
+    // i18n module errors
+    MUST_BE_CALL_SETUP_TOP: inc(), // 26
+    NOT_INSTALLED: inc(), // 27
+    NOT_AVAILABLE_IN_LEGACY_MODE: inc(), // 28
+    // directive module errors
+    REQUIRED_VALUE: inc(), // 29
+    INVALID_VALUE: inc(), // 30
+    // vue-devtools errors
+    CANNOT_SETUP_VUE_DEVTOOLS_PLUGIN: inc(), // 31
+    NOT_INSTALLED_WITH_PROVIDE: inc(), // 32
+    // unexpected error
+    UNEXPECTED_ERROR: inc(), // 33
+    // not compatible legacy vue-i18n constructor
+    NOT_COMPATIBLE_LEGACY_VUE_I18N: inc(), // 34
+    // bridge support vue 2.x only
+    BRIDGE_SUPPORT_VUE_2_ONLY: inc(), // 35
+    // need to define `i18n` option in `allowComposition: true` and `useScope: 'local' at `useI18n``
+    MUST_DEFINE_I18N_OPTION_IN_ALLOW_COMPOSITION: inc(), // 36
+    // Not available Compostion API in Legacy API mode. Please make sure that the legacy API mode is working properly
+    NOT_AVAILABLE_COMPOSITION_IN_LEGACY: inc(), // 37
+    // for enhancement
+    __EXTEND_POINT__: inc() // 38
+};
+function createI18nError(code, ...args) {
+    return (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_3__.createCompileError)(code, null, ( true) ? { messages: errorMessages, args } : 0);
+}
+const errorMessages = {
+    [I18nErrorCodes.UNEXPECTED_RETURN_TYPE]: 'Unexpected return type in composer',
+    [I18nErrorCodes.INVALID_ARGUMENT]: 'Invalid argument',
+    [I18nErrorCodes.MUST_BE_CALL_SETUP_TOP]: 'Must be called at the top of a `setup` function',
+    [I18nErrorCodes.NOT_INSTALLED]: 'Need to install with `app.use` function',
+    [I18nErrorCodes.UNEXPECTED_ERROR]: 'Unexpected error',
+    [I18nErrorCodes.NOT_AVAILABLE_IN_LEGACY_MODE]: 'Not available in legacy mode',
+    [I18nErrorCodes.REQUIRED_VALUE]: `Required in value: {0}`,
+    [I18nErrorCodes.INVALID_VALUE]: `Invalid value`,
+    [I18nErrorCodes.CANNOT_SETUP_VUE_DEVTOOLS_PLUGIN]: `Cannot setup vue-devtools plugin`,
+    [I18nErrorCodes.NOT_INSTALLED_WITH_PROVIDE]: 'Need to install with `provide` function',
+    [I18nErrorCodes.NOT_COMPATIBLE_LEGACY_VUE_I18N]: 'Not compatible legacy VueI18n.',
+    [I18nErrorCodes.BRIDGE_SUPPORT_VUE_2_ONLY]: 'vue-i18n-bridge support Vue 2.x only',
+    [I18nErrorCodes.MUST_DEFINE_I18N_OPTION_IN_ALLOW_COMPOSITION]: 'Must define ‘i18n’ option or custom block in Composition API with using local scope in Legacy API mode',
+    [I18nErrorCodes.NOT_AVAILABLE_COMPOSITION_IN_LEGACY]: 'Not available Compostion API in Legacy API mode. Please make sure that the legacy API mode is working properly'
+};
+
+const TranslateVNodeSymbol = 
+/* #__PURE__*/ (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.makeSymbol)('__translateVNode');
+const DatetimePartsSymbol = /* #__PURE__*/ (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.makeSymbol)('__datetimeParts');
+const NumberPartsSymbol = /* #__PURE__*/ (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.makeSymbol)('__numberParts');
+const EnableEmitter = /* #__PURE__*/ (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.makeSymbol)('__enableEmitter');
+const DisableEmitter = /* #__PURE__*/ (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.makeSymbol)('__disableEmitter');
+const SetPluralRulesSymbol = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.makeSymbol)('__setPluralRules');
+(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.makeSymbol)('__intlifyMeta');
+const InejctWithOptionSymbol = 
+/* #__PURE__*/ (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.makeSymbol)('__injectWithOption');
+const DisposeSymbol = /* #__PURE__*/ (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.makeSymbol)('__dispose');
+const __VUE_I18N_BRIDGE__ =  '__VUE_I18N_BRIDGE__';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * Transform flat json in obj to normal json in obj
+ */
+function handleFlatJson(obj) {
+    // check obj
+    if (!(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(obj)) {
+        return obj;
+    }
+    if ((0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.isMessageAST)(obj)) {
+        return obj;
+    }
+    for (const key in obj) {
+        // check key
+        if (!(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.hasOwn)(obj, key)) {
+            continue;
+        }
+        // handle for normal json
+        if (!key.includes('.')) {
+            // recursive process value if value is also a object
+            if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(obj[key])) {
+                handleFlatJson(obj[key]);
+            }
+        }
+        // handle for flat json, transform to normal json
+        else {
+            // go to the last object
+            const subKeys = key.split('.');
+            const lastIndex = subKeys.length - 1;
+            let currentObj = obj;
+            let hasStringValue = false;
+            for (let i = 0; i < lastIndex; i++) {
+                if (subKeys[i] === '__proto__') {
+                    throw new Error(`unsafe key: ${subKeys[i]}`);
+                }
+                if (!(subKeys[i] in currentObj)) {
+                    currentObj[subKeys[i]] = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)();
+                }
+                if (!(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(currentObj[subKeys[i]])) {
+                    ( true) &&
+                        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warn)(getWarnMessage(I18nWarnCodes.IGNORE_OBJ_FLATTEN, {
+                            key: subKeys[i]
+                        }));
+                    hasStringValue = true;
+                    break;
+                }
+                currentObj = currentObj[subKeys[i]];
+            }
+            // update last object value, delete old property
+            if (!hasStringValue) {
+                if (!(0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.isMessageAST)(currentObj)) {
+                    currentObj[subKeys[lastIndex]] = obj[key];
+                    delete obj[key];
+                }
+                else {
+                    /**
+                     * NOTE:
+                     * if the last object is a message AST and subKeys[lastIndex] has message AST prop key, ignore to copy and key deletion
+                     */
+                    if (!_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.AST_NODE_PROPS_KEYS.includes(subKeys[lastIndex])) {
+                        delete obj[key];
+                    }
+                }
+            }
+            // recursive process value if value is also a object
+            if (!(0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.isMessageAST)(currentObj)) {
+                const target = currentObj[subKeys[lastIndex]];
+                if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(target)) {
+                    handleFlatJson(target);
+                }
+            }
+        }
+    }
+    return obj;
+}
+function getLocaleMessages(locale, options) {
+    const { messages, __i18n, messageResolver, flatJson } = options;
+    // prettier-ignore
+    const ret = ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(messages)
+        ? messages
+        : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(__i18n)
+            ? (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)()
+            : { [locale]: (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)() });
+    // merge locale messages of i18n custom block
+    if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(__i18n)) {
+        __i18n.forEach(custom => {
+            if ('locale' in custom && 'resource' in custom) {
+                const { locale, resource } = custom;
+                if (locale) {
+                    ret[locale] = ret[locale] || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)();
+                    (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.deepCopy)(resource, ret[locale]);
+                }
+                else {
+                    (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.deepCopy)(resource, ret);
+                }
+            }
+            else {
+                (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(custom) && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.deepCopy)(JSON.parse(custom), ret);
+            }
+        });
+    }
+    // handle messages for flat json
+    if (messageResolver == null && flatJson) {
+        for (const key in ret) {
+            if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.hasOwn)(ret, key)) {
+                handleFlatJson(ret[key]);
+            }
+        }
+    }
+    return ret;
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getComponentOptions(instance) {
+    return instance.type ;
+}
+function adjustI18nResources(gl, options, componentOptions // eslint-disable-line @typescript-eslint/no-explicit-any
+) {
+    let messages = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(options.messages)
+        ? options.messages
+        : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)();
+    if ('__i18nGlobal' in componentOptions) {
+        messages = getLocaleMessages(gl.locale.value, {
+            messages,
+            __i18n: componentOptions.__i18nGlobal
+        });
+    }
+    // merge locale messages
+    const locales = Object.keys(messages);
+    if (locales.length) {
+        locales.forEach(locale => {
+            gl.mergeLocaleMessage(locale, messages[locale]);
+        });
+    }
+    {
+        // merge datetime formats
+        if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(options.datetimeFormats)) {
+            const locales = Object.keys(options.datetimeFormats);
+            if (locales.length) {
+                locales.forEach(locale => {
+                    gl.mergeDateTimeFormat(locale, options.datetimeFormats[locale]);
+                });
+            }
+        }
+        // merge number formats
+        if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(options.numberFormats)) {
+            const locales = Object.keys(options.numberFormats);
+            if (locales.length) {
+                locales.forEach(locale => {
+                    gl.mergeNumberFormat(locale, options.numberFormats[locale]);
+                });
+            }
+        }
+    }
+}
+function createTextNode(key) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(vue__WEBPACK_IMPORTED_MODULE_0__.Text, null, key, 0)
+        ;
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// extend VNode interface
+const DEVTOOLS_META = '__INTLIFY_META__';
+const NOOP_RETURN_ARRAY = () => [];
+const NOOP_RETURN_FALSE = () => false;
+let composerID = 0;
+function defineCoreMissingHandler(missing) {
+    return ((ctx, locale, key, type) => {
+        return missing(locale, key, (0,vue__WEBPACK_IMPORTED_MODULE_0__.getCurrentInstance)() || undefined, type);
+    });
+}
+// for Intlify DevTools
+/* #__NO_SIDE_EFFECTS__ */
+const getMetaInfo = () => {
+    const instance = (0,vue__WEBPACK_IMPORTED_MODULE_0__.getCurrentInstance)();
+    let meta = null; // eslint-disable-line @typescript-eslint/no-explicit-any
+    return instance && (meta = getComponentOptions(instance)[DEVTOOLS_META])
+        ? { [DEVTOOLS_META]: meta } // eslint-disable-line @typescript-eslint/no-explicit-any
+        : null;
+};
+/**
+ * Create composer interface factory
+ *
+ * @internal
+ */
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+function createComposer(options = {}, VueI18nLegacy) {
+    const { __root, __injectWithOption } = options;
+    const _isGlobal = __root === undefined;
+    const flatJson = options.flatJson;
+    const _ref = _intlify_shared__WEBPACK_IMPORTED_MODULE_1__.inBrowser ? vue__WEBPACK_IMPORTED_MODULE_0__.ref : vue__WEBPACK_IMPORTED_MODULE_0__.shallowRef;
+    const translateExistCompatible = !!options.translateExistCompatible;
+    if ((true)) {
+        if (translateExistCompatible && !false) {
+            (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warnOnce)(getWarnMessage(I18nWarnCodes.NOTICE_DROP_TRANSLATE_EXIST_COMPATIBLE_FLAG));
+        }
+    }
+    let _inheritLocale = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.inheritLocale)
+        ? options.inheritLocale
+        : true;
+    const _locale = _ref(
+    // prettier-ignore
+    __root && _inheritLocale
+        ? __root.locale.value
+        : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(options.locale)
+            ? options.locale
+            : _intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.DEFAULT_LOCALE);
+    const _fallbackLocale = _ref(
+    // prettier-ignore
+    __root && _inheritLocale
+        ? __root.fallbackLocale.value
+        : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(options.fallbackLocale) ||
+            (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(options.fallbackLocale) ||
+            (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options.fallbackLocale) ||
+            options.fallbackLocale === false
+            ? options.fallbackLocale
+            : _locale.value);
+    const _messages = _ref(getLocaleMessages(_locale.value, options));
+    // prettier-ignore
+    const _datetimeFormats = _ref((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options.datetimeFormats)
+            ? options.datetimeFormats
+            : { [_locale.value]: {} })
+        ;
+    // prettier-ignore
+    const _numberFormats = _ref((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options.numberFormats)
+            ? options.numberFormats
+            : { [_locale.value]: {} })
+        ;
+    // warning suppress options
+    // prettier-ignore
+    let _missingWarn = __root
+        ? __root.missingWarn
+        : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.missingWarn) || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isRegExp)(options.missingWarn)
+            ? options.missingWarn
+            : true;
+    // prettier-ignore
+    let _fallbackWarn = __root
+        ? __root.fallbackWarn
+        : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.fallbackWarn) || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isRegExp)(options.fallbackWarn)
+            ? options.fallbackWarn
+            : true;
+    // prettier-ignore
+    let _fallbackRoot = __root
+        ? __root.fallbackRoot
+        : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.fallbackRoot)
+            ? options.fallbackRoot
+            : true;
+    // configure fall back to root
+    let _fallbackFormat = !!options.fallbackFormat;
+    // runtime missing
+    let _missing = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.missing) ? options.missing : null;
+    let _runtimeMissing = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.missing)
+        ? defineCoreMissingHandler(options.missing)
+        : null;
+    // postTranslation handler
+    let _postTranslation = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.postTranslation)
+        ? options.postTranslation
+        : null;
+    // prettier-ignore
+    let _warnHtmlMessage = __root
+        ? __root.warnHtmlMessage
+        : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.warnHtmlMessage)
+            ? options.warnHtmlMessage
+            : true;
+    let _escapeParameter = !!options.escapeParameter;
+    // custom linked modifiers
+    // prettier-ignore
+    const _modifiers = __root
+        ? __root.modifiers
+        : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options.modifiers)
+            ? options.modifiers
+            : {};
+    // pluralRules
+    let _pluralRules = options.pluralRules || (__root && __root.pluralRules);
+    // runtime context
+    // eslint-disable-next-line prefer-const
+    let _context;
+    const getCoreContext = () => {
+        _isGlobal && (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.setFallbackContext)(null);
+        const ctxOptions = {
+            version: VERSION,
+            locale: _locale.value,
+            fallbackLocale: _fallbackLocale.value,
+            messages: _messages.value,
+            modifiers: _modifiers,
+            pluralRules: _pluralRules,
+            missing: _runtimeMissing === null ? undefined : _runtimeMissing,
+            missingWarn: _missingWarn,
+            fallbackWarn: _fallbackWarn,
+            fallbackFormat: _fallbackFormat,
+            unresolving: true,
+            postTranslation: _postTranslation === null ? undefined : _postTranslation,
+            warnHtmlMessage: _warnHtmlMessage,
+            escapeParameter: _escapeParameter,
+            messageResolver: options.messageResolver,
+            messageCompiler: options.messageCompiler,
+            __meta: { framework: 'vue' }
+        };
+        {
+            ctxOptions.datetimeFormats = _datetimeFormats.value;
+            ctxOptions.numberFormats = _numberFormats.value;
+            ctxOptions.__datetimeFormatters = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(_context)
+                ? _context.__datetimeFormatters
+                : undefined;
+            ctxOptions.__numberFormatters = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(_context)
+                ? _context.__numberFormatters
+                : undefined;
+        }
+        if ((true)) {
+            ctxOptions.__v_emitter = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(_context)
+                ? _context.__v_emitter
+                : undefined;
+        }
+        const ctx = (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.createCoreContext)(ctxOptions);
+        _isGlobal && (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.setFallbackContext)(ctx);
+        return ctx;
+    };
+    _context = getCoreContext();
+    (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.updateFallbackLocale)(_context, _locale.value, _fallbackLocale.value);
+    // track reactivity
+    function trackReactivityValues() {
+        return [
+                _locale.value,
+                _fallbackLocale.value,
+                _messages.value,
+                _datetimeFormats.value,
+                _numberFormats.value
+            ]
+            ;
+    }
+    // locale
+    const locale = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)({
+        get: () => _locale.value,
+        set: val => {
+            _locale.value = val;
+            _context.locale = _locale.value;
+        }
+    });
+    // fallbackLocale
+    const fallbackLocale = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)({
+        get: () => _fallbackLocale.value,
+        set: val => {
+            _fallbackLocale.value = val;
+            _context.fallbackLocale = _fallbackLocale.value;
+            (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.updateFallbackLocale)(_context, _locale.value, val);
+        }
+    });
+    // messages
+    const messages = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(() => _messages.value);
+    // datetimeFormats
+    const datetimeFormats = /* #__PURE__*/ (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(() => _datetimeFormats.value);
+    // numberFormats
+    const numberFormats = /* #__PURE__*/ (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(() => _numberFormats.value);
+    // getPostTranslationHandler
+    function getPostTranslationHandler() {
+        return (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(_postTranslation) ? _postTranslation : null;
+    }
+    // setPostTranslationHandler
+    function setPostTranslationHandler(handler) {
+        _postTranslation = handler;
+        _context.postTranslation = handler;
+    }
+    // getMissingHandler
+    function getMissingHandler() {
+        return _missing;
+    }
+    // setMissingHandler
+    function setMissingHandler(handler) {
+        if (handler !== null) {
+            _runtimeMissing = defineCoreMissingHandler(handler);
+        }
+        _missing = handler;
+        _context.missing = _runtimeMissing;
+    }
+    function isResolvedTranslateMessage(type, arg // eslint-disable-line @typescript-eslint/no-explicit-any
+    ) {
+        return type !== 'translate' || !arg.resolvedMessage;
+    }
+    const wrapWithDeps = (fn, argumentParser, warnType, fallbackSuccess, fallbackFail, successCondition) => {
+        trackReactivityValues(); // track reactive dependency
+        // NOTE: experimental !!
+        let ret;
+        try {
+            if (true) {
+                (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.setAdditionalMeta)(getMetaInfo());
+            }
+            if (!_isGlobal) {
+                _context.fallbackContext = __root
+                    ? (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.getFallbackContext)()
+                    : undefined;
+            }
+            ret = fn(_context);
+        }
+        finally {
+            if (true) {
+                (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.setAdditionalMeta)(null);
+            }
+            if (!_isGlobal) {
+                _context.fallbackContext = undefined;
+            }
+        }
+        if ((warnType !== 'translate exists' && // for not `te` (e.g `t`)
+            (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(ret) &&
+            ret === _intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.NOT_REOSLVED) ||
+            (warnType === 'translate exists' && !ret) // for `te`
+        ) {
+            const [key, arg2] = argumentParser();
+            if (( true) &&
+                __root &&
+                (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(key) &&
+                isResolvedTranslateMessage(warnType, arg2)) {
+                if (_fallbackRoot &&
+                    ((0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.isTranslateFallbackWarn)(_fallbackWarn, key) ||
+                        (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.isTranslateMissingWarn)(_missingWarn, key))) {
+                    (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warn)(getWarnMessage(I18nWarnCodes.FALLBACK_TO_ROOT, {
+                        key,
+                        type: warnType
+                    }));
+                }
+                // for vue-devtools timeline event
+                if ((true)) {
+                    const { __v_emitter: emitter } = _context;
+                    if (emitter && _fallbackRoot) {
+                        emitter.emit("fallback" /* VueDevToolsTimelineEvents.FALBACK */, {
+                            type: warnType,
+                            key,
+                            to: 'global',
+                            groupId: `${warnType}:${key}`
+                        });
+                    }
+                }
+            }
+            return __root && _fallbackRoot
+                ? fallbackSuccess(__root)
+                : fallbackFail(key);
+        }
+        else if (successCondition(ret)) {
+            return ret;
+        }
+        else {
+            /* istanbul ignore next */
+            throw createI18nError(I18nErrorCodes.UNEXPECTED_RETURN_TYPE);
+        }
+    };
+    // t
+    function t(...args) {
+        return wrapWithDeps(context => Reflect.apply(_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.translate, null, [context, ...args]), () => (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.parseTranslateArgs)(...args), 'translate', root => Reflect.apply(root.t, root, [...args]), key => key, val => (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(val));
+    }
+    // rt
+    function rt(...args) {
+        const [arg1, arg2, arg3] = args;
+        if (arg3 && !(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(arg3)) {
+            throw createI18nError(I18nErrorCodes.INVALID_ARGUMENT);
+        }
+        return t(...[arg1, arg2, (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.assign)({ resolvedMessage: true }, arg3 || {})]);
+    }
+    // d
+    function d(...args) {
+        return wrapWithDeps(context => Reflect.apply(_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.datetime, null, [context, ...args]), () => (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.parseDateTimeArgs)(...args), 'datetime format', root => Reflect.apply(root.d, root, [...args]), () => _intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.MISSING_RESOLVE_VALUE, val => (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(val));
+    }
+    // n
+    function n(...args) {
+        return wrapWithDeps(context => Reflect.apply(_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.number, null, [context, ...args]), () => (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.parseNumberArgs)(...args), 'number format', root => Reflect.apply(root.n, root, [...args]), () => _intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.MISSING_RESOLVE_VALUE, val => (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(val));
+    }
+    // for custom processor
+    function normalize(values) {
+        return values.map(val => (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(val) || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(val) || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(val)
+            ? createTextNode(String(val))
+            : val);
+    }
+    const interpolate = (val) => val;
+    const processor = {
+        normalize,
+        interpolate,
+        type: 'vnode'
+    };
+    // translateVNode, using for `i18n-t` component
+    function translateVNode(...args) {
+        return wrapWithDeps(context => {
+            let ret;
+            const _context = context;
+            try {
+                _context.processor = processor;
+                ret = Reflect.apply(_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.translate, null, [_context, ...args]);
+            }
+            finally {
+                _context.processor = null;
+            }
+            return ret;
+        }, () => (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.parseTranslateArgs)(...args), 'translate', 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        root => root[TranslateVNodeSymbol](...args), key => [createTextNode(key)], val => (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(val));
+    }
+    // numberParts, using for `i18n-n` component
+    function numberParts(...args) {
+        return wrapWithDeps(context => Reflect.apply(_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.number, null, [context, ...args]), () => (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.parseNumberArgs)(...args), 'number format', 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        root => root[NumberPartsSymbol](...args), NOOP_RETURN_ARRAY, val => (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(val) || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(val));
+    }
+    // datetimeParts, using for `i18n-d` component
+    function datetimeParts(...args) {
+        return wrapWithDeps(context => Reflect.apply(_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.datetime, null, [context, ...args]), () => (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.parseDateTimeArgs)(...args), 'datetime format', 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        root => root[DatetimePartsSymbol](...args), NOOP_RETURN_ARRAY, val => (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(val) || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(val));
+    }
+    function setPluralRules(rules) {
+        _pluralRules = rules;
+        _context.pluralRules = _pluralRules;
+    }
+    // te
+    function te(key, locale) {
+        return wrapWithDeps(() => {
+            if (!key) {
+                return false;
+            }
+            const targetLocale = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(locale) ? locale : _locale.value;
+            const message = getLocaleMessage(targetLocale);
+            const resolved = _context.messageResolver(message, key);
+            return !translateExistCompatible
+                ? (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.isMessageAST)(resolved) ||
+                    (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.isMessageFunction)(resolved) ||
+                    (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(resolved)
+                : resolved != null;
+        }, () => [key], 'translate exists', root => {
+            return Reflect.apply(root.te, root, [key, locale]);
+        }, NOOP_RETURN_FALSE, val => (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(val));
+    }
+    function resolveMessages(key) {
+        let messages = null;
+        const locales = (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.fallbackWithLocaleChain)(_context, _fallbackLocale.value, _locale.value);
+        for (let i = 0; i < locales.length; i++) {
+            const targetLocaleMessages = _messages.value[locales[i]] || {};
+            const messageValue = _context.messageResolver(targetLocaleMessages, key);
+            if (messageValue != null) {
+                messages = messageValue;
+                break;
+            }
+        }
+        return messages;
+    }
+    // tm
+    function tm(key) {
+        const messages = resolveMessages(key);
+        // prettier-ignore
+        return messages != null
+            ? messages
+            : __root
+                ? __root.tm(key) || {}
+                : {};
+    }
+    // getLocaleMessage
+    function getLocaleMessage(locale) {
+        return (_messages.value[locale] || {});
+    }
+    // setLocaleMessage
+    function setLocaleMessage(locale, message) {
+        if (flatJson) {
+            const _message = { [locale]: message };
+            for (const key in _message) {
+                if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.hasOwn)(_message, key)) {
+                    handleFlatJson(_message[key]);
+                }
+            }
+            message = _message[locale];
+        }
+        _messages.value[locale] = message;
+        _context.messages = _messages.value;
+    }
+    // mergeLocaleMessage
+    function mergeLocaleMessage(locale, message) {
+        _messages.value[locale] = _messages.value[locale] || {};
+        const _message = { [locale]: message };
+        if (flatJson) {
+            for (const key in _message) {
+                if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.hasOwn)(_message, key)) {
+                    handleFlatJson(_message[key]);
+                }
+            }
+        }
+        message = _message[locale];
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.deepCopy)(message, _messages.value[locale]);
+        _context.messages = _messages.value;
+    }
+    // getDateTimeFormat
+    function getDateTimeFormat(locale) {
+        return _datetimeFormats.value[locale] || {};
+    }
+    // setDateTimeFormat
+    function setDateTimeFormat(locale, format) {
+        _datetimeFormats.value[locale] = format;
+        _context.datetimeFormats = _datetimeFormats.value;
+        (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.clearDateTimeFormat)(_context, locale, format);
+    }
+    // mergeDateTimeFormat
+    function mergeDateTimeFormat(locale, format) {
+        _datetimeFormats.value[locale] = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.assign)(_datetimeFormats.value[locale] || {}, format);
+        _context.datetimeFormats = _datetimeFormats.value;
+        (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.clearDateTimeFormat)(_context, locale, format);
+    }
+    // getNumberFormat
+    function getNumberFormat(locale) {
+        return _numberFormats.value[locale] || {};
+    }
+    // setNumberFormat
+    function setNumberFormat(locale, format) {
+        _numberFormats.value[locale] = format;
+        _context.numberFormats = _numberFormats.value;
+        (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.clearNumberFormat)(_context, locale, format);
+    }
+    // mergeNumberFormat
+    function mergeNumberFormat(locale, format) {
+        _numberFormats.value[locale] = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.assign)(_numberFormats.value[locale] || {}, format);
+        _context.numberFormats = _numberFormats.value;
+        (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.clearNumberFormat)(_context, locale, format);
+    }
+    // for debug
+    composerID++;
+    // watch root locale & fallbackLocale
+    if (__root && _intlify_shared__WEBPACK_IMPORTED_MODULE_1__.inBrowser) {
+        (0,vue__WEBPACK_IMPORTED_MODULE_0__.watch)(__root.locale, (val) => {
+            if (_inheritLocale) {
+                _locale.value = val;
+                _context.locale = val;
+                (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.updateFallbackLocale)(_context, _locale.value, _fallbackLocale.value);
+            }
+        });
+        (0,vue__WEBPACK_IMPORTED_MODULE_0__.watch)(__root.fallbackLocale, (val) => {
+            if (_inheritLocale) {
+                _fallbackLocale.value = val;
+                _context.fallbackLocale = val;
+                (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.updateFallbackLocale)(_context, _locale.value, _fallbackLocale.value);
+            }
+        });
+    }
+    // define basic composition API!
+    const composer = {
+        id: composerID,
+        locale,
+        fallbackLocale,
+        get inheritLocale() {
+            return _inheritLocale;
+        },
+        set inheritLocale(val) {
+            _inheritLocale = val;
+            if (val && __root) {
+                _locale.value = __root.locale.value;
+                _fallbackLocale.value = __root.fallbackLocale.value;
+                (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.updateFallbackLocale)(_context, _locale.value, _fallbackLocale.value);
+            }
+        },
+        get availableLocales() {
+            return Object.keys(_messages.value).sort();
+        },
+        messages,
+        get modifiers() {
+            return _modifiers;
+        },
+        get pluralRules() {
+            return _pluralRules || {};
+        },
+        get isGlobal() {
+            return _isGlobal;
+        },
+        get missingWarn() {
+            return _missingWarn;
+        },
+        set missingWarn(val) {
+            _missingWarn = val;
+            _context.missingWarn = _missingWarn;
+        },
+        get fallbackWarn() {
+            return _fallbackWarn;
+        },
+        set fallbackWarn(val) {
+            _fallbackWarn = val;
+            _context.fallbackWarn = _fallbackWarn;
+        },
+        get fallbackRoot() {
+            return _fallbackRoot;
+        },
+        set fallbackRoot(val) {
+            _fallbackRoot = val;
+        },
+        get fallbackFormat() {
+            return _fallbackFormat;
+        },
+        set fallbackFormat(val) {
+            _fallbackFormat = val;
+            _context.fallbackFormat = _fallbackFormat;
+        },
+        get warnHtmlMessage() {
+            return _warnHtmlMessage;
+        },
+        set warnHtmlMessage(val) {
+            _warnHtmlMessage = val;
+            _context.warnHtmlMessage = val;
+        },
+        get escapeParameter() {
+            return _escapeParameter;
+        },
+        set escapeParameter(val) {
+            _escapeParameter = val;
+            _context.escapeParameter = val;
+        },
+        t,
+        getLocaleMessage,
+        setLocaleMessage,
+        mergeLocaleMessage,
+        getPostTranslationHandler,
+        setPostTranslationHandler,
+        getMissingHandler,
+        setMissingHandler,
+        [SetPluralRulesSymbol]: setPluralRules
+    };
+    {
+        composer.datetimeFormats = datetimeFormats;
+        composer.numberFormats = numberFormats;
+        composer.rt = rt;
+        composer.te = te;
+        composer.tm = tm;
+        composer.d = d;
+        composer.n = n;
+        composer.getDateTimeFormat = getDateTimeFormat;
+        composer.setDateTimeFormat = setDateTimeFormat;
+        composer.mergeDateTimeFormat = mergeDateTimeFormat;
+        composer.getNumberFormat = getNumberFormat;
+        composer.setNumberFormat = setNumberFormat;
+        composer.mergeNumberFormat = mergeNumberFormat;
+        composer[InejctWithOptionSymbol] = __injectWithOption;
+        composer[TranslateVNodeSymbol] = translateVNode;
+        composer[DatetimePartsSymbol] = datetimeParts;
+        composer[NumberPartsSymbol] = numberParts;
+    }
+    // for vue-devtools timeline event
+    if ((true)) {
+        composer[EnableEmitter] = (emitter) => {
+            _context.__v_emitter = emitter;
+        };
+        composer[DisableEmitter] = () => {
+            _context.__v_emitter = undefined;
+        };
+    }
+    return composer;
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * Convert to I18n Composer Options from VueI18n Options
+ *
+ * @internal
+ */
+function convertComposerOptions(options) {
+    const locale = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(options.locale) ? options.locale : _intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.DEFAULT_LOCALE;
+    const fallbackLocale = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(options.fallbackLocale) ||
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(options.fallbackLocale) ||
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options.fallbackLocale) ||
+        options.fallbackLocale === false
+        ? options.fallbackLocale
+        : locale;
+    const missing = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.missing) ? options.missing : undefined;
+    const missingWarn = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.silentTranslationWarn) ||
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isRegExp)(options.silentTranslationWarn)
+        ? !options.silentTranslationWarn
+        : true;
+    const fallbackWarn = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.silentFallbackWarn) ||
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isRegExp)(options.silentFallbackWarn)
+        ? !options.silentFallbackWarn
+        : true;
+    const fallbackRoot = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.fallbackRoot)
+        ? options.fallbackRoot
+        : true;
+    const fallbackFormat = !!options.formatFallbackMessages;
+    const modifiers = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options.modifiers) ? options.modifiers : {};
+    const pluralizationRules = options.pluralizationRules;
+    const postTranslation = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.postTranslation)
+        ? options.postTranslation
+        : undefined;
+    const warnHtmlMessage = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(options.warnHtmlInMessage)
+        ? options.warnHtmlInMessage !== 'off'
+        : true;
+    const escapeParameter = !!options.escapeParameterHtml;
+    const inheritLocale = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.sync) ? options.sync : true;
+    if (( true) && options.formatter) {
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warn)(getWarnMessage(I18nWarnCodes.NOT_SUPPORTED_FORMATTER));
+    }
+    if (( true) && options.preserveDirectiveContent) {
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warn)(getWarnMessage(I18nWarnCodes.NOT_SUPPORTED_PRESERVE_DIRECTIVE));
+    }
+    let messages = options.messages;
+    if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options.sharedMessages)) {
+        const sharedMessages = options.sharedMessages;
+        const locales = Object.keys(sharedMessages);
+        messages = locales.reduce((messages, locale) => {
+            const message = messages[locale] || (messages[locale] = {});
+            (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.assign)(message, sharedMessages[locale]);
+            return messages;
+        }, (messages || {}));
+    }
+    const { __i18n, __root, __injectWithOption } = options;
+    const datetimeFormats = options.datetimeFormats;
+    const numberFormats = options.numberFormats;
+    const flatJson = options.flatJson;
+    const translateExistCompatible = options
+        .translateExistCompatible;
+    return {
+        locale,
+        fallbackLocale,
+        messages,
+        flatJson,
+        datetimeFormats,
+        numberFormats,
+        missing,
+        missingWarn,
+        fallbackWarn,
+        fallbackRoot,
+        fallbackFormat,
+        modifiers,
+        pluralRules: pluralizationRules,
+        postTranslation,
+        warnHtmlMessage,
+        escapeParameter,
+        messageResolver: options.messageResolver,
+        inheritLocale,
+        translateExistCompatible,
+        __i18n,
+        __root,
+        __injectWithOption
+    };
+}
+/**
+ * create VueI18n interface factory
+ *
+ * @internal
+ */
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+function createVueI18n(options = {}, VueI18nLegacy) {
+    {
+        const composer = createComposer(convertComposerOptions(options));
+        const { __extender } = options;
+        // defines VueI18n
+        const vueI18n = {
+            // id
+            id: composer.id,
+            // locale
+            get locale() {
+                return composer.locale.value;
+            },
+            set locale(val) {
+                composer.locale.value = val;
+            },
+            // fallbackLocale
+            get fallbackLocale() {
+                return composer.fallbackLocale.value;
+            },
+            set fallbackLocale(val) {
+                composer.fallbackLocale.value = val;
+            },
+            // messages
+            get messages() {
+                return composer.messages.value;
+            },
+            // datetimeFormats
+            get datetimeFormats() {
+                return composer.datetimeFormats.value;
+            },
+            // numberFormats
+            get numberFormats() {
+                return composer.numberFormats.value;
+            },
+            // availableLocales
+            get availableLocales() {
+                return composer.availableLocales;
+            },
+            // formatter
+            get formatter() {
+                ( true) && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warn)(getWarnMessage(I18nWarnCodes.NOT_SUPPORTED_FORMATTER));
+                // dummy
+                return {
+                    interpolate() {
+                        return [];
+                    }
+                };
+            },
+            set formatter(val) {
+                ( true) && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warn)(getWarnMessage(I18nWarnCodes.NOT_SUPPORTED_FORMATTER));
+            },
+            // missing
+            get missing() {
+                return composer.getMissingHandler();
+            },
+            set missing(handler) {
+                composer.setMissingHandler(handler);
+            },
+            // silentTranslationWarn
+            get silentTranslationWarn() {
+                return (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(composer.missingWarn)
+                    ? !composer.missingWarn
+                    : composer.missingWarn;
+            },
+            set silentTranslationWarn(val) {
+                composer.missingWarn = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(val) ? !val : val;
+            },
+            // silentFallbackWarn
+            get silentFallbackWarn() {
+                return (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(composer.fallbackWarn)
+                    ? !composer.fallbackWarn
+                    : composer.fallbackWarn;
+            },
+            set silentFallbackWarn(val) {
+                composer.fallbackWarn = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(val) ? !val : val;
+            },
+            // modifiers
+            get modifiers() {
+                return composer.modifiers;
+            },
+            // formatFallbackMessages
+            get formatFallbackMessages() {
+                return composer.fallbackFormat;
+            },
+            set formatFallbackMessages(val) {
+                composer.fallbackFormat = val;
+            },
+            // postTranslation
+            get postTranslation() {
+                return composer.getPostTranslationHandler();
+            },
+            set postTranslation(handler) {
+                composer.setPostTranslationHandler(handler);
+            },
+            // sync
+            get sync() {
+                return composer.inheritLocale;
+            },
+            set sync(val) {
+                composer.inheritLocale = val;
+            },
+            // warnInHtmlMessage
+            get warnHtmlInMessage() {
+                return composer.warnHtmlMessage ? 'warn' : 'off';
+            },
+            set warnHtmlInMessage(val) {
+                composer.warnHtmlMessage = val !== 'off';
+            },
+            // escapeParameterHtml
+            get escapeParameterHtml() {
+                return composer.escapeParameter;
+            },
+            set escapeParameterHtml(val) {
+                composer.escapeParameter = val;
+            },
+            // preserveDirectiveContent
+            get preserveDirectiveContent() {
+                ( true) &&
+                    (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warn)(getWarnMessage(I18nWarnCodes.NOT_SUPPORTED_PRESERVE_DIRECTIVE));
+                return true;
+            },
+            set preserveDirectiveContent(val) {
+                ( true) &&
+                    (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warn)(getWarnMessage(I18nWarnCodes.NOT_SUPPORTED_PRESERVE_DIRECTIVE));
+            },
+            // pluralizationRules
+            get pluralizationRules() {
+                return composer.pluralRules || {};
+            },
+            // for internal
+            __composer: composer,
+            // t
+            t(...args) {
+                const [arg1, arg2, arg3] = args;
+                const options = {};
+                let list = null;
+                let named = null;
+                if (!(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(arg1)) {
+                    throw createI18nError(I18nErrorCodes.INVALID_ARGUMENT);
+                }
+                const key = arg1;
+                if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(arg2)) {
+                    options.locale = arg2;
+                }
+                else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(arg2)) {
+                    list = arg2;
+                }
+                else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(arg2)) {
+                    named = arg2;
+                }
+                if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(arg3)) {
+                    list = arg3;
+                }
+                else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(arg3)) {
+                    named = arg3;
+                }
+                // return composer.t(key, (list || named || {}) as any, options)
+                return Reflect.apply(composer.t, composer, [
+                    key,
+                    (list || named || {}),
+                    options
+                ]);
+            },
+            rt(...args) {
+                return Reflect.apply(composer.rt, composer, [...args]);
+            },
+            // tc
+            tc(...args) {
+                const [arg1, arg2, arg3] = args;
+                const options = { plural: 1 };
+                let list = null;
+                let named = null;
+                if (!(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(arg1)) {
+                    throw createI18nError(I18nErrorCodes.INVALID_ARGUMENT);
+                }
+                const key = arg1;
+                if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(arg2)) {
+                    options.locale = arg2;
+                }
+                else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(arg2)) {
+                    options.plural = arg2;
+                }
+                else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(arg2)) {
+                    list = arg2;
+                }
+                else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(arg2)) {
+                    named = arg2;
+                }
+                if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(arg3)) {
+                    options.locale = arg3;
+                }
+                else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(arg3)) {
+                    list = arg3;
+                }
+                else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(arg3)) {
+                    named = arg3;
+                }
+                // return composer.t(key, (list || named || {}) as any, options)
+                return Reflect.apply(composer.t, composer, [
+                    key,
+                    (list || named || {}),
+                    options
+                ]);
+            },
+            // te
+            te(key, locale) {
+                return composer.te(key, locale);
+            },
+            // tm
+            tm(key) {
+                return composer.tm(key);
+            },
+            // getLocaleMessage
+            getLocaleMessage(locale) {
+                return composer.getLocaleMessage(locale);
+            },
+            // setLocaleMessage
+            setLocaleMessage(locale, message) {
+                composer.setLocaleMessage(locale, message);
+            },
+            // mergeLocaleMessage
+            mergeLocaleMessage(locale, message) {
+                composer.mergeLocaleMessage(locale, message);
+            },
+            // d
+            d(...args) {
+                return Reflect.apply(composer.d, composer, [...args]);
+            },
+            // getDateTimeFormat
+            getDateTimeFormat(locale) {
+                return composer.getDateTimeFormat(locale);
+            },
+            // setDateTimeFormat
+            setDateTimeFormat(locale, format) {
+                composer.setDateTimeFormat(locale, format);
+            },
+            // mergeDateTimeFormat
+            mergeDateTimeFormat(locale, format) {
+                composer.mergeDateTimeFormat(locale, format);
+            },
+            // n
+            n(...args) {
+                return Reflect.apply(composer.n, composer, [...args]);
+            },
+            // getNumberFormat
+            getNumberFormat(locale) {
+                return composer.getNumberFormat(locale);
+            },
+            // setNumberFormat
+            setNumberFormat(locale, format) {
+                composer.setNumberFormat(locale, format);
+            },
+            // mergeNumberFormat
+            mergeNumberFormat(locale, format) {
+                composer.mergeNumberFormat(locale, format);
+            },
+            // getChoiceIndex
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            getChoiceIndex(choice, choicesLength) {
+                ( true) &&
+                    (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warn)(getWarnMessage(I18nWarnCodes.NOT_SUPPORTED_GET_CHOICE_INDEX));
+                return -1;
+            }
+        };
+        vueI18n.__extender = __extender;
+        // for vue-devtools timeline event
+        if ((true)) {
+            vueI18n.__enableEmitter = (emitter) => {
+                const __composer = composer;
+                __composer[EnableEmitter] && __composer[EnableEmitter](emitter);
+            };
+            vueI18n.__disableEmitter = () => {
+                const __composer = composer;
+                __composer[DisableEmitter] && __composer[DisableEmitter]();
+            };
+        }
+        return vueI18n;
+    }
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+const baseFormatProps = {
+    tag: {
+        type: [String, Object]
+    },
+    locale: {
+        type: String
+    },
+    scope: {
+        type: String,
+        // NOTE: avoid https://github.com/microsoft/rushstack/issues/1050
+        validator: (val /* ComponentI18nScope */) => val === 'parent' || val === 'global',
+        default: 'parent' /* ComponentI18nScope */
+    },
+    i18n: {
+        type: Object
+    }
+};
+
+function getInterpolateArg(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+{ slots }, // SetupContext,
+keys) {
+    if (keys.length === 1 && keys[0] === 'default') {
+        // default slot with list
+        const ret = slots.default ? slots.default() : [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return ret.reduce((slot, current) => {
+            return [
+                ...slot,
+                // prettier-ignore
+                ...(current.type === vue__WEBPACK_IMPORTED_MODULE_0__.Fragment ? current.children : [current]
+                    )
+            ];
+        }, []);
+    }
+    else {
+        // named slots
+        return keys.reduce((arg, key) => {
+            const slot = slots[key];
+            if (slot) {
+                arg[key] = slot();
+            }
+            return arg;
+        }, (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)());
+    }
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getFragmentableTag(tag) {
+    return vue__WEBPACK_IMPORTED_MODULE_0__.Fragment ;
+}
+
+const TranslationImpl = /*#__PURE__*/ (0,vue__WEBPACK_IMPORTED_MODULE_0__.defineComponent)({
+    /* eslint-disable */
+    name: 'i18n-t',
+    props: (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.assign)({
+        keypath: {
+            type: String,
+            required: true
+        },
+        plural: {
+            type: [Number, String],
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            validator: (val) => (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(val) || !isNaN(val)
+        }
+    }, baseFormatProps),
+    /* eslint-enable */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    setup(props, context) {
+        const { slots, attrs } = context;
+        // NOTE: avoid https://github.com/microsoft/rushstack/issues/1050
+        const i18n = props.i18n ||
+            useI18n({
+                useScope: props.scope,
+                __useComponent: true
+            });
+        return () => {
+            const keys = Object.keys(slots).filter(key => key !== '_');
+            const options = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)();
+            if (props.locale) {
+                options.locale = props.locale;
+            }
+            if (props.plural !== undefined) {
+                options.plural = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(props.plural) ? +props.plural : props.plural;
+            }
+            const arg = getInterpolateArg(context, keys);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const children = i18n[TranslateVNodeSymbol](props.keypath, arg, options);
+            const assignedAttrs = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.assign)((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)(), attrs);
+            const tag = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(props.tag) || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(props.tag)
+                ? props.tag
+                : getFragmentableTag();
+            return (0,vue__WEBPACK_IMPORTED_MODULE_0__.h)(tag, assignedAttrs, children);
+        };
+    }
+});
+/**
+ * export the public type for h/tsx inference
+ * also to avoid inline import() in generated d.ts files
+ */
+/**
+ * Translation Component
+ *
+ * @remarks
+ * See the following items for property about details
+ *
+ * @VueI18nSee [TranslationProps](component#translationprops)
+ * @VueI18nSee [BaseFormatProps](component#baseformatprops)
+ * @VueI18nSee [Component Interpolation](../guide/advanced/component)
+ *
+ * @example
+ * ```html
+ * <div id="app">
+ *   <!-- ... -->
+ *   <i18n keypath="term" tag="label" for="tos">
+ *     <a :href="url" target="_blank">{{ $t('tos') }}</a>
+ *   </i18n>
+ *   <!-- ... -->
+ * </div>
+ * ```
+ * ```js
+ * import { createApp } from 'vue'
+ * import { createI18n } from 'vue-i18n'
+ *
+ * const messages = {
+ *   en: {
+ *     tos: 'Term of Service',
+ *     term: 'I accept xxx {0}.'
+ *   },
+ *   ja: {
+ *     tos: '利用規約',
+ *     term: '私は xxx の{0}に同意します。'
+ *   }
+ * }
+ *
+ * const i18n = createI18n({
+ *   locale: 'en',
+ *   messages
+ * })
+ *
+ * const app = createApp({
+ *   data: {
+ *     url: '/term'
+ *   }
+ * }).use(i18n).mount('#app')
+ * ```
+ *
+ * @VueI18nComponent
+ */
+const Translation = TranslationImpl;
+const I18nT = Translation;
+
+function isVNode(target) {
+    return (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(target) && !(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(target[0]);
+}
+function renderFormatter(props, context, slotKeys, partFormatter) {
+    const { slots, attrs } = context;
+    return () => {
+        const options = { part: true };
+        let overrides = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)();
+        if (props.locale) {
+            options.locale = props.locale;
+        }
+        if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(props.format)) {
+            options.key = props.format;
+        }
+        else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(props.format)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(props.format.key)) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                options.key = props.format.key;
+            }
+            // Filter out number format options only
+            overrides = Object.keys(props.format).reduce((options, prop) => {
+                return slotKeys.includes(prop)
+                    ? (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.assign)((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)(), options, { [prop]: props.format[prop] }) // eslint-disable-line @typescript-eslint/no-explicit-any
+                    : options;
+            }, (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)());
+        }
+        const parts = partFormatter(...[props.value, options, overrides]);
+        let children = [options.key];
+        if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(parts)) {
+            children = parts.map((part, index) => {
+                const slot = slots[part.type];
+                const node = slot
+                    ? slot({ [part.type]: part.value, index, parts })
+                    : [part.value];
+                if (isVNode(node)) {
+                    node[0].key = `${part.type}-${index}`;
+                }
+                return node;
+            });
+        }
+        else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(parts)) {
+            children = [parts];
+        }
+        const assignedAttrs = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.assign)((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.create)(), attrs);
+        const tag = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(props.tag) || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(props.tag)
+            ? props.tag
+            : getFragmentableTag();
+        return (0,vue__WEBPACK_IMPORTED_MODULE_0__.h)(tag, assignedAttrs, children);
+    };
+}
+
+const NumberFormatImpl = /*#__PURE__*/ (0,vue__WEBPACK_IMPORTED_MODULE_0__.defineComponent)({
+    /* eslint-disable */
+    name: 'i18n-n',
+    props: (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.assign)({
+        value: {
+            type: Number,
+            required: true
+        },
+        format: {
+            type: [String, Object]
+        }
+    }, baseFormatProps),
+    /* eslint-enable */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    setup(props, context) {
+        const i18n = props.i18n ||
+            useI18n({
+                useScope: props.scope,
+                __useComponent: true
+            });
+        return renderFormatter(props, context, _intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.NUMBER_FORMAT_OPTIONS_KEYS, (...args) => 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        i18n[NumberPartsSymbol](...args));
+    }
+});
+/**
+ * export the public type for h/tsx inference
+ * also to avoid inline import() in generated d.ts files
+ */
+/**
+ * Number Format Component
+ *
+ * @remarks
+ * See the following items for property about details
+ *
+ * @VueI18nSee [FormattableProps](component#formattableprops)
+ * @VueI18nSee [BaseFormatProps](component#baseformatprops)
+ * @VueI18nSee [Custom Formatting](../guide/essentials/number#custom-formatting)
+ *
+ * @VueI18nDanger
+ * Not supported IE, due to no support `Intl.NumberFormat#formatToParts` in [IE](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/formatToParts)
+ *
+ * If you want to use it, you need to use [polyfill](https://github.com/formatjs/formatjs/tree/main/packages/intl-numberformat)
+ *
+ * @VueI18nComponent
+ */
+const NumberFormat = NumberFormatImpl;
+const I18nN = NumberFormat;
+
+const DatetimeFormatImpl = /* #__PURE__*/ (0,vue__WEBPACK_IMPORTED_MODULE_0__.defineComponent)({
+    /* eslint-disable */
+    name: 'i18n-d',
+    props: (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.assign)({
+        value: {
+            type: [Number, Date],
+            required: true
+        },
+        format: {
+            type: [String, Object]
+        }
+    }, baseFormatProps),
+    /* eslint-enable */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    setup(props, context) {
+        const i18n = props.i18n ||
+            useI18n({
+                useScope: props.scope,
+                __useComponent: true
+            });
+        return renderFormatter(props, context, _intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.DATETIME_FORMAT_OPTIONS_KEYS, (...args) => 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        i18n[DatetimePartsSymbol](...args));
+    }
+});
+/**
+ * Datetime Format Component
+ *
+ * @remarks
+ * See the following items for property about details
+ *
+ * @VueI18nSee [FormattableProps](component#formattableprops)
+ * @VueI18nSee [BaseFormatProps](component#baseformatprops)
+ * @VueI18nSee [Custom Formatting](../guide/essentials/datetime#custom-formatting)
+ *
+ * @VueI18nDanger
+ * Not supported IE, due to no support `Intl.DateTimeFormat#formatToParts` in [IE](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/formatToParts)
+ *
+ * If you want to use it, you need to use [polyfill](https://github.com/formatjs/formatjs/tree/main/packages/intl-datetimeformat)
+ *
+ * @VueI18nComponent
+ */
+const DatetimeFormat = DatetimeFormatImpl;
+const I18nD = DatetimeFormat;
+
+function getComposer$2(i18n, instance) {
+    const i18nInternal = i18n;
+    if (i18n.mode === 'composition') {
+        return (i18nInternal.__getInstance(instance) || i18n.global);
+    }
+    else {
+        const vueI18n = i18nInternal.__getInstance(instance);
+        return vueI18n != null
+            ? vueI18n.__composer
+            : i18n.global.__composer;
+    }
+}
+function vTDirective(i18n) {
+    const _process = (binding) => {
+        const { instance, modifiers, value } = binding;
+        /* istanbul ignore if */
+        if (!instance || !instance.$) {
+            throw createI18nError(I18nErrorCodes.UNEXPECTED_ERROR);
+        }
+        const composer = getComposer$2(i18n, instance.$);
+        if (( true) && modifiers.preserve) {
+            (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warn)(getWarnMessage(I18nWarnCodes.NOT_SUPPORTED_PRESERVE));
+        }
+        const parsedValue = parseValue(value);
+        return [
+            Reflect.apply(composer.t, composer, [...makeParams(parsedValue)]),
+            composer
+        ];
+    };
+    const register = (el, binding) => {
+        const [textContent, composer] = _process(binding);
+        if (_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.inBrowser && i18n.global === composer) {
+            // global scope only
+            el.__i18nWatcher = (0,vue__WEBPACK_IMPORTED_MODULE_0__.watch)(composer.locale, () => {
+                binding.instance && binding.instance.$forceUpdate();
+            });
+        }
+        el.__composer = composer;
+        el.textContent = textContent;
+    };
+    const unregister = (el) => {
+        if (_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.inBrowser && el.__i18nWatcher) {
+            el.__i18nWatcher();
+            el.__i18nWatcher = undefined;
+            delete el.__i18nWatcher;
+        }
+        if (el.__composer) {
+            el.__composer = undefined;
+            delete el.__composer;
+        }
+    };
+    const update = (el, { value }) => {
+        if (el.__composer) {
+            const composer = el.__composer;
+            const parsedValue = parseValue(value);
+            el.textContent = Reflect.apply(composer.t, composer, [
+                ...makeParams(parsedValue)
+            ]);
+        }
+    };
+    const getSSRProps = (binding) => {
+        const [textContent] = _process(binding);
+        return { textContent };
+    };
+    return {
+        created: register,
+        unmounted: unregister,
+        beforeUpdate: update,
+        getSSRProps
+    };
+}
+function parseValue(value) {
+    if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(value)) {
+        return { path: value };
+    }
+    else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(value)) {
+        if (!('path' in value)) {
+            throw createI18nError(I18nErrorCodes.REQUIRED_VALUE, 'path');
+        }
+        return value;
+    }
+    else {
+        throw createI18nError(I18nErrorCodes.INVALID_VALUE);
+    }
+}
+function makeParams(value) {
+    const { path, locale, args, choice, plural } = value;
+    const options = {};
+    const named = args || {};
+    if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(locale)) {
+        options.locale = locale;
+    }
+    if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(choice)) {
+        options.plural = choice;
+    }
+    if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isNumber)(plural)) {
+        options.plural = plural;
+    }
+    return [path, named, options];
+}
+
+function apply(app, i18n, ...options) {
+    const pluginOptions = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options[0])
+        ? options[0]
+        : {};
+    const useI18nComponentName = !!pluginOptions.useI18nComponentName;
+    const globalInstall = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(pluginOptions.globalInstall)
+        ? pluginOptions.globalInstall
+        : true;
+    if (( true) && globalInstall && useI18nComponentName) {
+        (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warn)(getWarnMessage(I18nWarnCodes.COMPONENT_NAME_LEGACY_COMPATIBLE, {
+            name: Translation.name
+        }));
+    }
+    if (globalInstall) {
+        [!useI18nComponentName ? Translation.name : 'i18n', 'I18nT'].forEach(name => app.component(name, Translation));
+        [NumberFormat.name, 'I18nN'].forEach(name => app.component(name, NumberFormat));
+        [DatetimeFormat.name, 'I18nD'].forEach(name => app.component(name, DatetimeFormat));
+    }
+    // install directive
+    {
+        app.directive('t', vTDirective(i18n));
+    }
+}
+
+const VueDevToolsLabels = {
+    ["vue-devtools-plugin-vue-i18n" /* VueDevToolsIDs.PLUGIN */]: 'Vue I18n devtools',
+    ["vue-i18n-resource-inspector" /* VueDevToolsIDs.CUSTOM_INSPECTOR */]: 'I18n Resources',
+    ["vue-i18n-timeline" /* VueDevToolsIDs.TIMELINE */]: 'Vue I18n'
+};
+const VueDevToolsPlaceholders = {
+    ["vue-i18n-resource-inspector" /* VueDevToolsIDs.CUSTOM_INSPECTOR */]: 'Search for scopes ...'
+};
+const VueDevToolsTimelineColors = {
+    ["vue-i18n-timeline" /* VueDevToolsIDs.TIMELINE */]: 0xffcd19
+};
+
+const VUE_I18N_COMPONENT_TYPES = 'vue-i18n: composer properties';
+let devtoolsApi;
+async function enableDevTools(app, i18n) {
+    return new Promise((resolve, reject) => {
+        try {
+            (0,_vue_devtools_api__WEBPACK_IMPORTED_MODULE_4__.setupDevtoolsPlugin)({
+                id: "vue-devtools-plugin-vue-i18n" /* VueDevToolsIDs.PLUGIN */,
+                label: VueDevToolsLabels["vue-devtools-plugin-vue-i18n" /* VueDevToolsIDs.PLUGIN */],
+                packageName: 'vue-i18n',
+                homepage: 'https://vue-i18n.intlify.dev',
+                logo: 'https://vue-i18n.intlify.dev/vue-i18n-devtools-logo.png',
+                componentStateTypes: [VUE_I18N_COMPONENT_TYPES],
+                app: app // eslint-disable-line @typescript-eslint/no-explicit-any
+            }, api => {
+                devtoolsApi = api;
+                api.on.visitComponentTree(({ componentInstance, treeNode }) => {
+                    updateComponentTreeTags(componentInstance, treeNode, i18n);
+                });
+                api.on.inspectComponent(({ componentInstance, instanceData }) => {
+                    if (componentInstance.vnode.el &&
+                        componentInstance.vnode.el.__VUE_I18N__ &&
+                        instanceData) {
+                        if (i18n.mode === 'legacy') {
+                            // ignore global scope on legacy mode
+                            if (componentInstance.vnode.el.__VUE_I18N__ !==
+                                i18n.global.__composer) {
+                                inspectComposer(instanceData, componentInstance.vnode.el.__VUE_I18N__);
+                            }
+                        }
+                        else {
+                            inspectComposer(instanceData, componentInstance.vnode.el.__VUE_I18N__);
+                        }
+                    }
+                });
+                api.addInspector({
+                    id: "vue-i18n-resource-inspector" /* VueDevToolsIDs.CUSTOM_INSPECTOR */,
+                    label: VueDevToolsLabels["vue-i18n-resource-inspector" /* VueDevToolsIDs.CUSTOM_INSPECTOR */],
+                    icon: 'language',
+                    treeFilterPlaceholder: VueDevToolsPlaceholders["vue-i18n-resource-inspector" /* VueDevToolsIDs.CUSTOM_INSPECTOR */]
+                });
+                api.on.getInspectorTree(payload => {
+                    if (payload.app === app &&
+                        payload.inspectorId === "vue-i18n-resource-inspector" /* VueDevToolsIDs.CUSTOM_INSPECTOR */) {
+                        registerScope(payload, i18n);
+                    }
+                });
+                const roots = new Map();
+                api.on.getInspectorState(async (payload) => {
+                    if (payload.app === app &&
+                        payload.inspectorId === "vue-i18n-resource-inspector" /* VueDevToolsIDs.CUSTOM_INSPECTOR */) {
+                        api.unhighlightElement();
+                        inspectScope(payload, i18n);
+                        if (payload.nodeId === 'global') {
+                            if (!roots.has(payload.app)) {
+                                const [root] = await api.getComponentInstances(payload.app);
+                                roots.set(payload.app, root);
+                            }
+                            api.highlightElement(roots.get(payload.app));
+                        }
+                        else {
+                            const instance = getComponentInstance(payload.nodeId, i18n);
+                            instance && api.highlightElement(instance);
+                        }
+                    }
+                });
+                api.on.editInspectorState(payload => {
+                    if (payload.app === app &&
+                        payload.inspectorId === "vue-i18n-resource-inspector" /* VueDevToolsIDs.CUSTOM_INSPECTOR */) {
+                        editScope(payload, i18n);
+                    }
+                });
+                api.addTimelineLayer({
+                    id: "vue-i18n-timeline" /* VueDevToolsIDs.TIMELINE */,
+                    label: VueDevToolsLabels["vue-i18n-timeline" /* VueDevToolsIDs.TIMELINE */],
+                    color: VueDevToolsTimelineColors["vue-i18n-timeline" /* VueDevToolsIDs.TIMELINE */]
+                });
+                resolve(true);
+            });
+        }
+        catch (e) {
+            console.error(e);
+            reject(false);
+        }
+    });
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getI18nScopeLable(instance) {
+    return (instance.type.name ||
+        instance.type.displayName ||
+        instance.type.__file ||
+        'Anonymous');
+}
+function updateComponentTreeTags(instance, // eslint-disable-line @typescript-eslint/no-explicit-any
+treeNode, i18n) {
+    // prettier-ignore
+    const global = i18n.mode === 'composition'
+        ? i18n.global
+        : i18n.global.__composer;
+    if (instance && instance.vnode.el && instance.vnode.el.__VUE_I18N__) {
+        // add custom tags local scope only
+        if (instance.vnode.el.__VUE_I18N__ !== global) {
+            const tag = {
+                label: `i18n (${getI18nScopeLable(instance)} Scope)`,
+                textColor: 0x000000,
+                backgroundColor: 0xffcd19
+            };
+            treeNode.tags.push(tag);
+        }
+    }
+}
+function inspectComposer(instanceData, composer) {
+    const type = VUE_I18N_COMPONENT_TYPES;
+    instanceData.state.push({
+        type,
+        key: 'locale',
+        editable: true,
+        value: composer.locale.value
+    });
+    instanceData.state.push({
+        type,
+        key: 'availableLocales',
+        editable: false,
+        value: composer.availableLocales
+    });
+    instanceData.state.push({
+        type,
+        key: 'fallbackLocale',
+        editable: true,
+        value: composer.fallbackLocale.value
+    });
+    instanceData.state.push({
+        type,
+        key: 'inheritLocale',
+        editable: true,
+        value: composer.inheritLocale
+    });
+    instanceData.state.push({
+        type,
+        key: 'messages',
+        editable: false,
+        value: getLocaleMessageValue(composer.messages.value)
+    });
+    {
+        instanceData.state.push({
+            type,
+            key: 'datetimeFormats',
+            editable: false,
+            value: composer.datetimeFormats.value
+        });
+        instanceData.state.push({
+            type,
+            key: 'numberFormats',
+            editable: false,
+            value: composer.numberFormats.value
+        });
+    }
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getLocaleMessageValue(messages) {
+    const value = {};
+    Object.keys(messages).forEach((key) => {
+        const v = messages[key];
+        if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(v) && 'source' in v) {
+            value[key] = getMessageFunctionDetails(v);
+        }
+        else if ((0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.isMessageAST)(v) && v.loc && v.loc.source) {
+            value[key] = v.loc.source;
+        }
+        else if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(v)) {
+            value[key] = getLocaleMessageValue(v);
+        }
+        else {
+            value[key] = v;
+        }
+    });
+    return value;
+}
+const ESC = {
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    '&': '&amp;'
+};
+function escape(s) {
+    return s.replace(/[<>"&]/g, escapeChar);
+}
+function escapeChar(a) {
+    return ESC[a] || a;
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getMessageFunctionDetails(func) {
+    const argString = func.source ? `("${escape(func.source)}")` : `(?)`;
+    return {
+        _custom: {
+            type: 'function',
+            display: `<span>ƒ</span> ${argString}`
+        }
+    };
+}
+function registerScope(payload, i18n) {
+    payload.rootNodes.push({
+        id: 'global',
+        label: 'Global Scope'
+    });
+    // prettier-ignore
+    const global = i18n.mode === 'composition'
+        ? i18n.global
+        : i18n.global.__composer;
+    for (const [keyInstance, instance] of i18n.__instances) {
+        // prettier-ignore
+        const composer = i18n.mode === 'composition'
+            ? instance
+            : instance.__composer;
+        if (global === composer) {
+            continue;
+        }
+        payload.rootNodes.push({
+            id: composer.id.toString(),
+            label: `${getI18nScopeLable(keyInstance)} Scope`
+        });
+    }
+}
+function getComponentInstance(nodeId, i18n) {
+    let instance = null;
+    if (nodeId !== 'global') {
+        for (const [component, composer] of i18n.__instances.entries()) {
+            if (composer.id.toString() === nodeId) {
+                instance = component;
+                break;
+            }
+        }
+    }
+    return instance;
+}
+function getComposer$1(nodeId, i18n) {
+    if (nodeId === 'global') {
+        return i18n.mode === 'composition'
+            ? i18n.global
+            : i18n.global.__composer;
+    }
+    else {
+        const instance = Array.from(i18n.__instances.values()).find(item => item.id.toString() === nodeId);
+        if (instance) {
+            return i18n.mode === 'composition'
+                ? instance
+                : instance.__composer;
+        }
+        else {
+            return null;
+        }
+    }
+}
+function inspectScope(payload, i18n
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+) {
+    const composer = getComposer$1(payload.nodeId, i18n);
+    if (composer) {
+        // TODO:
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        payload.state = makeScopeInspectState(composer);
+    }
+    return null;
+}
+function makeScopeInspectState(composer) {
+    const state = {};
+    const localeType = 'Locale related info';
+    const localeStates = [
+        {
+            type: localeType,
+            key: 'locale',
+            editable: true,
+            value: composer.locale.value
+        },
+        {
+            type: localeType,
+            key: 'fallbackLocale',
+            editable: true,
+            value: composer.fallbackLocale.value
+        },
+        {
+            type: localeType,
+            key: 'availableLocales',
+            editable: false,
+            value: composer.availableLocales
+        },
+        {
+            type: localeType,
+            key: 'inheritLocale',
+            editable: true,
+            value: composer.inheritLocale
+        }
+    ];
+    state[localeType] = localeStates;
+    const localeMessagesType = 'Locale messages info';
+    const localeMessagesStates = [
+        {
+            type: localeMessagesType,
+            key: 'messages',
+            editable: false,
+            value: getLocaleMessageValue(composer.messages.value)
+        }
+    ];
+    state[localeMessagesType] = localeMessagesStates;
+    {
+        const datetimeFormatsType = 'Datetime formats info';
+        const datetimeFormatsStates = [
+            {
+                type: datetimeFormatsType,
+                key: 'datetimeFormats',
+                editable: false,
+                value: composer.datetimeFormats.value
+            }
+        ];
+        state[datetimeFormatsType] = datetimeFormatsStates;
+        const numberFormatsType = 'Datetime formats info';
+        const numberFormatsStates = [
+            {
+                type: numberFormatsType,
+                key: 'numberFormats',
+                editable: false,
+                value: composer.numberFormats.value
+            }
+        ];
+        state[numberFormatsType] = numberFormatsStates;
+    }
+    return state;
+}
+function addTimelineEvent(event, payload) {
+    if (devtoolsApi) {
+        let groupId;
+        if (payload && 'groupId' in payload) {
+            groupId = payload.groupId;
+            delete payload.groupId;
+        }
+        devtoolsApi.addTimelineEvent({
+            layerId: "vue-i18n-timeline" /* VueDevToolsIDs.TIMELINE */,
+            event: {
+                title: event,
+                groupId,
+                time: Date.now(),
+                meta: {},
+                data: payload || {},
+                logType: event === "compile-error" /* VueDevToolsTimelineEvents.COMPILE_ERROR */
+                    ? 'error'
+                    : event === "fallback" /* VueDevToolsTimelineEvents.FALBACK */ ||
+                        event === "missing" /* VueDevToolsTimelineEvents.MISSING */
+                        ? 'warning'
+                        : 'default'
+            }
+        });
+    }
+}
+function editScope(payload, i18n) {
+    const composer = getComposer$1(payload.nodeId, i18n);
+    if (composer) {
+        const [field] = payload.path;
+        if (field === 'locale' && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(payload.state.value)) {
+            composer.locale.value = payload.state.value;
+        }
+        else if (field === 'fallbackLocale' &&
+            ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(payload.state.value) ||
+                (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(payload.state.value) ||
+                (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isObject)(payload.state.value))) {
+            composer.fallbackLocale.value = payload.state.value;
+        }
+        else if (field === 'inheritLocale' && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(payload.state.value)) {
+            composer.inheritLocale = payload.state.value;
+        }
+    }
+}
+
+/**
+ * Supports compatibility for legacy vue-i18n APIs
+ * This mixin is used when we use vue-i18n@v9.x or later
+ */
+function defineMixin(vuei18n, composer, i18n) {
+    return {
+        beforeCreate() {
+            const instance = (0,vue__WEBPACK_IMPORTED_MODULE_0__.getCurrentInstance)();
+            /* istanbul ignore if */
+            if (!instance) {
+                throw createI18nError(I18nErrorCodes.UNEXPECTED_ERROR);
+            }
+            const options = this.$options;
+            if (options.i18n) {
+                const optionsI18n = options.i18n;
+                if (options.__i18n) {
+                    optionsI18n.__i18n = options.__i18n;
+                }
+                optionsI18n.__root = composer;
+                if (this === this.$root) {
+                    // merge option and gttach global
+                    this.$i18n = mergeToGlobal(vuei18n, optionsI18n);
+                }
+                else {
+                    optionsI18n.__injectWithOption = true;
+                    optionsI18n.__extender = i18n.__vueI18nExtend;
+                    // atttach local VueI18n instance
+                    this.$i18n = createVueI18n(optionsI18n);
+                    // extend VueI18n instance
+                    const _vueI18n = this.$i18n;
+                    if (_vueI18n.__extender) {
+                        _vueI18n.__disposer = _vueI18n.__extender(this.$i18n);
+                    }
+                }
+            }
+            else if (options.__i18n) {
+                if (this === this.$root) {
+                    // merge option and gttach global
+                    this.$i18n = mergeToGlobal(vuei18n, options);
+                }
+                else {
+                    // atttach local VueI18n instance
+                    this.$i18n = createVueI18n({
+                        __i18n: options.__i18n,
+                        __injectWithOption: true,
+                        __extender: i18n.__vueI18nExtend,
+                        __root: composer
+                    });
+                    // extend VueI18n instance
+                    const _vueI18n = this.$i18n;
+                    if (_vueI18n.__extender) {
+                        _vueI18n.__disposer = _vueI18n.__extender(this.$i18n);
+                    }
+                }
+            }
+            else {
+                // attach global VueI18n instance
+                this.$i18n = vuei18n;
+            }
+            if (options.__i18nGlobal) {
+                adjustI18nResources(composer, options, options);
+            }
+            // defines vue-i18n legacy APIs
+            this.$t = (...args) => this.$i18n.t(...args);
+            this.$rt = (...args) => this.$i18n.rt(...args);
+            this.$tc = (...args) => this.$i18n.tc(...args);
+            this.$te = (key, locale) => this.$i18n.te(key, locale);
+            this.$d = (...args) => this.$i18n.d(...args);
+            this.$n = (...args) => this.$i18n.n(...args);
+            this.$tm = (key) => this.$i18n.tm(key);
+            i18n.__setInstance(instance, this.$i18n);
+        },
+        mounted() {
+            /* istanbul ignore if */
+            if ( true &&
+                this.$el &&
+                this.$i18n) {
+                const _vueI18n = this.$i18n;
+                this.$el.__VUE_I18N__ = _vueI18n.__composer;
+                const emitter = (this.__v_emitter =
+                    (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.createEmitter)());
+                _vueI18n.__enableEmitter && _vueI18n.__enableEmitter(emitter);
+                emitter.on('*', addTimelineEvent);
+            }
+        },
+        unmounted() {
+            const instance = (0,vue__WEBPACK_IMPORTED_MODULE_0__.getCurrentInstance)();
+            /* istanbul ignore if */
+            if (!instance) {
+                throw createI18nError(I18nErrorCodes.UNEXPECTED_ERROR);
+            }
+            const _vueI18n = this.$i18n;
+            /* istanbul ignore if */
+            if ( true &&
+                this.$el &&
+                this.$el.__VUE_I18N__) {
+                if (this.__v_emitter) {
+                    this.__v_emitter.off('*', addTimelineEvent);
+                    delete this.__v_emitter;
+                }
+                if (this.$i18n) {
+                    _vueI18n.__disableEmitter && _vueI18n.__disableEmitter();
+                    delete this.$el.__VUE_I18N__;
+                }
+            }
+            delete this.$t;
+            delete this.$rt;
+            delete this.$tc;
+            delete this.$te;
+            delete this.$d;
+            delete this.$n;
+            delete this.$tm;
+            if (_vueI18n.__disposer) {
+                _vueI18n.__disposer();
+                delete _vueI18n.__disposer;
+                delete _vueI18n.__extender;
+            }
+            i18n.__deleteInstance(instance);
+            delete this.$i18n;
+        }
+    };
+}
+function mergeToGlobal(g, options) {
+    g.locale = options.locale || g.locale;
+    g.fallbackLocale = options.fallbackLocale || g.fallbackLocale;
+    g.missing = options.missing || g.missing;
+    g.silentTranslationWarn =
+        options.silentTranslationWarn || g.silentFallbackWarn;
+    g.silentFallbackWarn = options.silentFallbackWarn || g.silentFallbackWarn;
+    g.formatFallbackMessages =
+        options.formatFallbackMessages || g.formatFallbackMessages;
+    g.postTranslation = options.postTranslation || g.postTranslation;
+    g.warnHtmlInMessage = options.warnHtmlInMessage || g.warnHtmlInMessage;
+    g.escapeParameterHtml = options.escapeParameterHtml || g.escapeParameterHtml;
+    g.sync = options.sync || g.sync;
+    g.__composer[SetPluralRulesSymbol](options.pluralizationRules || g.pluralizationRules);
+    const messages = getLocaleMessages(g.locale, {
+        messages: options.messages,
+        __i18n: options.__i18n
+    });
+    Object.keys(messages).forEach(locale => g.mergeLocaleMessage(locale, messages[locale]));
+    if (options.datetimeFormats) {
+        Object.keys(options.datetimeFormats).forEach(locale => g.mergeDateTimeFormat(locale, options.datetimeFormats[locale]));
+    }
+    if (options.numberFormats) {
+        Object.keys(options.numberFormats).forEach(locale => g.mergeNumberFormat(locale, options.numberFormats[locale]));
+    }
+    return g;
+}
+
+/**
+ * Injection key for {@link useI18n}
+ *
+ * @remarks
+ * The global injection key for I18n instances with `useI18n`. this injection key is used in Web Components.
+ * Specify the i18n instance created by {@link createI18n} together with `provide` function.
+ *
+ * @VueI18nGeneral
+ */
+const I18nInjectionKey = 
+/* #__PURE__*/ (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.makeSymbol)('global-vue-i18n');
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+function createI18n(options = {}, VueI18nLegacy) {
+    // prettier-ignore
+    const __legacyMode = __VUE_I18N_LEGACY_API__ && (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.legacy)
+            ? options.legacy
+            : __VUE_I18N_LEGACY_API__;
+    // prettier-ignore
+    const __globalInjection = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.globalInjection)
+        ? options.globalInjection
+        : true;
+    // prettier-ignore
+    const __allowComposition = __VUE_I18N_LEGACY_API__ && __legacyMode
+            ? !!options.allowComposition
+            : true;
+    const __instances = new Map();
+    const [globalScope, __global] = createGlobal(options, __legacyMode);
+    const symbol = /* #__PURE__*/ (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.makeSymbol)(( true) ? 'vue-i18n' : 0);
+    if ((true)) {
+        if (__legacyMode && __allowComposition && !false) {
+            (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warn)(getWarnMessage(I18nWarnCodes.NOTICE_DROP_ALLOW_COMPOSITION));
+        }
+    }
+    function __getInstance(component) {
+        return __instances.get(component) || null;
+    }
+    function __setInstance(component, instance) {
+        __instances.set(component, instance);
+    }
+    function __deleteInstance(component) {
+        __instances.delete(component);
+    }
+    {
+        const i18n = {
+            // mode
+            get mode() {
+                return __VUE_I18N_LEGACY_API__ && __legacyMode
+                    ? 'legacy'
+                    : 'composition';
+            },
+            // allowComposition
+            get allowComposition() {
+                return __allowComposition;
+            },
+            // install plugin
+            async install(app, ...options) {
+                if (true) {
+                    app.__VUE_I18N__ = i18n;
+                }
+                // setup global provider
+                app.__VUE_I18N_SYMBOL__ = symbol;
+                app.provide(app.__VUE_I18N_SYMBOL__, i18n);
+                // set composer & vuei18n extend hook options from plugin options
+                if ((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options[0])) {
+                    const opts = options[0];
+                    i18n.__composerExtend =
+                        opts.__composerExtend;
+                    i18n.__vueI18nExtend =
+                        opts.__vueI18nExtend;
+                }
+                // global method and properties injection for Composition API
+                let globalReleaseHandler = null;
+                if (!__legacyMode && __globalInjection) {
+                    globalReleaseHandler = injectGlobalFields(app, i18n.global);
+                }
+                // install built-in components and directive
+                if (__VUE_I18N_FULL_INSTALL__) {
+                    apply(app, i18n, ...options);
+                }
+                // setup mixin for Legacy API
+                if (__VUE_I18N_LEGACY_API__ && __legacyMode) {
+                    app.mixin(defineMixin(__global, __global.__composer, i18n));
+                }
+                // release global scope
+                const unmountApp = app.unmount;
+                app.unmount = () => {
+                    globalReleaseHandler && globalReleaseHandler();
+                    i18n.dispose();
+                    unmountApp();
+                };
+                // setup vue-devtools plugin
+                if (true) {
+                    const ret = await enableDevTools(app, i18n);
+                    if (!ret) {
+                        throw createI18nError(I18nErrorCodes.CANNOT_SETUP_VUE_DEVTOOLS_PLUGIN);
+                    }
+                    const emitter = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.createEmitter)();
+                    if (__legacyMode) {
+                        const _vueI18n = __global;
+                        _vueI18n.__enableEmitter && _vueI18n.__enableEmitter(emitter);
+                    }
+                    else {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const _composer = __global;
+                        _composer[EnableEmitter] && _composer[EnableEmitter](emitter);
+                    }
+                    emitter.on('*', addTimelineEvent);
+                }
+            },
+            // global accessor
+            get global() {
+                return __global;
+            },
+            dispose() {
+                globalScope.stop();
+            },
+            // @internal
+            __instances,
+            // @internal
+            __getInstance,
+            // @internal
+            __setInstance,
+            // @internal
+            __deleteInstance
+        };
+        return i18n;
+    }
+}
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+function useI18n(options = {}) {
+    const instance = (0,vue__WEBPACK_IMPORTED_MODULE_0__.getCurrentInstance)();
+    if (instance == null) {
+        throw createI18nError(I18nErrorCodes.MUST_BE_CALL_SETUP_TOP);
+    }
+    if (!instance.isCE &&
+        instance.appContext.app != null &&
+        !instance.appContext.app.__VUE_I18N_SYMBOL__) {
+        throw createI18nError(I18nErrorCodes.NOT_INSTALLED);
+    }
+    const i18n = getI18nInstance(instance);
+    const gl = getGlobalComposer(i18n);
+    const componentOptions = getComponentOptions(instance);
+    const scope = getScope(options, componentOptions);
+    if (__VUE_I18N_LEGACY_API__) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (i18n.mode === 'legacy' && !options.__useComponent) {
+            if (!i18n.allowComposition) {
+                throw createI18nError(I18nErrorCodes.NOT_AVAILABLE_IN_LEGACY_MODE);
+            }
+            return useI18nForLegacy(instance, scope, gl, options);
+        }
+    }
+    if (scope === 'global') {
+        adjustI18nResources(gl, options, componentOptions);
+        return gl;
+    }
+    if (scope === 'parent') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let composer = getComposer(i18n, instance, options.__useComponent);
+        if (composer == null) {
+            if ((true)) {
+                (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.warn)(getWarnMessage(I18nWarnCodes.NOT_FOUND_PARENT_SCOPE));
+            }
+            composer = gl;
+        }
+        return composer;
+    }
+    const i18nInternal = i18n;
+    let composer = i18nInternal.__getInstance(instance);
+    if (composer == null) {
+        const composerOptions = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.assign)({}, options);
+        if ('__i18n' in componentOptions) {
+            composerOptions.__i18n = componentOptions.__i18n;
+        }
+        if (gl) {
+            composerOptions.__root = gl;
+        }
+        composer = createComposer(composerOptions);
+        if (i18nInternal.__composerExtend) {
+            composer[DisposeSymbol] =
+                i18nInternal.__composerExtend(composer);
+        }
+        setupLifeCycle(i18nInternal, instance, composer);
+        i18nInternal.__setInstance(instance, composer);
+    }
+    return composer;
+}
+/**
+ * Cast to VueI18n legacy compatible type
+ *
+ * @remarks
+ * This API is provided only with [vue-i18n-bridge](https://vue-i18n.intlify.dev/guide/migration/ways.html#what-is-vue-i18n-bridge).
+ *
+ * The purpose of this function is to convert an {@link I18n} instance created with {@link createI18n | createI18n(legacy: true)} into a `vue-i18n@v8.x` compatible instance of `new VueI18n` in a TypeScript environment.
+ *
+ * @param i18n - An instance of {@link I18n}
+ * @returns A i18n instance which is casted to {@link VueI18n} type
+ *
+ * @VueI18nTip
+ * :new: provided by **vue-i18n-bridge only**
+ *
+ * @VueI18nGeneral
+ */
+/* #__NO_SIDE_EFFECTS__ */
+const castToVueI18n = (i18n
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+) => {
+    if (!(__VUE_I18N_BRIDGE__ in i18n)) {
+        throw createI18nError(I18nErrorCodes.NOT_COMPATIBLE_LEGACY_VUE_I18N);
+    }
+    return i18n;
+};
+function createGlobal(options, legacyMode, VueI18nLegacy // eslint-disable-line @typescript-eslint/no-explicit-any
+) {
+    const scope = (0,vue__WEBPACK_IMPORTED_MODULE_0__.effectScope)();
+    {
+        const obj = __VUE_I18N_LEGACY_API__ && legacyMode
+            ? scope.run(() => createVueI18n(options))
+            : scope.run(() => createComposer(options));
+        if (obj == null) {
+            throw createI18nError(I18nErrorCodes.UNEXPECTED_ERROR);
+        }
+        return [scope, obj];
+    }
+}
+function getI18nInstance(instance) {
+    {
+        const i18n = (0,vue__WEBPACK_IMPORTED_MODULE_0__.inject)(!instance.isCE
+            ? instance.appContext.app.__VUE_I18N_SYMBOL__
+            : I18nInjectionKey);
+        /* istanbul ignore if */
+        if (!i18n) {
+            throw createI18nError(!instance.isCE
+                ? I18nErrorCodes.UNEXPECTED_ERROR
+                : I18nErrorCodes.NOT_INSTALLED_WITH_PROVIDE);
+        }
+        return i18n;
+    }
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getScope(options, componentOptions) {
+    // prettier-ignore
+    return (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isEmptyObject)(options)
+        ? ('__i18n' in componentOptions)
+            ? 'local'
+            : 'global'
+        : !options.useScope
+            ? 'local'
+            : options.useScope;
+}
+function getGlobalComposer(i18n) {
+    // prettier-ignore
+    return i18n.mode === 'composition'
+            ? i18n.global
+            : i18n.global.__composer
+        ;
+}
+function getComposer(i18n, target, useComponent = false) {
+    let composer = null;
+    const root = target.root;
+    let current = getParentComponentInstance(target, useComponent);
+    while (current != null) {
+        const i18nInternal = i18n;
+        if (i18n.mode === 'composition') {
+            composer = i18nInternal.__getInstance(current);
+        }
+        else {
+            if (__VUE_I18N_LEGACY_API__) {
+                const vueI18n = i18nInternal.__getInstance(current);
+                if (vueI18n != null) {
+                    composer = vueI18n
+                        .__composer;
+                    if (useComponent &&
+                        composer &&
+                        !composer[InejctWithOptionSymbol] // eslint-disable-line @typescript-eslint/no-explicit-any
+                    ) {
+                        composer = null;
+                    }
+                }
+            }
+        }
+        if (composer != null) {
+            break;
+        }
+        if (root === current) {
+            break;
+        }
+        current = current.parent;
+    }
+    return composer;
+}
+function getParentComponentInstance(target, useComponent = false) {
+    if (target == null) {
+        return null;
+    }
+    {
+        // if `useComponent: true` will be specified, we get lexical scope owner instance for use-case slots
+        return !useComponent
+            ? target.parent
+            : target.vnode.ctx || target.parent; // eslint-disable-line @typescript-eslint/no-explicit-any
+    }
+}
+function setupLifeCycle(i18n, target, composer) {
+    let emitter = null;
+    {
+        (0,vue__WEBPACK_IMPORTED_MODULE_0__.onMounted)(() => {
+            // inject composer instance to DOM for intlify-devtools
+            if ( true &&
+                target.vnode.el) {
+                target.vnode.el.__VUE_I18N__ = composer;
+                emitter = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.createEmitter)();
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const _composer = composer;
+                _composer[EnableEmitter] && _composer[EnableEmitter](emitter);
+                emitter.on('*', addTimelineEvent);
+            }
+        }, target);
+        (0,vue__WEBPACK_IMPORTED_MODULE_0__.onUnmounted)(() => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const _composer = composer;
+            // remove composer instance from DOM for intlify-devtools
+            if ( true &&
+                target.vnode.el &&
+                target.vnode.el.__VUE_I18N__) {
+                emitter && emitter.off('*', addTimelineEvent);
+                _composer[DisableEmitter] && _composer[DisableEmitter]();
+                delete target.vnode.el.__VUE_I18N__;
+            }
+            i18n.__deleteInstance(target);
+            // dispose extended resources
+            const dispose = _composer[DisposeSymbol];
+            if (dispose) {
+                dispose();
+                delete _composer[DisposeSymbol];
+            }
+        }, target);
+    }
+}
+function useI18nForLegacy(instance, scope, root, options = {} // eslint-disable-line @typescript-eslint/no-explicit-any
+) {
+    const isLocalScope = scope === 'local';
+    const _composer = (0,vue__WEBPACK_IMPORTED_MODULE_0__.shallowRef)(null);
+    if (isLocalScope &&
+        instance.proxy &&
+        !(instance.proxy.$options.i18n || instance.proxy.$options.__i18n)) {
+        throw createI18nError(I18nErrorCodes.MUST_DEFINE_I18N_OPTION_IN_ALLOW_COMPOSITION);
+    }
+    const _inheritLocale = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.inheritLocale)
+        ? options.inheritLocale
+        : !(0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(options.locale);
+    const _locale = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(
+    // prettier-ignore
+    !isLocalScope || _inheritLocale
+        ? root.locale.value
+        : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(options.locale)
+            ? options.locale
+            : _intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.DEFAULT_LOCALE);
+    const _fallbackLocale = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(
+    // prettier-ignore
+    !isLocalScope || _inheritLocale
+        ? root.fallbackLocale.value
+        : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isString)(options.fallbackLocale) ||
+            (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isArray)(options.fallbackLocale) ||
+            (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options.fallbackLocale) ||
+            options.fallbackLocale === false
+            ? options.fallbackLocale
+            : _locale.value);
+    const _messages = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(getLocaleMessages(_locale.value, options));
+    // prettier-ignore
+    const _datetimeFormats = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options.datetimeFormats)
+        ? options.datetimeFormats
+        : { [_locale.value]: {} });
+    // prettier-ignore
+    const _numberFormats = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)((0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options.numberFormats)
+        ? options.numberFormats
+        : { [_locale.value]: {} });
+    // prettier-ignore
+    const _missingWarn = isLocalScope
+        ? root.missingWarn
+        : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.missingWarn) || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isRegExp)(options.missingWarn)
+            ? options.missingWarn
+            : true;
+    // prettier-ignore
+    const _fallbackWarn = isLocalScope
+        ? root.fallbackWarn
+        : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.fallbackWarn) || (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isRegExp)(options.fallbackWarn)
+            ? options.fallbackWarn
+            : true;
+    // prettier-ignore
+    const _fallbackRoot = isLocalScope
+        ? root.fallbackRoot
+        : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.fallbackRoot)
+            ? options.fallbackRoot
+            : true;
+    // configure fall back to root
+    const _fallbackFormat = !!options.fallbackFormat;
+    // runtime missing
+    const _missing = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.missing) ? options.missing : null;
+    // postTranslation handler
+    const _postTranslation = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isFunction)(options.postTranslation)
+        ? options.postTranslation
+        : null;
+    // prettier-ignore
+    const _warnHtmlMessage = isLocalScope
+        ? root.warnHtmlMessage
+        : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isBoolean)(options.warnHtmlMessage)
+            ? options.warnHtmlMessage
+            : true;
+    const _escapeParameter = !!options.escapeParameter;
+    // prettier-ignore
+    const _modifiers = isLocalScope
+        ? root.modifiers
+        : (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.isPlainObject)(options.modifiers)
+            ? options.modifiers
+            : {};
+    // pluralRules
+    const _pluralRules = options.pluralRules || (isLocalScope && root.pluralRules);
+    // track reactivity
+    function trackReactivityValues() {
+        return [
+            _locale.value,
+            _fallbackLocale.value,
+            _messages.value,
+            _datetimeFormats.value,
+            _numberFormats.value
+        ];
+    }
+    // locale
+    const locale = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)({
+        get: () => {
+            return _composer.value ? _composer.value.locale.value : _locale.value;
+        },
+        set: val => {
+            if (_composer.value) {
+                _composer.value.locale.value = val;
+            }
+            _locale.value = val;
+        }
+    });
+    // fallbackLocale
+    const fallbackLocale = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)({
+        get: () => {
+            return _composer.value
+                ? _composer.value.fallbackLocale.value
+                : _fallbackLocale.value;
+        },
+        set: val => {
+            if (_composer.value) {
+                _composer.value.fallbackLocale.value = val;
+            }
+            _fallbackLocale.value = val;
+        }
+    });
+    // messages
+    const messages = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(() => {
+        if (_composer.value) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return _composer.value.messages.value;
+        }
+        else {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return _messages.value;
+        }
+    });
+    const datetimeFormats = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(() => _datetimeFormats.value);
+    const numberFormats = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(() => _numberFormats.value);
+    function getPostTranslationHandler() {
+        return _composer.value
+            ? _composer.value.getPostTranslationHandler()
+            : _postTranslation;
+    }
+    function setPostTranslationHandler(handler) {
+        if (_composer.value) {
+            _composer.value.setPostTranslationHandler(handler);
+        }
+    }
+    function getMissingHandler() {
+        return _composer.value ? _composer.value.getMissingHandler() : _missing;
+    }
+    function setMissingHandler(handler) {
+        if (_composer.value) {
+            _composer.value.setMissingHandler(handler);
+        }
+    }
+    function warpWithDeps(fn) {
+        trackReactivityValues();
+        return fn();
+    }
+    function t(...args) {
+        return _composer.value
+            ? warpWithDeps(() => Reflect.apply(_composer.value.t, null, [...args]))
+            : warpWithDeps(() => '');
+    }
+    function rt(...args) {
+        return _composer.value
+            ? Reflect.apply(_composer.value.rt, null, [...args])
+            : '';
+    }
+    function d(...args) {
+        return _composer.value
+            ? warpWithDeps(() => Reflect.apply(_composer.value.d, null, [...args]))
+            : warpWithDeps(() => '');
+    }
+    function n(...args) {
+        return _composer.value
+            ? warpWithDeps(() => Reflect.apply(_composer.value.n, null, [...args]))
+            : warpWithDeps(() => '');
+    }
+    function tm(key) {
+        return _composer.value ? _composer.value.tm(key) : {};
+    }
+    function te(key, locale) {
+        return _composer.value ? _composer.value.te(key, locale) : false;
+    }
+    function getLocaleMessage(locale) {
+        return _composer.value ? _composer.value.getLocaleMessage(locale) : {};
+    }
+    function setLocaleMessage(locale, message) {
+        if (_composer.value) {
+            _composer.value.setLocaleMessage(locale, message);
+            _messages.value[locale] = message;
+        }
+    }
+    function mergeLocaleMessage(locale, message) {
+        if (_composer.value) {
+            _composer.value.mergeLocaleMessage(locale, message);
+        }
+    }
+    function getDateTimeFormat(locale) {
+        return _composer.value ? _composer.value.getDateTimeFormat(locale) : {};
+    }
+    function setDateTimeFormat(locale, format) {
+        if (_composer.value) {
+            _composer.value.setDateTimeFormat(locale, format);
+            _datetimeFormats.value[locale] = format;
+        }
+    }
+    function mergeDateTimeFormat(locale, format) {
+        if (_composer.value) {
+            _composer.value.mergeDateTimeFormat(locale, format);
+        }
+    }
+    function getNumberFormat(locale) {
+        return _composer.value ? _composer.value.getNumberFormat(locale) : {};
+    }
+    function setNumberFormat(locale, format) {
+        if (_composer.value) {
+            _composer.value.setNumberFormat(locale, format);
+            _numberFormats.value[locale] = format;
+        }
+    }
+    function mergeNumberFormat(locale, format) {
+        if (_composer.value) {
+            _composer.value.mergeNumberFormat(locale, format);
+        }
+    }
+    const wrapper = {
+        get id() {
+            return _composer.value ? _composer.value.id : -1;
+        },
+        locale,
+        fallbackLocale,
+        messages,
+        datetimeFormats,
+        numberFormats,
+        get inheritLocale() {
+            return _composer.value ? _composer.value.inheritLocale : _inheritLocale;
+        },
+        set inheritLocale(val) {
+            if (_composer.value) {
+                _composer.value.inheritLocale = val;
+            }
+        },
+        get availableLocales() {
+            return _composer.value
+                ? _composer.value.availableLocales
+                : Object.keys(_messages.value);
+        },
+        get modifiers() {
+            return (_composer.value ? _composer.value.modifiers : _modifiers);
+        },
+        get pluralRules() {
+            return (_composer.value ? _composer.value.pluralRules : _pluralRules);
+        },
+        get isGlobal() {
+            return _composer.value ? _composer.value.isGlobal : false;
+        },
+        get missingWarn() {
+            return _composer.value ? _composer.value.missingWarn : _missingWarn;
+        },
+        set missingWarn(val) {
+            if (_composer.value) {
+                _composer.value.missingWarn = val;
+            }
+        },
+        get fallbackWarn() {
+            return _composer.value ? _composer.value.fallbackWarn : _fallbackWarn;
+        },
+        set fallbackWarn(val) {
+            if (_composer.value) {
+                _composer.value.missingWarn = val;
+            }
+        },
+        get fallbackRoot() {
+            return _composer.value ? _composer.value.fallbackRoot : _fallbackRoot;
+        },
+        set fallbackRoot(val) {
+            if (_composer.value) {
+                _composer.value.fallbackRoot = val;
+            }
+        },
+        get fallbackFormat() {
+            return _composer.value ? _composer.value.fallbackFormat : _fallbackFormat;
+        },
+        set fallbackFormat(val) {
+            if (_composer.value) {
+                _composer.value.fallbackFormat = val;
+            }
+        },
+        get warnHtmlMessage() {
+            return _composer.value
+                ? _composer.value.warnHtmlMessage
+                : _warnHtmlMessage;
+        },
+        set warnHtmlMessage(val) {
+            if (_composer.value) {
+                _composer.value.warnHtmlMessage = val;
+            }
+        },
+        get escapeParameter() {
+            return _composer.value
+                ? _composer.value.escapeParameter
+                : _escapeParameter;
+        },
+        set escapeParameter(val) {
+            if (_composer.value) {
+                _composer.value.escapeParameter = val;
+            }
+        },
+        t,
+        getPostTranslationHandler,
+        setPostTranslationHandler,
+        getMissingHandler,
+        setMissingHandler,
+        rt,
+        d,
+        n,
+        tm,
+        te,
+        getLocaleMessage,
+        setLocaleMessage,
+        mergeLocaleMessage,
+        getDateTimeFormat,
+        setDateTimeFormat,
+        mergeDateTimeFormat,
+        getNumberFormat,
+        setNumberFormat,
+        mergeNumberFormat
+    };
+    function sync(composer) {
+        composer.locale.value = _locale.value;
+        composer.fallbackLocale.value = _fallbackLocale.value;
+        Object.keys(_messages.value).forEach(locale => {
+            composer.mergeLocaleMessage(locale, _messages.value[locale]);
+        });
+        Object.keys(_datetimeFormats.value).forEach(locale => {
+            composer.mergeDateTimeFormat(locale, _datetimeFormats.value[locale]);
+        });
+        Object.keys(_numberFormats.value).forEach(locale => {
+            composer.mergeNumberFormat(locale, _numberFormats.value[locale]);
+        });
+        composer.escapeParameter = _escapeParameter;
+        composer.fallbackFormat = _fallbackFormat;
+        composer.fallbackRoot = _fallbackRoot;
+        composer.fallbackWarn = _fallbackWarn;
+        composer.missingWarn = _missingWarn;
+        composer.warnHtmlMessage = _warnHtmlMessage;
+    }
+    (0,vue__WEBPACK_IMPORTED_MODULE_0__.onBeforeMount)(() => {
+        if (instance.proxy == null || instance.proxy.$i18n == null) {
+            throw createI18nError(I18nErrorCodes.NOT_AVAILABLE_COMPOSITION_IN_LEGACY);
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const composer = (_composer.value = instance.proxy.$i18n
+            .__composer);
+        if (scope === 'global') {
+            _locale.value = composer.locale.value;
+            _fallbackLocale.value = composer.fallbackLocale.value;
+            _messages.value = composer.messages.value;
+            _datetimeFormats.value = composer.datetimeFormats.value;
+            _numberFormats.value = composer.numberFormats.value;
+        }
+        else if (isLocalScope) {
+            sync(composer);
+        }
+    });
+    return wrapper;
+}
+const globalExportProps = [
+    'locale',
+    'fallbackLocale',
+    'availableLocales'
+];
+const globalExportMethods = ['t', 'rt', 'd', 'n', 'tm', 'te']
+    ;
+function injectGlobalFields(app, composer) {
+    const i18n = Object.create(null);
+    globalExportProps.forEach(prop => {
+        const desc = Object.getOwnPropertyDescriptor(composer, prop);
+        if (!desc) {
+            throw createI18nError(I18nErrorCodes.UNEXPECTED_ERROR);
+        }
+        const wrap = (0,vue__WEBPACK_IMPORTED_MODULE_0__.isRef)(desc.value) // check computed props
+            ? {
+                get() {
+                    return desc.value.value;
+                },
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                set(val) {
+                    desc.value.value = val;
+                }
+            }
+            : {
+                get() {
+                    return desc.get && desc.get();
+                }
+            };
+        Object.defineProperty(i18n, prop, wrap);
+    });
+    app.config.globalProperties.$i18n = i18n;
+    globalExportMethods.forEach(method => {
+        const desc = Object.getOwnPropertyDescriptor(composer, method);
+        if (!desc || !desc.value) {
+            throw createI18nError(I18nErrorCodes.UNEXPECTED_ERROR);
+        }
+        Object.defineProperty(app.config.globalProperties, `$${method}`, desc);
+    });
+    const dispose = () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete app.config.globalProperties.$i18n;
+        globalExportMethods.forEach(method => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            delete app.config.globalProperties[`$${method}`];
+        });
+    };
+    return dispose;
+}
+
+{
+    initFeatureFlags();
+}
+// register message compiler at vue-i18n
+if (__INTLIFY_JIT_COMPILATION__) {
+    (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.registerMessageCompiler)(_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.compile);
+}
+else {
+    (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.registerMessageCompiler)(_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.compileToFunction);
+}
+// register message resolver at vue-i18n
+(0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.registerMessageResolver)(_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.resolveValue);
+// register fallback locale at vue-i18n
+(0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.registerLocaleFallbacker)(_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.fallbackWithLocaleChain);
+// NOTE: experimental !!
+if (true) {
+    const target = (0,_intlify_shared__WEBPACK_IMPORTED_MODULE_1__.getGlobalThis)();
+    target.__INTLIFY__ = true;
+    (0,_intlify_core_base__WEBPACK_IMPORTED_MODULE_2__.setDevToolsHook)(target.__INTLIFY_DEVTOOLS_GLOBAL_HOOK__);
+}
+if ((true)) ;
+
+
+
+
 /***/ })
 
 /******/ 	});
@@ -50045,6 +57751,36 @@ const isIterable = (thing) => thing != null && isFunction(thing[iterator]);
 /******/ 		};
 /******/ 	})();
 /******/ 	
+/******/ 	/* webpack/runtime/create fake namespace object */
+/******/ 	(() => {
+/******/ 		var getProto = Object.getPrototypeOf ? (obj) => (Object.getPrototypeOf(obj)) : (obj) => (obj.__proto__);
+/******/ 		var leafPrototypes;
+/******/ 		// create a fake namespace object
+/******/ 		// mode & 1: value is a module id, require it
+/******/ 		// mode & 2: merge all properties of value into the ns
+/******/ 		// mode & 4: return value when already ns object
+/******/ 		// mode & 16: return value when it's Promise-like
+/******/ 		// mode & 8|1: behave like require
+/******/ 		__webpack_require__.t = function(value, mode) {
+/******/ 			if(mode & 1) value = this(value);
+/******/ 			if(mode & 8) return value;
+/******/ 			if(typeof value === 'object' && value) {
+/******/ 				if((mode & 4) && value.__esModule) return value;
+/******/ 				if((mode & 16) && typeof value.then === 'function') return value;
+/******/ 			}
+/******/ 			var ns = Object.create(null);
+/******/ 			__webpack_require__.r(ns);
+/******/ 			var def = {};
+/******/ 			leafPrototypes = leafPrototypes || [null, getProto({}), getProto([]), getProto(getProto)];
+/******/ 			for(var current = mode & 2 && value; typeof current == 'object' && !~leafPrototypes.indexOf(current); current = getProto(current)) {
+/******/ 				Object.getOwnPropertyNames(current).forEach((key) => (def[key] = () => (value[key])));
+/******/ 			}
+/******/ 			def['default'] = () => (value);
+/******/ 			__webpack_require__.d(ns, def);
+/******/ 			return ns;
+/******/ 		};
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/define property getters */
 /******/ 	(() => {
 /******/ 		// define getter functions for harmony exports
@@ -50054,6 +57790,39 @@ const isIterable = (thing) => thing != null && isFunction(thing[iterator]);
 /******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
 /******/ 				}
 /******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/ensure chunk */
+/******/ 	(() => {
+/******/ 		__webpack_require__.f = {};
+/******/ 		// This file contains only the entry chunk.
+/******/ 		// The chunk loading function for additional chunks
+/******/ 		__webpack_require__.e = (chunkId) => {
+/******/ 			return Promise.all(Object.keys(__webpack_require__.f).reduce((promises, key) => {
+/******/ 				__webpack_require__.f[key](chunkId, promises);
+/******/ 				return promises;
+/******/ 			}, []));
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/get javascript chunk filename */
+/******/ 	(() => {
+/******/ 		// This function allow to reference async chunks
+/******/ 		__webpack_require__.u = (chunkId) => {
+/******/ 			// return url for filenames not based on template
+/******/ 			if ({"resources_js_locales_ar_json":1,"resources_js_locales_en_json":1,"resources_js_locales_fr_json":1}[chunkId]) return "js/" + chunkId + ".js";
+/******/ 			// return url for filenames based on template
+/******/ 			return undefined;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/get mini-css chunk filename */
+/******/ 	(() => {
+/******/ 		// This function allow to reference all chunks
+/******/ 		__webpack_require__.miniCssF = (chunkId) => {
+/******/ 			// return url for filenames based on template
+/******/ 			return "" + chunkId + ".css";
 /******/ 		};
 /******/ 	})();
 /******/ 	
@@ -50074,6 +57843,52 @@ const isIterable = (thing) => thing != null && isFunction(thing[iterator]);
 /******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
 /******/ 	})();
 /******/ 	
+/******/ 	/* webpack/runtime/load script */
+/******/ 	(() => {
+/******/ 		var inProgress = {};
+/******/ 		// data-webpack is not used as build has no uniqueName
+/******/ 		// loadScript function to load a script via script tag
+/******/ 		__webpack_require__.l = (url, done, key, chunkId) => {
+/******/ 			if(inProgress[url]) { inProgress[url].push(done); return; }
+/******/ 			var script, needAttach;
+/******/ 			if(key !== undefined) {
+/******/ 				var scripts = document.getElementsByTagName("script");
+/******/ 				for(var i = 0; i < scripts.length; i++) {
+/******/ 					var s = scripts[i];
+/******/ 					if(s.getAttribute("src") == url) { script = s; break; }
+/******/ 				}
+/******/ 			}
+/******/ 			if(!script) {
+/******/ 				needAttach = true;
+/******/ 				script = document.createElement('script');
+/******/ 		
+/******/ 				script.charset = 'utf-8';
+/******/ 				script.timeout = 120;
+/******/ 				if (__webpack_require__.nc) {
+/******/ 					script.setAttribute("nonce", __webpack_require__.nc);
+/******/ 				}
+/******/ 		
+/******/ 		
+/******/ 				script.src = url;
+/******/ 			}
+/******/ 			inProgress[url] = [done];
+/******/ 			var onScriptComplete = (prev, event) => {
+/******/ 				// avoid mem leaks in IE.
+/******/ 				script.onerror = script.onload = null;
+/******/ 				clearTimeout(timeout);
+/******/ 				var doneFns = inProgress[url];
+/******/ 				delete inProgress[url];
+/******/ 				script.parentNode && script.parentNode.removeChild(script);
+/******/ 				doneFns && doneFns.forEach((fn) => (fn(event)));
+/******/ 				if(prev) return prev(event);
+/******/ 			}
+/******/ 			var timeout = setTimeout(onScriptComplete.bind(null, undefined, { type: 'timeout', target: script }), 120000);
+/******/ 			script.onerror = onScriptComplete.bind(null, script.onerror);
+/******/ 			script.onload = onScriptComplete.bind(null, script.onload);
+/******/ 			needAttach && document.head.appendChild(script);
+/******/ 		};
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
 /******/ 	(() => {
 /******/ 		// define __esModule on exports
@@ -50083,6 +57898,11 @@ const isIterable = (thing) => thing != null && isFunction(thing[iterator]);
 /******/ 			}
 /******/ 			Object.defineProperty(exports, '__esModule', { value: true });
 /******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/publicPath */
+/******/ 	(() => {
+/******/ 		__webpack_require__.p = "/";
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/jsonp chunk loading */
@@ -50097,7 +57917,44 @@ const isIterable = (thing) => thing != null && isFunction(thing[iterator]);
 /******/ 			"css/app": 0
 /******/ 		};
 /******/ 		
-/******/ 		// no chunk on demand loading
+/******/ 		__webpack_require__.f.j = (chunkId, promises) => {
+/******/ 				// JSONP chunk loading for javascript
+/******/ 				var installedChunkData = __webpack_require__.o(installedChunks, chunkId) ? installedChunks[chunkId] : undefined;
+/******/ 				if(installedChunkData !== 0) { // 0 means "already installed".
+/******/ 		
+/******/ 					// a Promise means "currently loading".
+/******/ 					if(installedChunkData) {
+/******/ 						promises.push(installedChunkData[2]);
+/******/ 					} else {
+/******/ 						if("css/app" != chunkId) {
+/******/ 							// setup Promise in chunk cache
+/******/ 							var promise = new Promise((resolve, reject) => (installedChunkData = installedChunks[chunkId] = [resolve, reject]));
+/******/ 							promises.push(installedChunkData[2] = promise);
+/******/ 		
+/******/ 							// start chunk loading
+/******/ 							var url = __webpack_require__.p + __webpack_require__.u(chunkId);
+/******/ 							// create error before stack unwound to get useful stacktrace later
+/******/ 							var error = new Error();
+/******/ 							var loadingEnded = (event) => {
+/******/ 								if(__webpack_require__.o(installedChunks, chunkId)) {
+/******/ 									installedChunkData = installedChunks[chunkId];
+/******/ 									if(installedChunkData !== 0) installedChunks[chunkId] = undefined;
+/******/ 									if(installedChunkData) {
+/******/ 										var errorType = event && (event.type === 'load' ? 'missing' : event.type);
+/******/ 										var realSrc = event && event.target && event.target.src;
+/******/ 										error.message = 'Loading chunk ' + chunkId + ' failed.\n(' + errorType + ': ' + realSrc + ')';
+/******/ 										error.name = 'ChunkLoadError';
+/******/ 										error.type = errorType;
+/******/ 										error.request = realSrc;
+/******/ 										installedChunkData[1](error);
+/******/ 									}
+/******/ 								}
+/******/ 							};
+/******/ 							__webpack_require__.l(url, loadingEnded, "chunk-" + chunkId, chunkId);
+/******/ 						} else installedChunks[chunkId] = 0;
+/******/ 					}
+/******/ 				}
+/******/ 		};
 /******/ 		
 /******/ 		// no prefetching
 /******/ 		

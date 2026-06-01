@@ -4,9 +4,9 @@
 <div class="auth-shell">
     <div class="auth-card auth-card-sm">
         <div class="auth-copy">
-            <div class="auth-kicker">Set a new one</div>
-            <h1 class="auth-title">{{ __('Choose a new password') }}</h1>
-            <p class="auth-subtitle">Keep it simple. You can get back to your session after this.</p>
+            <div class="auth-kicker" data-i18n="newPasswordKicker">Set a new one</div>
+            <h1 class="auth-title" data-i18n="newPasswordTitle">{{ __('Choose a new password') }}</h1>
+            <p class="auth-subtitle" data-i18n="newPasswordSubtitle">Keep it simple. You can get back to your session after this.</p>
         </div>
         <div class="auth-form-wrap">
                     <form method="POST" action="{{ route('password.update') }}">
@@ -15,7 +15,7 @@
                         <input type="hidden" name="token" value="{{ $token }}">
 
                         <div class="mb-3">
-                            <label for="email" class="form-label">{{ __('Email Address') }}</label>
+                            <label for="email" class="form-label" data-i18n="emailAddress">{{ __('Email Address') }}</label>
                                 <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ $email ?? old('email') }}" required autocomplete="email" autofocus>
 
                                 @error('email')
@@ -26,7 +26,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="password" class="form-label">{{ __('Password') }}</label>
+                            <label for="password" class="form-label" data-i18n="password">{{ __('Password') }}</label>
                                 <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="new-password">
 
                                 @error('password')
@@ -37,13 +37,13 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="password-confirm" class="form-label">{{ __('Confirm Password') }}</label>
+                            <label for="password-confirm" class="form-label" data-i18n="confirmPassword">{{ __('Confirm Password') }}</label>
                                 <input id="password-confirm" type="password" class="form-control" name="password_confirmation" required autocomplete="new-password">
                         </div>
 
                         <div class="auth-actions">
                                 <button type="submit" class="btn auth-btn-primary">
-                                    {{ __('Reset Password') }}
+                                    <span data-i18n="resetPassword">{{ __('Reset Password') }}</span>
                                 </button>
                         </div>
                     </form>

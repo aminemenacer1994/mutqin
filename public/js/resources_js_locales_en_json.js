@@ -1,0 +1,14 @@
+"use strict";
+(self["webpackChunk"] = self["webpackChunk"] || []).push([["resources_js_locales_en_json"],{
+
+/***/ "./resources/js/locales/en.json":
+/*!**************************************!*\
+  !*** ./resources/js/locales/en.json ***!
+  \**************************************/
+/***/ ((module) => {
+
+module.exports = JSON.parse('{"common":{"on":"On","off":"Off","reset":"Reset","startSession":"Start Session","pause":"Pause","settings":"Settings","language":"Language","login":"Login","register":"Register","logout":"Logout"},"home":{"startKicker":"Start a new session","startTitle":"Choose a surah, set your range, then practise.","selectSurah":"Select surah","pickRange":"Pick range","setRepeats":"Set repeats","openControls":"Open Session Controls","controlsHint":"You can tweak audio, focus tools, and saved sessions any time.","guestKicker":"Calm Quran memorisation","guestTitle":"Memorise with a quieter, more deliberate session flow.","guestSubtitle":"Build each session around a small ayah range, steady repetition, and clear recall.","guestSupport":"Mutqin keeps the Quran central while playback, progress, and saved sessions stay quietly organised around it.","guestNote":"Login keeps your sessions, insights, and exact memorisation position in sync."},"sessionSetup":{"title":"Session Setup","subtitle":"Choose what you memorise","defaults":"Defaults","chooseSurah":"Choose a surah...","surahHint":"Pick the surah you want to work on.","noAudioPlayed":"No ayah audio played yet for this session.","to":"to","rangeHint":"Keep ranges small for focused memorisation.","reciterHint":"Changes the audio voice for the session.","repeatHint":"Repeat each verse {count} time(s) before moving on.","surah":"Surah","ayahRange":"Ayah range","reciter":"Reciter","repetitions":"Repetitions","display":"Display","displaySub":"Customize how the Quran appears","readingAids":"Reading Aids","readingAidsSub":"Translations and word helpers","tajweed":"Tajweed","tajweedDesc":"Recitation color rules (Idgham, Ikhfa, Madd, etc.)","fontSize":"Font size","fontSizeDesc":"Adjust the Arabic text size for better readability","translation":"Translation","translationDesc":"English meaning of each verse","transliteration":"Transliteration","transliterationDesc":"Latin script pronunciation aid","wordByWord":"Word by word","wordByWordDesc":"Individual word chips with meanings","wordAudio":"Word audio","wordAudioDesc":"Audio playback with word highlighting"}}');
+
+/***/ })
+
+}]);

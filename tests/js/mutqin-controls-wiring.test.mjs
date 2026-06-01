@@ -25,7 +25,10 @@ includesAll('session setup controls', [
   /<select v-model="reciterId" @change="refreshVerses"/,
   /@change="setPlaybackSpeed\(option\)"/,
   /value="auto" v-model="playMode"/,
-  /value="manual" v-model="playMode"/
+  /value="manual" v-model="playMode"/,
+  /Delay between recitations \(secs\)/,
+  /<select v-model\.number="delay" class="select">/,
+  /option in delayOptions/
 ])
 
 includesAll('technique controls', [

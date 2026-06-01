@@ -4,15 +4,15 @@
 <div class="auth-shell">
     <div class="auth-card">
         <div class="auth-copy">
-            <div class="auth-kicker">Start here</div>
-            <p class="auth-subtitle">A clean setup for memorisation, revision, and tracking.</p>
+            <div class="auth-kicker" data-i18n="authRegisterKicker">Start here</div>
+            <p class="auth-subtitle" data-i18n="authRegisterSubtitle">A clean setup for memorisation, revision, and tracking.</p>
         </div>
         <div class="auth-form-wrap">
                     <form method="POST" action="{{ route('register') }}">
                         @csrf
 
                         <div class="mb-3">
-                            <label for="name" class="form-label">{{ __('Name') }}</label>
+                            <label for="name" class="form-label" data-i18n="name">{{ __('Name') }}</label>
                                 <input id="name" type="text" class="form-control @error('name') is-invalid @enderror" name="name" value="{{ old('name') }}" required autocomplete="name" autofocus>
 
                                 @error('name')
@@ -23,7 +23,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="email" class="form-label">{{ __('Email Address') }}</label>
+                            <label for="email" class="form-label" data-i18n="emailAddress">{{ __('Email Address') }}</label>
                                 <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email">
 
                                 @error('email')
@@ -34,7 +34,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="password" class="form-label">{{ __('Password') }}</label>
+                            <label for="password" class="form-label" data-i18n="password">{{ __('Password') }}</label>
                                 <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="new-password">
 
                                 @error('password')
@@ -45,13 +45,13 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="password-confirm" class="form-label">{{ __('Confirm Password') }}</label>
+                            <label for="password-confirm" class="form-label" data-i18n="confirmPassword">{{ __('Confirm Password') }}</label>
                                 <input id="password-confirm" type="password" class="form-control" name="password_confirmation" required autocomplete="new-password">
                         </div>
 
                         <div class="auth-actions">
                                 <button type="submit" class="btn auth-btn-primary">
-                                    {{ __('Register') }}
+                                    <span data-i18n="register">{{ __('Register') }}</span>
                                 </button>
                         </div>
                     </form>

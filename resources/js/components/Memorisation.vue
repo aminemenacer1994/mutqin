@@ -37,20 +37,20 @@
           </div>
           <div class="offcanvas-launcher-card">
             <div class="offcanvas-launcher-head">
-              <span class="offcanvas-launcher-kicker"><i class="bi bi-compass"></i> Start a new session</span>
-              <strong class="offcanvas-launcher-title">Choose a surah, set your range, then practise.</strong>
+              <span class="offcanvas-launcher-kicker"><i class="bi bi-compass"></i> {{ t('home.startKicker') }}</span>
+              <strong class="offcanvas-launcher-title">{{ t('home.startTitle') }}</strong>
             </div>
             <div class="offcanvas-launcher-steps" aria-label="Session setup steps">
-              <span><i class="bi bi-journal-text"></i> Select surah</span>
-              <span><i class="bi bi-bounding-box"></i> Pick range</span>
-              <span><i class="bi bi-arrow-repeat"></i> Set repeats</span>
+              <span><i class="bi bi-journal-text"></i> {{ t('home.selectSurah') }}</span>
+              <span><i class="bi bi-bounding-box"></i> {{ t('home.pickRange') }}</span>
+              <span><i class="bi bi-arrow-repeat"></i> {{ t('home.setRepeats') }}</span>
             </div>
             <button class="cta cta-primary setup-primary" type="button" aria-controls="memorisationToolsPanel"
               :aria-expanded="showTools ? 'true' : 'false'" @click="openToolsPanel()" title="Open controls">
-              <i class="bi bi-toggles2"></i> Open Session Controls
+              <i class="bi bi-toggles2"></i> {{ t('home.openControls') }}
             </button>
             <p class="offcanvas-launcher-copy">
-              You can tweak audio, focus tools, and saved sessions any time.
+              {{ t('home.controlsHint') }}
             </p>
           </div>
         </section>
@@ -129,7 +129,7 @@
                   <button class="action-btn action-btn-primary" type="button" @click="handlePrimaryAction"
                     :disabled="!isPlaying && !canStartSession">
                     <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-                    <span>{{ isPlaying ? 'Pause' : 'Start Session' }}</span>
+                    <span>{{ isPlaying ? t('common.pause') : t('common.startSession') }}</span>
                   </button>
                   <button class="action-btn action-btn-secondary action-btn-recordings" type="button" @click="openRecordingsLibrary"
                     title="Open recordings library">
@@ -428,8 +428,8 @@
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-journal-text"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">Session Setup</span>
-                    <span class="st-sub">Choose what you memorise</span>
+                    <span class="st-title">{{ t('sessionSetup.title') }}</span>
+                    <span class="st-sub">{{ t('sessionSetup.subtitle') }}</span>
                   </span>
                 </span>
                 <span class="st-chev" :class="{ open: sectionOpen.advanced_setup }"><i
@@ -438,39 +438,39 @@
               <div class="sheet-content" v-show="sectionOpen.advanced_setup">
                 <div class="field-stack field-stack-compact">
                   <div class="field">
-                    <label><i class="bi bi-journal-text"></i> Surah</label>
+                    <label><i class="bi bi-journal-text"></i> {{ t('sessionSetup.surah') }}</label>
                     <select :value="chapterId" @change="onChapterChange" class="select">
-                      <option :value="0">Choose a surah...</option>
+                      <option :value="0">{{ t('sessionSetup.chooseSurah') }}</option>
                       <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.name_simple }}</option>
                     </select>
-                    <small class="field-hint">Pick the surah you want to work on.</small>
+                    <small class="field-hint">{{ t('sessionSetup.surahHint') }}</small>
                     <div class="setup-metric-list" aria-label="Verse play counts">
                       <div v-if="sessionVersePlaySummary.length" v-for="item in sessionVersePlaySummary" :key="item.key" class="setup-metric-list-row">
                         <span>{{ item.label }}</span>
                         <strong>{{ item.count }} play{{ item.count === 1 ? '' : 's' }}</strong>
                       </div>
-                      <div v-else class="setup-metric-list-empty">No ayah audio played yet for this session.</div>
+                      <div v-else class="setup-metric-list-empty">{{ t('sessionSetup.noAudioPlayed') }}</div>
                     </div>
                   </div>
                   <div class="field">
-                    <label><i class="bi bi-bounding-box"></i> Ayah range</label>
+                    <label><i class="bi bi-bounding-box"></i> {{ t('sessionSetup.ayahRange') }}</label>
                     <div class="range range-single">
                       <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
-                      <span>to</span>
+                      <span>{{ t('sessionSetup.to') }}</span>
                       <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
                     </div>
-                    <small class="field-hint">Keep ranges small for focused memorisation.</small>
+                    <small class="field-hint">{{ t('sessionSetup.rangeHint') }}</small>
                   </div>
                   <div class="field">
-                    <label><i class="bi bi-mic-fill"></i> Reciter</label>
+                    <label><i class="bi bi-mic-fill"></i> {{ t('sessionSetup.reciter') }}</label>
                     <select v-model="reciterId" @change="refreshVerses" class="select">
                       <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
                     </select>
-                    <small class="field-hint">Changes the audio voice for the session.</small>
+                    <small class="field-hint">{{ t('sessionSetup.reciterHint') }}</small>
                   </div>
                   <div class="field">
                     <div class="field-header">
-                      <label><i class="bi bi-arrow-repeat"></i> Repetitions</label>
+                      <label><i class="bi bi-arrow-repeat"></i> {{ t('sessionSetup.repetitions') }}</label>
                       <span class="range-value-pill">{{ repetitionDisplayValue }}</span>
                     </div>
                     <div class="range-control">
@@ -487,7 +487,7 @@
                     <div class="slider-markers slider-markers-compact">
                       <span>1x</span><span>3x</span><span>5x</span><span>7x</span><span>10x</span>
                     </div>
-                    <small class="field-hint">Repeat each verse {{ repetitionsPerStep }} time{{ repetitionsPerStep === 1 ? '' : 's' }} before moving on.</small>
+                    <small class="field-hint">{{ t('sessionSetup.repeatHint', { count: repetitionsPerStep }) }}</small>
                   </div>
                 </div>
               </div>
@@ -523,6 +523,13 @@
                       <label class="radio"><input type="radio" value="manual" v-model="playMode"> No</label>
                     </div>
                     <small class="field-hint">Auto moves to the next queue item when audio ends.</small>
+                  </div>
+                  <div class="field">
+                    <label><i class="bi bi-hourglass-split"></i> Delay between recitations (secs)</label>
+                    <select v-model.number="delay" class="select">
+                      <option v-for="option in delayOptions" :key="`tool-delay-${option}`" :value="option">{{ option }}s</option>
+                    </select>
+                    <small class="field-hint">Pause before each next repetition/recitation in auto mode.</small>
                   </div>
                 </div>
               </div>
@@ -915,8 +922,8 @@
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-display"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">Display</span>
-                    <span class="st-sub">Customize how the Quran appears</span>
+                    <span class="st-title">{{ t('sessionSetup.display') }}</span>
+                    <span class="st-sub">{{ t('sessionSetup.displaySub') }}</span>
                   </span>
                 </span>
                 <span class="st-chev" :class="{ open: sectionOpen.display_settings }"><i
@@ -927,22 +934,31 @@
                 <!-- Tajweed -->
                 <div class="setting-item">
                   <div class="setting-info">
-                    <div class="setting-label">Tajweed</div>
-                    <div class="setting-description">Recitation color rules (Idgham, Ikhfa, Madd, etc.)</div>
+                    <div class="setting-label">{{ t('sessionSetup.tajweed') }}</div>
+                    <div class="setting-description">{{ t('sessionSetup.tajweedDesc') }}</div>
                   </div>
                 </div>
 
                 <!-- Font Size -->
                 <div class="setting-item setting-item-range">
                   <div class="setting-info">
-                    <div class="setting-label">Font size</div>
-                    <div class="setting-description">Adjust the Arabic text size for better readability</div>
+                    <div class="setting-label">{{ t('sessionSetup.fontSize') }}</div>
+                    <div class="setting-description">{{ t('sessionSetup.fontSizeDesc') }}</div>
                   </div>
                   <div class="range-control-compact">
                     <span class="range-value-badge">{{ defaultFontSize }}%</span>
                     <input type="range" min="80" max="200" step="5" v-model.number="defaultFontSize"
                       @input="updateDefaultFontSize" class="input range-slider">
                   </div>
+                </div>
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <div class="setting-label">{{ t('common.language') }}</div>
+                    <div class="setting-description">English, Arabic, or French UI</div>
+                  </div>
+                  <select class="select language-select" :value="activeLocale" @change="onLanguageChange($event.target.value)">
+                    <option v-for="option in languageOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+                  </select>
                 </div>
               </div>
             </section>
@@ -953,8 +969,8 @@
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-book-half"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">Reading Aids</span>
-                    <span class="st-sub">Translations and word helpers</span>
+                    <span class="st-title">{{ t('sessionSetup.readingAids') }}</span>
+                    <span class="st-sub">{{ t('sessionSetup.readingAidsSub') }}</span>
                   </span>
                 </span>
                 <span class="st-chev" :class="{ open: sectionOpen.reading_settings }"><i
@@ -966,46 +982,46 @@
                 <div class="setting-item">
                   <div class="setting-info">
                     <div class="setting-label">Translation</div>
-                    <div class="setting-description">English meaning of each verse</div>
+                    <div class="setting-description">{{ t('sessionSetup.translationDesc') }}</div>
                   </div>
                   <button class="toggle-chip" :class="{ active: showTranslation }"
                     @click="toggleReadingOption('translation')">
-                    {{ showTranslation ? 'On' : 'Off' }}
+                    {{ showTranslation ? t('common.on') : t('common.off') }}
                   </button>
                 </div>
 
                 <!-- Transliteration -->
                 <div class="setting-item">
                   <div class="setting-info">
-                    <div class="setting-label">Transliteration</div>
-                    <div class="setting-description">Latin script pronunciation aid</div>
+                    <div class="setting-label">{{ t('sessionSetup.transliteration') }}</div>
+                    <div class="setting-description">{{ t('sessionSetup.transliterationDesc') }}</div>
                   </div>
                   <button class="toggle-chip" :class="{ active: showTransliteration }"
                     @click="toggleReadingOption('transliteration')">
-                    {{ showTransliteration ? 'On' : 'Off' }}
+                    {{ showTransliteration ? t('common.on') : t('common.off') }}
                   </button>
                 </div>
 
                 <!-- Word by Word -->
                 <div class="setting-item">
                   <div class="setting-info">
-                    <div class="setting-label">Word by word</div>
-                    <div class="setting-description">Individual word chips with meanings</div>
+                    <div class="setting-label">{{ t('sessionSetup.wordByWord') }}</div>
+                    <div class="setting-description">{{ t('sessionSetup.wordByWordDesc') }}</div>
                   </div>
                   <button class="toggle-chip" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')">
-                    {{ showWordByWord ? 'On' : 'Off' }}
+                    {{ showWordByWord ? t('common.on') : t('common.off') }}
                   </button>
                 </div>
 
                 <!-- Word Audio -->
                 <div class="setting-item">
                   <div class="setting-info">
-                    <div class="setting-label">Word audio</div>
-                    <div class="setting-description">Audio playback with word highlighting</div>
+                    <div class="setting-label">{{ t('sessionSetup.wordAudio') }}</div>
+                    <div class="setting-description">{{ t('sessionSetup.wordAudioDesc') }}</div>
                   </div>
                   <button class="toggle-chip" :class="{ active: wordByWordAudioEnabled }"
                     @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
-                    {{ wordByWordAudioEnabled ? 'On' : 'Off' }}
+                    {{ wordByWordAudioEnabled ? t('common.on') : t('common.off') }}
                   </button>
                 </div>
               </div>
@@ -1015,10 +1031,10 @@
 
         <div class="tools-footer" :class="{ 'settings-footer': tab === 'settings' }">
           <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="resetControls">
-            <i class="bi bi-arrow-counterclockwise"></i><span>Reset</span>
+            <i class="bi bi-arrow-counterclockwise"></i><span>{{ t('common.reset') }}</span>
           </button>
           <button class="tools-btn tools-btn-primary tools-btn-soft" @click="startSessionAndClose">
-            <i class="bi bi-play-fill"></i><span>Start Session</span>
+            <i class="bi bi-play-fill"></i><span>{{ t('common.startSession') }}</span>
           </button>
         </div>
       </aside>
@@ -1029,28 +1045,28 @@
         <div class="guest-shell">
           <section class="guest-hero">
             <div class="guest-hero-copy">
-              <span class="guest-kicker">Calm Quran memorisation</span>
-              <h1>Memorise with a quieter, more deliberate session flow.</h1>
+              <span class="guest-kicker">{{ t('home.guestKicker') }}</span>
+              <h1>{{ t('home.guestTitle') }}</h1>
               <div class="guest-copy-stack">
                 <p class="guest-subtitle">
-                  Build each session around a small ayah range, steady repetition, and clear recall.
+                  {{ t('home.guestSubtitle') }}
                 </p>
                 <p class="guest-copy-support">
-                  Mutqin keeps the Quran central while playback, progress, and saved sessions stay quietly organised around it.
+                  {{ t('home.guestSupport') }}
                 </p>
               </div>
 
               <div class="guest-action-row">
                 <a href="/login" class="login-btn guest-primary-btn" style="text-decoration: none;">
                   <i class="bi bi-box-arrow-in-right"></i>
-                  <span>Start with your account</span>
+                  <span>{{ t('common.login') }}</span>
                 </a>
                 <a href="/register" class="guest-secondary-btn" style="text-decoration: none;">
                   <i class="bi bi-person-plus"></i>
-                  <span>Create a new account</span>
+                  <span>{{ t('common.register') }}</span>
                 </a>
               </div>
-              <p class="guest-cta-note">Login keeps your sessions, insights, and exact memorisation position in sync.</p>
+              <p class="guest-cta-note">{{ t('home.guestNote') }}</p>
 
               <div class="guest-proof-row">
                 <span><i class="bi bi-cloud-check"></i> Sync progress</span>
@@ -2201,6 +2217,12 @@ export default {
       // UI State
       currentMode: 'beginner',
       theme: 'light',
+      activeLocale: 'en',
+      languageOptions: [
+        { value: 'en', label: 'English' },
+        { value: 'ar', label: 'العربية' },
+        { value: 'fr', label: 'Français' }
+      ],
       tab: 'tools',
       showTools: false,
       focusModeEnabled: false,
@@ -3579,6 +3601,11 @@ export default {
   },
 
   async mounted() {
+    this.activeLocale = this.$i18n?.locale?.value || 'en'
+    this.handleLocaleChange = (event) => {
+      this.activeLocale = event?.detail?.locale || this.$i18n?.locale?.value || 'en'
+      this.$forceUpdate()
+    }
     this.handleGlobalThemeChange = (event) => {
       const nextTheme = event?.detail?.theme || document.documentElement.getAttribute('data-theme') || 'light'
       this.theme = nextTheme
@@ -3589,6 +3616,7 @@ export default {
       this.theme = nextTheme
     }
     window.addEventListener('mutqin:theme-change', this.handleGlobalThemeChange)
+    window.addEventListener('mutqin:locale-change', this.handleLocaleChange)
     window.addEventListener('storage', this.handleThemeStorageSync)
     this.watchActiveVerse()
     this.$nextTick(() => {
@@ -3687,6 +3715,7 @@ export default {
     }
     window.removeEventListener('online', this.handleOnline)
     window.removeEventListener('offline', this.handleOffline)
+    window.removeEventListener('mutqin:locale-change', this.handleLocaleChange)
     window.removeEventListener('beforeunload', this.persistAllState)
     window.removeEventListener('keydown', this.handleGlobalKeydown)
     window.removeEventListener('keyup', this.handleGlobalKeyup)
@@ -3882,6 +3911,18 @@ export default {
   },
 
   methods: {
+    t(key, params = {}) {
+      const translator = this.$t
+      if (typeof translator !== 'function') return key
+      return translator(key, params)
+    },
+
+    async onLanguageChange(locale) {
+      if (!this.$setLocale) return
+      await this.$setLocale(locale)
+      this.activeLocale = this.$i18n?.locale?.value || locale
+    },
+
     syncBodyScrollLock(locked) {
       if (typeof document === 'undefined') return
       document.body.classList.toggle('tools-panel-open', !!locked)

@@ -194,6 +194,33 @@
             transform: rotate(15deg);
         }
 
+        .lang-switcher {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--surface);
+        }
+
+        .lang-btn {
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            padding: 8px 10px;
+            min-width: 42px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .lang-btn.active {
+            color: var(--text);
+            background: var(--accent-light);
+        }
+
         /* Dropdown Styles */
         .dropdown {
             position: relative;
@@ -218,6 +245,23 @@
         .app-user-toggle:hover {
             border-color: var(--accent);
             background: var(--accent-light);
+        }
+
+        html[dir="rtl"] .navbar-brand {
+            margin-right: 0;
+            margin-left: 48px;
+        }
+
+        html[dir="rtl"] .app-navbar-actions,
+        html[dir="rtl"] .nav-links-desktop,
+        html[dir="rtl"] .app-user-toggle {
+            flex-direction: row-reverse;
+        }
+
+        html[dir="rtl"] .dropdown-menu {
+            text-align: right;
+            inset-inline-start: auto;
+            inset-inline-end: 0;
         }
 
         .app-user-avatar {
@@ -427,75 +471,80 @@
     </style>
 </head>
 <body>
-    <div id="app">
-        <nav class="navbar navbar-expand-lg app-navbar">
-            <div class="container-fluid shell navbar-shell">
-                <a class="navbar-brand" href="/memorisation">
-                    <img
-                        id="appNavbarLogo"
-                        src="/images/logo.png"
-                        data-logo-light="/images/logo.png"
-                        data-logo-dark="/images/dark_logo.png"
-                        alt="Mutqin"
-                        class="app-navbar-logo"
-                    >
-                </a>
+    <nav class="navbar navbar-expand-lg app-navbar">
+        <div class="container-fluid shell navbar-shell">
+            <a class="navbar-brand" href="/memorisation">
+                <img
+                    id="appNavbarLogo"
+                    src="/images/logo.png"
+                    data-logo-light="/images/logo.png"
+                    data-logo-dark="/images/dark_logo.png"
+                    alt="Mutqin"
+                    class="app-navbar-logo"
+                >
+            </a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <i class="bi bi-list"></i>
-                </button>
+            <button class="navbar-toggler" type="button" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="bi bi-list"></i>
+            </button>
 
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <div class="navbar-nav nav-links-desktop me-auto">
-                        <!-- <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="/">Home</a>
-                        <a class="nav-link {{ request()->is('memorisation') ? 'active' : '' }}" href="/memorisation">Memorisation</a> -->
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <div class="navbar-nav nav-links-desktop me-auto">
+                    <!-- <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="/">Home</a>
+                    <a class="nav-link {{ request()->is('memorisation') ? 'active' : '' }}" href="/memorisation">Memorisation</a> -->
+                </div>
+
+                <div class="d-flex align-items-center gap-3 ms-auto app-navbar-actions">
+                    <div class="lang-switcher" id="globalLangSwitcher" role="group" aria-label="Language switcher">
+                        <button type="button" class="lang-btn" data-locale="en">EN</button>
+                        <button type="button" class="lang-btn" data-locale="ar">AR</button>
+                        <button type="button" class="lang-btn" data-locale="fr">FR</button>
                     </div>
+                    <button id="globalThemeToggle" class="btn app-theme-toggle" type="button" aria-label="Toggle theme">
+                        <i class="bi bi-sun"></i>
+                    </button>
 
-                    <div class="d-flex align-items-center gap-3 ms-auto app-navbar-actions">
-                        <button id="globalThemeToggle" class="btn app-theme-toggle" type="button" aria-label="Toggle theme">
-                            <i class="bi bi-sun"></i>
-                        </button>
-
-                        @auth
-                            <div class="dropdown" id="userDropdown">
-                                <button class="btn app-user-toggle" type="button" id="dropdownToggle" aria-expanded="false">
-                                    <span class="app-user-avatar">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</span>
-                                    <span>{{ Auth::user()->name ?? 'User' }}</span>
-                                    <i class="bi bi-chevron-down"></i>
-                                </button>
-                                <ul class="dropdown-menu" id="dropdownMenu">
-                                    <!-- <li>
-                                        <a class="dropdown-item" href="/profile">
-                                            <i class="bi bi-person"></i> Profile
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="/dashboard">
-                                            <i class="bi bi-speedometer2"></i> Dashboard
-                                        </a>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li> -->
-                                    <li>
-                                        <form method="POST" action="{{ route('logout') }}" id="logoutForm">
-                                            @csrf
-                                            <button type="submit" class="dropdown-item">
-                                                <i class="bi bi-box-arrow-right"></i> Logout
-                                            </button>
-                                        </form>
-                                    </li>
-                                </ul>
-                            </div>
-                        @else
-                            <div class="d-flex align-items-center gap-2">
-                                <a class="nav-link" href="{{ route('login') }}">Login</a>
-                                <a class="nav-link" href="{{ route('register') }}">Register</a>
-                            </div>
-                        @endauth
-                    </div>
+                    @auth
+                        <div class="dropdown" id="userDropdown">
+                            <button class="btn app-user-toggle" type="button" id="dropdownToggle" aria-expanded="false">
+                                <span class="app-user-avatar">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</span>
+                                <span>{{ Auth::user()->name ?? 'User' }}</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                            <ul class="dropdown-menu" id="dropdownMenu">
+                                <!-- <li>
+                                    <a class="dropdown-item" href="/profile">
+                                        <i class="bi bi-person"></i> Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/dashboard">
+                                        <i class="bi bi-speedometer2"></i> Dashboard
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li> -->
+                                <li>
+                                    <form method="POST" action="{{ route('logout') }}" id="logoutForm">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="bi bi-box-arrow-right"></i> <span data-i18n="logout">Logout</span>
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    @else
+                        <div class="d-flex align-items-center gap-2">
+                            <a class="nav-link" href="{{ route('login') }}" data-i18n="login">Login</a>
+                            <a class="nav-link" href="{{ route('register') }}" data-i18n="register">Register</a>
+                        </div>
+                    @endauth
                 </div>
             </div>
-        </nav>
+        </div>
+    </nav>
 
+    <div id="app">
         <main class="shell">
             @yield('content')
         </main>
@@ -505,8 +554,22 @@
     <script src="{{ mix('js/app.js') }}" defer></script>
     
     <script>
+        function runWhenReady(fn) {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', fn);
+                return;
+            }
+            fn();
+        }
+
         // Theme management
         (function() {
+            function safeGet(key) {
+                try { return localStorage.getItem(key); } catch (e) { return null; }
+            }
+            function safeSet(key, value) {
+                try { localStorage.setItem(key, value); } catch (e) {}
+            }
             const themes = ['light', 'dark'];
             const themeIcons = {
                 light: 'bi-sun',
@@ -515,7 +578,7 @@
             
             function setTheme(theme) {
                 document.documentElement.setAttribute('data-theme', theme);
-                localStorage.setItem('mutqin-theme', theme);
+                safeSet('mutqin-theme', theme);
                 window.dispatchEvent(new CustomEvent('mutqin:theme-change', { detail: { theme } }));
                 
                 const button = document.getElementById('globalThemeToggle');
@@ -540,7 +603,7 @@
             }
             
             // Load saved theme
-            const savedTheme = localStorage.getItem('mutqin-theme');
+            const savedTheme = safeGet('mutqin-theme');
             if (savedTheme && themes.includes(savedTheme)) {
                 setTheme(savedTheme);
             } else {
@@ -551,7 +614,7 @@
                 }
             }
             
-            document.addEventListener('DOMContentLoaded', function() {
+            runWhenReady(function() {
                 const themeButton = document.getElementById('globalThemeToggle');
                 if (themeButton) {
                     themeButton.addEventListener('click', cycleTheme);
@@ -561,7 +624,7 @@
 
         // Custom dropdown functionality
         (function() {
-            document.addEventListener('DOMContentLoaded', function() {
+            runWhenReady(function() {
                 const dropdown = document.getElementById('userDropdown');
                 const toggle = document.getElementById('dropdownToggle');
                 const menu = document.getElementById('dropdownMenu');
@@ -611,7 +674,7 @@
         
         // Handle mobile menu toggle
         (function() {
-            document.addEventListener('DOMContentLoaded', function() {
+            runWhenReady(function() {
                 const toggler = document.querySelector('.navbar-toggler');
                 const collapse = document.querySelector('.navbar-collapse');
                 
@@ -630,6 +693,150 @@
                         });
                     });
                 }
+            });
+        })();
+
+        // Global language switcher for all pages
+        (function() {
+            const supported = ['en', 'ar', 'fr'];
+            const labels = {
+                en: {
+                    login: 'Login',
+                    register: 'Register',
+                    logout: 'Logout',
+                    authLoginKicker: 'Welcome back',
+                    authLoginSubtitle: 'Simple sign in. Your memorisation setup stays ready.',
+                    authRegisterKicker: 'Start here',
+                    authRegisterSubtitle: 'A clean setup for memorisation, revision, and tracking.',
+                    emailAddress: 'Email Address',
+                    password: 'Password',
+                    confirmPassword: 'Confirm Password',
+                    rememberMe: 'Remember Me',
+                    continueGoogle: 'Continue with Google',
+                    forgotPassword: 'Forgot Your Password?',
+                    name: 'Name',
+                    resetKicker: 'Need a reset?',
+                    resetTitle: 'Reset your password',
+                    resetSubtitle: 'Enter your email and we will send a reset link.',
+                    sendResetLink: 'Send Password Reset Link',
+                    newPasswordKicker: 'Set a new one',
+                    newPasswordTitle: 'Choose a new password',
+                    newPasswordSubtitle: 'Keep it simple. You can get back to your session after this.',
+                    resetPassword: 'Reset Password',
+                    verifyKicker: 'One last step',
+                    verifyTitle: 'Verify your email',
+                    verifySubtitle: 'Open the link in your inbox to unlock full access.',
+                    verifyMessage: 'Before proceeding, please check your email for a verification link.',
+                    verifyNoEmail: 'If you did not receive the email',
+                    verifyResend: 'click here to request another',
+                    verifySpam: "Check your spam folder if you don't see it within 5 minutes"
+                },
+                ar: {
+                    login: 'تسجيل الدخول',
+                    register: 'إنشاء حساب',
+                    logout: 'تسجيل الخروج',
+                    authLoginKicker: 'مرحبا بعودتك',
+                    authLoginSubtitle: 'تسجيل دخول بسيط. تبقى إعدادات الحفظ جاهزة.',
+                    authRegisterKicker: 'ابدأ من هنا',
+                    authRegisterSubtitle: 'إعداد واضح للحفظ والمراجعة والمتابعة.',
+                    emailAddress: 'البريد الإلكتروني',
+                    password: 'كلمة المرور',
+                    confirmPassword: 'تأكيد كلمة المرور',
+                    rememberMe: 'تذكرني',
+                    continueGoogle: 'المتابعة باستخدام Google',
+                    forgotPassword: 'هل نسيت كلمة المرور؟',
+                    name: 'الاسم',
+                    resetKicker: 'تحتاج إلى إعادة تعيين؟',
+                    resetTitle: 'إعادة تعيين كلمة المرور',
+                    resetSubtitle: 'أدخل بريدك الإلكتروني وسنرسل رابط إعادة التعيين.',
+                    sendResetLink: 'إرسال رابط إعادة التعيين',
+                    newPasswordKicker: 'عيّن كلمة مرور جديدة',
+                    newPasswordTitle: 'اختر كلمة مرور جديدة',
+                    newPasswordSubtitle: 'اجعلها بسيطة. يمكنك العودة إلى جلستك بعد ذلك.',
+                    resetPassword: 'إعادة تعيين كلمة المرور',
+                    verifyKicker: 'خطوة أخيرة',
+                    verifyTitle: 'تحقق من بريدك الإلكتروني',
+                    verifySubtitle: 'افتح الرابط في بريدك للوصول الكامل.',
+                    verifyMessage: 'قبل المتابعة، يرجى التحقق من بريدك الإلكتروني للحصول على رابط التحقق.',
+                    verifyNoEmail: 'إذا لم تستلم البريد الإلكتروني',
+                    verifyResend: 'اضغط هنا لطلب رابط آخر',
+                    verifySpam: 'تحقق من مجلد الرسائل غير المرغوب فيها إذا لم تجده خلال 5 دقائق'
+                },
+                fr: {
+                    login: 'Connexion',
+                    register: 'Inscription',
+                    logout: 'Déconnexion',
+                    authLoginKicker: 'Bon retour',
+                    authLoginSubtitle: 'Connexion simple. Votre configuration de mémorisation reste prête.',
+                    authRegisterKicker: 'Commencez ici',
+                    authRegisterSubtitle: 'Une configuration claire pour la mémorisation, la révision et le suivi.',
+                    emailAddress: 'Adresse e-mail',
+                    password: 'Mot de passe',
+                    confirmPassword: 'Confirmer le mot de passe',
+                    rememberMe: 'Se souvenir de moi',
+                    continueGoogle: 'Continuer avec Google',
+                    forgotPassword: 'Mot de passe oublié ?',
+                    name: 'Nom',
+                    resetKicker: 'Besoin de réinitialiser ?',
+                    resetTitle: 'Réinitialiser votre mot de passe',
+                    resetSubtitle: 'Entrez votre e-mail et nous vous enverrons un lien de réinitialisation.',
+                    sendResetLink: 'Envoyer le lien de réinitialisation',
+                    newPasswordKicker: 'Définir un nouveau mot de passe',
+                    newPasswordTitle: 'Choisissez un nouveau mot de passe',
+                    newPasswordSubtitle: 'Restez simple. Vous pourrez revenir à votre session ensuite.',
+                    resetPassword: 'Réinitialiser le mot de passe',
+                    verifyKicker: 'Dernière étape',
+                    verifyTitle: 'Vérifiez votre e-mail',
+                    verifySubtitle: 'Ouvrez le lien dans votre boîte de réception pour débloquer l’accès complet.',
+                    verifyMessage: 'Avant de continuer, veuillez vérifier votre e-mail pour le lien de vérification.',
+                    verifyNoEmail: "Si vous n'avez pas reçu l'e-mail",
+                    verifyResend: 'cliquez ici pour en demander un autre',
+                    verifySpam: 'Vérifiez votre dossier spam si vous ne le voyez pas dans les 5 minutes'
+                }
+            };
+
+            function safeGet(key) {
+                try { return localStorage.getItem(key); } catch (e) { return null; }
+            }
+            function safeSet(key, value) {
+                try { localStorage.setItem(key, value); } catch (e) {}
+            }
+
+            function normalize(locale) {
+                return supported.includes(locale) ? locale : 'en';
+            }
+
+            function setDocumentLocale(locale) {
+                const next = normalize(locale);
+                const rtl = next === 'ar';
+                document.documentElement.setAttribute('lang', next);
+                document.documentElement.setAttribute('dir', rtl ? 'rtl' : 'ltr');
+                if (document.body) document.body.setAttribute('dir', rtl ? 'rtl' : 'ltr');
+                safeSet('mutqin.locale', next);
+                document.querySelectorAll('#globalLangSwitcher .lang-btn').forEach((btn) => {
+                    btn.classList.toggle('active', btn.dataset.locale === next);
+                });
+                document.querySelectorAll('[data-i18n]').forEach((el) => {
+                    const key = el.getAttribute('data-i18n');
+                    if (labels[next] && labels[next][key]) el.textContent = labels[next][key];
+                });
+                window.dispatchEvent(new CustomEvent('mutqin:locale-change', { detail: { locale: next } }));
+                return next;
+            }
+
+            async function applyLocale(locale) {
+                const next = setDocumentLocale(locale);
+                if (window.mutqinSetLocale) {
+                    await window.mutqinSetLocale(next);
+                }
+            }
+
+            runWhenReady(function() {
+                const saved = safeGet('mutqin.locale') || 'en';
+                setDocumentLocale(saved);
+                document.querySelectorAll('#globalLangSwitcher .lang-btn').forEach((btn) => {
+                    btn.addEventListener('click', () => applyLocale(btn.dataset.locale));
+                });
             });
         })();
     </script>
