@@ -116,6 +116,11 @@
             line-height: 1.55;
         }
 
+        .guest-onboarding-list i {
+            color: rgba(189, 229, 217, 0.92);
+            margin-right: 10px;
+        }
+
         .guest-onboarding-actions {
             margin-top: 34px;
             display: flex;
@@ -139,12 +144,14 @@
             background: var(--accent);
             border: 1px solid var(--accent-strong);
             color: #f4fbf8;
+            gap: 10px;
         }
 
         .guest-onboarding-btn-soft {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.12);
             color: #d9e3de;
+            gap: 10px;
         }
 
         .guest-onboarding-btn:hover {
@@ -209,16 +216,20 @@
                     <h1>Preserve your hifz with calm, session-based repetition.</h1>
                     <p>Pick a small ayah range, repeat with structure, then switch into recall, self-check, and review. Mutqin keeps the flow simple so you can show up consistently.</p>
 
-                    <ul class="guest-onboarding-list" aria-label="Key features">
-                        <li>Short sessions that feel like a real memorisation sitting</li>
-                        <li>Clear steps: listen, repeat, then recall and self-check</li>
-                        <li>Saved progress so you can pause and resume without friction</li>
-                        <li>Review context that helps you return later with confidence</li>
-                    </ul>
+            <ul class="guest-onboarding-list" aria-label="Key features">
+                        <li><i class="bi bi-clock"></i> Short sessions that feel like a real memorisation sitting</li>
+                        <li><i class="bi bi-signpost-split"></i> Clear steps: listen, repeat, then recall and self-check</li>
+                        <li><i class="bi bi-cloud-check"></i> Saved progress so you can pause and resume without friction</li>
+                        <li><i class="bi bi-check2-circle"></i> Review context that helps you return later with confidence</li>
+            </ul>
 
                     <div class="guest-onboarding-actions">
-                        <a href="{{ route('register') }}" class="guest-onboarding-btn guest-onboarding-btn-primary">Get Started</a>
-                        <a href="{{ route('login') }}" class="guest-onboarding-btn guest-onboarding-btn-soft">Login</a>
+                        <a href="{{ route('register') }}" class="guest-onboarding-btn guest-onboarding-btn-primary">
+                            Get Started <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
+                        </a>
+                        <a href="{{ route('login') }}" class="guest-onboarding-btn guest-onboarding-btn-soft">
+                            Login <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+                        </a>
                     </div>
                 </section>
 

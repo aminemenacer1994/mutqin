@@ -36,12 +36,21 @@
             </div>
           </div>
           <div class="offcanvas-launcher-card">
+            <div class="offcanvas-launcher-head">
+              <span class="offcanvas-launcher-kicker"><i class="bi bi-compass"></i> Start a new session</span>
+              <strong class="offcanvas-launcher-title">Choose a surah, set your range, then practise.</strong>
+            </div>
+            <div class="offcanvas-launcher-steps" aria-label="Session setup steps">
+              <span><i class="bi bi-journal-text"></i> Select surah</span>
+              <span><i class="bi bi-bounding-box"></i> Pick range</span>
+              <span><i class="bi bi-arrow-repeat"></i> Set repeats</span>
+            </div>
             <button class="cta cta-primary setup-primary" type="button" aria-controls="memorisationToolsPanel"
               :aria-expanded="showTools ? 'true' : 'false'" @click="openToolsPanel()" title="Open controls">
-              <i class="bi bi-sliders"></i> Open Session Controls
+              <i class="bi bi-toggles2"></i> Open Session Controls
             </button>
             <p class="offcanvas-launcher-copy">
-              Session setup lives in the offcanvas.
+              You can tweak audio, focus tools, and saved sessions any time.
             </p>
           </div>
         </section>
@@ -417,7 +426,7 @@
             <section class="sheet-section sheet-section-compact">
               <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
                 <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-book"></i></span>
+                  <span class="st-ico"><i class="bi bi-journal-text"></i></span>
                   <span class="st-txt">
                     <span class="st-title">Session Setup</span>
                     <span class="st-sub">Choose what you memorise</span>
@@ -429,7 +438,7 @@
               <div class="sheet-content" v-show="sectionOpen.advanced_setup">
                 <div class="field-stack field-stack-compact">
                   <div class="field">
-                    <label>Surah</label>
+                    <label><i class="bi bi-journal-text"></i> Surah</label>
                     <select :value="chapterId" @change="onChapterChange" class="select">
                       <option :value="0">Choose a surah...</option>
                       <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.name_simple }}</option>
@@ -444,7 +453,7 @@
                     </div>
                   </div>
                   <div class="field">
-                    <label>Verse range</label>
+                    <label><i class="bi bi-bounding-box"></i> Ayah range</label>
                     <div class="range range-single">
                       <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
                       <span>to</span>
@@ -453,7 +462,7 @@
                     <small class="field-hint">Keep ranges small for focused memorisation.</small>
                   </div>
                   <div class="field">
-                    <label>Reciter</label>
+                    <label><i class="bi bi-mic-fill"></i> Reciter</label>
                     <select v-model="reciterId" @change="refreshVerses" class="select">
                       <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
                     </select>
@@ -461,7 +470,7 @@
                   </div>
                   <div class="field">
                     <div class="field-header">
-                      <label>Repetitions</label>
+                      <label><i class="bi bi-arrow-repeat"></i> Repetitions</label>
                       <span class="range-value-pill">{{ repetitionDisplayValue }}</span>
                     </div>
                     <div class="range-control">
@@ -10640,6 +10649,78 @@ export default {
 .tools-tabs button:hover:not(.active) {
   background: rgba(0, 0, 0, 0.04);
   color: var(--text);
+}
+
+.setup-summary-card {
+  margin: 0 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 10px 12px;
+}
+
+.setup-summary-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.setup-summary-label {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.setup-summary-value {
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--text);
+  text-align: right;
+}
+
+.offcanvas-launcher-head {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.offcanvas-launcher-kicker {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.offcanvas-launcher-title {
+  font-size: 1.12rem;
+  line-height: 1.22;
+}
+
+.offcanvas-launcher-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin: 0 0 14px;
+  color: rgba(237, 243, 240, 0.86);
+}
+
+.offcanvas-launcher-steps span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.86rem;
 }
 
 /* Fix button styles */
