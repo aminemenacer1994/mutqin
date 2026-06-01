@@ -777,66 +777,21 @@
                     <div class="session-primary-action">
                       <button class="session-resume-btn" @click="loadSavedSession(session.id)" type="button" :disabled="isLoadingSession(session.id)">
                         <i class="bi" :class="isLoadingSession(session.id) ? 'bi-arrow-repeat spin' : 'bi-play-fill'"></i>
-                        <span>{{ isLoadingSession(session.id) ? 'Resuming…' : 'Resume Session' }}</span>
+                        <span>{{ isLoadingSession(session.id) ? 'Opening…' : 'Open Session' }}</span>
                       </button>
                     </div>
                     <div class="session-secondary-actions">
-                      <div class="session-export-group" role="group" :aria-label="`Export actions for ${session.name || getSessionPrimaryLabel(session)}`">
-                        <button
-                          type="button"
-                          class="session-export-btn session-export-btn-csv"
-                          :class="{ success: isSessionExportSuccessful(session.id, 'csv') }"
-                          :disabled="isExportingSession(session.id)"
-                          @click.stop="exportSavedSession(session.id, 'csv')"
-                          title="Export CSV"
-                        >
-                          <i class="bi" :class="getSessionExportIcon(session.id, 'csv', 'bi-filetype-csv')"></i>
-                          <span>{{ getSessionExportLabel(session.id, 'csv', 'CSV') }}</span>
-                        </button>
-                        <button
-                          type="button"
-                          class="session-export-btn session-export-btn-pdf"
-                          :class="{ success: isSessionExportSuccessful(session.id, 'pdf') }"
-                          :disabled="isExportingSession(session.id)"
-                          @click.stop="exportSavedSession(session.id, 'pdf')"
-                          title="Export PDF"
-                        >
-                          <i class="bi" :class="getSessionExportIcon(session.id, 'pdf', 'bi-filetype-pdf')"></i>
-                          <span>{{ getSessionExportLabel(session.id, 'pdf', 'PDF') }}</span>
-                        </button>
-                        <button
-                          type="button"
-                          class="session-export-btn session-export-btn-word"
-                          :class="{ success: isSessionExportSuccessful(session.id, 'word') }"
-                          :disabled="isExportingSession(session.id)"
-                          @click.stop="exportSavedSession(session.id, 'word')"
-                          title="Export Word"
-                        >
-                          <i class="bi" :class="getSessionExportIcon(session.id, 'word', 'bi-file-earmark-word')"></i>
-                          <span>{{ getSessionExportLabel(session.id, 'word', 'Word') }}</span>
-                        </button>
-                      </div>
                       <button
                         class="delete-btn session-delete-btn"
                         @click.stop="deleteSavedSession(session.id)"
-                        title="Delete session"
+                        title="Remove saved session"
                       >
                         <i class="bi bi-trash3"></i>
-                        <span>Delete</span>
+                        <span>Remove</span>
                       </button>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div v-if="activeExportErrorSessionId" class="export-error-card">
-                <div>
-                  <strong>Export failed</strong>
-                  <p>{{ exportErrorMessage }}</p>
-                </div>
-                <button type="button" class="session-export-btn" @click="retryFailedExport">
-                  <i class="bi bi-arrow-repeat"></i>
-                  <span>Retry</span>
-                </button>
               </div>
               <div v-if="hasVerses" class="save-section">
                 <div class="current-info">
@@ -14962,7 +14917,7 @@ export default {
 
 .session-name {
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.86rem;
   color: var(--text);
   margin-bottom: 4px;
   display: flex;
@@ -15128,17 +15083,18 @@ export default {
   flex-direction: column;
   gap: 8px;
   margin-bottom: 24px;
-  max-height: 320px;
+  max-height: none;
   overflow-y: auto;
+  padding-right: 6px;
 }
 
 .session-item {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  padding: 12px 14px;
+  padding: 10px 12px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   transition: all 0.2s ease;
 }
 
@@ -15157,11 +15113,11 @@ export default {
 .session-name {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   min-width: 0;
 }
 
@@ -15173,8 +15129,8 @@ export default {
 }
 
 .session-subtitle {
-  margin: 0 0 8px;
-  font-size: 0.72rem;
+  margin: 0 0 6px;
+  font-size: 0.82rem;
   color: var(--text-muted);
 }
 
@@ -15186,14 +15142,14 @@ export default {
 .session-details {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px 12px;
 }
 
 .session-details span {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.65rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
 }
 
@@ -15938,7 +15894,7 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: 300px;
+  max-height: none;
   overflow-y: auto;
 }
 
@@ -15992,7 +15948,6 @@ export default {
 .session-actions {
   display: flex;
   gap: 10px;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   width: 100%;
@@ -16289,7 +16244,8 @@ export default {
 .session-details {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 14px;
+  gap: 6px 10px;
+  font-size: 0.76rem;
 }
 
 .session-details span {
@@ -16300,37 +16256,40 @@ export default {
 
 .session-primary-action {
   display: grid;
+  flex: 0 0 66.6667%;
+  max-width: 66.6667%;
 }
 
 .saved-sessions-container .session-actions {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   width: 100%;
-  margin-top: 14px;
-  padding-top: 14px;
+  margin-top: 8px;
+  padding-top: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  align-items: stretch;
-  justify-content: stretch;
 }
 
 .session-secondary-actions {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: stretch;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  align-items: center;
+  flex: 0 0 33.3333%;
+  max-width: 33.3333%;
 }
 
 .session-resume-btn,
 .session-delete-btn {
-  border-radius: 12px;
+  border-radius: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  font-size: 0.78rem;
+  gap: 6px;
+  font-size: 0.72rem;
   font-weight: 700;
-  padding: 10px 14px;
+  padding: 8px 11px;
   line-height: 1.1;
 }
 
@@ -16338,7 +16297,7 @@ export default {
   border: 1px solid rgba(154, 103, 56, 0.16);
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: #fff;
-  padding: 12px 16px;
+  padding: 9px 12px;
   box-shadow: 0 10px 22px rgba(154, 103, 56, 0.18);
 }
 
@@ -16346,12 +16305,13 @@ export default {
   border: 1px solid rgba(168, 87, 68, 0.2);
   color: #a85744;
   background: rgba(255, 246, 243, 0.86);
-  padding: 10px 14px;
+  padding: 8px 10px;
   min-width: 0;
   width: auto;
   height: auto;
   margin-right: 0;
   flex-shrink: 0;
+  width: 100%;
 }
 
 .session-delete-btn-quiet {
@@ -16589,7 +16549,8 @@ export default {
 
   .saved-sessions-container .session-actions {
     width: 100%;
-    align-items: stretch;
+    align-items: center;
+    flex-wrap: nowrap;
   }
 
   .session-export-group {
@@ -16597,7 +16558,13 @@ export default {
   }
 
   .session-secondary-actions {
-    grid-template-columns: 1fr;
+    flex: 0 0 33.3333%;
+    max-width: 33.3333%;
+  }
+
+  .session-primary-action {
+    flex: 0 0 66.6667%;
+    max-width: 66.6667%;
   }
 
   .session-delete-btn {
