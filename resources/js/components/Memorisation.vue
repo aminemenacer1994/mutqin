@@ -1661,7 +1661,6 @@
       <div class="modal-content recordings-library-modal" role="dialog" aria-modal="true" aria-labelledby="recordingsLibraryTitle">
         <div class="modal-header recordings-library-header">
           <div class="recordings-library-head-copy">
-            <div class="modal-context-badge">Personal archive</div>
             <h2 id="recordingsLibraryTitle">Recordings Library</h2>
             <p>Browse every ayah you have recorded in this session. Replay attempts, review self-ratings, and keep your memorisation progress in one archive.</p>
           </div>
@@ -1690,7 +1689,6 @@
                 <div>
                   <span class="recordings-library-nav-kicker">Recorded ayahs</span>
                   <strong>{{ filteredRecordingsAyahCount }} ayah{{ filteredRecordingsAyahCount === 1 ? '' : 's' }}</strong>
-                  <p class="recordings-library-section-desc">Select an ayah to replay attempts, review ratings, and manage your archive.</p>
                 </div>
                 <button class="recordings-library-nav-toggle" type="button" @click="toggleRecordingsNav">
                   <span>{{ recordingsNavExpanded ? 'Hide list' : 'Show list' }}</span>
@@ -1708,7 +1706,6 @@
                     aria-label="Search recorded ayahs"
                   >
                 </div>
-                <p class="recordings-library-search-hint">Filter by surah name or ayah number within your saved archive.</p>
               </div>
 
               <div v-show="recordingsNavExpanded" class="recordings-library-nav-scroll">
@@ -11357,19 +11354,7 @@ export default {
   flex: 1;
 }
 
-.modal-context-badge {
-  display: inline-flex;
-  align-items: center;
-  margin-bottom: 8px;
-  padding: 4px 9px;
-  border-radius: 999px;
-  background: rgba(154, 103, 56, 0.10);
-  border: 1px solid rgba(154, 103, 56, 0.14);
-  color: var(--accent-strong);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-}
+
 
 .modal-header-text h2 {
   margin: 0 0 4px 0;

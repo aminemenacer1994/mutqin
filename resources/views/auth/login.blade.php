@@ -11,6 +11,12 @@
                     <form method="POST" action="{{ route('login') }}">
                         @csrf
 
+                        @error('google')
+                            <div class="alert alert-danger auth-alert" role="alert">
+                                {{ $message }}
+                            </div>
+                        @enderror
+
                         <div class="mb-3">
                             <label for="email" class="form-label">{{ __('Email Address') }}</label>
                                 <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
@@ -47,6 +53,11 @@
                                 <button type="submit" class="btn auth-btn-primary">
                                     {{ __('Login') }}
                                 </button>
+
+                                <!-- Google Sign In Button -->
+                                <a href="{{ route('auth.google.redirect') }}" class="btn btn-outline-danger w-100 mt-2">
+                                    <i class="fab fa-google"></i> Continue with Google
+                                </a>
 
                                 @if (Route::has('password.request'))
                                     <a class="btn auth-btn-ghost" href="{{ route('password.request') }}">

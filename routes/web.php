@@ -1,14 +1,53 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MemorisationSyncController;
+use Laravel\Socialite\Facades\Socialite;
+
+
 
 // Authentication routes (from laravel/ui)
 Auth::routes();
+
+Route::get('/auth/redirect', function () {
+    return Socialite::driver('google')->stateless()->redirect();
+})->name('auth.google.redirect');
+
+Route::get('/auth/callback', function () {
+    try {
+        $googleUser = Socialite::driver('google')->stateless()->user();
+        
+        $user = User::updateOrCreate(
+            ['email' => $googleUser->email],
+            [
+                'name' => $googleUser->name,
+                'google_id' => $googleUser->id,
+                'avatar' => $googleUser->avatar,
+                'password' => bcrypt(uniqid()), // ← ADD THIS LINE
+                'email_verified_at' => now(),
+            ]
+        );
+        
+        Auth::login($user);
+        
+        return redirect()->route('memorisation');
+        
+    } catch (\Exception $e) {
+        return redirect()->route('login')->with('error', 'Google login failed: ' . $e->getMessage());
+    }
+});
+
+// Logout Route
+Route::post('/logout', function () {
+    Auth::logout();
+    return redirect('/login');
+})->name('logout');
 
 // Public routes
 Route::get('/', function () {
