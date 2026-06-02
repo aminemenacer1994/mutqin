@@ -5,6 +5,12 @@
   */
 
 /*!
+  * shared v9.14.5
+  * (c) 2025 kazuya kawaguchi
+  * Released under the MIT License.
+  */
+
+/*!
  * The buffer module from node.js, for the browser.
  *
  * @author   Feross Aboukhadijeh <http://feross.org>

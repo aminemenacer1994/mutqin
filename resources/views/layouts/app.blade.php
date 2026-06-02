@@ -350,25 +350,42 @@
         @media (max-width: 992px) {
             .navbar-shell {
                 padding: 12px var(--gutter-tight);
+                min-height: auto;
+            }
+
+            .app-navbar-logo {
+                height: clamp(42px, 10vw, 52px);
+            }
+
+            .navbar-brand {
+                margin-right: 0;
+                min-width: 0;
             }
             
             .navbar-collapse {
                 position: fixed;
-                top: calc(env(safe-area-inset-top, 0px) + var(--nav-h));
-                left: -105%;
+                top: calc(env(safe-area-inset-top, 0px) + 76px);
+                left: 0;
+                right: 0;
                 width: 100%;
-                height: calc(100dvh - (env(safe-area-inset-top, 0px) + var(--nav-h)));
+                height: calc(100dvh - (env(safe-area-inset-top, 0px) + 76px));
                 background: var(--surface-strong);
-                transition: left 0.3s ease;
+                transition: opacity 0.22s ease, visibility 0.22s ease, transform 0.22s ease;
                 padding: 18px var(--gutter);
                 z-index: 999;
                 overflow-y: auto;
                 overscroll-behavior: contain;
                 -webkit-overflow-scrolling: touch;
+                opacity: 0;
+                visibility: hidden;
+                transform: translateY(-8px);
+                border-top: 1px solid var(--border);
             }
             
             .navbar-collapse.show {
-                left: 0;
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
             }
             
             .nav-links-desktop {
@@ -386,7 +403,31 @@
             }
             
             .app-navbar-actions {
-                margin-left: auto;
+                margin-left: 0;
+                width: 100%;
+                display: grid;
+                grid-template-columns: 1fr;
+                align-items: stretch;
+                gap: 12px;
+                padding-top: 8px;
+            }
+
+            .app-navbar-actions > *,
+            .app-navbar-actions .dropdown,
+            .app-theme-toggle,
+            .lang-switcher,
+            .app-user-toggle {
+                width: 100%;
+            }
+
+            .app-theme-toggle,
+            .app-user-toggle {
+                justify-content: center;
+            }
+
+            .lang-switcher {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
             }
             
             .dropdown-menu {
@@ -423,15 +464,11 @@
 
         @media (max-width: 640px) {
             .navbar-shell {
-                padding: 10px 16px;
+                padding: 10px 14px;
             }
-            
-            .app-user-toggle span:not(.app-user-avatar) {
-                display: none;
-            }
-            
+
             .app-user-toggle {
-                padding: 6px 10px;
+                padding: 10px 12px;
             }
             
             .app-user-avatar {
@@ -447,6 +484,19 @@
             main.shell {
                 padding-top: 20px;
                 padding-bottom: 20px;
+            }
+
+            .navbar-toggler {
+                width: 54px;
+                height: 54px;
+                padding: 0;
+                border-radius: 16px;
+            }
+
+            .navbar-collapse {
+                top: calc(env(safe-area-inset-top, 0px) + 74px);
+                height: calc(100dvh - (env(safe-area-inset-top, 0px) + 74px));
+                padding: 16px;
             }
         }
 
@@ -471,7 +521,8 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg app-navbar">
+    <a class="skip-link" href="#mainContent">Skip to main content</a>
+    <nav class="navbar navbar-expand-lg app-navbar" aria-label="Primary navigation">
         <div class="container-fluid shell navbar-shell">
             <a class="navbar-brand" href="/memorisation">
                 <img
@@ -484,7 +535,7 @@
                 >
             </a>
 
-            <button class="navbar-toggler" type="button" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Open navigation menu">
                 <i class="bi bi-list"></i>
             </button>
 
@@ -496,22 +547,22 @@
 
                 <div class="d-flex align-items-center gap-3 ms-auto app-navbar-actions">
                     <div class="lang-switcher" id="globalLangSwitcher" role="group" aria-label="Language switcher">
-                        <button type="button" class="lang-btn" data-locale="en">EN</button>
-                        <button type="button" class="lang-btn" data-locale="ar">AR</button>
-                        <button type="button" class="lang-btn" data-locale="fr">FR</button>
+                        <button type="button" class="lang-btn" data-locale="en" aria-label="Switch language to English">EN</button>
+                        <button type="button" class="lang-btn" data-locale="ar" aria-label="Switch language to Arabic">AR</button>
+                        <button type="button" class="lang-btn" data-locale="fr" aria-label="Switch language to French">FR</button>
                     </div>
-                    <button id="globalThemeToggle" class="btn app-theme-toggle" type="button" aria-label="Toggle theme">
+                    <button id="globalThemeToggle" class="btn app-theme-toggle" type="button" aria-label="Switch to dark theme">
                         <i class="bi bi-sun"></i>
                     </button>
 
                     @auth
                         <div class="dropdown" id="userDropdown">
-                            <button class="btn app-user-toggle" type="button" id="dropdownToggle" aria-expanded="false">
-                                <span class="app-user-avatar">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</span>
+                            <button class="btn app-user-toggle" type="button" id="dropdownToggle" aria-expanded="false" aria-haspopup="menu" aria-controls="dropdownMenu">
+                                <span class="app-user-avatar" aria-hidden="true">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</span>
                                 <span>{{ Auth::user()->name ?? 'User' }}</span>
-                                <i class="bi bi-chevron-down"></i>
+                                <i class="bi bi-chevron-down" aria-hidden="true"></i>
                             </button>
-                            <ul class="dropdown-menu" id="dropdownMenu">
+                            <ul class="dropdown-menu" id="dropdownMenu" role="menu">
                                 <!-- <li>
                                     <a class="dropdown-item" href="/profile">
                                         <i class="bi bi-person"></i> Profile
@@ -526,8 +577,8 @@
                                 <li>
                                     <form method="POST" action="{{ route('logout') }}" id="logoutForm">
                                         @csrf
-                                        <button type="submit" class="dropdown-item">
-                                            <i class="bi bi-box-arrow-right"></i> <span data-i18n="logout">Logout</span>
+                                        <button type="submit" class="dropdown-item" role="menuitem">
+                                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i> <span data-i18n="logout">Logout</span>
                                         </button>
                                     </form>
                                 </li>
@@ -545,7 +596,7 @@
     </nav>
 
     <div id="app">
-        <main class="shell">
+        <main id="mainContent" class="shell" tabindex="-1">
             @yield('content')
         </main>
     </div>
@@ -585,6 +636,7 @@
                 if (button) {
                     const icon = button.querySelector('i');
                     icon.className = `bi ${themeIcons[theme] || themeIcons.light}`;
+                    button.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
                 }
 
                 const logo = document.getElementById('appNavbarLogo');
@@ -683,6 +735,7 @@
                         collapse.classList.toggle('show');
                         const expanded = collapse.classList.contains('show');
                         toggler.setAttribute('aria-expanded', expanded);
+                        toggler.setAttribute('aria-label', expanded ? 'Close navigation menu' : 'Open navigation menu');
                     });
                     
                     const links = collapse.querySelectorAll('a');
@@ -690,6 +743,7 @@
                         link.addEventListener('click', function() {
                             collapse.classList.remove('show');
                             toggler.setAttribute('aria-expanded', 'false');
+                            toggler.setAttribute('aria-label', 'Open navigation menu');
                         });
                     });
                 }

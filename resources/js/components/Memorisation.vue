@@ -1,6 +1,6 @@
 <template>
   <div class="app" :data-theme="theme" :style="appStyleVars" v-cloak>
-    <div v-if="appReady && banner" class="banner" :class="banner.kind">
+    <div v-if="appReady && banner" class="banner" :class="banner.kind" role="status" aria-live="polite">
       <span>{{ banner.message }}</span>
       <div class="banner-actions">
         <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
@@ -22,16 +22,16 @@
         <section v-if="!hasVerses && !currentConfig.chapterId" class="home-dashboard home-dashboard-minimal">
           <div v-if="hasContinueSession" class="continue-session-card">
             <div class="continue-session-copy">
-              <span class="continue-session-kicker">Continue where you left off</span>
+              <span class="continue-session-kicker">Resume last session</span>
               <strong>{{ continueSessionLabel }}</strong>
               <small>{{ continueSessionMeta }}</small>
             </div>
             <div class="continue-session-actions">
               <button class="cta cta-primary continue-session-btn" @click="continueLastSession">
-                <i class="bi bi-play-fill"></i> Continue Session
+                <i class="bi bi-play-fill"></i> Resume Last Session
               </button>
-              <button class="cta cta-ghost continue-session-dismiss" @click="confirmDiscardContinueSession">
-                <i class="bi bi-x-lg"></i>
+              <button class="cta cta-ghost continue-session-dismiss" @click="confirmDiscardContinueSession" type="button" aria-label="Discard saved session">
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
               </button>
             </div>
           </div>
@@ -46,8 +46,8 @@
               <span><i class="bi bi-arrow-repeat"></i> {{ t('home.setRepeats') }}</span>
             </div>
             <button class="cta cta-primary setup-primary" type="button" aria-controls="memorisationToolsPanel"
-              :aria-expanded="showTools ? 'true' : 'false'" @click="openToolsPanel()" title="Open controls">
-              <i class="bi bi-toggles2"></i>
+              :aria-expanded="showTools ? 'true' : 'false'" @click="openToolsPanel()" title="Open controls" aria-label="Open session setup controls">
+              <i class="bi bi-toggles2" aria-hidden="true"></i>
             </button>
             <p class="offcanvas-launcher-copy">
               {{ t('home.controlsHint') }}
@@ -114,7 +114,9 @@
           <section class="workspace-shell" :class="{ collapsed: mainCardCollapsed }" aria-label="Session overview">
             <div class="workspace-shell-head">
               <div class="workspace-shell-copy">
-                <span class="workspace-shell-kicker">{{ hasSessionStarted ? 'Active session' : 'Session ready' }}</span>
+                <span class="workspace-shell-kicker">
+                  {{ isSessionCompleted ? 'Session completed' : (hasSessionStarted ? 'Active session' : 'Session ready') }}
+                </span>
                 <div class="workspace-shell-title-row">
                   <h1>{{ currentChapter ? currentChapter.name_simple : activeChapterName }}</h1>
                 </div>
@@ -124,52 +126,56 @@
                 </div>
               </div>
               <div class="workspace-shell-actions">
-                <div class="action-buttons-group">
+                <div v-if="isSessionCompleted" class="session-completed-indicator" aria-live="polite">
+                  <i class="bi bi-check2-circle"></i>
+                  <span>Session Completed</span>
+                </div>
+                <div v-else class="action-buttons-group">
                   <button class="action-btn action-btn-primary" type="button" @click="handlePrimaryAction"
                     :disabled="!isPlaying && !canStartSession">
-                    <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                    <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
                     <span>{{ isPlaying ? t('common.pause') : t('common.startSession') }}</span>
                   </button>
                   <button class="action-btn action-btn-secondary action-btn-recordings" type="button" @click="openRecordingsLibrary"
-                    title="Open recordings library">
-                    <i class="bi bi-collection-play"></i>
+                    title="Open recordings library" aria-label="Open recordings library">
+                    <i class="bi bi-collection-play" aria-hidden="true"></i>
                     <span>View All Recordings</span>
                   </button>
                   <button class="action-btn action-btn-secondary" type="button" @click="openAdvancedControls"
-                    title="Open session controls">
-                    <i class="bi bi-sliders"></i>
+                    title="Open session controls" aria-label="Open session controls">
+                    <i class="bi bi-sliders" aria-hidden="true"></i>
                     <span>Controls</span>
                   </button>
                   <button v-if="hasSessionStarted" class="action-btn action-btn-secondary action-btn-exit" type="button" @click="openSessionExitModal"
-                    title="End session">
-                    <i class="bi bi-box-arrow-right"></i>
+                    title="End session" aria-label="End session">
+                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                     <span>End Session</span>
                   </button>
                   <div class="workspace-shell-icon-actions">
-                    <button class="action-icon-btn" @click="toggleKeyboardShortcuts" title="Keyboard shortcuts">
-                      <i class="bi bi-keyboard"></i>
+                    <button class="action-icon-btn" @click="toggleKeyboardShortcuts" title="Keyboard shortcuts" type="button" aria-label="Open keyboard shortcuts">
+                      <i class="bi bi-keyboard" aria-hidden="true"></i>
                     </button>
-                    <button class="action-icon-btn" @click="openOnboardingModal(true)" title="How Mutqin works">
-                      <i class="bi bi-question-circle"></i>
+                    <button class="action-icon-btn" @click="openOnboardingModal(true)" title="How Mutqin works" type="button" aria-label="Open help">
+                      <i class="bi bi-question-circle" aria-hidden="true"></i>
                     </button>
-                    <button class="action-icon-btn" @click="toggleFullScreen" title="Full screen mode">
-                      <i class="bi bi-arrows-fullscreen"></i>
+                    <button class="action-icon-btn" @click="toggleFullScreen" title="Full screen mode" type="button" aria-label="Toggle full screen mode">
+                      <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
                     </button>
                   </div>
                 </div>
               </div>
             </div>
             <!-- Keyboard Shortcuts Modal -->
-            <div v-if="showKeyboardShortcuts" class="keyboard-shortcuts-modal"
+            <div v-if="showKeyboardShortcuts" class="keyboard-shortcuts-modal" role="presentation"
               @click.self="showKeyboardShortcuts = false">
-              <div class="shortcuts-modal">
+              <div class="shortcuts-modal" role="dialog" aria-modal="true" aria-labelledby="keyboardShortcutsTitle" @keydown.esc.prevent="showKeyboardShortcuts = false" tabindex="-1">
                 <div class="shortcuts-modal-header">
-                  <h3>
-                    <i class="bi bi-keyboard"></i>
+                  <h3 id="keyboardShortcutsTitle">
+                    <i class="bi bi-keyboard" aria-hidden="true"></i>
                     <span>Keyboard Shortcuts</span>
                   </h3>
-                  <button class="shortcuts-modal-close" @click="showKeyboardShortcuts = false">
-                    <i class="bi bi-x-lg"></i>
+                  <button class="shortcuts-modal-close" @click="showKeyboardShortcuts = false" type="button" aria-label="Close keyboard shortcuts">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
                   </button>
                 </div>
                 <div class="shortcuts-modal-body">
@@ -233,6 +239,28 @@
             </div>
             <div v-show="!mainCardCollapsed" class="workspace-quick-controls" aria-label="Quick reading controls">
               <div class="quick-pill-group-list">
+                <div class="view-mode-toggle" role="group" aria-label="Reading layout">
+                  <button
+                    type="button"
+                    class="view-mode-btn"
+                    :class="{ active: readingViewMode === 'stacked' }"
+                    @click="setReadingViewMode('stacked')"
+                    title="Show each ayah in a stacked card layout"
+                  >
+                    <i class="bi bi-view-stacked"></i>
+                    <span>Stacked</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="view-mode-btn"
+                    :class="{ active: readingViewMode === 'mushaf' }"
+                    @click="setReadingViewMode('mushaf')"
+                    title="Show ayahs in an interactive mushaf-style page"
+                  >
+                    <i class="bi bi-book"></i>
+                    <span>Mushaf</span>
+                  </button>
+                </div>
                 <button class="toolbar-chip toolbar-chip-sm" :class="{ active: showTranslation }" @click="toggleReadingOption('translation')" type="button">Translation</button>
                 <button class="toolbar-chip toolbar-chip-sm" :class="{ active: showTransliteration }" @click="toggleReadingOption('transliteration')" type="button">Transliteration</button>
                 <button class="toolbar-chip toolbar-chip-sm" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')" type="button">Word by word</button>
@@ -260,7 +288,115 @@
 
           <main id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
             aria-label="Memorisation workspace">
-            <div class="verses-grid">
+            <div v-if="readingViewMode === 'mushaf'" class="mushaf-workspace">
+              <div class="mushaf-frame">
+                <div
+                  ref="mushafViewport"
+                  class="mushaf-viewport"
+                  :class="`mushaf-bg-${mushafBackground}`"
+                >
+                  <div v-if="!mushafPages.length" class="mushaf-empty-page">
+                    <i class="bi bi-book"></i>
+                    <strong>Mushaf page is preparing</strong>
+                    <span>Ayahs are loaded, but the mushaf page list has not synced yet. Switch back to Stacked or reopen this session.</span>
+                  </div>
+                  <div class="mushaf-track" :style="mushafTrackStyle">
+                    <article
+                      v-for="(page, pageIndex) in mushafPages"
+                      :key="page.id"
+                      class="mushaf-page"
+                      :class="[`mushaf-bg-${mushafBackground}`, { active: pageIndex === safeMushafPageIndex }]"
+                      :aria-hidden="pageIndex === safeMushafPageIndex ? 'false' : 'true'"
+                    >
+                      <div class="mushaf-sheet-tools" aria-label="Mushaf controls">
+                        <div class="mushaf-font-controls">
+                          <button type="button" @click.stop="decreaseMushafFontSize" title="Decrease mushaf font size">
+                            <i class="bi bi-dash-lg"></i>
+                          </button>
+                          <span>{{ getTextScalePercent() }}%</span>
+                          <button type="button" @click.stop="increaseMushafFontSize" title="Increase mushaf font size">
+                            <i class="bi bi-plus-lg"></i>
+                          </button>
+                        </div>
+                        <div class="mushaf-bg-picker" title="Change mushaf background">
+                          <button
+                            v-for="option in mushafBackgroundOptions"
+                            :key="option.value"
+                            type="button"
+                            class="mushaf-bg-swatch"
+                            :class="[`mushaf-bg-swatch-${option.value}`, { active: mushafBackground === option.value }]"
+                            @click.stop="setMushafBackground(option.value)"
+                            :aria-label="`Use ${option.label} background`"
+                          ></button>
+                        </div>
+                        <button v-if="activeVerseRef" type="button" @click.stop="playVerse(activeVerseRef)" :title="isPlaying ? 'Pause active ayah' : 'Play active ayah'">
+                          <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                        </button>
+                        <button v-if="activeVerseRef" type="button" @click.stop="openSelfCheckModal(activeVerseRef)" title="Open self-check recorder">
+                          <i class="bi bi-mic"></i>
+                        </button>
+                      </div>
+                      <header class="mushaf-page-header" dir="rtl">
+                        <h2>{{ mushafSurahTitle }}</h2>
+                        <div v-if="showMushafBismillah" class="mushaf-bismillah" aria-label="Bismillah">
+                          بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
+                        </div>
+                      </header>
+                      <div class="mushaf-page-body" dir="rtl">
+                        <button
+                          v-for="verse in page.verses"
+                          :key="verse.key"
+                          type="button"
+                          :data-verse-key="verse.key"
+                          class="mushaf-ayah"
+                          :class="{
+                            active: effectiveActiveVerseKey === verse.key,
+                            'blur-upcoming': blurModeEnabled && isVerseBlurred(verse.key),
+                            'peek-revealed': isVersePeekRevealed(verse.key),
+                            'review-priority': isReviewPriorityAyah(verse.key),
+                            'is-playing': activeVerseKey === verse.key && isPlaying
+                          }"
+                          @click="onVerseCardClick(verse)"
+                          @mouseenter="onMushafAyahEnter(verse)"
+                          @mouseleave="onMushafAyahLeave(verse)"
+                          @touchstart.passive="onVerseTouchStart($event, verse.key)"
+                          @touchend.passive="onVerseTouchEnd($event, verse.key)"
+                          @touchcancel.passive="clearTouchPeek"
+                        >
+                          <span
+                            class="mushaf-ayah-text"
+                            v-html="getDisplayArabic(verse)"
+                            :class="{
+                              'tajweed-enabled': tajweedEnabled,
+                              'word-highlight-enabled': true,
+                              'verse-weak': isWeakAyah(verse.key),
+                              'verse-mastered': isMasteredAyah(verse.key)
+                            }"
+                            :style="{
+                              '--verse-font-percent': getVerseFontSize(verse.key),
+                              'font-family': quranFontFamily
+                            }"
+                          ></span>
+                          <span class="mushaf-ayah-number">{{ verse.number }}</span>
+                          <span v-if="hoveredMushafVerseKey === verse.key" class="mushaf-ayah-hover-tools" dir="ltr" @click.stop>
+                            <button type="button" @click="playVerse(verse, { manualOnly: true })" title="Play this ayah only">
+                              <i class="bi bi-play-fill"></i>
+                            </button>
+                            <button type="button" @click="toggleMushafHoverTranslation(verse.key)" title="Show translation for this ayah">
+                              <i class="bi bi-translate"></i>
+                            </button>
+                          </span>
+                          <span v-if="mushafHoverTranslationKey === verse.key && verse.translation" class="mushaf-inline-translation" dir="ltr">
+                            {{ verse.translation }}
+                          </span>
+                        </button>
+                      </div>
+                    </article>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-else class="verses-grid">
               <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" class="verse-card" :class="{
                 active: effectiveActiveVerseKey === verse.key,
                 'serious-training': false,
@@ -270,7 +406,9 @@
                 @mouseenter="onVersePeekEnter(verse.key)" @mouseleave="onVersePeekLeave(verse.key)"
                 @touchstart.passive="onVerseTouchStart($event, verse.key)" @touchend.passive="onVerseTouchEnd($event, verse.key)"
                 @touchcancel.passive="clearTouchPeek"
-                @keydown.enter.prevent="onVerseCardClick(verse)">
+                          @keydown.enter.prevent="onVerseCardClick(verse)"
+                          @keydown.space.prevent="onVerseCardClick(verse)"
+                          :aria-label="`Open ayah ${verse.number}${effectiveActiveVerseKey === verse.key ? ', active ayah' : ''}`">
                 <div class="verse-header">
                   <div class="verse-badges">
                     <span class="verse-number">Ayah {{ verse.number }}</span>
@@ -280,25 +418,27 @@
                   </div>
                   <div class="verse-actions">
                     <div class="verse-font-inline-controls" @click.stop>
-                      <button class="verse-font-inline-btn" @click="decreaseTextScale($event)" title="Decrease text size">
-                        <i class="bi bi-dash-lg"></i>
+                      <button class="verse-font-inline-btn" @click="decreaseTextScale($event)" title="Decrease text size" type="button" aria-label="Decrease ayah text size">
+                        <i class="bi bi-dash-lg" aria-hidden="true"></i>
                       </button>
                       <span class="verse-font-inline-value">{{ getTextScalePercent() }}%</span>
-                      <button class="verse-font-inline-btn" @click="increaseTextScale($event)" title="Increase text size">
-                        <i class="bi bi-plus-lg"></i>
+                      <button class="verse-font-inline-btn" @click="increaseTextScale($event)" title="Increase text size" type="button" aria-label="Increase ayah text size">
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i>
                       </button>
                     </div>
                     <!-- Small play button next to play pill -->
                     <button class="verse-small-play-btn" @click.stop="playVerse(verse)"
-                      :title="hasSessionFeedback ? (activeVerseKey === verse.key && isPlaying ? 'Pause' : 'Play current ayah') : 'Preview this ayah (does not start a session)'">
+                      :title="hasSessionFeedback ? (activeVerseKey === verse.key && isPlaying ? 'Pause' : 'Play current ayah') : 'Preview this ayah (does not start a session)'"
+                      type="button"
+                      :aria-label="hasSessionFeedback ? (activeVerseKey === verse.key && isPlaying ? `Pause ayah ${verse.number}` : `Play ayah ${verse.number}`) : `Preview ayah ${verse.number}`">
                       <i class="bi"
                         :class="activeVerseKey === verse.key && isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
                     </button>
 
                     <!-- Download button for every verse -->
                     <button class="verse-download-btn" @click.stop="downloadVerseAudio(verse)" :disabled="!verse.audio"
-                      title="Download audio for offline listening">
-                      <i class="bi bi-download"></i>
+                      title="Download audio for offline listening" type="button" :aria-label="`Download audio for ayah ${verse.number}`">
+                      <i class="bi bi-download" aria-hidden="true"></i>
                     </button>
 
                     <button
@@ -307,7 +447,7 @@
                       @click.stop="openSelfCheckModal(verse)"
                       :title="showSelfCheckModal && selfCheckVerseKey === verse.key ? 'Self-check is open' : 'Open self-check recorder'"
                     >
-                      <i class="bi" :class="showSelfCheckModal && selfCheckVerseKey === verse.key ? 'bi-mic-fill' : 'bi-mic'"></i>
+                      <i class="bi" :class="showSelfCheckModal && selfCheckVerseKey === verse.key ? 'bi-mic-fill' : 'bi-mic'" aria-hidden="true"></i>
                       <span>Self-Check</span>
                       <em v-if="getAyahRecordingCount(verse.key)">{{ getAyahRecordingCount(verse.key) }}</em>
                     </button>
@@ -350,8 +490,9 @@
                     <span class="word-meaning">{{ word.en }}</span>
                     <button v-if="word.audio && wordByWordAudioEnabled" class="word-audio-btn"
                       type="button"
-                      @click.stop="playWordAudio(word.audio, verse, wi)">
-                      <i class="bi bi-volume-up"></i>
+                      @click.stop="playWordAudio(word.audio, verse, wi)"
+                      :aria-label="`Play word ${wi + 1} audio for ayah ${verse.number}`">
+                      <i class="bi bi-volume-up" aria-hidden="true"></i>
                     </button>
                   </div>
                 </div>
@@ -391,19 +532,19 @@
             </button>
           </div>
           <div class="tools-tabs" role="tablist" aria-label="Controls tabs">
-            <button :class="{ active: tab === 'tools' }" @click.prevent="setActiveTab('tools')" title="Session tools"
+            <button role="tab" :aria-selected="tab === 'tools' ? 'true' : 'false'" :class="{ active: tab === 'tools' }" @click.prevent="setActiveTab('tools')" title="Session tools"
               type="button">
               <i class="bi bi-sliders"></i> Session
             </button>
-            <button :class="{ active: tab === 'techniques' }" @click.prevent="setActiveTab('techniques')"
+            <button role="tab" :aria-selected="tab === 'techniques' ? 'true' : 'false'" :class="{ active: tab === 'techniques' }" @click.prevent="setActiveTab('techniques')"
               title="Practice presets" type="button">
               <i class="bi bi-stars"></i> Practice
             </button>
-            <button :class="{ active: tab === 'saved' }" @click.prevent="setActiveTab('saved')" title="Saved sessions"
+            <button role="tab" :aria-selected="tab === 'saved' ? 'true' : 'false'" :class="{ active: tab === 'saved' }" @click.prevent="setActiveTab('saved')" title="Saved sessions"
               type="button">
               <i class="bi bi-clock-history"></i> Saved
             </button>
-            <button v-if="isLoggedIn" :class="{ active: tab === 'stats' }" @click.prevent="setActiveTab('stats')" title="Session insights"
+            <button v-if="isLoggedIn" role="tab" :aria-selected="tab === 'stats' ? 'true' : 'false'" :class="{ active: tab === 'stats' }" @click.prevent="setActiveTab('stats')" title="Session insights"
               type="button">
               <i class="bi bi-bar-chart-line"></i> Insights
             </button>
@@ -737,7 +878,7 @@
               </div>
               <div v-if="hasContinueSession" class="saved-continue-banner">
                 <div class="saved-continue-copy">
-                  <span class="saved-continue-kicker">Resume previous session</span>
+                  <span class="saved-continue-kicker">Resume last session</span>
                   <strong>{{ continueSessionLabel }}</strong>
                   <small>{{ continueSessionMeta }}</small>
                 </div>
@@ -1188,13 +1329,13 @@
     </div>
 
     <div class="modal-overlay" v-if="showConfirmModal" @click.self="closeConfirmModal">
-      <div class="modal-content confirm-modal" role="dialog" aria-modal="true">
+      <div class="modal-content confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
         <div class="modal-header">
           <div class="modal-header-text">
             <div class="modal-context-badge">{{ sessionContextBadge }}</div>
-            <h2>{{ confirmModal.title }}</h2>
+            <h2 id="confirmModalTitle">{{ confirmModal.title }}</h2>
           </div>
-          <button class="btn-icon" @click="closeConfirmModal"><i class="bi bi-x-lg"></i></button>
+          <button class="btn-icon" @click="closeConfirmModal" type="button" aria-label="Close confirmation dialog"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
         </div>
         <div class="modal-body">
           <p class="confirm-copy">{{ confirmModal.message }}</p>
@@ -1214,7 +1355,7 @@
             <div class="modal-context-badge">{{ sessionContextBadge }}</div>
             <h2 id="sessionExitTitle">End Session</h2>
           </div>
-          <button class="btn-icon" @click="closeSessionExitModal"><i class="bi bi-x-lg"></i></button>
+          <button class="btn-icon" @click="closeSessionExitModal" type="button" aria-label="Close end session dialog"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
         </div>
         <div class="modal-body">
           <div class="session-exit-recap">
@@ -1229,7 +1370,7 @@
           </label>
         </div>
         <div class="modal-footer">
-          <button class="btn-secondary" @click="closeSessionExitModal">Continue</button>
+          <button class="btn-secondary" @click="closeSessionExitModal">Keep Current Session</button>
           <button class="btn-secondary" @click="exitSessionAnyway">Exit Anyway</button>
           <button class="btn-primary" @click="confirmSessionExit">{{ sessionExitAutoSave ? 'Save & Exit' : 'End Session' }}</button>
         </div>
@@ -1384,7 +1525,6 @@
           <div class="self-check-modal-head-copy">
             <div class="modal-context-badge">Per-ayah recorder</div>
             <h2 id="selfCheckModalTitle">Self-Check for Ayah {{ selfCheckModalVerse.number }}</h2>
-            <p>Record your recitation, rate your confidence, and build a personal archive for {{ selfCheckModalVerse.chapterName || currentChapter?.name_simple || activeChapterName || 'this surah' }} · Session range {{ rangeStart }}-{{ rangeEnd }}</p>
           </div>
           <button class="modal-close-btn" @click="closeSelfCheckModal" aria-label="Close self-check">
             <i class="bi bi-x-lg"></i>
@@ -1417,7 +1557,7 @@
               <span>Press and hold the ayah below to peek · release to hide again</span>
             </div>
 
-            <div
+              <div
               class="self-check-modal-ayah-shell"
               :class="{ 'is-blurred': selfCheckBlurEnabled && !selfCheckPeekActive, 'is-peekable': selfCheckBlurEnabled }"
               @mousedown="startSelfCheckPeek"
@@ -1427,6 +1567,23 @@
               @touchend="stopSelfCheckPeek"
               @touchcancel="stopSelfCheckPeek"
             >
+              <div class="self-check-ayah-actions" aria-label="Ayah quick actions">
+                <button class="self-check-ayah-action" type="button" @click.stop="adjustSelfCheckFont(-10)" title="Decrease ayah font size" aria-label="Decrease ayah font size">
+                  <i class="bi bi-dash-lg"></i>
+                </button>
+                <button class="self-check-ayah-action" type="button" @click.stop="adjustSelfCheckFont(10)" title="Increase ayah font size" aria-label="Increase ayah font size">
+                  <i class="bi bi-plus-lg"></i>
+                </button>
+                <button class="self-check-ayah-action" type="button" @click.stop="toggleSelfCheckTajweed" :class="{ active: selfCheckTajweedEnabled }" :title="selfCheckTajweedEnabled ? 'Hide tajweed colours' : 'Show tajweed colours'" :aria-pressed="selfCheckTajweedEnabled ? 'true' : 'false'" aria-label="Toggle tajweed colours">
+                  <i class="bi bi-palette"></i>
+                </button>
+                <button class="self-check-ayah-action" type="button" @click.stop="toggleSelfCheckAyahPlayback(selfCheckModalVerse)" :title="activeSelfCheckAyahPlaybackKey === selfCheckModalVerse.key ? 'Pause ayah' : 'Play ayah once'" aria-label="Play ayah once">
+                  <i class="bi" :class="activeSelfCheckAyahPlaybackKey === selfCheckModalVerse.key ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                </button>
+                <button class="self-check-ayah-action" type="button" @click="toggleSelfCheckBlurMode" :title="selfCheckBlurEnabled ? 'Disable blur' : 'Enable blur'">
+                  <i class="bi" :class="selfCheckBlurEnabled ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
+                </button>
+              </div>
               <div
                 class="self-check-modal-ayah"
                 dir="rtl"
@@ -1434,6 +1591,7 @@
                   'font-family': quranFontFamily,
                   'font-size': (selfCheckFontSize / 100) + 'rem'
                 }"
+                :class="{ 'tajweed-enabled': selfCheckTajweedEnabled }"
                 v-html="getSelfCheckModalArabic(selfCheckModalVerse)"
               ></div>
             </div>
@@ -1506,7 +1664,6 @@
                   <div>
                     <strong>Review this attempt</strong>
                     <span>{{ formatRecordingDate(selfCheckActiveDraft.recordedAt) }} · {{ formatRecordingDuration(selfCheckActiveDraft.durationSeconds) }}</span>
-                    <p class="self-check-card-desc">Listen back, compare with the ayah above, then tag how confident you felt.</p>
                   </div>
                   <button class="player-btn self-check-preview-btn" type="button" @click="toggleSelfCheckPreview(selfCheckModalVerse.key)">
                     <i class="bi" :class="activeSelfCheckPreviewKey === selfCheckModalVerse.key ? 'bi-pause-fill' : 'bi-play-fill'"></i>
@@ -1556,10 +1713,6 @@
                   <i class="bi bi-mic-fill"></i>
                   <span>Start Recording</span>
                 </button>
-                <button class="btn-secondary self-check-action-btn" type="button" @click="openRecordingsLibraryFromSelfCheck">
-                  <i class="bi bi-clock-history"></i>
-                  <span>{{ selfCheckModalAttempts.length ? 'Review Saved Attempts' : 'Open Library' }}</span>
-                </button>
               </div>
             </article>
 
@@ -1568,7 +1721,6 @@
                 <div>
                   <span class="self-check-kicker">Saved attempts</span>
                   <strong>Recent review history</strong>
-                  <p class="self-check-card-desc">Every saved attempt for this ayah appears here. Replay past recordings to compare your progress.</p>
                 </div>
                 <span class="self-check-attempts-count" :title="`${selfCheckModalAttempts.length} saved recording${selfCheckModalAttempts.length === 1 ? '' : 's'}`">{{ selfCheckModalAttempts.length }}</span>
               </div>
@@ -1582,7 +1734,7 @@
                 >
                   <div class="self-check-attempt-top">
                     <div class="self-check-attempt-copy">
-                      <strong>Attempt {{ recording.attemptNumber }}</strong>
+                      <strong>{{ getRecordingAttemptLabel(recording) }}</strong>
                       <span>{{ formatRecordingDate(recording.recordedAt) }} · {{ formatRecordingTimestamp(recording.recordedAt) }}</span>
                       <p class="self-check-attempt-note">Self-rated · {{ recording.result }}</p>
                     </div>
@@ -1634,11 +1786,22 @@
         <div class="modal-header recordings-library-header">
           <div class="recordings-library-head-copy">
             <h2 id="recordingsLibraryTitle">Recordings Library</h2>
-            <p>Browse every ayah you have recorded in this session. Replay attempts, review self-ratings, and keep your memorisation progress in one archive.</p>
+            <div class="recordings-library-hierarchy">
+              <span>{{ currentChapter?.name_simple || 'Saved session' }}</span>
+              <span>{{ rangeStart }}-{{ rangeEnd }}</span>
+              <span v-if="selectedRecordingsAyahGroup">Ayah {{ selectedRecordingsAyahGroup.ayahNumber }}</span>
+              <span v-if="selectedRecordingsAyahGroup">{{ selectedRecordingsAyahGroup.recordings.length }} attempts</span>
+            </div>
           </div>
-          <button class="modal-close-btn" @click="closeRecordingsLibrary" aria-label="Close recordings library">
+          <div class="recordings-library-header-actions">
+            <button v-if="recordingsLibraryReturnToSelfCheckKey" class="recordings-library-back-btn" type="button" @click="backToSelfCheckFromLibrary" aria-label="Back to self-check">
+              <i class="bi bi-arrow-left"></i>
+              <span>Back to Self-Check</span>
+            </button>
+            <button class="modal-close-btn" @click="closeRecordingsLibrary" aria-label="Close recordings library">
             <i class="bi bi-x-lg"></i>
-          </button>
+            </button>
+          </div>
         </div>
 
         <div class="modal-body recordings-library-body">
@@ -1659,8 +1822,12 @@
             <aside class="recordings-library-nav">
               <div class="recordings-library-nav-head">
                 <div>
-                  <span class="recordings-library-nav-kicker">Recorded ayahs</span>
-                  <strong>{{ filteredRecordingsAyahCount }} ayah{{ filteredRecordingsAyahCount === 1 ? '' : 's' }}</strong>
+                  <span class="recordings-library-nav-kicker">Saved session</span>
+                  <strong>{{ currentChapter?.name_simple || 'Session recordings' }}</strong>
+                  <div class="recordings-library-nav-meta">
+                    <span>Range {{ rangeStart }}-{{ rangeEnd }}</span>
+                    <span>{{ filteredRecordingsAyahCount }} ayah{{ filteredRecordingsAyahCount === 1 ? '' : 's' }}</span>
+                  </div>
                 </div>
                 <button class="recordings-library-nav-toggle" type="button" @click="toggleRecordingsNav">
                   <span>{{ recordingsNavExpanded ? 'Hide list' : 'Show list' }}</span>
@@ -1683,17 +1850,35 @@
               <div v-show="recordingsNavExpanded" class="recordings-library-nav-scroll">
                 <div v-for="surahGroup in filteredRecordingsAyahGroups" :key="surahGroup.chapterId || surahGroup.chapterName" class="recordings-library-surah-group">
                   <div class="recordings-library-surah-title">{{ surahGroup.chapterName }}</div>
-                  <button
-                    v-for="ayahGroup in surahGroup.ayahs"
-                    :key="ayahGroup.ayahKey"
-                    type="button"
-                    class="recordings-library-ayah-item"
-                    :class="{ active: ayahGroup.ayahKey === selectedRecordingsAyahKey }"
-                    @click="selectRecordingsAyah(ayahGroup.ayahKey)"
-                  >
-                    <span class="recordings-library-ayah-label">Ayah {{ ayahGroup.ayahNumber }}</span>
-                    <span class="recordings-library-ayah-count">{{ ayahGroup.recordings.length }} recording{{ ayahGroup.recordings.length === 1 ? '' : 's' }}</span>
-                  </button>
+                  <div v-for="ayahGroup in surahGroup.ayahs" :key="ayahGroup.ayahKey" class="recordings-library-ayah-group">
+                    <button
+                      type="button"
+                      class="recordings-library-ayah-item"
+                      :class="{ active: ayahGroup.ayahKey === selectedRecordingsAyahKey }"
+                      @click="selectRecordingsAyah(ayahGroup.ayahKey)"
+                    >
+                      <span class="recordings-library-ayah-label">Ayah {{ ayahGroup.ayahNumber }}</span>
+                      <span class="recordings-library-ayah-count">{{ ayahGroup.recordings.length }}</span>
+                    </button>
+                    <transition name="recordings-group-expand">
+                      <div v-if="ayahGroup.ayahKey === selectedRecordingsAyahKey" class="recordings-library-recordings">
+                        <article
+                          v-for="recording in ayahGroup.recordings"
+                          :key="recording.id"
+                          class="recordings-library-recording-item"
+                          :class="{ playing: recording.id === activeRecordingPlaybackId }"
+                        >
+                          <div class="recordings-library-recording-copy">
+                            <strong>{{ getRecordingAttemptLabel(recording) }}</strong>
+                            <span>{{ formatRecordingTimestamp(recording.recordedAt) }}</span>
+                          </div>
+                          <button class="player-btn recording-history-action" type="button" @click="toggleRecordingPlayback(recording)">
+                            <i class="bi" :class="recording.id === activeRecordingPlaybackId ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                          </button>
+                        </article>
+                      </div>
+                    </transition>
+                  </div>
                 </div>
               </div>
             </aside>
@@ -1701,15 +1886,19 @@
             <section class="recordings-library-detail">
               <div v-if="selectedRecordingsAyahGroup" class="recordings-library-detail-head">
                 <div>
+                  <span class="recordings-library-detail-kicker">Selected ayah</span>
                   <span class="recordings-library-detail-kicker">{{ selectedRecordingsAyahGroup.chapterName }}</span>
                   <h3>Ayah {{ selectedRecordingsAyahGroup.ayahNumber }}</h3>
+                  <div class="recordings-library-detail-meta">
+                    <span>{{ selectedRecordingsAyahGroup.recordings.length }} attempts</span>
+                    <span>Session {{ selectedRecordingsAyahGroup.recordings[0]?.sessionRangeStart || rangeStart }}-{{ selectedRecordingsAyahGroup.recordings[0]?.sessionRangeEnd || rangeEnd }}</span>
+                  </div>
                   <p v-if="getAyahTranslation(selectedRecordingsAyahGroup.ayahKey)" class="recordings-library-ayah-translation">
                     {{ getAyahTranslation(selectedRecordingsAyahGroup.ayahKey) }}
                   </p>
-                  <p class="recordings-library-section-desc">Replay each attempt, check your self-rating, and remove recordings you no longer need.</p>
                 </div>
                 <div class="recordings-library-detail-count">
-                  {{ selectedRecordingsAyahGroup.recordings.length }} attempt{{ selectedRecordingsAyahGroup.recordings.length === 1 ? '' : 's' }}
+                  {{ selectedRecordingsAyahGroup.recordings.length }}
                 </div>
               </div>
 
@@ -1722,9 +1911,9 @@
                 >
                   <div class="recording-history-top">
                     <div class="recording-history-copy">
-                      <strong>Attempt {{ recording.attemptNumber }}</strong>
+                      <div class="recording-history-kicker">{{ getRecordingAttemptLabel(recording) }}</div>
                       <span>{{ formatRecordingTimestamp(recording.recordedAt) }}</span>
-                      <p class="recording-history-note">Self-rated as {{ recording.result.toLowerCase() }} · tap play to listen back</p>
+                      <p class="recording-history-note">Self-rated as {{ recording.result.toLowerCase() }}</p>
                     </div>
                     <span class="recording-result-pill" :class="getRecordingResultTone(recording.result)">
                       {{ recording.result }}
@@ -1807,7 +1996,7 @@
 
     <!-- Global Audio Player - Updated with Speed Controls -->
     <transition name="slide-up">
-      <div v-if="appReady && playerVisible" class="player-bar" :class="{ collapsed: playerCollapsed }">
+      <div v-if="appReady && playerVisible" class="player-bar" :class="{ collapsed: playerCollapsed }" role="region" aria-label="Audio player">
         <div class="player-main">
           <div class="player-info">
             <div class="player-chapter">{{ currentChapter?.name_simple || 'Quran' }}</div>
@@ -1820,20 +2009,20 @@
           </div>
 
           <div class="player-controls">
-            <button class="player-btn" @click="prev" title="Previous">
-              <i class="bi bi-skip-start-fill"></i>
+            <button class="player-btn" @click="prev" title="Previous" type="button" aria-label="Previous ayah">
+              <i class="bi bi-skip-start-fill" aria-hidden="true"></i>
             </button>
-            <button class="player-btn player-play" @click="togglePlay" title="Play/Pause">
-              <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+            <button class="player-btn player-play" @click="togglePlay" title="Play/Pause" type="button" :aria-label="isPlaying ? 'Pause audio' : 'Play audio'">
+              <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
             </button>
-            <button class="player-btn" @click="next" title="Next">
-              <i class="bi bi-skip-end-fill"></i>
+            <button class="player-btn" @click="next" title="Next" type="button" aria-label="Next ayah">
+              <i class="bi bi-skip-end-fill" aria-hidden="true"></i>
             </button>
           </div>
 
           <div class="player-progress-wrap">
             <span class="player-time">{{ formatTime(currentTime) }}</span>
-            <div class="player-progress-bg" @click="seek" ref="progress">
+            <div class="player-progress-bg" @click="seek" ref="progress" role="progressbar" aria-label="Audio progress" :aria-valuenow="Math.round((currentTime / (duration || 1)) * 100)" aria-valuemin="0" aria-valuemax="100">
               <div class="player-progress-fill" :style="{ width: (currentTime / (duration || 1)) * 100 + '%' }"></div>
             </div>
             <span class="player-time">{{ formatTime(duration) }}</span>
@@ -1842,8 +2031,8 @@
 
 
 
-          <button class="player-btn" @click="playerVisible = false" title="Close player">
-            <i class="bi bi-x-lg"></i>
+          <button class="player-btn" @click="playerVisible = false" title="Close player" type="button" aria-label="Close audio player">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
           </button>
         </div>
       </div>
@@ -2031,6 +2220,8 @@ function createCentralSessionState() {
     showSaveNameModal: false,
     saveSessionName: '',
     activeTab: 'tools',
+    sessionStatus: 'idle',
+    sessionCompletedAt: null,
     repetitionTimes: 0,
     tajweedEnabled: false,
     focusModeEnabled: false,
@@ -2173,6 +2364,17 @@ export default {
       ],
       tab: 'tools',
       showTools: false,
+      readingViewMode: 'stacked',
+      mushafPageIndex: 0,
+      mushafBackground: 'warm',
+      hoveredMushafVerseKey: '',
+      mushafHoverTranslationKey: '',
+      mushafBackgroundOptions: [
+        { value: 'warm', label: 'Warm' },
+        { value: 'paper', label: 'Paper' },
+        { value: 'contrast', label: 'High contrast' },
+        { value: 'night', label: 'Night' }
+      ],
       focusModeEnabled: false,
       focusDimPercent: 54,
       blurModeEnabled: false,
@@ -2299,6 +2501,7 @@ export default {
       queue: [],
       queueIndex: 0,
       isPlaying: false,
+      manualOnlyPlayback: false,
       currentTime: 0,
       duration: 0,
       audioElement: null,
@@ -2392,6 +2595,7 @@ export default {
       selfCheckVerseRef: null,
       selfCheckVerseKey: '',
       selfCheckFontSize: 240,
+      selfCheckTajweedEnabled: false,
       selfCheckBlurEnabled: false,
       selfCheckPeekActive: false,
       selfCheckPreparing: false,
@@ -2406,7 +2610,9 @@ export default {
       selfCheckDraft: null,
       selfCheckDiscardOnStop: false,
       activeSelfCheckPreviewKey: '',
+      activeSelfCheckAyahPlaybackKey: '',
       selfCheckLastSavedAyahKey: '',
+      recordingsLibraryReturnToSelfCheckKey: '',
 
       // Analytics
       sm2: {},
@@ -2508,6 +2714,7 @@ export default {
       currentVerseIndex: 0,
       isAudioLoading: false,
       sessionCompleted: false,
+      sessionCompletedAt: null,
       hybridPendingKey: null,
       quizSkill: 'recite_text',
       quizSessionStats: null,
@@ -2535,9 +2742,6 @@ export default {
       if (!this.anchorModeEnabled) return 'Anchor mode off · use key words as memory hooks'
       const anchors = { 1: 'first/last word', 2: 'key word pairs', 3: 'complete structure' }
       return `Using ${anchors[this.anchorCount]} as mental anchors for each ayah`
-    },
-    activeVerseRef() {
-      return this.verses.find(v => v.key === this.effectiveActiveVerseKey) || null
     },
     getChainingMethodLabel() {
       if (!this.chainingEnabled) return `Chaining off · ${this.chainingRepetitions} repeats`
@@ -2697,7 +2901,7 @@ export default {
     },
 
     activeVerseRef() {
-      return this.verses.find(v => v.key === this.effectiveActiveVerseKey) || null
+      return this.mushafDisplayVerses.find(v => v.key === this.effectiveActiveVerseKey) || null
     },
     activeMutqinAyah() {
       return this.effectiveActiveVerseKey ? this.mutqinState.ayahs?.[this.effectiveActiveVerseKey] || null : null
@@ -2752,6 +2956,15 @@ export default {
       })
 
       const chapterMap = new Map()
+      grouped.forEach(group => {
+        const sorted = [...group.recordings].sort((left, right) => Date.parse(right.recordedAt) - Date.parse(left.recordedAt))
+        const total = sorted.length
+        group.recordings = sorted.map((recording, index) => ({
+          ...recording,
+          attemptNumber: total - index
+        }))
+      })
+
       Array.from(grouped.values())
         .sort((left, right) => {
           if (Number(left.chapterId || 0) !== Number(right.chapterId || 0)) {
@@ -3102,6 +3315,12 @@ export default {
     isSessionLive() {
       return !!this.mutqinState?.sessionState?.active && this.hasSessionFeedback && !this.sessionCompleted
     },
+    isSessionCompleted() {
+      return !!this.sessionCompleted || this.centralSession?.sessionStatus === 'completed'
+    },
+    showSessionCompletedState() {
+      return this.isSessionCompleted && !this.hasSessionStarted
+    },
     resumeFeedback() {
       const payload = this.continueSessionPayload
       const queue = payload?.queue || this.queue || []
@@ -3148,8 +3367,8 @@ export default {
     },
 
     resumeWhatNext() {
-      if (this.dueCount) return `You have ${this.dueCount} verses due for review. Continue to pick up where you left off.`
-      return 'Continue from your last saved ayah and keep building consistency.'
+      if (this.dueCount) return `You have ${this.dueCount} verses due for review. Resume Last Session to pick up where you left off.`
+      return 'Resume Last Session to continue from your last saved ayah and keep building consistency.'
     },
 
     resumeSavedAtLabel() {
@@ -3414,16 +3633,16 @@ export default {
     guidedPrimaryCta() {
       if (this.guidedPhaseLabel === 'Learn') return 'Listen & Follow'
       if (this.guidedPhaseLabel === 'Practice') return 'Try Reciting'
-      if (this.guidedPhaseLabel === 'Recall') return 'Continue'
-      if (this.guidedPhaseLabel === 'Review') return 'Continue'
-      return 'Continue'
+      if (this.guidedPhaseLabel === 'Recall') return 'Resume Last Session'
+      if (this.guidedPhaseLabel === 'Review') return 'Resume Last Session'
+      return 'Resume Last Session'
     },
     guidedInstruction() {
       if (this.guidedPhaseLabel === 'Learn') return 'Listen and follow the recitation.'
       if (this.guidedPhaseLabel === 'Practice') return 'Try reciting with the ayah still partially visible.'
       if (this.guidedPhaseLabel === 'Recall') return 'Recall the ayah before moving forward.'
       if (this.guidedPhaseLabel === 'Review') return 'Review the verses due now.'
-      return 'Continue your session.'
+      return 'Resume Last Session to continue your session.'
     },
 
     activeCardKicker() {
@@ -3557,6 +3776,64 @@ export default {
       return this.activeVerseIndex >= 0 && this.activeVerseIndex < this.verses.length - 1
     },
 
+    mushafPageSize() {
+      if (typeof window !== 'undefined' && window.innerWidth < 680) return 5
+      return 7
+    },
+
+    mushafDisplayVerses() {
+      const modeVerses = Array.isArray(this.currentConfig?.verses) ? this.currentConfig.verses : []
+      const localVerses = Array.isArray(this.verses) ? this.verses : []
+      return modeVerses.length ? modeVerses : localVerses
+    },
+
+    mushafPages() {
+      const sourceVerses = this.mushafDisplayVerses
+      if (!sourceVerses.length) return []
+      return [{
+        id: `mushaf-${sourceVerses[0].key}-${sourceVerses[sourceVerses.length - 1].key}`,
+        verses: sourceVerses,
+        startNumber: sourceVerses[0].number,
+        endNumber: sourceVerses[sourceVerses.length - 1].number
+      }]
+    },
+
+    mushafSurahTitle() {
+      const chapterId = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
+      const fallbackTitles = {
+        1: 'سُورَةُ الْفَاتِحَةِ',
+        112: 'سُورَةُ الْإِخْلَاصِ',
+        113: 'سُورَةُ الْفَلَقِ',
+        114: 'سُورَةُ النَّاسِ'
+      }
+      return this.currentChapter?.name_arabic || fallbackTitles[chapterId] || `سُورَةُ ${this.currentChapter?.name_simple || this.activeChapterName || ''}`
+    },
+
+    showMushafBismillah() {
+      const chapterId = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
+      return chapterId !== 9
+    },
+
+    mushafTrackStyle() {
+      const pageIndex = this.safeMushafPageIndex
+      return {
+        transform: `translateX(${-pageIndex * 100}%)`
+      }
+    },
+
+    safeMushafPageIndex() {
+      if (!this.mushafPages.length) return 0
+      return Math.max(0, Math.min(Number(this.mushafPageIndex || 0), this.mushafPages.length - 1))
+    },
+
+    canGoPreviousMushafPage() {
+      return this.safeMushafPageIndex > 0
+    },
+
+    canGoNextMushafPage() {
+      return this.safeMushafPageIndex < this.mushafPages.length - 1
+    },
+
     quizAccuracy() {
       if (!this.quizQueue.length) return 0
       return Math.round((this.quizScore / this.quizQueue.length) * 100)
@@ -3606,12 +3883,18 @@ export default {
         setTimeout(() => this.applyAnchorHighlights(), 100)
       }
     })
+    this.$watch('effectiveActiveVerseKey', () => {
+      if (this.readingViewMode === 'mushaf') this.syncMushafPageToActiveVerse()
+    })
+    this.$watch(() => this.mushafPages.length, () => {
+      this.syncMushafPageToActiveVerse()
+    })
     this.unwatchMutqinState = watchMutqinState(this.mutqinState)
     this.loadVerseFontSizes()
     this.migrateLocalStorage()
     this.loadUiState()
     this.loadCentralSessionState()
-    this.restoreSessionState()
+    this.resetImplicitSessionState()
     await this.loadChapters()
     await this.loadReciters()
     this.loadSavedSessions()
@@ -3634,12 +3917,6 @@ export default {
     this.updateMasteredWeekly()
     this.loadSavedSessions()
     this.loadRecordingsLibrary()
-
-    if (this.isLoggedIn && this.hasContinueSession) {
-      // One clear entry point for returning users.
-      this.showResumeModal = true
-    }
-
 
     if (this.currentMode === 'advanced' && this.advanced.chapterId) {
       this.currentMode = 'advanced'
@@ -4308,6 +4585,10 @@ export default {
         verseCards.forEach(card => {
           this.highlightAnchorsForCard(card)
         })
+        const mushafAyahs = document.querySelectorAll('.mushaf-ayah')
+        mushafAyahs.forEach(ayah => {
+          this.highlightAnchorsForCard(ayah)
+        })
       })
 
       
@@ -4319,7 +4600,7 @@ export default {
       if (!this.anchorModeEnabled) return
 
       // Get all word elements (supports both word-by-word modes)
-      const arabicDiv = card.querySelector('.verse-arabic')
+      const arabicDiv = card.querySelector('.verse-arabic, .mushaf-ayah-text')
       if (!arabicDiv) return
 
       // Get words - handles both tajweed and non-tajweed modes
@@ -4384,7 +4665,7 @@ export default {
 
     // Clear all anchor highlights
     clearAnchorHighlights() {
-      const allWords = document.querySelectorAll('.wbw-word, word, .word-item')
+      const allWords = document.querySelectorAll('.wbw-word, word, .word-item, .mushaf-ayah-text .wbw-word')
       allWords.forEach(word => {
         word.classList.remove('anchor-highlight')
         word.classList.remove('anchor-pulse')
@@ -4405,7 +4686,7 @@ export default {
           }
           if (mutation.type === 'attributes' &&
             mutation.attributeName === 'class' &&
-            mutation.target.classList?.contains('verse-card')) {
+            (mutation.target.classList?.contains('verse-card') || mutation.target.classList?.contains('mushaf-ayah'))) {
             shouldReapply = true
           }
         })
@@ -4631,6 +4912,7 @@ export default {
       }
 
       this.sessionCompleted = false
+      this.sessionCompletedAt = null
       this.sessionStartedAt = Date.now()
       this.playerVisible = payload.playerVisible ?? payload.config?.playerVisible ?? true
       const shouldResumePlayback = options.forcePlayback ?? payload.isPlaying ?? true
@@ -5550,6 +5832,19 @@ export default {
         year: 'numeric'
       })
     },
+
+    formatDateTime(value) {
+      if (!value) return ''
+      const date = new Date(value)
+      if (Number.isNaN(date.getTime())) return ''
+      return date.toLocaleString('en-GB', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    },
     recordingsLibraryStorageKey() {
       return this.userStorageKey('recordings')
     },
@@ -5682,6 +5977,7 @@ export default {
       this.showSessionExitModal = false
       this.showResumeModal = false
       this.showSelfCheckModal = false
+      this.recordingsLibraryReturnToSelfCheckKey = options?.returnToSelfCheck ? targetAyahKey : ''
       this.selfCheckPeekActive = false
       this.stopRecordingsPlayback({ clearSource: true })
       if (this.audioElement && !this.audioElement.paused) {
@@ -5708,8 +6004,23 @@ export default {
       this.pendingRecordingDeleteId = ''
       this.recordingsLibrarySearch = ''
       this.showRecordingsLibrary = false
+      this.recordingsLibraryReturnToSelfCheckKey = ''
       this.stopRecordingsPlayback({ clearSource: true })
       this.syncBodyScrollLock(false)
+    },
+    backToSelfCheckFromLibrary() {
+      const ayahKey = this.recordingsLibraryReturnToSelfCheckKey || this.selectedRecordingsAyahKey
+      const verse = this.verses.find(item => item.key === ayahKey) || this.selfCheckVerseRef
+      this.pendingRecordingDeleteId = ''
+      this.recordingsLibrarySearch = ''
+      this.showRecordingsLibrary = false
+      this.recordingsLibraryReturnToSelfCheckKey = ''
+      this.stopRecordingsPlayback({ clearSource: true })
+      if (verse?.key) {
+        this.openSelfCheckModal(verse)
+      } else {
+        this.syncBodyScrollLock(false)
+      }
     },
     toggleRecordingsNav() {
       this.recordingsNavExpanded = !this.recordingsNavExpanded
@@ -5727,16 +6038,19 @@ export default {
         if (!this.recordingsAudioElement?.ended) {
           this.activeRecordingPlaybackId = ''
           this.activeSelfCheckPreviewKey = ''
+          this.activeSelfCheckAyahPlaybackKey = ''
         }
       })
       this.recordingsAudioElement.addEventListener('ended', () => {
         this.activeRecordingPlaybackId = ''
         this.activeSelfCheckPreviewKey = ''
+        this.activeSelfCheckAyahPlaybackKey = ''
       })
       this.recordingsAudioElement.addEventListener('error', error => {
         console.error('Recordings playback error:', error)
         this.activeRecordingPlaybackId = ''
         this.activeSelfCheckPreviewKey = ''
+        this.activeSelfCheckAyahPlaybackKey = ''
         this.showBanner('Unable to play this recording right now.', 'error', 2200)
       })
       this.recordingsAudioBound = true
@@ -5763,6 +6077,7 @@ export default {
       }
       this.activeRecordingPlaybackId = ''
       this.activeSelfCheckPreviewKey = ''
+      this.activeSelfCheckAyahPlaybackKey = ''
     },
     async toggleRecordingPlayback(recording) {
       if (!recording?.audioSrc) return
@@ -5825,6 +6140,10 @@ export default {
         'info',
         1600
       )
+    },
+    getRecordingAttemptLabel(recording) {
+      const attempt = Number(recording?.attemptNumber || 0)
+      return attempt > 0 ? `Attempt ${attempt}` : 'Attempt'
     },
     getRecordingResultTone(result) {
       if (result === 'Excellent') return 'tone-excellent'
@@ -5909,6 +6228,7 @@ export default {
       this.selfCheckVerseRef = this.buildSelfCheckVerseRef(verse)
       this.selfCheckVerseKey = verse.key
       this.selfCheckFontSize = this.getSelfCheckInitialFontSize(verse)
+      this.selfCheckTajweedEnabled = !!this.tajweedEnabled
       this.showSelfCheckModal = true
       this.selfCheckError = ''
       this.selfCheckLastSavedAyahKey = ''
@@ -5946,7 +6266,7 @@ export default {
       this.pendingRecordingDeleteId = ''
       this.stopRecordingsPlayback({ clearSource: true })
       this.syncBodyScrollLock(false)
-      this.openRecordingsLibrary({ ayahKey })
+      this.openRecordingsLibrary({ ayahKey, returnToSelfCheck: true })
     },
     adjustSelfCheckFont(delta) {
       const next = Math.max(120, Math.min(220, Number(this.selfCheckFontSize || 160) + Number(delta || 0)))
@@ -5958,6 +6278,9 @@ export default {
         this.selfCheckPeekActive = false
       }
     },
+    toggleSelfCheckTajweed() {
+      this.selfCheckTajweedEnabled = !this.selfCheckTajweedEnabled
+    },
     startSelfCheckPeek() {
       if (!this.selfCheckBlurEnabled) return
       this.selfCheckPeekActive = true
@@ -5967,10 +6290,49 @@ export default {
     },
     getSelfCheckModalArabic(verse) {
       if (!verse?.arabic) return ''
-      if (this.tajweedEnabled && verse.arabic_tajweed) {
+      if (this.selfCheckTajweedEnabled && verse.arabic_tajweed) {
         return this.normalizeTajweedMarkup(verse.arabic_tajweed)
       }
       return this.stripTajweedMarkup(verse.arabic)
+    },
+    async toggleSelfCheckAyahPlayback(verse) {
+      if (!verse?.audio) {
+        this.showBanner(`Audio not available for verse ${verse?.number || ''}`.trim(), 'info', 2000)
+        return
+      }
+
+      const audio = this.ensureRecordingsAudioElement()
+      if (!audio) {
+        this.showBanner('Audio system not ready', 'error', 2200)
+        return
+      }
+
+      if (this.activeSelfCheckAyahPlaybackKey === verse.key && !audio.paused) {
+        audio.pause()
+        this.activeSelfCheckAyahPlaybackKey = ''
+        return
+      }
+
+      this.stopRecordingsPlayback({ clearSource: true })
+      if (this.audioElement) {
+        try { this.audioElement.pause() } catch { }
+      }
+      this.isPlaying = false
+      this.manualOnlyPlayback = false
+
+      audio.src = this.normalizeAudioUrl(verse.audio)
+      audio.load()
+
+      try {
+        await audio.play()
+        this.activeSelfCheckAyahPlaybackKey = verse.key
+        this.activeRecordingPlaybackId = ''
+        this.activeSelfCheckPreviewKey = ''
+      } catch (error) {
+        console.error('Failed to play self-check ayah audio:', error)
+        this.activeSelfCheckAyahPlaybackKey = ''
+        this.showBanner('Unable to play this ayah right now.', 'error', 2200)
+      }
     },
     supportsSelfCheckRecording() {
       return typeof navigator !== 'undefined'
@@ -6431,6 +6793,64 @@ export default {
         this.playVerse(verse)
       }
     },
+    setReadingViewMode(mode) {
+      const nextMode = mode === 'mushaf' ? 'mushaf' : 'stacked'
+      if (this.readingViewMode === nextMode) return
+      this.readingViewMode = nextMode
+      if (nextMode === 'mushaf') this.syncMushafPageToActiveVerse()
+      this.persistUiState()
+    },
+    syncMushafPageToActiveVerse() {
+      if (!this.mushafPages.length) {
+        this.mushafPageIndex = 0
+        return
+      }
+      const activeKey = this.effectiveActiveVerseKey || this.activeVerseKey
+      const pageIndex = this.mushafPages.findIndex(page => page.verses.some(verse => verse.key === activeKey))
+      if (pageIndex >= 0) {
+        this.mushafPageIndex = pageIndex
+        return
+      }
+      this.mushafPageIndex = this.safeMushafPageIndex
+    },
+    goToMushafPage(index) {
+      if (!this.mushafPages.length) {
+        this.mushafPageIndex = 0
+        return
+      }
+      this.mushafPageIndex = Math.max(0, Math.min(Number(index || 0), this.mushafPages.length - 1))
+    },
+    goToPreviousMushafPage() {
+      this.goToMushafPage(this.safeMushafPageIndex - 1)
+    },
+    goToNextMushafPage() {
+      this.goToMushafPage(this.safeMushafPageIndex + 1)
+    },
+    onMushafAyahEnter(verse) {
+      if (!verse?.key) return
+      this.hoveredMushafVerseKey = verse.key
+      this.onVersePeekEnter(verse.key)
+    },
+    onMushafAyahLeave(verse) {
+      this.hoveredMushafVerseKey = ''
+      this.onVersePeekLeave(verse?.key)
+    },
+    toggleMushafHoverTranslation(verseKey) {
+      this.mushafHoverTranslationKey = this.mushafHoverTranslationKey === verseKey ? '' : verseKey
+    },
+    increaseMushafFontSize() {
+      this.defaultFontSize = Math.min(this.maxFontSize, Number(this.defaultFontSize || 120) + this.fontSizeStep)
+      this.updateDefaultFontSize()
+    },
+    decreaseMushafFontSize() {
+      this.defaultFontSize = Math.max(this.minFontSize, Number(this.defaultFontSize || 120) - this.fontSizeStep)
+      this.updateDefaultFontSize()
+    },
+    setMushafBackground(value) {
+      if (!this.mushafBackgroundOptions.some(option => option.value === value)) return
+      this.mushafBackground = value
+      this.persistUiState()
+    },
     runGuidedAction(verse) {
       // Single visible flow: Learn -> Practice -> Recall -> Continue
       if (!this.hasVerses) {
@@ -6632,7 +7052,7 @@ export default {
 
       if (options.scroll !== false) {
         this.$nextTick(() => {
-          const el = document.querySelector(`.verse-card[data-verse-key="${verseKey}"]`)
+          const el = document.querySelector(`.verse-card[data-verse-key="${verseKey}"], .mushaf-ayah[data-verse-key="${verseKey}"]`)
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
         })
       }
@@ -6973,6 +7393,25 @@ export default {
       }
     },
 
+    resetImplicitSessionState() {
+      this.sessionStartedAt = 0
+      this.sessionCompleted = false
+      this.isPlaying = false
+      this.currentTime = 0
+      this.duration = 0
+      this.activeVerseKey = null
+      this.activeKey = null
+      this.queueIndex = 0
+      this.queue = []
+      this.playerVisible = false
+      this.restoredAudioState = null
+      if (this.mutqinState?.sessionState) {
+        this.mutqinState.sessionState.active = false
+        this.mutqinState.sessionState.queue = []
+        this.mutqinState.sessionState.current_index = 0
+      }
+    },
+
     persistContinueSession() {
       if (this.isBootstrapping) return
       try {
@@ -6984,7 +7423,7 @@ export default {
       try {
         const raw = localStorage.getItem('telawa.continueSession')
         const mutqinSession = this.mutqinState?.sessionState
-        if (mutqinSession?.active && mutqinSession?.config?.chapterId) {
+        if (mutqinSession?.config?.chapterId) {
           const activeItem = mutqinSession.queue?.[mutqinSession.current_index || 0]
           const restoredQueueIndex = Math.max(0, Number(mutqinSession.current_index || 0) - 1)
           this.continueSessionPayload = {
@@ -7016,18 +7455,39 @@ export default {
     async continueLastSession() {
       const payload = this.continueSessionPayload
       if (!payload) return
-      this.hasContinueSession = false
       if (!payload.config?.chapterId) {
         this.clearContinueSession()
         return
       }
-      await this.hydrateSessionFromPayload(payload, { bannerText: 'Session restored' })
-      this.$nextTick(() => {
-        if (this.effectiveActiveVerseKey) {
-          const el = document.querySelector(`.verse-card[data-verse-key="${this.effectiveActiveVerseKey}"]`)
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }
-      })
+      this.openResumeLastSessionModal()
+    },
+
+    openResumeLastSessionModal() {
+      if (!this.continueSessionPayload?.config?.chapterId) return
+      this.confirmModal = {
+        title: 'Resume last session?',
+        message: this.buildResumeSessionMessage(),
+        confirmLabel: 'Resume',
+        cancelLabel: 'Start New Session',
+        tone: 'default',
+        action: 'resume-last-session',
+        data: null
+      }
+      this.showPlannerModal = false
+      this.showTools = false
+      this.showResumeModal = false
+      this.showConfirmModal = true
+    },
+
+    buildResumeSessionMessage() {
+      const payload = this.continueSessionPayload || {}
+      const config = payload.config || {}
+      const chapterName = config.chapterName
+        || this.chapters.find(c => Number(c.id) === Number(config.chapterId))?.name_simple
+        || 'Saved session'
+      const range = config.rangeStart && config.rangeEnd ? `Ayah ${config.rangeStart}-${config.rangeEnd}` : 'Ayah range unavailable'
+      const lastActivity = payload.timestamp ? this.formatDateTime(payload.timestamp) : 'Unknown'
+      return `${chapterName} · ${range} · Last activity ${lastActivity}`
     },
 
     restoreAudioState() {
@@ -7178,12 +7638,15 @@ export default {
       this.currentTime = 0
       this.duration = 0
       this.sessionStartedAt = 0
-      this.sessionCompleted = false
+      this.sessionCompleted = true
+      this.sessionCompletedAt = this.sessionCompletedAt || new Date().toISOString()
 
       if (this.mutqinState?.sessionState) {
         this.mutqinState.sessionState.active = false
         this.mutqinState.sessionState.queue = []
         this.mutqinState.sessionState.current_index = 0
+        this.mutqinState.sessionState.completed = true
+        this.mutqinState.sessionState.completed_at = this.sessionCompletedAt
       }
 
       this.clearExitSessionStorage()
@@ -7245,7 +7708,20 @@ export default {
       if (action === 'switch-mode') this.performToggleMode()
       if (action === 'delete-offline' && this.pendingDeleteId) this.performDeleteOffline()
       if (action === 'discard-continue') this.clearContinueSession()
+      if (action === 'resume-last-session') this.resumeConfirmedLastSession()
       if (action === 'delete-saved-session' && actionData?.sessionId) this.performDeleteSavedSession(actionData.sessionId)
+    },
+
+    async resumeConfirmedLastSession() {
+      const payload = this.continueSessionPayload
+      if (!payload?.config?.chapterId) return
+      await this.hydrateSessionFromPayload(payload, { bannerText: 'Session restored' })
+      this.$nextTick(() => {
+        if (this.effectiveActiveVerseKey) {
+          const el = document.querySelector(`.verse-card[data-verse-key="${this.effectiveActiveVerseKey}"]`)
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      })
     },
 
     confirmDiscardContinueSession() {
@@ -7417,6 +7893,8 @@ export default {
           this.chainingRepetitions = Math.max(1, Math.min(5, Number(this.centralSession.chaining.repetitions || 1)))
         }
         this.speed = this.speedOptions.includes(Number(this.centralSession.audio.speed)) ? Number(this.centralSession.audio.speed) : this.speed
+        this.sessionCompleted = this.centralSession.sessionStatus === 'completed'
+        this.sessionCompletedAt = this.centralSession.sessionCompletedAt || null
       } catch (e) {
         console.error('Failed to load central session state:', e)
       }
@@ -7429,6 +7907,8 @@ export default {
           ...this.centralSession,
           // Update to include 'techniques' as valid tab
           activeTab: ['tools', 'techniques', 'saved', 'stats', 'settings'].includes(this.tab) ? this.tab : 'tools',
+          sessionStatus: this.sessionCompleted ? 'completed' : (this.centralSession.sessionStatus || 'idle'),
+          sessionCompletedAt: this.sessionCompletedAt || this.centralSession.sessionCompletedAt || null,
           tajweedEnabled: !!this.tajweedEnabled,
           focusModeEnabled: !!this.focusModeEnabled,
           blurModeEnabled: !!this.blurModeEnabled,
@@ -7864,8 +8344,8 @@ export default {
 
     getDisplayArabic(verse) {
       if (!verse?.arabic) return ''
-      if (this.wordByWordAudioEnabled) return this.splitArabicIntoWords(verse)
-      if (this.tajweedEnabled && verse.arabic_tajweed) return this.normalizeTajweedMarkup(verse.arabic_tajweed)
+      if (this.tajweedEnabled && verse.arabic_tajweed) return this.wrapTajweedWithWordHighlighting(verse, this.normalizeTajweedMarkup(verse.arabic_tajweed))
+      if (this.wordByWordAudioEnabled || this.anchorModeEnabled) return this.splitArabicIntoWords(verse)
       return this.stripTajweedMarkup(verse.arabic)
     },
 
@@ -8445,6 +8925,11 @@ export default {
           this.flowListenPlays += 1
           this.persistUiState()
         }
+        if (this.manualOnlyPlayback) {
+          this.manualOnlyPlayback = false
+          this.advanceLocked = false
+          return
+        }
         const gapSeconds = this.getCurrentPlaybackGapSeconds()
         const gapDelayMs = Math.max(0, gapSeconds * 1000)
         if (this.playMode === 'auto') {
@@ -8554,6 +9039,7 @@ export default {
       }
 
       const audioUrl = this.normalizeAudioUrl(verse.audio)
+      this.manualOnlyPlayback = !!options.manualOnly
       const currentSrc = this.audioElement?.currentSrc ? this.normalizeAudioUrl(this.audioElement.currentSrc) : ''
       const isSameSource = !!currentSrc && currentSrc === audioUrl
 
@@ -9213,9 +9699,12 @@ export default {
       this.persistUiState()
 
       this.sessionCompleted = false
+      this.sessionCompletedAt = null
       this.sessionStartedAt = Date.now()
       this.sessionErrorCount = 0
       this.statsTick = Date.now()
+      this.centralSession.sessionStatus = 'active'
+      this.centralSession.sessionCompletedAt = null
 
       const currentVerses = mode === 'beginner' ? this.beginner.verses : this.advanced.verses
       const modeNeedsReload = !currentVerses || !currentVerses.length || !this.modeDataMatchesConfig(mode, config)
@@ -9611,7 +10100,10 @@ export default {
       if (!this.verses.length) return
 
       this.sessionCompleted = true
+      this.sessionCompletedAt = new Date().toISOString()
       this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
+      this.centralSession.sessionStatus = 'completed'
+      this.centralSession.sessionCompletedAt = this.sessionCompletedAt
       completeMutqinSession(this.mutqinState)
       this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
       this.recomputeAnalytics()
@@ -9774,6 +10266,9 @@ export default {
             this.showTransliteration = state.showTransliteration ?? this.showTransliteration
             this.showWordByWord = state.showWordByWord ?? this.showWordByWord
             this.wordByWordAudioEnabled = state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
+            this.readingViewMode = ['stacked', 'mushaf'].includes(state.readingViewMode) ? state.readingViewMode : 'stacked'
+            this.mushafPageIndex = 0
+            this.mushafBackground = ['warm', 'paper', 'contrast', 'night'].includes(state.mushafBackground) ? state.mushafBackground : this.mushafBackground
             this.focusModeEnabled = !!state.focusModeEnabled
             this.blurModeEnabled = !!state.blurModeEnabled
             this.blurIntensity = Math.max(4, Math.min(18, Number(state.blurIntensity ?? this.blurIntensity ?? 10)))
@@ -9849,6 +10344,8 @@ export default {
           showTransliteration: this.showTransliteration,
           showWordByWord: this.showWordByWord,
           wordByWordAudioEnabled: this.wordByWordAudioEnabled,
+          readingViewMode: this.readingViewMode,
+          mushafBackground: this.mushafBackground,
           focusModeEnabled: this.focusModeEnabled,
           blurModeEnabled: this.blurModeEnabled,
           blurIntensity: this.blurIntensity,
@@ -9887,6 +10384,8 @@ export default {
           activeKey: this.activeKey,
           activeVerseKey: this.activeVerseKey,
           queueIndex: this.queueIndex,
+          completed: !!this.sessionCompleted,
+          completedAt: this.sessionCompletedAt,
           timestamp: Date.now()
         }))
       } catch (e) { console.error(e) }
@@ -9898,6 +10397,7 @@ export default {
         if (!saved) return
         try {
           const state = JSON.parse(saved)
+          if (state.completed) return
           if (Date.now() - state.timestamp < 24 * 60 * 60 * 1000) {
             const target = mode === 'beginner' ? this.beginner : this.advanced
             const restoredKey = state.activeVerseKey || state.activeKey || null
@@ -13348,6 +13848,8 @@ export default {
 /* Anchor Mode Styles - Enhanced */
 .verse-arabic .wbw-word.anchor-highlight,
 .verse-arabic word.anchor-highlight,
+.mushaf-ayah-text .wbw-word.anchor-highlight,
+.mushaf-ayah-text word.anchor-highlight,
 .word-item.anchor-highlight {
   position: relative;
   background: linear-gradient(135deg, rgba(255, 193, 7, 0.3), rgba(255, 152, 0, 0.4));
@@ -13383,6 +13885,8 @@ export default {
 
 .verse-arabic .wbw-word.anchor-highlight:hover,
 .verse-arabic word.anchor-highlight:hover,
+.mushaf-ayah-text .wbw-word.anchor-highlight:hover,
+.mushaf-ayah-text word.anchor-highlight:hover,
 .word-item.anchor-highlight:hover {
   background: rgba(255, 152, 0, 0.6);
   transform: scale(1.08);
@@ -13502,8 +14006,9 @@ export default {
 }
 
 .self-check-modal {
-  width: min(1120px, calc(100vw - 32px));
-  max-height: min(92vh, 980px);
+  width: min(1280px, calc(100vw - 20px));
+  max-height: calc(100dvh - 20px);
+  height: auto;
   padding: 0;
   overflow: hidden;
   animation: selfCheckModalIn 180ms ease;
@@ -13526,6 +14031,8 @@ export default {
 
 .self-check-modal-header {
   align-items: flex-start;
+  padding-top: 14px;
+  padding-bottom: 14px;
 }
 
 .self-check-modal-head-copy {
@@ -13541,8 +14048,8 @@ export default {
 
 .self-check-modal-body {
   display: grid;
-  gap: 18px;
-  padding: 20px 24px 24px;
+  gap: 20px;
+  padding: 18px 22px 22px;
 }
 
 .self-check-modal-stage,
@@ -13556,16 +14063,16 @@ export default {
 
 .self-check-modal-stage {
   display: grid;
-  gap: 16px;
-  padding: 20px;
-  border-radius: 24px;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 20px;
 }
 
 .self-check-section-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
 }
 
 .self-check-section-title {
@@ -13625,7 +14132,7 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 6px;
+  padding: 4px;
   border-radius: 999px;
   border: 1px solid rgba(154, 103, 56, 0.12);
   background: rgba(255, 255, 255, 0.76);
@@ -13633,8 +14140,8 @@ export default {
 
 .self-check-modal-tool-btn,
 .self-check-modal-memory-btn {
-  min-height: 40px;
-  padding: 0 14px;
+  min-height: 34px;
+  padding: 0 12px;
   border-radius: 14px;
   border: 1px solid rgba(154, 103, 56, 0.12);
   background: rgba(255, 255, 255, 0.78);
@@ -13670,14 +14177,15 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 22px;
-  min-height: 250px;
-  border-radius: 22px;
+  padding: 20px 20px 18px;
+  min-height: 280px;
+  border-radius: 18px;
   background:
-    radial-gradient(circle at top, rgba(212, 176, 133, 0.14), transparent 55%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 241, 233, 0.9));
+    radial-gradient(circle at top, rgba(212, 176, 133, 0.2), transparent 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 240, 232, 0.96));
+  border: 1px solid rgba(154, 103, 56, 0.18);
   overflow: hidden;
-  transition: box-shadow 0.22s ease, border-color 0.22s ease;
+  transition: box-shadow 0.22s ease, border-color 0.22s ease, transform 0.22s ease;
 }
 
 .self-check-modal-ayah-shell.is-peekable {
@@ -13686,7 +14194,44 @@ export default {
 }
 
 .self-check-modal-ayah-shell.is-peekable.is-blurred:hover {
-  box-shadow: inset 0 0 0 1px rgba(154, 103, 56, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(154, 103, 56, 0.2), 0 10px 24px rgba(154, 103, 56, 0.08);
+}
+
+.self-check-ayah-actions {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  z-index: 2;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.self-check-ayah-action {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid rgba(154, 103, 56, 0.22);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(85, 55, 26, 0.12);
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.self-check-ayah-action:hover {
+  transform: translateY(-1px);
+  background: #fff;
+  border-color: rgba(154, 103, 56, 0.34);
+}
+
+.self-check-ayah-action.active {
+  color: #6f421f;
+  background: rgba(154, 103, 56, 0.14);
+  border-color: rgba(154, 103, 56, 0.36);
 }
 
 
@@ -13700,6 +14245,40 @@ export default {
   transition: filter 0.22s ease, transform 0.22s ease, opacity 0.22s ease;
 }
 
+.self-check-modal-ayah.tajweed-enabled .tajweed-mark {
+  font-weight: inherit;
+}
+
+.self-check-modal-ayah.tajweed-enabled .tajweed-ham_wasl,
+.self-check-modal-ayah.tajweed-enabled .tajweed-slnt {
+  color: #8b8b8b;
+}
+
+.self-check-modal-ayah.tajweed-enabled .tajweed-ghn,
+.self-check-modal-ayah.tajweed-enabled .tajweed-idgh_ghn,
+.self-check-modal-ayah.tajweed-enabled .tajweed-iqlb {
+  color: #138a4c;
+}
+
+.self-check-modal-ayah.tajweed-enabled .tajweed-idgh_w_ghn,
+.self-check-modal-ayah.tajweed-enabled .tajweed-ikhf,
+.self-check-modal-ayah.tajweed-enabled .tajweed-ikhf_shfw {
+  color: #b56a00;
+}
+
+.self-check-modal-ayah.tajweed-enabled .tajweed-qlq,
+.self-check-modal-ayah.tajweed-enabled .tajweed-lqlq {
+  color: #a93226;
+}
+
+.self-check-modal-ayah.tajweed-enabled .tajweed-madda_normal,
+.self-check-modal-ayah.tajweed-enabled .tajweed-madda_permissible,
+.self-check-modal-ayah.tajweed-enabled .tajweed-madda_necessary,
+.self-check-modal-ayah.tajweed-enabled .tajweed-madda_obligatory,
+.self-check-modal-ayah.tajweed-enabled .tajweed-madda_pbligatory {
+  color: #7a42c8;
+}
+
 .self-check-modal-ayah-shell.is-blurred .self-check-modal-ayah {
   filter: blur(18px);
   transform: scale(1.025);
@@ -13709,16 +14288,16 @@ export default {
 .self-check-modal-recorder-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.22fr) minmax(320px, 0.92fr);
-  gap: 18px;
+  gap: 14px;
   align-items: start;
 }
 
 .self-check-recorder-card,
 .self-check-attempts-card {
   display: grid;
-  gap: 16px;
-  padding: 20px;
-  border-radius: 22px;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
 }
 
 .self-check-recorder-card.recording {
@@ -13795,15 +14374,15 @@ export default {
   padding: 0 10px;
   border-radius: 999px;
   border: 1px solid rgba(154, 103, 56, 0.12);
-  background: rgba(255, 255, 255, 0.68);
+  background: rgba(255, 255, 255, 0.84);
   color: var(--text-muted);
   font-size: 0.74rem;
   font-weight: 600;
 }
 
 .self-check-library-link {
-  min-height: 40px;
-  padding: 0 14px;
+  min-height: 34px;
+  padding: 0 12px;
   border-radius: 14px;
   border: 1px solid rgba(154, 103, 56, 0.12);
   background: rgba(255, 255, 255, 0.78);
@@ -13827,7 +14406,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   border-radius: 14px;
   border: 1px solid transparent;
   font-size: 0.8rem;
@@ -13857,7 +14436,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 18px;
+  padding: 14px 16px;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(154, 103, 56, 0.12);
@@ -13919,15 +14498,15 @@ export default {
 .self-check-result-group {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .self-check-result-btn {
   min-height: auto;
-  padding: 12px;
-  border-radius: 16px;
-  border: 1px solid transparent;
-  background: rgba(255, 255, 255, 0.74);
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(154, 103, 56, 0.16);
+  background: rgba(255, 255, 255, 0.9);
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
@@ -13935,6 +14514,7 @@ export default {
   display: grid;
   gap: 4px;
   text-align: left;
+  color: var(--text);
 }
 
 .self-check-result-btn-label {
@@ -13946,30 +14526,39 @@ export default {
   font-size: 0.72rem;
   font-weight: 500;
   line-height: 1.45;
-  opacity: 0.82;
+  opacity: 0.95;
+  color: var(--text-muted);
 }
 
 .self-check-result-btn.active {
   transform: translateY(-1px);
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12px 24px rgba(85, 55, 26, 0.14);
+  border-color: rgba(154, 103, 56, 0.42);
+  outline: 2px solid rgba(154, 103, 56, 0.22);
+  outline-offset: 0;
 }
 
 .self-check-result-btn.tone-excellent {
-  color: #43684a;
-  border-color: rgba(89, 138, 96, 0.18);
-  background: rgba(89, 138, 96, 0.08);
+  color: #12351f;
+  border-color: rgba(34, 118, 64, 0.38);
+  background: #dff0e4;
 }
 
 .self-check-result-btn.tone-good {
-  color: #6c5638;
-  border-color: rgba(122, 95, 58, 0.14);
-  background: rgba(122, 95, 58, 0.06);
+  color: #3d2a11;
+  border-color: rgba(161, 108, 38, 0.38);
+  background: #f3e1c5;
 }
 
 .self-check-result-btn.tone-review {
-  color: #8b653b;
-  border-color: rgba(166, 121, 72, 0.16);
-  background: rgba(166, 121, 72, 0.08);
+  color: #4b2217;
+  border-color: rgba(174, 82, 51, 0.38);
+  background: #f3d8ce;
+}
+
+.self-check-result-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(154, 103, 56, 0.16);
 }
 
 .self-check-attempts-head {
@@ -13981,8 +14570,8 @@ export default {
 
 .self-check-attempts-list {
   display: grid;
-  gap: 12px;
-  max-height: 360px;
+  gap: 10px;
+  max-height: 40vh;
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -13990,7 +14579,7 @@ export default {
 .self-check-attempt-card {
   gap: 12px;
   padding: 14px;
-  border-radius: 18px;
+  border-radius: 14px;
   box-shadow: none;
 }
 
@@ -17703,33 +18292,44 @@ html {
   overflow-wrap: anywhere;
 }
 
-.verse-arabic.tajweed-enabled .tajweed-mark {
+.verse-arabic.tajweed-enabled .tajweed-mark,
+.mushaf-ayah-text.tajweed-enabled .tajweed-mark {
   display: inline;
   border-radius: 0.2em;
   padding: 0 0.03em;
 }
 
 .verse-arabic.tajweed-enabled .tajweed-ham_wasl,
-.verse-arabic.tajweed-enabled .tajweed-slnt {
+.verse-arabic.tajweed-enabled .tajweed-slnt,
+.mushaf-ayah-text.tajweed-enabled .tajweed-ham_wasl,
+.mushaf-ayah-text.tajweed-enabled .tajweed-slnt {
   color: #7e8a97;
 }
 
 .verse-arabic.tajweed-enabled .tajweed-ghn,
 .verse-arabic.tajweed-enabled .tajweed-idgh_ghn,
-.verse-arabic.tajweed-enabled .tajweed-iqlb {
+.verse-arabic.tajweed-enabled .tajweed-iqlb,
+.mushaf-ayah-text.tajweed-enabled .tajweed-ghn,
+.mushaf-ayah-text.tajweed-enabled .tajweed-idgh_ghn,
+.mushaf-ayah-text.tajweed-enabled .tajweed-iqlb {
   color: #2e9d62;
   background: rgba(46, 157, 98, 0.10);
 }
 
 .verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,
 .verse-arabic.tajweed-enabled .tajweed-ikhf,
-.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw {
+.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw,
+.mushaf-ayah-text.tajweed-enabled .tajweed-idgh_w_ghn,
+.mushaf-ayah-text.tajweed-enabled .tajweed-ikhf,
+.mushaf-ayah-text.tajweed-enabled .tajweed-ikhf_shfw {
   color: #9b59b6;
   background: rgba(155, 89, 182, 0.10);
 }
 
 .verse-arabic.tajweed-enabled .tajweed-qlq,
-.verse-arabic.tajweed-enabled .tajweed-lqlq {
+.verse-arabic.tajweed-enabled .tajweed-lqlq,
+.mushaf-ayah-text.tajweed-enabled .tajweed-qlq,
+.mushaf-ayah-text.tajweed-enabled .tajweed-lqlq {
   color: #d98824;
   background: rgba(217, 136, 36, 0.12);
 }
@@ -17738,7 +18338,12 @@ html {
 .verse-arabic.tajweed-enabled .tajweed-madda_permissible,
 .verse-arabic.tajweed-enabled .tajweed-madda_necessary,
 .verse-arabic.tajweed-enabled .tajweed-madda_obligatory,
-.verse-arabic.tajweed-enabled .tajweed-madda_pbligatory {
+.verse-arabic.tajweed-enabled .tajweed-madda_pbligatory,
+.mushaf-ayah-text.tajweed-enabled .tajweed-madda_normal,
+.mushaf-ayah-text.tajweed-enabled .tajweed-madda_permissible,
+.mushaf-ayah-text.tajweed-enabled .tajweed-madda_necessary,
+.mushaf-ayah-text.tajweed-enabled .tajweed-madda_obligatory,
+.mushaf-ayah-text.tajweed-enabled .tajweed-madda_pbligatory {
   color: #d55245;
   background: rgba(213, 82, 69, 0.10);
 }
@@ -17746,7 +18351,11 @@ html {
 .verse-arabic.tajweed-enabled .tajweed-idgh_mus,
 .verse-arabic.tajweed-enabled .tajweed-idghm_shfw,
 .verse-arabic.tajweed-enabled .tajweed-idgh_shfw,
-.verse-arabic.tajweed-enabled .tajweed-ghn+.tajweed-mark {
+.verse-arabic.tajweed-enabled .tajweed-ghn+.tajweed-mark,
+.mushaf-ayah-text.tajweed-enabled .tajweed-idgh_mus,
+.mushaf-ayah-text.tajweed-enabled .tajweed-idghm_shfw,
+.mushaf-ayah-text.tajweed-enabled .tajweed-idgh_shfw,
+.mushaf-ayah-text.tajweed-enabled .tajweed-ghn+.tajweed-mark {
   color: #2b7bbb;
   background: rgba(43, 123, 187, 0.10);
 }
@@ -23836,11 +24445,481 @@ html {
   align-items: center;
 }
 
+.quick-pill-group-list .view-mode-toggle {
+  margin-left: auto;
+  order: 20;
+}
+
 .toolbar-chip-sm {
   min-height: 28px;
   padding: 3px 9px;
   font-size: 0.72rem;
   border-radius: 999px;
+}
+
+.view-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.view-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 30px;
+  padding: 0.3rem 0.68rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.view-mode-btn:hover {
+  transform: translateY(-1px);
+  color: var(--text);
+}
+
+.view-mode-btn.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+  color: #fff;
+  box-shadow: 0 10px 22px rgba(99, 102, 241, 0.22);
+}
+
+.mushaf-workspace {
+  width: 100%;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.mushaf-frame {
+  position: relative;
+  width: min(100%, 1560px);
+  margin-inline: auto;
+  transition: width 220ms ease, max-width 220ms ease;
+}
+
+.main.tools-open .mushaf-frame {
+  width: min(100%, 1180px);
+}
+
+.mushaf-viewport {
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.mushaf-track {
+  display: flex;
+}
+
+.mushaf-empty-page {
+  min-height: min(58vh, 560px);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  border: 1px dashed rgba(99, 102, 241, 0.24);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.58);
+  color: var(--muted);
+  text-align: center;
+}
+
+.mushaf-empty-page i {
+  color: var(--accent);
+  font-size: 1.6rem;
+}
+
+.mushaf-empty-page strong {
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.mushaf-empty-page span {
+  max-width: 32rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.mushaf-page {
+  position: relative;
+  flex: 0 0 100%;
+  min-height: min(82vh, 980px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: clamp(1rem, 2vh, 1.8rem);
+  padding: clamp(3rem, 5vw, 5.8rem) clamp(1rem, 8vw, 8rem) clamp(2rem, 4vw, 4rem);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 12px;
+  background: var(--mushaf-bg, #f1ede8);
+  color: var(--mushaf-text, #050505);
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.1);
+}
+
+.mushaf-bg-warm {
+  --mushaf-bg: #f1ede8;
+  --mushaf-text: #050505;
+  --mushaf-muted: #6f6258;
+  --mushaf-hover: rgba(150, 99, 52, 0.09);
+}
+
+.mushaf-bg-paper {
+  --mushaf-bg: #fffaf0;
+  --mushaf-text: #111827;
+  --mushaf-muted: #6b5f4b;
+  --mushaf-hover: rgba(180, 126, 42, 0.12);
+}
+
+.mushaf-bg-contrast {
+  --mushaf-bg: #ffffff;
+  --mushaf-text: #000000;
+  --mushaf-muted: #111827;
+  --mushaf-hover: rgba(0, 0, 0, 0.07);
+}
+
+.mushaf-bg-night {
+  --mushaf-bg: #101317;
+  --mushaf-text: #f8fafc;
+  --mushaf-muted: #cbd5e1;
+  --mushaf-hover: rgba(148, 163, 184, 0.16);
+}
+
+.mushaf-sheet-tools {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--mushaf-text) 14%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mushaf-bg) 88%, transparent);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.mushaf-sheet-tools button,
+.mushaf-font-controls {
+  color: var(--mushaf-text);
+}
+
+.mushaf-sheet-tools > button,
+.mushaf-font-controls button {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid color-mix(in srgb, var(--mushaf-text) 14%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mushaf-bg) 72%, #ffffff 18%);
+}
+
+.mushaf-font-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding-inline: 0.2rem;
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.mushaf-bg-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  padding-inline: 0.1rem;
+}
+
+.mushaf-bg-swatch {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  border-radius: 999px !important;
+  padding: 0 !important;
+}
+
+.mushaf-bg-swatch.active {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.mushaf-bg-swatch-warm { background: #f1ede8 !important; }
+.mushaf-bg-swatch-paper { background: #fffaf0 !important; }
+.mushaf-bg-swatch-contrast { background: #fff !important; }
+.mushaf-bg-swatch-night { background: #101317 !important; }
+
+.mushaf-page-header {
+  display: grid;
+  justify-items: center;
+  gap: clamp(0.65rem, 1.6vh, 1.2rem);
+  color: var(--mushaf-text);
+  text-align: center;
+}
+
+.mushaf-page-header h2 {
+  margin: 0;
+  color: var(--mushaf-text);
+  font-family: "Amiri Quran", "Amiri", "Scheherazade New", serif;
+  font-size: clamp(2.4rem, 5.1vw, 4.7rem);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.mushaf-bismillah {
+  color: var(--mushaf-text);
+  font-family: "Amiri Quran", "Amiri", "Scheherazade New", serif;
+  font-size: clamp(1.9rem, 3.9vw, 3.35rem);
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.mushaf-page-footer {
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.mushaf-page-body {
+  align-content: start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.22em 0.24em;
+  justify-content: center;
+  line-height: 2.65;
+  overflow: visible;
+  padding: clamp(0.8rem, 2vh, 1.7rem) 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.mushaf-ayah {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.12em;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--mushaf-text);
+  padding: 0.02em 0.08em;
+  text-align: right;
+  transition: background 180ms ease, box-shadow 180ms ease, filter 180ms ease, opacity 180ms ease;
+}
+
+.mushaf-ayah:hover,
+.mushaf-ayah.active {
+  background: var(--mushaf-hover);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mushaf-text) 14%, transparent);
+}
+
+.mushaf-ayah.review-priority {
+  box-shadow: inset 0 -2px 0 rgba(245, 158, 11, 0.48);
+}
+
+.mushaf-ayah-text {
+  color: var(--mushaf-text);
+  font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(2.25rem, 4.2vw, 4.25rem));
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.9;
+}
+
+.mushaf-ayah-number {
+  display: inline-grid;
+  place-items: center;
+  width: 1.55em;
+  height: 1.55em;
+  margin-inline: 0.1em 0.18em;
+  border: 2px double rgba(150, 99, 52, 0.58);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #eef0e6 47%, transparent 49%),
+    conic-gradient(from 20deg, #b0175a, #6f8d61, #b0175a, #6f8d61, #b0175a);
+  color: #111;
+  font-family: system-ui, sans-serif;
+  font-size: clamp(0.74rem, 1.45vw, 1.1rem);
+  font-weight: 900;
+  line-height: 1;
+  vertical-align: middle;
+  transform: translateY(-0.08em);
+}
+
+.mushaf-active-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  pointer-events: auto;
+}
+
+.mushaf-ayah-hover-tools {
+  position: absolute;
+  top: -2.45rem;
+  left: 50%;
+  z-index: 8;
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid color-mix(in srgb, var(--mushaf-text) 14%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mushaf-bg) 90%, transparent);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
+  transform: translateX(-50%);
+}
+
+.mushaf-ayah-hover-tools button {
+  display: inline-grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+}
+
+.mushaf-inline-translation {
+  flex-basis: 100%;
+  direction: ltr;
+  max-width: min(48rem, 90vw);
+  margin: -0.8rem auto 0.2rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--mushaf-bg) 78%, var(--mushaf-text) 8%);
+  color: var(--mushaf-muted);
+  font-family: system-ui, sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.mushaf-active-tools button,
+.mushaf-nav-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text);
+}
+
+.mushaf-nav-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.36;
+}
+
+.mushaf-hint {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.main.focus-mode-active .mushaf-ayah:not(.active) {
+  opacity: var(--focus-dim-opacity, 0.54);
+}
+
+.main.blur-mode-active .mushaf-ayah.blur-upcoming .mushaf-ayah-text {
+  filter: blur(var(--recall-blur, 10px));
+  user-select: none;
+}
+
+.main.blur-mode-active .mushaf-ayah.blur-upcoming.peek-revealed .mushaf-ayah-text,
+.main.blur-mode-active .mushaf-ayah.active .mushaf-ayah-text {
+  filter: none;
+  user-select: auto;
+}
+
+[data-theme="dark"] .view-mode-toggle,
+[data-theme="dark"] .mushaf-empty-page,
+[data-theme="dark"] .mushaf-active-tools button,
+[data-theme="dark"] .mushaf-nav-btn {
+  border-color: rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.88);
+}
+
+[data-theme="dark"] .mushaf-page {
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="dark"] .mushaf-ayah-number {
+  color: #0f172a;
+  border-color: rgba(248, 250, 252, 0.32);
+}
+
+[data-theme="dark"] .mushaf-ayah:hover,
+[data-theme="dark"] .mushaf-ayah.active {
+  background: rgba(129, 140, 248, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(199, 210, 254, 0.22);
+}
+
+@media (max-width: 720px) {
+  .mushaf-frame {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mushaf-nav-btn {
+    display: none;
+  }
+
+  .mushaf-page {
+    min-height: 70vh;
+    padding: 4.6rem 0.85rem 1.4rem;
+  }
+
+  .mushaf-sheet-tools {
+    top: 0.75rem;
+    right: 0.75rem;
+    left: 0.75rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    border-radius: 12px;
+  }
+
+  .mushaf-page-body {
+    line-height: 2.35;
+  }
+
+  .mushaf-page-header h2 {
+    font-size: clamp(2rem, 12vw, 3.2rem);
+  }
+
+  .mushaf-bismillah {
+    font-size: clamp(1.5rem, 8vw, 2.35rem);
+  }
+
+  .mushaf-ayah-text {
+    font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.85rem, 9.5vw, 2.7rem));
+  }
+
+  .view-mode-toggle {
+    width: 100%;
+  }
+
+  .view-mode-btn {
+    flex: 1 1 0;
+    justify-content: center;
+  }
 }
 
 .workspace-control-live {
@@ -24198,17 +25277,80 @@ html {
 }
 
 .recordings-library-modal {
-  width: min(1120px, 96vw);
-  max-height: 90vh;
+  width: min(1320px, calc(100vw - 20px));
+  max-height: calc(100dvh - 20px);
+  height: auto;
 }
 
 .recordings-library-header {
   align-items: flex-start;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.recordings-library-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.recordings-library-back-btn {
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(154, 103, 56, 0.16);
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.recordings-library-back-btn:hover {
+  background: var(--accent-light);
+  border-color: rgba(154, 103, 56, 0.28);
+  color: var(--accent);
 }
 
 .recordings-library-head-copy {
   display: grid;
   gap: 6px;
+}
+
+.recordings-library-hierarchy,
+.recordings-library-nav-meta,
+.recordings-library-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.recordings-library-hierarchy span,
+.recordings-library-nav-meta span,
+.recordings-library-detail-meta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(154, 103, 56, 0.16);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .recordings-library-hierarchy span,
+[data-theme="dark"] .recordings-library-nav-meta span,
+[data-theme="dark"] .recordings-library-detail-meta span {
+  background: rgba(255, 247, 236, 0.08);
+  border-color: rgba(255, 236, 216, 0.18);
+  color: var(--text);
 }
 
 .recordings-library-head-copy p {
@@ -24219,8 +25361,7 @@ html {
 }
 
 .recordings-library-body {
-  padding-top: 18px;
-  padding-bottom: 18px;
+  padding: 16px 20px 20px;
 }
 
 .recordings-library-loading,
@@ -24260,15 +25401,15 @@ html {
 
 .recordings-library-shell {
   display: grid;
-  grid-template-columns: minmax(280px, 320px) minmax(0, 1fr);
-  gap: 18px;
+  grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+  gap: 20px;
   min-height: 0;
 }
 
 .recordings-library-nav,
 .recordings-library-detail {
   border: 1px solid var(--border);
-  border-radius: 18px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.6);
   min-height: 0;
 }
@@ -24284,7 +25425,7 @@ html {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  padding: 18px 18px 12px;
+  padding: 14px 14px 10px;
   border-bottom: 1px solid rgba(154, 103, 56, 0.08);
 }
 
@@ -24326,7 +25467,7 @@ html {
 }
 
 .recordings-library-search {
-  padding: 14px 18px 12px;
+  padding: 12px 14px 10px;
   display: grid;
   gap: 8px;
 }
@@ -24378,13 +25519,13 @@ html {
 .recordings-library-nav-scroll {
   flex: 1;
   overflow-y: auto;
-  padding: 0 12px 14px 18px;
+  padding: 0 10px 12px 14px;
 }
 
 .recordings-library-surah-group {
   display: grid;
-  gap: 8px;
-  padding: 10px 0 14px;
+  gap: 6px;
+  padding: 8px 0 10px;
 }
 
 .recordings-library-surah-group + .recordings-library-surah-group {
@@ -24397,12 +25538,17 @@ html {
   color: var(--text);
 }
 
+.recordings-library-ayah-group {
+  display: grid;
+  gap: 6px;
+}
+
 .recordings-library-ayah-item {
   width: 100%;
   border: 1px solid transparent;
   border-radius: 14px;
   background: rgba(154, 103, 56, 0.05);
-  padding: 12px 14px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -24419,9 +25565,9 @@ html {
 }
 
 .recordings-library-ayah-item.active {
-  border-color: rgba(154, 103, 56, 0.28);
-  background: linear-gradient(135deg, rgba(154, 103, 56, 0.14), rgba(154, 103, 56, 0.06));
-  box-shadow: 0 10px 24px rgba(154, 103, 56, 0.1);
+  border-color: rgba(154, 103, 56, 0.5);
+  background: linear-gradient(135deg, rgba(154, 103, 56, 0.28), rgba(154, 103, 56, 0.18));
+  box-shadow: 0 10px 24px rgba(154, 103, 56, 0.2);
 }
 
 .recordings-library-ayah-label {
@@ -24436,6 +25582,95 @@ html {
   white-space: nowrap;
 }
 
+.recordings-library-recordings {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 6px 12px;
+  padding-left: 10px;
+  border-left: 2px solid rgba(154, 103, 56, 0.12);
+}
+
+.recordings-library-recording-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  background: rgba(255, 255, 255, 0.82);
+  animation: recordingsSlideIn 180ms ease;
+}
+
+.recordings-library-recording-item.playing {
+  border-color: rgba(154, 103, 56, 0.4);
+  box-shadow: 0 14px 26px rgba(154, 103, 56, 0.18);
+}
+
+.recordings-library-recording-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.recordings-library-recording-copy strong {
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.recordings-library-recording-copy span {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+[data-theme="dark"] .recordings-library-search input,
+[data-theme="dark"] .recordings-library-nav-toggle,
+[data-theme="dark"] .recordings-library-ayah-item {
+  background: rgba(255, 247, 236, 0.08);
+  border-color: rgba(255, 236, 216, 0.2);
+  color: var(--text);
+}
+
+[data-theme="dark"] .recordings-library-ayah-item.active {
+  background: linear-gradient(135deg, rgba(208, 160, 107, 0.28), rgba(255, 255, 255, 0.06));
+  border-color: rgba(208, 160, 107, 0.42);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.24);
+}
+
+[data-theme="dark"] .recordings-library-recording-item {
+  background: rgba(255, 247, 236, 0.08);
+  border-color: rgba(255, 236, 216, 0.18);
+}
+
+[data-theme="dark"] .recordings-library-recording-item.playing {
+  border-color: rgba(208, 160, 107, 0.38);
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.26);
+}
+
+@keyframes recordingsSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.recordings-group-expand-enter-active,
+.recordings-group-expand-leave-active {
+  overflow: hidden;
+  transition: opacity 0.18s ease, transform 0.18s ease, max-height 0.22s ease;
+}
+
+.recordings-group-expand-enter-from,
+.recordings-group-expand-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+  max-height: 0;
+}
+
 .recordings-library-detail {
   display: flex;
   flex-direction: column;
@@ -24447,7 +25682,7 @@ html {
   align-items: flex-start;
   justify-content: space-between;
   gap: 14px;
-  padding: 20px 20px 14px;
+  padding: 14px 14px 10px;
   border-bottom: 1px solid rgba(154, 103, 56, 0.08);
 }
 
@@ -24459,24 +25694,24 @@ html {
 .recordings-library-detail-head h3 {
   margin: 0;
   color: var(--text);
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 
 .recordings-library-history {
   flex: 1;
   overflow-y: auto;
-  padding: 18px 20px 20px;
+  padding: 12px 14px 14px;
   display: grid;
-  gap: 14px;
+  gap: 10px;
 }
 
 .recording-history-card {
   border: 1px solid rgba(154, 103, 56, 0.12);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.74);
-  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.84);
+  padding: 14px;
   display: grid;
-  gap: 12px;
+  gap: 10px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
@@ -24499,13 +25734,19 @@ html {
 
 .recording-history-copy {
   display: grid;
-  gap: 4px;
+  gap: 2px;
   flex: 1;
   min-width: 0;
 }
 
+.recording-history-kicker {
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
 .recording-history-note {
-  margin-top: 2px;
+  margin-top: 0;
 }
 
 .recording-history-copy strong {
@@ -24536,9 +25777,9 @@ html {
 }
 
 .recording-history-action {
-  min-width: 112px;
+  min-width: 92px;
   width: auto;
-  padding: 0 14px;
+  padding: 0 12px;
   gap: 8px;
 }
 
@@ -24547,7 +25788,7 @@ html {
 }
 
 .recording-history-action span {
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   font-weight: 600;
 }
 
@@ -24555,32 +25796,32 @@ html {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 30px;
-  padding: 0 10px;
+  min-height: 26px;
+  padding: 0 8px;
   border-radius: 999px;
   border: 1px solid transparent;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   white-space: nowrap;
 }
 
 .recording-result-pill.tone-excellent {
-  background: rgba(89, 138, 96, 0.12);
-  border-color: rgba(89, 138, 96, 0.18);
-  color: #43684a;
+  background: #dceee1;
+  border-color: rgba(47, 114, 72, 0.3);
+  color: #1d5b33;
 }
 
 .recording-result-pill.tone-good {
-  background: rgba(122, 95, 58, 0.1);
-  border-color: rgba(122, 95, 58, 0.14);
-  color: #6c5638;
+  background: #f0dfc4;
+  border-color: rgba(166, 121, 72, 0.32);
+  color: #6d461c;
 }
 
 .recording-result-pill.tone-review {
-  background: rgba(166, 121, 72, 0.12);
-  border-color: rgba(166, 121, 72, 0.18);
-  color: #8b653b;
+  background: #f1d7ce;
+  border-color: rgba(187, 103, 46, 0.34);
+  color: #8a3e24;
 }
 
 .recording-delete-confirm {
@@ -24622,14 +25863,15 @@ html {
 [data-theme="dark"] .self-check-recorder-card,
 [data-theme="dark"] .self-check-attempts-card,
 [data-theme="dark"] .self-check-attempt-card {
-  background: linear-gradient(180deg, rgba(40, 34, 30, 0.9), rgba(29, 25, 23, 0.86));
-  border-color: rgba(216, 185, 150, 0.16);
+  background: linear-gradient(180deg, rgba(34, 28, 24, 0.98), rgba(24, 20, 18, 0.95));
+  border-color: rgba(224, 180, 126, 0.24);
 }
 
 [data-theme="dark"] .self-check-modal-ayah-shell {
   background:
-    radial-gradient(circle at top, rgba(208, 160, 107, 0.12), transparent 54%),
-    linear-gradient(180deg, rgba(53, 46, 41, 0.9), rgba(37, 32, 29, 0.88));
+    radial-gradient(circle at top, rgba(208, 160, 107, 0.18), transparent 54%),
+    linear-gradient(180deg, rgba(46, 39, 34, 0.98), rgba(30, 25, 22, 0.96));
+  border-color: rgba(224, 180, 126, 0.28);
 }
 
 
@@ -24641,9 +25883,34 @@ html {
 [data-theme="dark"] .self-check-modal-memory-btn,
 [data-theme="dark"] .self-check-attempts-count,
 [data-theme="dark"] .self-check-live-stage {
-  background: rgba(255, 247, 236, 0.06);
-  border-color: rgba(255, 236, 216, 0.14);
+  background: rgba(255, 247, 236, 0.09);
+  border-color: rgba(255, 236, 216, 0.22);
   color: var(--text);
+}
+
+[data-theme="dark"] .self-check-ayah-action,
+[data-theme="dark"] .recordings-library-recording-item {
+  background: rgba(255, 247, 236, 0.08);
+  border-color: rgba(255, 236, 216, 0.18);
+  color: var(--text);
+}
+
+[data-theme="dark"] .self-check-ayah-action.active {
+  background: rgba(208, 160, 107, 0.18);
+  border-color: rgba(208, 160, 107, 0.34);
+  color: var(--accent-strong);
+}
+
+[data-theme="dark"] .recordings-library-back-btn {
+  background: rgba(255, 247, 236, 0.08);
+  border-color: rgba(255, 236, 216, 0.18);
+  color: var(--text);
+}
+
+[data-theme="dark"] .recordings-library-back-btn:hover {
+  background: rgba(208, 160, 107, 0.14);
+  border-color: rgba(208, 160, 107, 0.24);
+  color: var(--accent-strong);
 }
 
 [data-theme="dark"] .self-check-modal-tool-btn:hover,
@@ -24656,8 +25923,8 @@ html {
 }
 
 [data-theme="dark"] .self-check-status-info {
-  background: rgba(255, 247, 236, 0.06);
-  border-color: rgba(255, 236, 216, 0.14);
+  background: rgba(255, 247, 236, 0.1);
+  border-color: rgba(255, 236, 216, 0.2);
 }
 
 [data-theme="dark"] .self-check-status-success {
@@ -24673,15 +25940,40 @@ html {
 }
 
 [data-theme="dark"] .self-check-result-btn {
-  background: rgba(255, 247, 236, 0.05);
+  background: rgba(255, 247, 236, 0.1);
+  border-color: rgba(255, 236, 216, 0.2);
+  color: var(--text);
 }
 
 [data-theme="dark"] .recordings-library-search input,
 [data-theme="dark"] .recordings-library-nav-toggle,
 [data-theme="dark"] .recordings-library-ayah-item {
-  background: rgba(255, 247, 236, 0.05);
-  border-color: rgba(255, 236, 216, 0.14);
+  background: rgba(255, 247, 236, 0.08);
+  border-color: rgba(255, 236, 216, 0.2);
   color: var(--text);
+}
+
+[data-theme="dark"] .self-check-result-btn.tone-excellent {
+  color: #e8f9eb;
+  background: rgba(49, 123, 73, 0.42);
+  border-color: rgba(123, 200, 139, 0.42);
+}
+
+[data-theme="dark"] .self-check-result-btn.tone-good {
+  color: #fff1dc;
+  background: rgba(151, 101, 37, 0.44);
+  border-color: rgba(226, 175, 105, 0.38);
+}
+
+[data-theme="dark"] .self-check-result-btn.tone-review {
+  color: #fff0ea;
+  background: rgba(151, 72, 48, 0.46);
+  border-color: rgba(226, 135, 105, 0.4);
+}
+
+[data-theme="dark"] .self-check-result-btn.active {
+  outline-color: rgba(224, 180, 126, 0.3);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.32);
 }
 
 [data-theme="dark"] .recordings-library-ayah-item.active {
@@ -24900,6 +26192,359 @@ html {
 
   .analytics-heatmap-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Mobile hardening: keep dense session surfaces usable on narrow phones. */
+@media (max-width: 768px) {
+  .modal-overlay {
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 0;
+  }
+
+  .modal-content,
+  .save-name-modal,
+  .session-exit-modal,
+  .session-analytics-modal,
+  .recordings-library-modal,
+  .self-check-modal,
+  .post-onboarding-modal {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+
+  .modal-header,
+  .recordings-library-header,
+  .self-check-modal-header,
+  .session-analytics-header {
+    gap: 12px;
+    padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px 14px;
+  }
+
+  .modal-header-text,
+  .recordings-library-head-copy,
+  .self-check-modal-head-copy,
+  .session-analytics-head-copy {
+    min-width: 0;
+  }
+
+  .modal-header-text h2,
+  .recordings-library-head-copy h2,
+  .self-check-modal-head-copy h2,
+  .session-analytics-head-copy h2 {
+    overflow-wrap: anywhere;
+  }
+
+  .session-analytics-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .session-analytics-head-actions,
+  .action-buttons-group,
+  .workspace-shell-actions,
+  .workspace-shell-icon-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 10px;
+  }
+
+  .session-analytics-download,
+  .action-buttons-group .action-btn,
+  .workspace-shell-actions .action-btn,
+  .workspace-shell-icon-actions .action-btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .modal-body,
+  .recordings-library-body,
+  .self-check-modal-body,
+  .session-analytics-body {
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-footer {
+    padding: 14px 16px calc(env(safe-area-inset-bottom, 0px) + 14px);
+  }
+
+  .session-preview-card,
+  .preview-stats,
+  .input-hint,
+  .recording-history-top,
+  .recording-history-meta,
+  .recording-history-actions,
+  .self-check-recorder-head,
+  .self-check-review-head,
+  .self-check-attempt-top,
+  .self-check-attempt-actions,
+  .self-check-live-stage {
+    min-width: 0;
+  }
+
+  .tools {
+    max-width: 100vw;
+  }
+
+  .tools-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tools-tabs button,
+  .mode-radio,
+  .technique-row,
+  .setting-row,
+  .toolbar-chip,
+  .verse-self-check-btn {
+    min-width: 0;
+  }
+
+  .tools-footer {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .tools-footer .btn,
+  .tools-footer button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .verse-toolbar,
+  .verse-audio-controls,
+  .verse-player-controls,
+  .reading-toolbar,
+  .reading-toolbar-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .verse-audio-controls > *,
+  .verse-player-controls > *,
+  .reading-toolbar-group > * {
+    flex: 1 1 auto;
+    min-width: 44px;
+  }
+
+  .audio-player-container {
+    left: 8px;
+    right: 8px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+    width: auto;
+    max-width: none;
+  }
+
+  .audio-player-container,
+  .audio-player-content,
+  .mini-player,
+  .audio-player-controls {
+    min-width: 0;
+  }
+
+  .audio-player-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  .audio-player-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .self-check-modal-stage,
+  .self-check-recorder-card,
+  .self-check-attempts-card,
+  .recordings-library-nav,
+  .recordings-library-detail,
+  .recording-history-card {
+    min-width: 0;
+  }
+
+  .self-check-modal-ayah {
+    overflow-wrap: anywhere;
+  }
+
+  .self-check-recorder-head,
+  .self-check-review-head,
+  .self-check-attempt-top,
+  .self-check-attempt-actions,
+  .self-check-live-stage {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .self-check-idle-actions,
+  .self-check-live-actions,
+  .self-check-review-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .recordings-library-shell {
+    gap: 14px;
+  }
+
+  .recordings-library-nav,
+  .recordings-library-detail {
+    border-radius: 16px;
+  }
+
+  .recordings-library-recording-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(44px, auto);
+  }
+
+  .recordings-library-recording-copy strong,
+  .recordings-library-recording-copy span,
+  .recording-history-copy strong,
+  .recording-history-copy span {
+    overflow-wrap: anywhere;
+  }
+
+  .recording-history-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-header,
+  .recordings-library-header,
+  .self-check-modal-header {
+    align-items: flex-start;
+  }
+
+  .modal-header-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .modal-header-text h2,
+  .recordings-library-head-copy h2,
+  .self-check-modal-head-copy h2 {
+    font-size: 1.05rem;
+    line-height: 1.25;
+  }
+
+  .modal-close-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .session-analytics-head-actions,
+  .action-buttons-group,
+  .workspace-shell-actions,
+  .workspace-shell-icon-actions,
+  .tools-footer {
+    grid-template-columns: 1fr;
+  }
+
+  .session-preview-card,
+  .name-input-group,
+  .quick-suggestions,
+  .self-check-modal-stage,
+  .self-check-recorder-card,
+  .self-check-attempts-card,
+  .recordings-library-nav,
+  .recordings-library-detail,
+  .recording-history-card {
+    border-radius: 14px;
+  }
+
+  .session-preview-card,
+  .self-check-modal-stage,
+  .self-check-recorder-card,
+  .self-check-attempts-card,
+  .recording-history-card {
+    padding: 14px;
+  }
+
+  .preview-surah,
+  .preview-range,
+  .preview-stats,
+  .input-hint {
+    width: 100%;
+  }
+
+  .input-hint {
+    display: grid;
+    gap: 4px;
+  }
+
+  .suggestion-chips {
+    justify-content: flex-start;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+  }
+
+  .suggestion-chip {
+    white-space: nowrap;
+  }
+
+  .recordings-library-body,
+  .self-check-modal-body {
+    padding: 12px;
+  }
+
+  .recordings-library-nav-head,
+  .recordings-library-detail-head,
+  .recordings-library-search,
+  .recordings-library-history {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .recordings-library-recordings {
+    margin-left: 0;
+  }
+
+  .recordings-library-recording-item {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .recordings-library-recording-item .icon-btn,
+  .recordings-library-recording-item button {
+    width: 100%;
+  }
+
+  .recording-result-pill {
+    justify-self: flex-start;
+  }
+
+  .self-check-result-group {
+    grid-template-columns: 1fr;
+  }
+
+  .self-check-modal-ayah-shell {
+    min-height: 180px;
+    padding: 16px 12px;
+  }
+
+  .audio-player-content {
+    grid-template-columns: 1fr;
+  }
+
+  .audio-player-controls {
+    justify-content: stretch;
+  }
+
+  .audio-player-controls > * {
+    flex: 1 1 44px;
   }
 }
 </style>

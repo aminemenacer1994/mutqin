@@ -41,7 +41,7 @@
   --dur-fast: 120ms;
   --dur: 180ms;
   --dur-slow: 260ms;
-  --ring: 0 0 0 3px var(--accent-light);
+  --ring: 0 0 0 3px color-mix(in srgb, var(--accent) 34%, transparent);
 }
 
 html[data-theme="sepia"] {
@@ -80,9 +80,55 @@ body {
 }
 
 /* Consistent focus and press feedback across the app */
-:where(a, button, input, select, textarea):focus-visible {
-  outline: none;
+:where(a, button, input, select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
   box-shadow: var(--ring);
+}
+
+.skip-link {
+  position: fixed;
+  inset-block-start: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+  inset-inline-start: 0.75rem;
+  z-index: 3000;
+  transform: translateY(-150%);
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  color: #fff;
+  background: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: var(--shadow-md);
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+:where(button, .btn, [role="button"]) {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+:where(button, .btn, [role="button"]):disabled {
+  cursor: not-allowed;
+}
+
+:where([aria-pressed="true"], [aria-selected="true"]) {
+  border-color: var(--accent);
 }
 
 :where(button, .btn) {
