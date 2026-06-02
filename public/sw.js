@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'mutqin-shell-v1';
-const RUNTIME_CACHE = 'mutqin-runtime-v1';
+const SHELL_CACHE = 'mutqin-shell-v2';
+const RUNTIME_CACHE = 'mutqin-runtime-v2';
 const AUDIO_CACHE = 'mutqin-audio-v1';
 const SHELL_URLS = [
   '/',

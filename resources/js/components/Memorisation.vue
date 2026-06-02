@@ -382,12 +382,6 @@
                             <button type="button" @click="playVerse(verse, { manualOnly: true })" title="Play this ayah only">
                               <i class="bi bi-play-fill"></i>
                             </button>
-                            <button type="button" @click="toggleMushafHoverTranslation(verse.key)" title="Show translation for this ayah">
-                              <i class="bi bi-translate"></i>
-                            </button>
-                          </span>
-                          <span v-if="mushafHoverTranslationKey === verse.key && verse.translation" class="mushaf-inline-translation" dir="ltr">
-                            {{ verse.translation }}
                           </span>
                         </button>
                       </div>
@@ -1773,7 +1767,7 @@
                   <i class="bi bi-mic"></i>
                 </div>
                 <h3>No recordings yet</h3>
-                <p>Start a recording on the left to capture your first recitation. Saved attempts will appear here so you can replay and track improvement.</p>
+                <p>Start a recording on the left to capture your first recitation.</p>
               </div>
             </aside>
           </section>
@@ -2368,7 +2362,6 @@ export default {
       mushafPageIndex: 0,
       mushafBackground: 'warm',
       hoveredMushafVerseKey: '',
-      mushafHoverTranslationKey: '',
       mushafBackgroundOptions: [
         { value: 'warm', label: 'Warm' },
         { value: 'paper', label: 'Paper' },
@@ -2594,7 +2587,7 @@ export default {
       showSelfCheckModal: false,
       selfCheckVerseRef: null,
       selfCheckVerseKey: '',
-      selfCheckFontSize: 240,
+      selfCheckFontSize: 420,
       selfCheckTajweedEnabled: false,
       selfCheckBlurEnabled: false,
       selfCheckPeekActive: false,
@@ -6203,7 +6196,7 @@ export default {
     },
     getSelfCheckInitialFontSize(verse) {
       const verseFont = Number(this.getVerseFontSize(verse?.key) || this.defaultFontSize || 120)
-      return Math.max(220, Math.min(320, verseFont + 120))
+      return Math.max(400, Math.min(560, verseFont + 300))
     },
     openSelfCheckModal(verse) {
       if (!verse?.key) return
@@ -6262,7 +6255,7 @@ export default {
       this.openRecordingsLibrary({ ayahKey, returnToSelfCheck: true })
     },
     adjustSelfCheckFont(delta) {
-      const next = Math.max(120, Math.min(220, Number(this.selfCheckFontSize || 160) + Number(delta || 0)))
+      const next = Math.max(320, Math.min(560, Number(this.selfCheckFontSize || 420) + Number(delta || 0)))
       this.selfCheckFontSize = next
     },
     toggleSelfCheckBlurMode() {
@@ -6827,9 +6820,6 @@ export default {
     onMushafAyahLeave(verse) {
       this.hoveredMushafVerseKey = ''
       this.onVersePeekLeave(verse?.key)
-    },
-    toggleMushafHoverTranslation(verseKey) {
-      this.mushafHoverTranslationKey = this.mushafHoverTranslationKey === verseKey ? '' : verseKey
     },
     increaseMushafFontSize() {
       this.defaultFontSize = Math.min(this.maxFontSize, Number(this.defaultFontSize || 120) + this.fontSizeStep)
@@ -11623,6 +11613,18 @@ export default {
   }
 }
 
+.mode-radio,
+.tools-tabs button.mode-radio {
+  flex: 0 0 34px !important;
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+}
+
 .session-setup {
   padding: 20px;
   display: flex;
@@ -13801,6 +13803,29 @@ export default {
   box-shadow: 0 2px 4px rgba(255, 152, 0, 0.2);
 }
 
+.mushaf-ayah-text .wbw-word.anchor-highlight,
+.mushaf-ayah-text word.anchor-highlight {
+  display: inline;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  transform: none !important;
+  vertical-align: baseline;
+}
+
+.mushaf-ayah-text .anchor-pulse {
+  animation: mushafAnchorPulse 0.6s ease-out;
+}
+
+@keyframes mushafAnchorPulse {
+  0%, 100% {
+    box-shadow: 0 2px 4px rgba(255, 152, 0, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 152, 0, 0);
+  }
+}
+
 /* Animation for newly highlighted anchors */
 .anchor-pulse {
   animation: anchorPulse 0.6s ease-out;
@@ -13831,6 +13856,11 @@ export default {
   background: rgba(255, 152, 0, 0.6);
   transform: scale(1.08);
   box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+}
+
+.mushaf-ayah-text .wbw-word.anchor-highlight:hover,
+.mushaf-ayah-text word.anchor-highlight:hover {
+  transform: none !important;
 }
 
 /* Tooltip for anchors */
@@ -14117,8 +14147,8 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px 20px 18px;
-  min-height: 280px;
+  padding: 22px 22px 20px;
+  min-height: 310px;
   border-radius: 18px;
   background:
     radial-gradient(circle at top, rgba(212, 176, 133, 0.2), transparent 55%),
@@ -14148,8 +14178,8 @@ export default {
 }
 
 .self-check-ayah-action {
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
   border: 1px solid rgba(154, 103, 56, 0.22);
   background: rgba(255, 255, 255, 0.9);
@@ -14177,9 +14207,9 @@ export default {
 
 
 .self-check-modal-ayah {
-  width: min(100%, 760px);
+  width: min(100%, 900px);
   text-align: center;
-  line-height: 2.35;
+  line-height: 2.15;
   color: var(--text);
   font-weight: 500;
   transition: filter 0.22s ease, transform 0.22s ease, opacity 0.22s ease;
@@ -14238,6 +14268,7 @@ export default {
   gap: 14px;
   padding: 18px;
   border-radius: 18px;
+  align-content: start;
 }
 
 .self-check-recorder-card.recording {
@@ -14388,6 +14419,13 @@ export default {
   gap: 14px;
 }
 
+.self-check-review-card {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  background: rgba(255, 255, 255, 0.62);
+}
+
 .self-check-live-copy {
   display: grid;
   gap: 4px;
@@ -14438,12 +14476,12 @@ export default {
 .self-check-result-group {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
 }
 
 .self-check-result-btn {
   min-height: auto;
-  padding: 10px;
+  padding: 12px;
   border-radius: 12px;
   border: 1px solid rgba(154, 103, 56, 0.16);
   background: rgba(255, 255, 255, 0.9);
@@ -14458,7 +14496,7 @@ export default {
 }
 
 .self-check-result-btn-label {
-  font-size: 0.82rem;
+  font-size: 0.86rem;
   font-weight: 700;
 }
 
@@ -14472,10 +14510,10 @@ export default {
 
 .self-check-result-btn.active {
   transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(85, 55, 26, 0.14);
+  box-shadow: 0 12px 26px rgba(85, 55, 26, 0.16);
   border-color: rgba(154, 103, 56, 0.42);
-  outline: 2px solid rgba(154, 103, 56, 0.22);
-  outline-offset: 0;
+  outline: 2px solid rgba(154, 103, 56, 0.18);
+  outline-offset: 2px;
 }
 
 .self-check-result-btn.tone-excellent {
@@ -14519,9 +14557,10 @@ export default {
 
 .self-check-attempt-card {
   gap: 10px;
-  padding: 12px;
+  padding: 14px;
   border-radius: 12px;
-  box-shadow: none;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 10px 24px rgba(85, 55, 26, 0.05);
 }
 
 .self-check-attempt-card.playing {
@@ -18627,9 +18666,12 @@ html {
   position: relative;
   display: inline-grid;
   place-items: center;
-  min-width: 34px;
-  width: 34px;
+  flex: 0 0 34px;
+  min-width: 34px !important;
+  max-width: 34px;
+  width: 34px !important;
   height: 34px;
+  aspect-ratio: 1 / 1;
   padding: 0;
   border-radius: 50%;
   border: 1px solid rgba(154, 103, 56, 0.24);
@@ -24408,10 +24450,10 @@ html {
   align-items: center;
   gap: 0.25rem;
   padding: 0.25rem;
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, var(--accent) 18%);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--surface) 86%, transparent);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  background: color-mix(in srgb, var(--surface) 92%, var(--accent-light) 8%);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255,255,255,0.45);
 }
 
 .view-mode-btn {
@@ -24426,7 +24468,7 @@ html {
   color: var(--text-muted);
   font-size: 0.74rem;
   font-weight: 800;
-  transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+  transition: background 180ms ease, color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
 }
 
 .view-mode-btn:hover {
@@ -24437,7 +24479,7 @@ html {
 .view-mode-btn.active {
   background: linear-gradient(135deg, var(--accent), var(--accent-dark));
   color: #fff;
-  box-shadow: 0 10px 22px rgba(99, 102, 241, 0.22);
+  box-shadow: 0 9px 18px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .mushaf-workspace {
@@ -24448,13 +24490,13 @@ html {
 
 .mushaf-frame {
   position: relative;
-  width: min(100%, 1560px);
+  width: min(100%, 1180px);
   margin-inline: auto;
   transition: width 220ms ease, max-width 220ms ease;
 }
 
 .main.tools-open .mushaf-frame {
-  width: min(100%, 1180px);
+  width: min(100%, 920px);
 }
 
 .mushaf-viewport {
@@ -24499,16 +24541,16 @@ html {
 .mushaf-page {
   position: relative;
   flex: 0 0 100%;
-  min-height: min(82vh, 980px);
+  min-height: min(74vh, 820px);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: clamp(1rem, 2vh, 1.8rem);
-  padding: clamp(3rem, 5vw, 5.8rem) clamp(1rem, 8vw, 8rem) clamp(2rem, 4vw, 4rem);
-  border: 1px solid rgba(15, 23, 42, 0.06);
+  gap: clamp(0.8rem, 1.7vh, 1.35rem);
+  padding: clamp(2.7rem, 4vw, 4.5rem) clamp(1rem, 6vw, 5.25rem) clamp(1.5rem, 3vw, 3rem);
+  border: 1px solid color-mix(in srgb, var(--mushaf-text) 10%, transparent);
   border-radius: 12px;
   background: var(--mushaf-bg, #f1ede8);
   color: var(--mushaf-text, #050505);
-  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.1);
 }
 
 .mushaf-bg-warm {
@@ -24616,7 +24658,7 @@ html {
   margin: 0;
   color: var(--mushaf-text);
   font-family: "Amiri Quran", "Amiri", "Scheherazade New", serif;
-  font-size: clamp(2.4rem, 5.1vw, 4.7rem);
+  font-size: clamp(1.8rem, 3.8vw, 3.35rem);
   font-weight: 700;
   line-height: 1.2;
 }
@@ -24624,7 +24666,7 @@ html {
 .mushaf-bismillah {
   color: var(--mushaf-text);
   font-family: "Amiri Quran", "Amiri", "Scheherazade New", serif;
-  font-size: clamp(1.9rem, 3.9vw, 3.35rem);
+  font-size: clamp(1.45rem, 3vw, 2.55rem);
   font-weight: 600;
   line-height: 1.45;
   letter-spacing: 0;
@@ -24639,12 +24681,11 @@ html {
 }
 
 .mushaf-page-body {
-  align-content: start;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.22em 0.24em;
-  justify-content: center;
-  line-height: 2.65;
+  display: block;
+  direction: rtl;
+  text-align: justify;
+  text-align-last: center;
+  line-height: 2.45;
   overflow: visible;
   padding: clamp(0.8rem, 2vh, 1.7rem) 0;
   -webkit-overflow-scrolling: touch;
@@ -24653,15 +24694,12 @@ html {
 
 .mushaf-ayah {
   position: relative;
-  display: inline-flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 0.12em;
+  display: inline;
   border: 0;
   border-radius: 6px;
   background: transparent;
   color: var(--mushaf-text);
-  padding: 0.02em 0.08em;
+  padding: 0.01em 0.04em;
   text-align: right;
   transition: background 180ms ease, box-shadow 180ms ease, filter 180ms ease, opacity 180ms ease;
 }
@@ -24677,11 +24715,34 @@ html {
 }
 
 .mushaf-ayah-text {
+  display: inline;
   color: var(--mushaf-text);
-  font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(2.25rem, 4.2vw, 4.25rem));
+  font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.45rem, 2.8vw, 2.85rem));
   font-weight: 500;
   letter-spacing: 0;
-  line-height: 1.9;
+  line-height: inherit;
+}
+
+.mushaf-ayah-text .wbw-word,
+.mushaf-ayah-text word {
+  display: inline !important;
+  margin: 0 0.06em;
+  padding: 0.05em 0.12em;
+  border-radius: 0.18em;
+  line-height: inherit;
+  vertical-align: baseline;
+}
+
+.mushaf-ayah-text .wbw-word.highlighted,
+.mushaf-ayah-text word.highlighted {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: inherit !important;
+  box-shadow: inset 0 -0.08em 0 var(--accent);
+  transform: none !important;
+}
+
+.mushaf-ayah-text .word-audio-btn {
+  display: none !important;
 }
 
 .mushaf-ayah-number {
@@ -24713,7 +24774,7 @@ html {
 
 .mushaf-ayah-hover-tools {
   position: absolute;
-  top: -2.45rem;
+  top: -2.25rem;
   left: 50%;
   z-index: 8;
   display: inline-flex;
@@ -24729,28 +24790,12 @@ html {
 .mushaf-ayah-hover-tools button {
   display: inline-grid;
   place-items: center;
-  width: 1.8rem;
-  height: 1.8rem;
+  width: 1.75rem;
+  height: 1.75rem;
   border: 0;
   border-radius: 999px;
   background: var(--accent);
   color: #fff;
-}
-
-.mushaf-inline-translation {
-  flex-basis: 100%;
-  direction: ltr;
-  max-width: min(48rem, 90vw);
-  margin: -0.8rem auto 0.2rem;
-  padding: 0.65rem 0.85rem;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--mushaf-bg) 78%, var(--mushaf-text) 8%);
-  color: var(--mushaf-muted);
-  font-family: system-ui, sans-serif;
-  font-size: 0.92rem;
-  font-weight: 700;
-  line-height: 1.45;
-  text-align: center;
 }
 
 .mushaf-active-tools button,
@@ -24804,6 +24849,15 @@ html {
   background: rgba(15, 23, 42, 0.88);
 }
 
+[data-theme="dark"] .view-mode-btn {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .view-mode-btn:hover {
+  color: #f8fafc;
+  background: rgba(148, 163, 184, 0.12);
+}
+
 [data-theme="dark"] .mushaf-page {
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
 }
@@ -24847,15 +24901,15 @@ html {
   }
 
   .mushaf-page-header h2 {
-    font-size: clamp(2rem, 12vw, 3.2rem);
+    font-size: clamp(1.65rem, 9vw, 2.55rem);
   }
 
   .mushaf-bismillah {
-    font-size: clamp(1.5rem, 8vw, 2.35rem);
+    font-size: clamp(1.25rem, 6.5vw, 1.95rem);
   }
 
   .mushaf-ayah-text {
-    font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.85rem, 9.5vw, 2.7rem));
+    font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.32rem, 7vw, 2.05rem));
   }
 
   .view-mode-toggle {
@@ -25223,7 +25277,7 @@ html {
 }
 
 .recordings-library-modal {
-  width: min(1320px, calc(100vw - 20px));
+  width: min(1180px, calc(100vw - 28px));
   max-height: calc(100dvh - 20px);
   height: auto;
 }
@@ -25307,7 +25361,7 @@ html {
 }
 
 .recordings-library-body {
-  padding: 16px 20px 20px;
+  padding: 14px 18px 18px;
 }
 
 .recordings-library-loading,
@@ -25347,16 +25401,16 @@ html {
 
 .recordings-library-shell {
   display: grid;
-  grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
-  gap: 20px;
+  grid-template-columns: minmax(232px, 260px) minmax(0, 1fr);
+  gap: 16px;
   min-height: 0;
 }
 
 .recordings-library-nav,
 .recordings-library-detail {
   border: 1px solid var(--border);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.6);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.68);
   min-height: 0;
 }
 
@@ -25371,7 +25425,7 @@ html {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 14px 10px;
+  padding: 12px;
   border-bottom: 1px solid rgba(154, 103, 56, 0.08);
 }
 
@@ -25425,7 +25479,7 @@ html {
 }
 
 .recordings-library-search {
-  padding: 12px 14px 10px;
+  padding: 10px 12px;
   display: grid;
   gap: 8px;
 }
@@ -25477,7 +25531,7 @@ html {
 .recordings-library-nav-scroll {
   flex: 1;
   overflow-y: auto;
-  padding: 0 10px 12px 14px;
+  padding: 0 8px 12px 12px;
 }
 
 .recordings-library-surah-group {
@@ -25504,9 +25558,9 @@ html {
 .recordings-library-ayah-item {
   width: 100%;
   border: 1px solid transparent;
-  border-radius: 14px;
+  border-radius: 12px;
   background: rgba(154, 103, 56, 0.05);
-  padding: 10px 12px;
+  padding: 9px 11px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -25553,8 +25607,8 @@ html {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 8px 10px;
-  border-radius: 12px;
+  padding: 9px 10px;
+  border-radius: 10px;
   border: 1px solid rgba(154, 103, 56, 0.12);
   background: rgba(255, 255, 255, 0.82);
   animation: recordingsSlideIn 180ms ease;
@@ -25640,7 +25694,7 @@ html {
   align-items: flex-start;
   justify-content: space-between;
   gap: 14px;
-  padding: 12px 14px;
+  padding: 12px 14px 10px;
   border-bottom: 1px solid rgba(154, 103, 56, 0.08);
 }
 
@@ -25658,7 +25712,7 @@ html {
 .recordings-library-history {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 14px 14px;
+  padding: 12px 14px 16px;
   display: grid;
   gap: 10px;
   align-content: start;
@@ -25667,11 +25721,11 @@ html {
 
 .recording-history-card {
   border: 1px solid rgba(154, 103, 56, 0.12);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.84);
-  padding: 14px 16px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(253, 249, 244, 0.82));
+  padding: 14px;
   display: grid;
-  gap: 10px;
+  gap: 9px;
   min-height: 0;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
@@ -25833,6 +25887,11 @@ html {
 [data-theme="dark"] .self-check-attempt-card {
   background: linear-gradient(180deg, rgba(34, 28, 24, 0.98), rgba(24, 20, 18, 0.95));
   border-color: rgba(224, 180, 126, 0.24);
+}
+
+[data-theme="dark"] .self-check-review-card {
+  background: rgba(255, 247, 236, 0.06);
+  border-color: rgba(255, 236, 216, 0.16);
 }
 
 [data-theme="dark"] .self-check-modal-ayah-shell {
