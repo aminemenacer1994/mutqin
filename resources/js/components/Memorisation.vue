@@ -343,10 +343,11 @@
                         </div>
                       </header>
                       <div class="mushaf-page-body" dir="rtl">
-                        <button
+                        <span
                           v-for="verse in page.verses"
                           :key="verse.key"
-                          type="button"
+                          role="button"
+                          tabindex="0"
                           :data-verse-key="verse.key"
                           class="mushaf-ayah"
                           :class="{
@@ -359,6 +360,8 @@
                           @click="onVerseCardClick(verse)"
                           @mouseenter="onMushafAyahEnter(verse)"
                           @mouseleave="onMushafAyahLeave(verse)"
+                          @keydown.enter.prevent="onVerseCardClick(verse)"
+                          @keydown.space.prevent="onVerseCardClick(verse)"
                           @touchstart.passive="onVerseTouchStart($event, verse.key)"
                           @touchend.passive="onVerseTouchEnd($event, verse.key)"
                           @touchcancel.passive="clearTouchPeek"
@@ -383,7 +386,7 @@
                               <i class="bi bi-play-fill"></i>
                             </button>
                           </span>
-                        </button>
+                        </span>
                       </div>
                     </article>
                   </div>
@@ -24446,21 +24449,21 @@ html {
 }
 
 .view-mode-toggle {
-  --view-toggle-bg: color-mix(in srgb, var(--surface) 88%, var(--accent-light) 12%);
-  --view-toggle-border: color-mix(in srgb, var(--border) 78%, var(--accent) 22%);
-  --view-toggle-text: var(--text-muted);
-  --view-toggle-hover-bg: color-mix(in srgb, var(--surface) 78%, var(--accent-light) 22%);
-  --view-toggle-active-bg: #9a6738;
-  --view-toggle-active-text: #fffaf0;
-  --view-toggle-active-shadow: rgba(154, 103, 56, 0.24);
+  --view-toggle-bg: #fffaf2;
+  --view-toggle-border: #b58a62;
+  --view-toggle-text: #5d4d40;
+  --view-toggle-hover-bg: #f4e5d4;
+  --view-toggle-active-bg: #5f3b20;
+  --view-toggle-active-text: #fff7e8;
+  --view-toggle-active-shadow: rgba(95, 59, 32, 0.24);
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   padding: 0.25rem;
   border: 1px solid var(--view-toggle-border);
   border-radius: 999px;
-  background: var(--view-toggle-bg);
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255,255,255,0.45);
+  background: var(--view-toggle-bg) !important;
+  box-shadow: 0 10px 22px rgba(95, 59, 32, 0.12), inset 0 1px 0 rgba(255,255,255,0.58);
 }
 
 .view-mode-btn {
@@ -24471,8 +24474,8 @@ html {
   padding: 0.3rem 0.68rem;
   border: 0;
   border-radius: 999px;
-  background: transparent;
-  color: var(--view-toggle-text);
+  background: transparent !important;
+  color: var(--view-toggle-text) !important;
   font-size: 0.74rem;
   font-weight: 800;
   transition: background 180ms ease, color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
@@ -24480,14 +24483,19 @@ html {
 
 .view-mode-btn:hover {
   transform: translateY(-1px);
-  color: var(--text);
-  background: var(--view-toggle-hover-bg);
+  color: #2d1b10 !important;
+  background: var(--view-toggle-hover-bg) !important;
 }
 
 .view-mode-btn.active {
-  background: var(--view-toggle-active-bg);
-  color: var(--view-toggle-active-text);
-  box-shadow: 0 9px 18px var(--view-toggle-active-shadow);
+  background: var(--view-toggle-active-bg) !important;
+  color: var(--view-toggle-active-text) !important;
+  box-shadow: 0 9px 18px var(--view-toggle-active-shadow) !important;
+}
+
+.view-mode-btn.active i,
+.view-mode-btn.active span {
+  color: inherit !important;
 }
 
 .mushaf-workspace {
@@ -24498,7 +24506,6 @@ html {
 
 .mushaf-frame {
   position: relative;
-  width: min(100%, 1180px);
   margin-inline: auto;
   transition: width 220ms ease, max-width 220ms ease;
 }
@@ -24704,22 +24711,32 @@ html {
 .mushaf-ayah {
   position: relative;
   display: inline;
+  appearance: none;
   border: 0;
   border-radius: 6px;
   background: transparent;
   color: var(--mushaf-text);
-  padding: 0.01em 0.04em;
+  padding: 0;
+  margin: 0 0.04em;
   text-align: right;
   white-space: normal;
   line-height: inherit;
   vertical-align: baseline;
+  cursor: pointer;
   transition: background 180ms ease, box-shadow 180ms ease, filter 180ms ease, opacity 180ms ease;
 }
 
 .mushaf-ayah:hover,
 .mushaf-ayah.active {
+  background: transparent;
+  box-shadow: none;
+}
+
+.mushaf-ayah:hover .mushaf-ayah-text,
+.mushaf-ayah.active .mushaf-ayah-text {
   background: var(--mushaf-hover);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mushaf-text) 14%, transparent);
+  box-shadow: 0 0 0 0.08em color-mix(in srgb, var(--mushaf-text) 10%, transparent);
+  border-radius: 0.16em;
 }
 
 .mushaf-ayah.review-priority {
@@ -24779,7 +24796,8 @@ html {
   width: 1.55em;
   height: 1.55em;
   margin-inline: 0.1em 0.18em;
-  border: 2px double rgba(150, 99, 52, 0.58);
+  border: 0.5px solid rgba(150, 99, 52, 0.58);
+  padding: 5px;
   border-radius: 50%;
   background:
     radial-gradient(circle, #eef0e6 47%, transparent 49%),
@@ -24878,13 +24896,13 @@ html {
 }
 
 [data-theme="dark"] .view-mode-toggle {
-  --view-toggle-bg: rgba(18, 18, 18, 0.92);
-  --view-toggle-border: rgba(231, 207, 170, 0.28);
-  --view-toggle-text: #d8c7ad;
-  --view-toggle-hover-bg: rgba(243, 226, 199, 0.1);
-  --view-toggle-active-bg: #f3e2c7;
-  --view-toggle-active-text: #1f160f;
-  --view-toggle-active-shadow: rgba(243, 226, 199, 0.18);
+  --view-toggle-bg: #17120d;
+  --view-toggle-border: #8d6a45;
+  --view-toggle-text: #e9d7bd;
+  --view-toggle-hover-bg: #2a2118;
+  --view-toggle-active-bg: #f0c47b;
+  --view-toggle-active-text: #1d1309;
+  --view-toggle-active-shadow: rgba(240, 196, 123, 0.2);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
@@ -24893,8 +24911,8 @@ html {
 }
 
 [data-theme="dark"] .view-mode-btn:hover {
-  color: #f8ead8;
-  background: var(--view-toggle-hover-bg);
+  color: #fff4df !important;
+  background: var(--view-toggle-hover-bg) !important;
 }
 
 [data-theme="dark"] .mushaf-page {
@@ -24908,8 +24926,14 @@ html {
 
 [data-theme="dark"] .mushaf-ayah:hover,
 [data-theme="dark"] .mushaf-ayah.active {
-  background: rgba(129, 140, 248, 0.16);
-  box-shadow: inset 0 0 0 1px rgba(199, 210, 254, 0.22);
+  background: transparent;
+  box-shadow: none;
+}
+
+[data-theme="dark"] .mushaf-ayah:hover .mushaf-ayah-text,
+[data-theme="dark"] .mushaf-ayah.active .mushaf-ayah-text {
+  background: rgba(240, 196, 123, 0.12);
+  box-shadow: 0 0 0 0.08em rgba(240, 196, 123, 0.18);
 }
 
 @media (max-width: 720px) {
