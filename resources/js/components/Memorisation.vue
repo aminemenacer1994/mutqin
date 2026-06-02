@@ -24446,13 +24446,20 @@ html {
 }
 
 .view-mode-toggle {
+  --view-toggle-bg: color-mix(in srgb, var(--surface) 88%, var(--accent-light) 12%);
+  --view-toggle-border: color-mix(in srgb, var(--border) 78%, var(--accent) 22%);
+  --view-toggle-text: var(--text-muted);
+  --view-toggle-hover-bg: color-mix(in srgb, var(--surface) 78%, var(--accent-light) 22%);
+  --view-toggle-active-bg: #9a6738;
+  --view-toggle-active-text: #fffaf0;
+  --view-toggle-active-shadow: rgba(154, 103, 56, 0.24);
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   padding: 0.25rem;
-  border: 1px solid color-mix(in srgb, var(--border) 82%, var(--accent) 18%);
+  border: 1px solid var(--view-toggle-border);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--surface) 92%, var(--accent-light) 8%);
+  background: var(--view-toggle-bg);
   box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255,255,255,0.45);
 }
 
@@ -24465,7 +24472,7 @@ html {
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: var(--text-muted);
+  color: var(--view-toggle-text);
   font-size: 0.74rem;
   font-weight: 800;
   transition: background 180ms ease, color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
@@ -24474,12 +24481,13 @@ html {
 .view-mode-btn:hover {
   transform: translateY(-1px);
   color: var(--text);
+  background: var(--view-toggle-hover-bg);
 }
 
 .view-mode-btn.active {
-  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-  color: #fff;
-  box-shadow: 0 9px 18px color-mix(in srgb, var(--accent) 28%, transparent);
+  background: var(--view-toggle-active-bg);
+  color: var(--view-toggle-active-text);
+  box-shadow: 0 9px 18px var(--view-toggle-active-shadow);
 }
 
 .mushaf-workspace {
@@ -24690,6 +24698,7 @@ html {
   padding: clamp(0.8rem, 2vh, 1.7rem) 0;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
+  font-variant-ligatures: contextual;
 }
 
 .mushaf-ayah {
@@ -24701,6 +24710,9 @@ html {
   color: var(--mushaf-text);
   padding: 0.01em 0.04em;
   text-align: right;
+  white-space: normal;
+  line-height: inherit;
+  vertical-align: baseline;
   transition: background 180ms ease, box-shadow 180ms ease, filter 180ms ease, opacity 180ms ease;
 }
 
@@ -24721,16 +24733,32 @@ html {
   font-weight: 500;
   letter-spacing: 0;
   line-height: inherit;
+  white-space: normal;
+  unicode-bidi: isolate;
 }
 
 .mushaf-ayah-text .wbw-word,
 .mushaf-ayah-text word {
   display: inline !important;
-  margin: 0 0.06em;
-  padding: 0.05em 0.12em;
+  margin: 0;
+  padding: 0;
   border-radius: 0.18em;
+  color: inherit;
+  font: inherit !important;
+  font-size: 1em !important;
+  font-weight: inherit !important;
   line-height: inherit;
+  letter-spacing: inherit;
+  white-space: normal;
+  transform: none !important;
   vertical-align: baseline;
+}
+
+.mushaf-ayah-text .tajweed-mark,
+.mushaf-ayah-text .wbw-word *,
+.mushaf-ayah-text word * {
+  font-size: 1em !important;
+  line-height: inherit !important;
 }
 
 .mushaf-ayah-text .wbw-word.highlighted,
@@ -24849,13 +24877,24 @@ html {
   background: rgba(15, 23, 42, 0.88);
 }
 
+[data-theme="dark"] .view-mode-toggle {
+  --view-toggle-bg: rgba(18, 18, 18, 0.92);
+  --view-toggle-border: rgba(231, 207, 170, 0.28);
+  --view-toggle-text: #d8c7ad;
+  --view-toggle-hover-bg: rgba(243, 226, 199, 0.1);
+  --view-toggle-active-bg: #f3e2c7;
+  --view-toggle-active-text: #1f160f;
+  --view-toggle-active-shadow: rgba(243, 226, 199, 0.18);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
 [data-theme="dark"] .view-mode-btn {
-  color: #cbd5e1;
+  color: var(--view-toggle-text);
 }
 
 [data-theme="dark"] .view-mode-btn:hover {
-  color: #f8fafc;
-  background: rgba(148, 163, 184, 0.12);
+  color: #f8ead8;
+  background: var(--view-toggle-hover-bg);
 }
 
 [data-theme="dark"] .mushaf-page {
