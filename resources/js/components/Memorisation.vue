@@ -22,13 +22,13 @@
         <section v-if="!hasVerses && !currentConfig.chapterId" class="home-dashboard home-dashboard-minimal">
           <div v-if="hasContinueSession" class="continue-session-card">
             <div class="continue-session-copy">
-              <span class="continue-session-kicker">Resume last session</span>
+              <span class="continue-session-kicker">Continue where you left off</span>
               <strong>{{ continueSessionLabel }}</strong>
               <small>{{ continueSessionMeta }}</small>
             </div>
             <div class="continue-session-actions">
               <button class="cta cta-primary continue-session-btn" @click="continueLastSession">
-                <i class="bi bi-play-fill"></i> Resume Last Session
+                <i class="bi bi-play-fill"></i> Continue Session
               </button>
               <button class="cta cta-ghost continue-session-dismiss" @click="confirmDiscardContinueSession" type="button" aria-label="Discard saved session">
                 <i class="bi bi-x-lg" aria-hidden="true"></i>
@@ -126,11 +126,11 @@
                 </div>
               </div>
               <div class="workspace-shell-actions">
-                <div v-if="isSessionCompleted" class="session-completed-indicator" aria-live="polite">
+                <!-- <div v-if="isSessionCompleted" class="session-completed-indicator" aria-live="polite">
                   <i class="bi bi-check2-circle"></i>
                   <span>Session Completed</span>
-                </div>
-                <div v-else class="action-buttons-group">
+                </div> -->
+                <div class="action-buttons-group">
                   <button class="action-btn action-btn-primary" type="button" @click="handlePrimaryAction"
                     :disabled="!isPlaying && !canStartSession">
                     <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
@@ -878,7 +878,7 @@
               </div>
               <div v-if="hasContinueSession" class="saved-continue-banner">
                 <div class="saved-continue-copy">
-                  <span class="saved-continue-kicker">Resume last session</span>
+                  <span class="saved-continue-kicker">Resume previous session</span>
                   <strong>{{ continueSessionLabel }}</strong>
                   <small>{{ continueSessionMeta }}</small>
                 </div>
@@ -1370,7 +1370,7 @@
           </label>
         </div>
         <div class="modal-footer">
-          <button class="btn-secondary" @click="closeSessionExitModal">Keep Current Session</button>
+          <button class="btn-secondary" @click="closeSessionExitModal">Continue</button>
           <button class="btn-secondary" @click="exitSessionAnyway">Exit Anyway</button>
           <button class="btn-primary" @click="confirmSessionExit">{{ sessionExitAutoSave ? 'Save & Exit' : 'End Session' }}</button>
         </div>
@@ -1790,7 +1790,7 @@
               <span>{{ currentChapter?.name_simple || 'Saved session' }}</span>
               <span>{{ rangeStart }}-{{ rangeEnd }}</span>
               <span v-if="selectedRecordingsAyahGroup">Ayah {{ selectedRecordingsAyahGroup.ayahNumber }}</span>
-              <span v-if="selectedRecordingsAyahGroup">{{ selectedRecordingsAyahGroup.recordings.length }} attempts</span>
+              <span v-if="selectedRecordingsAyahGroup">{{ selectedRecordingsAyahGroup.recordings.length }} attempt{{ selectedRecordingsAyahGroup.recordings.length === 1 ? '' : 's' }}</span>
             </div>
           </div>
           <div class="recordings-library-header-actions">
@@ -1890,7 +1890,7 @@
                   <span class="recordings-library-detail-kicker">{{ selectedRecordingsAyahGroup.chapterName }}</span>
                   <h3>Ayah {{ selectedRecordingsAyahGroup.ayahNumber }}</h3>
                   <div class="recordings-library-detail-meta">
-                    <span>{{ selectedRecordingsAyahGroup.recordings.length }} attempts</span>
+                    <span>{{ selectedRecordingsAyahGroup.recordings.length }} attempt{{ selectedRecordingsAyahGroup.recordings.length === 1 ? '' : 's' }}</span>
                     <span>Session {{ selectedRecordingsAyahGroup.recordings[0]?.sessionRangeStart || rangeStart }}-{{ selectedRecordingsAyahGroup.recordings[0]?.sessionRangeEnd || rangeEnd }}</span>
                   </div>
                   <p v-if="getAyahTranslation(selectedRecordingsAyahGroup.ayahKey)" class="recordings-library-ayah-translation">
@@ -1913,7 +1913,7 @@
                     <div class="recording-history-copy">
                       <div class="recording-history-kicker">{{ getRecordingAttemptLabel(recording) }}</div>
                       <span>{{ formatRecordingTimestamp(recording.recordedAt) }}</span>
-                      <p class="recording-history-note">Self-rated as {{ recording.result.toLowerCase() }}</p>
+                      <p class="recording-history-note">Self-rated · {{ recording.result }}</p>
                     </div>
                     <span class="recording-result-pill" :class="getRecordingResultTone(recording.result)">
                       {{ recording.result }}
@@ -3367,8 +3367,8 @@ export default {
     },
 
     resumeWhatNext() {
-      if (this.dueCount) return `You have ${this.dueCount} verses due for review. Resume Last Session to pick up where you left off.`
-      return 'Resume Last Session to continue from your last saved ayah and keep building consistency.'
+      if (this.dueCount) return `You have ${this.dueCount} verses due for review. Continue to pick up where you left off.`
+      return 'Continue from your last saved ayah and keep building consistency.'
     },
 
     resumeSavedAtLabel() {
@@ -3633,16 +3633,16 @@ export default {
     guidedPrimaryCta() {
       if (this.guidedPhaseLabel === 'Learn') return 'Listen & Follow'
       if (this.guidedPhaseLabel === 'Practice') return 'Try Reciting'
-      if (this.guidedPhaseLabel === 'Recall') return 'Resume Last Session'
-      if (this.guidedPhaseLabel === 'Review') return 'Resume Last Session'
-      return 'Resume Last Session'
+      if (this.guidedPhaseLabel === 'Recall') return 'Continue'
+      if (this.guidedPhaseLabel === 'Review') return 'Continue'
+      return 'Continue'
     },
     guidedInstruction() {
       if (this.guidedPhaseLabel === 'Learn') return 'Listen and follow the recitation.'
       if (this.guidedPhaseLabel === 'Practice') return 'Try reciting with the ayah still partially visible.'
       if (this.guidedPhaseLabel === 'Recall') return 'Recall the ayah before moving forward.'
       if (this.guidedPhaseLabel === 'Review') return 'Review the verses due now.'
-      return 'Resume Last Session to continue your session.'
+      return 'Continue your session.'
     },
 
     activeCardKicker() {
@@ -3894,7 +3894,7 @@ export default {
     this.migrateLocalStorage()
     this.loadUiState()
     this.loadCentralSessionState()
-    this.resetImplicitSessionState()
+    this.restoreSessionState()
     await this.loadChapters()
     await this.loadReciters()
     this.loadSavedSessions()
@@ -3917,6 +3917,12 @@ export default {
     this.updateMasteredWeekly()
     this.loadSavedSessions()
     this.loadRecordingsLibrary()
+
+    if (this.isLoggedIn && this.hasContinueSession) {
+      // One clear entry point for returning users.
+      this.showResumeModal = true
+    }
+
 
     if (this.currentMode === 'advanced' && this.advanced.chapterId) {
       this.currentMode = 'advanced'
@@ -5832,19 +5838,6 @@ export default {
         year: 'numeric'
       })
     },
-
-    formatDateTime(value) {
-      if (!value) return ''
-      const date = new Date(value)
-      if (Number.isNaN(date.getTime())) return ''
-      return date.toLocaleString('en-GB', {
-        year: 'numeric',
-        month: 'short',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    },
     recordingsLibraryStorageKey() {
       return this.userStorageKey('recordings')
     },
@@ -7393,25 +7386,6 @@ export default {
       }
     },
 
-    resetImplicitSessionState() {
-      this.sessionStartedAt = 0
-      this.sessionCompleted = false
-      this.isPlaying = false
-      this.currentTime = 0
-      this.duration = 0
-      this.activeVerseKey = null
-      this.activeKey = null
-      this.queueIndex = 0
-      this.queue = []
-      this.playerVisible = false
-      this.restoredAudioState = null
-      if (this.mutqinState?.sessionState) {
-        this.mutqinState.sessionState.active = false
-        this.mutqinState.sessionState.queue = []
-        this.mutqinState.sessionState.current_index = 0
-      }
-    },
-
     persistContinueSession() {
       if (this.isBootstrapping) return
       try {
@@ -7423,7 +7397,7 @@ export default {
       try {
         const raw = localStorage.getItem('telawa.continueSession')
         const mutqinSession = this.mutqinState?.sessionState
-        if (mutqinSession?.config?.chapterId) {
+        if (mutqinSession?.active && mutqinSession?.config?.chapterId) {
           const activeItem = mutqinSession.queue?.[mutqinSession.current_index || 0]
           const restoredQueueIndex = Math.max(0, Number(mutqinSession.current_index || 0) - 1)
           this.continueSessionPayload = {
@@ -7455,39 +7429,18 @@ export default {
     async continueLastSession() {
       const payload = this.continueSessionPayload
       if (!payload) return
+      this.hasContinueSession = false
       if (!payload.config?.chapterId) {
         this.clearContinueSession()
         return
       }
-      this.openResumeLastSessionModal()
-    },
-
-    openResumeLastSessionModal() {
-      if (!this.continueSessionPayload?.config?.chapterId) return
-      this.confirmModal = {
-        title: 'Resume last session?',
-        message: this.buildResumeSessionMessage(),
-        confirmLabel: 'Resume',
-        cancelLabel: 'Start New Session',
-        tone: 'default',
-        action: 'resume-last-session',
-        data: null
-      }
-      this.showPlannerModal = false
-      this.showTools = false
-      this.showResumeModal = false
-      this.showConfirmModal = true
-    },
-
-    buildResumeSessionMessage() {
-      const payload = this.continueSessionPayload || {}
-      const config = payload.config || {}
-      const chapterName = config.chapterName
-        || this.chapters.find(c => Number(c.id) === Number(config.chapterId))?.name_simple
-        || 'Saved session'
-      const range = config.rangeStart && config.rangeEnd ? `Ayah ${config.rangeStart}-${config.rangeEnd}` : 'Ayah range unavailable'
-      const lastActivity = payload.timestamp ? this.formatDateTime(payload.timestamp) : 'Unknown'
-      return `${chapterName} · ${range} · Last activity ${lastActivity}`
+      await this.hydrateSessionFromPayload(payload, { bannerText: 'Session restored' })
+      this.$nextTick(() => {
+        if (this.effectiveActiveVerseKey) {
+          const el = document.querySelector(`.verse-card[data-verse-key="${this.effectiveActiveVerseKey}"]`)
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      })
     },
 
     restoreAudioState() {
@@ -7708,20 +7661,7 @@ export default {
       if (action === 'switch-mode') this.performToggleMode()
       if (action === 'delete-offline' && this.pendingDeleteId) this.performDeleteOffline()
       if (action === 'discard-continue') this.clearContinueSession()
-      if (action === 'resume-last-session') this.resumeConfirmedLastSession()
       if (action === 'delete-saved-session' && actionData?.sessionId) this.performDeleteSavedSession(actionData.sessionId)
-    },
-
-    async resumeConfirmedLastSession() {
-      const payload = this.continueSessionPayload
-      if (!payload?.config?.chapterId) return
-      await this.hydrateSessionFromPayload(payload, { bannerText: 'Session restored' })
-      this.$nextTick(() => {
-        if (this.effectiveActiveVerseKey) {
-          const el = document.querySelector(`.verse-card[data-verse-key="${this.effectiveActiveVerseKey}"]`)
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }
-      })
     },
 
     confirmDiscardContinueSession() {
@@ -14570,16 +14510,17 @@ export default {
 
 .self-check-attempts-list {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   max-height: 40vh;
   overflow-y: auto;
   padding-right: 4px;
+  align-content: start;
 }
 
 .self-check-attempt-card {
-  gap: 12px;
-  padding: 14px;
-  border-radius: 14px;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
   box-shadow: none;
 }
 
@@ -14590,7 +14531,7 @@ export default {
 
 .self-check-attempt-copy {
   display: grid;
-  gap: 4px;
+  gap: 3px;
 }
 
 .self-check-attempt-meta {
@@ -14605,6 +14546,11 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+
+.self-check-attempt-actions {
+  align-items: center;
+  padding-top: 2px;
 }
 
 .self-check-empty {
@@ -25452,6 +25398,18 @@ html {
   font-weight: 650;
 }
 
+.recordings-library-detail-count {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  background: rgba(255, 255, 255, 0.6);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+}
+
 .recordings-library-nav-toggle {
   display: none;
   align-items: center;
@@ -25682,7 +25640,7 @@ html {
   align-items: flex-start;
   justify-content: space-between;
   gap: 14px;
-  padding: 14px 14px 10px;
+  padding: 12px 14px;
   border-bottom: 1px solid rgba(154, 103, 56, 0.08);
 }
 
@@ -25703,15 +25661,18 @@ html {
   padding: 12px 14px 14px;
   display: grid;
   gap: 10px;
+  align-content: start;
+  align-items: start;
 }
 
 .recording-history-card {
   border: 1px solid rgba(154, 103, 56, 0.12);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.84);
-  padding: 14px;
+  padding: 14px 16px;
   display: grid;
   gap: 10px;
+  min-height: 0;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
@@ -25732,16 +25693,20 @@ html {
   gap: 12px;
 }
 
+.recording-history-top {
+  align-items: flex-start;
+}
+
 .recording-history-copy {
   display: grid;
-  gap: 2px;
+  gap: 3px;
   flex: 1;
   min-width: 0;
 }
 
 .recording-history-kicker {
   color: var(--text);
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   font-weight: 700;
 }
 
@@ -25763,11 +25728,14 @@ html {
 .recording-history-meta {
   justify-content: flex-start;
   flex-wrap: wrap;
+  gap: 12px;
 }
 
 .recording-history-actions {
   justify-content: flex-start;
   flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 2px;
 }
 
 .recording-history-meta span {
