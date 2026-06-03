@@ -1,5 +1,5 @@
 <template>
-  <div class="app" :data-theme="theme" :style="appStyleVars" v-cloak>
+  <div class="app" :data-theme="theme" :dir="activeLocale === 'ar' ? 'rtl' : 'ltr'" :class="{ 'is-rtl': activeLocale === 'ar' }" :style="appStyleVars" v-cloak>
     <div v-if="appReady && banner" class="banner" :class="banner.kind" role="status" aria-live="polite">
       <span>{{ banner.message }}</span>
       <div class="banner-actions">
@@ -26,8 +26,8 @@
               <i class="bi bi-arrow-clockwise"></i>
             </div>
             <div class="continue-session-copy smart-resume-copy">
-              <span class="continue-session-kicker">Smart Resume</span>
-              <strong>Pick up exactly where you left off</strong>
+              <span class="continue-session-kicker">{{ t('resume.kicker') }}</span>
+              <strong>{{ t('resume.title') }}</strong>
               <small>{{ continueSessionMeta }}</small>
               <div class="smart-resume-context" aria-label="Last session details">
                 <span><i class="bi bi-book"></i> {{ continueSessionLabel }}</span>
@@ -46,7 +46,7 @@
             </div>
             <div class="continue-session-actions">
               <button class="cta cta-primary continue-session-btn" @click="continueLastSession">
-                <i class="bi bi-play-fill"></i> Resume Now
+                <i class="bi bi-play-fill"></i> {{ t('resume.resumeNow') }}
               </button>
               <button class="cta cta-ghost continue-session-dismiss" @click="confirmDiscardContinueSession"
                 type="button" aria-label="Discard saved session">
@@ -128,21 +128,21 @@
         <!-- Verses Grid -->
         <div v-if="!isDataReady" class="loading-spinner">
           <i class="bi bi-hourglass-split"></i>
-          <span>Loading...</span>
+          <span>{{ t('common.loading') }}</span>
         </div>
         <div v-else-if="hasVerses" class="workspace">
           <section class="workspace-shell" :class="{ collapsed: mainCardCollapsed }" aria-label="Session overview">
             <div class="workspace-shell-head">
               <div class="workspace-shell-copy">
                 <span class="workspace-shell-kicker">
-                  {{ isSessionCompleted ? 'Session completed' : (hasSessionStarted ? 'Active session' : 'Session ready')
+                  {{ isSessionCompleted ? t('sessionStatus.completed') : (hasSessionStarted ? t('sessionStatus.active') : t('sessionStatus.ready'))
                   }}
                 </span>
                 <div class="workspace-shell-title-row">
                   <h1>{{ currentChapter ? currentChapter.name_simple : activeChapterName }}</h1>
                 </div>
-                <p>{{ currentPosition }} of {{ totalVerses }} ayahs · {{ progressPercent }}% complete<span
-                    v-if="etaLabel"> · {{ etaLabel }} left</span></p>
+                <p>{{ t('sessionStatus.progress', { current: currentPosition, total: totalVerses, percent: progressPercent }) }}<span
+                    v-if="etaLabel"> · {{ t('sessionStatus.left', { eta: etaLabel }) }}</span></p>
                 <div v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
                   <span v-if="reviewPriorityLabel">{{ reviewPriorityLabel }}</span>
                 </div>
@@ -161,7 +161,7 @@
                   <button class="action-btn action-btn-secondary action-btn-recordings" type="button"
                     @click="openRecordingsLibrary" title="Open recordings library" aria-label="Open recordings library">
                     <i class="bi bi-collection-play" aria-hidden="true"></i>
-                    <span>View All Recordings</span>
+                    <span>{{ t('recordings.viewAll') }}</span>
                   </button>
                   <!-- <button class="action-btn action-btn-secondary action-btn-recitation-check" type="button" @click="toggleRecitationCheck"
                     :disabled="recitationCheckPreparing || !activeVerseRef || !supportsSelfCheckRecording()"
@@ -172,12 +172,12 @@
                   <button class="action-btn action-btn-secondary" type="button" @click="openAdvancedControls"
                     title="Open session controls" aria-label="Open session controls">
                     <i class="bi bi-sliders" aria-hidden="true"></i>
-                    <span>Controls</span>
+                    <span>{{ t('common.controls') }}</span>
                   </button>
                   <button v-if="hasSessionStarted" class="action-btn action-btn-secondary action-btn-exit" type="button"
                     @click="openSessionExitModal" title="End session" aria-label="End session">
                     <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-                    <span>End Session</span>
+                    <span>{{ t('sessionStatus.end') }}</span>
                   </button>
                   <div class="workspace-shell-icon-actions">
                     <button class="action-icon-btn" @click="toggleKeyboardShortcuts" title="Keyboard shortcuts"
@@ -204,7 +204,7 @@
                 <div class="shortcuts-modal-header">
                   <h3 id="keyboardShortcutsTitle">
                     <i class="bi bi-keyboard" aria-hidden="true"></i>
-                    <span>Keyboard Shortcuts</span>
+                    <span>{{ t('shortcuts.title') }}</span>
                   </h3>
                   <button class="shortcuts-modal-close" @click="showKeyboardShortcuts = false" type="button"
                     aria-label="Close keyboard shortcuts">
@@ -214,7 +214,7 @@
                 <div class="shortcuts-modal-body">
                   <div class="shortcuts-grid">
                     <div class="shortcut-card">
-                      <div class="shortcut-card-title">Navigation</div>
+                      <div class="shortcut-card-title">{{ t('shortcuts.navigation') }}</div>
                       <div class="shortcut-row">
                         <div class="shortcut-keys"><kbd>↑</kbd></div>
                         <span>Previous verse</span>
@@ -319,6 +319,35 @@
             aria-label="Memorisation workspace">
             <div v-if="readingViewMode === 'mushaf'" class="mushaf-workspace">
               <div class="mushaf-frame">
+                <div class="mushaf-sheet-tools mushaf-sheet-tools-global" aria-label="Mushaf controls">
+                  <div class="mushaf-font-controls">
+                    <button type="button" @click.stop="decreaseMushafFontSize" title="Decrease mushaf font size">
+                      <i class="bi bi-dash-lg"></i>
+                    </button>
+                    <span>{{ getTextScalePercent() }}%</span>
+                    <button type="button" @click.stop="increaseMushafFontSize" title="Increase mushaf font size">
+                      <i class="bi bi-plus-lg"></i>
+                    </button>
+                    <button type="button" @click.stop="resetDefaultFontSize" title="Reset font size">
+                      <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                  </div>
+                  <div class="mushaf-bg-picker" title="Change mushaf background">
+                    <button v-for="option in mushafBackgroundOptions" :key="option.value" type="button"
+                      class="mushaf-bg-swatch"
+                      :class="[`mushaf-bg-swatch-${option.value}`, { active: mushafBackground === option.value }]"
+                      @click.stop="setMushafBackground(option.value)"
+                      :aria-label="`Use ${option.label} background`"></button>
+                  </div>
+                  <button v-if="activeVerseRef" class="mushaf-ai-button" type="button"
+                    @click.stop="openAiRecitationCheckForVerse(activeVerseRef)"
+                    :class="{ active: recitationCheckRecording }"
+                    :disabled="recitationCheckPreparing || !supportsSelfCheckRecording()"
+                    :title="recitationCheckRecording ? 'AI recitation check is active' : 'Open AI recitation check'">
+                    <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-stars'"></i>
+                    <span>{{ recitationCheckRecording ? 'Stop AI recitation check' : 'AI recitation check' }}</span>
+                  </button>
+                </div>
                 <div ref="mushafViewport" class="mushaf-viewport" :class="`mushaf-bg-${mushafBackground}`">
                   <div v-if="!mushafPages.length" class="mushaf-empty-page">
                     <i class="bi bi-book"></i>
@@ -350,21 +379,6 @@
                             @click.stop="setMushafBackground(option.value)"
                             :aria-label="`Use ${option.label} background`"></button>
                         </div>
-                        <div class="mushaf-border-picker" title="Change mushaf border">
-                          <button v-for="option in mushafBorderOptions" :key="option.value" type="button"
-                            class="mushaf-border-swatch"
-                            :class="[`mushaf-border-swatch-${option.value}`, { active: mushafBorder === option.value }]"
-                            @click.stop="setMushafBorder(option.value)"
-                            :aria-label="`Use ${option.label} border`"></button>
-                        </div>
-                        <button v-if="activeVerseRef" type="button" @click.stop="openSelfCheckModal(activeVerseRef)"
-                          title="Open self-check recorder">
-                          <i class="bi bi-mic"></i>
-                        </button>
-                      </div>
-                      <div class="mushaf-click-guide" dir="ltr">
-                        <i class="bi bi-volume-up" aria-hidden="true"></i>
-                        <span>Click any part of an ayah to play the whole ayah. Click it again to pause.</span>
                       </div>
                       <header class="mushaf-page-header" dir="rtl">
                         <h2>{{ mushafSurahTitle }}</h2>
@@ -384,6 +398,7 @@
                           @mouseleave="onMushafAyahLeave(verse)" @keydown.enter.prevent="onMushafAyahClick(verse)"
                           @keydown.space.prevent="onMushafAyahClick(verse)"
                           @touchstart.passive="onVerseTouchStart($event, verse.key)"
+                          @touchmove.passive="clearTouchPeek"
                           @touchend.passive="onVerseTouchEnd($event, verse.key)" @touchcancel.passive="clearTouchPeek">
                           <span class="mushaf-ayah-text" v-html="getDisplayArabic(verse)" :class="{
                             'tajweed-enabled': tajweedEnabled,
@@ -413,6 +428,7 @@
                 'ai-recitation-active': isRecitationCheckTargetVerse(verse.key)
               }" @click="onVerseCardClick(verse)" role="button" tabindex="0" @mouseenter="onVersePeekEnter(verse.key)"
                 @mouseleave="onVersePeekLeave(verse.key)" @touchstart.passive="onVerseTouchStart($event, verse.key)"
+                @touchmove.passive="clearTouchPeek"
                 @touchend.passive="onVerseTouchEnd($event, verse.key)" @touchcancel.passive="clearTouchPeek"
                 @keydown.enter.prevent="onVerseCardClick(verse)" @keydown.space.prevent="onVerseCardClick(verse)"
                 :aria-label="`Open ayah ${verse.number}${effectiveActiveVerseKey === verse.key ? ', active ayah' : ''}`">
@@ -459,11 +475,9 @@
                       :class="{ active: isRecitationCheckTargetVerse(verse.key), saved: getAyahRecordingCount(verse.key) }"
                       @click.stop="openAiRecitationCheckForVerse(verse)"
                       :disabled="recitationCheckPreparing || recitationCheckRecording || !supportsSelfCheckRecording()"
-                      :title="isRecitationCheckTargetVerse(verse.key) ? 'Recite Check is active' : 'Open recitation review options for this ayah'">
-                      <i class="bi"
-                        :class="isRecitationCheckTargetVerse(verse.key) ? 'bi-stars' : 'bi-mic-fill'"
-                        aria-hidden="true"></i>
-                      <span>{{ isRecitationCheckTargetVerse(verse.key) ? 'Checking' : 'Recite Check' }}</span>
+                      :title="isRecitationCheckTargetVerse(verse.key) ? 'AI recitation check is active' : 'Open AI recitation check for this ayah'">
+                      <i class="bi bi-stars" aria-hidden="true"></i>
+                      <span style="color:black">AI Recitation Check</span>
                       <em v-if="getAyahRecordingCount(verse.key)">{{ getAyahRecordingCount(verse.key) }}</em>
                     </button>
                   </div>
@@ -1336,7 +1350,7 @@
       </div>
     </div>
 
-    <div class="modal-overlay" v-if="showConfirmModal" @click.self="closeConfirmModal">
+    <div class="modal-overlay confirm-modal-overlay" v-if="showConfirmModal" @click.self="closeConfirmModal">
       <div class="modal-content confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
         <div class="modal-header">
           <div class="modal-header-text">
@@ -1480,7 +1494,7 @@
                   </div>
                 </div>
               </article>
-              <article class="session-analytics-panel">
+              <article class="session-analytics-panel analytics-detail-extra">
                 <header>
                   <h3>Ayah activity</h3>
                   <p>Verse plays across the selected range.</p>
@@ -1511,7 +1525,7 @@
                 <div v-else class="analytics-empty-panel">Play ayah audio to populate the activity chart.</div>
               </article>
             </section>
-            <section class="session-analytics-section session-analytics-two-col">
+            <section class="session-analytics-section session-analytics-two-col analytics-extra-section">
               <article class="session-analytics-panel">
                 <header>
                   <h3>Most Replayed Ayahs</h3>
@@ -1612,27 +1626,34 @@
                   <i class="bi"
                     :class="activeSelfCheckAyahPlaybackKey === selfCheckModalVerse.key ? 'bi-pause-fill' : 'bi-play-fill'"></i>
                 </button>
-                <button class="self-check-ayah-action self-check-ayah-action-ai" type="button"
-                  @click.stop="showRecitationChoicePanel(selfCheckModalVerse)"
-                  :class="{ active: recitationCheckRecording || recitationCheckPreparing }"
-                  :disabled="recitationCheckPreparing || !supportsSelfCheckRecording()"
-                  :title="recitationCheckRecording ? 'Recite Check is recording' : 'Open Recite Check options'"
-                  aria-label="Open Recite Check options">
-                  <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-mic-fill'"></i>
-                </button>
                 <button class="self-check-ayah-action" type="button" @click="toggleSelfCheckBlurMode"
                   :title="selfCheckBlurEnabled ? 'Disable blur' : 'Enable blur'">
                   <i class="bi" :class="selfCheckBlurEnabled ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
                 </button>
               </div>
-              <div class="self-check-modal-ayah" dir="rtl" :style="{
+                <div class="self-check-modal-ayah" dir="rtl" :style="{
                 'font-family': quranFontFamily,
                 'font-size': (selfCheckFontSize / 100) + 'rem'
-              }" :class="{ 'tajweed-enabled': selfCheckTajweedEnabled }"
+              }" :class="{ 'tajweed-enabled': selfCheckTajweedEnabled, 'recitation-word-review-active': isRecitationCheckTargetVerse(selfCheckModalVerse.key) }"
                 v-html="getSelfCheckModalArabic(selfCheckModalVerse)"></div>
             </div>
 
           </section>
+
+          <div class="self-check-modal-quick-actions" aria-label="Recording options">
+            <button class="btn-primary self-check-action-btn self-check-action-btn-manual" type="button"
+              @click="startSelfCheckRecording(selfCheckModalVerse)"
+              :disabled="isSelfCheckRecording || recitationCheckRecording || recitationCheckPreparing">
+              <i class="bi bi-mic-fill"></i>
+              <span>Manual recording</span>
+            </button>
+            <button class="btn-secondary self-check-action-btn self-check-action-btn-ai" type="button"
+              @click="toggleRecitationCheckForVerse(selfCheckModalVerse)"
+              :disabled="isSelfCheckRecording || recitationCheckPreparing || !supportsSelfCheckRecording()">
+              <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-stars'"></i>
+              <span>{{ recitationCheckRecording ? 'Stop AI recitation check' : 'AI recitation check' }}</span>
+            </button>
+          </div>
 
           <section class="self-check-modal-recorder-grid">
             <article class="self-check-recorder-card"
@@ -1674,26 +1695,6 @@
               <div v-if="!supportsSelfCheckRecording()" class="self-check-status self-check-status-warning">
                 <i class="bi bi-mic-mute"></i>
                 <span>Recording is not available in this browser.</span>
-              </div>
-
-              <div v-if="selfCheckModeChoiceVisible && !recitationCheckVisible && !isSelfCheckRecording && !selfCheckPreparing && !selfCheckActiveDraft"
-                class="self-check-choice-panel">
-                <button class="self-check-choice-btn" type="button" @click="startSelfCheckRecording(selfCheckModalVerse)">
-                  <i class="bi bi-mic-fill"></i>
-                  <span>
-                    <strong>Manual recording</strong>
-                    <small>Record, listen back, then self-rate.</small>
-                  </span>
-                </button>
-                <button class="self-check-choice-btn self-check-choice-btn-ai" type="button"
-                  @click="startRecitationCheckRecording(selfCheckModalVerse)"
-                  :disabled="recitationCheckPreparing || recitationCheckRecording || !supportsSelfCheckRecording()">
-                  <i class="bi bi-stars"></i>
-                  <span>
-                    <strong>Recite Check</strong>
-                    <small>Record only when ready, then compare words.</small>
-                  </span>
-                </button>
               </div>
 
               <section v-if="recitationCheckVisible" class="recitation-check-panel recitation-check-panel-inline"
@@ -1748,16 +1749,14 @@
                       <small>{{ stat.description }}</small>
                     </article>
                   </div>
-                  <div class="recitation-word-stream recitation-word-stream-final" dir="rtl">
-                    <span v-for="(word, index) in getRecitationWordStatuses(recitationCheckResult)"
-                      :key="`${word.text}-${index}`" class="recitation-word-chip" :class="`word-${word.status}`"
-                      :title="word.note">{{ word.text }}</span>
-                  </div>
                   <div class="recitation-next-card">
                     <span>What next?</span>
-                    <strong>{{ recitationCheckResult.recommendation }}</strong>
+                    <strong>{{ getRecitationRecommendationDisplay(recitationCheckResult) }}</strong>
                     <p>{{ getRecitationNextStep(recitationCheckResult) }}</p>
                   </div>
+                  <div v-if="getRecitationReviewArabic(recitationCheckResult, selfCheckModalVerse)"
+                    class="recitation-review-ayah" dir="rtl"
+                    v-html="getRecitationReviewArabic(recitationCheckResult, selfCheckModalVerse)"></div>
                   <div class="recitation-result-actions">
                     <button class="btn-secondary self-check-action-btn" type="button" @click="discardRecitationCheckAttempt">
                       <i class="bi bi-x-circle"></i>
@@ -1771,10 +1770,6 @@
                       <i class="bi bi-save2"></i>
                       <span>Save Attempt</span>
                     </button>
-                  </div>
-                  <div class="recitation-transcript-card">
-                    <span>Transcript</span>
-                    <p dir="rtl">{{ recitationCheckResult.transcript || 'No transcript returned.' }}</p>
                   </div>
                 </div>
               </section>
@@ -1856,19 +1851,6 @@
                 </div>
               </div>
 
-              <div v-else class="self-check-idle-actions">
-                <button class="btn-primary self-check-action-btn" type="button"
-                  @click="startSelfCheckRecording(selfCheckModalVerse)">
-                  <i class="bi bi-mic-fill"></i>
-                  <span>Manual Recording</span>
-                </button>
-                <button class="btn-secondary self-check-action-btn self-check-action-btn-ai" type="button"
-                  @click="showRecitationChoicePanel(selfCheckModalVerse)"
-                  :disabled="recitationCheckPreparing || recitationCheckRecording || !supportsSelfCheckRecording()">
-                  <i class="bi bi-stars"></i>
-                  <span>Recite Check</span>
-                </button>
-              </div>
             </article>
 
             <aside class="self-check-attempts-card">
@@ -1891,9 +1873,6 @@
                       <span>{{ formatRecordingDate(recording.recordedAt) }} · {{
                         formatRecordingTimestamp(recording.recordedAt) }}</span>
                       <p class="self-check-attempt-note">{{ isAiCheckRecording(recording) ? 'Recite Check result' : `Self-rated · ${recording.result}` }}</p>
-                      <button class="self-check-detail-link" type="button" @click.stop="openRecordingsLibraryForHistory(recording)">
-                        Click here for detailed results
-                      </button>
                     </div>
                     <span class="recording-result-pill" :class="isAiCheckRecording(recording) ? getRecitationScoreTone(recording.accuracyScore) : getRecordingResultTone(recording.result)">
                       {{ isAiCheckRecording(recording) ? `${recording.accuracyScore}%` : recording.result }}
@@ -2099,21 +2078,13 @@
                         <small>{{ stat.description }}</small>
                       </article>
                     </div>
-                    <div v-if="getRecitationWordStatuses(recording).length"
-                      class="recitation-word-stream recitation-word-stream-final" dir="rtl">
-                      <span v-for="(word, index) in getRecitationWordStatuses(recording)"
-                        :key="`${recording.id}-${word.text}-${index}`" class="recitation-word-chip"
-                        :class="`word-${word.status}`" :title="word.note">{{ word.text }}</span>
-                    </div>
                     <div class="recitation-next-card">
                       <span>What next?</span>
-                      <strong>{{ recording.recommendation }}</strong>
+                      <strong>{{ getRecitationRecommendationDisplay(recording) }}</strong>
                       <p>{{ getRecitationNextStep(recording) }}</p>
                     </div>
-                    <div v-if="recording.transcript" class="recitation-transcript-card">
-                      <span>Transcript</span>
-                      <p dir="rtl">{{ recording.transcript }}</p>
-                    </div>
+                    <div v-if="getRecitationReviewArabic(recording)" class="recitation-review-ayah" dir="rtl"
+                      v-html="getRecitationReviewArabic(recording)"></div>
                   </div>
 
                   <div class="recording-history-actions">
@@ -2719,6 +2690,7 @@ export default {
       recitationCheckPendingTargets: [],
       recitationCheckTargetVerseKey: '',
       recitationLiveWords: [],
+      recitationCheckAutoStopArmed: false,
       recitationSpeechRecognition: null,
       recitationSpeechTranscript: '',
       recitationSpeechInterim: '',
@@ -2811,7 +2783,7 @@ export default {
       showSelfCheckModal: false,
       selfCheckVerseRef: null,
       selfCheckVerseKey: '',
-      selfCheckFontSize: 340,
+      selfCheckFontSize: 320,
       selfCheckTajweedEnabled: false,
       selfCheckBlurEnabled: false,
       selfCheckPeekActive: false,
@@ -6643,7 +6615,7 @@ export default {
     },
     getSelfCheckInitialFontSize(verse) {
       const verseFont = Number(this.getVerseFontSize(verse?.key) || this.defaultFontSize || 120)
-      return Math.max(300, Math.min(430, verseFont + 200))
+      return Math.max(280, Math.min(420, verseFont + 120))
     },
     openSelfCheckModal(verse) {
       if (!verse?.key) return
@@ -6704,7 +6676,7 @@ export default {
       this.openRecordingsLibrary({ ayahKey, returnToSelfCheck: true })
     },
     adjustSelfCheckFont(delta) {
-      const next = Math.max(320, Math.min(560, Number(this.selfCheckFontSize || 420) + Number(delta || 0)))
+      const next = Math.max(280, Math.min(420, Number(this.selfCheckFontSize || 320) + Number(delta || 0)))
       this.selfCheckFontSize = next
     },
     resetSelfCheckFont() {
@@ -6736,7 +6708,10 @@ export default {
     getSelfCheckModalArabic(verse) {
       if (!verse?.arabic) return ''
       if (this.selfCheckTajweedEnabled && verse.arabic_tajweed) {
-        return this.normalizeTajweedMarkup(verse.arabic_tajweed)
+        return this.wrapTajweedWithWordHighlighting(verse, this.normalizeTajweedMarkup(verse.arabic_tajweed))
+      }
+      if (this.isRecitationCheckTargetVerse(verse.key)) {
+        return this.splitArabicIntoWords(verse)
       }
       return this.stripTajweedMarkup(verse.arabic)
     },
@@ -6816,7 +6791,6 @@ export default {
     openAiRecitationCheckForVerse(verse) {
       if (!verse?.key) return
       this.openSelfCheckModal(verse)
-      this.$nextTick(() => this.showRecitationChoicePanel(verse))
     },
     getLatestRecordingForAyah(ayahKey) {
       return this.getAyahRecordingHistory(ayahKey)[0] || null
@@ -6859,6 +6833,13 @@ export default {
         status: statuses[index]?.status || 'pending',
         note: statuses[index]?.note || 'Waiting for this word.'
       }))
+      if (this.recitationCheckAutoStopArmed
+        && this.recitationCheckRecording
+        && this.recitationLiveWords.length
+        && this.recitationLiveWords.every(word => word.status !== 'pending')) {
+        this.recitationCheckAutoStopArmed = false
+        this.stopRecitationCheckRecording()
+      }
     },
     chooseRecorderMimeType() {
       if (typeof MediaRecorder === 'undefined' || typeof MediaRecorder.isTypeSupported !== 'function') return ''
@@ -6886,6 +6867,7 @@ export default {
       this.recitationCheckMediaRecorder = null
       this.recitationCheckChunks = []
       this.recitationCheckStartedAt = 0
+      this.recitationCheckAutoStopArmed = false
     },
     getSpeechRecognitionConstructor() {
       if (typeof window === 'undefined') return null
@@ -6950,8 +6932,9 @@ export default {
         ...this.assessRecitationTranscript(transcript, targetVerses),
         transcriptionSource: source
       }
-      result.recommendation = `${result.recommendation} Transcription source: ${source}.`
       this.recitationCheckResult = result
+      this.recitationLiveWords = Array.isArray(result.wordStatuses) ? result.wordStatuses : []
+      this.recitationCheckAutoStopArmed = false
       this.recitationCheckError = ''
       this.showBanner(`Recite Check complete: ${result.accuracyScore}%`, 'success', 2200)
       this.scrollToRecitationResults()
@@ -6961,6 +6944,7 @@ export default {
       this.recitationCheckResult = null
       this.recitationCheckError = ''
       this.recitationLiveWords = []
+      this.recitationCheckAutoStopArmed = false
       this.recitationSpeechTranscript = ''
       this.recitationSpeechInterim = ''
       this.recitationCheckPendingTargets = []
@@ -6980,7 +6964,20 @@ export default {
       this.showBanner('Recite Check discarded.', 'info', 1400)
     },
     deleteRecitationCheckAttempt() {
-      if (this.recitationCheckResult?.id) this.deleteAiCheckFromMutqinSessions(this.recitationCheckResult.id)
+      if (!this.recitationCheckResult) return
+      this.openConfirmModal({
+        title: 'Delete Recite Check?',
+        message: 'This removes the current Recite Check result. Saved recordings are not affected unless this result was already saved.',
+        confirmLabel: 'Delete',
+        cancelLabel: 'Keep',
+        tone: 'danger',
+        action: 'delete-pending-recitation-check',
+        data: { attemptId: this.recitationCheckResult.id || '' }
+      })
+    },
+    performDeleteRecitationCheckAttempt(attemptId = '') {
+      const id = attemptId || this.recitationCheckResult?.id
+      if (id) this.deleteAiCheckFromMutqinSessions(id)
       this.dismissRecitationCheckResult()
       this.showBanner('Recite Check deleted.', 'info', 1400)
     },
@@ -7015,6 +7012,7 @@ export default {
       this.recitationCheckResult = null
       this.recitationCheckPendingTargets = targets
       this.recitationCheckTargetVerseKey = targets[0]?.key || ''
+      this.recitationCheckAutoStopArmed = true
       this.seedRecitationLiveWords(targets)
       this.startRecitationSpeechRecognition()
       this.recitationCheckPreparing = true
@@ -7083,11 +7081,13 @@ export default {
         this.recitationCheckPreparing = false
         this.recitationCheckRecording = false
         this.recitationCheckError = 'Microphone access was blocked. Allow microphone permission, then try again.'
+        this.recitationCheckAutoStopArmed = false
         this.cleanupRecitationCheckMedia()
       }
     },
     stopRecitationCheckRecording() {
       if (!this.recitationCheckMediaRecorder || this.recitationCheckMediaRecorder.state !== 'recording') return
+      this.recitationCheckAutoStopArmed = false
       this.recitationCheckPreparing = true
       this.recitationCheckMediaRecorder.stop()
     },
@@ -7113,6 +7113,8 @@ export default {
       const transcript = String(response?.data?.text || '').trim()
       const result = this.assessRecitationTranscript(transcript, targetVerses)
       this.recitationCheckResult = result
+      this.recitationLiveWords = Array.isArray(result.wordStatuses) ? result.wordStatuses : []
+      this.recitationCheckAutoStopArmed = false
       this.showBanner(`Recite Check complete: ${result.accuracyScore}%`, 'success', 2200)
       this.scrollToRecitationResults()
     },
@@ -7252,6 +7254,25 @@ export default {
       const targetWords = this.tokenizeRecitationWords(targetText)
       return this.buildRecitationWordStatuses(targetWords, result?.mistakeBreakdown || result?.mistakes || {})
     },
+    getVerseForRecitationReview(result = null, fallbackVerse = null) {
+      if (fallbackVerse?.key) return fallbackVerse
+      const ayahKey = result?.ayahKey || result?.ayahRange?.keys?.[0] || this.recitationCheckTargetVerseKey || this.selfCheckVerseKey
+      if (!ayahKey) return null
+      return (this.mushafDisplayVerses || this.verses || []).find(verse => verse?.key === ayahKey) || null
+    },
+    getRecitationReviewArabic(result = null, fallbackVerse = null) {
+      const verse = this.getVerseForRecitationReview(result, fallbackVerse)
+      const sourceText = verse?.arabic || result?.targetText || ''
+      if (!sourceText) return ''
+      const words = this.stripTajweedMarkup(sourceText).split(/\s+/).map(word => word.trim()).filter(Boolean)
+      const statuses = this.getRecitationWordStatuses(result || {})
+      if (!words.length) return ''
+      return words.map((word, index) => {
+        const status = statuses[index]?.status || 'pending'
+        const note = statuses[index]?.note || ''
+        return `<word class="wbw-word recitation-word-${this.escapeHtml(status)}" title="${this.escapeHtml(note)}">${this.escapeHtml(word)}</word>`
+      }).join(' ')
+    },
     getRecitationResultStats(result) {
       const mistakes = result?.mistakeBreakdown || result?.mistakes || {}
       const statuses = this.getRecitationWordStatuses(result)
@@ -7274,6 +7295,11 @@ export default {
       if (reviewCount) return `Focus on ${reviewCount} highlighted word${reviewCount === 1 ? '' : 's'} in the ayah display, replay the ayah once, then run another Recite Check.`
       if (extraCount) return 'Slow the pace and remove the extra wording before checking again.'
       return 'Repeat once at a slower pace, then save or check again to confirm consistency.'
+    },
+    getRecitationRecommendationDisplay(result) {
+      return String(result?.recommendation || '')
+        .replace(/\s*Transcription source:.*$/i, '')
+        .trim()
     },
     assessRecitationTranscript(transcript, targetVerses = this.getRecitationCheckTargetVerses()) {
       const targetText = this.getRecitationTargetText(targetVerses)
@@ -7605,6 +7631,7 @@ export default {
       if (action === 'discard-continue') this.clearContinueSession()
       if (action === 'delete-saved-session' && actionData?.sessionId)
         this.performDeleteSavedSession(actionData.sessionId)
+      if (action === 'delete-pending-recitation-check') this.performDeleteRecitationCheckAttempt(actionData?.attemptId)
     },
 
 
@@ -8728,6 +8755,7 @@ export default {
       if (action === 'discard-continue') this.clearContinueSession()
       if (action === 'delete-saved-session' && actionData?.sessionId) this.performDeleteSavedSession(actionData.sessionId)
       if (action === 'delete-recording' && actionData?.recordingId) this.deleteRecording(actionData.recordingId)
+      if (action === 'delete-pending-recitation-check') this.performDeleteRecitationCheckAttempt(actionData?.attemptId)
     },
 
     confirmDiscardContinueSession() {
@@ -11289,7 +11317,7 @@ export default {
             this.showTransliteration = state.showTransliteration ?? this.showTransliteration
             this.showWordByWord = state.showWordByWord ?? this.showWordByWord
             this.wordByWordAudioEnabled = state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
-            this.readingViewMode = ['stacked', 'mushaf'].includes(state.readingViewMode) ? state.readingViewMode : 'stacked'
+            this.readingViewMode = 'stacked'
             this.mushafPageIndex = 0
           this.mushafBackground = ['warm', 'paper', 'contrast', 'mist', 'night'].includes(state.mushafBackground) ? state.mushafBackground : this.mushafBackground
           this.mushafBorder = ['classic', 'fine', 'layered', 'emerald', 'ink'].includes(state.mushafBorder) ? state.mushafBorder : this.mushafBorder
@@ -17472,8 +17500,7 @@ export default {
 }
 
 .recitation-result-stat span,
-.recitation-next-card span,
-.recitation-transcript-card span {
+.recitation-next-card span {
   color: var(--text-muted);
   font-size: 0.72rem;
   font-weight: 750;
@@ -17493,8 +17520,7 @@ export default {
   line-height: 1.45;
 }
 
-.recitation-next-card,
-.recitation-transcript-card {
+.recitation-next-card {
   display: grid;
   gap: 6px;
   padding: 14px;
@@ -17508,16 +17534,8 @@ export default {
   font-size: 1rem;
 }
 
-.recitation-next-card p,
-.recitation-transcript-card p {
+.recitation-next-card p {
   margin: 0;
-}
-
-.recitation-transcript-card p {
-  color: var(--text);
-  text-align: right;
-  font-size: 1.08rem;
-  line-height: 1.85;
 }
 
 .recitation-check-recommendation {
@@ -17584,8 +17602,7 @@ export default {
 
 [data-theme="dark"] .recitation-word-stream,
 [data-theme="dark"] .recitation-result-stat,
-[data-theme="dark"] .recitation-next-card,
-[data-theme="dark"] .recitation-transcript-card {
+[data-theme="dark"] .recitation-next-card {
   border-color: rgba(214, 183, 132, 0.14);
   background: rgba(255, 255, 255, 0.045);
 }
@@ -19099,7 +19116,6 @@ body.has-navbar .tools-top {
   display: block;
   overflow-wrap: anywhere;
   word-break: normal;
-  contain: layout paint;
 }
 
 /* Force re-render when font changes */
@@ -19540,6 +19556,17 @@ html {
   background: rgba(154, 103, 56, 0.05);
 }
 
+.verse-arabic .wbw-word,
+.verse-arabic word {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+  background: transparent;
+  border-radius: 0;
+}
+
 .wbw-word:hover {
   background: var(--accent-light);
   transform: scale(1.02);
@@ -19977,8 +20004,8 @@ html {
 }
 
 .verse-ai-check-btn {
-  flex: 1 1 250px;
-  min-width: 230px;
+  flex: 0 0 auto;
+  min-width: 0;
   min-height: 46px;
   padding: 0 18px;
   border-radius: 18px;
@@ -19989,6 +20016,7 @@ html {
   font-size: 0.98rem;
   font-weight: 800;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.66);
+  white-space: nowrap;
 }
 
 .verse-ai-check-btn:hover:not(:disabled) {
@@ -20010,13 +20038,29 @@ html {
   opacity: 0.58;
 }
 
+.verse-ai-check-btn i,
+.verse-ai-check-btn span,
+.verse-ai-check-btn em {
+  flex: 0 0 auto;
+}
+
+.verse-ai-check-btn span {
+  white-space: nowrap;
+}
+
 .verse-card.ai-recitation-active {
   border-color: rgba(154, 103, 56, 0.24);
   box-shadow: 0 14px 40px rgba(95, 59, 32, 0.1);
 }
 
 .verse-arabic.recitation-word-review-active .wbw-word {
-  border-radius: 8px;
+  display: inline !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  white-space: normal;
+  margin: 0;
+  padding: 0 0.08em 0.05em;
+  border-radius: 0.18em;
   transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
 }
 
@@ -28772,18 +28816,6 @@ html {
   z-index: 4;
 }
 
-.self-check-ayah-action-ai {
-  color: #255f4d;
-  border-color: rgba(37, 95, 77, 0.24);
-  background: rgba(37, 95, 77, 0.08);
-}
-
-.self-check-ayah-action-ai.active {
-  color: #fff;
-  background: #255f4d;
-  border-color: #255f4d;
-}
-
 .recitation-check-panel-inline {
   border-color: rgba(37, 95, 77, 0.18);
   background: rgba(250, 252, 249, 0.74);
@@ -28846,8 +28878,7 @@ html {
 .recording-history-card,
 .recordings-library-recording-item,
 .recitation-result-stat,
-.recitation-next-card,
-.recitation-transcript-card {
+.recitation-next-card {
   border-radius: 8px;
 }
 
@@ -28942,12 +28973,14 @@ html {
   border-color: rgba(37, 95, 77, 0.22);
   background: rgba(255, 255, 255, 0.84);
   box-shadow: 0 10px 22px rgba(37, 95, 77, 0.08);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  white-space: nowrap;
 }
 
 .verse-ai-check-btn::before,
-.self-check-ayah-action-ai::before,
-.self-check-action-btn-ai::before,
-.self-check-choice-btn-ai::before {
+.self-check-action-btn-ai::before {
   content: "";
   position: absolute;
   inset: -2px;
@@ -28961,6 +28994,11 @@ html {
 .verse-ai-check-btn span {
   font-weight: 560;
   white-space: nowrap;
+}
+
+.verse-ai-check-btn i,
+.verse-ai-check-btn em {
+  flex: 0 0 auto;
 }
 
 .verse-ai-check-btn em {
@@ -29032,57 +29070,10 @@ html {
   border-radius: 12px;
 }
 
-.self-check-ayah-action-ai,
-.self-check-action-btn-ai,
-.self-check-choice-btn-ai {
+.self-check-action-btn-ai {
   position: relative;
   isolation: isolate;
   overflow: visible;
-}
-
-.self-check-choice-panel {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.self-check-choice-btn {
-  min-height: 86px;
-  padding: 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(154, 103, 56, 0.14);
-  background: rgba(255, 255, 255, 0.82);
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.self-check-choice-btn i {
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
-  display: inline-grid;
-  place-items: center;
-  background: rgba(37, 95, 77, 0.08);
-  color: #255f4d;
-}
-
-.self-check-choice-btn strong {
-  display: block;
-  font-size: 0.92rem;
-  font-weight: 560;
-}
-
-.self-check-choice-btn small {
-  display: block;
-  margin-top: 3px;
-  color: var(--text-muted);
-  font-size: 0.74rem;
-  font-weight: 400;
-  line-height: 1.35;
 }
 
 .self-check-attempt-top {
@@ -29106,6 +29097,58 @@ html {
 
 .self-check-detail-link:hover {
   color: #1f513f;
+}
+
+.app.is-rtl {
+  text-align: right;
+}
+
+.app.is-rtl .workspace-shell-head,
+.app.is-rtl .continue-session-card,
+.app.is-rtl .offcanvas-launcher-head,
+.app.is-rtl .offcanvas-launcher-steps,
+.app.is-rtl .action-buttons-group,
+.app.is-rtl .workspace-quick-controls,
+.app.is-rtl .quick-pill-group-list,
+.app.is-rtl .setting-row,
+.app.is-rtl .setup-field,
+.app.is-rtl .verse-header,
+.app.is-rtl .verse-badges,
+.app.is-rtl .verse-actions {
+  direction: rtl;
+}
+
+.app.is-rtl .verse-transliteration,
+.app.is-rtl .word-meaning,
+.app.is-rtl kbd,
+.app.is-rtl .mushaf-click-guide {
+  direction: ltr;
+}
+
+.app.is-rtl .tools {
+  left: 0;
+  right: auto;
+  border-left: 0;
+  border-right: 1px solid var(--border);
+}
+
+.app.is-rtl .main.tools-open {
+  padding-right: 0;
+  padding-left: min(var(--tools-width, 520px), 32vw);
+}
+
+.app.is-rtl .font-dropdown-menu,
+.app.is-rtl .quick-font-menu {
+  left: 0;
+  right: auto;
+  text-align: right;
+}
+
+.app.is-rtl .verse-aid-title,
+.app.is-rtl .setting-label,
+.app.is-rtl .setting-description,
+.app.is-rtl .workspace-shell-copy {
+  text-align: right;
 }
 
 @keyframes reciteCheckBorder {
@@ -29137,7 +29180,534 @@ html {
     max-width: none;
   }
 
-  .self-check-choice-panel {
+}
+
+.mushaf-click-guide {
+  display: none !important;
+}
+
+.self-check-modal-ayah-shell {
+  overflow: visible;
+}
+
+.self-check-ayah-actions {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  width: auto;
+  max-width: none;
+  padding: 7px;
+  border-radius: 18px;
+  box-shadow: 0 18px 34px rgba(85, 55, 26, 0.1);
+}
+
+.self-check-ayah-action {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+}
+
+.self-check-detail-link {
+  display: none !important;
+}
+
+.recitation-word-stream,
+.recitation-word-chip {
+  display: none !important;
+}
+
+.self-check-modal-ayah.recitation-word-review-active .wbw-word,
+.self-check-modal-ayah.recitation-word-review-active word {
+  display: inline !important;
+  position: relative;
+  margin-inline: 0.025em;
+  padding: 0.02em 0.08em 0.04em;
+  border-radius: 0.16em;
+  transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+}
+
+.self-check-modal-ayah.recitation-word-review-active .recitation-word-pending {
+  color: color-mix(in srgb, var(--text) 56%, transparent) !important;
+  opacity: 0.58;
+}
+
+.self-check-modal-ayah.recitation-word-review-active .recitation-word-correct {
+  color: #138a4c !important;
+  background: rgba(19, 138, 76, 0.13) !important;
+  box-shadow: inset 0 -0.12em 0 rgba(19, 138, 76, 0.34), 0 0 0 0.045em rgba(19, 138, 76, 0.18);
+}
+
+.self-check-modal-ayah.recitation-word-review-active .recitation-word-partial {
+  color: #b06a00 !important;
+  background: rgba(176, 106, 0, 0.14) !important;
+  box-shadow: inset 0 -0.12em 0 rgba(176, 106, 0, 0.34), 0 0 0 0.045em rgba(176, 106, 0, 0.2);
+}
+
+.self-check-modal-ayah.recitation-word-review-active .recitation-word-incorrect {
+  color: #a93226 !important;
+  background: rgba(169, 50, 38, 0.13) !important;
+  box-shadow: inset 0 -0.12em 0 rgba(169, 50, 38, 0.34), 0 0 0 0.045em rgba(169, 50, 38, 0.2);
+}
+
+.self-check-modal-ayah.recitation-word-review-active .recitation-word-correct,
+.self-check-modal-ayah.recitation-word-review-active .recitation-word-partial,
+.self-check-modal-ayah.recitation-word-review-active .recitation-word-incorrect {
+  animation: reciteWordLiveFlash 420ms ease both;
+}
+
+@keyframes reciteWordLiveFlash {
+  0% {
+    filter: brightness(1.08);
+    transform: translateY(-0.02em);
+  }
+  100% {
+    filter: brightness(1);
+    transform: translateY(0);
+  }
+}
+
+.recordings-library-modal {
+  width: min(1180px, calc(100vw - 44px));
+}
+
+.recordings-library-header {
+  align-items: center;
+  padding: 22px 26px;
+}
+
+.recordings-library-head-copy h2 {
+  font-size: 1.35rem;
+  font-weight: 620;
+  letter-spacing: 0;
+}
+
+.recordings-library-hierarchy {
+  margin-top: 10px;
+}
+
+.recordings-library-body {
+  padding: 18px 22px 22px;
+}
+
+.recordings-library-shell {
+  grid-template-columns: minmax(250px, 0.34fr) minmax(0, 1fr);
+  gap: 18px;
+}
+
+.recordings-library-nav,
+.recordings-library-detail {
+  border-radius: 12px;
+  box-shadow: none;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.recordings-library-nav-head,
+.recordings-library-detail-head,
+.recordings-library-search,
+.recordings-library-history {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.recordings-library-detail-head {
+  align-items: center;
+  padding-top: 16px;
+  padding-bottom: 14px;
+}
+
+.recordings-library-detail-kicker + .recordings-library-detail-kicker {
+  display: none;
+}
+
+.recordings-library-detail-head h3 {
+  margin-top: 4px;
+  font-size: 1.15rem;
+}
+
+.recordings-library-detail-count {
+  width: 42px;
+  height: 42px;
+  font-size: 0.92rem;
+}
+
+.recordings-library-recordings {
+  margin-left: 0;
+  padding-left: 0;
+  border-left: 0;
+}
+
+.recordings-library-recording-item,
+.recording-history-card {
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.recording-history-card {
+  padding: 16px;
+}
+
+.recording-history-top {
+  align-items: center;
+}
+
+.recording-history-meta {
+  margin-top: 10px;
+  gap: 8px;
+}
+
+.recording-history-actions {
+  margin-top: 12px;
+  justify-content: flex-start;
+}
+
+.recording-history-action {
+  min-height: 34px;
+  padding-inline: 10px;
+  font-weight: 560;
+}
+
+.recording-history-action-delete {
+  margin-left: auto;
+}
+
+.analytics-detail-extra,
+.analytics-extra-section {
+  display: none !important;
+}
+
+.session-analytics-summary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.session-analytics-summary-card,
+.session-analytics-panel,
+.analytics-progress-stat,
+.recitation-next-card {
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.session-analytics-summary-card strong,
+.analytics-progress-stat strong {
+  font-weight: 620;
+}
+
+.session-analytics-panel header h3 {
+  font-size: 1rem;
+  font-weight: 620;
+}
+
+.session-analytics-panel header p,
+.session-analytics-summary-card small,
+.analytics-progress-stat small {
+  font-weight: 400;
+}
+
+.analytics-progress-split {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.confirm-modal-overlay {
+  z-index: 13000;
+}
+
+.main.mushaf-mode-active .content,
+.main.mushaf-mode-active .workspace-main,
+.main.mushaf-mode-active .mushaf-workspace {
+  max-width: none;
+}
+
+.main.mushaf-mode-active .workspace-main {
+  padding-inline: clamp(14px, 3vw, 42px);
+}
+
+.mushaf-frame {
+  width: min(100%, 1500px);
+  max-width: calc(100vw - clamp(32px, 5vw, 96px));
+}
+
+.main.mushaf-mode-active.tools-open .mushaf-frame {
+  width: min(100%, 1320px);
+  margin-inline: auto;
+}
+
+.mushaf-page > .mushaf-sheet-tools {
+  display: none !important;
+}
+
+.mushaf-sheet-tools-global {
+  position: relative;
+  inset: auto;
+  width: min(100%, 1180px);
+  margin: 0 auto 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255, 250, 241, 0.98), rgba(242, 232, 217, 0.96));
+  border: 1px solid rgba(119, 80, 44, 0.22);
+  box-shadow: 0 24px 52px rgba(55, 34, 15, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.76);
+}
+
+.mushaf-sheet-tools-global .mushaf-font-controls {
+  min-height: 44px;
+  gap: 10px;
+  padding-inline: 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(119, 80, 44, 0.12);
+}
+
+.mushaf-sheet-tools-global .mushaf-bg-picker {
+  gap: 0.4rem;
+}
+
+.mushaf-ai-button {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(37, 95, 77, 0.24);
+  background: linear-gradient(180deg, rgba(37, 95, 77, 0.12), rgba(37, 95, 77, 0.2));
+  color: #255f4d;
+  box-shadow: 0 12px 26px rgba(37, 95, 77, 0.14);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 650;
+  position: relative;
+  isolation: isolate;
+}
+
+.mushaf-ai-button::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(37, 95, 77, 0.12), rgba(37, 95, 77, 0.58), rgba(37, 95, 77, 0.12));
+  opacity: 0.75;
+  animation: reciteCheckBorder 2.4s linear infinite;
+}
+
+.mushaf-ai-button.active {
+  color: #fff;
+  background: linear-gradient(180deg, #255f4d, #1e4f40);
+  border-color: #255f4d;
+}
+
+.mushaf-ai-button i {
+  font-size: 0.95rem;
+}
+
+.mushaf-ai-button span {
+  white-space: nowrap;
+}
+
+.mushaf-sheet-tools-global > button,
+.mushaf-sheet-tools-global .mushaf-font-controls button {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+}
+
+.mushaf-sheet-tools-global .mushaf-bg-swatch {
+  width: 42px !important;
+  height: 42px !important;
+}
+
+.mushaf-page {
+  min-height: min(78vh, 900px);
+  padding-inline: clamp(2.2rem, 6.5vw, 6.5rem);
+}
+
+.mushaf-ayah-text {
+  font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.45rem, 2.8vw, 2.85rem));
+}
+
+.self-check-idle-actions {
+  justify-content: flex-start;
+  grid-template-columns: minmax(180px, 260px) minmax(180px, 260px);
+  gap: 12px;
+}
+
+.self-check-idle-actions .self-check-action-btn {
+  min-height: 52px;
+  justify-content: center;
+  font-weight: 560;
+}
+
+.self-check-modal-quick-actions {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 14px;
+}
+
+.self-check-modal-quick-actions .self-check-action-btn {
+  min-height: 52px;
+  padding-inline: 16px;
+  font-weight: 560;
+}
+
+.self-check-modal-quick-actions .self-check-action-btn span {
+  white-space: nowrap;
+}
+
+.mushaf-border-picker {
+  display: none !important;
+}
+
+.recitation-check-panel-inline {
+  padding: 18px;
+}
+
+.recitation-result-stats {
+  gap: 10px;
+}
+
+.recitation-result-stat {
+  min-height: 116px;
+  padding: 14px 16px;
+}
+
+.recitation-result-stat span,
+.recitation-next-card span,
+.recording-history-kicker,
+.self-check-kicker,
+.recitation-check-kicker {
+  font-weight: 560;
+  letter-spacing: 0.04em;
+}
+
+.recitation-result-stat strong,
+.recording-history-kicker,
+.self-check-attempt-copy strong,
+.recitation-check-head h2 {
+  font-weight: 560;
+}
+
+.recitation-next-card {
+  padding: 16px 18px;
+}
+
+.recitation-next-card strong {
+  font-size: 0.95rem;
+  font-weight: 560;
+}
+
+.recitation-next-card p {
+  font-weight: 400;
+}
+
+.recitation-review-ayah {
+  padding: 18px 20px;
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text);
+  font-family: "Uthmanic Hafs", "Amiri Quran", "Scheherazade New", serif;
+  font-size: clamp(1.35rem, 2.8vw, 2.35rem);
+  font-weight: 400;
+  line-height: 2.05;
+  text-align: center;
+}
+
+.recitation-review-ayah .wbw-word,
+.recitation-review-ayah word {
+  display: inline !important;
+  margin-inline: 0.04em;
+  padding: 0.02em 0.1em 0.05em;
+  border-radius: 0.18em;
+  font: inherit !important;
+  transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.recitation-review-ayah .recitation-word-pending {
+  color: color-mix(in srgb, var(--text) 58%, transparent);
+  opacity: 0.62;
+}
+
+.recitation-review-ayah .recitation-word-correct {
+  color: #138a4c;
+  background: rgba(19, 138, 76, 0.13);
+  box-shadow: inset 0 -0.12em 0 rgba(19, 138, 76, 0.3);
+}
+
+.recitation-review-ayah .recitation-word-partial {
+  color: #b06a00;
+  background: rgba(176, 106, 0, 0.14);
+  box-shadow: inset 0 -0.12em 0 rgba(176, 106, 0, 0.32);
+}
+
+.recitation-review-ayah .recitation-word-incorrect {
+  color: #a93226;
+  background: rgba(169, 50, 38, 0.13);
+  box-shadow: inset 0 -0.12em 0 rgba(169, 50, 38, 0.32);
+}
+
+.recordings-library-modal {
+  width: min(1240px, calc(100vw - 42px));
+}
+
+.recordings-library-history {
+  gap: 12px;
+}
+
+.recording-history-card {
+  padding: 14px 16px;
+}
+
+.recording-history-copy span,
+.recording-history-note,
+.recording-history-meta span {
+  font-weight: 400;
+}
+
+.recording-history-ai-detail {
+  margin-top: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.recording-history-ai-detail .recitation-result-stat {
+  min-height: 98px;
+}
+
+.recording-history-ai-detail .recitation-review-ayah {
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  line-height: 1.9;
+  padding: 14px 16px;
+}
+
+@media (max-width: 680px) {
+  .self-check-ayah-actions {
+    transform: scale(0.92);
+    transform-origin: right bottom;
+  }
+
+  .recordings-library-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .mushaf-frame {
+    max-width: calc(100vw - 20px);
+  }
+
+  .mushaf-sheet-tools-global {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .mushaf-ayah-text {
+    font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.35rem, 6.8vw, 2.1rem));
+  }
+
+  .self-check-idle-actions {
     grid-template-columns: 1fr;
   }
 }

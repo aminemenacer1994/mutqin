@@ -6,10 +6,32 @@
     "startSession": "Start Session",
     "pause": "Pause",
     "settings": "Settings",
+    "controls": "Controls",
     "language": "Language",
     "login": "Login",
     "register": "Register",
-    "logout": "Logout"
+    "logout": "Logout",
+    "loading": "Loading..."
+  },
+  "resume": {
+    "kicker": "Smart Resume",
+    "title": "Pick up exactly where you left off",
+    "resumeNow": "Resume Now"
+  },
+  "sessionStatus": {
+    "completed": "Session completed",
+    "active": "Active session",
+    "ready": "Session ready",
+    "progress": "{current} of {total} ayahs · {percent}% complete",
+    "left": "{eta} left",
+    "end": "End Session"
+  },
+  "recordings": {
+    "viewAll": "View All Recordings"
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "navigation": "Navigation"
   },
   "home": {
     "startKicker": "Start a new session",

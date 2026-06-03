@@ -1,10 +1,14 @@
+@php
+    $appLocale = $appLocale ?? app()->getLocale();
+    $appDirection = $appDirection ?? ($appLocale === 'ar' ? 'rtl' : 'ltr');
+@endphp
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="{{ $appLocale }}" dir="{{ $appDirection }}" data-theme="light">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Mutqin - Preserve Your Hifz</title>
+    <title>{{ __('ui.app_title') }}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
@@ -83,6 +87,10 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
+        html[dir="rtl"] body {
+            text-align: right;
+        }
+
         /* App Navbar */
         .app-navbar {
             background: var(--surface-strong);
@@ -112,7 +120,7 @@
 
         .navbar-brand {
             padding: 0;
-            margin-right: 48px;
+            margin-inline-end: 48px;
         }
 
         .app-navbar-logo {
@@ -247,21 +255,8 @@
             background: var(--accent-light);
         }
 
-        html[dir="rtl"] .navbar-brand {
-            margin-right: 0;
-            margin-left: 48px;
-        }
-
-        html[dir="rtl"] .app-navbar-actions,
-        html[dir="rtl"] .nav-links-desktop,
-        html[dir="rtl"] .app-user-toggle {
-            flex-direction: row-reverse;
-        }
-
         html[dir="rtl"] .dropdown-menu {
             text-align: right;
-            inset-inline-start: auto;
-            inset-inline-end: 0;
         }
 
         .app-user-avatar {
@@ -280,7 +275,7 @@
         .dropdown-menu {
             position: absolute;
             top: calc(100% + 12px);
-            right: 0;
+            inset-inline-end: 0;
             background: var(--surface-strong);
             border: 1px solid var(--border);
             border-radius: 16px;
@@ -358,15 +353,14 @@
             }
 
             .navbar-brand {
-                margin-right: 0;
+                margin-inline-end: 0;
                 min-width: 0;
             }
             
             .navbar-collapse {
                 position: fixed;
                 top: calc(env(safe-area-inset-top, 0px) + 76px);
-                left: 0;
-                right: 0;
+                inset-inline: 0;
                 width: 100%;
                 height: calc(100dvh - (env(safe-area-inset-top, 0px) + 76px));
                 background: var(--surface-strong);
@@ -403,7 +397,7 @@
             }
             
             .app-navbar-actions {
-                margin-left: 0;
+                margin-inline-start: 0;
                 width: 100%;
                 display: grid;
                 grid-template-columns: 1fr;
@@ -434,7 +428,7 @@
                 position: static;
                 box-shadow: none;
                 background: transparent;
-                padding-left: 20px;
+                padding-inline-start: 20px;
                 margin-top: 8px;
                 transform: none;
                 border: none;
@@ -520,9 +514,9 @@
         }
     </style>
 </head>
-<body>
-    <a class="skip-link" href="#mainContent">Skip to main content</a>
-    <nav class="navbar navbar-expand-lg app-navbar" aria-label="Primary navigation">
+<body dir="{{ $appDirection }}">
+    <a class="skip-link" href="#mainContent">{{ __('ui.skip_main') }}</a>
+    <nav class="navbar navbar-expand-lg app-navbar" aria-label="{{ __('ui.primary_navigation') }}">
         <div class="container-fluid shell navbar-shell">
             <a class="navbar-brand" href="/memorisation">
                 <img
@@ -535,7 +529,7 @@
                 >
             </a>
 
-            <button class="navbar-toggler" type="button" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Open navigation menu">
+            <button class="navbar-toggler" type="button" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('ui.open_navigation') }}">
                 <i class="bi bi-list"></i>
             </button>
 
@@ -546,12 +540,12 @@
                 </div>
 
                 <div class="d-flex align-items-center gap-3 ms-auto app-navbar-actions">
-                    <div class="lang-switcher" id="globalLangSwitcher" role="group" aria-label="Language switcher">
-                        <button type="button" class="lang-btn" data-locale="en" aria-label="Switch language to English">EN</button>
-                        <button type="button" class="lang-btn" data-locale="ar" aria-label="Switch language to Arabic">AR</button>
-                        <button type="button" class="lang-btn" data-locale="fr" aria-label="Switch language to French">FR</button>
-                    </div>
-                    <button id="globalThemeToggle" class="btn app-theme-toggle" type="button" aria-label="Switch to dark theme">
+                    <!-- <div class="lang-switcher" id="globalLangSwitcher" role="group" aria-label="{{ __('ui.language_switcher') }}">
+                        <button type="button" class="lang-btn" data-locale="en" aria-label="{{ __('ui.switch_language', ['language' => __('ui.english')]) }}">EN</button>
+                        <button type="button" class="lang-btn" data-locale="ar" aria-label="{{ __('ui.switch_language', ['language' => __('ui.arabic')]) }}">AR</button>
+                        <button type="button" class="lang-btn" data-locale="fr" aria-label="{{ __('ui.switch_language', ['language' => __('ui.french')]) }}">FR</button>
+                    </div> -->
+                    <button id="globalThemeToggle" class="btn app-theme-toggle" type="button" aria-label="{{ __('ui.switch_dark') }}">
                         <i class="bi bi-sun"></i>
                     </button>
 
@@ -559,7 +553,7 @@
                         <div class="dropdown" id="userDropdown">
                             <button class="btn app-user-toggle" type="button" id="dropdownToggle" aria-expanded="false" aria-haspopup="menu" aria-controls="dropdownMenu">
                                 <span class="app-user-avatar" aria-hidden="true">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</span>
-                                <span>{{ Auth::user()->name ?? 'User' }}</span>
+                                <span>{{ Auth::user()->name ?? __('ui.user') }}</span>
                                 <i class="bi bi-chevron-down" aria-hidden="true"></i>
                             </button>
                             <ul class="dropdown-menu" id="dropdownMenu" role="menu">
@@ -578,7 +572,7 @@
                                     <form method="POST" action="{{ route('logout') }}" id="logoutForm">
                                         @csrf
                                         <button type="submit" class="dropdown-item" role="menuitem">
-                                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i> <span data-i18n="logout">Logout</span>
+                                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i> <span data-i18n="logout">{{ __('ui.logout') }}</span>
                                         </button>
                                     </form>
                                 </li>
@@ -586,8 +580,8 @@
                         </div>
                     @else
                         <div class="d-flex align-items-center gap-2">
-                            <a class="nav-link" href="{{ route('login') }}" data-i18n="login">Login</a>
-                            <a class="nav-link" href="{{ route('register') }}" data-i18n="register">Register</a>
+                            <a class="nav-link" href="{{ route('login') }}" data-i18n="login">{{ __('ui.login') }}</a>
+                            <a class="nav-link" href="{{ route('register') }}" data-i18n="register">{{ __('ui.register') }}</a>
                         </div>
                     @endauth
                 </div>
@@ -605,6 +599,10 @@
     <script src="{{ mix('js/app.js') }}" defer></script>
     
     <script>
+        window.mutqinInitialLocale = @json($appLocale);
+        window.mutqinInitialDirection = @json($appDirection);
+        window.mutqinForceInitialLocale = @json(request()->query('lang') ? true : false);
+
         function runWhenReady(fn) {
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', fn);
@@ -636,7 +634,7 @@
                 if (button) {
                     const icon = button.querySelector('i');
                     icon.className = `bi ${themeIcons[theme] || themeIcons.light}`;
-                    button.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+                    button.setAttribute('aria-label', theme === 'dark' ? @json(__('ui.switch_light')) : @json(__('ui.switch_dark')));
                 }
 
                 const logo = document.getElementById('appNavbarLogo');
@@ -735,7 +733,7 @@
                         collapse.classList.toggle('show');
                         const expanded = collapse.classList.contains('show');
                         toggler.setAttribute('aria-expanded', expanded);
-                        toggler.setAttribute('aria-label', expanded ? 'Close navigation menu' : 'Open navigation menu');
+                        toggler.setAttribute('aria-label', expanded ? @json(__('ui.close_navigation')) : @json(__('ui.open_navigation')));
                     });
                     
                     const links = collapse.querySelectorAll('a');
@@ -743,7 +741,7 @@
                         link.addEventListener('click', function() {
                             collapse.classList.remove('show');
                             toggler.setAttribute('aria-expanded', 'false');
-                            toggler.setAttribute('aria-label', 'Open navigation menu');
+                            toggler.setAttribute('aria-label', @json(__('ui.open_navigation')));
                         });
                     });
                 }
@@ -867,6 +865,7 @@
                 document.documentElement.setAttribute('dir', rtl ? 'rtl' : 'ltr');
                 if (document.body) document.body.setAttribute('dir', rtl ? 'rtl' : 'ltr');
                 safeSet('mutqin.locale', next);
+                document.cookie = `mutqin_locale=${next};path=/;max-age=31536000;samesite=lax`;
                 document.querySelectorAll('#globalLangSwitcher .lang-btn').forEach((btn) => {
                     btn.classList.toggle('active', btn.dataset.locale === next);
                 });
@@ -886,7 +885,7 @@
             }
 
             runWhenReady(function() {
-                const saved = safeGet('mutqin.locale') || 'en';
+                const saved = window.mutqinForceInitialLocale ? window.mutqinInitialLocale : (safeGet('mutqin.locale') || window.mutqinInitialLocale || 'en');
                 setDocumentLocale(saved);
                 document.querySelectorAll('#globalLangSwitcher .lang-btn').forEach((btn) => {
                     btn.addEventListener('click', () => applyLocale(btn.dataset.locale));

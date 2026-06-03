@@ -6,10 +6,32 @@
     "startSession": "Démarrer la session",
     "pause": "Pause",
     "settings": "Paramètres",
+    "controls": "Contrôles",
     "language": "Langue",
     "login": "Connexion",
     "register": "Inscription",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "loading": "Chargement..."
+  },
+  "resume": {
+    "kicker": "Reprise intelligente",
+    "title": "Reprenez exactement là où vous vous êtes arrêté",
+    "resumeNow": "Reprendre"
+  },
+  "sessionStatus": {
+    "completed": "Session terminée",
+    "active": "Session active",
+    "ready": "Session prête",
+    "progress": "{current} sur {total} ayahs · {percent} % terminé",
+    "left": "{eta} restant",
+    "end": "Terminer la session"
+  },
+  "recordings": {
+    "viewAll": "Voir tous les enregistrements"
+  },
+  "shortcuts": {
+    "title": "Raccourcis clavier",
+    "navigation": "Navigation"
   },
   "home": {
     "startKicker": "Démarrer une nouvelle session",

@@ -1,10 +1,14 @@
+@php
+    $appLocale = $appLocale ?? app()->getLocale();
+    $appDirection = $appDirection ?? ($appLocale === 'ar' ? 'rtl' : 'ltr');
+@endphp
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="{{ $appLocale }}" dir="{{ $appDirection }}" data-theme="dark">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Mutqin - Preserve Your Hifz</title>
+    <title>{{ __('ui.app_title') }}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
@@ -247,9 +251,9 @@
         }
     </style>
 </head>
-<body>
+<body dir="{{ $appDirection }}">
     <div class="onboarding-topbar">
-        <div class="lang-switcher" id="globalLangSwitcher" role="group" aria-label="Language switcher">
+        <div class="lang-switcher" id="globalLangSwitcher" role="group" aria-label="{{ __('ui.language_switcher') }}">
             <button type="button" class="lang-btn" data-locale="en">EN</button>
             <button type="button" class="lang-btn" data-locale="ar">AR</button>
             <button type="button" class="lang-btn" data-locale="fr">FR</button>
@@ -259,31 +263,31 @@
         <article class="guest-onboarding-card">
             <div class="guest-onboarding-grid">
                 <section>
-                    <span class="guest-onboarding-kicker" data-i18n="kicker">Memorisation Companion</span>
-                    <h1 data-i18n="title">Preserve your hifz with calm, session-based repetition.</h1>
-                    <p data-i18n="intro">Pick a small ayah range, repeat with structure, then switch into recall, self-check, and review. Mutqin keeps the flow simple so you can show up consistently.</p>
+                    <span class="guest-onboarding-kicker" data-i18n="kicker">{{ __('onboarding.kicker') }}</span>
+                    <h1 data-i18n="title">{{ __('onboarding.title') }}</h1>
+                    <p data-i18n="intro">{{ __('onboarding.intro') }}</p>
 
-            <ul class="guest-onboarding-list" aria-label="Key features">
-                        <li><i class="bi bi-clock"></i> <span data-i18n="feature1">Short sessions that feel like a real memorisation sitting</span></li>
-                        <li><i class="bi bi-signpost-split"></i> <span data-i18n="feature2">Clear steps: listen, repeat, then recall and self-check</span></li>
-                        <li><i class="bi bi-cloud-check"></i> <span data-i18n="feature3">Saved progress so you can pause and resume without friction</span></li>
-                        <li><i class="bi bi-check2-circle"></i> <span data-i18n="feature4">Review context that helps you return later with confidence</span></li>
+            <ul class="guest-onboarding-list" aria-label="{{ __('onboarding.features_label') }}">
+                        <li><i class="bi bi-clock"></i> <span data-i18n="feature1">{{ __('onboarding.feature1') }}</span></li>
+                        <li><i class="bi bi-signpost-split"></i> <span data-i18n="feature2">{{ __('onboarding.feature2') }}</span></li>
+                        <li><i class="bi bi-cloud-check"></i> <span data-i18n="feature3">{{ __('onboarding.feature3') }}</span></li>
+                        <li><i class="bi bi-check2-circle"></i> <span data-i18n="feature4">{{ __('onboarding.feature4') }}</span></li>
             </ul>
 
                     <div class="guest-onboarding-actions">
                         <a href="{{ route('register') }}" class="guest-onboarding-btn guest-onboarding-btn-primary">
-                            <span data-i18n="getStarted">Get Started</span> <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
+                            <span data-i18n="getStarted">{{ __('onboarding.get_started') }}</span> <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
                         </a>
                         <a href="{{ route('login') }}" class="guest-onboarding-btn guest-onboarding-btn-soft">
-                            <span data-i18n="login">Login</span> <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+                            <span data-i18n="login">{{ __('ui.login') }}</span> <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
                         </a>
                     </div>
                 </section>
 
-                <aside class="guest-onboarding-example" aria-label="Example session">
-                    <img src="/images/onboarding-example.png" alt="Example Mutqin memorisation session with listen, repeat, and recall steps">
+                <aside class="guest-onboarding-example" aria-label="{{ __('onboarding.example_label') }}">
+                    <img src="/images/onboarding-example.png" alt="{{ __('onboarding.example_alt') }}">
                     <div class="guest-onboarding-example-caption">
-                        <strong data-i18n="exampleTitle">Example session:</strong> <span data-i18n="exampleCopy">choose a range, set repeats, then transition into recall. The goal is steady progress, not overload.</span>
+                        <strong data-i18n="exampleTitle">{{ __('onboarding.example_session') }}</strong> <span data-i18n="exampleCopy">{{ __('onboarding.example_copy') }}</span>
                     </div>
                 </aside>
             </div>
@@ -342,6 +346,7 @@
       document.documentElement.setAttribute('dir', rtl ? 'rtl' : 'ltr');
       document.body.setAttribute('dir', rtl ? 'rtl' : 'ltr');
       localStorage.setItem('mutqin.locale', next);
+      document.cookie = `mutqin_locale=${next};path=/;max-age=31536000;samesite=lax`;
       document.querySelectorAll('#globalLangSwitcher .lang-btn').forEach((btn) => {
         btn.classList.toggle('active', btn.dataset.locale === next);
       });
@@ -351,7 +356,7 @@
       });
     }
     function init() {
-      apply(localStorage.getItem('mutqin.locale') || 'en');
+      apply(@json(request()->query('lang') ? $appLocale : null) || localStorage.getItem('mutqin.locale') || @json($appLocale));
       document.querySelectorAll('#globalLangSwitcher .lang-btn').forEach((btn) => {
         btn.addEventListener('click', () => apply(btn.dataset.locale));
       });

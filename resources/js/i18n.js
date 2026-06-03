@@ -7,11 +7,25 @@ function normalizeLocale(locale) {
   return SUPPORT_LOCALES.includes(locale) ? locale : 'en'
 }
 
+function getCookieLocale() {
+  if (typeof document === 'undefined') return null
+  const match = document.cookie.match(/(?:^|;\s*)mutqin_locale=([^;]+)/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+function getInitialLocale() {
+  if (typeof window !== 'undefined' && window.mutqinInitialLocale) {
+    return normalizeLocale(window.mutqinInitialLocale)
+  }
+  return normalizeLocale(getCookieLocale() || document.documentElement.getAttribute('lang') || 'en')
+}
+
 export function getSavedLocale() {
   try {
-    return normalizeLocale(localStorage.getItem(STORAGE_KEY) || 'en')
+    if (typeof window !== 'undefined' && window.mutqinForceInitialLocale) return getInitialLocale()
+    return normalizeLocale(localStorage.getItem(STORAGE_KEY) || getInitialLocale())
   } catch (e) {
-    return 'en'
+    return getInitialLocale()
   }
 }
 
@@ -41,6 +55,7 @@ export async function setLocale(i18n, locale) {
   } catch (e) {
     // no-op: storage may be unavailable
   }
+  document.cookie = `mutqin_locale=${normalized};path=/;max-age=31536000;samesite=lax`
   window.dispatchEvent(new CustomEvent('mutqin:locale-change', { detail: { locale: normalized } }))
   return normalized
 }
