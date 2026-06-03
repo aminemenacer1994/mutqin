@@ -1,13 +1,11 @@
-const SHELL_CACHE = 'mutqin-shell-v2';
-const RUNTIME_CACHE = 'mutqin-runtime-v2';
+const SHELL_CACHE = 'mutqin-shell-v3';
+const RUNTIME_CACHE = 'mutqin-runtime-v3';
 const AUDIO_CACHE = 'mutqin-audio-v1';
 const SHELL_URLS = [
   '/',
   '/memorisation',
   '/login',
   '/register',
-  '/css/app.css',
-  '/js/app.js',
   '/favicon.ico',
   '/favicon.svg'
 ];
@@ -57,8 +55,14 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
   const isDocument = request.mode === 'navigate';
   const isSameOrigin = url.origin === self.location.origin;
+  const isBuildAsset = isSameOrigin && (/^\/js\/app\.js/.test(url.pathname) || /^\/css\/app\.css/.test(url.pathname) || url.searchParams.has('id'));
   const isAudio = request.destination === 'audio' || /audio|mp3|opus|webm/i.test(url.pathname);
   const isQuranApi = /api\.quran\.com|api\.alquran\.cloud|cdn\.islamic\.network/i.test(url.host);
+
+  if (isBuildAsset) {
+    event.respondWith(fetch(request));
+    return;
+  }
 
   if (isDocument) {
     event.respondWith(networkFirst(request, SHELL_CACHE));

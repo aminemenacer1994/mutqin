@@ -41,4 +41,9 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'huggingface' => [
+        'token' => env('HUGGINGFACE_API_TOKEN'),
+        'asr_model' => env('HUGGINGFACE_ASR_MODEL', 'openai/whisper-large-v3'),
+    ],
+
 ];

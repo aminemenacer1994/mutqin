@@ -20,15 +20,32 @@
     }">
       <div class="content">
         <section v-if="!hasVerses && !currentConfig.chapterId" class="home-dashboard home-dashboard-minimal">
-          <div v-if="hasContinueSession" class="continue-session-card">
-            <div class="continue-session-copy">
-              <span class="continue-session-kicker">Continue where you left off</span>
-              <strong>{{ continueSessionLabel }}</strong>
+          <div v-if="hasContinueSession" class="continue-session-card smart-resume-card">
+            <div class="smart-resume-icon" aria-hidden="true">
+              <i class="bi bi-arrow-clockwise"></i>
+            </div>
+            <div class="continue-session-copy smart-resume-copy">
+              <span class="continue-session-kicker">Smart Resume</span>
+              <strong>Pick up exactly where you left off</strong>
               <small>{{ continueSessionMeta }}</small>
+              <div class="smart-resume-context" aria-label="Last session details">
+                <span><i class="bi bi-book"></i> {{ continueSessionLabel }}</span>
+                <span><i class="bi bi-crosshair"></i> {{ smartResumeDetails.focus }}</span>
+                <span><i class="bi bi-clock-history"></i> {{ smartResumeDetails.saved }}</span>
+              </div>
+              <div class="smart-resume-progress" aria-label="Last session progress">
+                <div class="smart-resume-progress-head">
+                  <span>{{ smartResumeDetails.progressLabel }}</span>
+                  <strong>{{ smartResumeDetails.progressPercent }}%</strong>
+                </div>
+                <div class="smart-resume-progress-track">
+                  <span :style="{ width: `${smartResumeDetails.progressPercent}%` }"></span>
+                </div>
+              </div>
             </div>
             <div class="continue-session-actions">
               <button class="cta cta-primary continue-session-btn" @click="continueLastSession">
-                <i class="bi bi-play-fill"></i> Continue Session
+                <i class="bi bi-play-fill"></i> Resume Now
               </button>
               <button class="cta cta-ghost continue-session-dismiss" @click="confirmDiscardContinueSession" type="button" aria-label="Discard saved session">
                 <i class="bi bi-x-lg" aria-hidden="true"></i>
@@ -141,6 +158,12 @@
                     <i class="bi bi-collection-play" aria-hidden="true"></i>
                     <span>View All Recordings</span>
                   </button>
+                  <!-- <button class="action-btn action-btn-secondary action-btn-recitation-check" type="button" @click="toggleRecitationCheck"
+                    :disabled="recitationCheckPreparing || !activeVerseRef || !supportsSelfCheckRecording()"
+                    title="Record and assess the current ayah" aria-label="Start recitation check">
+                    <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-mic-fill'" aria-hidden="true"></i>
+                    <span>{{ recitationCheckRecording ? 'Stop Recitation Check' : (recitationCheckPreparing ? 'Checking...' : 'Start Recitation Check') }}</span>
+                  </button> -->
                   <button class="action-btn action-btn-secondary" type="button" @click="openAdvancedControls"
                     title="Open session controls" aria-label="Open session controls">
                     <i class="bi bi-sliders" aria-hidden="true"></i>
@@ -237,6 +260,25 @@
                 </div>
               </div>
             </div>
+            <section v-if="(recitationCheckRecording || recitationCheckPreparing || recitationCheckError) && !showSelfCheckModal" class="recitation-check-panel" aria-live="polite">
+              <div class="recitation-check-head">
+                <div>
+                  <span class="recitation-check-kicker">Recitation Check</span>
+                  <h2>{{ recitationCheckTitle }}</h2>
+                </div>
+              </div>
+              <div v-if="recitationCheckRecording" class="recitation-check-status">
+                <i class="bi bi-record-circle" aria-hidden="true"></i>
+                <span>Recording... stop when you finish reciting.</span>
+              </div>
+              <div v-else-if="recitationCheckPreparing" class="recitation-check-status">
+                <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
+                <span>Transcribing with Hugging Face and comparing your recitation...</span>
+              </div>
+              <div v-if="recitationCheckError" class="recitation-check-error">
+                {{ recitationCheckError }}
+              </div>
+            </section>
             <div v-show="!mainCardCollapsed" class="workspace-quick-controls" aria-label="Quick reading controls">
               <div class="quick-pill-group-list">
                 <div class="view-mode-toggle" role="group" aria-label="Reading layout">
@@ -1422,6 +1464,26 @@
                 </article>
               </div>
             </section>
+            <section v-if="analyticsAiCheckSummary" class="session-analytics-section">
+              <article class="session-analytics-panel analytics-ai-report">
+                <header>
+                  <h3>AI Check Results</h3>
+                  <p>Saved recitation checks for this session range.</p>
+                </header>
+                <div class="recitation-result-stats">
+                  <article v-for="stat in analyticsAiCheckSummary.stats" :key="stat.key" class="recitation-result-stat" :class="stat.tone">
+                    <span>{{ stat.label }}</span>
+                    <strong>{{ stat.value }}</strong>
+                    <small>{{ stat.description }}</small>
+                  </article>
+                </div>
+                <div class="recitation-next-card">
+                  <span>What next?</span>
+                  <strong>{{ analyticsAiCheckSummary.recommendation }}</strong>
+                  <p>{{ analyticsAiCheckSummary.nextStep }}</p>
+                </div>
+              </article>
+            </section>
             <section class="session-analytics-section session-analytics-two-col">
               <article class="session-analytics-panel">
                 <header>
@@ -1611,6 +1673,7 @@
 
               <div class="self-check-recorder-meta">
                 <span>{{ selfCheckModalAttempts.length }} saved attempt{{ selfCheckModalAttempts.length === 1 ? '' : 's' }}</span>
+                <span v-if="selfCheckModalAiChecks.length">{{ selfCheckModalAiChecks.length }} AI check{{ selfCheckModalAiChecks.length === 1 ? '' : 's' }}</span>
                 <span v-if="selfCheckLatestAttempt">Latest: {{ selfCheckLatestAttempt.result }} · {{ formatRecordingDate(selfCheckLatestAttempt.recordedAt) }}</span>
               </div>
 
@@ -1628,6 +1691,87 @@
                 <i class="bi bi-mic-mute"></i>
                 <span>Recording is not available in this browser.</span>
               </div>
+
+              <section v-if="recitationCheckVisible" class="recitation-check-panel recitation-check-panel-inline" aria-live="polite">
+                <div class="recitation-check-head">
+                  <div>
+                    <span class="recitation-check-kicker">AI Recitation Check</span>
+                    <h2>{{ recitationCheckTitle }}</h2>
+                  </div>
+                  <div class="recitation-check-head-actions">
+                    <div v-if="recitationCheckResult" class="recitation-check-score" :class="getRecitationScoreTone(recitationCheckResult.accuracyScore)">
+                      {{ recitationCheckResult.accuracyScore }}%
+                    </div>
+                    <button
+                      v-if="recitationCheckResult && !recitationCheckRecording && !recitationCheckPreparing"
+                      class="recitation-result-close"
+                      type="button"
+                      @click="dismissRecitationCheckResult"
+                      aria-label="Close AI check results"
+                    >
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+                </div>
+                <div v-if="recitationCheckRecording" class="recitation-check-status">
+                  <i class="bi bi-record-circle" aria-hidden="true"></i>
+                  <span>Listening now. Words update as you recite.</span>
+                </div>
+                <div v-if="recitationCheckRecording" class="recitation-live-review" aria-label="Live recitation word check">
+                  <div class="recitation-live-head">
+                    <span>{{ recitationLiveSummary }}</span>
+                    <strong>{{ getRecitationLiveProgressPercent() }}%</strong>
+                  </div>
+                  <div class="recitation-word-stream" dir="rtl">
+                    <span
+                      v-for="(word, index) in recitationLiveWords"
+                      :key="`${word.text}-${index}`"
+                      class="recitation-word-chip"
+                      :class="`word-${word.status}`"
+                    >{{ word.text }}</span>
+                  </div>
+                </div>
+                <div v-if="recitationCheckRecording" class="recitation-check-actions">
+                  <button class="btn-primary self-check-action-btn" type="button" @click="stopRecitationCheckRecording">
+                    <i class="bi bi-stop-circle"></i>
+                    <span>Stop AI Check</span>
+                  </button>
+                </div>
+                <div v-else-if="recitationCheckPreparing" class="recitation-check-status">
+                  <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
+                  <span>Checking the recording...</span>
+                </div>
+                <div v-if="recitationCheckError" class="recitation-check-error">
+                  {{ recitationCheckError }}
+                </div>
+                <div v-if="recitationCheckResult" class="recitation-check-body recitation-check-results">
+                  <div class="recitation-result-stats">
+                    <article v-for="stat in getRecitationResultStats(recitationCheckResult)" :key="stat.key" class="recitation-result-stat" :class="stat.tone">
+                      <span>{{ stat.label }}</span>
+                      <strong>{{ stat.value }}</strong>
+                      <small>{{ stat.description }}</small>
+                    </article>
+                  </div>
+                  <div class="recitation-word-stream recitation-word-stream-final" dir="rtl">
+                    <span
+                      v-for="(word, index) in getRecitationWordStatuses(recitationCheckResult)"
+                      :key="`${word.text}-${index}`"
+                      class="recitation-word-chip"
+                      :class="`word-${word.status}`"
+                      :title="word.note"
+                    >{{ word.text }}</span>
+                  </div>
+                  <div class="recitation-next-card">
+                    <span>What next?</span>
+                    <strong>{{ recitationCheckResult.recommendation }}</strong>
+                    <p>{{ getRecitationNextStep(recitationCheckResult) }}</p>
+                  </div>
+                  <div class="recitation-transcript-card">
+                    <span>Transcript</span>
+                    <p dir="rtl">{{ recitationCheckResult.transcript || 'No transcript returned.' }}</p>
+                  </div>
+                </div>
+              </section>
 
               <div v-else-if="isSelfCheckRecording" class="self-check-live-card">
                 <div class="self-check-live-stage">
@@ -1709,6 +1853,10 @@
                 <button class="btn-primary self-check-action-btn" type="button" @click="startSelfCheckRecording(selfCheckModalVerse)">
                   <i class="bi bi-mic-fill"></i>
                   <span>Start Recording</span>
+                </button>
+                <button class="btn-secondary self-check-action-btn" type="button" @click="startRecitationCheckRecording(selfCheckModalVerse)" :disabled="recitationCheckPreparing || recitationCheckRecording || !supportsSelfCheckRecording()">
+                  <i class="bi bi-stars"></i>
+                  <span>AI Recitation Check</span>
                 </button>
               </div>
             </article>
@@ -1867,11 +2015,12 @@
                         >
                           <div class="recordings-library-recording-copy">
                             <strong>{{ getRecordingAttemptLabel(recording) }}</strong>
-                            <span>{{ formatRecordingTimestamp(recording.recordedAt) }}</span>
+                            <span>{{ isAiCheckRecording(recording) ? `${recording.accuracyScore}% AI check` : formatRecordingTimestamp(recording.recordedAt) }}</span>
                           </div>
-                          <button class="player-btn recording-history-action" type="button" @click="toggleRecordingPlayback(recording)">
+                          <button v-if="!isAiCheckRecording(recording)" class="player-btn recording-history-action" type="button" @click="toggleRecordingPlayback(recording)">
                             <i class="bi" :class="recording.id === activeRecordingPlaybackId ? 'bi-pause-fill' : 'bi-play-fill'"></i>
                           </button>
+                          <span v-else class="recordings-library-ai-score" :class="getRecitationScoreTone(recording.accuracyScore)">{{ recording.accuracyScore }}%</span>
                         </article>
                       </div>
                     </transition>
@@ -1910,20 +2059,52 @@
                     <div class="recording-history-copy">
                       <div class="recording-history-kicker">{{ getRecordingAttemptLabel(recording) }}</div>
                       <span>{{ formatRecordingTimestamp(recording.recordedAt) }}</span>
-                      <p class="recording-history-note">Self-rated · {{ recording.result }}</p>
+                      <p class="recording-history-note">{{ isAiCheckRecording(recording) ? 'AI recitation check' : `Self-rated · ${recording.result}` }}</p>
                     </div>
-                    <span class="recording-result-pill" :class="getRecordingResultTone(recording.result)">
+                    <span v-if="isAiCheckRecording(recording)" class="recording-result-pill recording-result-pill-ai" :class="getRecitationScoreTone(recording.accuracyScore)">
+                      {{ recording.accuracyScore }}%
+                    </span>
+                    <span v-else class="recording-result-pill" :class="getRecordingResultTone(recording.result)">
                       {{ recording.result }}
                     </span>
                   </div>
 
                   <div class="recording-history-meta">
-                    <span><i class="bi bi-clock-history"></i> {{ formatRecordingDuration(recording.durationSeconds) }}</span>
+                    <span v-if="!isAiCheckRecording(recording)"><i class="bi bi-clock-history"></i> {{ formatRecordingDuration(recording.durationSeconds) }}</span>
+                    <span v-else><i class="bi bi-stars"></i> {{ getRecitationMistakeSummary(recording.mistakeBreakdown || recording.mistakes) }}</span>
                     <span><i class="bi bi-calendar3"></i> {{ formatRecordingDate(recording.recordedAt) }}</span>
                   </div>
 
+                  <div v-if="isAiCheckRecording(recording)" class="recording-history-ai-detail">
+                    <div class="recitation-result-stats">
+                      <article v-for="stat in getRecitationResultStats(recording)" :key="stat.key" class="recitation-result-stat" :class="stat.tone">
+                        <span>{{ stat.label }}</span>
+                        <strong>{{ stat.value }}</strong>
+                        <small>{{ stat.description }}</small>
+                      </article>
+                    </div>
+                    <div v-if="getRecitationWordStatuses(recording).length" class="recitation-word-stream recitation-word-stream-final" dir="rtl">
+                      <span
+                        v-for="(word, index) in getRecitationWordStatuses(recording)"
+                        :key="`${recording.id}-${word.text}-${index}`"
+                        class="recitation-word-chip"
+                        :class="`word-${word.status}`"
+                        :title="word.note"
+                      >{{ word.text }}</span>
+                    </div>
+                    <div class="recitation-next-card">
+                      <span>What next?</span>
+                      <strong>{{ recording.recommendation }}</strong>
+                      <p>{{ getRecitationNextStep(recording) }}</p>
+                    </div>
+                    <div v-if="recording.transcript" class="recitation-transcript-card">
+                      <span>Transcript</span>
+                      <p dir="rtl">{{ recording.transcript }}</p>
+                    </div>
+                  </div>
+
                   <div class="recording-history-actions">
-                    <button class="player-btn recording-history-action" type="button" @click="toggleRecordingPlayback(recording)">
+                    <button v-if="!isAiCheckRecording(recording)" class="player-btn recording-history-action" type="button" @click="toggleRecordingPlayback(recording)">
                       <i class="bi" :class="recording.id === activeRecordingPlaybackId ? 'bi-pause-fill' : 'bi-play-fill'"></i>
                       <span>{{ recording.id === activeRecordingPlaybackId ? 'Pause' : 'Play' }}</span>
                     </button>
@@ -2044,6 +2225,7 @@
 
 <script>
 import axios from 'axios'
+import diff from 'fast-diff'
 import { toRaw } from 'vue'
 import { getEditions, getSurahEdition, getSurahEditions } from '../lib/quranApis'
 import { loadMutqinState, saveMutqinState, watchMutqinState } from '../composables/useMutqinPersistence'
@@ -2501,6 +2683,18 @@ export default {
       currentTime: 0,
       duration: 0,
       audioElement: null,
+      recitationCheckRecording: false,
+      recitationCheckPreparing: false,
+      recitationCheckError: '',
+      recitationCheckMediaRecorder: null,
+      recitationCheckMediaStream: null,
+      recitationCheckChunks: [],
+      recitationCheckStartedAt: 0,
+      recitationCheckResult: null,
+      recitationLiveWords: [],
+      recitationSpeechRecognition: null,
+      recitationSpeechTranscript: '',
+      recitationSpeechInterim: '',
 
       // Reading options
       script: 'uthmani',
@@ -2899,6 +3093,20 @@ export default {
     activeVerseRef() {
       return this.mushafDisplayVerses.find(v => v.key === this.effectiveActiveVerseKey) || null
     },
+    recitationCheckVisible() {
+      return this.recitationCheckRecording
+        || this.recitationCheckPreparing
+        || !!this.recitationCheckError
+        || !!this.recitationCheckResult
+    },
+    recitationCheckTitle() {
+      const targets = this.getRecitationCheckTargetVerses()
+      if (!targets.length) return 'Current ayah'
+      const first = targets[0]?.number
+      const last = targets[targets.length - 1]?.number
+      const surah = this.currentChapter?.name_simple || this.activeChapterName || 'Session'
+      return first === last ? `${surah} · Ayah ${first}` : `${surah} · Ayahs ${first}-${last}`
+    },
     activeMutqinAyah() {
       return this.effectiveActiveVerseKey ? this.mutqinState.ayahs?.[this.effectiveActiveVerseKey] || null : null
     },
@@ -3023,6 +3231,17 @@ export default {
     selfCheckModalAttempts() {
       if (!this.selfCheckVerseKey) return []
       const sorted = this.getAyahRecordingHistory(this.selfCheckVerseKey)
+        .filter(recording => !this.isAiCheckRecording(recording))
+      const total = sorted.length
+      return sorted.map((recording, index) => ({
+        ...recording,
+        attemptNumber: total - index
+      }))
+    },
+    selfCheckModalAiChecks() {
+      if (!this.selfCheckVerseKey) return []
+      const sorted = this.getAyahRecordingHistory(this.selfCheckVerseKey)
+        .filter(recording => this.isAiCheckRecording(recording))
       const total = sorted.length
       return sorted.map((recording, index) => ({
         ...recording,
@@ -3088,6 +3307,42 @@ export default {
         { key: 'verse_plays', label: 'Verse plays', value: `${data.metrics.total_verse_play_count || 0}`, description: 'Total ayah audio starts across the selected range.' },
         { key: 'recall_strength', label: 'Recall strength', value: `${data.metrics.recall_strength || 'Low'}`, description: 'Simple snapshot of how strong this session felt overall.' }
       ]
+    },
+    analyticsAiCheckSummary() {
+      const record = this.analyticsModalRecord
+      if (!record) return null
+      const config = record.config || {}
+      const chapterId = Number(config.chapterId || this.chapterId || 0)
+      const start = Number(config.rangeStart || this.rangeStart || 0)
+      const end = Number(config.rangeEnd || this.rangeEnd || start)
+      const checks = this.recordingsLibrary.filter(item => {
+        if (!this.isAiCheckRecording(item)) return false
+        if (chapterId && Number(item.chapterId || 0) !== chapterId) return false
+        const ayah = Number(item.ayahNumber || 0)
+        return ayah >= start && ayah <= end
+      })
+      if (!checks.length) return null
+      const latest = [...checks].sort((left, right) => Date.parse(right.recordedAt) - Date.parse(left.recordedAt))[0]
+      const average = Math.round(checks.reduce((sum, item) => sum + Number(item.accuracyScore || 0), 0) / checks.length)
+      const stats = this.getRecitationResultStats({ ...latest, accuracyScore: average })
+      stats.unshift({
+        key: 'checks',
+        label: 'AI checks',
+        value: checks.length,
+        description: 'Saved checks in this range.',
+        tone: 'tone-neutral'
+      })
+      return {
+        stats,
+        recommendation: latest.recommendation || this.getRecitationRecommendation(average, latest.mistakeBreakdown || latest.mistakes || {}),
+        nextStep: this.getRecitationNextStep(latest)
+      }
+    },
+    recitationLiveSummary() {
+      const total = this.recitationLiveWords.length
+      if (!total) return 'Preparing ayah words...'
+      const checked = this.recitationLiveWords.filter(word => word.status !== 'pending').length
+      return checked ? `${checked} of ${total} spoken words matched` : 'Waiting for your first recognized word'
     },
     analyticsTotalAyahs() {
       return Math.max(1, Number(this.analyticsModalData?.metrics?.total_ayahs || 1))
@@ -3348,11 +3603,38 @@ export default {
     },
     continueSessionMeta() {
       const payload = this.continueSessionPayload
-      if (!payload) return 'Your last study session is ready to continue.'
+      if (!payload) return 'Your last study session is ready to continue with the same setup.'
       const ayah = payload.activeVerseKey ? String(payload.activeVerseKey).split(':')[1] : null
       const minutesAgo = Math.max(0, Math.round((Date.now() - Number(payload.timestamp || 0)) / 60000))
       const timeLabel = minutesAgo < 1 ? 'saved just now' : `saved ${minutesAgo} min ago`
-      return `Resume from ayah ${ayah || payload.config?.rangeStart || 1}, ${timeLabel}.`
+      return `Your ayah, progress, audio position, and memorisation settings are ready to restore from ayah ${ayah || payload.config?.rangeStart || 1}; ${timeLabel}.`
+    },
+    smartResumeDetails() {
+      const payload = this.continueSessionPayload || {}
+      const config = payload.config || {}
+      const start = Number(config.rangeStart || 1)
+      const end = Number(config.rangeEnd || start)
+      const activeAyah = payload.activeVerseKey ? String(payload.activeVerseKey).split(':')[1] : ''
+      const total = Math.max(1, end - start + 1)
+      const current = Math.max(start, Math.min(end, Number(activeAyah || start)))
+      const covered = Math.max(0, Math.min(total, current - start))
+      const fallbackPercent = Math.round((covered / total) * 100)
+      const queue = Array.isArray(payload.queue) ? payload.queue : []
+      const queueTotal = Math.max(1, queue.length || total)
+      const queueIndex = Math.max(0, Math.min(queueTotal, Number(payload.queueIndex ?? payload.mutqinSessionIndex ?? covered)))
+      const progressPercent = Math.max(0, Math.min(100, queue.length ? Math.round((queueIndex / queueTotal) * 100) : fallbackPercent))
+      const minutesAgo = Math.max(0, Math.round((Date.now() - Number(payload.timestamp || 0)) / 60000))
+      const saved = minutesAgo < 1
+        ? 'Saved just now'
+        : minutesAgo < 60
+          ? `Saved ${minutesAgo} min ago`
+          : `Saved ${Math.round(minutesAgo / 60)} hr ago`
+      return {
+        focus: `Resume at ayah ${activeAyah || start} of ${end}`,
+        saved,
+        progressPercent,
+        progressLabel: progressPercent > 0 ? 'Previous progress' : 'Ready to begin this range'
+      }
     },
 
     resumeModalTitle() {
@@ -3980,6 +4262,10 @@ export default {
       this.selfCheckDiscardOnStop = true
       try { this.selfCheckMediaRecorder.stop() } catch {}
     }
+    if (this.recitationCheckMediaRecorder && this.recitationCheckMediaRecorder.state === 'recording') {
+      try { this.recitationCheckMediaRecorder.stop() } catch {}
+    }
+    this.cleanupRecitationCheckMedia()
     this.cleanupSelfCheckMedia()
     this.persistAllState()
     saveMutqinState(this.mutqinState)
@@ -4172,7 +4458,15 @@ export default {
     syncBodyScrollLock(locked) {
       if (typeof document === 'undefined') return
       document.body.classList.toggle('tools-panel-open', !!locked)
-      const shouldLock = !!locked
+      const hasBlockingOverlay = this.showRecordingsLibrary
+        || this.showSelfCheckModal
+        || this.showConfirmModal
+        || this.showSessionExitModal
+        || this.showResumeModal
+        || this.showPlannerModal
+        || this.showSessionAnalyticsModal
+        || this.showPostLoginOnboarding
+      const shouldMarkPanelOpen = !!locked
         || this.showTools
         || this.showRecordingsLibrary
         || this.showSelfCheckModal
@@ -4182,8 +4476,8 @@ export default {
         || this.showPlannerModal
         || this.showSessionAnalyticsModal
         || this.showPostLoginOnboarding
-      document.body.classList.toggle('tools-panel-open', shouldLock)
-      document.body.style.overflow = shouldLock ? 'hidden' : ''
+      document.body.classList.toggle('tools-panel-open', shouldMarkPanelOpen)
+      document.body.style.overflow = hasBlockingOverlay ? 'hidden' : ''
     },
 
     focusToolsPanel() {
@@ -5446,7 +5740,8 @@ export default {
             repeats_completed: this.analyticsModalData.metrics.repetitions_completed,
             session_plays: this.analyticsModalData.metrics.session_play_count || 0,
             verse_plays: this.analyticsModalData.metrics.total_verse_play_count || 0,
-            recall_strength: this.analyticsModalData.metrics.recall_strength
+            recall_strength: this.analyticsModalData.metrics.recall_strength,
+            ai_check_results: this.analyticsAiCheckSummary
           },
           session: {
             id: this.analyticsModalData.session.id,
@@ -5888,8 +6183,9 @@ export default {
         entry.dataUrl ||
         ''
       ).trim()
+      const isAiCheck = entry.source === 'ai-check' || entry.type === 'ai-check' || entry.kind === 'ai-check'
 
-      if (!ayahKey || !audioSrc) return null
+      if (!ayahKey || (!audioSrc && !isAiCheck)) return null
 
       const recordedAt = parseRecordingDate(entry.recordedAt || entry.createdAt || entry.timestamp || entry.date)
       const durationSeconds = parseRecordingDurationSeconds(
@@ -5909,7 +6205,16 @@ export default {
         recordedAt,
         durationSeconds,
         result: normalizeRecordingResult(entry.result || entry.selfCheckResult || entry.checkResult || entry.status || entry.score),
-        audioSrc
+        audioSrc,
+        source: isAiCheck ? 'ai-check' : (entry.source || 'self-check'),
+        type: isAiCheck ? 'ai-check' : (entry.type || 'recording'),
+        accuracyScore: Number(entry.accuracyScore ?? entry.accuracy_score ?? entry.score ?? 0),
+        transcript: String(entry.transcript || ''),
+        targetText: String(entry.targetText || entry.target_text || ''),
+        wordStatuses: Array.isArray(entry.wordStatuses || entry.word_statuses) ? (entry.wordStatuses || entry.word_statuses) : [],
+        recommendation: String(entry.recommendation || ''),
+        mistakeBreakdown: entry.mistakeBreakdown || entry.mistakes || null,
+        reviewMetadata: entry.reviewMetadata || entry.review || null
       }
     },
     persistRecordingsLibrary() {
@@ -6069,6 +6374,7 @@ export default {
       this.activeSelfCheckAyahPlaybackKey = ''
     },
     async toggleRecordingPlayback(recording) {
+      if (this.isAiCheckRecording(recording)) return
       if (!recording?.audioSrc) return
 
       const audio = this.ensureRecordingsAudioElement()
@@ -6119,20 +6425,96 @@ export default {
       }
       this.recordingsLibrary = this.recordingsLibrary.filter(recording => recording.id !== recordingId)
       this.persistRecordingsLibrary()
+      if (target && this.isAiCheckRecording(target)) this.deleteAiCheckFromMutqinSessions(recordingId)
       this.pendingRecordingDeleteId = ''
       this.ensureSelectedRecordingsAyah()
       if (!this.recordingsLibrary.length) {
         this.selectedRecordingsAyahKey = ''
       }
       this.showBanner(
-        target ? `Deleted ayah ${target.ayahNumber} recording` : 'Recording deleted',
+        target ? `Deleted ayah ${target.ayahNumber} ${this.isAiCheckRecording(target) ? 'AI check' : 'recording'}` : 'Recording deleted',
         'info',
         1600
       )
     },
+    deleteAiCheckFromMutqinSessions(attemptId) {
+      if (!attemptId) return
+      const sessions = this.loadMutqinSessionsForRecitation()
+        .map(session => ({
+          ...session,
+          attempts: Array.isArray(session.attempts)
+            ? session.attempts.filter(attempt => attempt?.id !== attemptId)
+            : []
+        }))
+        .filter(session => session.attempts.length)
+      localStorage.setItem(this.mutqinSessionsStorageKey(), JSON.stringify(sessions))
+    },
     getRecordingAttemptLabel(recording) {
+      if (this.isAiCheckRecording(recording)) {
+        const attempt = Number(recording?.attemptNumber || 0)
+        return attempt > 0 ? `AI Check ${attempt}` : 'AI Check'
+      }
       const attempt = Number(recording?.attemptNumber || 0)
       return attempt > 0 ? `Attempt ${attempt}` : 'Attempt'
+    },
+    isAiCheckRecording(recording) {
+      return recording?.source === 'ai-check' || recording?.type === 'ai-check'
+    },
+    getRecitationScoreTone(score) {
+      const value = Number(score || 0)
+      if (value >= 90) return 'tone-excellent'
+      if (value >= 75) return 'tone-good'
+      return 'tone-review'
+    },
+    formatAiMistakeList(items) {
+      const list = Array.isArray(items) ? items.filter(Boolean) : []
+      return list.length ? list.join('، ') : 'None'
+    },
+    formatAiIncorrectList(items) {
+      const list = Array.isArray(items) ? items.filter(Boolean) : []
+      if (!list.length) return 'None'
+      return list.map(item => {
+        if (typeof item === 'string') return item
+        return `${item.expected || ''} -> ${item.actual || ''}`.trim()
+      }).join('، ')
+    },
+    getRecitationMistakeSummary(mistakes = {}) {
+      const missing = Array.isArray(mistakes?.missing) ? mistakes.missing.length : 0
+      const extra = Array.isArray(mistakes?.extra) ? mistakes.extra.length : 0
+      const incorrect = Array.isArray(mistakes?.incorrect) ? mistakes.incorrect.length : 0
+      const total = missing + extra + incorrect
+      return total ? `${total} word issue${total === 1 ? '' : 's'}` : 'No word issues'
+    },
+    saveAiCheckToRecordingsLibrary(attempt, result) {
+      if (!attempt || !result) return
+      this.loadRecordingsLibrary()
+      const savedEntry = {
+        id: attempt.id,
+        source: 'ai-check',
+        type: 'ai-check',
+        chapterId: attempt.surah?.id,
+        chapterName: attempt.surah?.name,
+        ayahNumber: attempt.ayahRange?.start,
+        ayahKey: attempt.ayahRange?.keys?.[0] || `${attempt.surah?.id}:${attempt.ayahRange?.start}`,
+        recordedAt: attempt.timestamp,
+        durationSeconds: 0,
+        result: result.accuracyScore >= 90 ? 'Excellent' : result.accuracyScore >= 75 ? 'Good' : 'Needs Review',
+        accuracyScore: result.accuracyScore,
+        transcript: result.transcript,
+        targetText: result.targetText,
+        wordStatuses: result.wordStatuses,
+        recommendation: result.recommendation,
+        mistakeBreakdown: result.mistakes,
+        reviewMetadata: result.reviewMetadata,
+        sessionRangeStart: Number(this.rangeStart || attempt.ayahRange?.start || 1),
+        sessionRangeEnd: Number(this.rangeEnd || attempt.ayahRange?.end || attempt.ayahRange?.start || 1)
+      }
+      this.recordingsLibrary = [
+        savedEntry,
+        ...this.recordingsLibrary.filter(recording => recording.id !== savedEntry.id)
+      ]
+      this.persistRecordingsLibrary()
+      this.ensureSelectedRecordingsAyah()
     },
     getRecordingResultTone(result) {
       if (result === 'Excellent') return 'tone-excellent'
@@ -6348,6 +6730,37 @@ export default {
       const seconds = Math.max(0, Math.round((Number(this.statsTick || Date.now()) - Number(this.selfCheckStartedAt || 0)) / 1000))
       return this.formatRecordingDuration(seconds)
     },
+    getRecitationLiveProgressPercent() {
+      if (!this.recitationLiveWords.length) return 0
+      const checked = this.recitationLiveWords.filter(word => word.status !== 'pending').length
+      return Math.max(0, Math.min(100, Math.round((checked / this.recitationLiveWords.length) * 100)))
+    },
+    seedRecitationLiveWords(targetVerses = this.getRecitationCheckTargetVerses()) {
+      const targetWords = this.getRecitationTargetText(targetVerses)
+        .split(/\s+/)
+        .map(word => word.trim())
+        .filter(Boolean)
+      this.recitationLiveWords = targetWords.map(text => ({ text, status: 'pending', note: 'Waiting for this word.' }))
+    },
+    updateRecitationLiveWordsFromTranscript(transcript) {
+      if (!this.recitationLiveWords.length) return
+      const spokenWords = this.tokenizeRecitationWords(transcript)
+      if (!spokenWords.length) {
+        this.recitationLiveWords = this.recitationLiveWords.map(word => ({
+          ...word,
+          status: 'pending',
+          note: 'Waiting for this word.'
+        }))
+        return
+      }
+      const targetWords = this.recitationLiveWords.map(word => this.tokenizeRecitationWords(word.text)[0] || '')
+      const statuses = this.buildRecitationWordStatuses(targetWords, this.buildWordFeedbackFromDiff(this.buildRecitationWordDiffParts(targetWords, spokenWords)))
+      this.recitationLiveWords = this.recitationLiveWords.map((word, index) => ({
+        ...word,
+        status: statuses[index]?.status || 'pending',
+        note: statuses[index]?.note || 'Waiting for this word.'
+      }))
+    },
     chooseRecorderMimeType() {
       if (typeof MediaRecorder === 'undefined' || typeof MediaRecorder.isTypeSupported !== 'function') return ''
       const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus']
@@ -6360,6 +6773,469 @@ export default {
         reader.onerror = () => reject(reader.error || new Error('FileReader failed'))
         reader.readAsDataURL(blob)
       })
+    },
+    cleanupRecitationCheckMedia() {
+      this.stopRecitationSpeechRecognition()
+      if (this.recitationCheckMediaStream) {
+        try {
+          this.recitationCheckMediaStream.getTracks().forEach(track => track.stop())
+        } catch (error) {
+          console.warn('Failed to stop recitation check media tracks:', error)
+        }
+      }
+      this.recitationCheckMediaStream = null
+      this.recitationCheckMediaRecorder = null
+      this.recitationCheckChunks = []
+      this.recitationCheckStartedAt = 0
+    },
+    getSpeechRecognitionConstructor() {
+      if (typeof window === 'undefined') return null
+      return window.SpeechRecognition || window.webkitSpeechRecognition || null
+    },
+    startRecitationSpeechRecognition() {
+      const SpeechRecognition = this.getSpeechRecognitionConstructor()
+      this.recitationSpeechTranscript = ''
+      this.recitationSpeechInterim = ''
+      this.recitationSpeechRecognition = null
+      if (!SpeechRecognition) return false
+
+      try {
+        const recognition = new SpeechRecognition()
+        recognition.lang = 'ar'
+        recognition.continuous = true
+        recognition.interimResults = true
+        recognition.maxAlternatives = 1
+        recognition.onresult = event => {
+          let finalText = ''
+          let interimText = ''
+          for (let index = event.resultIndex; index < event.results.length; index += 1) {
+            const transcript = event.results[index]?.[0]?.transcript || ''
+            if (event.results[index]?.isFinal) finalText += ` ${transcript}`
+            else interimText += ` ${transcript}`
+          }
+          if (finalText.trim()) {
+            this.recitationSpeechTranscript = `${this.recitationSpeechTranscript} ${finalText}`.replace(/\s+/g, ' ').trim()
+          }
+          this.recitationSpeechInterim = interimText.trim()
+          this.updateRecitationLiveWordsFromTranscript(this.getRecitationSpeechFallbackTranscript())
+        }
+        recognition.onerror = event => {
+          console.warn('Speech recognition error:', event?.error || event)
+        }
+        recognition.start()
+        this.recitationSpeechRecognition = recognition
+        return true
+      } catch (error) {
+        console.warn('Failed to start speech recognition fallback:', error)
+        this.recitationSpeechRecognition = null
+        return false
+      }
+    },
+    stopRecitationSpeechRecognition() {
+      if (!this.recitationSpeechRecognition) return
+      try {
+        this.recitationSpeechRecognition.onresult = null
+        this.recitationSpeechRecognition.onerror = null
+        this.recitationSpeechRecognition.stop()
+      } catch (error) {
+        console.warn('Failed to stop speech recognition fallback:', error)
+      }
+      this.recitationSpeechRecognition = null
+    },
+    getRecitationSpeechFallbackTranscript() {
+      return `${this.recitationSpeechTranscript || ''} ${this.recitationSpeechInterim || ''}`.replace(/\s+/g, ' ').trim()
+    },
+    completeRecitationCheckFromTranscript(transcript, targetVerses, source = 'browser speech recognition') {
+      if (!transcript) return null
+      const result = {
+        ...this.assessRecitationTranscript(transcript, targetVerses),
+        transcriptionSource: source
+      }
+      result.recommendation = `${result.recommendation} Transcription source: ${source}.`
+      this.recitationCheckResult = result
+      this.saveRecitationCheckAttempt(result, targetVerses)
+      this.recitationCheckError = ''
+      this.showBanner(`Recitation Check complete: ${result.accuracyScore}%`, 'success', 2200)
+      return result
+    },
+    dismissRecitationCheckResult() {
+      this.recitationCheckResult = null
+      this.recitationCheckError = ''
+      this.recitationLiveWords = []
+      this.recitationSpeechTranscript = ''
+      this.recitationSpeechInterim = ''
+    },
+    async toggleRecitationCheck() {
+      if (this.recitationCheckRecording) {
+        this.stopRecitationCheckRecording()
+        return
+      }
+      await this.startRecitationCheckRecording()
+    },
+    async startRecitationCheckRecording(targetVerse = null) {
+      if (!this.supportsSelfCheckRecording()) {
+        this.recitationCheckError = 'Recording is not supported in this browser.'
+        return
+      }
+      const targets = this.getRecitationCheckTargetVerses(targetVerse)
+      if (!targets.length) {
+        this.recitationCheckError = 'Choose an ayah before starting Recitation Check.'
+        return
+      }
+      if (this.recitationCheckRecording || this.recitationCheckPreparing) return
+
+      this.recitationCheckError = ''
+      this.recitationCheckResult = null
+      this.seedRecitationLiveWords(targets)
+      this.startRecitationSpeechRecognition()
+      this.recitationCheckPreparing = true
+      this.stopRecordingsPlayback({ clearSource: true })
+      if (this.audioElement && !this.audioElement.paused) {
+        try { this.audioElement.pause() } catch {}
+        this.isPlaying = false
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        const mimeType = this.chooseRecorderMimeType()
+        const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream)
+        this.recitationCheckMediaStream = stream
+        this.recitationCheckMediaRecorder = recorder
+        this.recitationCheckChunks = []
+
+        recorder.ondataavailable = event => {
+          if (event.data?.size) this.recitationCheckChunks.push(event.data)
+        }
+        recorder.onerror = () => {
+          this.recitationCheckError = 'The microphone stopped unexpectedly.'
+          this.recitationCheckPreparing = false
+          this.recitationCheckRecording = false
+          this.cleanupRecitationCheckMedia()
+        }
+        recorder.onstop = async () => {
+          const chunks = [...this.recitationCheckChunks]
+          const speechFallbackTranscript = this.getRecitationSpeechFallbackTranscript()
+          this.stopRecitationSpeechRecognition()
+          this.recitationCheckRecording = false
+          this.recitationCheckPreparing = true
+
+          try {
+            if (!chunks.length) throw new Error('No audio was captured.')
+            if (speechFallbackTranscript && this.completeRecitationCheckFromTranscript(speechFallbackTranscript, targets, 'browser speech recognition')) {
+              return
+            }
+            const blob = new Blob(chunks, { type: recorder.mimeType || mimeType || 'audio/webm' })
+            await this.submitRecitationCheck(blob, targets)
+          } catch (error) {
+            console.error('Failed to process recitation check:', error)
+            const serverMessage = error?.response?.data?.message
+            if (speechFallbackTranscript && this.completeRecitationCheckFromTranscript(speechFallbackTranscript, targets)) {
+              this.showBanner('Hugging Face failed, so AI Check used browser speech recognition fallback.', 'info', 3600)
+              return
+            }
+            this.recitationCheckError = serverMessage || error?.message || 'The recitation check could not be completed.'
+            if (serverMessage) this.showBanner(serverMessage, 'error', 3600)
+          } finally {
+            this.recitationCheckPreparing = false
+            this.cleanupRecitationCheckMedia()
+          }
+        }
+
+        recorder.start()
+        this.recitationCheckStartedAt = Date.now()
+        this.recitationCheckRecording = true
+        this.recitationCheckPreparing = false
+      } catch (error) {
+        console.error('Failed to start recitation check:', error)
+        this.recitationCheckPreparing = false
+        this.recitationCheckRecording = false
+        this.recitationCheckError = 'Microphone access was blocked. Allow microphone permission, then try again.'
+        this.cleanupRecitationCheckMedia()
+      }
+    },
+    stopRecitationCheckRecording() {
+      if (!this.recitationCheckMediaRecorder || this.recitationCheckMediaRecorder.state !== 'recording') return
+      this.recitationCheckPreparing = true
+      this.recitationCheckMediaRecorder.stop()
+    },
+    async submitRecitationCheck(blob, targetVerses = this.getRecitationCheckTargetVerses()) {
+      const extension = blob.type.includes('mp4') ? 'mp4' : blob.type.includes('ogg') ? 'ogg' : 'webm'
+      const formData = new FormData()
+      formData.append('audio', blob, `recitation-check.${extension}`)
+
+      const response = await axios.post('/memorisation/recitation-check/transcribe', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      const transcript = String(response?.data?.text || '').trim()
+      const result = this.assessRecitationTranscript(transcript, targetVerses)
+      this.recitationCheckResult = result
+      this.saveRecitationCheckAttempt(result, targetVerses)
+      this.showBanner(`Recitation Check complete: ${result.accuracyScore}%`, 'success', 2200)
+    },
+    getRecitationCheckTargetVerses(targetVerse = null) {
+      if (targetVerse?.key) return [targetVerse]
+      if (this.showSelfCheckModal && this.selfCheckModalVerse?.key) return [this.selfCheckModalVerse]
+      if (this.activeVerseRef?.key) return [this.activeVerseRef]
+      const start = Number(this.rangeStart || 0)
+      const end = Number(this.rangeEnd || start)
+      return (this.mushafDisplayVerses || []).filter(verse => {
+        const number = Number(verse?.number || String(verse?.key || '').split(':')[1] || 0)
+        return number >= start && number <= end
+      })
+    },
+    getRecitationTargetText(targetVerses = this.getRecitationCheckTargetVerses()) {
+      return targetVerses
+        .map(verse => this.stripTajweedMarkup(verse?.arabic || verse?.arabic_tajweed || ''))
+        .filter(Boolean)
+        .join(' ')
+    },
+    normalizeArabicForRecitation(text) {
+      return String(text || '')
+        .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g, '')
+        .replace(/\u0640/g, '')
+        .replace(/[إأآٱ]/g, 'ا')
+        .replace(/ؤ/g, 'و')
+        .replace(/ئ/g, 'ي')
+        .replace(/ى/g, 'ي')
+        .replace(/ة/g, 'ه')
+        .replace(/[^\u0621-\u064A\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+    },
+    tokenizeRecitationWords(text) {
+      const normalized = this.normalizeArabicForRecitation(text)
+      return normalized ? normalized.split(/\s+/).filter(Boolean) : []
+    },
+    buildRecitationWordDiffParts(targetWords, transcriptWords) {
+      const vocabulary = new Map()
+      const reverseVocabulary = new Map()
+      const encodeWord = word => {
+        if (!vocabulary.has(word)) {
+          const token = String.fromCodePoint(0xE000 + vocabulary.size)
+          vocabulary.set(word, token)
+          reverseVocabulary.set(token, word)
+        }
+        return vocabulary.get(word)
+      }
+      return diff(targetWords.map(encodeWord).join(''), transcriptWords.map(encodeWord).join(''))
+        .map(([operation, text]) => ({
+          operation,
+          words: Array.from(text).map(token => reverseVocabulary.get(token)).filter(Boolean)
+        }))
+        .filter(chunk => chunk.words.length)
+    },
+    buildWordFeedbackFromDiff(chunks) {
+      const feedback = { correct: [], missing: [], extra: [], incorrect: [] }
+      for (let index = 0; index < chunks.length; index += 1) {
+        const chunk = chunks[index]
+        if (chunk.operation === 0) {
+          feedback.correct.push(...chunk.words)
+          continue
+        }
+        if (chunk.operation === -1 && chunks[index + 1]?.operation === 1) {
+          const inserted = chunks[index + 1].words
+          const max = Math.max(chunk.words.length, inserted.length)
+          for (let wordIndex = 0; wordIndex < max; wordIndex += 1) {
+            const expected = chunk.words[wordIndex]
+            const actual = inserted[wordIndex]
+            if (expected && actual) feedback.incorrect.push({ expected, actual })
+            else if (expected) feedback.missing.push(expected)
+            else if (actual) feedback.extra.push(actual)
+          }
+          index += 1
+          continue
+        }
+        if (chunk.operation === -1) feedback.missing.push(...chunk.words)
+        if (chunk.operation === 1) feedback.extra.push(...chunk.words)
+      }
+      return feedback
+    },
+    getRecitationWordSimilarity(left, right) {
+      const a = String(left || '')
+      const b = String(right || '')
+      if (!a || !b) return 0
+      if (a === b) return 1
+      const rows = a.length + 1
+      const cols = b.length + 1
+      const matrix = Array.from({ length: rows }, () => Array(cols).fill(0))
+      for (let i = 0; i < rows; i += 1) matrix[i][0] = i
+      for (let j = 0; j < cols; j += 1) matrix[0][j] = j
+      for (let i = 1; i < rows; i += 1) {
+        for (let j = 1; j < cols; j += 1) {
+          const cost = a[i - 1] === b[j - 1] ? 0 : 1
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j - 1] + cost
+          )
+        }
+      }
+      const distance = matrix[a.length][b.length]
+      return 1 - (distance / Math.max(a.length, b.length))
+    },
+    buildRecitationWordStatuses(targetWords, mistakes) {
+      const missing = new Map()
+      const incorrect = new Map()
+      ;(mistakes?.missing || []).forEach(word => {
+        missing.set(word, Number(missing.get(word) || 0) + 1)
+      })
+      ;(mistakes?.incorrect || []).forEach(item => {
+        const expected = item?.expected || ''
+        if (!expected) return
+        if (!incorrect.has(expected)) incorrect.set(expected, [])
+        incorrect.get(expected).push(item?.actual || '')
+      })
+      return targetWords.map(word => {
+        if (incorrect.has(word) && incorrect.get(word).length) {
+          const actual = incorrect.get(word).shift()
+          const status = this.getRecitationWordSimilarity(word, actual) >= 0.55 ? 'partial' : 'incorrect'
+          return {
+            text: word,
+            status,
+            note: actual ? `Expected ${word}; heard ${actual}.` : 'Incorrect word.'
+          }
+        }
+        if (missing.get(word) > 0) {
+          missing.set(word, missing.get(word) - 1)
+          return { text: word, status: 'pending', note: 'Not heard yet.' }
+        }
+        return { text: word, status: 'correct', note: 'Correct.' }
+      })
+    },
+    getRecitationWordStatuses(result) {
+      if (Array.isArray(result?.wordStatuses)) return result.wordStatuses
+      const targetText = result?.targetText || this.getRecitationTargetText()
+      const targetWords = this.tokenizeRecitationWords(targetText)
+      return this.buildRecitationWordStatuses(targetWords, result?.mistakeBreakdown || result?.mistakes || {})
+    },
+    getRecitationResultStats(result) {
+      const mistakes = result?.mistakeBreakdown || result?.mistakes || {}
+      const statuses = this.getRecitationWordStatuses(result)
+      const correct = statuses.filter(word => word.status === 'correct').length
+      const partial = statuses.filter(word => word.status === 'partial').length
+      const incorrect = statuses.filter(word => word.status === 'incorrect').length
+      const extra = Array.isArray(mistakes.extra) ? mistakes.extra.length : 0
+      return [
+        { key: 'score', label: 'Accuracy', value: `${Number(result?.accuracyScore || 0)}%`, description: 'Overall match against the ayah.', tone: this.getRecitationScoreTone(result?.accuracyScore || 0) },
+        { key: 'correct', label: 'Correct', value: correct, description: 'Words matched clearly.', tone: 'tone-excellent' },
+        { key: 'partial', label: 'Partial', value: partial, description: 'Words to slow down and clarify.', tone: 'tone-good' },
+        { key: 'incorrect', label: 'Review', value: incorrect + extra, description: 'Incorrect or extra words.', tone: 'tone-review' }
+      ]
+    },
+    getRecitationNextStep(result) {
+      const mistakes = result?.mistakeBreakdown || result?.mistakes || {}
+      const reviewCount = (mistakes.incorrect?.length || 0) + (mistakes.missing?.length || 0)
+      if (Number(result?.accuracyScore || 0) >= 90) return 'Save this as a strong attempt and move to light review.'
+      if (reviewCount) return 'Replay the ayah once, practise the amber and red words, then run another AI Check.'
+      return 'Repeat once at a slower pace, then check again to confirm consistency.'
+    },
+    assessRecitationTranscript(transcript, targetVerses = this.getRecitationCheckTargetVerses()) {
+      const targetText = this.getRecitationTargetText(targetVerses)
+      const targetWords = this.tokenizeRecitationWords(targetText)
+      const transcriptWords = this.tokenizeRecitationWords(transcript)
+      const mistakes = this.buildWordFeedbackFromDiff(this.buildRecitationWordDiffParts(targetWords, transcriptWords))
+      const wordStatuses = this.buildRecitationWordStatuses(targetWords, mistakes)
+      const targetCount = Math.max(1, targetWords.length)
+      const penalty = mistakes.missing.length + mistakes.incorrect.length + Math.ceil(mistakes.extra.length * 0.5)
+      const accuracyScore = Math.max(0, Math.min(100, Math.round(((targetCount - penalty) / targetCount) * 100)))
+
+      return {
+        id: `recitation-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        transcript,
+        targetText,
+        accuracyScore,
+        mistakes,
+        wordStatuses,
+        recommendation: this.getRecitationRecommendation(accuracyScore, mistakes),
+        reviewMetadata: this.buildRecitationReviewMetadata(accuracyScore, mistakes)
+      }
+    },
+    getRecitationRecommendation(score, mistakes) {
+      if (score >= 90) return 'Strong recitation. Keep this ayah in light review.'
+      if (score >= 75) return 'Good foundation. Repeat the highlighted words slowly, then check again.'
+      if (mistakes.missing.length) return 'Focus on the missing words first, then recite the ayah again without rushing.'
+      return 'Review the ayah with audio once, then try another Recitation Check.'
+    },
+    buildRecitationReviewMetadata(score, mistakes) {
+      const intervalDays = score >= 90 ? 7 : score >= 75 ? 3 : 1
+      const dueAt = new Date()
+      dueAt.setDate(dueAt.getDate() + intervalDays)
+      return {
+        priority: score >= 90 ? 'low' : score >= 75 ? 'medium' : 'high',
+        intervalDays,
+        dueAt: dueAt.toISOString(),
+        mistakeCount: mistakes.missing.length + mistakes.extra.length + mistakes.incorrect.length,
+        reason: score >= 90 ? 'high-accuracy' : score >= 75 ? 'partial-review' : 'needs-review'
+      }
+    },
+    mutqinSessionsStorageKey() {
+      return 'mutqin_sessions'
+    },
+    getCurrentRecitationSessionId() {
+      const chapter = Number(this.chapterId || this.currentChapter?.id || 0)
+      const start = Number(this.rangeStart || 0)
+      const end = Number(this.rangeEnd || start)
+      const user = this.auth?.id ? `user-${this.auth.id}` : 'guest'
+      return `${user}-surah-${chapter}-ayahs-${start}-${end}`
+    },
+    loadMutqinSessionsForRecitation() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(this.mutqinSessionsStorageKey()) || '[]')
+        return Array.isArray(parsed) ? parsed : []
+      } catch {
+        return []
+      }
+    },
+    saveRecitationCheckAttempt(result, targetVerses = this.getRecitationCheckTargetVerses()) {
+      if (!result) return
+      const targets = targetVerses?.length ? targetVerses : this.getRecitationCheckTargetVerses()
+      const sessionId = this.getCurrentRecitationSessionId()
+      const chapterId = Number(this.chapterId || this.currentChapter?.id || targets[0]?.chapterId || 0)
+      const rangeStart = targets[0]?.number || this.rangeStart
+      const rangeEnd = targets[targets.length - 1]?.number || this.rangeEnd
+      const attempt = {
+        id: result.id,
+        sessionId,
+        surah: {
+          id: chapterId,
+          name: this.currentChapter?.name_simple || this.activeChapterName || `Surah ${chapterId}`
+        },
+        ayahRange: {
+          start: rangeStart,
+          end: rangeEnd,
+          keys: targets.map(verse => verse.key).filter(Boolean)
+        },
+        timestamp: result.timestamp,
+        transcript: result.transcript,
+        targetText: result.targetText,
+        accuracyScore: result.accuracyScore,
+        mistakeBreakdown: result.mistakes,
+        wordStatuses: result.wordStatuses,
+        reviewMetadata: result.reviewMetadata
+      }
+
+      const sessions = this.loadMutqinSessionsForRecitation()
+      let session = sessions.find(item => item?.sessionId === sessionId)
+      if (!session) {
+        session = {
+          sessionId,
+          surah: attempt.surah,
+          ayahRange: attempt.ayahRange,
+          attempts: [],
+          reviewMetadata: null,
+          createdAt: new Date().toISOString()
+        }
+        sessions.push(session)
+      }
+      session.surah = attempt.surah
+      session.ayahRange = attempt.ayahRange
+      session.updatedAt = attempt.timestamp
+      session.reviewMetadata = result.reviewMetadata
+      session.attempts = Array.isArray(session.attempts) ? session.attempts : []
+      session.attempts.push(attempt)
+      localStorage.setItem(this.mutqinSessionsStorageKey(), JSON.stringify(sessions))
+      this.saveAiCheckToRecordingsLibrary(attempt, result)
     },
     cleanupSelfCheckMedia() {
       if (this.selfCheckMediaStream) {
@@ -7381,8 +8257,17 @@ export default {
 
     persistContinueSession() {
       if (this.isBootstrapping) return
+      if (this.sessionCompleted || this.mutqinState?.sessionState?.completed || !this.mutqinState?.sessionState?.active) {
+        this.clearExitSessionStorage()
+        return
+      }
       try {
-        localStorage.setItem('telawa.continueSession', JSON.stringify(this.buildContinueSessionPayload()))
+        const payload = this.buildContinueSessionPayload()
+        if (!payload?.config?.chapterId || !payload?.activeVerseKey) {
+          this.clearExitSessionStorage()
+          return
+        }
+        localStorage.setItem('telawa.continueSession', JSON.stringify(payload))
       } catch (e) { console.error(e) }
     },
 
@@ -7390,6 +8275,10 @@ export default {
       try {
         const raw = localStorage.getItem('telawa.continueSession')
         const mutqinSession = this.mutqinState?.sessionState
+        if (mutqinSession?.completed || this.sessionCompleted || this.centralSession?.sessionStatus === 'completed') {
+          this.clearExitSessionStorage()
+          return
+        }
         if (mutqinSession?.active && mutqinSession?.config?.chapterId) {
           const activeItem = mutqinSession.queue?.[mutqinSession.current_index || 0]
           const restoredQueueIndex = Math.max(0, Number(mutqinSession.current_index || 0) - 1)
@@ -7411,7 +8300,10 @@ export default {
         }
         if (!raw) return
         const payload = JSON.parse(raw)
-        if (!payload?.config?.chapterId) return
+        if (!payload?.config?.chapterId || payload.completed || payload.sessionStatus === 'completed') {
+          this.clearExitSessionStorage()
+          return
+        }
         this.continueSessionPayload = payload
         this.hasContinueSession = true
         const chapterName = this.chapters.find(c => Number(c.id) === Number(payload.config.chapterId))?.name_simple || 'Saved session'
@@ -16085,6 +16977,404 @@ export default {
   transform: translateY(0);
 }
 
+.action-btn-recitation-check {
+  border-color: rgba(154, 103, 56, 0.2);
+}
+
+.action-btn-recitation-check:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+.recitation-check-panel {
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid rgba(154, 103, 56, 0.16);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 253, 248, 0.92), rgba(250, 244, 236, 0.82));
+  box-shadow: var(--shadow-sm);
+}
+
+.recitation-check-panel-inline {
+  margin: 14px 0;
+  box-shadow: none;
+}
+
+.recitation-check-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.recitation-check-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recitation-result-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(154, 103, 56, 0.16);
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.recitation-result-close:hover {
+  border-color: rgba(154, 103, 56, 0.32);
+  background: rgba(154, 103, 56, 0.1);
+  color: var(--text);
+}
+
+.recitation-check-kicker {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.recitation-check-head h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.recitation-check-score {
+  min-width: 64px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(154, 103, 56, 0.12);
+  color: var(--accent-strong);
+  text-align: center;
+  font-weight: 750;
+}
+
+.recitation-check-score.tone-excellent {
+  background: rgba(66, 145, 96, 0.14);
+  color: #2f7a4d;
+}
+
+.recitation-check-score.tone-good {
+  background: rgba(176, 126, 50, 0.16);
+  color: #7b5223;
+}
+
+.recitation-check-score.tone-review {
+  background: rgba(180, 87, 61, 0.14);
+  color: #994833;
+}
+
+.recitation-check-status,
+.recitation-check-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  color: var(--text-muted);
+  font-weight: 560;
+}
+
+.recitation-check-status .bi-record-circle {
+  color: #b84a35;
+}
+
+.recitation-check-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.recitation-check-error {
+  color: #9f3f2d;
+}
+
+.recitation-check-body {
+  margin-top: 12px;
+}
+
+.recitation-live-review,
+.recitation-check-results {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.recitation-live-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.recitation-live-head strong {
+  color: var(--text);
+}
+
+.recitation-word-stream {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 14px;
+  border: 1px solid rgba(154, 103, 56, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.58);
+  line-height: 2.1;
+}
+
+.recitation-word-stream-final {
+  background: rgba(154, 103, 56, 0.045);
+}
+
+.recitation-word-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text);
+  font-size: 1.06rem;
+  font-weight: 700;
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.recitation-word-chip.word-pending {
+  color: var(--text-muted);
+  opacity: 0.62;
+}
+
+.recitation-word-chip.word-correct {
+  border-color: rgba(66, 145, 96, 0.28);
+  background: rgba(66, 145, 96, 0.14);
+  color: #2f7a4d;
+  animation: recitationWordPop 180ms ease;
+}
+
+.recitation-word-chip.word-partial {
+  border-color: rgba(176, 126, 50, 0.3);
+  background: rgba(176, 126, 50, 0.16);
+  color: #7b5223;
+  animation: recitationWordPop 180ms ease;
+}
+
+.recitation-word-chip.word-incorrect {
+  border-color: rgba(180, 87, 61, 0.28);
+  background: rgba(180, 87, 61, 0.14);
+  color: #994833;
+  animation: recitationWordPop 180ms ease;
+}
+
+@keyframes recitationWordPop {
+  from {
+    transform: translateY(3px) scale(0.98);
+  }
+  to {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.recitation-result-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.recitation-result-stat {
+  min-height: 96px;
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(154, 103, 56, 0.14);
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.recitation-result-stat span,
+.recitation-next-card span,
+.recitation-transcript-card span {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.recitation-result-stat strong {
+  color: var(--text);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.recitation-result-stat small,
+.recitation-next-card p {
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.recitation-next-card,
+.recitation-transcript-card {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid rgba(154, 103, 56, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.recitation-next-card strong {
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.recitation-next-card p,
+.recitation-transcript-card p {
+  margin: 0;
+}
+
+.recitation-transcript-card p {
+  color: var(--text);
+  text-align: right;
+  font-size: 1.08rem;
+  line-height: 1.85;
+}
+
+.recitation-check-recommendation {
+  margin: 0 0 12px;
+  color: var(--text);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.recitation-check-feedback-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.recitation-check-feedback-card {
+  min-height: 74px;
+  padding: 12px;
+  border: 1px solid rgba(154, 103, 56, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--text-muted);
+}
+
+.recitation-check-feedback-card strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.recitation-check-feedback-card strong i {
+  margin-right: 5px;
+  color: var(--accent);
+}
+
+.recitation-check-transcript {
+  margin-top: 12px;
+  color: var(--text-muted);
+}
+
+.recitation-check-transcript summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.recitation-check-transcript p {
+  margin: 8px 0 0;
+  color: var(--text);
+  font-size: 1.08rem;
+  line-height: 1.8;
+}
+
+[data-theme="dark"] .recitation-check-panel {
+  border-color: rgba(214, 183, 132, 0.18);
+  background: linear-gradient(180deg, rgba(36, 31, 27, 0.96), rgba(28, 24, 22, 0.92));
+}
+
+[data-theme="dark"] .recitation-check-feedback-card {
+  border-color: rgba(214, 183, 132, 0.14);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+[data-theme="dark"] .recitation-word-stream,
+[data-theme="dark"] .recitation-result-stat,
+[data-theme="dark"] .recitation-next-card,
+[data-theme="dark"] .recitation-transcript-card {
+  border-color: rgba(214, 183, 132, 0.14);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+[data-theme="dark"] .recitation-word-chip {
+  border-color: rgba(214, 183, 132, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .recitation-result-close {
+  border-color: rgba(214, 183, 132, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .recitation-word-chip.word-correct {
+  border-color: rgba(90, 190, 128, 0.3);
+  background: rgba(90, 190, 128, 0.16);
+  color: #9ce0b0;
+}
+
+[data-theme="dark"] .recitation-word-chip.word-partial {
+  border-color: rgba(224, 171, 87, 0.3);
+  background: rgba(224, 171, 87, 0.16);
+  color: #f0d19b;
+}
+
+[data-theme="dark"] .recitation-word-chip.word-incorrect {
+  border-color: rgba(232, 120, 89, 0.3);
+  background: rgba(232, 120, 89, 0.16);
+  color: #f1ad9a;
+}
+
+[data-theme="dark"] .recitation-check-score {
+  background: rgba(214, 183, 132, 0.14);
+  color: #f0d7ad;
+}
+
+[data-theme="dark"] .recitation-check-score.tone-excellent {
+  background: rgba(90, 190, 128, 0.16);
+  color: #9ce0b0;
+}
+
+[data-theme="dark"] .recitation-check-score.tone-good {
+  background: rgba(224, 171, 87, 0.16);
+  color: #f0d19b;
+}
+
+[data-theme="dark"] .recitation-check-score.tone-review {
+  background: rgba(232, 120, 89, 0.16);
+  color: #f1ad9a;
+}
+
 /* Responsive adjustments */
 @media (max-width: 640px) {
   .action-buttons-group {
@@ -16106,6 +17396,23 @@ export default {
   .action-btn span {
     display: inline-block;
   }
+
+  .recitation-check-panel {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .recitation-check-feedback-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .recitation-result-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .recording-history-ai-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 480px) {
@@ -16121,6 +17428,15 @@ export default {
   .action-btn i {
     font-size: 1.1rem;
     margin: 0;
+  }
+
+  .recitation-result-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .recitation-word-chip {
+    font-size: 0.98rem;
+    min-height: 32px;
   }
 }
 
@@ -22254,6 +23570,23 @@ html {
   border-color: rgba(255, 236, 216, 0.18);
 }
 
+[data-theme="dark"] .smart-resume-card {
+  background:
+    linear-gradient(135deg, rgba(38, 32, 27, 0.98), rgba(28, 24, 21, 0.96)),
+    radial-gradient(circle at top left, rgba(208, 160, 107, 0.18), transparent 36%);
+  border-color: rgba(208, 160, 107, 0.24);
+}
+
+[data-theme="dark"] .smart-resume-context span {
+  background: rgba(255, 247, 236, 0.08);
+  border-color: rgba(255, 236, 216, 0.14);
+  color: #f4e5d2;
+}
+
+[data-theme="dark"] .smart-resume-progress-track {
+  background: rgba(255, 247, 236, 0.12);
+}
+
 [data-theme="dark"] .verse-font-inline-controls {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 236, 216, 0.16);
@@ -23631,16 +24964,55 @@ html {
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
+.smart-resume-card {
+  align-items: stretch;
+  border-color: rgba(154, 103, 56, 0.28);
+  background:
+    linear-gradient(135deg, rgba(255, 252, 246, 0.98), rgba(247, 236, 221, 0.92)),
+    radial-gradient(circle at top left, rgba(154, 103, 56, 0.14), transparent 34%);
+  box-shadow: 0 18px 40px rgba(99, 66, 32, 0.12);
+}
+
 .continue-session-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
   border-color: var(--accent);
 }
 
+.smart-resume-card:hover {
+  box-shadow: 0 22px 48px rgba(99, 66, 32, 0.16);
+}
+
+.smart-resume-icon {
+  flex: 0 0 auto;
+  width: 54px;
+  height: 54px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: var(--accent);
+  color: white;
+  font-size: 1.45rem;
+  box-shadow: 0 12px 24px rgba(154, 103, 56, 0.22);
+}
+
 .continue-session-copy {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.smart-resume-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 8px;
+}
+
+.smart-resume-copy strong {
+  color: var(--text);
+  font-size: 1.15rem;
+  line-height: 1.2;
 }
 
 .continue-session-actions {
@@ -23650,22 +25022,89 @@ html {
   flex-wrap: nowrap;
 }
 
+.smart-resume-card .continue-session-actions {
+  flex: 0 0 auto;
+  align-self: center;
+}
+
 .continue-session-kicker {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--accent);
+  font-weight: 800;
 }
 
 .continue-session-copy small {
   color: var(--text-muted);
 }
 
+.smart-resume-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.smart-resume-context span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 5px 9px;
+  border: 1px solid rgba(154, 103, 56, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.66);
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.smart-resume-context i {
+  color: var(--accent);
+}
+
+.smart-resume-progress {
+  display: grid;
+  gap: 6px;
+  max-width: 520px;
+}
+
+.smart-resume-progress-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.smart-resume-progress-head strong {
+  color: var(--accent-strong);
+  font-size: 0.78rem;
+}
+
+.smart-resume-progress-track {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(154, 103, 56, 0.12);
+}
+
+.smart-resume-progress-track span {
+  display: block;
+  height: 100%;
+  min-width: 8px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+}
+
 .continue-session-btn {
   min-height: 44px;
   white-space: nowrap;
   flex: 0 0 auto;
-  padding-inline: 18px;
+  padding-inline: 22px;
+  box-shadow: 0 12px 24px rgba(154, 103, 56, 0.18);
 }
 
 .continue-session-dismiss {
@@ -24006,6 +25445,15 @@ html {
     align-items: stretch;
   }
 
+  .smart-resume-card {
+    gap: 14px;
+  }
+
+  .smart-resume-icon {
+    width: 48px;
+    height: 48px;
+  }
+
   .dashboard-actions {
     grid-template-columns: 1fr;
     gap: 14px;
@@ -24040,7 +25488,7 @@ html {
   }
 
   .continue-session-btn {
-    width: auto;
+    width: 100%;
   }
 
   .settings-toggle {
@@ -25698,6 +27146,85 @@ html {
   font-size: 0.7rem;
 }
 
+.recordings-library-ai-score {
+  min-width: 44px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.recordings-library-ai-score.tone-excellent,
+.recording-result-pill-ai.tone-excellent {
+  background: rgba(66, 145, 96, 0.14);
+  color: #2f7a4d;
+}
+
+.recordings-library-ai-score.tone-good,
+.recording-result-pill-ai.tone-good {
+  background: rgba(176, 126, 50, 0.16);
+  color: #7b5223;
+}
+
+.recordings-library-ai-score.tone-review,
+.recording-result-pill-ai.tone-review {
+  background: rgba(180, 87, 61, 0.14);
+  color: #994833;
+}
+
+.recording-history-ai-detail {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+  padding: 12px;
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  border-radius: 12px;
+  background: rgba(154, 103, 56, 0.045);
+}
+
+.recording-history-ai-detail p {
+  margin: 0;
+  color: var(--text);
+  font-weight: 560;
+}
+
+.recording-history-ai-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.recording-history-ai-grid span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 9px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.recording-history-ai-grid strong {
+  color: var(--text);
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.recording-history-ai-transcript summary {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.recording-history-ai-transcript p {
+  margin-top: 8px;
+  text-align: right;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
 [data-theme="dark"] .recordings-library-search input,
 [data-theme="dark"] .recordings-library-nav-toggle,
 [data-theme="dark"] .recordings-library-ayah-item {
@@ -25715,6 +27242,33 @@ html {
 [data-theme="dark"] .recordings-library-recording-item {
   background: rgba(255, 247, 236, 0.08);
   border-color: rgba(255, 236, 216, 0.18);
+}
+
+[data-theme="dark"] .recordings-library-ai-score.tone-excellent,
+[data-theme="dark"] .recording-result-pill-ai.tone-excellent {
+  background: rgba(90, 190, 128, 0.16);
+  color: #9ce0b0;
+}
+
+[data-theme="dark"] .recordings-library-ai-score.tone-good,
+[data-theme="dark"] .recording-result-pill-ai.tone-good {
+  background: rgba(224, 171, 87, 0.16);
+  color: #f0d19b;
+}
+
+[data-theme="dark"] .recordings-library-ai-score.tone-review,
+[data-theme="dark"] .recording-result-pill-ai.tone-review {
+  background: rgba(232, 120, 89, 0.16);
+  color: #f1ad9a;
+}
+
+[data-theme="dark"] .recording-history-ai-detail {
+  border-color: rgba(255, 236, 216, 0.16);
+  background: rgba(255, 247, 236, 0.055);
+}
+
+[data-theme="dark"] .recording-history-ai-grid span {
+  background: rgba(255, 255, 255, 0.045);
 }
 
 [data-theme="dark"] .recordings-library-recording-item.playing {
