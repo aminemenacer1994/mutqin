@@ -35,15 +35,14 @@ return [
         ],
     ],
 
+    'groq' => [
+        'api_key' => env('GROQ_API_KEY'),
+    ],
+
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URI'),
-    ],
-
-    'huggingface' => [
-        'token' => env('HUGGINGFACE_API_TOKEN'),
-        'asr_model' => env('HUGGINGFACE_ASR_MODEL', 'openai/whisper-large-v3'),
     ],
 
 ];
