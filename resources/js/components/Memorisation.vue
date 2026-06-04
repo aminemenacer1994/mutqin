@@ -30572,8 +30572,6 @@ html {
   align-items: center;
   padding: 5px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(154, 103, 56, 0.1);
 }
 
 .self-check-ayah-action {
@@ -31793,15 +31791,10 @@ html {
 }
 
 .self-check-modal .self-check-ayah-actions {
-  background: #17120f !important;
-  border: 1px solid rgba(210, 160, 98, 0.24) !important;
-  box-shadow: none !important;
 }
 
 .self-check-modal .self-check-ayah-action {
-  background: #221914 !important;
-  color: #f4c982 !important;
-  border-color: rgba(244, 201, 130, 0.28) !important;
+  
 }
 
 [data-theme="light"] .self-check-modal,
@@ -32647,9 +32640,7 @@ button:active {
 }
 
 .self-check-modal .self-check-ayah-actions {
-  inset: auto 18px 18px auto !important;
-  transform: none !important;
-  max-width: none !important;
+
 }
 
 .self-check-modal .self-check-modal-quick-actions {
