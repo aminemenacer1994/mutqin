@@ -179,20 +179,22 @@
                     <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                     <span>{{ t('sessionStatus.end') }}</span>
                   </button>
-                  <div class="workspace-shell-icon-actions">
-                    <button class="action-icon-btn" @click="toggleKeyboardShortcuts" title="Keyboard shortcuts"
-                      type="button" aria-label="Open keyboard shortcuts">
-                      <i class="bi bi-keyboard" aria-hidden="true"></i>
-                    </button>
-                    <button class="action-icon-btn" @click="openOnboardingModal(true)" title="How Mutqin works"
-                      type="button" aria-label="Open help">
-                      <i class="bi bi-question-circle" aria-hidden="true"></i>
-                    </button>
-                    <button class="action-icon-btn" @click="toggleFullScreen" title="Full screen mode" type="button"
-                      aria-label="Toggle full screen mode">
-                      <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
-                    </button>
-                  </div>
+                  <!--
+                    <div class="workspace-shell-icon-actions">
+                      <button class="action-icon-btn" @click="toggleKeyboardShortcuts" title="Keyboard shortcuts"
+                        type="button" aria-label="Open keyboard shortcuts">
+                        <i class="bi bi-keyboard" aria-hidden="true"></i>
+                      </button>
+                      <button class="action-icon-btn" @click="openOnboardingModal(true)" title="How Mutqin works"
+                        type="button" aria-label="Open help">
+                        <i class="bi bi-question-circle" aria-hidden="true"></i>
+                      </button>
+                      <button class="action-icon-btn" @click="toggleFullScreen" title="Full screen mode" type="button"
+                        aria-label="Toggle full screen mode">
+                        <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  -->
                 </div>
               </div>
             </div>
@@ -1603,6 +1605,21 @@
             <h2 id="aiMemorisationCheckerTitle">{{ aiMemorisationCheckerTitle }}</h2>
           </div>
           <div class="memorisation-checker-header-actions">
+            <label class="memorisation-checker-mode-select">
+              <span>Check mode</span>
+              <select v-model="aiMemorisationCheckerMode" @change="onAiMemorisationCheckerModeChange"
+                :disabled="aiMemorisationCheckerRecording || aiMemorisationCheckerPreparing">
+                <option value="guided">Fix mistakes before continuing</option>
+                <option value="full">Complete ayah, then review</option>
+                <option value="random">Fill random missing words</option>
+              </select>
+            </label>
+            <label v-if="aiMemorisationCheckerMode === 'random'" class="memorisation-checker-random-count">
+              <span>Missing</span>
+              <input v-model.number="aiMemorisationCheckerRandomWordCount" type="number" min="1"
+                :max="Math.max(1, aiMemorisationCheckerLiveWords.length)" @change="prepareAiMemorisationCheckerWords"
+                :disabled="aiMemorisationCheckerRecording || aiMemorisationCheckerPreparing">
+            </label>
             <button v-if="!aiMemorisationCheckerRecording && !aiMemorisationCheckerResult"
               class="btn-primary self-check-action-btn memorisation-checker-start-btn" type="button"
               @click="startAiMemorisationCheckerRecording"
@@ -1647,6 +1664,9 @@
               </transition-group>
               <p v-if="aiMemorisationCheckerMode === 'random'" class="memorisation-checker-hint">
                 Hidden words change each time this mode is prepared. Recite the whole ayah; only hidden words are concealed.
+              </p>
+              <p v-else-if="aiMemorisationCheckerMode === 'guided'" class="memorisation-checker-hint">
+                Mutqin holds the flow at the first missed or changed word until it is corrected.
               </p>
               <div v-if="aiMemorisationCheckerError" class="recitation-check-error">
                 {{ aiMemorisationCheckerError }}
@@ -1695,7 +1715,7 @@
             </section>
           </section>
 
-          <section class="memorisation-checker-ayah-panel">
+          <section class="memorisation-checker-ayah-panel" :class="{ 'has-result': !!aiMemorisationCheckerResult }">
             <header class="memorisation-checker-section-head">
               <span>Selected ayah</span>
               <strong>{{ aiMemorisationCheckerTargetLabel }}</strong>
@@ -2986,7 +3006,8 @@ export default {
       aiMemorisationCheckerVerseKey: '',
       aiMemorisationCheckerScope: 'ayah',
       aiMemorisationCheckerTargetVerses: [],
-      aiMemorisationCheckerMode: 'full',
+      aiMemorisationCheckerMode: 'guided',
+      aiMemorisationCheckerRandomWordCount: 3,
       aiMemorisationCheckerTajweedEnabled: false,
       aiMemorisationCheckerBlurEnabled: true,
       aiMemorisationCheckerPeekActive: false,
@@ -6772,8 +6793,8 @@ export default {
     },
     getRecitationScoreTone(score) {
       const value = Number(score || 0)
-      if (value >= 90) return 'tone-excellent'
-      if (value >= 75) return 'tone-good'
+      if (value >= 75) return 'tone-excellent'
+      if (value >= 50) return 'tone-good'
       return 'tone-review'
     },
     formatAiMistakeList(items) {
@@ -6808,7 +6829,7 @@ export default {
         ayahKey: attempt.ayahRange?.keys?.[0] || `${attempt.surah?.id}:${attempt.ayahRange?.start}`,
         recordedAt: attempt.timestamp,
         durationSeconds: 0,
-        result: result.accuracyScore >= 90 ? 'Excellent' : result.accuracyScore >= 75 ? 'Good' : 'Needs Review',
+        result: result.accuracyScore >= 75 ? 'Excellent' : result.accuracyScore >= 50 ? 'Good' : 'Needs Review',
         accuracyScore: result.accuracyScore,
         transcript: result.transcript,
         targetText: result.targetText,
@@ -7150,12 +7171,15 @@ export default {
     },
     setAiMemorisationCheckerMode(mode) {
       if (this.aiMemorisationCheckerRecording || this.aiMemorisationCheckerPreparing) return
-      this.aiMemorisationCheckerMode = mode === 'random' ? 'random' : 'full'
+      this.aiMemorisationCheckerMode = ['guided', 'random', 'full'].includes(mode) ? mode : 'guided'
       this.aiMemorisationCheckerBlurEnabled = true
       this.aiMemorisationCheckerPeekActive = false
       this.aiMemorisationCheckerResult = null
       this.prepareAiMemorisationCheckerWords()
       this.persistAiMemorisationCheckerSession()
+    },
+    onAiMemorisationCheckerModeChange() {
+      this.setAiMemorisationCheckerMode(this.aiMemorisationCheckerMode)
     },
     activateAiMemorisationRandomWords() {
       if (this.aiMemorisationCheckerRecording || this.aiMemorisationCheckerPreparing) return
@@ -7177,7 +7201,8 @@ export default {
         : words.map((_, index) => index)
     },
     buildRandomMemorisationHiddenIndexes(total) {
-      const count = Math.max(1, Math.min(total, Math.ceil(total * 0.38)))
+      const requested = Number(this.aiMemorisationCheckerRandomWordCount || 0)
+      const count = Math.max(1, Math.min(total, requested > 0 ? requested : Math.ceil(total * 0.38)))
       const indexes = Array.from({ length: total }, (_, index) => index)
       for (let index = indexes.length - 1; index > 0; index -= 1) {
         const swapIndex = Math.floor(Math.random() * (index + 1))
@@ -7213,12 +7238,12 @@ export default {
         if (this.aiMemorisationCheckerTajweedEnabled && liveVerse.arabic_tajweed) {
           return this.wrapTajweedWithWordHighlighting(liveVerse, this.normalizeTajweedMarkup(liveVerse.arabic_tajweed))
         }
-        return this.stripTajweedMarkup(liveVerse.arabic || liveVerse.arabic_tajweed || '')
+        return this.stripTajweedMarkup(liveVerse.arabic_tajweed || liveVerse.arabic || '')
       }).filter(Boolean).join(' ')
     },
     getAiMemorisationCheckerRandomArabic(verse) {
       const hidden = new Set(this.aiMemorisationCheckerHiddenIndexes || [])
-      return this.stripTajweedMarkup(verse?.arabic || '')
+      return this.stripTajweedMarkup(verse?.arabic_tajweed || verse?.arabic || '')
         .split(/\s+/)
         .filter(Boolean)
         .map((word, index) => hidden.has(index)
@@ -7237,8 +7262,9 @@ export default {
         }))
         return
       }
-      const targetWords = this.aiMemorisationCheckerLiveWords.map(word => this.tokenizeRecitationWords(word.text)[0] || '')
-      const statuses = this.buildRecitationWordStatuses(targetWords, this.buildWordFeedbackFromDiff(this.buildRecitationWordDiffParts(targetWords, spokenWords)))
+      const displayWords = this.aiMemorisationCheckerLiveWords.map(word => word.text)
+      const targetWords = displayWords.map(word => this.tokenizeRecitationWords(word)[0] || '').filter(Boolean)
+      const statuses = this.buildSequentialRecitationWordStatuses(displayWords, targetWords, spokenWords)
       this.aiMemorisationCheckerLiveWords = this.aiMemorisationCheckerLiveWords.map((word, index) => ({
         ...word,
         status: statuses[index]?.status || 'pending',
@@ -7246,7 +7272,9 @@ export default {
       }))
       if (this.aiMemorisationCheckerRecording
         && this.aiMemorisationCheckerLiveWords.length
-        && this.aiMemorisationCheckerLiveWords.every(word => word.status !== 'pending')) {
+        && (this.aiMemorisationCheckerMode === 'guided'
+          ? this.aiMemorisationCheckerLiveWords.every(word => word.status === 'correct')
+          : this.aiMemorisationCheckerLiveWords.every(word => word.status !== 'pending'))) {
         this.stopAiMemorisationCheckerRecording()
       }
     },
@@ -7266,7 +7294,8 @@ export default {
           let finalText = ''
           let interimText = ''
           for (let index = event.resultIndex; index < event.results.length; index += 1) {
-            const transcript = event.results[index]?.[0]?.transcript || ''
+            const alternatives = Array.from(event.results[index] || []).slice(0, 3)
+            const transcript = alternatives.map(item => item?.transcript || '').filter(Boolean).join(' ')
             if (event.results[index]?.isFinal) finalText += ` ${transcript}`
             else interimText += ` ${transcript}`
           }
@@ -7319,8 +7348,8 @@ export default {
     async queueAiMemorisationCheckerLiveChunk(blob) {
       if (!blob?.size || !this.aiMemorisationCheckerRecording || this.aiMemorisationCheckerResult) return
       this.aiMemorisationCheckerLiveChunkQueue.push(blob)
-      if (this.aiMemorisationCheckerLiveChunkQueue.length > 2) {
-        this.aiMemorisationCheckerLiveChunkQueue.splice(0, this.aiMemorisationCheckerLiveChunkQueue.length - 2)
+      if (this.aiMemorisationCheckerLiveChunkQueue.length > 4) {
+        this.aiMemorisationCheckerLiveChunkQueue.splice(0, this.aiMemorisationCheckerLiveChunkQueue.length - 4)
       }
       if (this.aiMemorisationCheckerLiveChunkInFlight) return
       await this.processNextAiMemorisationCheckerLiveChunk()
@@ -7414,7 +7443,7 @@ export default {
             this.cleanupAiMemorisationCheckerMedia()
           }
         }
-        recorder.start(1000)
+        recorder.start(700)
         this.aiMemorisationCheckerStartedAt = Date.now()
         this.aiMemorisationCheckerRecording = true
         this.aiMemorisationCheckerPreparing = false
@@ -7502,7 +7531,7 @@ export default {
       const statuses = this.getRecitationWordStatuses(result)
       const partial = statuses.filter(word => word.status === 'partial').slice(0, 3).map(word => word.text)
       const review = statuses.filter(word => word.status === 'incorrect' || word.status === 'pending').slice(0, 3).map(word => word.text)
-      if (Number(result?.accuracyScore || 0) >= 90) return 'Save this attempt to the recordings library, then run one clean recall without peeking.'
+      if (Number(result?.accuracyScore || 0) >= 75) return 'Save this attempt to the recordings library, then run one clean recall without peeking.'
       if (review.length) return `Replay and drill: ${review.join('، ')}. Then retry the checker for the same target.`
       if (partial.length) return `Slow down and sharpen: ${partial.join('، ')}. These were close but not clean.`
       return this.getRecitationNextStep(result)
@@ -7581,7 +7610,7 @@ export default {
         ayahKey: first?.key || '',
         recordedAt: result.timestamp || result.savedAt || new Date().toISOString(),
         durationSeconds: 0,
-        result: Number(result.accuracyScore || 0) >= 90 ? 'Excellent' : Number(result.accuracyScore || 0) >= 75 ? 'Good' : 'Needs Review',
+        result: Number(result.accuracyScore || 0) >= 75 ? 'Excellent' : Number(result.accuracyScore || 0) >= 50 ? 'Good' : 'Needs Review',
         accuracyScore: Number(result.accuracyScore || 0),
         transcript: result.transcript || '',
         targetText: result.targetText || this.getRecitationTargetText(targets),
@@ -7656,8 +7685,9 @@ export default {
         }))
         return
       }
-      const targetWords = this.recitationLiveWords.map(word => this.tokenizeRecitationWords(word.text)[0] || '')
-      const statuses = this.buildRecitationWordStatuses(targetWords, this.buildWordFeedbackFromDiff(this.buildRecitationWordDiffParts(targetWords, spokenWords)))
+      const displayWords = this.recitationLiveWords.map(word => word.text)
+      const targetWords = displayWords.map(word => this.tokenizeRecitationWords(word)[0] || '').filter(Boolean)
+      const statuses = this.buildSequentialRecitationWordStatuses(displayWords, targetWords, spokenWords)
       this.recitationLiveWords = this.recitationLiveWords.map((word, index) => ({
         ...word,
         status: statuses[index]?.status || 'pending',
@@ -7720,7 +7750,8 @@ export default {
           let finalText = ''
           let interimText = ''
           for (let index = event.resultIndex; index < event.results.length; index += 1) {
-            const transcript = event.results[index]?.[0]?.transcript || ''
+            const alternatives = Array.from(event.results[index] || []).slice(0, 3)
+            const transcript = alternatives.map(item => item?.transcript || '').filter(Boolean).join(' ')
             if (event.results[index]?.isFinal) finalText += ` ${transcript}`
             else interimText += ` ${transcript}`
           }
@@ -7910,7 +7941,7 @@ export default {
           }
         }
 
-        recorder.start(1000)
+        recorder.start(700)
         this.recitationCheckStartedAt = Date.now()
         this.recitationCheckRecording = true
         this.recitationCheckPreparing = false
@@ -7974,7 +8005,7 @@ export default {
     },
     getRecitationTargetText(targetVerses = this.getRecitationCheckTargetVerses()) {
       return targetVerses
-        .map(verse => this.stripTajweedMarkup(verse?.arabic || verse?.arabic_tajweed || ''))
+        .map(verse => this.stripTajweedMarkup(verse?.arabic_tajweed || verse?.arabic || ''))
         .filter(Boolean)
         .join(' ')
     },
@@ -8091,11 +8122,66 @@ export default {
         return { text: word, status: 'correct', note: 'Correct.' }
       })
     },
+    buildSequentialRecitationWordStatuses(displayWords, normalizedTargetWords, transcriptWords) {
+      const statuses = displayWords.map(text => ({ text, status: 'pending', note: 'Not heard yet.' }))
+      let transcriptIndex = 0
+      for (let targetIndex = 0; targetIndex < normalizedTargetWords.length; targetIndex += 1) {
+        const targetWord = normalizedTargetWords[targetIndex]
+        let matchedIndex = -1
+        for (let index = transcriptIndex; index < transcriptWords.length; index += 1) {
+          if (transcriptWords[index] === targetWord) {
+            matchedIndex = index
+            break
+          }
+        }
+        if (matchedIndex !== -1) {
+          statuses[targetIndex] = { text: displayWords[targetIndex], status: 'correct', note: 'Correct.' }
+          transcriptIndex = matchedIndex + 1
+          continue
+        }
+        const actual = transcriptWords[transcriptIndex] || ''
+        const similarity = this.getRecitationWordSimilarity(targetWord, actual)
+        if (actual && similarity >= 0.28) {
+          statuses[targetIndex] = {
+            text: displayWords[targetIndex],
+            status: 'partial',
+            note: `Expected ${displayWords[targetIndex]}; heard ${actual}.`
+          }
+          transcriptIndex += 1
+        }
+      }
+      return statuses
+    },
+    buildRecitationMistakesFromStatuses(statuses, transcriptWords, normalizedTargetWords) {
+      const correctCount = statuses.filter(word => word.status === 'correct').length
+      const partialCount = statuses.filter(word => word.status === 'partial').length
+      return {
+        correct: statuses.filter(word => word.status === 'correct').map(word => word.text),
+        missing: statuses.filter(word => word.status === 'pending').map(word => word.text),
+        extra: transcriptWords.slice(Math.min(transcriptWords.length, correctCount + partialCount)),
+        partial: statuses
+          .map((word, index) => ({ word, index }))
+          .filter(item => item.word.status === 'partial')
+          .map(item => ({
+            expected: item.word.text,
+            actual: transcriptWords[item.index] || normalizedTargetWords[item.index] || ''
+          })),
+        incorrect: statuses
+          .map((word, index) => ({ word, index }))
+          .filter(item => item.word.status === 'incorrect')
+          .map(item => ({
+            expected: item.word.text,
+            actual: transcriptWords[item.index] || normalizedTargetWords[item.index] || ''
+          }))
+      }
+    },
     getRecitationWordStatuses(result) {
       if (Array.isArray(result?.wordStatuses)) return result.wordStatuses
       const targetText = result?.targetText || this.getRecitationTargetText()
-      const targetWords = this.tokenizeRecitationWords(targetText)
-      return this.buildRecitationWordStatuses(targetWords, result?.mistakeBreakdown || result?.mistakes || {})
+      const displayWords = targetText.split(/\s+/).map(word => word.trim()).filter(Boolean)
+      const targetWords = displayWords.map(word => this.tokenizeRecitationWords(word)[0] || '').filter(Boolean)
+      const statuses = this.buildRecitationWordStatuses(targetWords, result?.mistakeBreakdown || result?.mistakes || {})
+      return statuses.map((word, index) => ({ ...word, text: displayWords[index] || word.text }))
     },
     getVerseForRecitationReview(result = null, fallbackVerse = null) {
       if (fallbackVerse?.key) return fallbackVerse
@@ -8105,7 +8191,7 @@ export default {
     },
     getRecitationReviewArabic(result = null, fallbackVerse = null) {
       const verse = this.getVerseForRecitationReview(result, fallbackVerse)
-      const sourceText = verse?.arabic || result?.targetText || ''
+      const sourceText = verse?.arabic_tajweed || verse?.arabic || result?.targetText || ''
       if (!sourceText) return ''
       const words = this.stripTajweedMarkup(sourceText).split(/\s+/).map(word => word.trim()).filter(Boolean)
       const statuses = this.getRecitationWordStatuses(result || {})
@@ -8134,7 +8220,7 @@ export default {
       const mistakes = result?.mistakeBreakdown || result?.mistakes || {}
       const reviewCount = (mistakes.incorrect?.length || 0) + (mistakes.missing?.length || 0)
       const extraCount = mistakes.extra?.length || 0
-      if (Number(result?.accuracyScore || 0) >= 90) return 'Save the attempt, then recite it once more without looking before moving on.'
+      if (Number(result?.accuracyScore || 0) >= 75) return 'Save the attempt, then recite it once more without looking before moving on.'
       if (reviewCount) return `Focus on ${reviewCount} highlighted word${reviewCount === 1 ? '' : 's'} in the ayah display, replay the ayah once, then run another Recite Check.`
       if (extraCount) return 'Slow the pace and remove the extra wording before checking again.'
       return 'Repeat once at a slower pace, then save or check again to confirm consistency.'
@@ -8146,12 +8232,20 @@ export default {
     },
     assessRecitationTranscript(transcript, targetVerses = this.getRecitationCheckTargetVerses()) {
       const targetText = this.getRecitationTargetText(targetVerses)
-      const targetWords = this.tokenizeRecitationWords(targetText)
+      const displayWords = targetText.split(/\s+/).map(word => word.trim()).filter(Boolean)
+      const targetWords = displayWords.map(word => this.tokenizeRecitationWords(word)[0] || '').filter(Boolean)
       const transcriptWords = this.tokenizeRecitationWords(transcript)
-      const mistakes = this.buildWordFeedbackFromDiff(this.buildRecitationWordDiffParts(targetWords, transcriptWords))
-      const wordStatuses = this.buildRecitationWordStatuses(targetWords, mistakes)
+      const wordStatuses = this.buildSequentialRecitationWordStatuses(displayWords, targetWords, transcriptWords)
+      const heardAllInOrder = wordStatuses.length > 0 && wordStatuses.every(word => word.status === 'correct')
+      const mistakes = heardAllInOrder
+        ? { correct: [...displayWords], missing: [], extra: [], incorrect: [] }
+        : this.buildRecitationMistakesFromStatuses(wordStatuses, transcriptWords, targetWords)
       const targetCount = Math.max(1, targetWords.length)
-      const penalty = mistakes.missing.length + mistakes.incorrect.length + Math.ceil(mistakes.extra.length * 0.5)
+      const partialPenalty = (mistakes.partial?.length || 0) * 0.15
+      const missingPenalty = mistakes.missing.length * 0.45
+      const incorrectPenalty = mistakes.incorrect.length * 0.7
+      const extraPenalty = (mistakes.extra.length || 0) * 0.1
+      const penalty = missingPenalty + partialPenalty + incorrectPenalty + extraPenalty
       const accuracyScore = Math.max(0, Math.min(100, Math.round(((targetCount - penalty) / targetCount) * 100)))
 
       return {
@@ -8169,24 +8263,26 @@ export default {
     getRecitationRecommendation(score, mistakes) {
       const missing = mistakes.missing?.length || 0
       const incorrect = mistakes.incorrect?.length || 0
+      const partial = mistakes.partial?.length || 0
       const extra = mistakes.extra?.length || 0
-      if (score >= 90) return 'Strong. Save it and keep this ayah on light review.'
-      if (score >= 75) return 'Close. Drill the amber or red words, then check again.'
+      if (score >= 75) return 'Strong. Save it and keep this ayah on light review.'
+      if (score >= 50) return 'Close. Drill the amber or red words, then check again.'
       if (missing) return `Missing ${missing} word${missing === 1 ? '' : 's'}. Recite that section slowly before retrying.`
+      if (partial) return `Clarify ${partial} close word${partial === 1 ? '' : 's'}, then check again.`
       if (incorrect) return `Review ${incorrect} changed word${incorrect === 1 ? '' : 's'} and compare with the displayed ayah.`
       if (extra) return 'Extra wording detected. Slow down and keep the ayah boundary tight.'
       return 'Replay the ayah once, recite without looking, then run another Recite Check.'
     },
     buildRecitationReviewMetadata(score, mistakes) {
-      const intervalDays = score >= 90 ? 7 : score >= 75 ? 3 : 1
+      const intervalDays = score >= 75 ? 7 : score >= 50 ? 3 : 1
       const dueAt = new Date()
       dueAt.setDate(dueAt.getDate() + intervalDays)
       return {
-        priority: score >= 90 ? 'low' : score >= 75 ? 'medium' : 'high',
+        priority: score >= 75 ? 'low' : score >= 50 ? 'medium' : 'high',
         intervalDays,
         dueAt: dueAt.toISOString(),
-        mistakeCount: mistakes.missing.length + mistakes.extra.length + mistakes.incorrect.length,
-        reason: score >= 90 ? 'high-accuracy' : score >= 75 ? 'partial-review' : 'needs-review'
+        mistakeCount: mistakes.missing.length + mistakes.extra.length + mistakes.incorrect.length + (mistakes.partial?.length || 0),
+        reason: score >= 75 ? 'high-accuracy' : score >= 50 ? 'partial-review' : 'needs-review'
       }
     },
     mutqinSessionsStorageKey() {
@@ -31024,7 +31120,6 @@ html {
   padding: 18px 20px;
   border: 1px solid rgba(154, 103, 56, 0.12);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.78);
   color: var(--text);
   font-family: "Uthmanic Hafs", "Amiri Quran", "Scheherazade New", serif;
   font-size: clamp(1.35rem, 2.8vw, 2.35rem);
@@ -31365,10 +31460,7 @@ html {
   overflow: hidden;
 }
 
-.memorisation-checker-modal .memorisation-checker-workspace {
-  grid-template-rows: auto minmax(0, 1fr);
-  overflow: hidden;
-}
+
 
 .memorisation-checker-modal .memorisation-checker-live {
   min-height: 0;
@@ -31417,10 +31509,6 @@ html {
   padding: 12px 14px;
 }
 
-.memorisation-checker-modal .memorisation-checker-ayah-panel {
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  overflow: hidden;
-}
 
 .memorisation-checker-modal .memorisation-checker-ayah {
   order: 2;
@@ -31498,6 +31586,1207 @@ html {
 
   .memorisation-checker-modal .memorisation-checker-results .recitation-result-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.memorisation-checker-modal {
+  background: #211914 !important;
+  border-color: rgba(181, 130, 74, 0.34) !important;
+  color: #f6efe5 !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-header {
+  background: #241b16 !important;
+  border-bottom-color: rgba(181, 130, 74, 0.28) !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-body {
+  grid-template-rows: minmax(520px, 2fr) minmax(340px, 1fr) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  background: #1b1512;
+  scrollbar-color: rgba(210, 160, 98, 0.72) rgba(255, 255, 255, 0.08);
+}
+
+.memorisation-checker-modal .memorisation-checker-workspace,
+.memorisation-checker-modal .memorisation-checker-ayah-panel {
+  overflow: visible !important;
+  background: linear-gradient(180deg, rgba(45, 34, 27, 0.98), rgba(31, 24, 20, 0.98)) !important;
+  border-color: rgba(181, 130, 74, 0.3) !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-live,
+.memorisation-checker-modal .memorisation-checker-results {
+  overflow: visible !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-section-head span {
+  color: #efc280 !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-section-head strong {
+  color: #fff7ed !important;
+}
+
+.memorisation-checker-mode-select,
+.memorisation-checker-random-count {
+  display: grid;
+  gap: 4px;
+  color: #d8c4ad;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.memorisation-checker-mode-select {
+  min-width: 230px;
+}
+
+.memorisation-checker-random-count {
+  width: 88px;
+}
+
+.memorisation-checker-mode-select select,
+.memorisation-checker-random-count input {
+  min-height: 42px;
+  border-radius: 8px;
+  border: 1px solid rgba(210, 160, 98, 0.34);
+  background: #17120f;
+  color: #fff7ed;
+  font-weight: 650;
+}
+
+.memorisation-checker-mode-select select {
+  padding: 0 34px 0 12px;
+  font-size: 0.82rem;
+  text-transform: none;
+}
+
+.memorisation-checker-random-count input {
+  padding: 0 10px;
+  font-size: 0.92rem;
+}
+
+.memorisation-checker-modal .memorisation-checker-word-stream.recitation-word-stream,
+.memorisation-checker-modal .memorisation-checker-ayah {
+  background: #110e0c !important;
+  border-color: rgba(210, 160, 98, 0.2) !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah {
+  min-height: 260px;
+  color: #fffaf2 !important;
+  line-height: 2.1;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah-actions {
+  background: #17120f !important;
+  border: 1px solid rgba(210, 160, 98, 0.24);
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah-actions .self-check-ayah-action {
+  background: #221914 !important;
+  color: #f4c982 !important;
+  border-color: rgba(244, 201, 130, 0.28) !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah-actions .self-check-ayah-action.active,
+.memorisation-checker-modal .memorisation-checker-ayah-actions .self-check-ayah-action:hover {
+  background: rgba(181, 130, 74, 0.22) !important;
+  color: #ffe0a6 !important;
+}
+
+.memorisation-checker-modal .recitation-result-stat,
+.memorisation-checker-modal .recitation-next-card {
+  background: rgba(255, 247, 237, 0.045) !important;
+  border-color: rgba(210, 160, 98, 0.24) !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-final-words.recitation-word-stream {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.view-mode-toggle .view-mode-ai-btn {
+  position: relative;
+  border-radius: 999px;
+  border: 1px solid rgba(181, 130, 74, 0.2);
+}
+
+.view-mode-toggle .view-mode-ai-btn + .view-mode-ai-btn {
+  margin-inline-start: 6px;
+}
+
+.view-mode-toggle .view-mode-ai-btn:nth-of-type(2) {
+  margin-inline-end: 18px;
+}
+
+.view-mode-toggle .view-mode-ai-btn:nth-of-type(2)::after {
+  content: "";
+  position: absolute;
+  inset-block: 18%;
+  inset-inline-end: -10px;
+  width: 1px;
+  background: rgba(181, 130, 74, 0.28);
+}
+
+[data-theme="light"] .memorisation-checker-modal {
+  background: #f7efe4 !important;
+  color: #241b16 !important;
+}
+
+[data-theme="light"] .memorisation-checker-modal .memorisation-checker-header,
+[data-theme="light"] .memorisation-checker-modal .memorisation-checker-body,
+[data-theme="light"] .memorisation-checker-modal .memorisation-checker-workspace,
+[data-theme="light"] .memorisation-checker-modal .memorisation-checker-ayah-panel {
+  background: #fbf6ef !important;
+  color: #241b16 !important;
+}
+
+[data-theme="light"] .memorisation-checker-modal .memorisation-checker-section-head strong,
+[data-theme="light"] .memorisation-checker-modal .memorisation-checker-ayah {
+  color: #241b16 !important;
+}
+
+[data-theme="light"] .memorisation-checker-mode-select select,
+[data-theme="light"] .memorisation-checker-modal .memorisation-checker-word-stream.recitation-word-stream,
+[data-theme="light"] .memorisation-checker-modal .memorisation-checker-ayah {
+  background: #fffaf3 !important;
+  color: #241b16 !important;
+}
+
+.self-check-modal {
+  background: #211914 !important;
+  border-color: rgba(181, 130, 74, 0.34) !important;
+  color: #f6efe5 !important;
+}
+
+.self-check-modal .self-check-modal-header,
+.self-check-modal .self-check-modal-body,
+.self-check-modal .self-check-modal-stage,
+.self-check-modal .self-check-recorder-card,
+.self-check-modal .self-check-attempts-card,
+.self-check-modal .recitation-check-panel-inline {
+  background: linear-gradient(180deg, rgba(45, 34, 27, 0.98), rgba(31, 24, 20, 0.98)) !important;
+  border-color: rgba(181, 130, 74, 0.3) !important;
+  color: #f6efe5 !important;
+}
+
+.self-check-modal .self-check-section-title,
+.self-check-modal .self-check-recorder-head strong,
+.self-check-modal .recitation-check-head h2 {
+  color: #fff7ed !important;
+}
+
+.self-check-modal .self-check-section-desc,
+.self-check-modal .self-check-card-desc,
+.self-check-modal .self-check-tool-hint {
+  color: rgba(246, 239, 229, 0.72) !important;
+}
+
+.self-check-modal .self-check-modal-ayah-shell,
+.self-check-modal .self-check-modal-ayah {
+  background: #110e0c !important;
+  border-color: rgba(210, 160, 98, 0.24) !important;
+  color: #fffaf2 !important;
+}
+
+.self-check-modal .self-check-ayah-actions {
+  background: #17120f !important;
+  border: 1px solid rgba(210, 160, 98, 0.24) !important;
+  box-shadow: none !important;
+}
+
+.self-check-modal .self-check-ayah-action {
+  background: #221914 !important;
+  color: #f4c982 !important;
+  border-color: rgba(244, 201, 130, 0.28) !important;
+}
+
+[data-theme="light"] .self-check-modal,
+[data-theme="light"] .self-check-modal .self-check-modal-header,
+[data-theme="light"] .self-check-modal .self-check-modal-body,
+[data-theme="light"] .self-check-modal .self-check-modal-stage,
+[data-theme="light"] .self-check-modal .self-check-recorder-card,
+[data-theme="light"] .self-check-modal .self-check-attempts-card,
+[data-theme="light"] .self-check-modal .recitation-check-panel-inline {
+  background: #fbf6ef !important;
+  color: #241b16 !important;
+}
+
+[data-theme="light"] .self-check-modal .self-check-section-title,
+[data-theme="light"] .self-check-modal .self-check-recorder-head strong,
+[data-theme="light"] .self-check-modal .recitation-check-head h2,
+[data-theme="light"] .self-check-modal .self-check-modal-ayah {
+  color: #241b16 !important;
+}
+
+[data-theme="light"] .self-check-modal .self-check-modal-ayah-shell,
+[data-theme="light"] .self-check-modal .self-check-modal-ayah,
+[data-theme="light"] .self-check-modal .self-check-ayah-actions {
+  background: #fffaf3 !important;
+}
+
+@media (max-width: 760px) {
+  .memorisation-checker-modal .memorisation-checker-header {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+
+  .memorisation-checker-header-actions {
+    grid-column: 1 / -1;
+    flex-wrap: wrap;
+  }
+
+  .memorisation-checker-mode-select,
+  .memorisation-checker-start-btn {
+    flex: 1 1 100%;
+  }
+}
+
+/* Final AI checker layout reset. Keep this last so older checker overrides cannot overlap sections. */
+.memorisation-checker-modal {
+  width: min(1180px, calc(100vw - 28px)) !important;
+  height: min(92dvh, 920px) !important;
+  max-height: min(92dvh, 920px) !important;
+  overflow: hidden !important;
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  background: #1e1713 !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-header {
+  position: relative !important;
+  z-index: 5 !important;
+  display: grid !important;
+  grid-template-columns: minmax(260px, 1fr) minmax(320px, auto) auto !important;
+  gap: 16px !important;
+  align-items: center !important;
+  min-height: auto !important;
+  padding: 18px 20px !important;
+  border-bottom: 1px solid rgba(184, 127, 67, 0.3) !important;
+  background: #241a15 !important;
+}
+
+.memorisation-checker-modal .self-check-modal-head-copy h2 {
+  margin: 4px 0 0 !important;
+  font-size: clamp(1.22rem, 2vw, 1.7rem) !important;
+  line-height: 1.15 !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-header-actions {
+  display: grid !important;
+  grid-template-columns: minmax(230px, 1fr) auto auto !important;
+  align-items: end !important;
+  gap: 10px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-start-btn {
+  min-width: 154px !important;
+  min-height: 48px !important;
+  border-radius: 10px !important;
+}
+
+.memorisation-checker-modal .modal-close-btn {
+  position: static !important;
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 10px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-body {
+  display: grid !important;
+  gap: 14px !important;
+  min-height: 0 !important;
+  padding: 14px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  background: #17120f !important;
+}
+
+/* SNIPPET 1: CORE DESIGN SYSTEM */
+:root {
+  --bg-body: #f7f3ef;
+  --surface: #ffffff;
+  --surface-elevated: #fffbf7;
+  --border-light: rgba(100, 70, 40, 0.12);
+  --border-medium: rgba(100, 70, 40, 0.2);
+  --text-primary: #231f1c;
+  --text-secondary: #6b5e52;
+  --text-muted: #9b8e82;
+  --accent: #b5723c;
+  --accent-deep: #8b532b;
+  --accent-soft: rgba(181, 114, 60, 0.12);
+  --success: #2e7d64;
+  --success-soft: rgba(46, 125, 100, 0.12);
+  --warning: #e09d32;
+  --error: #c2573a;
+  --radius-card: 20px;
+  --radius-element: 14px;
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
+  --transition: all 0.2s ease;
+}
+
+/* SNIPPET 2: SESSION HEADER */
+.session-header {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 24px 28px;
+  margin-bottom: 28px;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.session-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.session-badge {
+  background: var(--accent-soft);
+  color: var(--accent);
+  padding: 6px 14px;
+  border-radius: 40px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* SNIPPET 3: VERSE CARD */
+.verse-card {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 28px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border-light);
+  transition: var(--transition);
+}
+
+.verse-card.active {
+  border-left: 4px solid var(--accent);
+  box-shadow: var(--shadow-md);
+}
+
+.verse-arabic {
+  font-family: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;
+  font-size: 2.2rem;
+  line-height: 1.8;
+  text-align: right;
+  direction: rtl;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.verse-translation {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  border-top: 1px solid var(--border-light);
+  padding-top: 16px;
+}
+
+/* SNIPPET 4: TOGGLE CHIP */
+.toggle-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 40px;
+  background: var(--surface);
+  border: 1px solid var(--border-medium);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.toggle-chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+/* SNIPPET 5: PROGRESS BAR */
+.progress-section {
+  margin: 20px 0;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.progress-track {
+  height: 6px;
+  background: var(--border-light);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+/* SNIPPET 6: BUTTON STYLES */
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-element);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary:hover {
+  background: var(--accent-deep);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--border-medium);
+  color: var(--text-secondary);
+  padding: 12px 24px;
+  border-radius: var(--radius-element);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+/* SNIPPET 7: AI CHECKER MODAL */
+.ai-checker-modal {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  max-width: 900px;
+  width: 90%;
+  margin: 40px auto;
+  padding: 28px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-light);
+}
+
+.checker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.checker-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+/* SNIPPET 8: WORD STREAM (LIVE RECOGNITION) */
+.word-stream {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  padding: 24px;
+  background: var(--surface-elevated);
+  border-radius: var(--radius-element);
+  border: 1px solid var(--border-light);
+  margin: 20px 0;
+  direction: rtl;
+}
+
+.word-chip {
+  display: inline-block;
+  padding: 8px 16px;
+  background: var(--surface);
+  border-radius: 40px;
+  font-family: 'UthmanicHafs', 'Amiri', serif;
+  font-size: 1.2rem;
+  border: 1px solid var(--border-light);
+  transition: var(--transition);
+}
+
+.word-chip.correct {
+  background: var(--success-soft);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.word-chip.partial {
+  background: var(--warning-soft);
+  border-color: var(--warning);
+  color: #b87a1a;
+}
+
+.word-chip.incorrect {
+  background: var(--error-soft);
+  border-color: var(--error);
+  color: var(--error);
+}
+
+/* SNIPPET 9: RESULTS GRID */
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.result-card {
+  background: var(--surface-elevated);
+  padding: 20px;
+  border-radius: var(--radius-element);
+  text-align: center;
+  border: 1px solid var(--border-light);
+}
+
+.result-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.result-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* SNIPPET 10: RECORDINGS LIBRARY */
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.recording-card {
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-element);
+  padding: 16px;
+  transition: var(--transition);
+}
+
+.recording-card:hover {
+  border-color: var(--accent-soft);
+  box-shadow: var(--shadow-sm);
+}
+
+.recording-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.recording-date {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* SNIPPET 11: RESPONSIVE TOOLBAR */
+.tools-tabs {
+  display: flex;
+  gap: 8px;
+  background: var(--surface);
+  padding: 6px;
+  border-radius: 60px;
+  border: 1px solid var(--border-light);
+  width: fit-content;
+}
+
+.tab-btn {
+  padding: 10px 20px;
+  border-radius: 40px;
+  background: transparent;
+  border: none;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.tab-btn.active {
+  background: var(--accent);
+  color: white;
+}
+
+/* SNIPPET 12: STATS CARDS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin: 24px 0;
+}
+
+.stat-card {
+  background: var(--surface);
+  border-radius: var(--radius-element);
+  padding: 20px;
+  text-align: center;
+  border: 1px solid var(--border-light);
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* SNIPPET 13: MICRO INTERACTIONS */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-content {
+  animation: slideUp 0.25s ease;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+/* SNIPPET 14: MOBILE ADAPTATION */
+@media (max-width: 768px) {
+  .session-header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
+  }
+  
+  .verse-arabic {
+    font-size: 1.6rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .tools-tabs {
+    width: 100%;
+    overflow-x: auto;
+  }
+  
+  .btn-primary, .btn-secondary {
+    padding: 10px 18px;
+    font-size: 0.8rem;
+  }
+}
+
+/* SNIPPET 15: DARK MODE TOGGLE */
+.theme-toggle {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border-medium);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+}
+
+.memorisation-checker-modal .memorisation-checker-workspace,
+.memorisation-checker-modal .memorisation-checker-ayah-panel {
+  display: grid !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  padding: 16px !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(184, 127, 67, 0.28) !important;
+  background: #241b16 !important;
+  box-shadow: none !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-workspace {
+  gap: 14px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-live {
+  display: grid !important;
+  grid-template-rows: auto minmax(260px, auto) auto auto !important;
+  gap: 12px !important;
+  overflow: visible !important;
+}
+
+.memorisation-checker-modal .recitation-live-head {
+  min-height: 34px !important;
+  padding: 0 !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-word-stream.recitation-word-stream {
+  position: static !important;
+  display: flex !important;
+  min-height: 280px !important;
+  max-height: none !important;
+  overflow: visible !important;
+  align-content: center !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  padding: 22px !important;
+  border-radius: 10px !important;
+  background: #0f0c0a !important;
+  border: 1px solid rgba(184, 127, 67, 0.24) !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-live-placeholder {
+  min-height: 180px !important;
+  color: rgba(246, 239, 229, 0.5) !important;
+  text-align: center !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-results {
+  display: grid !important;
+  gap: 14px !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-results .memorisation-checker-section-head {
+  padding: 0 !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-results .recitation-result-stats {
+  display: grid !important;
+  grid-template-columns: repeat(6, minmax(120px, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-results .recitation-result-stat {
+  min-height: 118px !important;
+  padding: 14px !important;
+  border-radius: 10px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-final-words.recitation-word-stream {
+  min-height: 118px !important;
+  padding: 16px !important;
+  align-items: center !important;
+  align-content: center !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-final-words .recitation-word-chip {
+  font-size: clamp(1.05rem, 1.8vw, 1.45rem) !important;
+  min-height: 34px !important;
+}
+
+.memorisation-checker-modal .recitation-next-card {
+  border-radius: 10px !important;
+}
+
+.memorisation-checker-modal .recitation-result-actions {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  margin: 0 !important;
+}
+
+.memorisation-checker-modal .recitation-result-actions .self-check-action-btn {
+  width: 100% !important;
+  min-height: 50px !important;
+  justify-content: center !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah-panel {
+  grid-template-rows: auto minmax(260px, auto) auto !important;
+  gap: 12px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah-panel.has-result {
+  grid-template-rows: auto minmax(180px, auto) auto !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah {
+  order: 2 !important;
+  position: static !important;
+  width: 100% !important;
+  min-height: 320px !important;
+  overflow: visible !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px !important;
+  border-radius: 10px !important;
+  text-align: center !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah-panel.has-result .memorisation-checker-ayah {
+  min-height: 220px !important;
+  font-size: clamp(1.35rem, 2.4vw, 2rem) !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah-actions {
+  order: 3 !important;
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: none !important;
+  display: flex !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  padding: 10px !important;
+  border-radius: 10px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-hidden-word {
+  min-width: 2.8ch !important;
+  padding: 0.06em 0.38em !important;
+  border-radius: 999px !important;
+  background: rgba(184, 127, 67, 0.2) !important;
+}
+
+@media (max-width: 980px) {
+  .memorisation-checker-modal .memorisation-checker-header {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+
+  .memorisation-checker-modal .memorisation-checker-header-actions {
+    grid-column: 1 / -1 !important;
+    grid-template-columns: 1fr auto !important;
+  }
+
+  .memorisation-checker-modal .memorisation-checker-random-count {
+    width: 96px !important;
+  }
+
+  .memorisation-checker-modal .memorisation-checker-results .recitation-result-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .memorisation-checker-modal {
+    width: 100vw !important;
+    height: 100dvh !important;
+    max-height: none !important;
+  }
+
+  .memorisation-checker-modal .memorisation-checker-header-actions,
+  .memorisation-checker-modal .recitation-result-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .memorisation-checker-modal .memorisation-checker-results .recitation-result-stats {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Simplified respectful modal layout. */
+.memorisation-checker-modal {
+  width: min(1040px, calc(100vw - 32px)) !important;
+  height: min(86dvh, 760px) !important;
+  max-height: min(86dvh, 760px) !important;
+  border-radius: 14px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-header {
+  grid-template-columns: minmax(240px, 1fr) minmax(360px, auto) auto !important;
+  padding: 18px 20px !important;
+}
+
+.memorisation-checker-modal .modal-context-badge {
+  display: none !important;
+}
+
+.memorisation-checker-modal .self-check-modal-head-copy h2 {
+  font-size: clamp(1.35rem, 2.2vw, 1.9rem) !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-body {
+  gap: 12px !important;
+  padding: 12px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-workspace,
+.memorisation-checker-modal .memorisation-checker-ayah-panel {
+  padding: 14px !important;
+  border-radius: 10px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-section-head {
+  gap: 2px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-section-head span {
+  font-size: 0.68rem !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-section-head strong {
+  font-size: 1rem !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-live {
+  grid-template-rows: auto minmax(180px, auto) auto !important;
+  gap: 10px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-word-stream.recitation-word-stream {
+  min-height: 210px !important;
+  padding: 16px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-live-placeholder {
+  min-height: 120px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-hint {
+  margin: 0 !important;
+  font-size: 0.84rem !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah-panel {
+  grid-template-rows: auto minmax(180px, auto) auto !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah {
+  min-height: 220px !important;
+  padding: 18px !important;
+  font-size: clamp(1.7rem, 3vw, 2.6rem) !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah-actions {
+  padding: 8px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah-actions .self-check-ayah-action {
+  width: 42px !important;
+  height: 42px !important;
+  flex-basis: 42px !important;
+  border-radius: 9px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-results .recitation-result-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-results .recitation-result-stat {
+  min-height: 92px !important;
+}
+
+.self-check-modal {
+  width: min(1120px, calc(100vw - 32px)) !important;
+  max-height: min(88dvh, 820px) !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+}
+
+.self-check-modal .modal-context-badge,
+.self-check-modal .self-check-section-desc,
+.self-check-modal .technique-peek-hint {
+  display: none !important;
+}
+
+.self-check-modal .self-check-modal-header {
+  padding: 18px 20px !important;
+}
+
+.self-check-modal .self-check-modal-body {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 14px !important;
+  padding: 18px 20px !important;
+  overflow-y: auto !important;
+}
+
+.self-check-modal .self-check-modal-stage {
+  padding: 16px !important;
+  border-radius: 10px !important;
+}
+
+.self-check-modal .self-check-section-head {
+  padding: 0 !important;
+  margin-bottom: 10px !important;
+}
+
+.self-check-modal .self-check-modal-ayah-shell {
+  min-height: 310px !important;
+  padding: 14px !important;
+  border-radius: 10px !important;
+}
+
+.self-check-modal .self-check-modal-ayah {
+  min-height: 270px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  border-radius: 10px !important;
+}
+
+.self-check-modal .self-check-ayah-actions {
+  inset: auto 18px 18px auto !important;
+  transform: none !important;
+  max-width: none !important;
+}
+
+.self-check-modal .self-check-modal-quick-actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+  margin: 0 !important;
+}
+
+.self-check-modal .self-check-action-btn {
+  min-height: 48px !important;
+  border-radius: 10px !important;
+}
+
+.self-check-modal .self-check-modal-recorder-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.72fr) !important;
+  gap: 14px !important;
+}
+
+.self-check-modal .self-check-recorder-card,
+.self-check-modal .self-check-attempts-card {
+  padding: 16px !important;
+  border-radius: 10px !important;
+}
+
+.self-check-modal .self-check-recorder-meta {
+  margin-top: 12px !important;
+}
+
+@media (max-width: 820px) {
+  .memorisation-checker-modal .memorisation-checker-header,
+  .memorisation-checker-modal .memorisation-checker-header-actions,
+  .self-check-modal .self-check-modal-recorder-grid,
+  .self-check-modal .self-check-modal-quick-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Second simplification pass: compact memory checker and clearer self-check contrast. */
+.memorisation-checker-modal {
+  width: min(980px, calc(100vw - 32px)) !important;
+  height: auto !important;
+  max-height: min(88dvh, 760px) !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-header {
+  grid-template-columns: minmax(0, 1fr) minmax(420px, auto) auto !important;
+  padding: 16px 18px !important;
+}
+
+.memorisation-checker-modal .self-check-modal-head-copy h2 {
+  max-width: 30rem !important;
+  font-size: clamp(1.22rem, 1.8vw, 1.55rem) !important;
+  overflow-wrap: normal !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-body {
+  max-height: calc(min(88dvh, 760px) - 92px) !important;
+  padding: 12px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-workspace,
+.memorisation-checker-modal .memorisation-checker-ayah-panel {
+  padding: 12px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-live {
+  grid-template-rows: auto minmax(150px, auto) auto !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-word-stream.recitation-word-stream {
+  min-height: 170px !important;
+  padding: 14px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-live-placeholder {
+  min-height: 90px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah-panel {
+  grid-template-rows: auto minmax(150px, auto) auto !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah {
+  min-height: 190px !important;
+  padding: 16px !important;
+  font-size: clamp(1.55rem, 2.6vw, 2.35rem) !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah-actions {
+  min-height: 58px !important;
+  flex-wrap: nowrap !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah-actions .self-check-ayah-action {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  flex: 0 0 44px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-hidden-word {
+  min-width: 2.2ch !important;
+  font-size: 0.9em !important;
+}
+
+[data-theme="light"] .self-check-modal .self-check-section-desc,
+[data-theme="light"] .self-check-modal .self-check-card-desc {
+  display: block !important;
+  color: rgba(36, 27, 22, 0.6) !important;
+}
+
+[data-theme="light"] .self-check-modal .self-check-modal-body,
+[data-theme="light"] .self-check-modal .self-check-modal-stage,
+[data-theme="light"] .self-check-modal .self-check-recorder-card,
+[data-theme="light"] .self-check-modal .self-check-attempts-card {
+  background: #fffaf4 !important;
+}
+
+[data-theme="light"] .self-check-modal .self-check-modal-ayah-shell,
+[data-theme="light"] .self-check-modal .self-check-modal-ayah {
+  background: #fffdf8 !important;
+  border-color: rgba(154, 103, 56, 0.18) !important;
+}
+
+@media (max-width: 900px) {
+  .memorisation-checker-modal .memorisation-checker-header {
+    grid-template-columns: 1fr auto !important;
+  }
+
+  .memorisation-checker-modal .memorisation-checker-header-actions {
+    grid-column: 1 / -1 !important;
+    grid-template-columns: 1fr auto !important;
+  }
+
+  .memorisation-checker-modal .memorisation-checker-start-btn {
+    grid-column: 1 / -1 !important;
   }
 }
 </style>
