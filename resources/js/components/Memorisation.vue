@@ -1776,7 +1776,7 @@
         <div class="modal-header self-check-modal-header">
           <div class="self-check-modal-head-copy">
             <div class="modal-context-badge">Per-ayah recorder</div>
-            <h2 id="selfCheckModalTitle">Self-Check for Ayah {{ selfCheckModalVerse.number }}</h2>
+            <h2 id="selfCheckModalTitle">{{ selfCheckModalTitle }}</h2>
           </div>
           <button class="modal-close-btn" @click="closeSelfCheckModal" aria-label="Close self-check">
             <i class="bi bi-x-lg"></i>
@@ -1825,6 +1825,12 @@
                   aria-label="Manual recording">
                   <i class="bi" :class="isSelfCheckRecording ? 'bi-stop-circle' : 'bi-mic-fill'"></i>
                 </button>
+                <button class="self-check-ayah-action" type="button"
+                  @click.stop="resetDisplayedRecitationAyah"
+                  :disabled="recitationCheckRecording || recitationCheckPreparing"
+                  title="Reset displayed ayah review" aria-label="Reset displayed ayah review">
+                  <i class="bi bi-arrow-counterclockwise"></i>
+                </button>
                 <select :value="reciterId" @change="handleSelfCheckReciterChange" class="self-check-reciter-select"
                   title="Select reciter" aria-label="Select reciter">
                   <option v-for="r in reciters" :key="`self-check-reciter-${r.id}`" :value="r.id">{{ r.name }}</option>
@@ -1843,10 +1849,8 @@
                     :class="activeSelfCheckAyahPlaybackKey === selfCheckModalVerse.key ? 'bi-pause-fill' : 'bi-play-fill'"></i>
                 </button>
               </div>
-                <div class="self-check-modal-ayah" dir="rtl" :style="{
-                'font-family': quranFontFamily,
-                'font-size': (selfCheckFontSize / 100) + 'rem'
-              }" :class="{ 'tajweed-enabled': selfCheckTajweedEnabled, 'recitation-word-review-active': isRecitationCheckTargetVerse(selfCheckModalVerse.key) }"
+                <div class="self-check-modal-ayah" dir="rtl" :style="getSelfCheckAyahDisplayStyle()"
+              :class="{ 'tajweed-enabled': selfCheckTajweedEnabled, 'recitation-word-review-active': isRecitationCheckTargetVerse(selfCheckModalVerse.key), 'self-check-session-ayat': recitationCheckScope === 'session' && recitationCheckPendingTargets.length > 1 }"
                 v-html="getSelfCheckDisplayArabic(selfCheckModalVerse)"></div>
             </div>
 
@@ -1924,6 +1928,11 @@
                       aria-label="Close Recite Check results">
                       <i class="bi bi-x-lg"></i>
                     </button>
+                    <button v-if="recitationCheckResult && !recitationCheckRecording && !recitationCheckPreparing"
+                      class="recitation-result-reset" type="button" @click="resetDisplayedRecitationAyah"
+                      title="Reset displayed ayah review" aria-label="Reset displayed ayah review">
+                      <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
                   </div>
                 </div>
                 <div v-if="recitationCheckRecording" class="recitation-check-status">
@@ -1936,6 +1945,12 @@
                     <span>{{ recitationLiveSummary }}</span>
                     <strong>{{ getRecitationLiveProgressPercent() }}%</strong>
                   </div>
+                  <transition-group name="memory-word" tag="div" class="recitation-word-stream recitation-live-word-stream" dir="rtl">
+                    <span v-for="word in getVisibleRecitationLiveWords()" :key="word.key"
+                      class="recitation-word-chip" :class="`word-${word.status || 'pending'}`" :title="word.note">
+                      {{ word.text }}
+                    </span>
+                  </transition-group>
                 </div>
                 <div v-if="recitationCheckRecording" class="recitation-check-actions">
                   <button class="btn-primary self-check-action-btn" type="button" @click="stopRecitationCheckRecording">
@@ -1971,6 +1986,10 @@
                     <button class="btn-secondary self-check-action-btn" type="button" @click="discardRecitationCheckAttempt">
                       <i class="bi bi-x-circle"></i>
                       <span>Discard</span>
+                    </button>
+                    <button class="btn-secondary self-check-action-btn" type="button" @click="resetDisplayedRecitationAyah">
+                      <i class="bi bi-arrow-counterclockwise"></i>
+                      <span>Reset Ayah</span>
                     </button>
                     <button class="btn-secondary self-check-action-btn recitation-delete-btn" type="button" @click="deleteRecitationCheckAttempt">
                       <i class="bi bi-trash3"></i>
@@ -3503,6 +3522,17 @@ export default {
         }
       }
       return this.selfCheckVerseRef || null
+    },
+    selfCheckModalTitle() {
+      const targets = this.recitationCheckScope === 'session' && this.recitationCheckPendingTargets.length
+        ? this.recitationCheckPendingTargets
+        : [this.selfCheckModalVerse].filter(Boolean)
+      if (targets.length > 1) {
+        const first = targets[0]?.number || String(targets[0]?.key || '').split(':')[1] || ''
+        const last = targets[targets.length - 1]?.number || String(targets[targets.length - 1]?.key || '').split(':')[1] || ''
+        return `Self-Check for Ayahs ${first}-${last}`
+      }
+      return `Self-Check for Ayah ${this.selfCheckModalVerse?.number || ''}`.trim()
     },
     aiMemorisationCheckerVerse() {
       if (!this.aiMemorisationCheckerVerseKey) return null
@@ -6863,8 +6893,8 @@ export default {
     },
     getRecitationScoreTone(score) {
       const value = Number(score || 0)
-      if (value >= 65) return 'tone-excellent'
-      if (value >= 38) return 'tone-good'
+      if (value >= 85) return 'tone-excellent'
+      if (value >= 65) return 'tone-good'
       return 'tone-review'
     },
     formatAiMistakeList(items) {
@@ -6899,7 +6929,7 @@ export default {
         ayahKey: attempt.ayahRange?.keys?.[0] || `${attempt.surah?.id}:${attempt.ayahRange?.start}`,
         recordedAt: attempt.timestamp,
         durationSeconds: 0,
-        result: result.accuracyScore >= 65 ? 'Excellent' : result.accuracyScore >= 38 ? 'Good' : 'Needs Review',
+        result: result.accuracyScore >= 85 ? 'Excellent' : result.accuracyScore >= 65 ? 'Good' : 'Needs Review',
         accuracyScore: result.accuracyScore,
         transcript: result.transcript,
         targetText: result.targetText,
@@ -7078,13 +7108,13 @@ export default {
     },
     getSelfCheckModalArabic(verse) {
       if (!verse?.arabic) return ''
+      if (this.isRecitationCheckTargetVerse(verse.key)) {
+        return this.splitRecitationDisplayIntoWords(verse)
+      }
       if (this.selfCheckTajweedEnabled && verse.arabic_tajweed) {
         return this.wrapTajweedWithWordHighlighting(verse, this.normalizeTajweedMarkup(verse.arabic_tajweed))
       }
-      if (this.isRecitationCheckTargetVerse(verse.key)) {
-        return this.splitArabicIntoWords(verse)
-      }
-      return this.stripTajweedMarkup(verse.arabic)
+      return this.cleanRecitationDisplayText(verse.arabic)
     },
     getSelfCheckDisplayArabic(verse) {
       const targets = this.recitationCheckScope === 'session' && this.recitationCheckPendingTargets.length
@@ -7094,6 +7124,31 @@ export default {
         .map(item => this.getSelfCheckModalArabic(this.getCanonicalVerseForCheck(item) || item))
         .filter(Boolean)
         .join(' ')
+    },
+    getSelfCheckDisplayTargets() {
+      return this.recitationCheckScope === 'session' && this.recitationCheckPendingTargets.length
+        ? this.recitationCheckPendingTargets
+        : [this.selfCheckModalVerse || this.selfCheckVerseRef].filter(Boolean)
+    },
+    getSelfCheckTargetWordCount() {
+      return this.tokenizeRecitationDisplayWords(this.getRecitationTargetText(this.getSelfCheckDisplayTargets())).length
+    },
+    getSelfCheckDisplayFontRem() {
+      const wordCount = this.getSelfCheckTargetWordCount()
+      const targetCount = this.getSelfCheckDisplayTargets().length
+      if (targetCount > 4 || wordCount > 72) return 2.05
+      if (targetCount > 2 || wordCount > 42) return 2.45
+      if (wordCount > 24) return 2.9
+      if (wordCount > 12) return 3.35
+      return 4.15
+    },
+    getSelfCheckAyahDisplayStyle() {
+      const fontSize = this.getSelfCheckDisplayFontRem()
+      return {
+        'font-family': this.quranFontFamily,
+        'font-size': `${fontSize}rem`,
+        '--self-check-display-font-size': `${fontSize}rem`
+      }
     },
     async toggleSelfCheckAyahPlayback(verse) {
       if (!verse?.audio) {
@@ -7149,14 +7204,25 @@ export default {
       return this.recordingsLibrary.filter(recording => recording.ayahKey === ayahKey).length
     },
     isRecitationCheckTargetVerse(ayahKey) {
-      return !!ayahKey && this.recitationCheckTargetVerseKey === ayahKey
+      if (!ayahKey) return false
+      if (this.recitationCheckTargetVerseKey === ayahKey) return true
+      return (this.recitationCheckPendingTargets || []).some(verse => verse?.key === ayahKey)
+    },
+    getRecitationWordOffsetForVerse(ayahKey) {
+      if (!ayahKey || !this.recitationCheckPendingTargets?.length) return 0
+      let offset = 0
+      for (const verse of this.recitationCheckPendingTargets) {
+        if (verse?.key === ayahKey) return offset
+        offset += this.tokenizeRecitationDisplayWords(this.getPlainVerseArabicForCheck(verse)).length
+      }
+      return 0
     },
     getRecitationWordStatusForVerse(ayahKey, index) {
       if (!this.isRecitationCheckTargetVerse(ayahKey)) return ''
       const source = this.recitationCheckResult
         ? this.getRecitationWordStatuses(this.recitationCheckResult)
         : this.recitationLiveWords
-      const status = source?.[index]?.status || ''
+      const status = source?.[this.getRecitationWordOffsetForVerse(ayahKey) + index]?.status || ''
       return ['pending', 'correct', 'partial', 'incorrect'].includes(status) ? status : ''
     },
     focusSelfCheckSavedAttempts(kind = '') {
@@ -7276,10 +7342,7 @@ export default {
       this.persistAiMemorisationCheckerSession()
     },
     prepareAiMemorisationCheckerWords() {
-      const words = this.getRecitationTargetText(this.aiMemorisationCheckerTargets)
-        .split(/\s+/)
-        .map(word => word.trim())
-        .filter(Boolean)
+      const words = this.tokenizeRecitationDisplayWords(this.getRecitationTargetText(this.aiMemorisationCheckerTargets))
       this.aiMemorisationCheckerLiveWords = words.map(text => ({ text, status: 'pending', note: 'Waiting for this word.' }))
       this.aiMemorisationCheckerHiddenIndexes = this.aiMemorisationCheckerMode === 'random'
         ? this.buildRandomMemorisationHiddenIndexes(words.length)
@@ -7323,14 +7386,12 @@ export default {
         if (this.aiMemorisationCheckerTajweedEnabled && liveVerse.arabic_tajweed) {
           return this.wrapTajweedWithWordHighlighting(liveVerse, this.normalizeTajweedMarkup(liveVerse.arabic_tajweed))
         }
-        return this.stripTajweedMarkup(liveVerse.arabic || liveVerse.arabic_tajweed || '')
+        return this.cleanRecitationDisplayText(liveVerse.arabic || liveVerse.arabic_tajweed || '')
       }).filter(Boolean).join(' ')
     },
     getAiMemorisationCheckerRandomArabic(verse) {
       const hidden = new Set(this.aiMemorisationCheckerHiddenIndexes || [])
-      return this.getPlainVerseArabicForCheck(verse)
-        .split(/\s+/)
-        .filter(Boolean)
+      return this.tokenizeRecitationDisplayWords(this.getPlainVerseArabicForCheck(verse))
         .map((word, index) => hidden.has(index)
           ? `<span class="memorisation-checker-hidden-word">•••</span>`
           : this.escapeHtml(word))
@@ -7549,7 +7610,7 @@ export default {
     },
     async submitAiMemorisationChecker(blob, targetVerses, fallbackTranscript = '', audioSrc = '') {
       try {
-        const transcript = await this.transcribeAiMemorisationCheckerBlob(blob, 'memorisation-check')
+        const transcript = await this.transcribeAiMemorisationCheckerBlob(blob, 'memorisation-check', targetVerses)
         this.completeAiMemorisationCheckerFromTranscript(transcript || fallbackTranscript, targetVerses, 'groq whisper', audioSrc)
       } catch (error) {
         if (fallbackTranscript) {
@@ -7560,10 +7621,12 @@ export default {
         throw error
       }
     },
-    async transcribeAiMemorisationCheckerBlob(blob, prefix = 'memorisation-check') {
+    async transcribeAiMemorisationCheckerBlob(blob, prefix = 'memorisation-check', targetVerses = []) {
       const extension = blob.type.includes('mp4') ? 'mp4' : blob.type.includes('ogg') ? 'ogg' : 'webm'
       const formData = new FormData()
       formData.append('audio', blob, `${prefix}.${extension}`)
+      const targetText = this.getRecitationTargetText(targetVerses?.length ? targetVerses : this.aiMemorisationCheckerTargets)
+      if (targetText) formData.append('target_text', targetText)
       const response = await axios.post('/memorisation/recitation-check/transcribe', formData)
       return String(response?.data?.text || '').trim()
     },
@@ -7605,7 +7668,7 @@ export default {
     getAiMemorisationCheckerResultStats(result) {
       const stats = this.getRecitationResultStats(result)
       const statuses = this.getRecitationWordStatuses(result)
-      const missed = statuses.filter(word => word.status === 'pending').length + (result?.mistakes?.missing?.length || 0)
+      const missed = statuses.filter(word => word.status === 'pending' || word.status === 'incorrect').length
       const spoken = statuses.filter(word => word.status && word.status !== 'pending').length
       const total = Math.max(1, statuses.length)
       return [
@@ -7618,7 +7681,7 @@ export default {
       const statuses = this.getRecitationWordStatuses(result)
       const partial = statuses.filter(word => word.status === 'partial').slice(0, 3).map(word => word.text)
       const review = statuses.filter(word => word.status === 'incorrect' || word.status === 'pending').slice(0, 3).map(word => word.text)
-      if (Number(result?.accuracyScore || 0) >= 65) return 'Save this attempt to the recordings library, then run one clean recall without peeking.'
+      if (Number(result?.accuracyScore || 0) >= 85) return 'Save this attempt to the recordings library, then run one clean recall without peeking.'
       if (review.length) return `Replay and drill: ${review.join('، ')}. Then retry the checker for the same target.`
       if (partial.length) return `Slow down and sharpen: ${partial.join('، ')}. These were close but not clean.`
       return this.getRecitationNextStep(result)
@@ -7697,7 +7760,7 @@ export default {
         ayahKey: first?.key || '',
         recordedAt: result.timestamp || result.savedAt || new Date().toISOString(),
         durationSeconds: 0,
-        result: Number(result.accuracyScore || 0) >= 65 ? 'Excellent' : Number(result.accuracyScore || 0) >= 38 ? 'Good' : 'Needs Review',
+        result: Number(result.accuracyScore || 0) >= 85 ? 'Excellent' : Number(result.accuracyScore || 0) >= 65 ? 'Good' : 'Needs Review',
         accuracyScore: Number(result.accuracyScore || 0),
         transcript: result.transcript || '',
         targetText: result.targetText || this.getRecitationTargetText(targets),
@@ -7755,11 +7818,19 @@ export default {
       const checked = this.recitationLiveWords.filter(word => word.status !== 'pending').length
       return Math.max(0, Math.min(100, Math.round((checked / this.recitationLiveWords.length) * 100)))
     },
+    getVisibleRecitationLiveWords(limit = 36) {
+      const words = Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : []
+      if (!words.length) return []
+      const lastActiveIndex = words.reduce((latest, word, index) => word.status && word.status !== 'pending' ? index : latest, -1)
+      const end = Math.min(words.length, Math.max(limit, lastActiveIndex + 6))
+      const start = Math.max(0, end - limit)
+      return words.slice(start, end).map((word, index) => ({
+        ...word,
+        key: `recitation-live-${start + index}-${word.status || 'pending'}`
+      }))
+    },
     seedRecitationLiveWords(targetVerses = this.getRecitationCheckTargetVerses()) {
-      const targetWords = this.getRecitationTargetText(targetVerses)
-        .split(/\s+/)
-        .map(word => word.trim())
-        .filter(Boolean)
+      const targetWords = this.tokenizeRecitationDisplayWords(this.getRecitationTargetText(targetVerses))
       this.recitationLiveWords = targetWords.map(text => ({ text, status: 'pending', note: 'Waiting for this word.' }))
     },
     updateRecitationLiveWordsFromTranscript(transcript) {
@@ -7894,6 +7965,17 @@ export default {
     dismissRecitationCheckResult() {
       this.clearRecitationReviewState()
     },
+    resetDisplayedRecitationAyah() {
+      const targets = this.recitationCheckPendingTargets?.length
+        ? this.recitationCheckPendingTargets
+        : this.getRecitationCheckTargetVerses(this.selfCheckModalVerse || null)
+      this.recitationCheckResult = null
+      this.recitationCheckError = ''
+      this.recitationSpeechTranscript = ''
+      this.recitationSpeechInterim = ''
+      this.seedRecitationLiveWords(targets)
+      this.showBanner('Displayed ayah review reset.', 'info', 1400)
+    },
     clearRecitationReviewState() {
       this.recitationCheckResult = null
       this.recitationCheckError = ''
@@ -8023,14 +8105,11 @@ export default {
             if (!chunks.length) throw new Error('No audio was captured.')
             const blob = new Blob(chunks, { type: recorder.mimeType || mimeType || 'audio/webm' })
             const audioSrc = await this.blobToDataUrl(blob)
-            if (speechFallbackTranscript && this.completeRecitationCheckFromTranscript(speechFallbackTranscript, targets, 'browser speech recognition', audioSrc)) {
-              return
-            }
-            await this.submitRecitationCheck(blob, targets, audioSrc)
+            await this.submitRecitationCheck(blob, targets, audioSrc, speechFallbackTranscript)
           } catch (error) {
             console.error('Failed to process recitation check:', error)
             const serverMessage = error?.response?.data?.message
-            if (speechFallbackTranscript && this.completeRecitationCheckFromTranscript(speechFallbackTranscript, targets)) {
+            if (speechFallbackTranscript && this.completeRecitationCheckFromTranscript(speechFallbackTranscript, targets, 'browser speech recognition', audioSrc)) {
               this.showBanner('Transcription failed, so Recite Check used browser speech recognition fallback.', 'info', 3600)
               return
             }
@@ -8077,15 +8156,18 @@ export default {
         if (el?.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
       })
     },
-    async submitRecitationCheck(blob, targetVerses = this.getRecitationCheckTargetVerses(), audioSrc = '') {
+    async submitRecitationCheck(blob, targetVerses = this.getRecitationCheckTargetVerses(), audioSrc = '', fallbackTranscript = '') {
       const extension = blob.type.includes('mp4') ? 'mp4' : blob.type.includes('ogg') ? 'ogg' : 'webm'
       const formData = new FormData()
       formData.append('audio', blob, `recitation-check.${extension}`)
+      formData.append('target_text', this.getRecitationTargetText(targetVerses))
 
       const response = await axios.post('/memorisation/recitation-check/transcribe', formData)
       const transcript = String(response?.data?.text || '').trim()
-      const result = this.assessRecitationTranscript(transcript, targetVerses)
+      const mergedTranscript = this.mergeRecitationTranscripts(transcript, fallbackTranscript)
+      const result = this.assessRecitationTranscript(mergedTranscript, targetVerses)
       result.audioSrc = audioSrc
+      result.transcriptionSource = transcript ? 'groq whisper' : 'browser speech recognition'
       this.recitationCheckResult = result
       this.recitationLiveWords = Array.isArray(result.wordStatuses) ? result.wordStatuses : []
       this.recitationCheckAutoStopArmed = false
@@ -8116,9 +8198,7 @@ export default {
     },
     getPlainVerseArabicForCheck(verse) {
       const source = this.getCanonicalVerseForCheck(verse)
-      return this.stripTajweedMarkup(source?.arabic || source?.arabic_tajweed || '')
-        .replace(/\s+/g, ' ')
-        .trim()
+      return this.cleanRecitationDisplayText(source?.arabic || source?.arabic_tajweed || '')
     },
     getRecitationTargetText(targetVerses = this.getRecitationCheckTargetVerses()) {
       return targetVerses
@@ -8130,18 +8210,46 @@ export default {
       return String(text || '')
         .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g, '')
         .replace(/\u0640/g, '')
+        .replace(/([^\s])ٱ\s+(?=ل)/g, '$1 ٱ')
+        .replace(/(^|\s)ٱ\s+(?=ل)/g, '$1ٱ')
         .replace(/[إأآٱ]/g, 'ا')
         .replace(/ؤ/g, 'و')
         .replace(/ئ/g, 'ي')
         .replace(/ى/g, 'ي')
         .replace(/ة/g, 'ه')
+        .replace(/(^|\s)ا\s+(?=ل)/g, '$1ا')
         .replace(/[^\u0621-\u064A\s]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim()
     },
+    cleanRecitationDisplayText(text) {
+      return this.stripTajweedMarkup(text)
+        .replace(/\u0640/g, '')
+        .replace(/[\u06D6-\u06ED]/g, '')
+        .replace(/([^\s])ٱ\s+(?=ل)/g, '$1 ٱ')
+        .replace(/(^|\s)ٱ\s+(?=ل)/g, '$1ٱ')
+        .replace(/(^|\s)ا\s+(?=ل)/g, '$1ا')
+        .replace(/[^\u0621-\u064A\u0671\u0670\u064B-\u065F\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+    },
+    tokenizeRecitationDisplayWords(text) {
+      const cleaned = this.cleanRecitationDisplayText(text)
+      return cleaned ? cleaned.split(/\s+/).map(word => word.trim()).filter(Boolean) : []
+    },
     tokenizeRecitationWords(text) {
       const normalized = this.normalizeArabicForRecitation(text)
       return normalized ? normalized.split(/\s+/).filter(Boolean) : []
+    },
+    mergeRecitationTranscripts(primary = '', fallback = '') {
+      const first = String(primary || '').trim()
+      const second = String(fallback || '').trim()
+      if (!first) return second
+      if (!second) return first
+      const firstWords = this.tokenizeRecitationWords(first)
+      const secondWords = this.tokenizeRecitationWords(second)
+      if (secondWords.length > firstWords.length + 1) return second
+      return first
     },
     buildRecitationWordDiffParts(targetWords, transcriptWords) {
       const vocabulary = new Map()
@@ -8239,63 +8347,97 @@ export default {
         return { text: word, status: 'correct', note: 'Correct.' }
       })
     },
-    buildSequentialRecitationWordStatuses(displayWords, normalizedTargetWords, transcriptWords) {
-      const statuses = displayWords.map(text => ({ text, status: 'pending', note: 'Not heard yet.' }))
-      let transcriptIndex = 0
-      for (let targetIndex = 0; targetIndex < normalizedTargetWords.length; targetIndex += 1) {
-        const targetWord = normalizedTargetWords[targetIndex]
-        let matchedIndex = -1
-        for (let index = transcriptIndex; index < transcriptWords.length; index += 1) {
-          if (transcriptWords[index] === targetWord) {
-            matchedIndex = index
-            break
-          }
-        }
-        if (matchedIndex !== -1) {
-          statuses[targetIndex] = { text: displayWords[targetIndex], status: 'correct', note: 'Correct.' }
-          transcriptIndex = matchedIndex + 1
-          continue
-        }
-        const actual = transcriptWords[transcriptIndex] || ''
-        const similarity = this.getRecitationWordSimilarity(targetWord, actual)
-        if (actual && similarity >= 0.45) {
-          statuses[targetIndex] = {
-            text: displayWords[targetIndex],
-            status: 'partial',
-            note: `Expected ${displayWords[targetIndex]}; heard ${actual}.`
-          }
-          transcriptIndex += 1
+    buildRecitationAlignment(displayWords, normalizedTargetWords, transcriptWords) {
+      const targetCount = normalizedTargetWords.length
+      const heardCount = transcriptWords.length
+      const matrix = Array.from({ length: targetCount + 1 }, () => Array(heardCount + 1).fill(null))
+      matrix[0][0] = { cost: 0, prev: null, op: 'start' }
+
+      for (let targetIndex = 1; targetIndex <= targetCount; targetIndex += 1) {
+        matrix[targetIndex][0] = { cost: matrix[targetIndex - 1][0].cost + 1, prev: [targetIndex - 1, 0], op: 'missing' }
+      }
+      for (let heardIndex = 1; heardIndex <= heardCount; heardIndex += 1) {
+        matrix[0][heardIndex] = { cost: matrix[0][heardIndex - 1].cost + 0.72, prev: [0, heardIndex - 1], op: 'extra' }
+      }
+
+      for (let targetIndex = 1; targetIndex <= targetCount; targetIndex += 1) {
+        for (let heardIndex = 1; heardIndex <= heardCount; heardIndex += 1) {
+          const targetWord = normalizedTargetWords[targetIndex - 1]
+          const heardWord = transcriptWords[heardIndex - 1]
+          const similarity = this.getRecitationWordSimilarity(targetWord, heardWord)
+          const matchCost = similarity >= 0.98 ? 0 : similarity >= 0.68 ? 0.32 : similarity >= 0.5 ? 0.58 : 1.1
+          const candidates = [
+            { cost: matrix[targetIndex - 1][heardIndex - 1].cost + matchCost, prev: [targetIndex - 1, heardIndex - 1], op: 'match', similarity },
+            { cost: matrix[targetIndex - 1][heardIndex].cost + 1, prev: [targetIndex - 1, heardIndex], op: 'missing' },
+            { cost: matrix[targetIndex][heardIndex - 1].cost + 0.72, prev: [targetIndex, heardIndex - 1], op: 'extra' }
+          ]
+          matrix[targetIndex][heardIndex] = candidates.sort((left, right) => left.cost - right.cost)[0]
         }
       }
-      return statuses
+
+      const statuses = displayWords.map(text => ({ text, status: 'pending', note: 'Not heard yet.', actual: '' }))
+      const extra = []
+      let targetIndex = targetCount
+      let heardIndex = heardCount
+      while (targetIndex > 0 || heardIndex > 0) {
+        const cell = matrix[targetIndex][heardIndex]
+        if (!cell) break
+        if (cell.op === 'match') {
+          const displayText = displayWords[targetIndex - 1] || normalizedTargetWords[targetIndex - 1]
+          const actual = transcriptWords[heardIndex - 1] || ''
+          if (cell.similarity >= 0.98) {
+            statuses[targetIndex - 1] = { text: displayText, status: 'correct', note: 'Correct.', actual }
+          } else if (cell.similarity >= 0.5) {
+            statuses[targetIndex - 1] = {
+              text: displayText,
+              status: 'partial',
+              note: `Expected ${displayText}; heard ${actual}.`,
+              actual
+            }
+          } else {
+            statuses[targetIndex - 1] = {
+              text: displayText,
+              status: 'incorrect',
+              note: actual ? `Expected ${displayText}; heard ${actual}.` : 'Incorrect word.',
+              actual
+            }
+          }
+        } else if (cell.op === 'extra') {
+          extra.unshift(transcriptWords[heardIndex - 1])
+        }
+        ;[targetIndex, heardIndex] = cell.prev || [0, 0]
+      }
+
+      return { statuses, extra }
     },
-    buildRecitationMistakesFromStatuses(statuses, transcriptWords, normalizedTargetWords) {
-      const correctCount = statuses.filter(word => word.status === 'correct').length
-      const partialCount = statuses.filter(word => word.status === 'partial').length
+    buildSequentialRecitationWordStatuses(displayWords, normalizedTargetWords, transcriptWords) {
+      return this.buildRecitationAlignment(displayWords, normalizedTargetWords, transcriptWords).statuses
+    },
+    buildRecitationMistakesFromStatuses(statuses, transcriptWords, normalizedTargetWords, extraWords = []) {
       return {
         correct: statuses.filter(word => word.status === 'correct').map(word => word.text),
         missing: statuses.filter(word => word.status === 'pending').map(word => word.text),
-        extra: transcriptWords.slice(Math.min(transcriptWords.length, correctCount + partialCount)),
+        extra: extraWords,
         partial: statuses
           .map((word, index) => ({ word, index }))
           .filter(item => item.word.status === 'partial')
           .map(item => ({
             expected: item.word.text,
-            actual: transcriptWords[item.index] || normalizedTargetWords[item.index] || ''
+            actual: item.word.actual || transcriptWords[item.index] || normalizedTargetWords[item.index] || ''
           })),
         incorrect: statuses
           .map((word, index) => ({ word, index }))
           .filter(item => item.word.status === 'incorrect')
           .map(item => ({
             expected: item.word.text,
-            actual: transcriptWords[item.index] || normalizedTargetWords[item.index] || ''
+            actual: item.word.actual || transcriptWords[item.index] || normalizedTargetWords[item.index] || ''
           }))
       }
     },
     getRecitationWordStatuses(result) {
       if (Array.isArray(result?.wordStatuses)) return result.wordStatuses
       const targetText = result?.targetText || this.getRecitationTargetText()
-      const displayWords = targetText.split(/\s+/).map(word => word.trim()).filter(Boolean)
+      const displayWords = this.tokenizeRecitationDisplayWords(targetText)
       const targetWords = displayWords.map(word => this.tokenizeRecitationWords(word)[0] || '').filter(Boolean)
       const statuses = this.buildRecitationWordStatuses(targetWords, result?.mistakeBreakdown || result?.mistakes || {})
       return statuses.map((word, index) => ({ ...word, text: displayWords[index] || word.text }))
@@ -8308,9 +8450,13 @@ export default {
     },
     getRecitationReviewArabic(result = null, fallbackVerse = null) {
       const verse = this.getVerseForRecitationReview(result, fallbackVerse)
-      const sourceText = this.getPlainVerseArabicForCheck(verse) || result?.targetText || ''
+      const isRangeReview = (result?.ayahRange?.keys || []).length > 1
+        || (this.recitationCheckPendingTargets || []).length > 1
+      const sourceText = isRangeReview
+        ? (result?.targetText || this.getRecitationTargetText(this.recitationCheckPendingTargets))
+        : (this.getPlainVerseArabicForCheck(verse) || result?.targetText || '')
       if (!sourceText) return ''
-      const words = this.stripTajweedMarkup(sourceText).split(/\s+/).map(word => word.trim()).filter(Boolean)
+      const words = this.tokenizeRecitationDisplayWords(sourceText)
       const statuses = this.getRecitationWordStatuses(result || {})
       if (!words.length) return ''
       return words.map((word, index) => {
@@ -8337,19 +8483,20 @@ export default {
       const correct = statuses.filter(word => word.status === 'correct').length
       const partial = statuses.filter(word => word.status === 'partial').length
       const incorrect = statuses.filter(word => word.status === 'incorrect').length
+      const missing = statuses.filter(word => word.status === 'pending').length
       const extra = Array.isArray(mistakes.extra) ? mistakes.extra.length : 0
       return [
         { key: 'score', label: 'Accuracy', value: `${Number(result?.accuracyScore || 0)}%`, description: 'Overall match against the ayah.', tone: this.getRecitationScoreTone(result?.accuracyScore || 0) },
         { key: 'correct', label: 'Green', value: correct, description: 'Words accepted as correct.', tone: 'tone-excellent' },
         { key: 'partial', label: 'Amber', value: partial, description: 'Close words accepted with gentle review.', tone: 'tone-good' },
-        { key: 'incorrect', label: 'Red', value: incorrect + extra, description: 'Words to revisit slowly.', tone: 'tone-review' }
+        { key: 'incorrect', label: 'Red', value: incorrect + missing + extra, description: 'Words to revisit slowly.', tone: 'tone-review' }
       ]
     },
     getRecitationNextStep(result) {
       const mistakes = result?.mistakeBreakdown || result?.mistakes || {}
       const reviewCount = (mistakes.incorrect?.length || 0) + (mistakes.missing?.length || 0)
       const extraCount = mistakes.extra?.length || 0
-      if (Number(result?.accuracyScore || 0) >= 65) return 'Save the attempt, then recite it once more without looking before moving on.'
+      if (Number(result?.accuracyScore || 0) >= 85) return 'Save the attempt, then recite it once more without looking before moving on.'
       if (reviewCount) return `Focus on ${reviewCount} highlighted word${reviewCount === 1 ? '' : 's'} in the ayah display, replay the ayah once, then run another Recite Check.`
       if (extraCount) return 'Slow the pace and remove the extra wording before checking again.'
       return 'Repeat once at a slower pace, then save or check again to confirm consistency.'
@@ -8361,21 +8508,20 @@ export default {
     },
     assessRecitationTranscript(transcript, targetVerses = this.getRecitationCheckTargetVerses()) {
       const targetText = this.getRecitationTargetText(targetVerses)
-      const displayWords = targetText.split(/\s+/).map(word => word.trim()).filter(Boolean)
+      const displayWords = this.tokenizeRecitationDisplayWords(targetText)
       const targetWords = displayWords.map(word => this.tokenizeRecitationWords(word)[0] || '').filter(Boolean)
       const transcriptWords = this.tokenizeRecitationWords(transcript)
-      const wordStatuses = this.buildSequentialRecitationWordStatuses(displayWords, targetWords, transcriptWords)
+      const alignment = this.buildRecitationAlignment(displayWords, targetWords, transcriptWords)
+      const wordStatuses = alignment.statuses
       const heardAllInOrder = wordStatuses.length > 0 && wordStatuses.every(word => word.status === 'correct')
       const mistakes = heardAllInOrder
-        ? { correct: [...displayWords], missing: [], extra: [], incorrect: [] }
-        : this.buildRecitationMistakesFromStatuses(wordStatuses, transcriptWords, targetWords)
+        ? { correct: [...displayWords], missing: [], extra: alignment.extra, partial: [], incorrect: [] }
+        : this.buildRecitationMistakesFromStatuses(wordStatuses, transcriptWords, targetWords, alignment.extra)
       const targetCount = Math.max(1, targetWords.length)
-      const partialPenalty = (mistakes.partial?.length || 0) * 0.08
-      const missingPenalty = mistakes.missing.length * 0.28
-      const incorrectPenalty = mistakes.incorrect.length * 0.42
-      const extraPenalty = (mistakes.extra.length || 0) * 0.05
-      const penalty = missingPenalty + partialPenalty + incorrectPenalty + extraPenalty
-      const accuracyScore = Math.max(0, Math.min(100, Math.round(((targetCount - penalty) / targetCount) * 100)))
+      const correctScore = wordStatuses.filter(word => word.status === 'correct').length
+      const partialScore = wordStatuses.filter(word => word.status === 'partial').length * 0.55
+      const extraPenalty = (mistakes.extra.length || 0) * 0.18
+      const accuracyScore = Math.max(0, Math.min(100, Math.round(((correctScore + partialScore - extraPenalty) / targetCount) * 100)))
 
       return {
         id: `recitation-${Date.now()}`,
@@ -8394,8 +8540,8 @@ export default {
       const incorrect = mistakes.incorrect?.length || 0
       const partial = mistakes.partial?.length || 0
       const extra = mistakes.extra?.length || 0
-      if (score >= 65) return 'Strong. Save it and keep this ayah on light review.'
-      if (score >= 38) return 'Close. Drill the amber or red words, then check again.'
+      if (score >= 85) return 'Strong. Save it and keep this ayah on light review.'
+      if (score >= 65) return 'Close. Drill the amber or red words, then check again.'
       if (missing) return `Missing ${missing} word${missing === 1 ? '' : 's'}. Recite that section slowly before retrying.`
       if (partial) return `Clarify ${partial} close word${partial === 1 ? '' : 's'}, then check again.`
       if (incorrect) return `Review ${incorrect} changed word${incorrect === 1 ? '' : 's'} and compare with the displayed ayah.`
@@ -8403,15 +8549,15 @@ export default {
       return 'Replay the ayah once, recite without looking, then run another Recite Check.'
     },
     buildRecitationReviewMetadata(score, mistakes) {
-      const intervalDays = score >= 65 ? 7 : score >= 38 ? 3 : 1
+      const intervalDays = score >= 85 ? 7 : score >= 65 ? 3 : 1
       const dueAt = new Date()
       dueAt.setDate(dueAt.getDate() + intervalDays)
       return {
-        priority: score >= 65 ? 'low' : score >= 38 ? 'medium' : 'high',
+        priority: score >= 85 ? 'low' : score >= 65 ? 'medium' : 'high',
         intervalDays,
         dueAt: dueAt.toISOString(),
         mistakeCount: mistakes.missing.length + mistakes.extra.length + mistakes.incorrect.length + (mistakes.partial?.length || 0),
-        reason: score >= 65 ? 'high-accuracy' : score >= 38 ? 'partial-review' : 'needs-review'
+        reason: score >= 85 ? 'high-accuracy' : score >= 65 ? 'partial-review' : 'needs-review'
       }
     },
     mutqinSessionsStorageKey() {
@@ -10465,8 +10611,8 @@ export default {
 
     getDisplayArabic(verse) {
       if (!verse?.arabic) return ''
+      if (this.isRecitationCheckTargetVerse(verse.key)) return this.splitRecitationDisplayIntoWords(verse)
       if (this.tajweedEnabled && verse.arabic_tajweed) return this.wrapTajweedWithWordHighlighting(verse, this.normalizeTajweedMarkup(verse.arabic_tajweed))
-      if (this.isRecitationCheckTargetVerse(verse.key)) return this.splitArabicIntoWords(verse)
       if (this.wordByWordAudioEnabled || this.anchorModeEnabled) return this.splitArabicIntoWords(verse)
       return this.stripTajweedMarkup(verse.arabic)
     },
@@ -10524,6 +10670,9 @@ export default {
 
       return childUnits
     },
+    isArabicBaseLetterForTajweed(char) {
+      return /[\u0621-\u064A\u0671]/.test(String(char || ''))
+    },
 
     buildTajweedWordTokens(verse, tajweedHtml) {
       if (!tajweedHtml) return ''
@@ -10552,7 +10701,7 @@ export default {
       words.forEach((word, idx) => {
         html += consumeWhitespace()
 
-        const targetChars = Array.from(String(word?.ar || '')).filter(char => !/^\s$/.test(char))
+        const targetChars = Array.from(this.normalizeArabicForRecitation(word?.ar || '')).filter(char => this.isArabicBaseLetterForTajweed(char))
         if (!targetChars.length) return
 
         let innerHtml = ''
@@ -10566,7 +10715,7 @@ export default {
             continue
           }
           innerHtml += unit.html
-          collected += 1
+          if (this.isArabicBaseLetterForTajweed(unit.text)) collected += 1
         }
 
         html += this.buildWordTokenHtml(verse, word, idx, innerHtml)
@@ -10735,6 +10884,14 @@ export default {
       })
 
       return html
+    },
+    splitRecitationDisplayIntoWords(verse) {
+      if (!verse?.key) return ''
+      const words = this.tokenizeRecitationDisplayWords(this.getPlainVerseArabicForCheck(verse))
+      if (!words.length) return this.cleanRecitationDisplayText(verse.arabic || verse.arabic_tajweed || '')
+      return words
+        .map((word, idx) => this.buildWordTokenHtml(verse, { ar: word, en: '', audio: null }, idx, this.escapeHtml(word)))
+        .join(' ')
     },
 
     async getWordTimings(verse, actualDuration = null) {
@@ -33754,6 +33911,224 @@ button:active {
   .quick-ai-actions,
   .self-check-review-toggles {
     grid-template-columns: 1fr !important;
+  }
+}
+
+/* AI recitation correction pass: keep controls obvious and live review readable. */
+.quick-ai-action,
+.mushaf-ai-button {
+  min-height: 64px !important;
+}
+
+.quick-ai-action > i,
+.mushaf-ai-button i {
+  font-size: 1.42rem !important;
+}
+
+.verse-ai-check-btn {
+  min-height: 40px !important;
+  min-width: 8.6rem !important;
+  max-width: none !important;
+}
+
+.verse-ai-check-btn i {
+  font-size: 1rem !important;
+}
+
+.self-check-ayah-action {
+  width: 40px !important;
+  min-width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+}
+
+.self-check-ayah-action i {
+  font-size: 1.08rem !important;
+}
+
+.self-check-ayah-action-ai.recording,
+.quick-ai-recite.active,
+.mushaf-ai-recite.active,
+.recitation-check-status:has(.bi-record-circle) {
+  outline: 2px solid rgba(177, 63, 50, 0.42) !important;
+  outline-offset: 2px !important;
+}
+
+.recitation-live-review-compact {
+  gap: 10px !important;
+  padding: 12px !important;
+  border: 1px solid rgba(177, 63, 50, 0.34) !important;
+  background: rgba(177, 63, 50, 0.08) !important;
+}
+
+.recitation-live-word-stream.recitation-word-stream {
+  min-height: 76px !important;
+  max-height: 150px !important;
+  overflow: auto !important;
+  padding: 10px !important;
+  border: 1px solid rgba(47, 111, 88, 0.22) !important;
+  background: var(--surface-strong) !important;
+}
+
+.recitation-live-word-stream .recitation-word-chip {
+  font-size: 1.08rem !important;
+  line-height: 1.7 !important;
+}
+
+.recitation-result-reset {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-strong);
+  color: var(--text);
+}
+
+.self-check-modal .self-check-modal-ayah,
+.memorisation-checker-modal .memorisation-checker-ayah {
+  max-height: min(48dvh, 460px) !important;
+  overflow: auto !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-body {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.78fr) !important;
+}
+
+@media (max-width: 900px) {
+  .quick-ai-action,
+  .mushaf-ai-button {
+    min-height: 58px !important;
+  }
+
+  .verse-ai-check-btn {
+    min-width: 7.6rem !important;
+  }
+
+  .memorisation-checker-modal .memorisation-checker-body {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Session recite layout reset: fluid, centered, no clipped ayah text. */
+.self-check-modal {
+  width: calc(100vw - 28px) !important;
+  max-width: none !important;
+  height: min(92dvh, 920px) !important;
+  max-height: min(92dvh, 920px) !important;
+}
+
+.self-check-modal .self-check-modal-header {
+  flex: 0 0 auto !important;
+}
+
+.self-check-modal .self-check-modal-body {
+  height: calc(100% - 96px) !important;
+  min-height: 0 !important;
+  display: grid !important;
+  grid-template-rows: minmax(0, 1fr) auto !important;
+  gap: 14px !important;
+  overflow: hidden !important;
+}
+
+.self-check-modal .self-check-modal-stage {
+  min-height: 0 !important;
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  overflow: hidden !important;
+}
+
+.self-check-modal .self-check-section-head {
+  margin-bottom: 8px !important;
+}
+
+.self-check-modal .self-check-modal-ayah-shell {
+  min-height: 0 !important;
+  height: 100% !important;
+  padding: clamp(18px, 2.2vw, 34px) !important;
+  padding-bottom: 86px !important;
+  overflow: hidden !important;
+}
+
+.self-check-modal .self-check-modal-ayah {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  height: 100% !important;
+  padding: 0 !important;
+  display: block !important;
+  overflow: visible !important;
+  color: var(--text) !important;
+  direction: rtl !important;
+  unicode-bidi: isolate !important;
+  text-align: center !important;
+  font-size: var(--self-check-display-font-size, 3rem) !important;
+  line-height: 1.75 !important;
+  text-wrap: pretty !important;
+}
+
+.self-check-modal .self-check-modal-ayah.self-check-session-ayat {
+  align-content: center !important;
+  line-height: 1.75 !important;
+}
+
+.self-check-modal .self-check-modal-ayah.recitation-word-review-active {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-content: center !important;
+  justify-content: center !important;
+}
+
+.self-check-modal .self-check-modal-ayah .wbw-word,
+.self-check-modal .self-check-modal-ayah word {
+  display: inline-block !important;
+  margin: 0.05em 0.04em !important;
+  white-space: nowrap !important;
+}
+
+.self-check-ayah-actions {
+  left: auto !important;
+  right: clamp(14px, 1.8vw, 28px) !important;
+  bottom: clamp(14px, 1.8vw, 28px) !important;
+  max-width: calc(100% - 32px) !important;
+  justify-content: flex-end !important;
+}
+
+.self-check-reciter-select {
+  width: clamp(170px, 16vw, 260px) !important;
+}
+
+.self-check-modal .self-check-modal-recorder-grid {
+  min-height: 0 !important;
+  max-height: 42% !important;
+  overflow: hidden !important;
+}
+
+.self-check-modal .recitation-check-panel-inline {
+  max-height: 100% !important;
+  overflow: auto !important;
+}
+
+@media (max-width: 900px) {
+  .self-check-modal {
+    width: calc(100vw - 16px) !important;
+    height: min(94dvh, 880px) !important;
+    max-height: min(94dvh, 880px) !important;
+  }
+
+  .self-check-modal .self-check-modal-body {
+    height: calc(100% - 84px) !important;
+    padding: 12px !important;
+  }
+
+  .self-check-modal .self-check-modal-ayah {
+    font-size: min(var(--self-check-display-font-size, 2.6rem), 3rem) !important;
+  }
+
+  .self-check-modal .self-check-modal-recorder-grid {
+    max-height: 48% !important;
   }
 }
 </style>

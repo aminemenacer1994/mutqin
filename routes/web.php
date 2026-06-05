@@ -108,9 +108,16 @@ Route::get('/memorisation/audio-download', function (Request $request) {
 Route::post('/memorisation/recitation-check/transcribe', function (Request $request) {
     $request->validate([
         'audio' => ['required', 'file', 'max:25600'],
+        'target_text' => ['nullable', 'string', 'max:8000'],
     ]);
 
     $file = $request->file('audio');
+    $targetText = trim((string) $request->input('target_text', ''));
+    $promptTargetText = '';
+    if ($targetText !== '') {
+        $targetWords = preg_split('/\s+/u', $targetText, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $promptTargetText = implode(' ', array_slice($targetWords, 0, 180));
+    }
     $groqApiKey = config('services.groq.api_key'); // Add this to config/services.php
     
     if (!$groqApiKey) {
@@ -125,12 +132,15 @@ Route::post('/memorisation/recitation-check/transcribe', function (Request $requ
             ->attach('file', file_get_contents($file->getRealPath()), $file->getClientOriginalName() ?: 'recitation-check.webm', [
                 'Content-Type' => $file->getMimeType() ?: 'audio/webm',
             ])
-            ->post('https://api.groq.com/openai/v1/audio/transcriptions', [
+            ->post('https://api.groq.com/openai/v1/audio/transcriptions', array_filter([
                 'model' => 'whisper-large-v3-turbo',
                 'response_format' => 'json',
                 'language' => 'ar',
                 'temperature' => '0',
-            ]);
+                'prompt' => $promptTargetText
+                    ? 'Quran recitation in Arabic. Prefer this target text when the audio matches it: ' . $promptTargetText
+                    : null,
+            ], fn ($value) => $value !== null && $value !== ''));
         
         if (!$response->successful()) {
             $error = $response->json();

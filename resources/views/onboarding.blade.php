@@ -8,7 +8,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Mutqin - AI-Powered Quran Memorization</title>
+    <title>Mutqin - AI-Powered Quran Memorization | Master Tajweed with Artificial Intelligence</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,6 +27,26 @@
             background: linear-gradient(135deg, #0a0e0c 0%, #0f1412 50%, #0a0e0c 100%);
             color: #e8f0ec;
             overflow-x: hidden;
+        }
+
+        /* Animated Background Pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.05"><path fill="none" stroke="%234f9d8a" stroke-width="0.5" d="M20,20 L80,20 M20,40 L80,40 M20,60 L80,60 M20,80 L80,80 M40,20 L40,80 M60,20 L60,80 M80,20 L80,80"/><circle cx="50" cy="50" r="8" stroke="%234f9d8a" stroke-width="0.5" fill="none"/><path d="M50,42 L58,50 L50,58 L42,50 Z" fill="%234f9d8a" opacity="0.3"/></svg>');
+            background-repeat: repeat;
+            pointer-events: none;
+            z-index: -1;
+            animation: subtleMove 20s linear infinite;
+        }
+
+        @keyframes subtleMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(100px, 100px); }
         }
 
         /* Custom Scrollbar */
@@ -57,6 +77,7 @@
             border-bottom: 1px solid rgba(79, 157, 138, 0.2);
             z-index: 1000;
             padding: 1rem 0;
+            transition: all 0.3s ease;
         }
 
         .nav-container {
@@ -100,6 +121,22 @@
             text-decoration: none;
             transition: color 0.3s ease;
             font-weight: 500;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #4f9d8a;
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
         }
 
         .nav-links a:hover {
@@ -113,6 +150,10 @@
             color: white !important;
             border: none;
             cursor: pointer;
+        }
+
+        .btn-nav::after {
+            display: none;
         }
 
         .btn-nav:hover {
@@ -131,14 +172,20 @@
         }
 
         .hero::before {
-            content: '';
+            content: '۞';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 20% 50%, rgba(79, 157, 138, 0.1) 0%, transparent 50%);
+            font-size: 30rem;
+            opacity: 0.03;
+            right: -10%;
+            top: 50%;
+            transform: translateY(-50%);
             pointer-events: none;
+            animation: rotate 60s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: translateY(-50%) rotate(0deg); }
+            to { transform: translateY(-50%) rotate(360deg); }
         }
 
         .hero-container {
@@ -157,10 +204,11 @@
             font-weight: 800;
             line-height: 1.2;
             margin-bottom: 1.5rem;
-            background: linear-gradient(135deg, #ffffff, #4f9d8a);
+            background: linear-gradient(135deg, #ffffff, #4f9d8a, #ffd966);
             background-clip: text;
             -webkit-background-clip: text;
             color: transparent;
+            animation: fadeInUp 0.8s ease;
         }
 
         .hero-content p {
@@ -168,12 +216,25 @@
             color: #8ba39a;
             margin-bottom: 2rem;
             line-height: 1.6;
+            animation: fadeInUp 0.8s ease 0.2s backwards;
         }
 
         .hero-buttons {
             display: flex;
             gap: 1rem;
             flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease 0.4s backwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .btn-primary {
@@ -189,6 +250,26 @@
             gap: 8px;
             border: none;
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn-primary:hover::before {
+            width: 300px;
+            height: 300px;
         }
 
         .btn-primary:hover {
@@ -219,16 +300,30 @@
             display: flex;
             gap: 2rem;
             margin-top: 3rem;
+            animation: fadeInUp 0.8s ease 0.6s backwards;
         }
 
         .stat {
             text-align: center;
+            position: relative;
+        }
+
+        .stat::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 2px;
+            background: #4f9d8a;
         }
 
         .stat-number {
             font-size: 2rem;
             font-weight: 800;
             color: #4f9d8a;
+            animation: countUp 2s ease;
         }
 
         .stat-label {
@@ -236,14 +331,31 @@
             color: #8ba39a;
         }
 
-        .hero-image {
-            position: relative;
+        @keyframes countUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .hero-image img {
-            width: 100%;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        .hero-image {
+            position: relative;
+            animation: fadeInRight 0.8s ease;
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         .floating-card {
@@ -270,9 +382,42 @@
             animation-delay: 1s;
         }
 
+        .floating-card:nth-child(3) {
+            top: 40%;
+            right: -15%;
+            animation-delay: 2s;
+        }
+
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
+        }
+
+        /* Quran Verse Ticker */
+        .verse-ticker {
+            background: rgba(79, 157, 138, 0.1);
+            padding: 1rem 0;
+            overflow: hidden;
+            white-space: nowrap;
+            border-top: 1px solid rgba(79, 157, 138, 0.2);
+            border-bottom: 1px solid rgba(79, 157, 138, 0.2);
+        }
+
+        .ticker-content {
+            display: inline-block;
+            animation: ticker 30s linear infinite;
+        }
+
+        .ticker-content span {
+            margin: 0 2rem;
+            font-family: 'Amiri', serif;
+            font-size: 1.1rem;
+            color: #4f9d8a;
+        }
+
+        @keyframes ticker {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
         }
 
         /* Features Section */
@@ -291,6 +436,18 @@
             font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 1rem;
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .section-title::before,
+        .section-title::after {
+            content: '۞';
+            color: #4f9d8a;
+            font-size: 1.5rem;
+            margin: 0 1rem;
+            opacity: 0.5;
         }
 
         .section-subtitle {
@@ -312,18 +469,42 @@
             padding: 2rem;
             transition: all 0.3s ease;
             border: 1px solid rgba(79, 157, 138, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(79, 157, 138, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .feature-card:hover::before {
+            left: 100%;
         }
 
         .feature-card:hover {
             transform: translateY(-5px);
             border-color: rgba(79, 157, 138, 0.5);
-            box-shadow: 0 10px 30px rgba(79, 157, 138, 0.1);
+            box-shadow: 0 10px 30px rgba(79, 157, 138, 0.2);
         }
 
         .feature-icon {
             font-size: 2.5rem;
             color: #4f9d8a;
             margin-bottom: 1.5rem;
+            display: inline-block;
+            animation: iconPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes iconPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
 
         .feature-card h3 {
@@ -350,19 +531,44 @@
 
         .step {
             text-align: center;
+            position: relative;
+        }
+
+        .step:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            color: #4f9d8a;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .step:not(:last-child)::after {
+                display: none;
+            }
         }
 
         .step-number {
-            width: 60px;
-            height: 60px;
+            width: 70px;
+            height: 70px;
             background: linear-gradient(135deg, #4f9d8a, #3d7a6b);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: 700;
             margin: 0 auto 1.5rem;
+            position: relative;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(79, 157, 138, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(79, 157, 138, 0.8); }
         }
 
         .step h3 {
@@ -391,12 +597,32 @@
             border-radius: 20px;
             padding: 2rem;
             border: 1px solid rgba(79, 157, 138, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .testimonial-card::before {
+            content: '"';
+            position: absolute;
+            top: -20px;
+            left: 20px;
+            font-size: 5rem;
+            color: #4f9d8a;
+            opacity: 0.3;
+            font-family: serif;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+            border-color: #4f9d8a;
         }
 
         .testimonial-text {
             font-style: italic;
             margin-bottom: 1.5rem;
             line-height: 1.6;
+            position: relative;
+            z-index: 1;
         }
 
         .testimonial-author {
@@ -446,11 +672,36 @@
             text-align: center;
             border: 1px solid rgba(79, 157, 138, 0.2);
             transition: all 0.3s ease;
+            position: relative;
         }
 
         .pricing-card.featured {
             border: 2px solid #4f9d8a;
             transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(79, 157, 138, 0.3);
+        }
+
+        .pricing-card.featured::before {
+            content: '⭐ MOST POPULAR';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #4f9d8a, #3d7a6b);
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            border-color: #4f9d8a;
+        }
+
+        .pricing-card.featured:hover {
+            transform: scale(1.05) translateY(-10px);
         }
 
         .pricing-card h3 {
@@ -490,11 +741,26 @@
             padding: 5rem 2rem;
             background: linear-gradient(135deg, rgba(79, 157, 138, 0.1), rgba(61, 122, 107, 0.1));
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta::before {
+            content: '۞';
+            position: absolute;
+            font-size: 20rem;
+            opacity: 0.05;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            animation: rotate 30s linear infinite;
         }
 
         .cta h2 {
             font-size: 2.5rem;
             margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
         }
 
         .cta p {
@@ -503,6 +769,8 @@
             max-width: 600px;
             margin-left: auto;
             margin-right: auto;
+            position: relative;
+            z-index: 1;
         }
 
         /* Footer */
@@ -523,6 +791,18 @@
         .footer-section h4 {
             margin-bottom: 1rem;
             color: #4f9d8a;
+            position: relative;
+            display: inline-block;
+        }
+
+        .footer-section h4::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 30px;
+            height: 2px;
+            background: #4f9d8a;
         }
 
         .footer-section a {
@@ -530,11 +810,12 @@
             color: #8ba39a;
             text-decoration: none;
             margin-bottom: 0.5rem;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         .footer-section a:hover {
             color: #4f9d8a;
+            transform: translateX(5px);
         }
 
         .social-links {
@@ -544,6 +825,11 @@
 
         .social-links a {
             font-size: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .social-links a:hover {
+            transform: translateY(-3px) scale(1.1);
         }
 
         .footer-bottom {
@@ -580,8 +866,17 @@
                 font-size: 2rem;
             }
 
+            .section-title::before,
+            .section-title::after {
+                display: none;
+            }
+
             .pricing-card.featured {
                 transform: scale(1);
+            }
+
+            .pricing-card.featured:hover {
+                transform: translateY(-10px);
             }
         }
 
@@ -592,6 +887,15 @@
             50% {
                 opacity: 0.7;
             }
+        }
+
+        /* Islamic Pattern Divider */
+        .divider {
+            text-align: center;
+            padding: 2rem 0;
+            color: #4f9d8a;
+            font-size: 1.5rem;
+            letter-spacing: 10px;
         }
     </style>
 </head>
@@ -608,20 +912,35 @@
                 <a href="#how-it-works">How It Works</a>
                 <a href="#testimonials">Testimonials</a>
                 <a href="#pricing">Pricing</a>
-                <a href="{{ route('onboarding') }}" class="btn-nav">Get Started</a>
+                <a href="{{ route('onboarding') }}" class="btn-nav">Begin Your Journey</a>
             </div>
         </div>
     </nav>
+
+    <!-- Quran Verse Ticker -->
+    <div class="verse-ticker">
+        <div class="ticker-content">
+            <span>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</span>
+            <span>وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا</span>
+            <span>إِنَّا نَحْنُ نَزَّلْنَا الذِّكْرَ وَإِنَّا لَهُ لَحَافِظُونَ</span>
+            <span>اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ</span>
+            <span>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</span>
+            <span>وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا</span>
+            <span>إِنَّا نَحْنُ نَزَّلْنَا الذِّكْرَ وَإِنَّا لَهُ لَحَافِظُونَ</span>
+            <span>اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ</span>
+        </div>
+    </div>
 
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-container">
             <div class="hero-content">
                 <h1>Master Quran Recitation with AI-Powered Precision</h1>
-                <p>Join thousands of students perfecting their Tajweed and memorization with real-time AI feedback, personalized learning paths, and interactive tools.</p>
+                <p>"And recite the Qur'an with measured recitation." (Surah Al-Muzzammil, 73:4)</p>
+                <p>Join thousands of students perfecting their Tajweed and memorization with real-time AI feedback, personalized learning paths, and interactive tools designed to help you connect with the Word of Allah.</p>
                 <div class="hero-buttons">
                     <a href="{{ route('onboarding') }}" class="btn-primary">
-                        <i class="bi bi-rocket-takeoff"></i> Start Free Trial
+                        <i class="bi bi-rocket-takeoff"></i> Begin Your Journey
                     </a>
                     <a href="#features" class="btn-secondary">
                         <i class="bi bi-play-circle"></i> Watch Demo
@@ -630,7 +949,7 @@
                 <div class="hero-stats">
                     <div class="stat">
                         <div class="stat-number">10K+</div>
-                        <div class="stat-label">Active Students</div>
+                        <div class="stat-label">Students Worldwide</div>
                     </div>
                     <div class="stat">
                         <div class="stat-number">98%</div>
@@ -640,182 +959,206 @@
                         <div class="stat-number">50+</div>
                         <div class="stat-label">Countries</div>
                     </div>
+                    <div class="stat">
+                        <div class="stat-number">100K+</div>
+                        <div class="stat-label">Recitations Analyzed</div>
+                    </div>
                 </div>
             </div>
             <div class="hero-image">
-                <div style="background: linear-gradient(135deg, #4f9d8a, #3d7a6b); border-radius: 20px; padding: 2rem; text-align: center; min-height: 400px; display: flex; align-items: center; justify-content: center; flex-direction: column;">
-                    <i class="bi bi-book" style="font-size: 5rem; margin-bottom: 1rem;"></i>
-                    <h3 style="margin-bottom: 1rem;">Interactive Learning Dashboard</h3>
-                    <p style="color: rgba(255,255,255,0.8);">Real-time feedback & progress tracking</p>
+                <div style="background: linear-gradient(135deg, #4f9d8a, #3d7a6b); border-radius: 20px; padding: 2rem; text-align: center; min-height: 400px; display: flex; align-items: center; justify-content: center; flex-direction: column; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); animation: rotate 20s linear infinite;"></div>
+                    <i class="bi bi-book" style="font-size: 5rem; margin-bottom: 1rem; position: relative; z-index: 1;"></i>
+                    <h3 style="margin-bottom: 1rem; position: relative; z-index: 1;">Interactive Learning Dashboard</h3>
+                    <p style="color: rgba(255,255,255,0.8); position: relative; z-index: 1;">Real-time feedback & progress tracking</p>
                 </div>
                 <div class="floating-card">
                     <i class="bi bi-check-circle-fill" style="color: #4caf50;"></i>
-                    <span>Tajweed Score: 94%</span>
+                    <span>Tajweed Score: 94% ↑</span>
                 </div>
                 <div class="floating-card">
                     <i class="bi bi-graph-up" style="color: #4f9d8a;"></i>
                     <span>Memorization: 15 Juz</span>
                 </div>
+                <div class="floating-card">
+                    <i class="bi bi-star-fill" style="color: #ffd966;"></i>
+                    <span>Accuracy: Excellent</span>
+                </div>
             </div>
         </div>
     </section>
+
+    <div class="divider">✦ ۞ ✦</div>
 
     <!-- Features Section -->
     <section id="features" class="features">
         <div class="section-container">
             <h2 class="section-title">Powerful Features for Serious Learners</h2>
-            <p class="section-subtitle">Everything you need to master Quran recitation and memorization</p>
+            <p class="section-subtitle">"He has taught him eloquence." (Surah Ar-Rahman, 55:4)</p>
             <div class="features-grid">
                 <div class="feature-card">
                     <div class="feature-icon">
                         <i class="bi bi-mic"></i>
                     </div>
                     <h3>AI Recitation Checker</h3>
-                    <p>Get real-time feedback on your pronunciation, Tajweed rules, and recitation accuracy with our advanced AI system.</p>
+                    <p>Get real-time feedback on your pronunciation, Tajweed rules, and recitation accuracy with our advanced AI system that analyzes every letter according to the rules of Tajweed.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
                         <i class="bi bi-brain"></i>
                     </div>
                     <h3>Smart Memorization</h3>
-                    <p>AI-powered memorization tracking that identifies weak verses and creates personalized review schedules.</p>
+                    <p>AI-powered memorization tracking that identifies weak verses and creates personalized review schedules based on your retention patterns and learning speed.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
                         <i class="bi bi-journal-bookmark-fill"></i>
                     </div>
                     <h3>Interactive Mushaf</h3>
-                    <p>Word-by-word highlighting with Tajweed color coding, translations, and transliterations for deeper understanding.</p>
+                    <p>Word-by-word highlighting with Tajweed color coding, multiple translations, and transliterations for deeper understanding and proper pronunciation.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
                         <i class="bi bi-link"></i>
                     </div>
                     <h3>Memorization Techniques</h3>
-                    <p>Multiple methods including linking, cumulative, and anchor techniques to suit your learning style.</p>
+                    <p>Multiple methods including linking, cumulative, anchor techniques, and spaced repetition to suit your unique learning style and goals.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
                         <i class="bi bi-collection-play"></i>
                     </div>
                     <h3>Personal Library</h3>
-                    <p>Save your recitations, AI analyses, and track your progress over time in your personal library.</p>
+                    <p>Save your recitations, AI analyses, track progress over time, and revisit past sessions to witness your improvement journey.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
                         <i class="bi bi-graph-up"></i>
                     </div>
                     <h3>Progress Analytics</h3>
-                    <p>Detailed insights into your learning journey with comprehensive analytics and performance metrics.</p>
+                    <p>Detailed insights into your learning journey with comprehensive analytics, performance metrics, and personalized recommendations for improvement.</p>
                 </div>
             </div>
         </div>
     </section>
+
+    <div class="divider">✦ ۞ ✦</div>
 
     <!-- How It Works -->
     <section id="how-it-works" class="how-it-works">
         <div class="section-container">
             <h2 class="section-title">How Mutqin Works</h2>
-            <p class="section-subtitle">Start your Quran learning journey in 3 simple steps</p>
+            <p class="section-subtitle">"Read! And your Lord is the Most Generous." (Surah Al-Alaq, 96:3)</p>
             <div class="steps">
                 <div class="step">
                     <div class="step-number">1</div>
                     <h3>Choose Your Session</h3>
-                    <p>Select surah, reciter, and customize your learning preferences</p>
+                    <p>Select surah, reciter, customize your learning preferences, and set your memorization goals for the session.</p>
                 </div>
                 <div class="step">
                     <div class="step-number">2</div>
                     <h3>Practice & Record</h3>
-                    <p>Recite along with word highlighting and record yourself</p>
+                    <p>Recite along with word highlighting, practice repetitions, and record yourself for AI analysis.</p>
                 </div>
                 <div class="step">
                     <div class="step-number">3</div>
                     <h3>Get AI Feedback</h3>
-                    <p>Receive detailed analysis and personalized improvement tips</p>
+                    <p>Receive detailed analysis, personalized improvement tips, and track your progress over time.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3>Review & Perfect</h3>
+                    <p>Review weak areas, practice consistently, and perfect your recitation with ongoing guidance.</p>
                 </div>
             </div>
         </div>
     </section>
+
+    <div class="divider">✦ ۞ ✦</div>
 
     <!-- Testimonials -->
     <section id="testimonials" class="testimonials">
         <div class="section-container">
             <h2 class="section-title">What Our Students Say</h2>
-            <p class="section-subtitle">Join thousands of satisfied learners worldwide</p>
+            <p class="section-subtitle">"Allah will raise those who have believed among you and those who were given knowledge, by degrees." (Surah Al-Mujadila, 58:11)</p>
             <div class="testimonials-grid">
                 <div class="testimonial-card">
-                    <p class="testimonial-text">"Mutqin has transformed my Quran learning journey. The AI feedback is incredibly accurate and has helped me correct Tajweed mistakes I didn't even know I was making!"</p>
+                    <p class="testimonial-text">"Mutqin has transformed my Quran learning journey. The AI feedback is incredibly accurate and has helped me correct Tajweed mistakes I didn't even know I was making. May Allah reward the team immensely!"</p>
                     <div class="testimonial-author">
                         <div class="author-avatar">A</div>
                         <div class="author-info">
                             <h4>Ahmed Khan</h4>
-                            <p>Student since 2024</p>
+                            <p>Student since 2024 | 8 Juz Memorized</p>
                         </div>
                     </div>
                 </div>
                 <div class="testimonial-card">
-                    <p class="testimonial-text">"The memorization techniques and progress tracking have helped me memorize 5 Juz in just 3 months. Best investment in my spiritual journey!"</p>
+                    <p class="testimonial-text">"The memorization techniques and progress tracking have helped me memorize 5 Juz in just 3 months. Best investment in my spiritual journey! The AI identifies exactly where I need more practice."</p>
                     <div class="testimonial-author">
                         <div class="author-avatar">F</div>
                         <div class="author-info">
                             <h4>Fatima Rahman</h4>
-                            <p>Hafidha in progress</p>
+                            <p>Hafidha in progress | 15 Juz Completed</p>
                         </div>
                     </div>
                 </div>
                 <div class="testimonial-card">
-                    <p class="testimonial-text">"As a busy professional, Mutqin fits perfectly into my schedule. The AI analysis saves me hours of self-evaluation time."</p>
+                    <p class="testimonial-text">"As a busy professional, Mutqin fits perfectly into my schedule. The AI analysis saves me hours of self-evaluation time and gives me confidence in my recitation during Salah."</p>
                     <div class="testimonial-author">
                         <div class="author-avatar">O</div>
                         <div class="author-info">
                             <h4>Omar Hassan</h4>
-                            <p>Working Professional</p>
+                            <p>Working Professional | Daily Active User</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
+
+    <div class="divider">✦ ۞ ✦</div>
 
     <!-- Pricing Section -->
     <section id="pricing" class="pricing">
         <div class="section-container">
             <h2 class="section-title">Choose Your Plan</h2>
-            <p class="section-subtitle">Start free and upgrade as you grow</p>
+            <p class="section-subtitle">"And whatever you spend in good, it will be fully repaid to you." (Surah Al-Baqarah, 2:272)</p>
             <div class="pricing-grid">
                 <div class="pricing-card">
-                    <h3>Free</h3>
+                    <h3>Free Plan</h3>
                     <div class="price">$0<span>/month</span></div>
                     <ul class="pricing-features">
-                        <li><i class="bi bi-check"></i> Basic recitation checker</li>
-                        <li><i class="bi bi-check"></i> 3 surahs available</li>
-                        <li><i class="bi bi-check"></i> Daily progress tracking</li>
-                        <li><i class="bi bi-x"></i> AI memorization analysis</li>
-                        <li><i class="bi bi-x"></i> Personal library</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Basic recitation checker</li>
+                        <li><i class="bi bi-check-circle-fill"></i> 3 surahs available</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Daily progress tracking</li>
+                        <li><i class="bi bi-x-circle-fill"></i> AI memorization analysis</li>
+                        <li><i class="bi bi-x-circle-fill"></i> Personal library</li>
                     </ul>
-                    <a href="{{ route('onboarding') }}" class="btn-secondary">Get Started</a>
+                    <a href="{{ route('onboarding') }}" class="btn-secondary">Start Free</a>
                 </div>
                 <div class="pricing-card featured">
-                    <h3>Pro</h3>
+                    <h3>Pro Plan</h3>
                     <div class="price">$9.99<span>/month</span></div>
                     <ul class="pricing-features">
-                        <li><i class="bi bi-check"></i> Advanced AI recitation analysis</li>
-                        <li><i class="bi bi-check"></i> Full Quran access</li>
-                        <li><i class="bi bi-check"></i> AI memorization tracking</li>
-                        <li><i class="bi bi-check"></i> Unlimited recordings</li>
-                        <li><i class="bi bi-check"></i> Priority support</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Advanced AI recitation analysis</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Full Quran access</li>
+                        <li><i class="bi bi-check-circle-fill"></i> AI memorization tracking</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Unlimited recordings</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Priority support</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Personalized learning path</li>
                     </ul>
                     <a href="{{ route('onboarding') }}" class="btn-primary">Start Free Trial</a>
                 </div>
                 <div class="pricing-card">
-                    <h3>Family</h3>
+                    <h3>Family Plan</h3>
                     <div class="price">$19.99<span>/month</span></div>
                     <ul class="pricing-features">
-                        <li><i class="bi bi-check"></i> Everything in Pro</li>
-                        <li><i class="bi bi-check"></i> Up to 5 family members</li>
-                        <li><i class="bi bi-check"></i> Shared progress tracking</li>
-                        <li><i class="bi bi-check"></i> Group learning features</li>
-                        <li><i class="bi bi-check"></i> Dedicated support</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Everything in Pro</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Up to 5 family members</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Shared progress tracking</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Group learning features</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Dedicated support</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Family dashboard</li>
                     </ul>
                     <a href="{{ route('onboarding') }}" class="btn-secondary">Get Started</a>
                 </div>
@@ -823,13 +1166,16 @@
         </div>
     </section>
 
+    <div class="divider">✦ ۞ ✦</div>
+
     <!-- CTA Section -->
     <section class="cta">
         <div class="section-container">
             <h2>Ready to Perfect Your Recitation?</h2>
-            <p>Join thousands of students already mastering Quran recitation with Mutqin's AI-powered platform.</p>
+            <p>"And the Messenger says, 'O my Lord, indeed my people have taken this Qur'an as a thing abandoned.'" (Surah Al-Furqan, 25:30)</p>
+            <p>Don't let the Qur'an be abandoned. Start your journey today with Mutqin and join thousands of students already mastering Quran recitation with our AI-powered platform.</p>
             <a href="{{ route('onboarding') }}" class="btn-primary" style="font-size: 1.1rem;">
-                <i class="bi bi-rocket-takeoff"></i> Start Your Free Trial
+                <i class="bi bi-rocket-takeoff"></i> Begin Your Spiritual Journey
             </a>
         </div>
     </section>
@@ -839,36 +1185,48 @@
         <div class="footer-content">
             <div class="footer-section">
                 <h4>Mutqin</h4>
-                <p style="color: #8ba39a;">AI-powered Quran memorization and recitation platform.</p>
+                <p style="color: #8ba39a;">AI-powered Quran memorization and recitation platform helping Muslims worldwide connect with the Word of Allah.</p>
             </div>
             <div class="footer-section">
                 <h4>Product</h4>
                 <a href="#features">Features</a>
                 <a href="#pricing">Pricing</a>
                 <a href="#how-it-works">How It Works</a>
+                <a href="#">Roadmap</a>
+            </div>
+            <div class="footer-section">
+                <h4>Resources</h4>
+                <a href="#">Tajweed Guide</a>
+                <a href="#">Memorization Tips</a>
+                <a href="#">Blog</a>
+                <a href="#">Help Center</a>
             </div>
             <div class="footer-section">
                 <h4>Company</h4>
                 <a href="#">About Us</a>
-                <a href="#">Blog</a>
+                <a href="#">Our Mission</a>
                 <a href="#">Contact</a>
+                <a href="#">Islamic Scholars</a>
             </div>
             <div class="footer-section">
                 <h4>Legal</h4>
                 <a href="#">Privacy Policy</a>
                 <a href="#">Terms of Service</a>
+                <a href="#">Cookie Policy</a>
             </div>
             <div class="footer-section">
-                <h4>Follow Us</h4>
+                <h4>Connect</h4>
                 <div class="social-links">
                     <a href="#"><i class="bi bi-twitter-x"></i></a>
                     <a href="#"><i class="bi bi-instagram"></i></a>
                     <a href="#"><i class="bi bi-youtube"></i></a>
+                    <a href="#"><i class="bi bi-facebook"></i></a>
+                    <a href="#"><i class="bi bi-telegram"></i></a>
                 </div>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2024 Mutqin. All rights reserved.</p>
+            <p>&copy; 2024 Mutqin. All rights reserved. "And remember the favor of Allah upon you and what has been revealed to you of the Book and wisdom." (Surah Al-Baqarah, 2:231)</p>
         </div>
     </footer>
 
@@ -892,10 +1250,43 @@
             const navbar = document.querySelector('.navbar');
             if (window.scrollY > 50) {
                 navbar.style.background = 'rgba(10, 14, 12, 0.98)';
+                navbar.style.backdropFilter = 'blur(10px)';
             } else {
                 navbar.style.background = 'rgba(10, 14, 12, 0.95)';
             }
         });
+
+        // Animated counter for stats
+        const observerOptions = {
+            threshold: 0.5,
+            rootMargin: '0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const stats = document.querySelectorAll('.stat-number');
+                    stats.forEach(stat => {
+                        const finalValue = stat.innerText.replace('+', '');
+                        let current = 0;
+                        const increment = Math.ceil(finalValue / 50);
+                        const timer = setInterval(() => {
+                            current += increment;
+                            if (current >= finalValue) {
+                                stat.innerText = finalValue + (stat.innerText.includes('+') ? '+' : '');
+                                clearInterval(timer);
+                            } else {
+                                stat.innerText = current + (stat.innerText.includes('+') ? '+' : '');
+                            }
+                        }, 30);
+                    });
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        const heroStats = document.querySelector('.hero-stats');
+        if (heroStats) observer.observe(heroStats);
     </script>
 </body>
 </html>
