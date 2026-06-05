@@ -3,366 +3,899 @@
     $appDirection = $appDirection ?? ($appLocale === 'ar' ? 'rtl' : 'ltr');
 @endphp
 <!doctype html>
-<html lang="{{ $appLocale }}" dir="{{ $appDirection }}" data-theme="dark">
+<html lang="{{ $appLocale }}" dir="{{ $appDirection }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ __('ui.app_title') }}</title>
+    <title>Mutqin - AI-Powered Quran Memorization</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="{{ mix('css/app.css') }}">
+    
     <style>
-        :root {
-            color-scheme: dark;
-            --bg: #171c1a;
-            --surface: rgba(28, 33, 31, 0.96);
-            --surface-strong: rgba(22, 27, 25, 0.98);
-            --border: rgba(109, 160, 145, 0.18);
-            --text: #edf3f0;
-            --text-muted: #b6c3be;
-            --accent: #4f9d8a;
-            --accent-strong: #5ca794;
-            --accent-light: rgba(79, 157, 138, 0.14);
-            --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.28);
-            --shadow-lg: 0 28px 60px rgba(0, 0, 0, 0.34);
-            --radius-xl: 26px;
-            --radius-lg: 20px;
-        }
-
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
 
-        html, body {
-            margin: 0;
-            min-height: 100%;
-            background:
-                radial-gradient(circle at top, rgba(79, 157, 138, 0.12), transparent 42%),
-                linear-gradient(180deg, #171c1a, #121615);
-            color: var(--text);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        }
-
         body {
-            min-height: 100dvh;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0a0e0c 0%, #0f1412 50%, #0a0e0c 100%);
+            color: #e8f0ec;
+            overflow-x: hidden;
         }
 
-        .guest-onboarding-shell {
-            min-height: 100dvh;
-            display: grid;
-            place-items: center;
-            padding: clamp(20px, 4vw, 48px);
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
         }
 
-        .onboarding-topbar {
+        ::-webkit-scrollbar-track {
+            background: #0a0e0c;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4f9d8a;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3d7a6b;
+        }
+
+        /* Navigation */
+        .navbar {
             position: fixed;
-            top: 16px;
-            right: 16px;
-            z-index: 20;
+            top: 0;
+            width: 100%;
+            background: rgba(10, 14, 12, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(79, 157, 138, 0.2);
+            z-index: 1000;
+            padding: 1rem 0;
         }
 
-        html[dir="rtl"] .onboarding-topbar {
-            right: auto;
-            left: 16px;
-        }
-
-        .lang-switcher {
-            display: inline-flex;
+        .nav-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            overflow: hidden;
-            background: rgba(28, 33, 31, 0.92);
-            backdrop-filter: blur(8px);
         }
 
-        .lang-btn {
-            border: none;
-            background: transparent;
-            color: var(--text-muted);
-            font-size: 12px;
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            color: #4f9d8a;
+            animation: pulse 2s infinite;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
             font-weight: 700;
-            letter-spacing: 0.04em;
-            padding: 8px 10px;
-            min-width: 42px;
+            background: linear-gradient(135deg, #e8f0ec, #4f9d8a);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #e8f0ec;
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: #4f9d8a;
+        }
+
+        .btn-nav {
+            background: linear-gradient(135deg, #4f9d8a, #3d7a6b);
+            padding: 0.5rem 1.5rem;
+            border-radius: 40px;
+            color: white !important;
+            border: none;
             cursor: pointer;
-            text-transform: uppercase;
         }
 
-        .lang-btn.active {
-            color: var(--text);
-            background: var(--accent-light);
+        .btn-nav:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 157, 138, 0.3);
         }
 
-        .guest-onboarding-card {
-            width: min(1040px, 100%);
-            padding: clamp(24px, 4.5vw, 54px);
-            border-radius: var(--radius-xl);
-            background: linear-gradient(180deg, var(--surface), var(--surface-strong));
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-lg);
-            animation: onboardingFade 260ms ease-out;
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 6rem 2rem 4rem;
+            position: relative;
+            overflow: hidden;
         }
 
-        .guest-onboarding-grid {
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(79, 157, 138, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .hero-container {
+            max-width: 1280px;
+            margin: 0 auto;
             display: grid;
-            grid-template-columns: 1.05fr 0.95fr;
-            gap: clamp(22px, 4vw, 54px);
-            align-items: start;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            position: relative;
+            z-index: 1;
         }
 
-        .guest-onboarding-kicker {
+        .hero-content h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffffff, #4f9d8a);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .hero-content p {
+            font-size: 1.2rem;
+            color: #8ba39a;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4f9d8a, #3d7a6b);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            min-height: 34px;
-            padding: 0 12px;
-            border-radius: 999px;
-            font-size: 0.72rem;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 157, 138, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(79, 157, 138, 0.3);
+            color: #e8f0ec;
+            padding: 1rem 2rem;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(79, 157, 138, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #4f9d8a;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #8ba39a;
+        }
+
+        .hero-image {
+            position: relative;
+        }
+
+        .hero-image img {
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .floating-card {
+            position: absolute;
+            background: rgba(20, 25, 23, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid rgba(79, 157, 138, 0.3);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .floating-card:nth-child(1) {
+            top: 10%;
+            right: -10%;
+        }
+
+        .floating-card:nth-child(2) {
+            bottom: 20%;
+            left: -10%;
+            animation-delay: 1s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Features Section */
+        .features {
+            padding: 5rem 2rem;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .section-container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
             font-weight: 700;
-            color: #bde5d9;
-            background: rgba(79, 157, 138, 0.12);
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #8ba39a;
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: rgba(20, 25, 23, 0.8);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: all 0.3s ease;
             border: 1px solid rgba(79, 157, 138, 0.2);
         }
 
-        .guest-onboarding-card h1 {
-            margin: 16px 0 10px;
-            font-size: clamp(1.65rem, 3.2vw, 2.6rem);
-            line-height: 1.08;
-            letter-spacing: -0.03em;
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(79, 157, 138, 0.5);
+            box-shadow: 0 10px 30px rgba(79, 157, 138, 0.1);
         }
 
-        .guest-onboarding-card p {
-            margin: 0;
-            max-width: 66ch;
-            color: var(--text-muted);
-            font-size: clamp(0.98rem, 1.2vw, 1.08rem);
-            line-height: 1.65;
+        .feature-icon {
+            font-size: 2.5rem;
+            color: #4f9d8a;
+            margin-bottom: 1.5rem;
         }
 
-        .guest-onboarding-list {
-            margin: 26px 0 0;
-            padding-left: 18px;
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card p {
+            color: #8ba39a;
+            line-height: 1.6;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 5rem 2rem;
+        }
+
+        .steps {
             display: grid;
-            gap: 12px;
-            color: #d7e3de;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
         }
 
-        .guest-onboarding-list li {
-            line-height: 1.55;
+        .step {
+            text-align: center;
         }
 
-        .guest-onboarding-list i {
-            color: rgba(189, 229, 217, 0.92);
-            margin-right: 10px;
-        }
-
-        .guest-onboarding-actions {
-            margin-top: 34px;
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4f9d8a, #3d7a6b);
+            border-radius: 50%;
             display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .guest-onboarding-btn {
-            min-height: 46px;
-            padding: 0 18px;
-            border-radius: 16px;
-            text-decoration: none;
-            display: inline-flex;
             align-items: center;
             justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 auto 1.5rem;
+        }
+
+        .step h3 {
+            margin-bottom: 0.5rem;
+        }
+
+        .step p {
+            color: #8ba39a;
+        }
+
+        /* Testimonials */
+        .testimonials {
+            padding: 5rem 2rem;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .testimonial-card {
+            background: rgba(20, 25, 23, 0.8);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(79, 157, 138, 0.2);
+        }
+
+        .testimonial-text {
+            font-style: italic;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #4f9d8a, #3d7a6b);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
             font-weight: 600;
-            transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
         }
 
-        .guest-onboarding-btn-primary {
-            background: var(--accent);
-            border: 1px solid var(--accent-strong);
-            color: #f4fbf8;
-            gap: 10px;
+        .author-info h4 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
         }
 
-        .guest-onboarding-btn-soft {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            color: #d9e3de;
-            gap: 10px;
+        .author-info p {
+            font-size: 0.85rem;
+            color: #8ba39a;
         }
 
-        .guest-onboarding-btn:hover {
-            transform: translateY(-1px);
+        /* Pricing Section */
+        .pricing {
+            padding: 5rem 2rem;
         }
 
-        .guest-onboarding-example {
-            border-radius: var(--radius-lg);
-            border: 1px solid rgba(109, 160, 145, 0.22);
-            background: rgba(255, 255, 255, 0.03);
-            box-shadow: var(--shadow-md);
-            overflow: clip;
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
         }
 
-        .guest-onboarding-example img {
-            width: 100%;
-            height: auto;
+        .pricing-card {
+            background: rgba(20, 25, 23, 0.8);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid rgba(79, 157, 138, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .pricing-card.featured {
+            border: 2px solid #4f9d8a;
+            transform: scale(1.05);
+        }
+
+        .pricing-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .price {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #4f9d8a;
+            margin: 1.5rem 0;
+        }
+
+        .price span {
+            font-size: 1rem;
+            color: #8ba39a;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin: 1.5rem 0;
+        }
+
+        .pricing-features li {
+            padding: 0.5rem 0;
+            color: #8ba39a;
+        }
+
+        .pricing-features i {
+            color: #4f9d8a;
+            margin-right: 8px;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 5rem 2rem;
+            background: linear-gradient(135deg, rgba(79, 157, 138, 0.1), rgba(61, 122, 107, 0.1));
+            text-align: center;
+        }
+
+        .cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta p {
+            color: #8ba39a;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Footer */
+        .footer {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 3rem 2rem 1rem;
+        }
+
+        .footer-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h4 {
+            margin-bottom: 1rem;
+            color: #4f9d8a;
+        }
+
+        .footer-section a {
             display: block;
+            color: #8ba39a;
+            text-decoration: none;
+            margin-bottom: 0.5rem;
+            transition: color 0.3s ease;
         }
 
-        .guest-onboarding-example-caption {
-            padding: 14px 16px 16px;
-            border-top: 1px solid rgba(109, 160, 145, 0.14);
-            color: rgba(237, 243, 240, 0.86);
-            font-size: 0.93rem;
-            line-height: 1.5;
+        .footer-section a:hover {
+            color: #4f9d8a;
         }
 
-        .guest-onboarding-example-caption strong {
-            color: var(--text);
-            font-weight: 650;
+        .social-links {
+            display: flex;
+            gap: 1rem;
         }
 
-        @keyframes onboardingFade {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
+        .social-links a {
+            font-size: 1.5rem;
         }
 
-        @media (max-width: 900px) {
-            .guest-onboarding-grid {
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(79, 157, 138, 0.2);
+            color: #8ba39a;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-container {
                 grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-buttons {
+                justify-content: center;
+            }
+
+            .hero-stats {
+                justify-content: center;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .pricing-card.featured {
+                transform: scale(1);
             }
         }
 
-        @media (max-width: 640px) {
-            .guest-onboarding-actions {
-                flex-direction: column;
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
             }
-
-            .guest-onboarding-btn {
-                width: 100%;
+            50% {
+                opacity: 0.7;
             }
         }
     </style>
 </head>
-<body dir="{{ $appDirection }}">
-    <div class="onboarding-topbar">
-        <div class="lang-switcher" id="globalLangSwitcher" role="group" aria-label="{{ __('ui.language_switcher') }}">
-            <button type="button" class="lang-btn" data-locale="en">EN</button>
-            <button type="button" class="lang-btn" data-locale="ar">AR</button>
-            <button type="button" class="lang-btn" data-locale="fr">FR</button>
-        </div>
-    </div>
-    <main class="guest-onboarding-shell">
-        <article class="guest-onboarding-card">
-            <div class="guest-onboarding-grid">
-                <section>
-                    <span class="guest-onboarding-kicker" data-i18n="kicker">{{ __('onboarding.kicker') }}</span>
-                    <h1 data-i18n="title">{{ __('onboarding.title') }}</h1>
-                    <p data-i18n="intro">{{ __('onboarding.intro') }}</p>
-
-            <ul class="guest-onboarding-list" aria-label="{{ __('onboarding.features_label') }}">
-                        <li><i class="bi bi-clock"></i> <span data-i18n="feature1">{{ __('onboarding.feature1') }}</span></li>
-                        <li><i class="bi bi-signpost-split"></i> <span data-i18n="feature2">{{ __('onboarding.feature2') }}</span></li>
-                        <li><i class="bi bi-cloud-check"></i> <span data-i18n="feature3">{{ __('onboarding.feature3') }}</span></li>
-                        <li><i class="bi bi-check2-circle"></i> <span data-i18n="feature4">{{ __('onboarding.feature4') }}</span></li>
-            </ul>
-
-                    <div class="guest-onboarding-actions">
-                        <a href="{{ route('register') }}" class="guest-onboarding-btn guest-onboarding-btn-primary">
-                            <span data-i18n="getStarted">{{ __('onboarding.get_started') }}</span> <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
-                        </a>
-                        <a href="{{ route('login') }}" class="guest-onboarding-btn guest-onboarding-btn-soft">
-                            <span data-i18n="login">{{ __('ui.login') }}</span> <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
-                        </a>
-                    </div>
-                </section>
-
-                <aside class="guest-onboarding-example" aria-label="{{ __('onboarding.example_label') }}">
-                    <img src="/images/onboarding-example.png" alt="{{ __('onboarding.example_alt') }}">
-                    <div class="guest-onboarding-example-caption">
-                        <strong data-i18n="exampleTitle">{{ __('onboarding.example_session') }}</strong> <span data-i18n="exampleCopy">{{ __('onboarding.example_copy') }}</span>
-                    </div>
-                </aside>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">۞</span>
+                <h1>Mutqin</h1>
             </div>
-        </article>
-    </main>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#testimonials">Testimonials</a>
+                <a href="#pricing">Pricing</a>
+                <a href="{{ route('onboarding') }}" class="btn-nav">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1>Master Quran Recitation with AI-Powered Precision</h1>
+                <p>Join thousands of students perfecting their Tajweed and memorization with real-time AI feedback, personalized learning paths, and interactive tools.</p>
+                <div class="hero-buttons">
+                    <a href="{{ route('onboarding') }}" class="btn-primary">
+                        <i class="bi bi-rocket-takeoff"></i> Start Free Trial
+                    </a>
+                    <a href="#features" class="btn-secondary">
+                        <i class="bi bi-play-circle"></i> Watch Demo
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-number">10K+</div>
+                        <div class="stat-label">Active Students</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">98%</div>
+                        <div class="stat-label">Success Rate</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">50+</div>
+                        <div class="stat-label">Countries</div>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div style="background: linear-gradient(135deg, #4f9d8a, #3d7a6b); border-radius: 20px; padding: 2rem; text-align: center; min-height: 400px; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                    <i class="bi bi-book" style="font-size: 5rem; margin-bottom: 1rem;"></i>
+                    <h3 style="margin-bottom: 1rem;">Interactive Learning Dashboard</h3>
+                    <p style="color: rgba(255,255,255,0.8);">Real-time feedback & progress tracking</p>
+                </div>
+                <div class="floating-card">
+                    <i class="bi bi-check-circle-fill" style="color: #4caf50;"></i>
+                    <span>Tajweed Score: 94%</span>
+                </div>
+                <div class="floating-card">
+                    <i class="bi bi-graph-up" style="color: #4f9d8a;"></i>
+                    <span>Memorization: 15 Juz</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="section-container">
+            <h2 class="section-title">Powerful Features for Serious Learners</h2>
+            <p class="section-subtitle">Everything you need to master Quran recitation and memorization</p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-mic"></i>
+                    </div>
+                    <h3>AI Recitation Checker</h3>
+                    <p>Get real-time feedback on your pronunciation, Tajweed rules, and recitation accuracy with our advanced AI system.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-brain"></i>
+                    </div>
+                    <h3>Smart Memorization</h3>
+                    <p>AI-powered memorization tracking that identifies weak verses and creates personalized review schedules.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-journal-bookmark-fill"></i>
+                    </div>
+                    <h3>Interactive Mushaf</h3>
+                    <p>Word-by-word highlighting with Tajweed color coding, translations, and transliterations for deeper understanding.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-link"></i>
+                    </div>
+                    <h3>Memorization Techniques</h3>
+                    <p>Multiple methods including linking, cumulative, and anchor techniques to suit your learning style.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-collection-play"></i>
+                    </div>
+                    <h3>Personal Library</h3>
+                    <p>Save your recitations, AI analyses, and track your progress over time in your personal library.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <h3>Progress Analytics</h3>
+                    <p>Detailed insights into your learning journey with comprehensive analytics and performance metrics.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="section-container">
+            <h2 class="section-title">How Mutqin Works</h2>
+            <p class="section-subtitle">Start your Quran learning journey in 3 simple steps</p>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Choose Your Session</h3>
+                    <p>Select surah, reciter, and customize your learning preferences</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Practice & Record</h3>
+                    <p>Recite along with word highlighting and record yourself</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Get AI Feedback</h3>
+                    <p>Receive detailed analysis and personalized improvement tips</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section id="testimonials" class="testimonials">
+        <div class="section-container">
+            <h2 class="section-title">What Our Students Say</h2>
+            <p class="section-subtitle">Join thousands of satisfied learners worldwide</p>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"Mutqin has transformed my Quran learning journey. The AI feedback is incredibly accurate and has helped me correct Tajweed mistakes I didn't even know I was making!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">A</div>
+                        <div class="author-info">
+                            <h4>Ahmed Khan</h4>
+                            <p>Student since 2024</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"The memorization techniques and progress tracking have helped me memorize 5 Juz in just 3 months. Best investment in my spiritual journey!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">F</div>
+                        <div class="author-info">
+                            <h4>Fatima Rahman</h4>
+                            <p>Hafidha in progress</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"As a busy professional, Mutqin fits perfectly into my schedule. The AI analysis saves me hours of self-evaluation time."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">O</div>
+                        <div class="author-info">
+                            <h4>Omar Hassan</h4>
+                            <p>Working Professional</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing">
+        <div class="section-container">
+            <h2 class="section-title">Choose Your Plan</h2>
+            <p class="section-subtitle">Start free and upgrade as you grow</p>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Free</h3>
+                    <div class="price">$0<span>/month</span></div>
+                    <ul class="pricing-features">
+                        <li><i class="bi bi-check"></i> Basic recitation checker</li>
+                        <li><i class="bi bi-check"></i> 3 surahs available</li>
+                        <li><i class="bi bi-check"></i> Daily progress tracking</li>
+                        <li><i class="bi bi-x"></i> AI memorization analysis</li>
+                        <li><i class="bi bi-x"></i> Personal library</li>
+                    </ul>
+                    <a href="{{ route('onboarding') }}" class="btn-secondary">Get Started</a>
+                </div>
+                <div class="pricing-card featured">
+                    <h3>Pro</h3>
+                    <div class="price">$9.99<span>/month</span></div>
+                    <ul class="pricing-features">
+                        <li><i class="bi bi-check"></i> Advanced AI recitation analysis</li>
+                        <li><i class="bi bi-check"></i> Full Quran access</li>
+                        <li><i class="bi bi-check"></i> AI memorization tracking</li>
+                        <li><i class="bi bi-check"></i> Unlimited recordings</li>
+                        <li><i class="bi bi-check"></i> Priority support</li>
+                    </ul>
+                    <a href="{{ route('onboarding') }}" class="btn-primary">Start Free Trial</a>
+                </div>
+                <div class="pricing-card">
+                    <h3>Family</h3>
+                    <div class="price">$19.99<span>/month</span></div>
+                    <ul class="pricing-features">
+                        <li><i class="bi bi-check"></i> Everything in Pro</li>
+                        <li><i class="bi bi-check"></i> Up to 5 family members</li>
+                        <li><i class="bi bi-check"></i> Shared progress tracking</li>
+                        <li><i class="bi bi-check"></i> Group learning features</li>
+                        <li><i class="bi bi-check"></i> Dedicated support</li>
+                    </ul>
+                    <a href="{{ route('onboarding') }}" class="btn-secondary">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="section-container">
+            <h2>Ready to Perfect Your Recitation?</h2>
+            <p>Join thousands of students already mastering Quran recitation with Mutqin's AI-powered platform.</p>
+            <a href="{{ route('onboarding') }}" class="btn-primary" style="font-size: 1.1rem;">
+                <i class="bi bi-rocket-takeoff"></i> Start Your Free Trial
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Mutqin</h4>
+                <p style="color: #8ba39a;">AI-powered Quran memorization and recitation platform.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Product</h4>
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#how-it-works">How It Works</a>
+            </div>
+            <div class="footer-section">
+                <h4>Company</h4>
+                <a href="#">About Us</a>
+                <a href="#">Blog</a>
+                <a href="#">Contact</a>
+            </div>
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+            </div>
+            <div class="footer-section">
+                <h4>Follow Us</h4>
+                <div class="social-links">
+                    <a href="#"><i class="bi bi-twitter-x"></i></a>
+                    <a href="#"><i class="bi bi-instagram"></i></a>
+                    <a href="#"><i class="bi bi-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Mutqin. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Navbar background change on scroll
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.style.background = 'rgba(10, 14, 12, 0.98)';
+            } else {
+                navbar.style.background = 'rgba(10, 14, 12, 0.95)';
+            }
+        });
+    </script>
 </body>
-<script>
-  (function() {
-    const supported = ['en', 'ar', 'fr'];
-    const messages = {
-      en: {
-        kicker: 'Memorisation Companion',
-        title: 'Preserve your hifz with calm, session-based repetition.',
-        intro: 'Pick a small ayah range, repeat with structure, then switch into recall, self-check, and review. Mutqin keeps the flow simple so you can show up consistently.',
-        feature1: 'Short sessions that feel like a real memorisation sitting',
-        feature2: 'Clear steps: listen, repeat, then recall and self-check',
-        feature3: 'Saved progress so you can pause and resume without friction',
-        feature4: 'Review context that helps you return later with confidence',
-        getStarted: 'Get Started',
-        login: 'Login',
-        exampleTitle: 'Example session:',
-        exampleCopy: 'choose a range, set repeats, then transition into recall. The goal is steady progress, not overload.'
-      },
-      ar: {
-        kicker: 'رفيق الحفظ',
-        title: 'حافظ على حفظك بتكرار هادئ ومنظم.',
-        intro: 'اختر نطاقا صغيرا من الآيات، وكرر بمنهجية، ثم انتقل إلى الاسترجاع والمراجعة الذاتية. يجعل متقن سير الجلسة بسيطا لتستمر بثبات.',
-        feature1: 'جلسات قصيرة تشبه مجلس الحفظ الحقيقي',
-        feature2: 'خطوات واضحة: استماع، تكرار، ثم استرجاع ومراجعة ذاتية',
-        feature3: 'حفظ التقدم لتتوقف وتكمل دون تعقيد',
-        feature4: 'سياق مراجعة يساعدك على العودة بثقة',
-        getStarted: 'ابدأ الآن',
-        login: 'تسجيل الدخول',
-        exampleTitle: 'مثال جلسة:',
-        exampleCopy: 'اختر نطاقا، واضبط التكرار، ثم انتقل إلى الاسترجاع. الهدف تقدم ثابت بلا إرهاق.'
-      },
-      fr: {
-        kicker: 'Compagnon de mémorisation',
-        title: 'Préservez votre hifz avec une répétition calme et structurée.',
-        intro: 'Choisissez une petite plage d\'ayahs, répétez avec structure, puis passez au rappel, à l\'auto-vérification et à la révision. Mutqin garde le flux simple pour vous aider à rester régulier.',
-        feature1: 'Des sessions courtes qui ressemblent à une vraie séance de mémorisation',
-        feature2: 'Des étapes claires : écouter, répéter, puis rappeler et vérifier',
-        feature3: 'Une progression enregistrée pour reprendre sans friction',
-        feature4: 'Un contexte de révision pour revenir avec confiance',
-        getStarted: 'Commencer',
-        login: 'Connexion',
-        exampleTitle: 'Exemple de session :',
-        exampleCopy: 'choisissez une plage, réglez les répétitions, puis passez au rappel. L\'objectif est une progression régulière, sans surcharge.'
-      }
-    };
-    function normalize(locale) { return supported.includes(locale) ? locale : 'en'; }
-    function apply(locale) {
-      const next = normalize(locale);
-      const rtl = next === 'ar';
-      document.documentElement.setAttribute('lang', next);
-      document.documentElement.setAttribute('dir', rtl ? 'rtl' : 'ltr');
-      document.body.setAttribute('dir', rtl ? 'rtl' : 'ltr');
-      localStorage.setItem('mutqin.locale', next);
-      document.cookie = `mutqin_locale=${next};path=/;max-age=31536000;samesite=lax`;
-      document.querySelectorAll('#globalLangSwitcher .lang-btn').forEach((btn) => {
-        btn.classList.toggle('active', btn.dataset.locale === next);
-      });
-      document.querySelectorAll('[data-i18n]').forEach((el) => {
-        const key = el.getAttribute('data-i18n');
-        if (messages[next] && messages[next][key]) el.textContent = messages[next][key];
-      });
-    }
-    function init() {
-      apply(@json(request()->query('lang') ? $appLocale : null) || localStorage.getItem('mutqin.locale') || @json($appLocale));
-      document.querySelectorAll('#globalLangSwitcher .lang-btn').forEach((btn) => {
-        btn.addEventListener('click', () => apply(btn.dataset.locale));
-      });
-    }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-    else init();
-  })();
-</script>
 </html>

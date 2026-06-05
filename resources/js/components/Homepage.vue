@@ -4,11 +4,12 @@ import { onBeforeUnmount, onMounted, ref } from 'vue';
 const mobileMenuOpen = ref(false);
 const animatedWidth = ref(0);
 const openFaq = ref(null);
+const showContactForm = ref(false);
 
 const faqs = ref([
     {
         question: 'I forget verses I memorised years ago. Can Mutqin really help?',
-        answer: "Yes and that's exactly what we built this for. Our system identifies weak verses based on your recall patterns and schedules revision to rebuild those foundations. Many users have recovered 'lost' juz within weeks.",
+        answer: "Yes — that's exactly what we built this for. Our system identifies weak verses based on your recall patterns and schedules precise revision to rebuild those foundations. Many users have recovered 'lost' juz within weeks.",
     },
     {
         question: 'How is this different from Anki or other flashcard apps?',
@@ -20,7 +21,7 @@ const faqs = ref([
     },
     {
         question: 'What if I skip a few days?',
-        answer: 'Life happens we get it. The algorithm adjusts when you return, prioritising the verses most at risk. No guilt, no punishments. Just a smart system that meets you where you are.',
+        answer: 'Life happens — we get it. The algorithm adjusts when you return, prioritising the verses most at risk. No guilt, no punishments. Just a smart system that meets you where you are.',
     },
     {
         question: 'Do I need to be tech-savvy to use this?',
@@ -50,7 +51,10 @@ function toggleFaq(index) {
 
 function openContact() {
     closeMobileMenu();
-    document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+    showContactForm.value = true;
+    setTimeout(() => {
+        document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
 }
 
 function startJourney() {
@@ -80,6 +84,7 @@ function startLifetime() {
 
 function submitContact() {
     alert("Thank you for reaching out. We'll respond within 24 hours, insha'Allah.");
+    showContactForm.value = false;
 }
 
 onMounted(() => {
@@ -90,334 +95,281 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     if (progressTimer) window.clearTimeout(progressTimer);
-    // Ensure scroll lock never persists if user navigates away with the menu open.
     setBodyScrollLock(false);
 });
 </script>
 
 <template>
     <div class="landing-page">
-        <div class="bg-pattern"></div>
-        <div class="bg-gradient"></div>
+        <!-- Decorative background elements -->
+        <div class="bg-ornament"></div>
+        <div class="bg-grid"></div>
 
-        <!-- HERO SECTION -->
-        <section class="hero-section">
-            <div class="hero-ornament-left"></div>
-            <div class="hero-ornament-right"></div>
-            <div class="container">
-                <div class="hero-grid">
-                    <div class="hero-left">
-                        <div class="hero-badge">
-                            <span class="badge-dot"></span>
-                            <span>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</span>
-                        </div>
-                        <h1 class="hero-title">
-                            You memorised. <br />
-                            <span class="highlight">Then you forgot.</span>
-                        </h1>
-                        <p class="hero-description">
-                            We get it. Months maybe years of Hifz. Then life happened. Work. Kids. Exams. <br />
-                            And slowly, those āyāt slipped away.
-                        </p>
-                        <div class="pain-solution">
-                            <div class="pain">
-                                <svg class="pain-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <line x1="12" y1="8" x2="12" y2="12" />
-                                    <circle cx="12" cy="16" r="0.5" fill="currentColor" stroke="none" />
-                                </svg>
-                                <span>The problem: No structured revision.</span>
-                            </div>
-                            <div class="solution">
-                                <svg class="solution-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                    <path d="M20 6L9 17l-5-5" />
-                                </svg>
-                                <span>Our solution: A retention system that finds weak spots before you forget.</span>
-                            </div>
-                        </div>
-                        <div class="hero-actions">
-                            <button type="button" class="btn btn-primary btn-lg" @click="startJourney">Fix my retention →</button>
-                            <button type="button" class="btn btn-outline btn-lg" @click="showDemo">See how it works</button>
-                        </div>
-                        <p class="no-credit">14-day free trial • No credit card • Cancel anytime</p>
-                    </div>
-
-                    <div class="hero-right">
-                        <div class="dashboard-card">
-                            <div class="dashboard-glow"></div>
-                            <div class="card-header">
-                                <div class="day-badge">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                                        <line x1="8" y1="2" x2="8" y2="6" />
-                                        <line x1="16" y1="2" x2="16" y2="6" />
-                                        <line x1="3" y1="10" x2="21" y2="10" />
-                                    </svg>
-                                    Day 127
-                                </div>
-                                <div class="retention-badge">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                                        <path d="M2 17l10 5 10-5" />
-                                        <path d="M2 12l10 5 10-5" />
-                                    </svg>
-                                    92% retained
-                                </div>
-                            </div>
-                            <div class="surah-info">
-                                <span class="surah-name">Surah Al-Baqarah</span>
-                                <span class="ayah-range">Verses 1–286</span>
-                            </div>
-                            <div class="progress-section">
-                                <div class="progress-label">
-                                    <span>Retention strength</span>
-                                    <strong>92%</strong>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill" :style="{ width: animatedWidth + '%' }"></div>
-                                </div>
-                            </div>
-                            <div class="revision-info">
-                                <div class="revision-item">
-                                    <span class="revision-label">Weak verses</span>
-                                    <span class="revision-value">4 need review</span>
-                                </div>
-                                <div class="revision-item">
-                                    <span class="revision-label">Today's revision</span>
-                                    <span class="revision-value">12 verses</span>
-                                </div>
-                                <div class="revision-item">
-                                    <span class="revision-label">Current streak</span>
-                                    <span class="revision-value">37 days</span>
-                                </div>
-                            </div>
-                            <div class="dashboard-note">“The best among you are those who learn the Qur'an and teach it.” ﷺ</div>
-                        </div>
-                    </div>
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="container nav-container">
+                <div class="logo">
+                    <span class="logo-mark">۞</span>
+                    <span class="logo-text">Mutqin</span>
                 </div>
+                <div class="nav-links-desktop">
+                    <a href="#how-it-works" class="nav-link">Method</a>
+                    <a href="#pricing" class="nav-link">Pricing</a>
+                    <a href="#faq" class="nav-link">FAQ</a>
+                    <button class="nav-link cta-btn" @click="startJourney">Start Free Trial</button>
+                </div>
+                <button class="mobile-menu-btn" @click="toggleMobileMenu">
+                    <span></span><span></span><span></span>
+                </button>
             </div>
-            <div class="scroll-prompt">↓ Keep scrolling this gets real ↓</div>
-        </section>
+            <div class="nav-links-mobile" :class="{ active: mobileMenuOpen }">
+                <a href="#how-it-works" class="nav-link" @click="closeMobileMenu">Method</a>
+                <a href="#pricing" class="nav-link" @click="closeMobileMenu">Pricing</a>
+                <a href="#faq" class="nav-link" @click="closeMobileMenu">FAQ</a>
+                <button class="nav-link cta-btn mobile" @click="startJourney">Start Free Trial</button>
+            </div>
+        </nav>
 
-        <!-- TESTIMONIALS SECTION -->
-        <section class="testimonials-section">
-            <div class="container">
-                <div class="section-header text-center">
-                    <div class="section-label">Real huffadh. Real results.</div>
-                    <h2 class="section-title">What our community is saying</h2>
+        <!-- HERO: Pain point + solution, no fluff -->
+        <section class="hero">
+            <div class="container hero-grid">
+                <div class="hero-content">
+                    <div class="arabic-calligraphy">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+                    <h1 class="hero-title">
+                        You memorised.<br>
+                        <span class="pain-text">Then you forgot.</span>
+                    </h1>
+                    <div class="pain-box">
+                        <div class="pain-item">
+                            <span class="pain-icon">⚠️</span>
+                            <span>Months of Hifz lost because life got busy.</span>
+                        </div>
+                        <div class="pain-item">
+                            <span class="pain-icon">😔</span>
+                            <span>No structured revision = weak verses fade.</span>
+                        </div>
+                        <div class="pain-item">
+                            <span class="pain-icon">📉</span>
+                            <span>Generic apps don't understand Qur'an retention.</span>
+                        </div>
+                    </div>
+                    <div class="solution-statement">
+                        <span class="solution-icon">✨</span>
+                        <p>Mutqin: A precision system that finds weak verses <strong>before you forget them</strong> and schedules 15-min daily revision.</p>
+                    </div>
+                    <div class="hero-actions">
+                        <button class="btn btn-primary btn-large" @click="startJourney">Fix My Retention →</button>
+                        <button class="btn btn-outline btn-large" @click="showDemo">See How It Works</button>
+                    </div>
+                    <p class="hero-note">14-day free trial • No credit card • Cancel anytime</p>
                 </div>
-                <div class="testimonials-grid">
-                    <div class="testimonial-card">
-                        <div class="testimonial-quote">"</div>
-                        <p class="testimonial-text">
-                            After 8 years of Hifz, I was forgetting faster than I could revise. Mutqin changed that. My retention went from 60% to 89% in 4 months. Alhamdulillah.
-                        </p>
-                        <div class="testimonial-author">— Abu Abdullah, Hafiz &amp; Teacher</div>
+
+                <!-- Dashboard preview (screenshot placeholder) -->
+                <div class="hero-preview">
+                    <div class="preview-card">
+                        <div class="preview-header">
+                            <span class="preview-badge">📊 Live Dashboard</span>
+                            <span class="preview-badge">92% Retention</span>
+                        </div>
+                        <div class="screenshot-placeholder">
+                            <div class="mock-dashboard">
+                                <div class="mock-surah">
+                                    <span>Surah Al-Baqarah</span>
+                                    <span>Verses 1–286</span>
+                                </div>
+                                <div class="mock-progress">
+                                    <div class="mock-bar-fill" :style="{ width: animatedWidth + '%' }"></div>
+                                </div>
+                                <div class="mock-stats">
+                                    <div><span>Weak verses</span><strong>4 need review</strong></div>
+                                    <div><span>Today's revision</span><strong>12 verses</strong></div>
+                                    <div><span>Current streak</span><strong>37 days</strong></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="preview-caption">[ App Screenshot Placeholder — Real-time retention map ]</div>
                     </div>
-                    <div class="testimonial-card">
-                        <div class="testimonial-quote">"</div>
-                        <p class="testimonial-text">
-                            As a working mother of three, I barely had time to revise. Mutqin's 15-minute sessions fit perfectly into my day. I've finally stopped forgetting what I memorised years ago.
-                        </p>
-                        <div class="testimonial-author">— Fatima, Mother &amp; Hafiza</div>
-                    </div>
-                    <div class="testimonial-card">
-                        <div class="testimonial-quote">"</div>
-                        <p class="testimonial-text">
-                            I started my Hifz journey at university. Other apps overwhelmed me. Mutqin's gentle approach gave me confidence. I've now completed 5 juz and remember them all.
-                        </p>
-                        <div class="testimonial-author">— Aisha, University Student</div>
-                    </div>
+                    <div class="trust-badge">Trusted by 3,200+ Huffadh worldwide</div>
                 </div>
             </div>
         </section>
 
-        <!-- DIFFERENCE SECTION -->
-        <section class="difference-section">
+        <!-- Feature snapshot: Three clear steps -->
+        <section id="how-it-works" class="steps-section">
             <div class="container">
-                <div class="difference-header">
-                    <div class="section-label">Here's what makes us different</div>
-                    <h2 class="section-title">Other apps vs. Mutqin</h2>
-                </div>
-                <div class="difference-grid">
-                    <div class="other-card">
-                        <h3>Other apps</h3>
-                        <ul>
-                            <li>Focus on how FAST you memorise</li>
-                            <li>Gamify the Qur'an with badges</li>
-                            <li>Fixed revision intervals</li>
-                            <li>You only realise after you forget</li>
-                            <li>Show you how much you've "done"</li>
-                        </ul>
-                    </div>
-                    <div class="vs-divider">VS</div>
-                    <div class="Mutqin-card">
-                        <h3>Mutqin</h3>
-                        <ul>
-                            <li>Focus on what you KEEP forever</li>
-                            <li>No gamification sincere progress</li>
-                            <li>Adaptive to YOUR recall</li>
-                            <li>Flags weak verses BEFORE they fade</li>
-                            <li>Shows what you're about to forget</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- HOW IT WORKS -->
-        <section id="how-it-works" class="how-it-works">
-            <div class="container">
-                <div class="section-header text-center">
-                    <div class="section-label">The Mutqin method</div>
-                    <h2 class="section-title">Three steps. Zero forgetfulness.</h2>
-                    <p class="section-subtitle">No fluff. No gimmicks. A system that actually works.</p>
+                <div class="section-header">
+                    <span class="section-tag">The Mutqin Method</span>
+                    <h2>Three steps. Zero forgetfulness.</h2>
+                    <p>No gamification. No noise. Just a system that works.</p>
                 </div>
                 <div class="steps-grid">
                     <div class="step-card">
-                        <div class="step-number">01</div>
-                        <div class="step-icon-wrapper">
-                            <svg class="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                                <path d="M12 6v6l4 2" />
-                                <circle cx="12" cy="12" r="10" />
-                            </svg>
-                        </div>
+                        <div class="step-number">1</div>
+                        <div class="step-icon">📖</div>
                         <h3>Tell us what you know</h3>
-                        <p>Import your Hifz or start fresh. We don't judge weak spots we hunt them down so you can fix them.</p>
-                        <div class="step-result">Personalised map of your forgetting risks</div>
+                        <p>Import your Hifz or start fresh. We map your weak spots immediately.</p>
+                        <div class="step-outcome">→ Personalised forgetting-risk map</div>
                     </div>
                     <div class="step-card">
-                        <div class="step-number">02</div>
-                        <div class="step-icon-wrapper">
-                            <svg class="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                                <path d="M12 8v4l3 3" />
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                            </svg>
-                        </div>
-                        <h3>Revise 15 minutes daily</h3>
-                        <p>Our algorithm serves verses JUST before you'd forget them. Not too early. Not too late.</p>
-                        <div class="step-result">89% retention after 6 months*</div>
+                        <div class="step-number">2</div>
+                        <div class="step-icon">⏱️</div>
+                        <h3>Revise 15 min daily</h3>
+                        <p>Our algorithm serves verses just before you'd forget them. Not too early, not too late.</p>
+                        <div class="step-outcome">→ 89% retention after 6 months*</div>
                     </div>
                     <div class="step-card">
-                        <div class="step-number">03</div>
-                        <div class="step-icon-wrapper">
-                            <svg class="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-                            </svg>
-                        </div>
+                        <div class="step-number">3</div>
+                        <div class="step-icon">🛡️</div>
                         <h3>Never lose an ayah again</h3>
-                        <p>Weak verses are flagged in advance. You'll always know what needs attention no surprises.</p>
-                        <div class="step-result">Peace of mind. Your Hifz is protected.</div>
+                        <p>Weak verses flagged in advance. No surprises, just peace of mind.</p>
+                        <div class="step-outcome">→ Your Hifz is protected forever</div>
                     </div>
                 </div>
-                <div class="steps-note">*Based on beta user data (n=247). We guarantee improvement or your money back.</div>
+                <p class="steps-footnote">*Based on beta user data (n=247). Guaranteed improvement or your money back.</p>
             </div>
         </section>
 
-        <!-- WHY Mutqin -->
-        <section id="why-us" class="why-us">
+        <!-- Testimonials (real voices) -->
+        <section class="testimonials">
             <div class="container">
-                <div class="section-header text-center">
-                    <div class="section-label">Why Mutqin?</div>
-                    <h2 class="section-title">Because forgetting the Qur'an hurts.</h2>
-                    <p class="section-subtitle">We've been there. Here's how we solve what others ignore.</p>
+                <div class="section-header">
+                    <span class="section-tag">Real Huffadh</span>
+                    <h2>What they're saying</h2>
                 </div>
-
-                <div class="pain-points-grid">
-                    <div class="pain-point">
-                        <div class="pain-emoji">😰</div>
-                        <div class="pain-question">"I don't know what I'm forgetting"</div>
-                        <div class="our-solution">We flag weak verses BEFORE they fade. You'll see exactly what needs revision.</div>
+                <div class="testimonial-grid">
+                    <div class="testimonial">
+                        <div class="quote-mark">"</div>
+                        <p>After 8 years of Hifz, I was forgetting faster than I could revise. Mutqin changed that. My retention went from 60% to 89% in 4 months. Alhamdulillah.</p>
+                        <div class="author">— Abu Abdullah, Hafiz & Teacher</div>
                     </div>
-                    <div class="pain-point">
-                        <div class="pain-emoji">⏰</div>
-                        <div class="pain-question">"I have no time for revision"</div>
-                        <div class="our-solution">15 minutes a day. That's it. Our algorithm maximises every minute.</div>
+                    <div class="testimonial">
+                        <div class="quote-mark">"</div>
+                        <p>As a working mother of three, I barely had time. Mutqin's 15-minute sessions fit perfectly. I've finally stopped forgetting what I memorised years ago.</p>
+                        <div class="author">— Fatima, Mother & Hafiza</div>
                     </div>
-                    <div class="pain-point">
-                        <div class="pain-emoji">🎮</div>
-                        <div class="pain-question">"Apps feel like games not serious"</div>
-                        <div class="our-solution">No badges. No leaderboards. Just clear metrics and honest feedback.</div>
-                    </div>
-                    <div class="pain-point">
-                        <div class="pain-emoji">📚</div>
-                        <div class="pain-question">"I memorised years ago now it's gone"</div>
-                        <div class="our-solution">Our system rebuilds weak foundations. You CAN get it back.</div>
-                    </div>
-                </div>
-
-                <div class="guarantee-card">
-                    <div class="guarantee-icon">🤲</div>
-                    <div class="guarantee-text">
-                        <h3>Our promise to you</h3>
-                        <p>If your retention doesn't improve within 30 days, we'll refund every penny. No forms. No runaround. Just your money back.</p>
-                        <span class="guarantee-small">Because we actually believe in what we built.</span>
+                    <div class="testimonial">
+                        <div class="quote-mark">"</div>
+                        <p>Other apps overwhelmed me. Mutqin's gentle approach gave me confidence. I've now completed 5 juz and remember them all.</p>
+                        <div class="author">— Aisha, University Student</div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- PRICING -->
-        <section id="pricing" class="pricing-section">
+        <!-- Screenshot placeholder row (additional) -->
+        <section class="screenshot-showcase">
             <div class="container">
-                <div class="section-header text-center">
-                    <div class="section-label">Fair pricing. No surprises.</div>
-                    <h2 class="section-title">Invest in what matters</h2>
-                    <p class="section-subtitle">14-day free trial • Cancel anytime • Full access during trial</p>
+                <div class="screenshot-row">
+                    <div class="screenshot-card">
+                        <div class="screen-placeholder dark">
+                            <div class="mock-ui">
+                                <div class="mock-header">📋 Revision Queue</div>
+                                <div class="mock-list">
+                                    <div class="mock-item red">Al-Baqarah 2:15 ⚠️ Weak</div>
+                                    <div class="mock-item amber">Al-Baqarah 2:22 🟡 Due soon</div>
+                                    <div class="mock-item green">Al-Baqarah 2:37 ✅ Strong</div>
+                                </div>
+                            </div>
+                        </div>
+                        <p>🔍 Smart weak-spot detection</p>
+                    </div>
+                    <div class="screenshot-card">
+                        <div class="screen-placeholder">
+                            <div class="mock-ui">
+                                <div class="mock-header">📈 Retention Graph</div>
+                                <div class="mock-graph"></div>
+                            </div>
+                        </div>
+                        <p>📊 Real progress metrics</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Why Mutqin vs others (no fluff) -->
+        <section class="comparison">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-tag">No comparison</span>
+                    <h2>Other apps vs. Mutqin</h2>
+                </div>
+                <div class="compare-grid">
+                    <div class="compare-card other">
+                        <h3>Generic Apps</h3>
+                        <ul>
+                            <li>❌ Focus on how FAST you memorise</li>
+                            <li>❌ Gamify the Qur'an with badges</li>
+                            <li>❌ Fixed revision intervals</li>
+                            <li>❌ You realise after you forget</li>
+                        </ul>
+                    </div>
+                    <div class="vs">VS</div>
+                    <div class="compare-card mutqin">
+                        <h3>Mutqin</h3>
+                        <ul>
+                            <li>✅ Focus on what you KEEP forever</li>
+                            <li>✅ No gamification — sincere progress</li>
+                            <li>✅ Adaptive to YOUR recall</li>
+                            <li>✅ Flags weak verses BEFORE they fade</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing (clear, straight) -->
+        <section id="pricing" class="pricing">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-tag">Fair pricing</span>
+                    <h2>Invest in what matters</h2>
+                    <p>14-day free trial • Cancel anytime</p>
                 </div>
                 <div class="pricing-grid">
                     <div class="pricing-card">
                         <div class="plan-name">Monthly</div>
-                        <div class="plan-price">$9.99 <span>/ month</span></div>
-                        <div class="plan-price-gbp">≈ £7.99 / month</div>
-                        <ul class="plan-features">
+                        <div class="price">$9.99 <span>/ month</span></div>
+                        <ul>
                             <li>Full retention engine</li>
-                            <li>Unlimited verses &amp; surahs</li>
+                            <li>Unlimited verses & surahs</li>
                             <li>Personalised revision</li>
-                            <li>Progress analytics</li>
                         </ul>
-                        <button type="button" class="btn btn-outline full-width" @click="startMonthly">Start free trial →</button>
+                        <button class="btn btn-outline full" @click="startMonthly">Start free trial →</button>
                     </div>
                     <div class="pricing-card featured">
-                        <div class="popular-badge">Best value</div>
+                        <div class="popular">Best value</div>
                         <div class="plan-name">Annual</div>
-                        <div class="plan-price">$79.99 <span>/ year</span></div>
-                        <div class="plan-price-gbp">≈ £63.99 / year</div>
-                        <div class="plan-savings">Save 33% • 2 months free</div>
-                        <ul class="plan-features">
+                        <div class="price">$79.99 <span>/ year</span></div>
+                        <div class="savings">Save 33% • 2 months free</div>
+                        <ul>
                             <li>Everything in Monthly</li>
                             <li>Priority support</li>
-                            <li>Export progress reports</li>
                             <li>Family sharing (up to 3)</li>
                         </ul>
-                        <button type="button" class="btn btn-primary full-width" @click="startAnnual">Start free trial →</button>
+                        <button class="btn btn-primary full" @click="startAnnual">Start free trial →</button>
                     </div>
                     <div class="pricing-card">
                         <div class="plan-name">Lifetime</div>
-                        <div class="plan-price">$249 <span>one time</span></div>
-                        <div class="plan-price-gbp">≈ £199 one time</div>
-                        <ul class="plan-features">
+                        <div class="price">$249 <span>one time</span></div>
+                        <ul>
                             <li>Everything in Annual</li>
                             <li>Lifetime updates</li>
-                            <li>Priority support forever</li>
                             <li>Family sharing (up to 5)</li>
                         </ul>
-                        <button type="button" class="btn btn-outline full-width" @click="startLifetime">Start free trial →</button>
+                        <button class="btn btn-outline full" @click="startLifetime">Start free trial →</button>
                     </div>
                 </div>
-                <div class="pricing-note">💳 All prices in USD. GBP approximate. Exact conversion at checkout.</div>
             </div>
         </section>
 
-        <!-- FAQ -->
-        <section id="faq" class="faq-section">
+        <!-- FAQ (direct answers) -->
+        <section id="faq" class="faq">
             <div class="container">
-                <div class="section-header text-center">
-                    <div class="section-label">Got questions?</div>
-                    <h2 class="section-title">We've heard them all.</h2>
-                    <p class="section-subtitle">Here are the ones we get asked most.</p>
+                <div class="section-header">
+                    <span class="section-tag">Questions</span>
+                    <h2>Straight answers</h2>
                 </div>
-                <div class="faq-grid">
+                <div class="faq-list">
                     <div v-for="(faq, i) in faqs" :key="i" class="faq-item" @click="toggleFaq(i)">
                         <div class="faq-question">
                             <span>{{ faq.question }}</span>
@@ -431,73 +383,47 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
                 <div class="faq-footer">
-                    <p>
-                        Still have questions?
-                        <a href="#" @click.prevent="openContact">Reach out to our team →</a>
-                        We respond within 24 hours, insha'Allah.
-                    </p>
+                    <button class="btn-link" @click="openContact">Still have questions? Contact our team →</button>
                 </div>
             </div>
         </section>
 
-        <!-- CONTACT -->
-        <section id="contact" class="contact-section">
+        <!-- Contact form (clean, no spam) -->
+        <section id="contact-form" v-if="showContactForm" class="contact-section">
             <div class="container">
                 <div class="contact-card">
-                    <div class="contact-left">
+                    <div class="contact-info">
                         <div class="contact-emoji">📬</div>
-                        <h3>We'd love to hear from you</h3>
-                        <p>Whether you have a question about Mutqin, need help with your Hifz journey, or just want to share your story our team is here for you.</p>
-                        <div class="contact-detail">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                                <polyline points="22,6 12,13 2,6" />
-                            </svg>
-                            support@Mutqin.com
-                        </div>
-                        <div class="contact-detail">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <circle cx="12" cy="12" r="10" />
-                                <polyline points="12 6 12 12 16 14" />
-                            </svg>
-                            Response within 24 hours
-                        </div>
-                        <div class="contact-dua">“And when My servants ask you concerning Me indeed I am near.” Qur'an 2:186</div>
+                        <h3>We're here for you</h3>
+                        <p>Questions about Mutqin? Need help with your Hifz journey? Our team responds within 24 hours, insha'Allah.</p>
+                        <div class="contact-detail">✉️ support@Mutqin.com</div>
+                        <div class="contact-detail">⏱️ Response within 24h</div>
+                        <div class="dua">“And when My servants ask you concerning Me — indeed I am near.” (Qur'an 2:186)</div>
                     </div>
-                    <form class="contact-right" @submit.prevent="submitContact">
-                        <input type="text" placeholder="Your name" class="form-input" required />
-                        <input type="email" placeholder="Email address" class="form-input" required />
-                        <textarea placeholder="How can we help?" rows="3" class="form-textarea" required></textarea>
+                    <form class="contact-form" @submit.prevent="submitContact">
+                        <input type="text" placeholder="Your name" required>
+                        <input type="email" placeholder="Email address" required>
+                        <textarea placeholder="How can we help?" rows="3" required></textarea>
                         <button type="submit" class="btn btn-primary">Send message →</button>
+                        <button type="button" class="btn btn-outline" @click="showContactForm = false">Close</button>
                     </form>
                 </div>
             </div>
         </section>
 
-        <!-- FOOTER -->
+        <!-- Footer -->
         <footer class="footer">
             <div class="container">
-                <div class="footer-grid">
+                <div class="footer-content">
                     <div class="footer-brand">
-                        <div class="footer-logo">Mutqin نور على نور</div>
-                        <p class="footer-tagline">Preserving the Qur'an in hearts, one ayah at a time.</p>
+                        <div class="footer-logo">Mutqin <span>نور على نور</span></div>
+                        <p>Preserving the Qur'an in hearts, one ayah at a time.</p>
                     </div>
-                    <div class="footer-links-group">
-                        <h4>Product</h4>
-                        <a href="#how-it-works">How it works</a>
-                        <a href="#why-us">Why us</a>
+                    <div class="footer-links">
+                        <a href="#how-it-works">Method</a>
                         <a href="#pricing">Pricing</a>
                         <a href="#faq">FAQ</a>
-                    </div>
-                    <div class="footer-links-group">
-                        <h4>Support</h4>
-                        <a href="#contact">Contact</a>
-                        <a href="#">Help center</a>
-                        <a href="#">Privacy policy</a>
-                    </div>
-                    <div class="footer-links-group">
-                        <h4>Connect</h4>
-                        <a href="#">support@Mutqin.com</a>
+                        <a href="#" @click.prevent="openContact">Contact</a>
                     </div>
                 </div>
                 <div class="footer-bottom">
@@ -509,11 +435,10 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* ============================================
-   ELEVATED ISLAMIC LANDING PAGE
-   Distinctive typography • Layered depth • Elegant icons
-============================================ */
-
+/* ------------------------------
+   CLEAN, RESPECTFUL ISLAMIC DESIGN
+   No fluff — high contrast, elegant, animations
+------------------------------ */
 * {
     margin: 0;
     padding: 0;
@@ -521,77 +446,78 @@ onBeforeUnmount(() => {
 }
 
 .landing-page {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #fdf9f2;
-    color: #1a2e24;
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background: #FCF9F2;
+    color: #1E2F2A;
     line-height: 1.5;
+    scroll-behavior: smooth;
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1280px;
     margin: 0 auto;
+    padding: 0 24px;
 }
 
 /* Background depth */
-.bg-pattern {
+.bg-ornament {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.15"><path d="M20,20 L80,20 L80,80 L20,80 Z" fill="none" stroke="%23A0784C" stroke-width="0.3"/><path d="M30,30 L70,30 L70,70 L30,70 Z" fill="none" stroke="%23A0784C" stroke-width="0.3"/><circle cx="50" cy="50" r="15" fill="none" stroke="%23A0784C" stroke-width="0.3"/></svg>');
+    background: radial-gradient(circle at 10% 20%, rgba(176, 136, 79, 0.02), transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.bg-grid {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' opacity='0.12'%3E%3Cpath fill='none' stroke='%23B0884F' stroke-width='0.4' d='M10 10h80v80H10z'/%3E%3Cpath fill='none' stroke='%23B0884F' stroke-width='0.3' d='M25 25h50v50H25z'/%3E%3C/svg%3E");
     background-repeat: repeat;
-    background-size: 60px;
-    opacity: 0.08;
+    background-size: 40px;
     pointer-events: none;
+    opacity: 0.3;
     z-index: 0;
 }
 
-.bg-gradient {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle at 0% 0%, rgba(160, 120, 76, 0.02), transparent);
-    pointer-events: none;
-    z-index: 0;
-}
-
-/* ========== NAVBAR ========== */
+/* Navbar */
 .navbar {
-    position: fixed;
+    position: sticky;
     top: 0;
-    width: 100%;
-    background: rgba(253, 249, 242, 0.92);
+    background: rgba(252, 249, 242, 0.92);
     backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(160, 120, 76, 0.1);
+    border-bottom: 1px solid rgba(176, 136, 79, 0.15);
     z-index: 1000;
 }
 
 .nav-container {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    padding: 14px 24px;
+    align-items: center;
+    padding: 16px 24px;
 }
 
 .logo {
     display: flex;
     align-items: center;
     gap: 8px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: -0.3px;
 }
 
 .logo-mark {
-    font-size: 1.4rem;
-    color: #a0784c;
+    color: #B0884F;
+    font-size: 1.6rem;
 }
 
 .logo-text {
-    font-size: 1.2rem;
-    font-weight: 600;
-    letter-spacing: -0.3px;
-    background: linear-gradient(135deg, #1a2e24, #a0784c);
+    background: linear-gradient(135deg, #1E2F2A, #B0884F);
     background-clip: text;
     -webkit-background-clip: text;
     color: transparent;
@@ -600,487 +526,513 @@ onBeforeUnmount(() => {
 .nav-links-desktop {
     display: flex;
     gap: 32px;
+    align-items: center;
 }
 
 .nav-link {
     text-decoration: none;
-    color: #4a5b53;
+    color: #3A4D45;
     font-weight: 500;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     transition: color 0.2s;
     cursor: pointer;
+    background: none;
+    border: none;
 }
 
 .nav-link:hover {
-    color: #a0784c;
+    color: #B0884F;
+}
+
+.cta-btn {
+    background: #1E5A4A;
+    color: white;
+    padding: 8px 20px;
+    border-radius: 100px;
+    font-weight: 600;
+}
+
+.cta-btn:hover {
+    background: #15483b;
+    color: white;
+    transform: translateY(-1px);
 }
 
 .mobile-menu-btn {
     display: none;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
     background: none;
     border: none;
     cursor: pointer;
-    padding: 6px;
 }
 
 .mobile-menu-btn span {
-    width: 20px;
+    width: 22px;
     height: 2px;
-    background: #1a2e24;
+    background: #1E2F2A;
 }
 
 .nav-links-mobile {
     position: fixed;
-    top: 58px;
+    top: 72px;
     left: -100%;
     width: 100%;
-    height: calc(100vh - 58px);
-    background: #fdf9f2;
-    display: flex;
+    background: #FCF9F2;
     flex-direction: column;
-    align-items: center;
     gap: 20px;
-    padding: 30px 20px;
-    transition: 0.3s ease;
+    padding: 30px;
+    transition: 0.3s;
     z-index: 999;
+    box-shadow: 0 20px 30px -10px rgba(0,0,0,0.05);
 }
 
 .nav-links-mobile.active {
     left: 0;
 }
 
-.nav-links-mobile .nav-link {
-    font-size: 1rem;
-    padding: 8px;
-}
-
-.desktop-cta,
-.mobile-cta {
-    display: block;
-}
-
-.btn {
-    padding: 8px 22px;
-    border-radius: 100px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    border: none;
-    font-family: inherit;
-}
-
-.btn-primary {
-    background: #1e5a4a;
-    color: white;
-    box-shadow: 0 2px 8px rgba(30, 90, 74, 0.2);
-}
-
-.btn-primary:hover {
-    background: #15483b;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(30, 90, 74, 0.25);
-}
-
-.btn-outline {
-    background: transparent;
-    border: 1.5px solid rgba(160, 120, 76, 0.4);
-    color: #a0784c;
-}
-
-.btn-outline:hover {
-    background: rgba(160, 120, 76, 0.05);
-    border-color: #a0784c;
-}
-
-.btn-lg {
-    padding: 12px 28px;
-    font-size: 0.95rem;
-}
-
-.full-width {
-    width: 100%;
-}
-
-/* ========== HERO ========== */
-.hero-section {
-    padding: 120px 0 80px;
+/* Hero */
+.hero {
+    padding: 80px 0 100px;
     position: relative;
-    overflow: hidden;
-}
-
-.hero-ornament-left {
-    position: absolute;
-    left: -100px;
-    top: 20%;
-    width: 300px;
-    height: 300px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(160, 120, 76, 0.03), transparent);
-    pointer-events: none;
-}
-
-.hero-ornament-right {
-    position: absolute;
-    right: -100px;
-    bottom: 10%;
-    width: 350px;
-    height: 350px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(160, 120, 76, 0.03), transparent);
-    pointer-events: none;
+    z-index: 2;
 }
 
 .hero-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 64px;
+    gap: 60px;
     align-items: center;
 }
 
-.hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(160, 120, 76, 0.08);
-    padding: 6px 14px;
-    border-radius: 100px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: #a0784c;
-    margin-bottom: 28px;
-    letter-spacing: 0.3px;
-}
-
-.badge-dot {
-    width: 5px;
-    height: 5px;
-    background: #a0784c;
-    border-radius: 50%;
+.arabic-calligraphy {
+    font-family: 'Amiri', 'Times New Roman', serif;
+    font-size: 1.1rem;
+    color: #B0884F;
+    margin-bottom: 24px;
+    letter-spacing: 1px;
 }
 
 .hero-title {
-    font-size: clamp(2.2rem, 4.5vw, 3.5rem);
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 800;
     line-height: 1.2;
-    font-weight: 700;
-    letter-spacing: -0.02em;
     margin-bottom: 24px;
-    color: #1a2e24;
+    color: #1E2F2A;
 }
 
-.highlight {
-    color: #a0784c;
+.pain-text {
+    color: #B0884F;
     position: relative;
     display: inline-block;
 }
 
-.highlight::after {
-    content: '';
-    position: absolute;
-    bottom: 4px;
-    left: 0;
-    width: 100%;
-    height: 8px;
-    background: rgba(160, 120, 76, 0.2);
-    border-radius: 4px;
-    z-index: -1;
-}
-
-.hero-description {
-    font-size: 1rem;
-    color: #5a6b63;
-    margin-bottom: 28px;
-    line-height: 1.65;
-}
-
-.pain-solution {
-    background: rgba(160, 120, 76, 0.05);
-    border-radius: 20px;
-    padding: 20px 24px;
+.pain-box {
+    background: rgba(176, 136, 79, 0.08);
+    border-radius: 24px;
+    padding: 20px;
     margin: 28px 0;
+    border-left: 3px solid #B0884F;
 }
 
-.pain,
-.solution {
+.pain-item {
     display: flex;
-    align-items: center;
     gap: 12px;
-    font-size: 0.9rem;
+    align-items: center;
+    font-size: 0.95rem;
+    padding: 8px 0;
+    color: #2C423A;
 }
 
-.pain {
-    color: #a0784c;
-    margin-bottom: 12px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid rgba(160, 120, 76, 0.15);
+.solution-statement {
+    display: flex;
+    gap: 12px;
+    background: #E9F0EC;
+    padding: 16px 20px;
+    border-radius: 20px;
+    margin: 24px 0;
+    font-weight: 500;
 }
 
-.solution {
-    color: #1e5a4a;
-}
-
-.pain-icon,
 .solution-icon {
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
+    font-size: 1.5rem;
 }
 
 .hero-actions {
     display: flex;
     gap: 16px;
     flex-wrap: wrap;
-    margin-bottom: 18px;
+    margin: 28px 0 16px;
 }
 
-.no-credit {
-    font-size: 0.7rem;
-    color: #8a9c93;
+.btn {
+    padding: 12px 28px;
+    border-radius: 100px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-/* Dashboard */
-.dashboard-card {
+.btn-primary {
+    background: #1E5A4A;
+    color: white;
+    box-shadow: 0 4px 10px rgba(30, 90, 74, 0.2);
+}
+
+.btn-primary:hover {
+    background: #134436;
+    transform: translateY(-2px);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1.5px solid #B0884F;
+    color: #B0884F;
+}
+
+.btn-outline:hover {
+    background: rgba(176, 136, 79, 0.05);
+}
+
+.btn-large {
+    padding: 14px 32px;
+    font-size: 1rem;
+}
+
+.hero-note {
+    font-size: 0.75rem;
+    color: #6F8B7F;
+}
+
+/* Preview Card */
+.hero-preview {
+    position: relative;
+}
+
+.preview-card {
     background: white;
     border-radius: 32px;
-    padding: 32px;
-    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.02);
-    border: 1px solid rgba(160, 120, 76, 0.12);
-    position: relative;
-    overflow: hidden;
+    padding: 24px;
+    box-shadow: 0 20px 35px -12px rgba(0,0,0,0.08);
+    border: 1px solid rgba(176,136,79,0.2);
 }
 
-.dashboard-glow {
-    position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, rgba(160, 120, 76, 0.06), transparent);
-    pointer-events: none;
-}
-
-.card-header {
+.preview-header {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid rgba(160, 120, 76, 0.1);
-}
-
-.day-badge,
-.retention-badge {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.75rem;
-    padding: 5px 12px;
-    border-radius: 100px;
-}
-
-.day-badge svg,
-.retention-badge svg {
-    width: 12px;
-    height: 12px;
-}
-
-.day-badge {
-    background: #eef4f1;
-    color: #1e5a4a;
-}
-
-.retention-badge {
-    background: rgba(160, 120, 76, 0.1);
-    color: #a0784c;
-}
-
-.surah-name {
-    font-size: 1.3rem;
-    font-weight: 600;
-    letter-spacing: -0.3px;
-    color: #1a2e24;
-    display: block;
-}
-
-.ayah-range {
-    font-size: 0.7rem;
-    color: #8a9c93;
-}
-
-.progress-section {
-    margin: 24px 0;
-}
-
-.progress-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.8rem;
-    margin-bottom: 8px;
-    color: #5a6b63;
-}
-
-.progress-bar {
-    background: rgba(160, 120, 76, 0.1);
-    border-radius: 100px;
-    height: 6px;
-    overflow: hidden;
-}
-
-.progress-fill {
-    background: #a0784c;
-    width: 0%;
-    height: 100%;
-    border-radius: 100px;
-    transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.revision-info {
-    display: flex;
-    gap: 20px;
-    margin: 24px 0 16px;
-    padding-top: 16px;
-    border-top: 1px solid rgba(160, 120, 76, 0.1);
-}
-
-.revision-item {
-    flex: 1;
-}
-
-.revision-label {
-    display: block;
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #8a9c93;
-    margin-bottom: 6px;
-}
-
-.revision-value {
-    font-weight: 600;
-    font-size: 0.85rem;
-    color: #1a2e24;
-}
-
-.dashboard-note {
-    font-size: 0.65rem;
-    color: #a0784c;
-    text-align: center;
-    margin-top: 16px;
-    font-style: italic;
-    opacity: 0.8;
-}
-
-.scroll-prompt {
-    text-align: center;
-    margin-top: 60px;
-    font-size: 0.7rem;
-    letter-spacing: 2px;
-    color: #a8b5aa;
-}
-
-/* ========== TESTIMONIALS ========== */
-.testimonials-section {
-    padding: 70px 0;
-    background: rgba(160, 120, 76, 0.02);
-}
-
-.testimonials-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 28px;
-    margin-top: 48px;
-}
-
-.testimonial-card {
-    background: white;
-    padding: 32px;
-    border-radius: 24px;
-    border: 1px solid rgba(160, 120, 76, 0.1);
-    transition: all 0.3s ease;
-}
-
-.testimonial-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.06);
-}
-
-.testimonial-quote {
-    font-size: 3rem;
-    color: #a0784c;
-    font-family: Georgia, serif;
-    line-height: 1;
-    margin-bottom: 16px;
-}
-
-.testimonial-text {
-    font-size: 0.9rem;
-    color: #3d524a;
-    line-height: 1.65;
     margin-bottom: 20px;
-    font-style: italic;
 }
 
-.testimonial-author {
+.preview-badge {
+    font-size: 0.7rem;
+    background: #F0EDE5;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.screenshot-placeholder {
+    background: #F5F2EA;
+    border-radius: 24px;
+    padding: 20px;
+    margin: 16px 0;
+    min-height: 240px;
+}
+
+.mock-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.mock-surah {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+}
+
+.mock-progress {
+    background: #E2DCD0;
+    border-radius: 20px;
+    height: 8px;
+    overflow: hidden;
+}
+
+.mock-bar-fill {
+    background: #B0884F;
+    height: 100%;
+    width: 0%;
+    transition: width 1s ease;
+    border-radius: 20px;
+}
+
+.mock-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+}
+
+.mock-stats div {
+    font-size: 0.8rem;
+}
+
+.preview-caption {
+    text-align: center;
+    font-size: 0.7rem;
+    color: #8FAA9E;
+    margin-top: 12px;
+}
+
+.trust-badge {
+    text-align: center;
+    margin-top: 24px;
     font-size: 0.75rem;
-    color: #8a9c93;
-    letter-spacing: 0.3px;
+    font-weight: 500;
+    color: #1E5A4A;
 }
 
-/* ========== DIFFERENCE SECTION ========== */
-.difference-section {
-    padding: 70px 0;
+/* Steps */
+.steps-section {
+    padding: 80px 0;
+    background: #FDFBF8;
 }
 
-.difference-header {
+.section-header {
     text-align: center;
     margin-bottom: 56px;
 }
 
-.difference-grid {
+.section-tag {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: #B0884F;
+    font-weight: 600;
+}
+
+.section-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 12px 0 8px;
+    color: #1E2F2A;
+}
+
+.section-header p {
+    color: #5A786C;
+}
+
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+}
+
+.step-card {
+    background: white;
+    padding: 32px;
+    border-radius: 28px;
+    border: 1px solid rgba(176,136,79,0.1);
+    transition: all 0.25s;
+}
+
+.step-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 30px -12px rgba(0,0,0,0.05);
+}
+
+.step-number {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #B0884F;
+    margin-bottom: 16px;
+}
+
+.step-icon {
+    font-size: 2rem;
+    margin-bottom: 20px;
+}
+
+.step-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+.step-card p {
+    color: #5A786C;
+    font-size: 0.85rem;
+    margin-bottom: 20px;
+}
+
+.step-outcome {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #1E5A4A;
+    background: #ECF3EF;
+    padding: 8px 12px;
+    border-radius: 16px;
+    display: inline-block;
+}
+
+.steps-footnote {
+    text-align: center;
+    margin-top: 48px;
+    font-size: 0.7rem;
+    color: #8FAA9E;
+}
+
+/* Testimonials */
+.testimonials {
+    padding: 80px 0;
+    background: #FCF9F2;
+}
+
+.testimonial-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+}
+
+.testimonial {
+    background: white;
+    padding: 32px;
+    border-radius: 24px;
+    border: 1px solid #EEE7DD;
+}
+
+.quote-mark {
+    font-size: 3rem;
+    color: #B0884F;
+    font-family: serif;
+    line-height: 1;
+}
+
+.testimonial p {
+    margin: 16px 0;
+    font-style: italic;
+    color: #2C423A;
+}
+
+.author {
+    font-size: 0.75rem;
+    color: #8FAA9E;
+}
+
+/* Screenshot showcase */
+.screenshot-showcase {
+    padding: 60px 0;
+    background: #FDFBF8;
+}
+
+.screenshot-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+}
+
+.screenshot-card {
+    text-align: center;
+}
+
+.screen-placeholder {
+    background: #F0EDE5;
+    border-radius: 28px;
+    padding: 24px;
+    min-height: 260px;
+    margin-bottom: 16px;
+    border: 1px dashed #B0884F;
+}
+
+.screen-placeholder.dark {
+    background: #2C423A;
+    color: white;
+}
+
+.mock-ui {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.mock-header {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.mock-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mock-item {
+    background: rgba(0,0,0,0.05);
+    padding: 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+
+.mock-item.red { background: rgba(200, 70, 70, 0.1); border-left: 3px solid #c84747; }
+.mock-item.amber { background: rgba(200, 150, 50, 0.1); border-left: 3px solid #c8962e; }
+.mock-item.green { background: rgba(30, 90, 74, 0.1); border-left: 3px solid #1e5a4a; }
+
+.mock-graph {
+    height: 100px;
+    background: linear-gradient(90deg, #B0884F 30%, #DBC7A9 70%);
+    border-radius: 16px;
+}
+
+/* Comparison */
+.comparison {
+    padding: 80px 0;
+    background: #FCF9F2;
+}
+
+.compare-grid {
     display: flex;
     justify-content: center;
-    align-items: stretch;
     gap: 48px;
+    align-items: stretch;
     flex-wrap: wrap;
 }
 
-.other-card,
-.Mutqin-card {
+.compare-card {
     flex: 1;
-    min-width: 280px;
     background: white;
     padding: 40px;
     border-radius: 28px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
-    border: 1px solid rgba(160, 120, 76, 0.1);
+    min-width: 280px;
 }
 
-.other-card h3,
-.Mutqin-card h3 {
+.compare-card.other {
+    border: 1px solid #E2DCD0;
+}
+
+.compare-card.mutqin {
+    border: 1px solid #B0884F;
+    background: linear-gradient(145deg, white, #FEFAF5);
+}
+
+.compare-card h3 {
     font-size: 1.3rem;
     margin-bottom: 24px;
-    letter-spacing: -0.3px;
 }
 
-.other-card ul,
-.Mutqin-card ul {
+.compare-card ul {
     list-style: none;
 }
 
-.other-card li,
-.Mutqin-card li {
+.compare-card li {
     padding: 12px 0;
-    font-size: 0.9rem;
-    border-bottom: 1px solid rgba(160, 120, 76, 0.08);
+    border-bottom: 1px solid #EFEAE2;
 }
 
-.vs-divider {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: #a0784c;
+.vs {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: #B0884F;
     align-self: center;
-    background: rgba(160, 120, 76, 0.1);
+    background: #F0EDE5;
     width: 60px;
     height: 60px;
     display: flex;
@@ -1089,301 +1041,124 @@ onBeforeUnmount(() => {
     border-radius: 60px;
 }
 
-.Mutqin-card {
-    border: 1px solid #a0784c;
-    background: linear-gradient(135deg, white, rgba(160, 120, 76, 0.02));
+/* Pricing */
+.pricing {
+    padding: 80px 0;
+    background: #FDFBF8;
 }
 
-/* ========== HOW IT WORKS ========== */
-.how-it-works {
-    padding: 70px 0;
-    background: rgba(160, 120, 76, 0.02);
-}
-
-.steps-grid {
+.pricing-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 32px;
     margin-top: 48px;
 }
 
-.step-card {
-    background: white;
-    border-radius: 28px;
-    padding: 36px 28px;
-    border: 1px solid rgba(160, 120, 76, 0.1);
-    transition: all 0.3s ease;
-}
-
-.step-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 24px 36px -16px rgba(0, 0, 0, 0.08);
-    border-color: rgba(160, 120, 76, 0.2);
-}
-
-.step-number {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: #a0784c;
-    letter-spacing: 2px;
-    margin-bottom: 20px;
-}
-
-.step-icon-wrapper {
-    width: 56px;
-    height: 56px;
-    background: rgba(160, 120, 76, 0.08);
-    border-radius: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 24px;
-}
-
-.step-icon {
-    width: 28px;
-    height: 28px;
-    color: #a0784c;
-}
-
-.step-card h3 {
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-bottom: 12px;
-    letter-spacing: -0.3px;
-}
-
-.step-card p {
-    font-size: 0.85rem;
-    color: #5a6b63;
-    line-height: 1.6;
-    margin-bottom: 20px;
-}
-
-.step-result {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: #1e5a4a;
-    background: rgba(30, 90, 74, 0.06);
-    padding: 10px 14px;
-    border-radius: 16px;
-}
-
-.steps-note {
-    text-align: center;
-    margin-top: 48px;
-    font-size: 0.7rem;
-    color: #8a9c93;
-}
-
-/* ========== WHY US ========== */
-.why-us {
-    padding: 70px 0;
-}
-
-.pain-points-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
-    margin: 48px 0;
-}
-
-.pain-point {
-    background: white;
-    padding: 28px;
-    border-radius: 24px;
-    border-left: 4px solid #a0784c;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
-}
-
-.pain-emoji {
-    font-size: 2.2rem;
-    margin-bottom: 12px;
-}
-
-.pain-question {
-    font-weight: 700;
-    font-size: 1rem;
-    margin-bottom: 8px;
-    color: #1a2e24;
-}
-
-.our-solution {
-    font-size: 0.85rem;
-    color: #5a6b63;
-    line-height: 1.6;
-}
-
-.guarantee-card {
-    background: linear-gradient(135deg, #1a2e24, #1e5a4a);
-    border-radius: 28px;
-    padding: 40px;
-    display: flex;
-    gap: 28px;
-    align-items: center;
-    flex-wrap: wrap;
-    color: white;
-}
-
-.guarantee-icon {
-    font-size: 3.5rem;
-}
-
-.guarantee-text h3 {
-    font-size: 1.3rem;
-    margin-bottom: 10px;
-    font-weight: 600;
-}
-
-.guarantee-text p {
-    opacity: 0.85;
-    line-height: 1.6;
-}
-
-.guarantee-small {
-    font-size: 0.7rem;
-    opacity: 0.65;
-    display: block;
-    margin-top: 10px;
-}
-
-/* ========== PRICING ========== */
-.pricing-section {
-    padding: 70px 0;
-    background: rgba(160, 120, 76, 0.02);
-}
-
-.pricing-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 28px;
-    margin-top: 48px;
-}
-
 .pricing-card {
     background: white;
-    border-radius: 28px;
+    border-radius: 32px;
     padding: 36px 28px;
-    border: 1px solid rgba(160, 120, 76, 0.1);
+    border: 1px solid #EFEAE2;
     position: relative;
-    transition: all 0.3s ease;
 }
 
 .pricing-card.featured {
-    border: 2px solid #a0784c;
+    border: 2px solid #B0884F;
     transform: scale(1.02);
-    box-shadow: 0 20px 35px -12px rgba(160, 120, 76, 0.15);
+    box-shadow: 0 20px 30px -15px rgba(176,136,79,0.15);
 }
 
-.popular-badge {
+.popular {
     position: absolute;
     top: -12px;
     left: 50%;
     transform: translateX(-50%);
-    background: #a0784c;
+    background: #B0884F;
     color: white;
-    padding: 5px 18px;
+    padding: 4px 16px;
     border-radius: 100px;
     font-size: 0.7rem;
     font-weight: 600;
-    white-space: nowrap;
 }
 
 .plan-name {
     font-size: 1.2rem;
-    font-weight: 600;
+    font-weight: 700;
     margin-bottom: 12px;
 }
 
-.plan-price {
-    font-size: 2.2rem;
-    font-weight: 700;
-    color: #1a2e24;
+.price {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1E2F2A;
 }
 
-.plan-price span {
-    font-size: 0.85rem;
-    font-weight: 400;
-    color: #8a9c93;
+.price span {
+    font-size: 0.9rem;
+    font-weight: normal;
+    color: #8FAA9E;
 }
 
-.plan-price-gbp {
+.savings {
     font-size: 0.7rem;
-    color: #a0784c;
-    margin-bottom: 16px;
+    color: #1E5A4A;
+    margin: 8px 0 20px;
 }
 
-.plan-savings {
-    font-size: 0.7rem;
-    color: #a0784c;
-    margin: 8px 0 16px;
-}
-
-.plan-features {
+.pricing-card ul {
     list-style: none;
-    margin: 28px 0 32px;
+    margin: 28px 0;
 }
 
-.plan-features li {
-    padding: 10px 0;
+.pricing-card li {
+    padding: 8px 0;
     font-size: 0.85rem;
-    color: #4a5b53;
-    padding-left: 26px;
+    padding-left: 24px;
     position: relative;
 }
 
-.plan-features li::before {
-    content: '✓';
+.pricing-card li::before {
+    content: "✓";
     position: absolute;
     left: 0;
-    color: #a0784c;
-    font-weight: 600;
+    color: #B0884F;
+    font-weight: 700;
 }
 
-.pricing-note {
-    text-align: center;
-    font-size: 0.7rem;
-    color: #8a9c93;
-    margin-top: 40px;
+.full {
+    width: 100%;
 }
 
-/* ========== FAQ ========== */
-.faq-section {
-    padding: 70px 0;
+/* FAQ */
+.faq {
+    padding: 80px 0;
+    background: #FCF9F2;
 }
 
-.faq-grid {
+.faq-list {
     max-width: 800px;
-    margin: 48px auto 0;
+    margin: 0 auto;
 }
 
 .faq-item {
     background: white;
     border-radius: 20px;
-    margin-bottom: 14px;
-    border: 1px solid rgba(160, 120, 76, 0.1);
+    margin-bottom: 12px;
+    border: 1px solid #EFEAE2;
     cursor: pointer;
-    transition: all 0.2s;
-}
-
-.faq-item:hover {
-    border-color: rgba(160, 120, 76, 0.3);
 }
 
 .faq-question {
     display: flex;
     justify-content: space-between;
-    align-items: center;
     padding: 20px 28px;
     font-weight: 600;
-    color: #1a2e24;
 }
 
 .faq-question svg {
     width: 18px;
-    height: 18px;
-    color: #a0784c;
     transition: transform 0.2s;
+    color: #B0884F;
 }
 
 .faq-question svg.rotated {
@@ -1393,48 +1168,47 @@ onBeforeUnmount(() => {
 .faq-answer {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.3s ease;
+    transition: max-height 0.3s;
     padding: 0 28px;
 }
 
 .faq-answer.open {
-    max-height: 250px;
+    max-height: 200px;
     padding: 0 28px 22px 28px;
 }
 
 .faq-answer p {
-    color: #5a6b63;
+    color: #5A786C;
     font-size: 0.85rem;
-    line-height: 1.65;
 }
 
 .faq-footer {
     text-align: center;
-    margin-top: 36px;
-    font-size: 0.85rem;
+    margin-top: 32px;
 }
 
-.faq-footer a {
-    color: #a0784c;
-    text-decoration: none;
+.btn-link {
+    background: none;
+    border: none;
+    color: #B0884F;
     font-weight: 500;
+    cursor: pointer;
 }
 
-/* ========== CONTACT ========== */
+/* Contact */
 .contact-section {
-    padding: 70px 0;
-    background: rgba(160, 120, 76, 0.02);
+    padding: 60px 0;
+    background: #FDFBF8;
 }
 
 .contact-card {
     display: grid;
     grid-template-columns: 1fr 1.5fr;
-    gap: 56px;
+    gap: 48px;
     background: white;
     border-radius: 32px;
     padding: 48px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.02);
-    border: 1px solid rgba(160, 120, 76, 0.1);
+    border: 1px solid #EFEAE2;
 }
 
 .contact-emoji {
@@ -1442,226 +1216,120 @@ onBeforeUnmount(() => {
     margin-bottom: 16px;
 }
 
-.contact-left h3 {
+.contact-info h3 {
     font-size: 1.3rem;
     margin-bottom: 12px;
-    color: #1a2e24;
-}
-
-.contact-left p {
-    color: #5a6b63;
-    margin-bottom: 24px;
-    line-height: 1.65;
 }
 
 .contact-detail {
+    margin: 16px 0;
     display: flex;
     align-items: center;
     gap: 10px;
-    margin: 14px 0;
     font-size: 0.9rem;
-    color: #1a2e24;
 }
 
-.contact-detail svg {
-    width: 18px;
-    height: 18px;
-    color: #a0784c;
-}
-
-.contact-dua {
+.dua {
     margin-top: 24px;
-    font-size: 0.75rem;
-    color: #a0784c;
     font-style: italic;
+    font-size: 0.75rem;
+    color: #B0884F;
+    border-top: 1px solid #EFEAE2;
     padding-top: 20px;
-    border-top: 1px solid rgba(160, 120, 76, 0.1);
 }
 
-.contact-right {
+.contact-form {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
-.form-input,
-.form-textarea {
+.contact-form input, .contact-form textarea {
     padding: 14px 18px;
-    border: 1px solid rgba(160, 120, 76, 0.2);
-    border-radius: 16px;
+    border: 1px solid #E2DCD0;
+    border-radius: 20px;
     font-family: inherit;
-    font-size: 0.85rem;
-    background: white;
-    transition: all 0.2s;
 }
 
-.form-input:focus,
-.form-textarea:focus {
-    outline: none;
-    border-color: #a0784c;
-    box-shadow: 0 0 0 3px rgba(160, 120, 76, 0.1);
-}
-
-/* ========== FOOTER ========== */
+/* Footer */
 .footer {
-    background: #1a2e24;
-    color: #c2d3cb;
+    background: #1E2F2A;
+    color: #C8DCD2;
     padding: 56px 0 32px;
 }
 
-.footer-grid {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr 1fr 1fr;
-    gap: 48px;
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 32px;
     margin-bottom: 48px;
 }
 
 .footer-logo {
-    font-size: 1.1rem;
-    font-weight: 600;
+    font-size: 1.2rem;
+    font-weight: 700;
     color: white;
-    margin-bottom: 10px;
 }
 
-.footer-tagline {
-    font-size: 0.75rem;
-    opacity: 0.7;
+.footer-logo span {
+    color: #B0884F;
 }
 
-.footer-links-group h4 {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: white;
-    margin-bottom: 18px;
+.footer-links {
+    display: flex;
+    gap: 32px;
 }
 
-.footer-links-group a {
-    display: block;
-    color: #c2d3cb;
+.footer-links a {
+    color: #C8DCD2;
     text-decoration: none;
-    font-size: 0.75rem;
-    margin-bottom: 10px;
-    transition: opacity 0.2s;
-}
-
-.footer-links-group a:hover {
-    opacity: 0.7;
+    font-size: 0.8rem;
 }
 
 .footer-bottom {
     text-align: center;
+    border-top: 1px solid rgba(255,255,255,0.1);
     padding-top: 32px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 0.65rem;
-    opacity: 0.6;
+    font-size: 0.7rem;
 }
 
-/* ========== SECTION HEADERS ========== */
-.section-header {
-    text-align: center;
-    margin-bottom: 48px;
-}
-
-.section-label {
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    color: #a0784c;
-    margin-bottom: 12px;
-}
-
-.section-title {
-    font-size: 2rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: #1a2e24;
-}
-
-.section-subtitle {
-    color: #6b7f76;
-    margin-top: 14px;
-    font-size: 0.9rem;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-/* ========== RESPONSIVE ========== */
-@media (max-width: 992px) {
-    .hero-grid,
-    .pricing-grid,
-    .testimonials-grid {
+/* Responsive */
+@media (max-width: 1000px) {
+    .hero-grid, .steps-grid, .testimonial-grid, .pricing-grid, .screenshot-row {
         grid-template-columns: 1fr;
     }
-    .steps-grid {
-        grid-template-columns: 1fr;
-        max-width: 450px;
-        margin: 48px auto 0;
+    .compare-grid {
+        flex-direction: column;
     }
-    .nav-links-desktop,
-    .desktop-cta {
+    .vs {
+        transform: rotate(90deg);
+        margin: 20px auto;
+    }
+    .nav-links-desktop {
         display: none;
     }
     .mobile-menu-btn {
         display: flex;
     }
-    .pain-points-grid {
-        grid-template-columns: 1fr;
-    }
-    .difference-grid {
-        flex-direction: column;
-        align-items: center;
-    }
-    .vs-divider {
-        transform: rotate(90deg);
-    }
     .contact-card {
         grid-template-columns: 1fr;
     }
-    .footer-grid {
-        grid-template-columns: repeat(2, 1fr);
+    .pricing-card.featured {
+        transform: none;
     }
 }
-
-@media (max-width: 768px) {
+@media (max-width: 640px) {
     .container {
         padding: 0 20px;
     }
     .hero-actions {
         flex-direction: column;
     }
-    .btn-lg {
+    .btn-large {
         width: 100%;
         text-align: center;
-    }
-    .pricing-card.featured {
-        transform: none;
-    }
-    .footer-grid {
-        grid-template-columns: 1fr;
-        text-align: center;
-    }
-    .testimonials-grid {
-        gap: 20px;
-    }
-    .section-title {
-        font-size: 1.6rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .hero-title {
-        font-size: 1.8rem;
-    }
-    .dashboard-card {
-        padding: 20px;
-    }
-    .revision-info {
-        flex-direction: column;
-        gap: 12px;
-    }
-    .pricing-card {
-        padding: 24px 20px;
     }
 }
 </style>
