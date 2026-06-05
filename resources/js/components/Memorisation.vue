@@ -6893,8 +6893,8 @@ export default {
     },
     getRecitationScoreTone(score) {
       const value = Number(score || 0)
-      if (value >= 85) return 'tone-excellent'
-      if (value >= 65) return 'tone-good'
+      if (value >= 100) return 'tone-excellent'
+      if (value >= 85) return 'tone-good'
       return 'tone-review'
     },
     formatAiMistakeList(items) {
@@ -6929,7 +6929,7 @@ export default {
         ayahKey: attempt.ayahRange?.keys?.[0] || `${attempt.surah?.id}:${attempt.ayahRange?.start}`,
         recordedAt: attempt.timestamp,
         durationSeconds: 0,
-        result: result.accuracyScore >= 85 ? 'Excellent' : result.accuracyScore >= 65 ? 'Good' : 'Needs Review',
+        result: result.accuracyScore >= 100 ? 'Excellent' : result.accuracyScore >= 85 ? 'Good' : 'Needs Review',
         accuracyScore: result.accuracyScore,
         transcript: result.transcript,
         targetText: result.targetText,
@@ -7681,9 +7681,9 @@ export default {
       const statuses = this.getRecitationWordStatuses(result)
       const partial = statuses.filter(word => word.status === 'partial').slice(0, 3).map(word => word.text)
       const review = statuses.filter(word => word.status === 'incorrect' || word.status === 'pending').slice(0, 3).map(word => word.text)
-      if (Number(result?.accuracyScore || 0) >= 85) return 'Save this attempt to the recordings library, then run one clean recall without peeking.'
       if (review.length) return `Replay and drill: ${review.join('، ')}. Then retry the checker for the same target.`
       if (partial.length) return `Slow down and sharpen: ${partial.join('، ')}. These were close but not clean.`
+      if (Number(result?.accuracyScore || 0) >= 100) return 'Save this attempt to the recordings library, then run one clean recall without peeking.'
       return this.getRecitationNextStep(result)
     },
     aiMemorisationCheckerStorageKey() {
@@ -7760,7 +7760,7 @@ export default {
         ayahKey: first?.key || '',
         recordedAt: result.timestamp || result.savedAt || new Date().toISOString(),
         durationSeconds: 0,
-        result: Number(result.accuracyScore || 0) >= 85 ? 'Excellent' : Number(result.accuracyScore || 0) >= 65 ? 'Good' : 'Needs Review',
+        result: Number(result.accuracyScore || 0) >= 100 ? 'Excellent' : Number(result.accuracyScore || 0) >= 85 ? 'Good' : 'Needs Review',
         accuracyScore: Number(result.accuracyScore || 0),
         transcript: result.transcript || '',
         targetText: result.targetText || this.getRecitationTargetText(targets),
@@ -8245,10 +8245,6 @@ export default {
       const first = String(primary || '').trim()
       const second = String(fallback || '').trim()
       if (!first) return second
-      if (!second) return first
-      const firstWords = this.tokenizeRecitationWords(first)
-      const secondWords = this.tokenizeRecitationWords(second)
-      if (secondWords.length > firstWords.length + 1) return second
       return first
     },
     buildRecitationWordDiffParts(targetWords, transcriptWords) {
@@ -8333,10 +8329,9 @@ export default {
       return targetWords.map(word => {
         if (incorrect.has(word) && incorrect.get(word).length) {
           const actual = incorrect.get(word).shift()
-          const status = this.getRecitationWordSimilarity(word, actual) >= 0.55 ? 'partial' : 'incorrect'
           return {
             text: word,
-            status,
+            status: 'incorrect',
             note: actual ? `Expected ${word}; heard ${actual}.` : 'Incorrect word.'
           }
         }
@@ -8365,7 +8360,7 @@ export default {
           const targetWord = normalizedTargetWords[targetIndex - 1]
           const heardWord = transcriptWords[heardIndex - 1]
           const similarity = this.getRecitationWordSimilarity(targetWord, heardWord)
-          const matchCost = similarity >= 0.98 ? 0 : similarity >= 0.68 ? 0.32 : similarity >= 0.5 ? 0.58 : 1.1
+          const matchCost = targetWord === heardWord ? 0 : similarity >= 0.72 ? 0.86 : 1.14
           const candidates = [
             { cost: matrix[targetIndex - 1][heardIndex - 1].cost + matchCost, prev: [targetIndex - 1, heardIndex - 1], op: 'match', similarity },
             { cost: matrix[targetIndex - 1][heardIndex].cost + 1, prev: [targetIndex - 1, heardIndex], op: 'missing' },
@@ -8385,15 +8380,8 @@ export default {
         if (cell.op === 'match') {
           const displayText = displayWords[targetIndex - 1] || normalizedTargetWords[targetIndex - 1]
           const actual = transcriptWords[heardIndex - 1] || ''
-          if (cell.similarity >= 0.98) {
+          if (normalizedTargetWords[targetIndex - 1] === actual) {
             statuses[targetIndex - 1] = { text: displayText, status: 'correct', note: 'Correct.', actual }
-          } else if (cell.similarity >= 0.5) {
-            statuses[targetIndex - 1] = {
-              text: displayText,
-              status: 'partial',
-              note: `Expected ${displayText}; heard ${actual}.`,
-              actual
-            }
           } else {
             statuses[targetIndex - 1] = {
               text: displayText,
@@ -8496,9 +8484,9 @@ export default {
       const mistakes = result?.mistakeBreakdown || result?.mistakes || {}
       const reviewCount = (mistakes.incorrect?.length || 0) + (mistakes.missing?.length || 0)
       const extraCount = mistakes.extra?.length || 0
-      if (Number(result?.accuracyScore || 0) >= 85) return 'Save the attempt, then recite it once more without looking before moving on.'
       if (reviewCount) return `Focus on ${reviewCount} highlighted word${reviewCount === 1 ? '' : 's'} in the ayah display, replay the ayah once, then run another Recite Check.`
       if (extraCount) return 'Slow the pace and remove the extra wording before checking again.'
+      if (Number(result?.accuracyScore || 0) >= 100) return 'Save the attempt, then recite it once more without looking before moving on.'
       return 'Repeat once at a slower pace, then save or check again to confirm consistency.'
     },
     getRecitationRecommendationDisplay(result) {
@@ -8519,9 +8507,8 @@ export default {
         : this.buildRecitationMistakesFromStatuses(wordStatuses, transcriptWords, targetWords, alignment.extra)
       const targetCount = Math.max(1, targetWords.length)
       const correctScore = wordStatuses.filter(word => word.status === 'correct').length
-      const partialScore = wordStatuses.filter(word => word.status === 'partial').length * 0.55
-      const extraPenalty = (mistakes.extra.length || 0) * 0.18
-      const accuracyScore = Math.max(0, Math.min(100, Math.round(((correctScore + partialScore - extraPenalty) / targetCount) * 100)))
+      const extraPenalty = (mistakes.extra.length || 0) * 0.25
+      const accuracyScore = Math.max(0, Math.min(100, Math.round(((correctScore - extraPenalty) / targetCount) * 100)))
 
       return {
         id: `recitation-${Date.now()}`,
@@ -8540,24 +8527,25 @@ export default {
       const incorrect = mistakes.incorrect?.length || 0
       const partial = mistakes.partial?.length || 0
       const extra = mistakes.extra?.length || 0
-      if (score >= 85) return 'Strong. Save it and keep this ayah on light review.'
-      if (score >= 65) return 'Close. Drill the amber or red words, then check again.'
       if (missing) return `Missing ${missing} word${missing === 1 ? '' : 's'}. Recite that section slowly before retrying.`
       if (partial) return `Clarify ${partial} close word${partial === 1 ? '' : 's'}, then check again.`
       if (incorrect) return `Review ${incorrect} changed word${incorrect === 1 ? '' : 's'} and compare with the displayed ayah.`
       if (extra) return 'Extra wording detected. Slow down and keep the ayah boundary tight.'
+      if (score >= 100) return 'Clean match. Save it and keep this ayah on light review.'
+      if (score >= 85) return 'Mostly clean. Recheck once before saving.'
       return 'Replay the ayah once, recite without looking, then run another Recite Check.'
     },
     buildRecitationReviewMetadata(score, mistakes) {
-      const intervalDays = score >= 85 ? 7 : score >= 65 ? 3 : 1
+      const issueCount = mistakes.missing.length + mistakes.extra.length + mistakes.incorrect.length + (mistakes.partial?.length || 0)
+      const intervalDays = score >= 100 && issueCount === 0 ? 7 : score >= 85 ? 3 : 1
       const dueAt = new Date()
       dueAt.setDate(dueAt.getDate() + intervalDays)
       return {
-        priority: score >= 85 ? 'low' : score >= 65 ? 'medium' : 'high',
+        priority: score >= 100 && issueCount === 0 ? 'low' : score >= 85 ? 'medium' : 'high',
         intervalDays,
         dueAt: dueAt.toISOString(),
-        mistakeCount: mistakes.missing.length + mistakes.extra.length + mistakes.incorrect.length + (mistakes.partial?.length || 0),
-        reason: score >= 85 ? 'high-accuracy' : score >= 65 ? 'partial-review' : 'needs-review'
+        mistakeCount: issueCount,
+        reason: score >= 100 && issueCount === 0 ? 'high-accuracy' : score >= 85 ? 'partial-review' : 'needs-review'
       }
     },
     mutqinSessionsStorageKey() {
@@ -34011,124 +33999,4 @@ button:active {
   }
 }
 
-/* Session recite layout reset: fluid, centered, no clipped ayah text. */
-.self-check-modal {
-  width: calc(100vw - 28px) !important;
-  max-width: none !important;
-  height: min(92dvh, 920px) !important;
-  max-height: min(92dvh, 920px) !important;
-}
-
-.self-check-modal .self-check-modal-header {
-  flex: 0 0 auto !important;
-}
-
-.self-check-modal .self-check-modal-body {
-  height: calc(100% - 96px) !important;
-  min-height: 0 !important;
-  display: grid !important;
-  grid-template-rows: minmax(0, 1fr) auto !important;
-  gap: 14px !important;
-  overflow: hidden !important;
-}
-
-.self-check-modal .self-check-modal-stage {
-  min-height: 0 !important;
-  display: grid !important;
-  grid-template-rows: auto minmax(0, 1fr) !important;
-  overflow: hidden !important;
-}
-
-.self-check-modal .self-check-section-head {
-  margin-bottom: 8px !important;
-}
-
-.self-check-modal .self-check-modal-ayah-shell {
-  min-height: 0 !important;
-  height: 100% !important;
-  padding: clamp(18px, 2.2vw, 34px) !important;
-  padding-bottom: 86px !important;
-  overflow: hidden !important;
-}
-
-.self-check-modal .self-check-modal-ayah {
-  width: 100% !important;
-  max-width: 100% !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  height: 100% !important;
-  padding: 0 !important;
-  display: block !important;
-  overflow: visible !important;
-  color: var(--text) !important;
-  direction: rtl !important;
-  unicode-bidi: isolate !important;
-  text-align: center !important;
-  font-size: var(--self-check-display-font-size, 3rem) !important;
-  line-height: 1.75 !important;
-  text-wrap: pretty !important;
-}
-
-.self-check-modal .self-check-modal-ayah.self-check-session-ayat {
-  align-content: center !important;
-  line-height: 1.75 !important;
-}
-
-.self-check-modal .self-check-modal-ayah.recitation-word-review-active {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  align-content: center !important;
-  justify-content: center !important;
-}
-
-.self-check-modal .self-check-modal-ayah .wbw-word,
-.self-check-modal .self-check-modal-ayah word {
-  display: inline-block !important;
-  margin: 0.05em 0.04em !important;
-  white-space: nowrap !important;
-}
-
-.self-check-ayah-actions {
-  left: auto !important;
-  right: clamp(14px, 1.8vw, 28px) !important;
-  bottom: clamp(14px, 1.8vw, 28px) !important;
-  max-width: calc(100% - 32px) !important;
-  justify-content: flex-end !important;
-}
-
-.self-check-reciter-select {
-  width: clamp(170px, 16vw, 260px) !important;
-}
-
-.self-check-modal .self-check-modal-recorder-grid {
-  min-height: 0 !important;
-  max-height: 42% !important;
-  overflow: hidden !important;
-}
-
-.self-check-modal .recitation-check-panel-inline {
-  max-height: 100% !important;
-  overflow: auto !important;
-}
-
-@media (max-width: 900px) {
-  .self-check-modal {
-    width: calc(100vw - 16px) !important;
-    height: min(94dvh, 880px) !important;
-    max-height: min(94dvh, 880px) !important;
-  }
-
-  .self-check-modal .self-check-modal-body {
-    height: calc(100% - 84px) !important;
-    padding: 12px !important;
-  }
-
-  .self-check-modal .self-check-modal-ayah {
-    font-size: min(var(--self-check-display-font-size, 2.6rem), 3rem) !important;
-  }
-
-  .self-check-modal .self-check-modal-recorder-grid {
-    max-height: 48% !important;
-  }
-}
 </style>
