@@ -113,12 +113,11 @@ Route::post('/memorisation/recitation-check/transcribe', function (Request $requ
 
     $file = $request->file('audio');
     $targetText = trim((string) $request->input('target_text', ''));
-    $promptTargetText = '';
-    if ($targetText !== '') {
-        $targetWords = preg_split('/\s+/u', $targetText, -1, PREG_SPLIT_NO_EMPTY) ?: [];
-        $promptTargetText = implode(' ', array_slice($targetWords, 0, 180));
-    }
-    $groqApiKey = config('services.groq.api_key'); // Add this to config/services.php
+    $targetWords = $targetText !== ''
+        ? (preg_split('/\s+/u', $targetText, -1, PREG_SPLIT_NO_EMPTY) ?: [])
+        : [];
+    $promptTargetText = implode(' ', array_slice($targetWords, 0, 220));
+    $groqApiKey = config('services.groq.api_key');
     
     if (!$groqApiKey) {
         return response()->json([
@@ -126,20 +125,38 @@ Route::post('/memorisation/recitation-check/transcribe', function (Request $requ
         ], 422);
     }
 
+    if (!$file || !$file->isValid() || !is_readable($file->getRealPath())) {
+        return response()->json([
+            'message' => 'The recording could not be read. Please record again.',
+        ], 422);
+    }
+
     try {
+        $filename = $file->getClientOriginalName() ?: 'recitation-check.webm';
+        $mimeType = $file->getMimeType() ?: 'audio/webm';
+        $prompt = $promptTargetText
+            ? implode(' ', [
+                'Arabic Quran recitation transcription.',
+                'Return only the Arabic words that are clearly audible, in order.',
+                'Do not infer missing words, do not complete the ayah, do not add Quran verse numbers, and do not correct misread words.',
+                'Ignore silence, room noise, breath, fillers, and repeated non-recited sounds.',
+                'Use this reference only to spell words that were actually heard:',
+                $promptTargetText,
+            ])
+            : 'Arabic Quran recitation transcription. Return only the Arabic words that are clearly audible, in order. Do not infer, complete, add, or correct missing or misread words.';
+
         $response = Http::withToken($groqApiKey)
+            ->retry(2, 350)
             ->timeout(120)
-            ->attach('file', file_get_contents($file->getRealPath()), $file->getClientOriginalName() ?: 'recitation-check.webm', [
-                'Content-Type' => $file->getMimeType() ?: 'audio/webm',
+            ->attach('file', file_get_contents($file->getRealPath()), $filename, [
+                'Content-Type' => $mimeType,
             ])
             ->post('https://api.groq.com/openai/v1/audio/transcriptions', array_filter([
                 'model' => 'whisper-large-v3-turbo',
                 'response_format' => 'json',
                 'language' => 'ar',
                 'temperature' => '0',
-                'prompt' => $promptTargetText
-                    ? 'Arabic Quran recitation. Write exactly the Arabic words that are audibly recited, in order. Do not infer, complete, add, or correct missing or misread words from the reference. Ignore pauses, fillers, and noise. The reference is only for Arabic spelling of words actually heard: ' . $promptTargetText
-                    : 'Arabic Quran recitation. Write exactly the Arabic words that are audibly recited, in order. Do not infer, complete, add, or correct missing or misread words.',
+                'prompt' => $prompt,
             ], fn ($value) => $value !== null && $value !== ''));
         
         if (!$response->successful()) {
@@ -154,7 +171,10 @@ Route::post('/memorisation/recitation-check/transcribe', function (Request $requ
         $data = $response->json();
         $transcript = trim($data['text'] ?? '');
         
-        return response()->json(['text' => $transcript]);
+        return response()->json([
+            'text' => $transcript,
+            'word_count' => $transcript === '' ? 0 : count(preg_split('/\s+/u', $transcript, -1, PREG_SPLIT_NO_EMPTY) ?: []),
+        ]);
         
     } catch (ConnectionException $error) {
         return response()->json([
