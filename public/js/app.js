@@ -25441,34 +25441,219 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
-  name: 'MutqinApp',
-  data: function data() {
+/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
+
+
+// Animated Counter Component
+var AnimatedCounter = {
+  props: {
+    target: Number,
+    duration: {
+      type: Number,
+      "default": 2000
+    }
+  },
+  setup: function setup(props) {
+    var current = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(0);
+    var animationId = null;
+    (0,vue__WEBPACK_IMPORTED_MODULE_0__.onMounted)(function () {
+      var startTime = performance.now();
+      var _updateCounter = function updateCounter(now) {
+        var elapsed = now - startTime;
+        var progress = Math.min(elapsed / props.duration, 1);
+        current.value = Math.floor(progress * props.target);
+        if (progress < 1) {
+          animationId = requestAnimationFrame(_updateCounter);
+        } else {
+          current.value = props.target;
+        }
+      };
+      animationId = requestAnimationFrame(_updateCounter);
+    });
+    (0,vue__WEBPACK_IMPORTED_MODULE_0__.onUnmounted)(function () {
+      if (animationId) cancelAnimationFrame(animationId);
+    });
     return {
-      activeMode: 'stacked' // 'stacked' or 'mushaf'
+      current: current
     };
   },
-  mounted: function mounted() {
-    // Apply prefers-color-scheme on mount
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    }
-
-    // Watch for changes in color scheme preference
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
-      document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
-    });
+  template: '<span>{{ current }}</span>'
+};
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
+  name: 'OnboardingPage',
+  components: {
+    AnimatedCounter: AnimatedCounter
   },
-  methods: {
-    scrollTo: function scrollTo(targetId) {
-      var element = document.querySelector(targetId);
-      if (element) {
-        element.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
+  setup: function setup() {
+    // Theme management
+    var currentTheme = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)('light');
+    var setTheme = function setTheme(theme) {
+      currentTheme.value = theme;
+      localStorage.setItem('mutqin-theme', theme);
+      document.documentElement.setAttribute('data-theme', theme);
+    };
+    var loadTheme = function loadTheme() {
+      var saved = localStorage.getItem('mutqin-theme');
+      if (saved && ['light', 'dark', 'sepia'].includes(saved)) {
+        currentTheme.value = saved;
+        document.documentElement.setAttribute('data-theme', saved);
+      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        setTheme('dark');
+      } else {
+        setTheme('light');
       }
-    }
+    };
+
+    // Refs for scroll tracking
+    var featuresSection = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(null);
+    var pricingSection = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(null);
+
+    // Scroll methods
+    var scrollToFeatures = function scrollToFeatures() {
+      var _featuresSection$valu;
+      (_featuresSection$valu = featuresSection.value) === null || _featuresSection$valu === void 0 || _featuresSection$valu.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    };
+    var scrollToPricing = function scrollToPricing() {
+      var _pricingSection$value;
+      (_pricingSection$value = pricingSection.value) === null || _pricingSection$value === void 0 || _pricingSection$value.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    };
+
+    // Data
+    var stats = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)([{
+      value: 15000,
+      suffix: '+',
+      label: 'Active Students'
+    }, {
+      value: 94,
+      suffix: '%',
+      label: 'Tajweed Improvement'
+    }, {
+      value: 280,
+      suffix: 'k+',
+      label: 'Errors Corrected'
+    }]);
+    var floatingBadges = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)([{
+      icon: 'bi bi-check-circle-fill',
+      text: 'Tajweed score: +27%'
+    }, {
+      icon: 'bi bi-graph-up',
+      text: 'Weak verses auto-scheduled'
+    }, {
+      icon: 'bi bi-star-fill',
+      text: '15 min/day memorization'
+    }]);
+    var features = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)([{
+      icon: 'bi bi-mic',
+      title: 'AI Recitation Checker',
+      badge: 'Free',
+      badgeType: '',
+      description: 'Letter-by-letter Tajweed analysis, mistake heatmaps, instant audio feedback. 25 free checks/day.'
+    }, {
+      icon: 'bi bi-brain',
+      title: 'Smart Memorization',
+      badge: 'Pro',
+      badgeType: 'pro',
+      description: 'Spaced repetition + forgetting curve AI. Tests weak verses before you forget.'
+    }, {
+      icon: 'bi bi-journal-bookmark-fill',
+      title: 'Interactive Mushaf',
+      badge: 'Free',
+      badgeType: '',
+      description: 'Tajweed color-coding, tafsir, transliteration, audio from 5 renowned Qaris.'
+    }, {
+      icon: 'bi bi-link',
+      title: 'Memory Linking',
+      badge: 'Pro',
+      badgeType: 'pro',
+      description: 'AI selects anchor/story method based on your retention style.'
+    }, {
+      icon: 'bi bi-collection-play',
+      title: 'Personal Library',
+      badge: 'Free (limited)',
+      badgeType: '',
+      description: 'Save last 15 recordings + basic analytics. Pro: unlimited history.'
+    }, {
+      icon: 'bi bi-graph-up',
+      title: 'Weakness Analytics',
+      badge: 'Pro',
+      badgeType: 'pro',
+      description: 'Heatmap of recurring errors, rule-based recommendations, monthly progress reports.'
+    }]);
+    var steps = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)([{
+      title: 'Record',
+      description: 'Recite any verse directly in your browser.',
+      icon: 'bi bi-mic'
+    }, {
+      title: 'AI Analysis',
+      description: 'Get letter‑level tajweed report within 3 seconds.',
+      icon: 'bi bi-cpu'
+    }, {
+      title: 'Fix & Review',
+      description: 'Actionable corrections + smart revision scheduler.',
+      icon: 'bi bi-check2-circle'
+    }]);
+    var testimonials = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)([{
+      quote: "Mutqin fixed my 'ض' in 2 weeks after 5 years of struggle. Alhamdulillah.",
+      author: "Abdullah Khan",
+      role: "12 Juz Memorized",
+      initials: "AK"
+    }, {
+      quote: "Spaced repetition saved my hifdh. I don't forget anymore. Essential for every hafidh.",
+      author: "Fatima El-Sayed",
+      role: "Hafidha in Progress",
+      initials: "FE"
+    }, {
+      quote: "As a tajweed teacher, I use Mutqin to track students' weak spots instantly.",
+      author: "Ustadh Hisham",
+      role: "Certified Qari",
+      initials: "UH"
+    }]);
+    var freeFeatures = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(['AI recitation (25/day)', "Juz 'Amma + 5 surahs", 'Basic progress tracking', 'Smart memorization AI', 'Unlimited library']);
+    var proFeatures = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(['Unlimited AI recitation', 'Entire Quran + 10 Qira\'at', 'Smart memorization engine', 'Unlimited recordings & library', 'Weakness heatmaps + analytics', 'Priority support & monthly PDF']);
+
+    // Intersection Observer for animations
+    var observerOptions = {
+      threshold: 0.3,
+      rootMargin: '0px'
+    };
+    (0,vue__WEBPACK_IMPORTED_MODULE_0__.onMounted)(function () {
+      loadTheme();
+
+      // Animate elements when they come into view
+      var animatedElements = document.querySelectorAll('[data-aos]');
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('aos-animate');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, observerOptions);
+      animatedElements.forEach(function (el) {
+        return observer.observe(el);
+      });
+    });
+    return {
+      currentTheme: currentTheme,
+      setTheme: setTheme,
+      featuresSection: featuresSection,
+      pricingSection: pricingSection,
+      scrollToFeatures: scrollToFeatures,
+      scrollToPricing: scrollToPricing,
+      stats: stats,
+      floatingBadges: floatingBadges,
+      features: features,
+      steps: steps,
+      testimonials: testimonials,
+      freeFeatures: freeFeatures,
+      proFeatures: proFeatures
+    };
   }
 });
 
@@ -37778,10 +37963,10 @@ function createAdvancedState() {
 
 /***/ }),
 
-/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Homepage.vue?vue&type=template&id=7f033e59&scoped=true":
-/*!******************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Homepage.vue?vue&type=template&id=7f033e59&scoped=true ***!
-  \******************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Homepage.vue?vue&type=template&id=7f033e59":
+/*!******************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Homepage.vue?vue&type=template&id=7f033e59 ***!
+  \******************************************************************************************************************************************************************************************************************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -37790,91 +37975,326 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   render: () => (/* binding */ render)
 /* harmony export */ });
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
+function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
+function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 
-var _hoisted_1 = {
-  "class": "shell"
-};
+var _hoisted_1 = ["data-theme"];
 var _hoisted_2 = {
-  style: {
-    "background": "var(--surface-card)",
-    "border-radius": "var(--radius-lg)",
-    "padding": "2rem",
-    "margin": "1rem 0",
-    "text-align": "center",
-    "border": "1px solid var(--border)"
-  }
+  "class": "hero"
 };
 var _hoisted_3 = {
-  "class": "mode-switch"
+  "class": "hero-container"
 };
 var _hoisted_4 = {
-  "class": "footer"
+  "class": "hero-content",
+  "data-aos": "fade-up"
 };
 var _hoisted_5 = {
-  "class": "shell"
+  "class": "hero-buttons"
 };
 var _hoisted_6 = {
-  "class": "footer-links"
+  "class": "hero-stats"
 };
 var _hoisted_7 = {
-  "class": "footer-col"
+  "class": "stat-number"
+};
+var _hoisted_8 = {
+  "class": "stat-label"
+};
+var _hoisted_9 = {
+  "class": "hero-image",
+  "data-aos": "fade-left"
+};
+var _hoisted_10 = {
+  id: "features",
+  "class": "features-section",
+  ref: "featuresSection"
+};
+var _hoisted_11 = {
+  "class": "section-container"
+};
+var _hoisted_12 = {
+  "class": "features-grid"
+};
+var _hoisted_13 = {
+  "class": "feature-icon"
+};
+var _hoisted_14 = {
+  id: "how-it-works"
+};
+var _hoisted_15 = {
+  "class": "section-container"
+};
+var _hoisted_16 = {
+  "class": "steps-grid"
+};
+var _hoisted_17 = ["data-aos-delay"];
+var _hoisted_18 = {
+  "class": "step-number"
+};
+var _hoisted_19 = {
+  id: "testimonials",
+  "class": "testimonials-section"
+};
+var _hoisted_20 = {
+  "class": "section-container"
+};
+var _hoisted_21 = {
+  "class": "testimonials-grid"
+};
+var _hoisted_22 = ["data-aos-delay"];
+var _hoisted_23 = {
+  "class": "testimonial-author"
+};
+var _hoisted_24 = {
+  "class": "author-avatar"
+};
+var _hoisted_25 = {
+  "class": "author-info"
+};
+var _hoisted_26 = {
+  id: "pricing",
+  "class": "pricing-section"
+};
+var _hoisted_27 = {
+  "class": "section-container"
+};
+var _hoisted_28 = {
+  "class": "pricing-grid"
+};
+var _hoisted_29 = {
+  "class": "pricing-card",
+  "data-aos": "flip-right"
+};
+var _hoisted_30 = {
+  "class": "pricing-features"
+};
+var _hoisted_31 = {
+  "class": "pricing-card featured",
+  "data-aos": "flip-left"
+};
+var _hoisted_32 = {
+  "class": "pricing-features"
+};
+var _hoisted_33 = {
+  "class": "theme-switcher"
+};
+var _hoisted_34 = {
+  "class": "footer"
+};
+var _hoisted_35 = {
+  "class": "footer-container"
+};
+var _hoisted_36 = {
+  "class": "footer-grid"
+};
+var _hoisted_37 = {
+  "class": "footer-links"
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" FULL WIDTH QURAN BANNER (directly below navbar) "), _cache[16] || (_cache[16] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"quran-full-banner\" data-v-7f033e59><div class=\"quran-banner-content\" data-v-7f033e59><span data-v-7f033e59>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</span> ✦ <span data-v-7f033e59>وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا</span> ✦ <span data-v-7f033e59>رَبِّ زِدْنِي عِلْمًا</span> ✦ <span data-v-7f033e59>إِنَّا نَحْنُ نَزَّلْنَا الذِّكْرَ وَإِنَّا لَهُ لَحَافِظُونَ</span> ✦ <span data-v-7f033e59>اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ</span> ✦ <span data-v-7f033e59>وَرَتِّلْهُ تَرْتِيلًا</span> ✦ <span data-v-7f033e59>وَالْحِسْنِ تَرْتِيلِي</span></div></div>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("main", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Hero Section "), _cache[6] || (_cache[6] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section class=\"hero\" data-v-7f033e59><div class=\"hero-grid\" data-v-7f033e59><div data-v-7f033e59><div style=\"background:var(--gold-light);display:inline-block;padding:4px 16px;border-radius:40px;font-size:0.75rem;font-weight:600;\" data-v-7f033e59>📖 رَبَّنَا آتِنَا</div><h1 class=\"hero-title\" data-v-7f033e59>Memorize the Quran with <span data-v-7f033e59>AI &amp; classical techniques</span></h1><p style=\"color:var(--text-muted);font-size:1.1rem;\" data-v-7f033e59>Chaining • Anchor method • Blur/Focus modes • Smart revision. Not just tajweed — real memorization power.</p><div style=\"margin:2rem 0;display:flex;gap:1rem;flex-wrap:wrap;\" data-v-7f033e59><a href=\"#\" class=\"btn-primary\" data-v-7f033e59><i class=\"bi bi-journal-bookmark-fill\" data-v-7f033e59></i> Start Memorizing</a><a href=\"#\" class=\"btn-secondary\" data-v-7f033e59><i class=\"bi bi-mic\" data-v-7f033e59></i> AI Recitation Check</a></div><div style=\"display:flex;gap:2rem;margin-top:1rem;flex-wrap:wrap;\" data-v-7f033e59><div data-v-7f033e59><strong style=\"color:var(--accent);\" data-v-7f033e59>🔗 Anchor mode</strong><br data-v-7f033e59><span style=\"font-size:0.8rem;\" data-v-7f033e59>visual linking</span></div><div data-v-7f033e59><strong style=\"color:var(--accent);\" data-v-7f033e59>⛓️ Chaining</strong><br data-v-7f033e59><span style=\"font-size:0.8rem;\" data-v-7f033e59>verse connections</span></div><div data-v-7f033e59><strong style=\"color:var(--accent);\" data-v-7f033e59>👁️ Blur/Focus</strong><br data-v-7f033e59><span style=\"font-size:0.8rem;\" data-v-7f033e59>progressive recall</span></div></div></div><div style=\"background:var(--surface-card);border-radius:var(--radius-lg);padding:2rem;text-align:center;border:1px solid var(--border);\" data-v-7f033e59><i class=\"bi bi-cpu\" style=\"font-size:3rem;color:var(--accent);\" data-v-7f033e59></i><h3 style=\"margin:1rem 0;\" data-v-7f033e59>Two flagship AI tools</h3><p style=\"margin:0.5rem 0;\" data-v-7f033e59><i class=\"bi bi-mic-fill\" style=\"color:var(--accent);\" data-v-7f033e59></i> <strong data-v-7f033e59>AI Recitation Check</strong><br data-v-7f033e59><span style=\"font-size:0.85rem;\" data-v-7f033e59>letter-level fluency feedback</span></p><p style=\"margin:0.5rem 0;\" data-v-7f033e59><i class=\"bi bi-brain\" style=\"color:var(--accent);\" data-v-7f033e59></i> <strong data-v-7f033e59>AI Memorization Check</strong><br data-v-7f033e59><span style=\"font-size:0.85rem;\" data-v-7f033e59>predicts weak spots before you forget</span></p><div style=\"background:var(--accent-light);border-radius:50px;padding:0.5rem;margin-top:1rem;font-size:0.85rem;\" data-v-7f033e59>🧠 Smart forgetting curve scheduler</div></div></div></section>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Features Section (with proper alignment) "), _cache[7] || (_cache[7] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section id=\"features\" data-v-7f033e59><h2 class=\"section-title\" data-v-7f033e59>Designed for hifdh &amp; retention</h2><p class=\"section-subtitle\" data-v-7f033e59>Stacked mode + Mushaf mode • Your sessions, your goals</p><div class=\"features-grid\" data-v-7f033e59><div class=\"feature-card\" data-v-7f033e59><div class=\"feature-icon\" data-v-7f033e59><i class=\"bi bi-diagram-3\" data-v-7f033e59></i></div><h3 data-v-7f033e59>Chaining Method <span class=\"badge\" data-v-7f033e59>Core</span></h3><p data-v-7f033e59>Link verses like a story. AI remembers which ayah connects to the next — automatic recall triggers.</p></div><div class=\"feature-card\" data-v-7f033e59><div class=\"feature-icon\" data-v-7f033e59><i class=\"bi bi-pin-angle-fill\" data-v-7f033e59></i></div><h3 data-v-7f033e59>Anchor Mode <span class=\"badge badge-pro\" data-v-7f033e59>Pro</span></h3><p data-v-7f033e59>Attach each verse to a mental image, location or emotion. AI suggests anchors based on surah theme.</p></div><div class=\"feature-card\" data-v-7f033e59><div class=\"feature-icon\" data-v-7f033e59><i class=\"bi bi-eye-slash\" data-v-7f033e59></i></div><h3 data-v-7f033e59>Blur / Focus Mode <span class=\"badge badge-pro\" data-v-7f033e59>Pro</span></h3><p data-v-7f033e59>Progressive blurring of words. Train active recall without looking at full mushaf — builds strong memory.</p></div><div class=\"feature-card\" data-v-7f033e59><div class=\"feature-icon\" data-v-7f033e59><i class=\"bi bi-mic\" data-v-7f033e59></i></div><h3 data-v-7f033e59>AI Recitation Check <span class=\"badge\" data-v-7f033e59>Free</span></h3><p data-v-7f033e59>Letter-level analysis to improve fluency. Main goal: strengthen memory anchoring through correct recitation. 25 free checks/day.</p></div><div class=\"feature-card\" data-v-7f033e59><div class=\"feature-icon\" data-v-7f033e59><i class=\"bi bi-cpu\" data-v-7f033e59></i></div><h3 data-v-7f033e59>AI Memorization Check <span class=\"badge badge-pro\" data-v-7f033e59>Flagship</span></h3><p data-v-7f033e59>Predicts verses you&#39;re about to forget. Tests you before the forgetting curve hits. Smart revision scheduler.</p></div><div class=\"feature-card\" data-v-7f033e59><div class=\"feature-icon\" data-v-7f033e59><i class=\"bi bi-collection-play\" data-v-7f033e59></i></div><h3 data-v-7f033e59>Recording Library + Goals</h3><p data-v-7f033e59>Save self-assessments, set daily goals (juz/pages), track accuracy over time. Stacked + Mushaf modes available.</p></div></div></section>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Stacked vs Mushaf mode switcher "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["mode-btn", {
-      active: $data.activeMode === 'stacked'
-    }]),
-    onClick: _cache[0] || (_cache[0] = function ($event) {
-      return $data.activeMode = 'stacked';
-    })
-  }, "📚 Stacked Mode (line-by-line)", 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["mode-btn", {
-      active: $data.activeMode === 'mushaf'
-    }]),
+  var _component_AnimatedCounter = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("AnimatedCounter");
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+    "class": "vue-onboarding",
+    "data-theme": $setup.currentTheme
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Quran Ticker "), _cache[34] || (_cache[34] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "verse-ticker"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "ticker-track"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "إِنَّا نَحْنُ نَزَّلْنَا الذِّكْرَ وَإِنَّا لَهُ لَحَافِظُونَ"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "رَبِّ زِدْنِي عِلْمًا"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "وَأَحْسِنْ تَرْتِيلِي")])], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Hero Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_4, [_cache[8] || (_cache[8] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"hero-badge\"><i class=\"bi bi-moon-stars\"></i> AI-Powered Quran Learning </div><h1 class=\"hero-title\">You recite. But <span>do you know</span> where you&#39;re making mistakes?</h1><p class=\"hero-desc\">Mutqin listens to every letter. Instantly detects tajweed errors. Schedules perfect reviews. No guesswork.</p><div class=\"problem-solution\"><p class=\"problem-text\"><i class=\"bi bi-exclamation-triangle-fill\"></i> <strong>The problem:</strong> Years of repeating the same tajweed mistakes. Fading memorization. No one catches every error.</p><div class=\"solution-highlight\"><p class=\"solution-text\"><i class=\"bi bi-check-lg\"></i> <strong>The solution:</strong> AI pinpoints your exact makharij issues. Smart spaced repetition locks verses in memory. Real-time feedback after every recitation.</p></div></div>", 4)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [_cache[7] || (_cache[7] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
+    href: "/register",
+    "class": "btn-primary"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-book-half"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Start Free")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    onClick: _cache[0] || (_cache[0] = function () {
+      return $setup.scrollToFeatures && $setup.scrollToFeatures.apply($setup, arguments);
+    }),
+    "class": "btn-secondary"
+  }, _toConsumableArray(_cache[6] || (_cache[6] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-arrow-down"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" See Features", -1 /* CACHED */)])))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.stats, function (stat) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+      "class": "stat-card",
+      key: stat.label
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_AnimatedCounter, {
+      target: stat.value,
+      duration: 2000
+    }, null, 8 /* PROPS */, ["target"]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(stat.suffix), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(stat.label), 1 /* TEXT */)]);
+  }), 128 /* KEYED_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_9, [_cache[9] || (_cache[9] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "demo-card"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-mic"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Live AI Analysis"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "\"Ikhfa' weak — hold nasalization 2 beats.\""), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "demo-wave"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-soundwave"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Recording... → 96% accuracy")])], -1 /* CACHED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.floatingBadges, function (badge, idx) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+      "class": "floating-card",
+      key: idx,
+      style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
+        animationDelay: "".concat(idx * 0.8, "s")
+      })
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(badge.icon)
+    }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(badge.text), 1 /* TEXT */)], 4 /* STYLE */);
+  }), 128 /* KEYED_FRAGMENT */))])])]), _cache[35] || (_cache[35] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "divider"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-star-fill"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" ۞ "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-star-fill"
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Features Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_10, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_11, [_cache[10] || (_cache[10] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", {
+    "class": "section-title"
+  }, "Everything you need to master recitation", -1 /* CACHED */)), _cache[11] || (_cache[11] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+    "class": "section-subtitle"
+  }, "Clear tools. Real AI feedback. Zero fluff.", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_12, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.features, function (feature) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+      "class": "feature-card",
+      key: feature.title,
+      "data-aos": "zoom-in"
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_13, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(feature.icon)
+    }, null, 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(feature.title) + " ", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(['feature-badge', feature.badgeType])
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(feature.badge), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(feature.description), 1 /* TEXT */)]);
+  }), 128 /* KEYED_FRAGMENT */))])])], 512 /* NEED_PATCH */), _cache[36] || (_cache[36] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "divider"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-star-fill"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" ۞ "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-star-fill"
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" How It Works "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_14, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_15, [_cache[12] || (_cache[12] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", {
+    "class": "section-title"
+  }, "Three steps to fluent recitation", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_16, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.steps, function (step, idx) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+      "class": "step-card",
+      key: idx,
+      "data-aos": "flip-up",
+      "data-aos-delay": idx * 100
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_18, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(idx + 1), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)([step.icon, "step-icon"])
+    }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(step.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(step.description), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_17);
+  }), 128 /* KEYED_FRAGMENT */))])])]), _cache[37] || (_cache[37] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "divider"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-star-fill"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" ۞ "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-star-fill"
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Testimonials "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_19, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_20, [_cache[14] || (_cache[14] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", {
+    "class": "section-title"
+  }, "Trusted by thousands", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_21, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.testimonials, function (testimonial, idx) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+      "class": "testimonial-card",
+      key: idx,
+      "data-aos": "fade-up",
+      "data-aos-delay": idx * 100
+    }, [_cache[13] || (_cache[13] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      "class": "bi bi-chat-quote-fill"
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "\"" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(testimonial.quote) + "\"", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_23, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_24, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(testimonial.initials), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h4", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(testimonial.author), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(testimonial.role), 1 /* TEXT */)])])], 8 /* PROPS */, _hoisted_22);
+  }), 128 /* KEYED_FRAGMENT */))])])]), _cache[38] || (_cache[38] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "divider"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-star-fill"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" ۞ "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-star-fill"
+  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Pricing Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_26, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [_cache[22] || (_cache[22] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", {
+    "class": "section-title"
+  }, "Simple, transparent pricing", -1 /* CACHED */)), _cache[23] || (_cache[23] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+    "class": "section-subtitle"
+  }, "No hidden fees. Just free or full power.", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_28, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Freemium Plan "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_29, [_cache[15] || (_cache[15] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "pricing-icon"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-flower1"
+  })], -1 /* CACHED */)), _cache[16] || (_cache[16] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Freemium", -1 /* CACHED */)), _cache[17] || (_cache[17] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "price"
+  }, "$0", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("ul", _hoisted_30, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.freeFeatures, function (feature) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("li", {
+      key: feature
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(feature.includes('Smart') || feature.includes('Unlimited') ? 'bi bi-x-circle' : 'bi bi-check-circle-fill')
+    }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(feature), 1 /* TEXT */)]);
+  }), 128 /* KEYED_FRAGMENT */))]), _cache[18] || (_cache[18] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
+    href: "/register",
+    "class": "btn-secondary"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Start Free "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-arrow-right"
+  })], -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Pro Plan "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_31, [_cache[20] || (_cache[20] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"featured-tag\"><i class=\"bi bi-star-fill\"></i> MOST POPULAR</div><div class=\"pricing-icon\"><i class=\"bi bi-gem\"></i></div><h3>Pro · Full Quran</h3><div class=\"price\">$9.99 <span>/month</span></div>", 4)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("ul", _hoisted_32, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.proFeatures, function (feature) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("li", {
+      key: feature
+    }, [_cache[19] || (_cache[19] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      "class": "bi bi-check-circle-fill"
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(feature), 1 /* TEXT */)]);
+  }), 128 /* KEYED_FRAGMENT */))]), _cache[21] || (_cache[21] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
+    href: "/register",
+    "class": "btn-primary"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Try 7 days free "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-gift-fill"
+  })], -1 /* CACHED */))])])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" CTA Section "), _cache[39] || (_cache[39] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"cta-block\"><div class=\"cta-icon\"><i class=\"bi bi-heart-fill\"></i></div><h2>Stop repeating the same mistakes.</h2><p>Get AI feedback that actually improves your tajweed and memorization — starting today.</p><a href=\"/register\" class=\"btn-primary\"><i class=\"bi bi-person-badge\"></i> Create Free Account</a></div>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Theme Switcher "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_33, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     onClick: _cache[1] || (_cache[1] = function ($event) {
-      return $data.activeMode = 'mushaf';
-    })
-  }, "🕋 Mushaf Mode (full page)", 2 /* CLASS */)]), _cache[5] || (_cache[5] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
-    style: {
-      "color": "var(--text-muted)"
-    }
-  }, "Switch between modern stacked layout or authentic Madani mushaf. Both support tafsir, tajweed coloring & audio from renowned qaris.", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Memorization techniques (3 steps with detailed context) "), _cache[8] || (_cache[8] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section id=\"techniques\" data-v-7f033e59><h2 class=\"section-title\" data-v-7f033e59>Memorization flow: from new verse to mastery</h2><div class=\"steps-grid\" data-v-7f033e59><div class=\"step-card\" data-v-7f033e59><div class=\"step-number\" data-v-7f033e59>1</div><h3 data-v-7f033e59>🎯 Anchor &amp; Chaining</h3><p style=\"font-size:0.9rem;\" data-v-7f033e59>Build mental anchors (images/locations). Chain verses using keywords. AI picks anchor style based on your retention profile.</p><div class=\"tech-icons\" data-v-7f033e59><i class=\"bi bi-image\" data-v-7f033e59></i> <i class=\"bi bi-link\" data-v-7f033e59></i> <i class=\"bi bi-brightness-alt-high\" data-v-7f033e59></i></div></div><div class=\"step-card\" data-v-7f033e59><div class=\"step-number\" data-v-7f033e59>2</div><h3 data-v-7f033e59>🎙️ Self-Assessment Recording</h3><p style=\"font-size:0.9rem;\" data-v-7f033e59>Record yourself reciting from memory. AI checks both memorization accuracy &amp; recitation fluency. Store in personal library.</p><div class=\"tech-icons\" data-v-7f033e59><i class=\"bi bi-mic\" data-v-7f033e59></i> <i class=\"bi bi-journal-code\" data-v-7f033e59></i></div></div><div class=\"step-card\" data-v-7f033e59><div class=\"step-number\" data-v-7f033e59>3</div><h3 data-v-7f033e59>📊 Smart Revision + Analytics</h3><p style=\"font-size:0.9rem;\" data-v-7f033e59>Personalized repetition scheduler. Weak verses pop up before you forget. Detailed heatmap of weak junctions.</p><div class=\"tech-icons\" data-v-7f033e59><i class=\"bi bi-graph-up\" data-v-7f033e59></i> <i class=\"bi bi-calendar-week\" data-v-7f033e59></i></div></div></div></section>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Integrated recording library & goals "), _cache[9] || (_cache[9] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div style=\"background:var(--accent-light);border-radius:var(--radius-lg);padding:2rem;margin:1rem 0;\" data-v-7f033e59><div style=\"display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem;\" data-v-7f033e59><div data-v-7f033e59><h3 data-v-7f033e59><i class=\"bi bi-collection\" data-v-7f033e59></i> Your personal memorization library</h3><p style=\"margin-top:0.5rem;\" data-v-7f033e59>Save every recording, track progress per surah, set session goals (pages/day).<br data-v-7f033e59>Integrated with AI memorization check and analytics dashboard.</p></div><div data-v-7f033e59><span class=\"badge badge-pro\" style=\"background:var(--accent);padding:0.4rem 1rem;\" data-v-7f033e59>📈 Detailed Analytics</span></div></div></div>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Testimonials "), _cache[10] || (_cache[10] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section id=\"testimonials\" data-v-7f033e59><h2 class=\"section-title\" data-v-7f033e59>What hafidh &amp; students say</h2><div class=\"features-grid\" style=\"grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));\" data-v-7f033e59><div class=\"feature-card\" data-v-7f033e59><i class=\"bi bi-chat-quote\" style=\"font-size:2rem;color:var(--accent);\" data-v-7f033e59></i><p style=\"margin:1rem 0;\" data-v-7f033e59>“Chaining method changed everything. I memorized 2 juz in 3 weeks with anchor mode. AI reminds me exactly before I slip.”</p><h4 data-v-7f033e59>— Yusuf M., half-hafidh</h4></div><div class=\"feature-card\" data-v-7f033e59><i class=\"bi bi-chat-quote\" style=\"font-size:2rem;color:var(--accent);\" data-v-7f033e59></i><p style=\"margin:1rem 0;\" data-v-7f033e59>“Stacked mode + self-recording library helped me find my weak transitions. Finally a tool for hifdh, not just tajweed.”</p><h4 data-v-7f033e59>— Amina K., teacher</h4></div><div class=\"feature-card\" data-v-7f033e59><i class=\"bi bi-chat-quote\" style=\"font-size:2rem;color:var(--accent);\" data-v-7f033e59></i><p style=\"margin:1rem 0;\" data-v-7f033e59>“AI memorization check predicted I&#39;d forget Al-i-Imran verses. Accurate. The scheduler is a blessing.”</p><h4 data-v-7f033e59>— Ibrahim, full-time student</h4></div></div></section>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Pricing "), _cache[11] || (_cache[11] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<section id=\"pricing\" data-v-7f033e59><h2 class=\"section-title\" data-v-7f033e59>Simple for students, powerful for serious hifdh</h2><div class=\"pricing-grid\" data-v-7f033e59><div class=\"feature-card\" data-v-7f033e59><h3 data-v-7f033e59>🌿 Memorizer Starter</h3><div style=\"font-size:2.2rem;font-weight:800;color:var(--accent);\" data-v-7f033e59>$0</div><ul style=\"margin:1rem 0;list-style:none;padding:0;\" data-v-7f033e59><li style=\"margin:0.5rem 0;\" data-v-7f033e59>✓ AI Recitation (25/day)</li><li style=\"margin:0.5rem 0;\" data-v-7f033e59>✓ Chaining + Basic Anchor</li><li style=\"margin:0.5rem 0;\" data-v-7f033e59>✓ Recording library (15 saves)</li><li style=\"margin:0.5rem 0;\" data-v-7f033e59>✓ Stacked mode</li></ul><a href=\"#\" class=\"btn-secondary\" style=\"width:100%;justify-content:center;margin-top:auto;\" data-v-7f033e59>Start Free</a></div><div class=\"feature-card\" style=\"border:2px solid var(--accent);\" data-v-7f033e59><h3 data-v-7f033e59>🔥 Full Hifdh <span class=\"badge badge-pro\" data-v-7f033e59>Pro</span></h3><div style=\"font-size:2.2rem;font-weight:800;color:var(--accent);\" data-v-7f033e59>$9.99 <span style=\"font-size:1rem;\" data-v-7f033e59>/month</span></div><ul style=\"margin:1rem 0;list-style:none;padding:0;\" data-v-7f033e59><li style=\"margin:0.5rem 0;\" data-v-7f033e59>✓ Unlimited AI Recitation + Memorization Check</li><li style=\"margin:0.5rem 0;\" data-v-7f033e59>✓ Anchor mode, Blur/Focus, Smart Chaining AI</li><li style=\"margin:0.5rem 0;\" data-v-7f033e59>✓ Unlimited recordings &amp; analytics heatmap</li><li style=\"margin:0.5rem 0;\" data-v-7f033e59>✓ Mushaf + Stacked mode, Goals &amp; sessions</li><li style=\"margin:0.5rem 0;\" data-v-7f033e59>✓ Forgetting curve scheduler (AI predictions)</li></ul><a href=\"#\" class=\"btn-primary\" style=\"width:100%;justify-content:center;margin-top:auto;\" data-v-7f033e59>Try 7 days free</a></div></div></section>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" CTA "), _cache[12] || (_cache[12] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div style=\"background:linear-gradient(130deg, var(--accent-soft), var(--surface-card));border-radius:40px;padding:3rem;text-align:center;margin:2rem 0;border:1px solid var(--border);\" data-v-7f033e59><div class=\"ayah-decoration\" data-v-7f033e59>&quot;وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا&quot;</div><h2 style=\"font-size:2rem;margin-top:0.5rem;\" data-v-7f033e59>Set your hifdh goal today</h2><p style=\"margin:1rem 0;\" data-v-7f033e59>Whether it&#39;s 1 page per week or 1 juz per month — Mutqin adapts to you.</p><a href=\"#\" class=\"btn-primary\" data-v-7f033e59><i class=\"bi bi-calendar-check\" data-v-7f033e59></i> Create free account</a></div>", 1))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Footer "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("footer", _hoisted_4, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [_cache[13] || (_cache[13] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "footer-col"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h4", {
-    style: {
-      "color": "var(--accent)",
-      "margin-bottom": "1rem"
-    }
-  }, "Mutqin"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
-    style: {
-      "font-size": "0.85rem",
-      "color": "var(--text-muted)"
-    }
-  }, "AI for Quran memorization • Anchors • Chaining • Smart revision")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
+      return $setup.setTheme('light');
+    }),
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
+      active: $setup.currentTheme === 'light'
+    }),
+    "aria-label": "Light mode"
+  }, _toConsumableArray(_cache[24] || (_cache[24] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-brightness-high-fill"
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    onClick: _cache[2] || (_cache[2] = function ($event) {
+      return $setup.setTheme('dark');
+    }),
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
+      active: $setup.currentTheme === 'dark'
+    }),
+    "aria-label": "Dark mode"
+  }, _toConsumableArray(_cache[25] || (_cache[25] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-moon-fill"
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    onClick: _cache[3] || (_cache[3] = function ($event) {
+      return $setup.setTheme('sepia');
+    }),
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
+      active: $setup.currentTheme === 'sepia'
+    }),
+    "aria-label": "Sepia mode"
+  }, _toConsumableArray(_cache[26] || (_cache[26] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-book-half"
+  }, null, -1 /* CACHED */)])), 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Footer - full width, bottom fixed position "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("footer", _hoisted_34, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_35, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_36, [_cache[31] || (_cache[31] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "footer-brand"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "footer-logo"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-moon-stars"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Mutqin")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "AI that corrects your tajweed & locks memorization. Rooted in tradition, powered by innovation.")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_37, [_cache[29] || (_cache[29] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h4", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-grid-3x3-gap-fill"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Product")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
     href: "#features",
-    onClick: _cache[2] || (_cache[2] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
-      return $options.scrollTo('features');
+    onClick: _cache[4] || (_cache[4] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+      return $setup.scrollToFeatures && $setup.scrollToFeatures.apply($setup, arguments);
     }, ["prevent"]))
-  }, "Features"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
-    href: "#techniques",
-    onClick: _cache[3] || (_cache[3] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
-      return $options.scrollTo('techniques');
-    }, ["prevent"]))
-  }, "Techniques"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
+  }, _toConsumableArray(_cache[27] || (_cache[27] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-mic"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Features", -1 /* CACHED */)]))), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
     href: "#pricing",
-    onClick: _cache[4] || (_cache[4] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
-      return $options.scrollTo('pricing');
+    onClick: _cache[5] || (_cache[5] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+      return $setup.scrollToPricing && $setup.scrollToPricing.apply($setup, arguments);
     }, ["prevent"]))
-  }, "Pricing")]), _cache[14] || (_cache[14] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"footer-col\" data-v-7f033e59><a href=\"#\" data-v-7f033e59>Tajweed Guide</a><a href=\"#\" data-v-7f033e59>Blog</a><a href=\"#\" data-v-7f033e59>Support</a></div><div class=\"footer-col\" data-v-7f033e59><div style=\"display:flex;gap:1rem;\" data-v-7f033e59><a href=\"#\" data-v-7f033e59><i class=\"bi bi-instagram\" style=\"font-size:1.3rem;\" data-v-7f033e59></i></a><a href=\"#\" data-v-7f033e59><i class=\"bi bi-youtube\" style=\"font-size:1.3rem;\" data-v-7f033e59></i></a><a href=\"#\" data-v-7f033e59><i class=\"bi bi-telegram\" style=\"font-size:1.3rem;\" data-v-7f033e59></i></a></div></div>", 2))]), _cache[15] || (_cache[15] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    style: {
-      "margin-top": "2rem",
-      "text-align": "center",
-      "font-size": "0.75rem",
-      "border-top": "1px solid var(--border)",
-      "padding-top": "1.5rem",
-      "color": "var(--text-muted)"
-    }
-  }, " © 2025 Mutqin — وَذَكِّرْ فَإِنَّ الذِّكْرَىٰ تَنفَعُ الْمُؤْمِنِينَ ", -1 /* CACHED */))])])]);
+  }, _toConsumableArray(_cache[28] || (_cache[28] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-tag-fill"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Pricing", -1 /* CACHED */)]))), _cache[30] || (_cache[30] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
+    href: "#"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-compass"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Roadmap")], -1 /* CACHED */))]), _cache[32] || (_cache[32] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"footer-links\"><h4><i class=\"bi bi-book-half\"></i> Resources</h4><a href=\"#\"><i class=\"bi bi-pen-fill\"></i> Tajweed Guide</a><a href=\"#\"><i class=\"bi bi-lightbulb-fill\"></i> Memorization Tips</a><a href=\"#\"><i class=\"bi bi-journal-bookmark-fill\"></i> Blog</a></div><div class=\"footer-links\"><h4><i class=\"bi bi-building\"></i> Company</h4><a href=\"#\"><i class=\"bi bi-info-circle-fill\"></i> About Us</a><a href=\"#\"><i class=\"bi bi-chat-dots-fill\"></i> Contact</a><a href=\"#\"><i class=\"bi bi-shield-check\"></i> Islamic Scholars</a></div><div class=\"footer-social\"><h4><i class=\"bi bi-share-fill\"></i> Connect</h4><div class=\"social-icons\"><a href=\"#\" aria-label=\"Twitter\"><i class=\"bi bi-twitter-x\"></i></a><a href=\"#\" aria-label=\"Instagram\"><i class=\"bi bi-instagram\"></i></a><a href=\"#\" aria-label=\"YouTube\"><i class=\"bi bi-youtube\"></i></a><a href=\"#\" aria-label=\"Telegram\"><i class=\"bi bi-telegram\"></i></a><a href=\"#\" aria-label=\"Facebook\"><i class=\"bi bi-facebook\"></i></a></div></div>", 3))]), _cache[33] || (_cache[33] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "footer-bottom"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-c-circle"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" 2025 Mutqin · \"And recite the Quran with measured recitation.\" 🤍")])], -1 /* CACHED */))])])], 8 /* PROPS */, _hoisted_1);
 }
 
 /***/ }),
@@ -49364,10 +49784,10 @@ function isnan (val) {
 
 /***/ }),
 
-/***/ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Homepage.vue?vue&type=style&index=0&id=7f033e59&scoped=true&lang=css":
-/*!***************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Homepage.vue?vue&type=style&index=0&id=7f033e59&scoped=true&lang=css ***!
-  \***************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Homepage.vue?vue&type=style&index=0&id=7f033e59&lang=css":
+/*!***************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Homepage.vue?vue&type=style&index=0&id=7f033e59&lang=css ***!
+  \***************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 /***/ ((module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -49381,7 +49801,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n  /* All styles from original go here */\n[data-v-7f033e59] {\n      margin: 0;\n      padding: 0;\n      box-sizing: border-box;\n}\n[data-v-7f033e59]:root {\n      --bg: #fefaf2;\n      --surface: rgba(255, 250, 240, 0.96);\n      --surface-strong: #fffcf5;\n      --surface-card: #ffffff;\n      --border: rgba(139, 89, 48, 0.12);\n      --border-strong: rgba(139, 89, 48, 0.22);\n      --text: #2c2418;\n      --text-muted: #7c6b53;\n      --text-soft: #9e8b72;\n      --accent: #b57c3c;\n      --accent-deep: #8b5a2b;\n      --accent-soft: #f2e5d4;\n      --accent-light: rgba(181, 124, 60, 0.08);\n      --gold: #d4af37;\n      --gold-light: #f9eec1;\n      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.02), 0 4px 12px rgba(74, 45, 22, 0.04);\n      --shadow-md: 0 8px 24px rgba(74, 45, 22, 0.06);\n      --shadow-lg: 0 20px 32px -12px rgba(0, 0, 0, 0.1);\n      --radius-md: 20px;\n      --radius-lg: 28px;\n      --radius-xl: 36px;\n      --font-ar: 'Amiri', serif;\n      --font-ui: 'Inter', system-ui, sans-serif;\n      --shell-max: 1320px;\n      --gutter: clamp(16px, 4vw, 40px);\n      --nav-h: 74px;\n}\n[data-theme=\"dark\"][data-v-7f033e59] {\n      --bg: #1f1a14;\n      --surface: rgba(30, 26, 22, 0.96);\n      --surface-strong: #26201a;\n      --surface-card: #2b241e;\n      --border: rgba(181, 124, 60, 0.2);\n      --text: #f2e8dc;\n      --text-muted: #b8a890;\n      --accent: #cf9f6e;\n      --accent-soft: #4a3a2a;\n}\nbody[data-v-7f033e59] {\n      font-family: var(--font-ui);\n      background: var(--bg);\n      color: var(--text);\n      line-height: 1.5;\n      font-size: 15px;\n}\nbody[data-v-7f033e59]::before {\n      content: '';\n      position: fixed;\n      top: 0;\n      left: 0;\n      width: 100%;\n      height: 100%;\n      background-image: radial-gradient(circle at 15% 30%, var(--accent-light) 1px, transparent 1px);\n      background-size: 48px 48px;\n      pointer-events: none;\n      z-index: -1;\n      opacity: 0.5;\n}\n  \n  /* Navbar */\n.app-navbar[data-v-7f033e59] {\n      background: var(--surface-strong);\n      backdrop-filter: blur(12px);\n      border-bottom: 1px solid var(--border);\n      position: sticky;\n      top: 0;\n      z-index: 1000;\n}\n.navbar-shell[data-v-7f033e59] {\n      max-width: var(--shell-max);\n      margin: 0 auto;\n      padding: 12px var(--gutter);\n      min-height: var(--nav-h);\n      display: flex;\n      align-items: center;\n      justify-content: space-between;\n      gap: 24px;\n      flex-wrap: wrap;\n}\n.navbar-brand[data-v-7f033e59] {\n      display: flex;\n      align-items: center;\n      gap: 10px;\n      text-decoration: none;\n      font-family: var(--font-ar);\n      font-size: 1.8rem;\n      font-weight: 700;\n      color: var(--accent);\n}\n.brand-icon[data-v-7f033e59] {\n      font-size: 2rem;\n      background: var(--accent-light);\n      width: 44px;\n      height: 44px;\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      border-radius: 60%;\n}\n  \n  /* Nav links in a row */\n.nav-links-desktop[data-v-7f033e59] {\n      display: flex;\n      gap: 6px;\n      align-items: center;\n      flex-wrap: wrap;\n}\n.nav-link[data-v-7f033e59] {\n      padding: 8px 18px;\n      border-radius: 40px;\n      font-weight: 500;\n      font-size: 0.9rem;\n      color: var(--text-muted);\n      transition: all 0.2s;\n      text-decoration: none;\n}\n.nav-link[data-v-7f033e59]:hover {\n      color: var(--accent);\n      background: var(--accent-light);\n}\n.app-navbar-actions[data-v-7f033e59] {\n      display: flex;\n      align-items: center;\n      gap: 12px;\n}\n.btn-primary[data-v-7f033e59] {\n      background: var(--accent);\n      color: white;\n      padding: 8px 22px;\n      border-radius: 40px;\n      font-weight: 600;\n      text-decoration: none;\n      transition: 0.2s;\n      border: none;\n      display: inline-flex;\n      align-items: center;\n      gap: 8px;\n}\n.btn-primary[data-v-7f033e59]:hover {\n      background: var(--accent-deep);\n      transform: translateY(-2px);\n}\n.btn-secondary[data-v-7f033e59] {\n      border: 1px solid var(--border-strong);\n      background: transparent;\n      padding: 8px 22px;\n      border-radius: 40px;\n      color: var(--text);\n      font-weight: 500;\n      text-decoration: none;\n      display: inline-flex;\n      align-items: center;\n      gap: 8px;\n}\n  \n  /* Full-width Quran Banner below navbar */\n.quran-full-banner[data-v-7f033e59] {\n      background: linear-gradient(135deg, var(--accent-soft) 0%, #e7d8c4 100%);\n      width: 100%;\n      padding: 1rem 2rem;\n      text-align: center;\n      border-bottom: 1px solid var(--border);\n      border-top: 1px solid var(--border);\n      font-family: var(--font-ar);\n      font-size: 1.25rem;\n      color: var(--accent-deep);\n      letter-spacing: 1px;\n      overflow-x: auto;\n      white-space: nowrap;\n}\n.quran-banner-content[data-v-7f033e59] {\n      display: inline-block;\n      animation: scrollBanner-7f033e59 70s linear infinite;\n}\n.quran-banner-content span[data-v-7f033e59] {\n      margin: 0 2rem;\n}\n@keyframes scrollBanner-7f033e59 {\n0% { transform: translateX(0);\n}\n100% { transform: translateX(-48%);\n}\n}\n.shell[data-v-7f033e59] {\n      max-width: var(--shell-max);\n      margin: 0 auto;\n      padding: 0 var(--gutter);\n}\nsection[data-v-7f033e59] {\n      padding: 3.5rem 0;\n}\n.section-title[data-v-7f033e59] {\n      font-size: 2.4rem;\n      font-weight: 700;\n      text-align: center;\n      margin-bottom: 0.8rem;\n      font-family: var(--font-ar);\n      color: var(--accent);\n}\n.section-subtitle[data-v-7f033e59] {\n      text-align: center;\n      color: var(--text-muted);\n      max-width: 680px;\n      margin: 0 auto 2.5rem;\n}\n  \n  /* Hero */\n.hero-grid[data-v-7f033e59] {\n      display: grid;\n      grid-template-columns: 1fr 1fr;\n      gap: 3rem;\n      align-items: center;\n}\n.hero-title[data-v-7f033e59] {\n      font-size: 3rem;\n      font-weight: 800;\n      line-height: 1.2;\n      margin: 1rem 0;\n}\n.hero-title span[data-v-7f033e59] {\n      color: var(--accent);\n      border-bottom: 3px solid var(--gold);\n}\n  \n  /* Feature Cards - aligned */\n.features-grid[data-v-7f033e59] {\n      display: grid;\n      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));\n      gap: 2rem;\n}\n.feature-card[data-v-7f033e59] {\n      background: var(--surface-card);\n      border-radius: var(--radius-md);\n      padding: 1.8rem;\n      border: 1px solid var(--border);\n      transition: all 0.25s;\n      height: 100%;\n      display: flex;\n      flex-direction: column;\n}\n.feature-card[data-v-7f033e59]:hover {\n      transform: translateY(-5px);\n      border-color: var(--accent);\n      box-shadow: var(--shadow-md);\n}\n.feature-icon[data-v-7f033e59] {\n      font-size: 2.2rem;\n      color: var(--accent);\n      margin-bottom: 1rem;\n}\n.badge[data-v-7f033e59] {\n      background: var(--accent-light);\n      border-radius: 30px;\n      padding: 0.2rem 0.8rem;\n      font-size: 0.7rem;\n      font-weight: 600;\n      margin-left: 0.6rem;\n      vertical-align: middle;\n}\n.badge-pro[data-v-7f033e59] {\n      background: var(--accent);\n      color: white;\n}\n  \n  /* Steps with techniques */\n.steps-grid[data-v-7f033e59] {\n      display: grid;\n      grid-template-columns: repeat(3, 1fr);\n      gap: 2rem;\n}\n.step-card[data-v-7f033e59] {\n      background: var(--surface-card);\n      border-radius: var(--radius-md);\n      padding: 1.8rem;\n      text-align: center;\n      border: 1px solid var(--border);\n      transition: all 0.25s;\n}\n.step-card[data-v-7f033e59]:hover {\n      transform: translateY(-4px);\n      border-color: var(--accent);\n}\n.step-number[data-v-7f033e59] {\n      width: 64px;\n      height: 64px;\n      background: var(--accent);\n      color: white;\n      border-radius: 64px;\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      font-size: 1.8rem;\n      font-weight: bold;\n      margin: 0 auto 1rem;\n}\n.tech-icons[data-v-7f033e59] {\n      display: flex;\n      justify-content: center;\n      gap: 0.6rem;\n      margin-top: 1rem;\n      font-size: 0.75rem;\n      color: var(--accent);\n}\n  \n  /* Mode switcher */\n.mode-switch[data-v-7f033e59] {\n      background: var(--surface-card);\n      border-radius: 80px;\n      padding: 0.4rem;\n      display: inline-flex;\n      gap: 0.5rem;\n      border: 1px solid var(--border);\n      margin-bottom: 1rem;\n}\n.mode-btn[data-v-7f033e59] {\n      padding: 0.5rem 1.5rem;\n      border-radius: 60px;\n      background: transparent;\n      border: none;\n      font-weight: 600;\n      cursor: pointer;\n      color: var(--text-muted);\n      transition: all 0.2s;\n}\n.mode-btn.active[data-v-7f033e59] {\n      background: var(--accent);\n      color: white;\n}\n.pricing-grid[data-v-7f033e59] {\n      display: grid;\n      grid-template-columns: repeat(2, 1fr);\n      gap: 2rem;\n      max-width: 900px;\n      margin: 0 auto;\n}\n.footer[data-v-7f033e59] {\n      background: var(--surface-card);\n      border-top: 1px solid var(--border);\n      padding: 2rem 0;\n      margin-top: 2rem;\n}\n.footer-links[data-v-7f033e59] {\n      display: flex;\n      flex-wrap: wrap;\n      justify-content: space-between;\n      gap: 2rem;\n}\n.footer-col a[data-v-7f033e59] {\n      display: block;\n      color: var(--text-muted);\n      text-decoration: none;\n      margin-bottom: 0.5rem;\n      font-size: 0.85rem;\n}\n.footer-col a[data-v-7f033e59]:hover {\n      color: var(--accent);\n}\n@media (max-width: 880px) {\n.hero-grid[data-v-7f033e59] {\n          grid-template-columns: 1fr;\n}\n.steps-grid[data-v-7f033e59] {\n          grid-template-columns: 1fr;\n}\n.pricing-grid[data-v-7f033e59] {\n          grid-template-columns: 1fr;\n}\n.navbar-shell[data-v-7f033e59] {\n          flex-direction: column;\n          align-items: center;\n}\n.nav-links-desktop[data-v-7f033e59] {\n          justify-content: center;\n}\n}\n@media (max-width: 640px) {\n.hero-title[data-v-7f033e59] {\n          font-size: 2rem;\n}\n.section-title[data-v-7f033e59] {\n          font-size: 1.8rem;\n}\n}\n.ayah-decoration[data-v-7f033e59] {\n      font-family: var(--font-ar);\n      font-size: 1.4rem;\n      color: var(--accent);\n      text-align: center;\n      margin: 1rem 0;\n}\n  ", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n  /* CSS Variables - Warm Islamic Color Palette */\n:root {\n    --bg: #f3eee6;\n    --surface: rgba(255, 250, 243, 0.88);\n    --surface-strong: rgba(255, 255, 255, 0.92);\n    --border: rgba(78, 58, 38, 0.10);\n    --text: #1f1a17;\n    --text-muted: #6c6258;\n    --accent: #9a6738;\n    --accent-strong: #6e4726;\n    --accent-soft: #d8c1a8;\n    --accent-light: rgba(154, 103, 56, 0.10);\n    --accent-wash: rgba(228, 211, 194, 0.42);\n    --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);\n    --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);\n    --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);\n    --radius: 16px;\n    --font-ar: 'Amiri', 'Noto Naskh Arabic', serif;\n    --font-ui: \"Inter\", \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n[data-theme=\"dark\"] {\n    --bg: #14110f;\n    --surface: rgba(31, 27, 24, 0.92);\n    --surface-strong: rgba(43, 37, 32, 0.96);\n    --border: rgba(255, 236, 216, 0.16);\n    --text: #f7ebdf;\n    --text-muted: #d1c2b3;\n    --accent: #d0a06b;\n    --accent-strong: #efc18d;\n    --accent-soft: #5f4530;\n    --accent-light: rgba(208, 160, 107, 0.14);\n    --accent-wash: rgba(208, 160, 107, 0.08);\n    --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);\n    --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);\n    --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);\n}\n[data-theme=\"sepia\"] {\n    --bg: #efe2cb;\n    --surface: rgba(250, 241, 227, 0.88);\n    --surface-strong: rgba(255, 248, 237, 0.94);\n    --text: #352516;\n    --text-muted: #75624f;\n    --accent: #b8824e;\n    --accent-strong: #8f6033;\n    --accent-soft: #dcc3a6;\n    --accent-light: rgba(184, 130, 78, 0.12);\n    --accent-wash: rgba(221, 194, 162, 0.35);\n}\n* {\n    margin: 0;\n    padding: 0;\n    box-sizing: border-box;\n}\nbody {\n    font-family: var(--font-ui);\n    background: var(--bg);\n    color: var(--text);\n    overflow-x: hidden;\n    transition: background 0.3s ease, color 0.3s ease;\n}\n.vue-onboarding {\n    \n    min-height: 100vh;\n    display: flex;\n    flex-direction: column;\n}\n  \n  /* Verse Ticker */\n.verse-ticker {\n    background: var(--accent-wash);\n    padding: 1rem 0;\n    overflow: hidden;\n    white-space: nowrap;\n    border-top: 1px solid var(--border);\n    border-bottom: 1px solid var(--border);\n}\n.ticker-track {\n    display: inline-block;\n    animation: ticker 60s linear infinite;\n}\n.ticker-track span {\n    margin: 0 2rem;\n    font-family: var(--font-ar);\n    font-size: 1.2rem;\n    color: var(--accent);\n}\n@keyframes ticker {\n0% { transform: translateX(0);\n}\n100% { transform: translateX(-50%);\n}\n}\n  \n  /* Hero Section */\n.hero {\n    min-height: 100vh;\n    display: flex;\n    align-items: center;\n    padding: 6rem 2rem 4rem;\n    position: relative;\n    overflow: hidden;\n}\n.hero::before {\n    content: '۞';\n    position: absolute;\n    font-size: 30rem;\n    opacity: 0.03;\n    right: -10%;\n    top: 50%;\n    transform: translateY(-50%);\n    pointer-events: none;\n    animation: rotate 60s linear infinite;\n    color: var(--accent);\n}\n@keyframes rotate {\nfrom { transform: translateY(-50%) rotate(0deg);\n}\nto { transform: translateY(-50%) rotate(360deg);\n}\n}\n.hero-container {\n    max-width: 1280px;\n    margin: 0 auto;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 5rem;\n    align-items: center;\n    position: relative;\n    z-index: 1;\n}\n.hero-badge {\n    display: inline-flex;\n    align-items: center;\n    gap: 8px;\n    background: var(--accent-light);\n    color: var(--accent);\n    padding: 0.3rem 1rem;\n    border-radius: 40px;\n    font-size: 0.75rem;\n    font-weight: 600;\n    margin-bottom: 1.5rem;\n}\n.hero-title {\n    font-size: 3.5rem;\n    font-weight: 800;\n    line-height: 1.15;\n    margin-bottom: 1.5rem;\n    letter-spacing: -0.03em;\n}\n.hero-title span {\n    color: var(--accent);\n    border-bottom: 2px solid var(--accent);\n}\n.hero-desc {\n    font-size: 1.1rem;\n    color: var(--text-muted);\n    margin-bottom: 2rem;\n    line-height: 1.6;\n}\n.problem-solution {\n    background: var(--surface);\n    border-radius: var(--radius);\n    padding: 1.5rem;\n    margin: 1.5rem 0;\n    border: 1px solid var(--border);\n    backdrop-filter: blur(10px);\n}\n.problem-text, .solution-text {\n    font-size: 0.95rem;\n    color: var(--text-muted);\n    display: flex;\n    align-items: flex-start;\n    gap: 10px;\n}\n.problem-text i, .solution-text i {\n    color: var(--accent);\n    margin-top: 2px;\n}\n.problem-text strong, .solution-text strong {\n    color: var(--accent-strong);\n}\n.solution-highlight {\n    margin-top: 1rem;\n    padding-top: 1rem;\n    border-top: 1px solid var(--border);\n}\n.hero-buttons {\n    display: flex;\n    gap: 1rem;\n    flex-wrap: wrap;\n}\n.hero-stats {\n    display: flex;\n    gap: 2.5rem;\n    margin-top: 2rem;\n    flex-wrap: wrap;\n}\n.stat-card .stat-number {\n    font-size: 2rem;\n    font-weight: 800;\n    color: var(--accent);\n    line-height: 1.2;\n}\n.stat-card .stat-label {\n    font-size: 0.8rem;\n    color: var(--text-muted);\n    text-transform: uppercase;\n    letter-spacing: 0.03em;\n}\n  \n  /* Hero Image */\n.hero-image {\n    position: relative;\n}\n.demo-card {\n    background: var(--surface-strong);\n    border-radius: 28px;\n    padding: 2rem;\n    text-align: center;\n    box-shadow: var(--shadow-lg);\n    border: 1px solid var(--border);\n}\n.demo-card i {\n    font-size: 3.5rem;\n    color: var(--accent);\n    margin-bottom: 1rem;\n}\n.demo-card p {\n    color: var(--text-muted);\n    margin: 0.5rem 0;\n}\n.demo-wave {\n    background: var(--accent-light);\n    border-radius: 60px;\n    padding: 0.5rem 1rem;\n    margin-top: 1rem;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    gap: 8px;\n}\n.demo-wave i {\n    font-size: 1rem;\n    margin-bottom: 0;\n}\n.floating-card {\n    position: absolute;\n    background: var(--surface-strong);\n    backdrop-filter: blur(12px);\n    border-radius: 60px;\n    padding: 0.6rem 1.2rem;\n    display: flex;\n    align-items: center;\n    gap: 0.6rem;\n    font-size: 0.8rem;\n    font-weight: 500;\n    box-shadow: var(--shadow-md);\n    border: 1px solid var(--border);\n    animation: float 3s ease-in-out infinite;\n}\n.floating-card i {\n    font-size: 1rem;\n}\n.floating-card:nth-child(2) { top: 5%; right: -5%;\n}\n.floating-card:nth-child(3) { bottom: 15%; left: -8%;\n}\n.floating-card:nth-child(4) { top: 45%; right: -10%;\n}\n@keyframes float {\n0%, 100% { transform: translateY(0);\n}\n50% { transform: translateY(-6px);\n}\n}\n  \n  /* Divider */\n.divider {\n    text-align: center;\n    padding: 2rem 0;\n    color: var(--accent);\n    font-size: 1rem;\n    letter-spacing: 4px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    gap: 12px;\n}\n.divider i {\n    font-size: 0.8rem;\n    opacity: 0.6;\n}\n  \n  /* Section Styles */\n.section-container {\n    max-width: 1280px;\n    margin: 0 auto;\n    padding: 4rem 2rem;\n}\n.section-title {\n    text-align: center;\n    font-size: 2.5rem;\n    font-weight: 700;\n    margin-bottom: 1rem;\n    color: var(--text);\n}\n.section-title::before,\n  .section-title::after {\n    content: '۞';\n    color: var(--accent);\n    font-size: 1.5rem;\n    margin: 0 1rem;\n    opacity: 0.5;\n    display: inline-block;\n}\n.section-subtitle {\n    text-align: center;\n    color: var(--text-muted);\n    margin-bottom: 3rem;\n    font-size: 1.1rem;\n}\n  \n  /* Features Grid */\n.features-grid {\n    display: grid;\n    grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));\n    gap: 2rem;\n}\n.feature-card {\n    background: var(--surface);\n    backdrop-filter: blur(4px);\n    border-radius: var(--radius);\n    padding: 2rem;\n    border: 1px solid var(--border);\n    transition: all 0.3s ease;\n}\n.feature-card:hover {\n    transform: translateY(-4px);\n    border-color: var(--accent);\n    box-shadow: var(--shadow-md);\n}\n.feature-icon {\n    font-size: 2.5rem;\n    color: var(--accent);\n    margin-bottom: 1.2rem;\n}\n.feature-badge {\n    font-size: 0.7rem;\n    background: var(--accent-light);\n    border-radius: 40px;\n    padding: 0.2rem 0.8rem;\n    margin-left: 0.6rem;\n    font-weight: 600;\n    vertical-align: middle;\n    color: var(--accent);\n}\n.feature-badge.pro {\n    background: var(--accent);\n    color: white;\n}\n  \n  /* Steps Grid */\n.steps-grid {\n    display: grid;\n    grid-template-columns: repeat(3, 1fr);\n    gap: 2rem;\n    margin-top: 2rem;\n}\n.step-card {\n    text-align: center;\n    padding: 1.5rem;\n    background: var(--surface);\n    border-radius: var(--radius);\n    border: 1px solid var(--border);\n    transition: all 0.3s ease;\n}\n.step-card:hover {\n    transform: translateY(-4px);\n    border-color: var(--accent);\n    box-shadow: var(--shadow-md);\n}\n.step-number {\n    width: 72px;\n    height: 72px;\n    background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n    border-radius: 72px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    font-size: 2rem;\n    font-weight: 800;\n    color: white;\n    margin: 0 auto 1rem;\n    box-shadow: var(--shadow-md);\n}\n.step-icon {\n    font-size: 2rem;\n    color: var(--accent);\n    margin: 0.5rem 0;\n    display: inline-block;\n}\n  \n  /* Testimonials */\n.testimonials-section {\n    background: var(--accent-wash);\n}\n.testimonials-grid {\n    display: grid;\n    grid-template-columns: repeat(3, 1fr);\n    gap: 2rem;\n}\n.testimonial-card {\n    background: var(--surface-strong);\n    border-radius: var(--radius);\n    padding: 2rem;\n    border: 1px solid var(--border);\n    transition: all 0.3s ease;\n}\n.testimonial-card i {\n    font-size: 2rem;\n    color: var(--accent);\n    opacity: 0.6;\n}\n.testimonial-card:hover {\n    transform: translateY(-3px);\n    box-shadow: var(--shadow-md);\n}\n.testimonial-author {\n    display: flex;\n    align-items: center;\n    gap: 1rem;\n    margin-top: 1rem;\n}\n.author-avatar {\n    width: 48px;\n    height: 48px;\n    background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n    border-radius: 50%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: white;\n    font-weight: 600;\n    font-size: 1rem;\n}\n.author-info h4 {\n    font-size: 1rem;\n    margin-bottom: 0.25rem;\n}\n.author-info p {\n    font-size: 0.8rem;\n    color: var(--text-muted);\n}\n  \n  /* Pricing */\n.pricing-grid {\n    display: grid;\n    grid-template-columns: repeat(2, 1fr);\n    gap: 2rem;\n    max-width: 1000px;\n    margin: 0 auto;\n}\n.pricing-card {\n    background: var(--surface-strong);\n    border-radius: 28px;\n    padding: 2rem;\n    border: 1px solid var(--border);\n    transition: all 0.3s ease;\n    position: relative;\n    text-align: center;\n}\n.pricing-icon {\n    font-size: 2.5rem;\n    color: var(--accent);\n    margin-bottom: 1rem;\n}\n.pricing-card.featured {\n    border: 2px solid var(--accent);\n    transform: scale(1.02);\n    box-shadow: var(--shadow-lg);\n}\n.featured-tag {\n    position: absolute;\n    top: -12px;\n    left: 50%;\n    transform: translateX(-50%);\n    background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n    color: white;\n    font-size: 0.7rem;\n    font-weight: 700;\n    padding: 0.25rem 1rem;\n    border-radius: 40px;\n    white-space: nowrap;\n    display: flex;\n    align-items: center;\n    gap: 4px;\n}\n.price {\n    font-size: 3rem;\n    font-weight: 800;\n    color: var(--accent);\n    margin: 1rem 0;\n}\n.price span {\n    font-size: 1rem;\n    color: var(--text-muted);\n}\n.pricing-features {\n    list-style: none;\n    margin: 1.5rem 0;\n    text-align: left;\n}\n.pricing-features li {\n    padding: 0.6rem 0;\n    display: flex;\n    align-items: center;\n    gap: 0.6rem;\n    color: var(--text-muted);\n    font-size: 0.9rem;\n}\n.pricing-features i.bi-check-circle-fill { color: var(--accent); font-size: 1rem;\n}\n.pricing-features i.bi-x-circle { color: #c9b6a0; font-size: 1rem;\n}\n  \n  /* CTA Block */\n.cta-block {\n    max-width: 1000px;\n    margin: 2rem auto 3rem;\n    background: linear-gradient(135deg, var(--accent-wash), var(--surface-strong));\n    border-radius: 48px;\n    text-align: center;\n    padding: 3rem;\n    border: 1px solid var(--border);\n}\n.cta-icon {\n    font-size: 3rem;\n    color: var(--accent);\n    margin-bottom: 1rem;\n}\n.cta-block h2 {\n    font-size: 2rem;\n    margin-bottom: 1rem;\n}\n.cta-block p {\n    margin-bottom: 1.5rem;\n    color: var(--text-muted);\n}\n  \n  /* Buttons */\n.btn-primary, .btn-secondary {\n    display: inline-flex;\n    align-items: center;\n    justify-content: center;\n    gap: 0.6rem;\n    padding: 0.85rem 2rem;\n    border-radius: 60px;\n    font-weight: 600;\n    font-size: 0.95rem;\n    transition: all 0.3s ease;\n    text-decoration: none;\n    cursor: pointer;\n    border: none;\n}\n.btn-primary {\n    background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n    color: white;\n}\n.btn-primary:hover {\n    transform: translateY(-2px);\n    box-shadow: var(--shadow-md);\n}\n.btn-secondary {\n    background: transparent;\n    border: 1px solid var(--border);\n    color: var(--text);\n}\n.btn-secondary:hover {\n    background: var(--accent-light);\n    border-color: var(--accent);\n    transform: translateY(-1px);\n}\n  \n  /* Theme Switcher */\n.theme-switcher {\n    position: fixed;\n    bottom: 20px;\n    right: 20px;\n    display: flex;\n    gap: 8px;\n    background: var(--surface-strong);\n    padding: 8px 12px;\n    border-radius: 60px;\n    box-shadow: var(--shadow-md);\n    border: 1px solid var(--border);\n    z-index: 1000;\n    backdrop-filter: blur(10px);\n}\n.theme-switcher button {\n    width: 36px;\n    height: 36px;\n    border-radius: 50%;\n    border: none;\n    background: transparent;\n    color: var(--text-muted);\n    cursor: pointer;\n    font-size: 1rem;\n    transition: all 0.2s ease;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n.theme-switcher button.active {\n    background: var(--accent);\n    color: white;\n}\n.theme-switcher button:hover:not(.active) {\n    background: var(--accent-light);\n    color: var(--accent);\n}\n  \n  /* Footer - Full Width, Bottom Fixed */\n.footer {\n    background: var(--surface);\n    border-top: 1px solid var(--border);\n    padding: 3rem 2rem 1.5rem;\n    margin-top: auto;\n    width: 100%;\n    bottom: 0;\n    left: 0;\n    right: 0;\n}\n.footer-container {\n    max-width: 1280px;\n    margin: 0 auto;\n}\n.footer-grid {\n    display: grid;\n    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));\n    gap: 2rem;\n    margin-bottom: 2rem;\n}\n.footer-brand {\n    max-width: 280px;\n}\n.footer-logo {\n    display: flex;\n    align-items: center;\n    gap: 8px;\n    margin-bottom: 1rem;\n}\n.footer-logo i {\n    font-size: 1.8rem;\n    color: var(--accent);\n}\n.footer-logo h3 {\n    font-size: 1.3rem;\n    background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n    background-clip: text;\n    -webkit-background-clip: text;\n    color: transparent;\n}\n.footer-brand p {\n    color: var(--text-muted);\n    font-size: 0.85rem;\n    line-height: 1.5;\n}\n.footer-links h4, .footer-social h4 {\n    color: var(--accent);\n    margin-bottom: 1rem;\n    font-size: 1rem;\n    display: flex;\n    align-items: center;\n    gap: 6px;\n}\n.footer-links a {\n    display: flex;\n    align-items: center;\n    gap: 8px;\n    color: var(--text-muted);\n    text-decoration: none;\n    margin-bottom: 0.6rem;\n    font-size: 0.85rem;\n    transition: all 0.3s ease;\n}\n.footer-links a i {\n    font-size: 0.8rem;\n}\n.footer-links a:hover {\n    color: var(--accent);\n    transform: translateX(5px);\n}\n.social-icons {\n    display: flex;\n    gap: 1rem;\n    flex-wrap: wrap;\n}\n.social-icons a {\n    width: 38px;\n    height: 38px;\n    border-radius: 50%;\n    background: var(--accent-light);\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: var(--accent);\n    font-size: 1.2rem;\n    transition: all 0.3s ease;\n    text-decoration: none;\n}\n.social-icons a:hover {\n    background: var(--accent);\n    color: white;\n    transform: translateY(-3px);\n}\n.footer-bottom {\n    text-align: center;\n    padding-top: 1.5rem;\n    border-top: 1px solid var(--border);\n    color: var(--text-muted);\n    font-size: 0.8rem;\n}\n.footer-bottom i {\n    margin-right: 4px;\n}\n  \n  /* AOS Animations */\n[data-aos] {\n    opacity: 0;\n    transform: translateY(20px);\n    transition: all 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1);\n}\n[data-aos].aos-animate {\n    opacity: 1;\n    transform: translateY(0);\n}\n[data-aos=\"fade-up\"] { transform: translateY(30px);\n}\n[data-aos=\"fade-left\"] { transform: translateX(30px);\n}\n[data-aos=\"zoom-in\"] { transform: scale(0.95);\n}\n[data-aos=\"zoom-in\"].aos-animate { transform: scale(1);\n}\n[data-aos=\"flip-up\"] { transform: rotateX(90deg); transform-origin: center;\n}\n[data-aos=\"flip-up\"].aos-animate { transform: rotateX(0);\n}\n[data-aos=\"flip-right\"] { transform: rotateY(90deg);\n}\n[data-aos=\"flip-right\"].aos-animate { transform: rotateY(0);\n}\n[data-aos=\"flip-left\"] { transform: rotateY(-90deg);\n}\n[data-aos=\"flip-left\"].aos-animate { transform: rotateY(0);\n}\n  \n  /* Responsive */\n@media (max-width: 768px) {\n.hero-container {\n      grid-template-columns: 1fr;\n      text-align: center;\n      gap: 2rem;\n}\n.hero-title { font-size: 2.2rem;\n}\n.hero-stats { justify-content: center;\n}\n.steps-grid, .testimonials-grid, .pricing-grid { grid-template-columns: 1fr;\n}\n.pricing-card.featured { transform: scale(1);\n}\n.floating-card { display: none;\n}\n.section-title { font-size: 1.8rem;\n}\n.section-title::before,\n    .section-title::after { display: none;\n}\n.section-container { padding: 2rem 1.2rem;\n}\n.theme-switcher { bottom: 10px; right: 10px;\n}\n.footer-grid { grid-template-columns: 1fr; text-align: center;\n}\n.footer-brand { max-width: 100%; text-align: center;\n}\n.footer-logo { justify-content: center;\n}\n.footer-links a { justify-content: center;\n}\n.social-icons { justify-content: center;\n}\n.problem-text, .solution-text { flex-direction: column; text-align: left;\n}\n}\n  ", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -50953,10 +51373,10 @@ process.umask = function() { return 0; };
 
 /***/ }),
 
-/***/ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Homepage.vue?vue&type=style&index=0&id=7f033e59&scoped=true&lang=css":
-/*!*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Homepage.vue?vue&type=style&index=0&id=7f033e59&scoped=true&lang=css ***!
-  \*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Homepage.vue?vue&type=style&index=0&id=7f033e59&lang=css":
+/*!*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Homepage.vue?vue&type=style&index=0&id=7f033e59&lang=css ***!
+  \*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -50966,7 +51386,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! !../../../node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js */ "./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js");
 /* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_Homepage_vue_vue_type_style_index_0_id_7f033e59_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! !!../../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../../node_modules/vue-loader/dist/stylePostLoader.js!../../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./Homepage.vue?vue&type=style&index=0&id=7f033e59&scoped=true&lang=css */ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Homepage.vue?vue&type=style&index=0&id=7f033e59&scoped=true&lang=css");
+/* harmony import */ var _node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_Homepage_vue_vue_type_style_index_0_id_7f033e59_lang_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! !!../../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../../node_modules/vue-loader/dist/stylePostLoader.js!../../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./Homepage.vue?vue&type=style&index=0&id=7f033e59&lang=css */ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Homepage.vue?vue&type=style&index=0&id=7f033e59&lang=css");
 
             
 
@@ -50975,11 +51395,11 @@ var options = {};
 options.insert = "head";
 options.singleton = false;
 
-var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()(_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_Homepage_vue_vue_type_style_index_0_id_7f033e59_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_1__["default"], options);
+var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()(_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_Homepage_vue_vue_type_style_index_0_id_7f033e59_lang_css__WEBPACK_IMPORTED_MODULE_1__["default"], options);
 
 
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_Homepage_vue_vue_type_style_index_0_id_7f033e59_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_1__["default"].locals || {});
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_Homepage_vue_vue_type_style_index_0_id_7f033e59_lang_css__WEBPACK_IMPORTED_MODULE_1__["default"].locals || {});
 
 /***/ }),
 
@@ -51325,9 +51745,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var _Homepage_vue_vue_type_template_id_7f033e59_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Homepage.vue?vue&type=template&id=7f033e59&scoped=true */ "./resources/js/components/Homepage.vue?vue&type=template&id=7f033e59&scoped=true");
+/* harmony import */ var _Homepage_vue_vue_type_template_id_7f033e59__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Homepage.vue?vue&type=template&id=7f033e59 */ "./resources/js/components/Homepage.vue?vue&type=template&id=7f033e59");
 /* harmony import */ var _Homepage_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Homepage.vue?vue&type=script&lang=js */ "./resources/js/components/Homepage.vue?vue&type=script&lang=js");
-/* harmony import */ var _Homepage_vue_vue_type_style_index_0_id_7f033e59_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Homepage.vue?vue&type=style&index=0&id=7f033e59&scoped=true&lang=css */ "./resources/js/components/Homepage.vue?vue&type=style&index=0&id=7f033e59&scoped=true&lang=css");
+/* harmony import */ var _Homepage_vue_vue_type_style_index_0_id_7f033e59_lang_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Homepage.vue?vue&type=style&index=0&id=7f033e59&lang=css */ "./resources/js/components/Homepage.vue?vue&type=style&index=0&id=7f033e59&lang=css");
 /* harmony import */ var _Users_mohamedamine_Desktop_mutqin_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
 
 
@@ -51336,7 +51756,7 @@ __webpack_require__.r(__webpack_exports__);
 ;
 
 
-const __exports__ = /*#__PURE__*/(0,_Users_mohamedamine_Desktop_mutqin_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_Homepage_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_Homepage_vue_vue_type_template_id_7f033e59_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-7f033e59"],['__file',"resources/js/components/Homepage.vue"]])
+const __exports__ = /*#__PURE__*/(0,_Users_mohamedamine_Desktop_mutqin_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_Homepage_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_Homepage_vue_vue_type_template_id_7f033e59__WEBPACK_IMPORTED_MODULE_0__.render],['__file',"resources/js/components/Homepage.vue"]])
 /* hot reload */
 if (false) {}
 
@@ -51408,18 +51828,18 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./resources/js/components/Homepage.vue?vue&type=template&id=7f033e59&scoped=true":
-/*!****************************************************************************************!*\
-  !*** ./resources/js/components/Homepage.vue?vue&type=template&id=7f033e59&scoped=true ***!
-  \****************************************************************************************/
+/***/ "./resources/js/components/Homepage.vue?vue&type=template&id=7f033e59":
+/*!****************************************************************************!*\
+  !*** ./resources/js/components/Homepage.vue?vue&type=template&id=7f033e59 ***!
+  \****************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   render: () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_Homepage_vue_vue_type_template_id_7f033e59_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render)
+/* harmony export */   render: () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_Homepage_vue_vue_type_template_id_7f033e59__WEBPACK_IMPORTED_MODULE_0__.render)
 /* harmony export */ });
-/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_Homepage_vue_vue_type_template_id_7f033e59_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./Homepage.vue?vue&type=template&id=7f033e59&scoped=true */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Homepage.vue?vue&type=template&id=7f033e59&scoped=true");
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_Homepage_vue_vue_type_template_id_7f033e59__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./Homepage.vue?vue&type=template&id=7f033e59 */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Homepage.vue?vue&type=template&id=7f033e59");
 
 
 /***/ }),
@@ -51440,15 +51860,15 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./resources/js/components/Homepage.vue?vue&type=style&index=0&id=7f033e59&scoped=true&lang=css":
-/*!******************************************************************************************************!*\
-  !*** ./resources/js/components/Homepage.vue?vue&type=style&index=0&id=7f033e59&scoped=true&lang=css ***!
-  \******************************************************************************************************/
+/***/ "./resources/js/components/Homepage.vue?vue&type=style&index=0&id=7f033e59&lang=css":
+/*!******************************************************************************************!*\
+  !*** ./resources/js/components/Homepage.vue?vue&type=style&index=0&id=7f033e59&lang=css ***!
+  \******************************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_style_loader_dist_cjs_js_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_Homepage_vue_vue_type_style_index_0_id_7f033e59_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/style-loader/dist/cjs.js!../../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../../node_modules/vue-loader/dist/stylePostLoader.js!../../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./Homepage.vue?vue&type=style&index=0&id=7f033e59&scoped=true&lang=css */ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Homepage.vue?vue&type=style&index=0&id=7f033e59&scoped=true&lang=css");
+/* harmony import */ var _node_modules_style_loader_dist_cjs_js_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_Homepage_vue_vue_type_style_index_0_id_7f033e59_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/style-loader/dist/cjs.js!../../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../../node_modules/vue-loader/dist/stylePostLoader.js!../../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./Homepage.vue?vue&type=style&index=0&id=7f033e59&lang=css */ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Homepage.vue?vue&type=style&index=0&id=7f033e59&lang=css");
 
 
 /***/ }),

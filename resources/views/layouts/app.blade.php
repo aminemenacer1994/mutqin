@@ -17,6 +17,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-W4K8J2T0SG"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-W4K8J2T0SG');
+    </script>
     <style>
         /* Theme Variables */
         :root {
@@ -336,9 +345,9 @@
         }
 
         main.shell {
-            min-height: calc(100dvh - var(--nav-h));
-            padding-top: clamp(18px, 2.8vw, 32px);
-            padding-bottom: clamp(18px, 2.8vw, 32px);
+            bottom: 0px;
+            right: 0px;
+            left: 0px;
         }
 
         /* Mobile styles */
@@ -513,6 +522,8 @@
             animation: fadeIn 0.4s ease-out;
         }
     </style>
+
+
 </head>
 <body dir="{{ $appDirection }}">
     <a class="skip-link" href="#mainContent">{{ __('ui.skip_main') }}</a>
@@ -590,7 +601,7 @@
     </nav>
 
     <div id="app">
-        <main id="mainContent" class="shell" tabindex="-1">
+        <main id="mainContent" tabindex="-1">
             @yield('content')
         </main>
     </div>

@@ -1,228 +1,222 @@
 <template>
-    <div>
-      
-  
-      <!-- FULL WIDTH QURAN BANNER (directly below navbar) -->
-      <div class="quran-full-banner">
-        <div class="quran-banner-content">
-          <span>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</span> ✦
-          <span>وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا</span> ✦
-          <span>رَبِّ زِدْنِي عِلْمًا</span> ✦
-          <span>إِنَّا نَحْنُ نَزَّلْنَا الذِّكْرَ وَإِنَّا لَهُ لَحَافِظُونَ</span> ✦
-          <span>اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ</span> ✦
-          <span>وَرَتِّلْهُ تَرْتِيلًا</span> ✦
-          <span>وَالْحِسْنِ تَرْتِيلِي</span>
+    <div class="vue-onboarding" :data-theme="currentTheme">
+      <!-- Quran Ticker -->
+      <div class="verse-ticker">
+        <div class="ticker-track">
+          <span>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</span>
+          <span>وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا</span>
+          <span>إِنَّا نَحْنُ نَزَّلْنَا الذِّكْرَ وَإِنَّا لَهُ لَحَافِظُونَ</span>
+          <span>اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ</span>
+          <span>رَبِّ زِدْنِي عِلْمًا</span>
+          <span>وَأَحْسِنْ تَرْتِيلِي</span>
         </div>
       </div>
   
-      <main class="shell">
-        <!-- Hero Section -->
-        <section class="hero">
-          <div class="hero-grid">
-            <div>
-              <div style="background: var(--gold-light); display: inline-block; padding: 4px 16px; border-radius: 40px; font-size: 0.75rem; font-weight: 600;">📖 رَبَّنَا آتِنَا</div>
-              <h1 class="hero-title">Memorize the Quran with <span>AI & classical techniques</span></h1>
-              <p style="color: var(--text-muted); font-size: 1.1rem;">Chaining • Anchor method • Blur/Focus modes • Smart revision. Not just tajweed — real memorization power.</p>
-              <div style="margin: 2rem 0; display: flex; gap: 1rem; flex-wrap: wrap;">
-                <a href="#" class="btn-primary"><i class="bi bi-journal-bookmark-fill"></i> Start Memorizing</a>
-                <a href="#" class="btn-secondary"><i class="bi bi-mic"></i> AI Recitation Check</a>
-              </div>
-              <div style="display: flex; gap: 2rem; margin-top: 1rem; flex-wrap: wrap;">
-                <div><strong style="color: var(--accent);">🔗 Anchor mode</strong><br><span style="font-size: 0.8rem;">visual linking</span></div>
-                <div><strong style="color: var(--accent);">⛓️ Chaining</strong><br><span style="font-size: 0.8rem;">verse connections</span></div>
-                <div><strong style="color: var(--accent);">👁️ Blur/Focus</strong><br><span style="font-size: 0.8rem;">progressive recall</span></div>
+      <!-- Hero Section -->
+      <section class="hero">
+        <div class="hero-container">
+          <div class="hero-content" data-aos="fade-up">
+            <div class="hero-badge">
+              <i class="bi bi-moon-stars"></i> AI-Powered Quran Learning
+            </div>
+            <h1 class="hero-title">You recite. But <span>do you know</span> where you're making mistakes?</h1>
+            <p class="hero-desc">Mutqin listens to every letter. Instantly detects tajweed errors. Schedules perfect reviews. No guesswork.</p>
+            
+            <div class="problem-solution">
+              <p class="problem-text"><i class="bi bi-exclamation-triangle-fill"></i> <strong>The problem:</strong> Years of repeating the same tajweed mistakes. Fading memorization. No one catches every error.</p>
+              <div class="solution-highlight">
+                <p class="solution-text"><i class="bi bi-check-lg"></i> <strong>The solution:</strong> AI pinpoints your exact makharij issues. Smart spaced repetition locks verses in memory. Real-time feedback after every recitation.</p>
               </div>
             </div>
-            <div style="background: var(--surface-card); border-radius: var(--radius-lg); padding: 2rem; text-align: center; border: 1px solid var(--border);">
-              <i class="bi bi-cpu" style="font-size: 3rem; color: var(--accent);"></i>
-              <h3 style="margin: 1rem 0;">Two flagship AI tools</h3>
-              <p style="margin: 0.5rem 0;"><i class="bi bi-mic-fill" style="color: var(--accent);"></i> <strong>AI Recitation Check</strong><br><span style="font-size: 0.85rem;">letter-level fluency feedback</span></p>
-              <p style="margin: 0.5rem 0;"><i class="bi bi-brain" style="color: var(--accent);"></i> <strong>AI Memorization Check</strong><br><span style="font-size: 0.85rem;">predicts weak spots before you forget</span></p>
-              <div style="background: var(--accent-light); border-radius: 50px; padding: 0.5rem; margin-top: 1rem; font-size: 0.85rem;">🧠 Smart forgetting curve scheduler</div>
+            
+            <div class="hero-buttons">
+              <a href="/register" class="btn-primary"><i class="bi bi-book-half"></i> Start Free</a>
+              <button @click="scrollToFeatures" class="btn-secondary"><i class="bi bi-arrow-down"></i> See Features</button>
+            </div>
+            
+            <div class="hero-stats">
+              <div class="stat-card" v-for="stat in stats" :key="stat.label">
+                <div class="stat-number"><AnimatedCounter :target="stat.value" :duration="2000" />{{ stat.suffix }}</div>
+                <div class="stat-label">{{ stat.label }}</div>
+              </div>
             </div>
           </div>
-        </section>
+          
+          <div class="hero-image" data-aos="fade-left">
+            <div class="demo-card">
+              <i class="bi bi-mic"></i>
+              <h3>Live AI Analysis</h3>
+              <p>"Ikhfa' weak — hold nasalization 2 beats."</p>
+              <div class="demo-wave">
+                <i class="bi bi-soundwave"></i>
+                <span>Recording... → 96% accuracy</span>
+              </div>
+            </div>
+            <div class="floating-card" v-for="(badge, idx) in floatingBadges" :key="idx" :style="{ animationDelay: `${idx * 0.8}s` }">
+              <i :class="badge.icon"></i>
+              <span>{{ badge.text }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
   
-        <!-- Features Section (with proper alignment) -->
-        <section id="features">
-          <h2 class="section-title">Designed for hifdh & retention</h2>
-          <p class="section-subtitle">Stacked mode + Mushaf mode • Your sessions, your goals</p>
+      <div class="divider"><i class="bi bi-star-fill"></i> ۞ <i class="bi bi-star-fill"></i></div>
+  
+      <!-- Features Section -->
+      <section id="features" class="features-section" ref="featuresSection">
+        <div class="section-container">
+          <h2 class="section-title">Everything you need to master recitation</h2>
+          <p class="section-subtitle">Clear tools. Real AI feedback. Zero fluff.</p>
           <div class="features-grid">
-            <div class="feature-card">
-              <div class="feature-icon"><i class="bi bi-diagram-3"></i></div>
-              <h3>Chaining Method <span class="badge">Core</span></h3>
-              <p>Link verses like a story. AI remembers which ayah connects to the next — automatic recall triggers.</p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon"><i class="bi bi-pin-angle-fill"></i></div>
-              <h3>Anchor Mode <span class="badge badge-pro">Pro</span></h3>
-              <p>Attach each verse to a mental image, location or emotion. AI suggests anchors based on surah theme.</p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon"><i class="bi bi-eye-slash"></i></div>
-              <h3>Blur / Focus Mode <span class="badge badge-pro">Pro</span></h3>
-              <p>Progressive blurring of words. Train active recall without looking at full mushaf — builds strong memory.</p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon"><i class="bi bi-mic"></i></div>
-              <h3>AI Recitation Check <span class="badge">Free</span></h3>
-              <p>Letter-level analysis to improve fluency. Main goal: strengthen memory anchoring through correct recitation. 25 free checks/day.</p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon"><i class="bi bi-cpu"></i></div>
-              <h3>AI Memorization Check <span class="badge badge-pro">Flagship</span></h3>
-              <p>Predicts verses you're about to forget. Tests you before the forgetting curve hits. Smart revision scheduler.</p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon"><i class="bi bi-collection-play"></i></div>
-              <h3>Recording Library + Goals</h3>
-              <p>Save self-assessments, set daily goals (juz/pages), track accuracy over time. Stacked + Mushaf modes available.</p>
+            <div class="feature-card" v-for="feature in features" :key="feature.title" data-aos="zoom-in">
+              <div class="feature-icon"><i :class="feature.icon"></i></div>
+              <h3>{{ feature.title }} <span :class="['feature-badge', feature.badgeType]">{{ feature.badge }}</span></h3>
+              <p>{{ feature.description }}</p>
             </div>
           </div>
-        </section>
-  
-        <!-- Stacked vs Mushaf mode switcher -->
-        <div style="background: var(--surface-card); border-radius: var(--radius-lg); padding: 2rem; margin: 1rem 0; text-align: center; border: 1px solid var(--border);">
-          <div class="mode-switch">
-            <button 
-              class="mode-btn" 
-              :class="{ active: activeMode === 'stacked' }"
-              @click="activeMode = 'stacked'"
-            >📚 Stacked Mode (line-by-line)</button>
-            <button 
-              class="mode-btn" 
-              :class="{ active: activeMode === 'mushaf' }"
-              @click="activeMode = 'mushaf'"
-            >🕋 Mushaf Mode (full page)</button>
-          </div>
-          <p style="color: var(--text-muted);">Switch between modern stacked layout or authentic Madani mushaf. Both support tafsir, tajweed coloring & audio from renowned qaris.</p>
         </div>
+      </section>
   
-        <!-- Memorization techniques (3 steps with detailed context) -->
-        <section id="techniques">
-          <h2 class="section-title">Memorization flow: from new verse to mastery</h2>
+      <div class="divider"><i class="bi bi-star-fill"></i> ۞ <i class="bi bi-star-fill"></i></div>
+  
+      <!-- How It Works -->
+      <section id="how-it-works">
+        <div class="section-container">
+          <h2 class="section-title">Three steps to fluent recitation</h2>
           <div class="steps-grid">
-            <div class="step-card">
-              <div class="step-number">1</div>
-              <h3>🎯 Anchor & Chaining</h3>
-              <p style="font-size: 0.9rem;">Build mental anchors (images/locations). Chain verses using keywords. AI picks anchor style based on your retention profile.</p>
-              <div class="tech-icons"><i class="bi bi-image"></i> <i class="bi bi-link"></i> <i class="bi bi-brightness-alt-high"></i></div>
+            <div class="step-card" v-for="(step, idx) in steps" :key="idx" data-aos="flip-up" :data-aos-delay="idx * 100">
+              <div class="step-number">{{ idx + 1 }}</div>
+              <i :class="step.icon" class="step-icon"></i>
+              <h3>{{ step.title }}</h3>
+              <p>{{ step.description }}</p>
             </div>
-            <div class="step-card">
-              <div class="step-number">2</div>
-              <h3>🎙️ Self-Assessment Recording</h3>
-              <p style="font-size: 0.9rem;">Record yourself reciting from memory. AI checks both memorization accuracy & recitation fluency. Store in personal library.</p>
-              <div class="tech-icons"><i class="bi bi-mic"></i> <i class="bi bi-journal-code"></i></div>
-            </div>
-            <div class="step-card">
-              <div class="step-number">3</div>
-              <h3>📊 Smart Revision + Analytics</h3>
-              <p style="font-size: 0.9rem;">Personalized repetition scheduler. Weak verses pop up before you forget. Detailed heatmap of weak junctions.</p>
-              <div class="tech-icons"><i class="bi bi-graph-up"></i> <i class="bi bi-calendar-week"></i></div>
-            </div>
-          </div>
-        </section>
-  
-        <!-- Integrated recording library & goals -->
-        <div style="background: var(--accent-light); border-radius: var(--radius-lg); padding: 2rem; margin: 1rem 0;">
-          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem;">
-            <div>
-              <h3><i class="bi bi-collection"></i> Your personal memorization library</h3>
-              <p style="margin-top: 0.5rem;">Save every recording, track progress per surah, set session goals (pages/day).<br>Integrated with AI memorization check and analytics dashboard.</p>
-            </div>
-            <div><span class="badge badge-pro" style="background: var(--accent); padding: 0.4rem 1rem;">📈 Detailed Analytics</span></div>
           </div>
         </div>
+      </section>
   
-        <!-- Testimonials -->
-        <section id="testimonials">
-          <h2 class="section-title">What hafidh & students say</h2>
-          <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
-            <div class="feature-card">
-              <i class="bi bi-chat-quote" style="font-size: 2rem; color: var(--accent);"></i>
-              <p style="margin: 1rem 0;">“Chaining method changed everything. I memorized 2 juz in 3 weeks with anchor mode. AI reminds me exactly before I slip.”</p>
-              <h4>— Yusuf M., half-hafidh</h4>
-            </div>
-            <div class="feature-card">
-              <i class="bi bi-chat-quote" style="font-size: 2rem; color: var(--accent);"></i>
-              <p style="margin: 1rem 0;">“Stacked mode + self-recording library helped me find my weak transitions. Finally a tool for hifdh, not just tajweed.”</p>
-              <h4>— Amina K., teacher</h4>
-            </div>
-            <div class="feature-card">
-              <i class="bi bi-chat-quote" style="font-size: 2rem; color: var(--accent);"></i>
-              <p style="margin: 1rem 0;">“AI memorization check predicted I'd forget Al-i-Imran verses. Accurate. The scheduler is a blessing.”</p>
-              <h4>— Ibrahim, full-time student</h4>
-            </div>
-          </div>
-        </section>
+      <div class="divider"><i class="bi bi-star-fill"></i> ۞ <i class="bi bi-star-fill"></i></div>
   
-        <!-- Pricing -->
-        <section id="pricing">
-          <h2 class="section-title">Simple for students, powerful for serious hifdh</h2>
-          <div class="pricing-grid">
-            <div class="feature-card">
-              <h3>🌿 Memorizer Starter</h3>
-              <div style="font-size: 2.2rem; font-weight: 800; color: var(--accent);">$0</div>
-              <ul style="margin: 1rem 0; list-style: none; padding: 0;">
-                <li style="margin: 0.5rem 0;">✓ AI Recitation (25/day)</li>
-                <li style="margin: 0.5rem 0;">✓ Chaining + Basic Anchor</li>
-                <li style="margin: 0.5rem 0;">✓ Recording library (15 saves)</li>
-                <li style="margin: 0.5rem 0;">✓ Stacked mode</li>
-              </ul>
-              <a href="#" class="btn-secondary" style="width: 100%; justify-content: center; margin-top: auto;">Start Free</a>
-            </div>
-            <div class="feature-card" style="border: 2px solid var(--accent);">
-              <h3>🔥 Full Hifdh <span class="badge badge-pro">Pro</span></h3>
-              <div style="font-size: 2.2rem; font-weight: 800; color: var(--accent);">$9.99 <span style="font-size: 1rem;">/month</span></div>
-              <ul style="margin: 1rem 0; list-style: none; padding: 0;">
-                <li style="margin: 0.5rem 0;">✓ Unlimited AI Recitation + Memorization Check</li>
-                <li style="margin: 0.5rem 0;">✓ Anchor mode, Blur/Focus, Smart Chaining AI</li>
-                <li style="margin: 0.5rem 0;">✓ Unlimited recordings & analytics heatmap</li>
-                <li style="margin: 0.5rem 0;">✓ Mushaf + Stacked mode, Goals & sessions</li>
-                <li style="margin: 0.5rem 0;">✓ Forgetting curve scheduler (AI predictions)</li>
-              </ul>
-              <a href="#" class="btn-primary" style="width: 100%; justify-content: center; margin-top: auto;">Try 7 days free</a>
-            </div>
-          </div>
-        </section>
-  
-        <!-- CTA -->
-        <div style="background: linear-gradient(130deg, var(--accent-soft), var(--surface-card)); border-radius: 40px; padding: 3rem; text-align: center; margin: 2rem 0; border: 1px solid var(--border);">
-          <div class="ayah-decoration">"وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا"</div>
-          <h2 style="font-size: 2rem; margin-top: 0.5rem;">Set your hifdh goal today</h2>
-          <p style="margin: 1rem 0;">Whether it's 1 page per week or 1 juz per month — Mutqin adapts to you.</p>
-          <a href="#" class="btn-primary"><i class="bi bi-calendar-check"></i> Create free account</a>
-        </div>
-      </main>
-  
-      <!-- Footer -->
-      <footer class="footer">
-        <div class="shell">
-          <div class="footer-links">
-            <div class="footer-col">
-              <h4 style="color: var(--accent); margin-bottom: 1rem;">Mutqin</h4>
-              <p style="font-size: 0.85rem; color: var(--text-muted);">AI for Quran memorization • Anchors • Chaining • Smart revision</p>
-            </div>
-            <div class="footer-col">
-              <a href="#features" @click.prevent="scrollTo('features')">Features</a>
-              <a href="#techniques" @click.prevent="scrollTo('techniques')">Techniques</a>
-              <a href="#pricing" @click.prevent="scrollTo('pricing')">Pricing</a>
-            </div>
-            <div class="footer-col">
-              <a href="#">Tajweed Guide</a>
-              <a href="#">Blog</a>
-              <a href="#">Support</a>
-            </div>
-            <div class="footer-col">
-              <div style="display: flex; gap: 1rem;">
-                <a href="#"><i class="bi bi-instagram" style="font-size: 1.3rem;"></i></a>
-                <a href="#"><i class="bi bi-youtube" style="font-size: 1.3rem;"></i></a>
-                <a href="#"><i class="bi bi-telegram" style="font-size: 1.3rem;"></i></a>
+      <!-- Testimonials -->
+      <section id="testimonials" class="testimonials-section">
+        <div class="section-container">
+          <h2 class="section-title">Trusted by thousands</h2>
+          <div class="testimonials-grid">
+            <div class="testimonial-card" v-for="(testimonial, idx) in testimonials" :key="idx" data-aos="fade-up" :data-aos-delay="idx * 100">
+              <i class="bi bi-chat-quote-fill"></i>
+              <p>"{{ testimonial.quote }}"</p>
+              <div class="testimonial-author">
+                <div class="author-avatar">{{ testimonial.initials }}</div>
+                <div class="author-info">
+                  <h4>{{ testimonial.author }}</h4>
+                  <p>{{ testimonial.role }}</p>
+                </div>
               </div>
             </div>
           </div>
-          <div style="margin-top: 2rem; text-align: center; font-size: 0.75rem; border-top: 1px solid var(--border); padding-top: 1.5rem; color: var(--text-muted);">
-            © 2025 Mutqin — وَذَكِّرْ فَإِنَّ الذِّكْرَىٰ تَنفَعُ الْمُؤْمِنِينَ
+        </div>
+      </section>
+  
+      <div class="divider"><i class="bi bi-star-fill"></i> ۞ <i class="bi bi-star-fill"></i></div>
+  
+      <!-- Pricing Section -->
+      <section id="pricing" class="pricing-section">
+        <div class="section-container">
+          <h2 class="section-title">Simple, transparent pricing</h2>
+          <p class="section-subtitle">No hidden fees. Just free or full power.</p>
+          <div class="pricing-grid">
+            <!-- Freemium Plan -->
+            <div class="pricing-card" data-aos="flip-right">
+              <div class="pricing-icon"><i class="bi bi-flower1"></i></div>
+              <h3>Freemium</h3>
+              <div class="price">$0</div>
+              <ul class="pricing-features">
+                <li v-for="feature in freeFeatures" :key="feature">
+                  <i :class="feature.includes('Smart') || feature.includes('Unlimited') ? 'bi bi-x-circle' : 'bi bi-check-circle-fill'"></i>
+                  {{ feature }}
+                </li>
+              </ul>
+              <a href="/register" class="btn-secondary">Start Free <i class="bi bi-arrow-right"></i></a>
+            </div>
+            <!-- Pro Plan -->
+            <div class="pricing-card featured" data-aos="flip-left">
+              <div class="featured-tag"><i class="bi bi-star-fill"></i> MOST POPULAR</div>
+              <div class="pricing-icon"><i class="bi bi-gem"></i></div>
+              <h3>Pro · Full Quran</h3>
+              <div class="price">$9.99 <span>/month</span></div>
+              <ul class="pricing-features">
+                <li v-for="feature in proFeatures" :key="feature">
+                  <i class="bi bi-check-circle-fill"></i> {{ feature }}
+                </li>
+              </ul>
+              <a href="/register" class="btn-primary">Try 7 days free <i class="bi bi-gift-fill"></i></a>
+            </div>
+          </div>
+        </div>
+      </section>
+  
+      <!-- CTA Section -->
+      <div class="cta-block">
+        <div class="cta-icon"><i class="bi bi-heart-fill"></i></div>
+        <h2>Stop repeating the same mistakes.</h2>
+        <p>Get AI feedback that actually improves your tajweed and memorization — starting today.</p>
+        <a href="/register" class="btn-primary"><i class="bi bi-person-badge"></i> Create Free Account</a>
+      </div>
+  
+      <!-- Theme Switcher -->
+      <div class="theme-switcher">
+        <button @click="setTheme('light')" :class="{ active: currentTheme === 'light' }" aria-label="Light mode">
+          <i class="bi bi-brightness-high-fill"></i>
+        </button>
+        <button @click="setTheme('dark')" :class="{ active: currentTheme === 'dark' }" aria-label="Dark mode">
+          <i class="bi bi-moon-fill"></i>
+        </button>
+        <button @click="setTheme('sepia')" :class="{ active: currentTheme === 'sepia' }" aria-label="Sepia mode">
+          <i class="bi bi-book-half"></i>
+        </button>
+      </div>
+  
+      <!-- Footer - full width, bottom fixed position -->
+      <footer class="footer">
+        <div class="footer-container">
+          <div class="footer-grid">
+            <div class="footer-brand">
+              <div class="footer-logo">
+                <i class="bi bi-moon-stars"></i>
+                <h3>Mutqin</h3>
+              </div>
+              <p>AI that corrects your tajweed & locks memorization. Rooted in tradition, powered by innovation.</p>
+            </div>
+            <div class="footer-links">
+              <h4><i class="bi bi-grid-3x3-gap-fill"></i> Product</h4>
+              <a href="#features" @click.prevent="scrollToFeatures"><i class="bi bi-mic"></i> Features</a>
+              <a href="#pricing" @click.prevent="scrollToPricing"><i class="bi bi-tag-fill"></i> Pricing</a>
+              <a href="#"><i class="bi bi-compass"></i> Roadmap</a>
+            </div>
+            <div class="footer-links">
+              <h4><i class="bi bi-book-half"></i> Resources</h4>
+              <a href="#"><i class="bi bi-pen-fill"></i> Tajweed Guide</a>
+              <a href="#"><i class="bi bi-lightbulb-fill"></i> Memorization Tips</a>
+              <a href="#"><i class="bi bi-journal-bookmark-fill"></i> Blog</a>
+            </div>
+            <div class="footer-links">
+              <h4><i class="bi bi-building"></i> Company</h4>
+              <a href="#"><i class="bi bi-info-circle-fill"></i> About Us</a>
+              <a href="#"><i class="bi bi-chat-dots-fill"></i> Contact</a>
+              <a href="#"><i class="bi bi-shield-check"></i> Islamic Scholars</a>
+            </div>
+            <div class="footer-social">
+              <h4><i class="bi bi-share-fill"></i> Connect</h4>
+              <div class="social-icons">
+                <a href="#" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
+                <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                <a href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+                <a href="#" aria-label="Telegram"><i class="bi bi-telegram"></i></a>
+                <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+              </div>
+            </div>
+          </div>
+          <div class="footer-bottom">
+            <p><i class="bi bi-c-circle"></i> 2025 Mutqin · "And recite the Quran with measured recitation." 🤍</p>
           </div>
         </div>
       </footer>
@@ -230,470 +224,1015 @@
   </template>
   
   <script>
-  export default {
-    name: 'MutqinApp',
-    data() {
-      return {
-        activeMode: 'stacked' // 'stacked' or 'mushaf'
-      };
-    },
-    mounted() {
-      // Apply prefers-color-scheme on mount
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-      }
+  import { ref, onMounted, onUnmounted } from 'vue';
   
-      // Watch for changes in color scheme preference
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-        document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+  // Animated Counter Component
+  const AnimatedCounter = {
+    props: { target: Number, duration: { type: Number, default: 2000 } },
+    setup(props) {
+      const current = ref(0);
+      let animationId = null;
+      
+      onMounted(() => {
+        const startTime = performance.now();
+        const updateCounter = (now) => {
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / props.duration, 1);
+          current.value = Math.floor(progress * props.target);
+          if (progress < 1) {
+            animationId = requestAnimationFrame(updateCounter);
+          } else {
+            current.value = props.target;
+          }
+        };
+        animationId = requestAnimationFrame(updateCounter);
       });
+      
+      onUnmounted(() => {
+        if (animationId) cancelAnimationFrame(animationId);
+      });
+      
+      return { current };
     },
-    methods: {
-      scrollTo(targetId) {
-        const element = document.querySelector(targetId);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    template: '<span>{{ current }}</span>'
+  };
+  
+  export default {
+    name: 'OnboardingPage',
+    components: { AnimatedCounter },
+    setup() {
+      // Theme management
+      const currentTheme = ref('light');
+      
+      const setTheme = (theme) => {
+        currentTheme.value = theme;
+        localStorage.setItem('mutqin-theme', theme);
+        document.documentElement.setAttribute('data-theme', theme);
+      };
+      
+      const loadTheme = () => {
+        const saved = localStorage.getItem('mutqin-theme');
+        if (saved && ['light', 'dark', 'sepia'].includes(saved)) {
+          currentTheme.value = saved;
+          document.documentElement.setAttribute('data-theme', saved);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          setTheme('dark');
+        } else {
+          setTheme('light');
         }
-      }
+      };
+      
+      // Refs for scroll tracking
+      const featuresSection = ref(null);
+      const pricingSection = ref(null);
+      
+      // Scroll methods
+      const scrollToFeatures = () => {
+        featuresSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+      
+      const scrollToPricing = () => {
+        pricingSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+      
+      // Data
+      const stats = ref([
+        { value: 15000, suffix: '+', label: 'Active Students' },
+        { value: 94, suffix: '%', label: 'Tajweed Improvement' },
+        { value: 280, suffix: 'k+', label: 'Errors Corrected' }
+      ]);
+      
+      const floatingBadges = ref([
+        { icon: 'bi bi-check-circle-fill', text: 'Tajweed score: +27%' },
+        { icon: 'bi bi-graph-up', text: 'Weak verses auto-scheduled' },
+        { icon: 'bi bi-star-fill', text: '15 min/day memorization' }
+      ]);
+      
+      const features = ref([
+        { icon: 'bi bi-mic', title: 'AI Recitation Checker', badge: 'Free', badgeType: '', description: 'Letter-by-letter Tajweed analysis, mistake heatmaps, instant audio feedback. 25 free checks/day.' },
+        { icon: 'bi bi-brain', title: 'Smart Memorization', badge: 'Pro', badgeType: 'pro', description: 'Spaced repetition + forgetting curve AI. Tests weak verses before you forget.' },
+        { icon: 'bi bi-journal-bookmark-fill', title: 'Interactive Mushaf', badge: 'Free', badgeType: '', description: 'Tajweed color-coding, tafsir, transliteration, audio from 5 renowned Qaris.' },
+        { icon: 'bi bi-link', title: 'Memory Linking', badge: 'Pro', badgeType: 'pro', description: 'AI selects anchor/story method based on your retention style.' },
+        { icon: 'bi bi-collection-play', title: 'Personal Library', badge: 'Free (limited)', badgeType: '', description: 'Save last 15 recordings + basic analytics. Pro: unlimited history.' },
+        { icon: 'bi bi-graph-up', title: 'Weakness Analytics', badge: 'Pro', badgeType: 'pro', description: 'Heatmap of recurring errors, rule-based recommendations, monthly progress reports.' }
+      ]);
+      
+      const steps = ref([
+        { title: 'Record', description: 'Recite any verse directly in your browser.', icon: 'bi bi-mic' },
+        { title: 'AI Analysis', description: 'Get letter‑level tajweed report within 3 seconds.', icon: 'bi bi-cpu' },
+        { title: 'Fix & Review', description: 'Actionable corrections + smart revision scheduler.', icon: 'bi bi-check2-circle' }
+      ]);
+      
+      const testimonials = ref([
+        { quote: "Mutqin fixed my 'ض' in 2 weeks after 5 years of struggle. Alhamdulillah.", author: "Abdullah Khan", role: "12 Juz Memorized", initials: "AK" },
+        { quote: "Spaced repetition saved my hifdh. I don't forget anymore. Essential for every hafidh.", author: "Fatima El-Sayed", role: "Hafidha in Progress", initials: "FE" },
+        { quote: "As a tajweed teacher, I use Mutqin to track students' weak spots instantly.", author: "Ustadh Hisham", role: "Certified Qari", initials: "UH" }
+      ]);
+      
+      const freeFeatures = ref([
+        'AI recitation (25/day)',
+        "Juz 'Amma + 5 surahs",
+        'Basic progress tracking',
+        'Smart memorization AI',
+        'Unlimited library'
+      ]);
+      
+      const proFeatures = ref([
+        'Unlimited AI recitation',
+        'Entire Quran + 10 Qira\'at',
+        'Smart memorization engine',
+        'Unlimited recordings & library',
+        'Weakness heatmaps + analytics',
+        'Priority support & monthly PDF'
+      ]);
+      
+      // Intersection Observer for animations
+      const observerOptions = { threshold: 0.3, rootMargin: '0px' };
+      
+      onMounted(() => {
+        loadTheme();
+        
+        // Animate elements when they come into view
+        const animatedElements = document.querySelectorAll('[data-aos]');
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('aos-animate');
+              observer.unobserve(entry.target);
+            }
+          });
+        }, observerOptions);
+        
+        animatedElements.forEach(el => observer.observe(el));
+      });
+      
+      return {
+        currentTheme,
+        setTheme,
+        featuresSection,
+        pricingSection,
+        scrollToFeatures,
+        scrollToPricing,
+        stats,
+        floatingBadges,
+        features,
+        steps,
+        testimonials,
+        freeFeatures,
+        proFeatures
+      };
     }
   };
   </script>
   
-  <style scoped>
-  /* All styles from original go here */
-  * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-  }
-  
+  <style>
+  /* CSS Variables - Warm Islamic Color Palette */
   :root {
-      --bg: #fefaf2;
-      --surface: rgba(255, 250, 240, 0.96);
-      --surface-strong: #fffcf5;
-      --surface-card: #ffffff;
-      --border: rgba(139, 89, 48, 0.12);
-      --border-strong: rgba(139, 89, 48, 0.22);
-      --text: #2c2418;
-      --text-muted: #7c6b53;
-      --text-soft: #9e8b72;
-      --accent: #b57c3c;
-      --accent-deep: #8b5a2b;
-      --accent-soft: #f2e5d4;
-      --accent-light: rgba(181, 124, 60, 0.08);
-      --gold: #d4af37;
-      --gold-light: #f9eec1;
-      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.02), 0 4px 12px rgba(74, 45, 22, 0.04);
-      --shadow-md: 0 8px 24px rgba(74, 45, 22, 0.06);
-      --shadow-lg: 0 20px 32px -12px rgba(0, 0, 0, 0.1);
-      --radius-md: 20px;
-      --radius-lg: 28px;
-      --radius-xl: 36px;
-      --font-ar: 'Amiri', serif;
-      --font-ui: 'Inter', system-ui, sans-serif;
-      --shell-max: 1320px;
-      --gutter: clamp(16px, 4vw, 40px);
-      --nav-h: 74px;
+    --bg: #f3eee6;
+    --surface: rgba(255, 250, 243, 0.88);
+    --surface-strong: rgba(255, 255, 255, 0.92);
+    --border: rgba(78, 58, 38, 0.10);
+    --text: #1f1a17;
+    --text-muted: #6c6258;
+    --accent: #9a6738;
+    --accent-strong: #6e4726;
+    --accent-soft: #d8c1a8;
+    --accent-light: rgba(154, 103, 56, 0.10);
+    --accent-wash: rgba(228, 211, 194, 0.42);
+    --shadow-sm: 0 8px 20px rgba(63, 39, 18, 0.08);
+    --shadow-md: 0 16px 36px rgba(63, 39, 18, 0.12);
+    --shadow-lg: 0 28px 70px rgba(63, 39, 18, 0.16);
+    --radius: 16px;
+    --font-ar: 'Amiri', 'Noto Naskh Arabic', serif;
+    --font-ui: "Inter", "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   }
   
   [data-theme="dark"] {
-      --bg: #1f1a14;
-      --surface: rgba(30, 26, 22, 0.96);
-      --surface-strong: #26201a;
-      --surface-card: #2b241e;
-      --border: rgba(181, 124, 60, 0.2);
-      --text: #f2e8dc;
-      --text-muted: #b8a890;
-      --accent: #cf9f6e;
-      --accent-soft: #4a3a2a;
+    --bg: #14110f;
+    --surface: rgba(31, 27, 24, 0.92);
+    --surface-strong: rgba(43, 37, 32, 0.96);
+    --border: rgba(255, 236, 216, 0.16);
+    --text: #f7ebdf;
+    --text-muted: #d1c2b3;
+    --accent: #d0a06b;
+    --accent-strong: #efc18d;
+    --accent-soft: #5f4530;
+    --accent-light: rgba(208, 160, 107, 0.14);
+    --accent-wash: rgba(208, 160, 107, 0.08);
+    --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);
+    --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);
+    --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);
+  }
+  
+  [data-theme="sepia"] {
+    --bg: #efe2cb;
+    --surface: rgba(250, 241, 227, 0.88);
+    --surface-strong: rgba(255, 248, 237, 0.94);
+    --text: #352516;
+    --text-muted: #75624f;
+    --accent: #b8824e;
+    --accent-strong: #8f6033;
+    --accent-soft: #dcc3a6;
+    --accent-light: rgba(184, 130, 78, 0.12);
+    --accent-wash: rgba(221, 194, 162, 0.35);
+  }
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
   }
   
   body {
-      font-family: var(--font-ui);
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-      font-size: 15px;
+    font-family: var(--font-ui);
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    transition: background 0.3s ease, color 0.3s ease;
   }
   
-  body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: radial-gradient(circle at 15% 30%, var(--accent-light) 1px, transparent 1px);
-      background-size: 48px 48px;
-      pointer-events: none;
-      z-index: -1;
-      opacity: 0.5;
+  .vue-onboarding {
+    
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
   
-  /* Navbar */
-  .app-navbar {
-      background: var(--surface-strong);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
+  /* Verse Ticker */
+  .verse-ticker {
+    background: var(--accent-wash);
+    padding: 1rem 0;
+    overflow: hidden;
+    white-space: nowrap;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
   }
   
-  .navbar-shell {
-      max-width: var(--shell-max);
-      margin: 0 auto;
-      padding: 12px var(--gutter);
-      min-height: var(--nav-h);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      flex-wrap: wrap;
+  .ticker-track {
+    display: inline-block;
+    animation: ticker 60s linear infinite;
   }
   
-  .navbar-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      font-family: var(--font-ar);
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: var(--accent);
+  .ticker-track span {
+    margin: 0 2rem;
+    font-family: var(--font-ar);
+    font-size: 1.2rem;
+    color: var(--accent);
   }
   
-  .brand-icon {
-      font-size: 2rem;
-      background: var(--accent-light);
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 60%;
+  @keyframes ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
   }
   
-  /* Nav links in a row */
-  .nav-links-desktop {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      flex-wrap: wrap;
+  /* Hero Section */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 6rem 2rem 4rem;
+    position: relative;
+    overflow: hidden;
   }
   
-  .nav-link {
-      padding: 8px 18px;
-      border-radius: 40px;
-      font-weight: 500;
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      transition: all 0.2s;
-      text-decoration: none;
+  .hero::before {
+    content: '۞';
+    position: absolute;
+    font-size: 30rem;
+    opacity: 0.03;
+    right: -10%;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    animation: rotate 60s linear infinite;
+    color: var(--accent);
   }
   
-  .nav-link:hover {
-      color: var(--accent);
-      background: var(--accent-light);
+  @keyframes rotate {
+    from { transform: translateY(-50%) rotate(0deg); }
+    to { transform: translateY(-50%) rotate(360deg); }
   }
   
-  .app-navbar-actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+  .hero-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+    align-items: center;
+    position: relative;
+    z-index: 1;
   }
   
-  .btn-primary {
-      background: var(--accent);
-      color: white;
-      padding: 8px 22px;
-      border-radius: 40px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: 0.2s;
-      border: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-  }
-  
-  .btn-primary:hover {
-      background: var(--accent-deep);
-      transform: translateY(-2px);
-  }
-  
-  .btn-secondary {
-      border: 1px solid var(--border-strong);
-      background: transparent;
-      padding: 8px 22px;
-      border-radius: 40px;
-      color: var(--text);
-      font-weight: 500;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-  }
-  
-  /* Full-width Quran Banner below navbar */
-  .quran-full-banner {
-      background: linear-gradient(135deg, var(--accent-soft) 0%, #e7d8c4 100%);
-      width: 100%;
-      padding: 1rem 2rem;
-      text-align: center;
-      border-bottom: 1px solid var(--border);
-      border-top: 1px solid var(--border);
-      font-family: var(--font-ar);
-      font-size: 1.25rem;
-      color: var(--accent-deep);
-      letter-spacing: 1px;
-      overflow-x: auto;
-      white-space: nowrap;
-  }
-  
-  .quran-banner-content {
-      display: inline-block;
-      animation: scrollBanner 70s linear infinite;
-  }
-  
-  .quran-banner-content span {
-      margin: 0 2rem;
-  }
-  
-  @keyframes scrollBanner {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-48%); }
-  }
-  
-  .shell {
-      max-width: var(--shell-max);
-      margin: 0 auto;
-      padding: 0 var(--gutter);
-  }
-  
-  section {
-      padding: 3.5rem 0;
-  }
-  
-  .section-title {
-      font-size: 2.4rem;
-      font-weight: 700;
-      text-align: center;
-      margin-bottom: 0.8rem;
-      font-family: var(--font-ar);
-      color: var(--accent);
-  }
-  
-  .section-subtitle {
-      text-align: center;
-      color: var(--text-muted);
-      max-width: 680px;
-      margin: 0 auto 2.5rem;
-  }
-  
-  /* Hero */
-  .hero-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 3rem;
-      align-items: center;
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent-light);
+    color: var(--accent);
+    padding: 0.3rem 1rem;
+    border-radius: 40px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
   }
   
   .hero-title {
-      font-size: 3rem;
-      font-weight: 800;
-      line-height: 1.2;
-      margin: 1rem 0;
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.03em;
   }
   
   .hero-title span {
-      color: var(--accent);
-      border-bottom: 3px solid var(--gold);
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
   }
   
-  /* Feature Cards - aligned */
+  .hero-desc {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+  }
+  
+  .problem-solution {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    border: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+  }
+  
+  .problem-text, .solution-text {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .problem-text i, .solution-text i {
+    color: var(--accent);
+    margin-top: 2px;
+  }
+  
+  .problem-text strong, .solution-text strong {
+    color: var(--accent-strong);
+  }
+  
+  .solution-highlight {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  
+  .hero-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .hero-stats {
+    display: flex;
+    gap: 2.5rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+  }
+  
+  .stat-card .stat-number {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1.2;
+  }
+  
+  .stat-card .stat-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  
+  /* Hero Image */
+  .hero-image {
+    position: relative;
+  }
+  
+  .demo-card {
+    background: var(--surface-strong);
+    border-radius: 28px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+  }
+  
+  .demo-card i {
+    font-size: 3.5rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  
+  .demo-card p {
+    color: var(--text-muted);
+    margin: 0.5rem 0;
+  }
+  
+  .demo-wave {
+    background: var(--accent-light);
+    border-radius: 60px;
+    padding: 0.5rem 1rem;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .demo-wave i {
+    font-size: 1rem;
+    margin-bottom: 0;
+  }
+  
+  .floating-card {
+    position: absolute;
+    background: var(--surface-strong);
+    backdrop-filter: blur(12px);
+    border-radius: 60px;
+    padding: 0.6rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border);
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  .floating-card i {
+    font-size: 1rem;
+  }
+  
+  .floating-card:nth-child(2) { top: 5%; right: -5%; }
+  .floating-card:nth-child(3) { bottom: 15%; left: -8%; }
+  .floating-card:nth-child(4) { top: 45%; right: -10%; }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  
+  /* Divider */
+  .divider {
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--accent);
+    font-size: 1rem;
+    letter-spacing: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+  
+  .divider i {
+    font-size: 0.8rem;
+    opacity: 0.6;
+  }
+  
+  /* Section Styles */
+  .section-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 4rem 2rem;
+  }
+  
+  .section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--text);
+  }
+  
+  .section-title::before,
+  .section-title::after {
+    content: '۞';
+    color: var(--accent);
+    font-size: 1.5rem;
+    margin: 0 1rem;
+    opacity: 0.5;
+    display: inline-block;
+  }
+  
+  .section-subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 3rem;
+    font-size: 1.1rem;
+  }
+  
+  /* Features Grid */
   .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+    gap: 2rem;
   }
   
   .feature-card {
-      background: var(--surface-card);
-      border-radius: var(--radius-md);
-      padding: 1.8rem;
-      border: 1px solid var(--border);
-      transition: all 0.25s;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
+    background: var(--surface);
+    backdrop-filter: blur(4px);
+    border-radius: var(--radius);
+    padding: 2rem;
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
   }
   
   .feature-card:hover {
-      transform: translateY(-5px);
-      border-color: var(--accent);
-      box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: var(--shadow-md);
   }
   
   .feature-icon {
-      font-size: 2.2rem;
-      color: var(--accent);
-      margin-bottom: 1rem;
+    font-size: 2.5rem;
+    color: var(--accent);
+    margin-bottom: 1.2rem;
   }
   
-  .badge {
-      background: var(--accent-light);
-      border-radius: 30px;
-      padding: 0.2rem 0.8rem;
-      font-size: 0.7rem;
-      font-weight: 600;
-      margin-left: 0.6rem;
-      vertical-align: middle;
+  .feature-badge {
+    font-size: 0.7rem;
+    background: var(--accent-light);
+    border-radius: 40px;
+    padding: 0.2rem 0.8rem;
+    margin-left: 0.6rem;
+    font-weight: 600;
+    vertical-align: middle;
+    color: var(--accent);
   }
   
-  .badge-pro {
-      background: var(--accent);
-      color: white;
+  .feature-badge.pro {
+    background: var(--accent);
+    color: white;
   }
   
-  /* Steps with techniques */
+  /* Steps Grid */
   .steps-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 2rem;
   }
   
   .step-card {
-      background: var(--surface-card);
-      border-radius: var(--radius-md);
-      padding: 1.8rem;
-      text-align: center;
-      border: 1px solid var(--border);
-      transition: all 0.25s;
+    text-align: center;
+    padding: 1.5rem;
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
   }
   
   .step-card:hover {
-      transform: translateY(-4px);
-      border-color: var(--accent);
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: var(--shadow-md);
   }
   
   .step-number {
-      width: 64px;
-      height: 64px;
-      background: var(--accent);
-      color: white;
-      border-radius: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.8rem;
-      font-weight: bold;
-      margin: 0 auto 1rem;
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    border-radius: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    margin: 0 auto 1rem;
+    box-shadow: var(--shadow-md);
   }
   
-  .tech-icons {
-      display: flex;
-      justify-content: center;
-      gap: 0.6rem;
-      margin-top: 1rem;
-      font-size: 0.75rem;
-      color: var(--accent);
+  .step-icon {
+    font-size: 2rem;
+    color: var(--accent);
+    margin: 0.5rem 0;
+    display: inline-block;
   }
   
-  /* Mode switcher */
-  .mode-switch {
-      background: var(--surface-card);
-      border-radius: 80px;
-      padding: 0.4rem;
-      display: inline-flex;
-      gap: 0.5rem;
-      border: 1px solid var(--border);
-      margin-bottom: 1rem;
+  /* Testimonials */
+  .testimonials-section {
+    background: var(--accent-wash);
   }
   
-  .mode-btn {
-      padding: 0.5rem 1.5rem;
-      border-radius: 60px;
-      background: transparent;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-      color: var(--text-muted);
-      transition: all 0.2s;
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
   }
   
-  .mode-btn.active {
-      background: var(--accent);
-      color: white;
+  .testimonial-card {
+    background: var(--surface-strong);
+    border-radius: var(--radius);
+    padding: 2rem;
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
   }
   
+  .testimonial-card i {
+    font-size: 2rem;
+    color: var(--accent);
+    opacity: 0.6;
+  }
+  
+  .testimonial-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .author-avatar {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+  }
+  
+  .author-info h4 {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .author-info p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+  
+  /* Pricing */
   .pricing-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 2rem;
-      max-width: 900px;
-      margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
   }
   
+  .pricing-card {
+    background: var(--surface-strong);
+    border-radius: 28px;
+    padding: 2rem;
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+    position: relative;
+    text-align: center;
+  }
+  
+  .pricing-icon {
+    font-size: 2.5rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  
+  .pricing-card.featured {
+    border: 2px solid var(--accent);
+    transform: scale(1.02);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .featured-tag {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.25rem 1rem;
+    border-radius: 40px;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .price {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--accent);
+    margin: 1rem 0;
+  }
+  
+  .price span {
+    font-size: 1rem;
+    color: var(--text-muted);
+  }
+  
+  .pricing-features {
+    list-style: none;
+    margin: 1.5rem 0;
+    text-align: left;
+  }
+  
+  .pricing-features li {
+    padding: 0.6rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+  
+  .pricing-features i.bi-check-circle-fill { color: var(--accent); font-size: 1rem; }
+  .pricing-features i.bi-x-circle { color: #c9b6a0; font-size: 1rem; }
+  
+  /* CTA Block */
+  .cta-block {
+    max-width: 1000px;
+    margin: 2rem auto 3rem;
+    background: linear-gradient(135deg, var(--accent-wash), var(--surface-strong));
+    border-radius: 48px;
+    text-align: center;
+    padding: 3rem;
+    border: 1px solid var(--border);
+  }
+  
+  .cta-icon {
+    font-size: 3rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  
+  .cta-block h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .cta-block p {
+    margin-bottom: 1.5rem;
+    color: var(--text-muted);
+  }
+  
+  /* Buttons */
+  .btn-primary, .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 0.85rem 2rem;
+    border-radius: 60px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+  }
+  
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  
+  .btn-secondary:hover {
+    background: var(--accent-light);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  
+  /* Theme Switcher */
+  .theme-switcher {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    gap: 8px;
+    background: var(--surface-strong);
+    padding: 8px 12px;
+    border-radius: 60px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border);
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+  }
+  
+  .theme-switcher button {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .theme-switcher button.active {
+    background: var(--accent);
+    color: white;
+  }
+  
+  .theme-switcher button:hover:not(.active) {
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+  
+  /* Footer - Full Width, Bottom Fixed */
   .footer {
-      background: var(--surface-card);
-      border-top: 1px solid var(--border);
-      padding: 2rem 0;
-      margin-top: 2rem;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 3rem 2rem 1.5rem;
+    margin-top: auto;
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    right: 0;
   }
   
-  .footer-links {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 2rem;
+  .footer-container {
+    max-width: 1280px;
+    margin: 0 auto;
   }
   
-  .footer-col a {
-      display: block;
-      color: var(--text-muted);
-      text-decoration: none;
-      margin-bottom: 0.5rem;
-      font-size: 0.85rem;
+  .footer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
   }
   
-  .footer-col a:hover {
-      color: var(--accent);
+  .footer-brand {
+    max-width: 280px;
   }
   
-  @media (max-width: 880px) {
-      .hero-grid {
-          grid-template-columns: 1fr;
-      }
-      .steps-grid {
-          grid-template-columns: 1fr;
-      }
-      .pricing-grid {
-          grid-template-columns: 1fr;
-      }
-      .navbar-shell {
-          flex-direction: column;
-          align-items: center;
-      }
-      .nav-links-desktop {
-          justify-content: center;
-      }
+  .footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1rem;
   }
   
-  @media (max-width: 640px) {
-      .hero-title {
-          font-size: 2rem;
-      }
-      .section-title {
-          font-size: 1.8rem;
-      }
+  .footer-logo i {
+    font-size: 1.8rem;
+    color: var(--accent);
   }
   
-  .ayah-decoration {
-      font-family: var(--font-ar);
-      font-size: 1.4rem;
-      color: var(--accent);
+  .footer-logo h3 {
+    font-size: 1.3rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+  
+  .footer-brand p {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+  
+  .footer-links h4, .footer-social h4 {
+    color: var(--accent);
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .footer-links a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    text-decoration: none;
+    margin-bottom: 0.6rem;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+  }
+  
+  .footer-links a i {
+    font-size: 0.8rem;
+  }
+  
+  .footer-links a:hover {
+    color: var(--accent);
+    transform: translateX(5px);
+  }
+  
+  .social-icons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .social-icons a {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--accent-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+  
+  .social-icons a:hover {
+    background: var(--accent);
+    color: white;
+    transform: translateY(-3px);
+  }
+  
+  .footer-bottom {
+    text-align: center;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+  
+  .footer-bottom i {
+    margin-right: 4px;
+  }
+  
+  /* AOS Animations */
+  [data-aos] {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+  }
+  [data-aos].aos-animate {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  [data-aos="fade-up"] { transform: translateY(30px); }
+  [data-aos="fade-left"] { transform: translateX(30px); }
+  [data-aos="zoom-in"] { transform: scale(0.95); }
+  [data-aos="zoom-in"].aos-animate { transform: scale(1); }
+  [data-aos="flip-up"] { transform: rotateX(90deg); transform-origin: center; }
+  [data-aos="flip-up"].aos-animate { transform: rotateX(0); }
+  [data-aos="flip-right"] { transform: rotateY(90deg); }
+  [data-aos="flip-right"].aos-animate { transform: rotateY(0); }
+  [data-aos="flip-left"] { transform: rotateY(-90deg); }
+  [data-aos="flip-left"].aos-animate { transform: rotateY(0); }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .hero-container {
+      grid-template-columns: 1fr;
       text-align: center;
-      margin: 1rem 0;
+      gap: 2rem;
+    }
+    .hero-title { font-size: 2.2rem; }
+    .hero-stats { justify-content: center; }
+    .steps-grid, .testimonials-grid, .pricing-grid { grid-template-columns: 1fr; }
+    .pricing-card.featured { transform: scale(1); }
+    .floating-card { display: none; }
+    .section-title { font-size: 1.8rem; }
+    .section-title::before,
+    .section-title::after { display: none; }
+    .section-container { padding: 2rem 1.2rem; }
+    .theme-switcher { bottom: 10px; right: 10px; }
+    .footer-grid { grid-template-columns: 1fr; text-align: center; }
+    .footer-brand { max-width: 100%; text-align: center; }
+    .footer-logo { justify-content: center; }
+    .footer-links a { justify-content: center; }
+    .social-icons { justify-content: center; }
+    .problem-text, .solution-text { flex-direction: column; text-align: left; }
   }
   </style>
