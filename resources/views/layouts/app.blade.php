@@ -518,7 +518,7 @@
     <a class="skip-link" href="#mainContent">{{ __('ui.skip_main') }}</a>
     <nav class="navbar navbar-expand-lg app-navbar" aria-label="{{ __('ui.primary_navigation') }}">
         <div class="container-fluid shell navbar-shell">
-            <a class="navbar-brand" href="/memorisation">
+            <a class="navbar-brand" href="{{ route('home') }}">
                 <img
                     id="appNavbarLogo"
                     src="/images/logo.png"

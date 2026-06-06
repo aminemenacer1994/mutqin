@@ -47,7 +47,10 @@ Route::get('/auth/callback', function () {
 // Logout Route
 Route::post('/logout', function () {
     Auth::logout();
-    return redirect('/login');
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+
+    return redirect()->route('home');
 })->name('logout');
 
 // Public routes
@@ -56,15 +59,11 @@ Route::get('/', function () {
         return redirect()->route('memorisation');
     }
 
-    return view('onboarding');
-})->name('onboarding');
+    return view('home');
+})->name('home');
 
 Route::get('/onboarding', function () {
-    if (Auth::check()) {
-        return redirect()->route('memorisation');
-    }
-
-    return view('onboarding');
+    return redirect()->route('home');
 })->name('onboarding.page');
 
 Route::get('/memorisation', function () {
@@ -194,4 +193,6 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/memorisation/sync-state', [MemorisationSyncController::class, 'update'])->name('memorisation.sync.update');
 });
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/home', function () {
+    return redirect('/');
+})->name('home.legacy');
