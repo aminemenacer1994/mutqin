@@ -138,8 +138,8 @@ Route::post('/memorisation/recitation-check/transcribe', function (Request $requ
                 'language' => 'ar',
                 'temperature' => '0',
                 'prompt' => $promptTargetText
-                    ? 'Arabic Quran recitation. Transcribe only what is actually heard. Do not correct mistakes to the reference. Reference for spelling only: ' . $promptTargetText
-                    : 'Arabic Quran recitation. Transcribe only what is actually heard. Do not correct recitation mistakes.',
+                    ? 'Arabic Quran recitation. Write exactly the Arabic words that are audibly recited, in order. Do not infer, complete, add, or correct missing or misread words from the reference. Ignore pauses, fillers, and noise. The reference is only for Arabic spelling of words actually heard: ' . $promptTargetText
+                    : 'Arabic Quran recitation. Write exactly the Arabic words that are audibly recited, in order. Do not infer, complete, add, or correct missing or misread words.',
             ], fn ($value) => $value !== null && $value !== ''));
         
         if (!$response->successful()) {

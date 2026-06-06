@@ -1704,6 +1704,23 @@
                   {{ word.text }}
                 </span>
               </div>
+              <div v-if="getRecitationTajweedSummary(aiMemorisationCheckerResult).length" class="recitation-tajweed-panel">
+                <div class="recitation-tajweed-head">
+                  <div>
+                    <span>Tajweed & Quranic symbols</span>
+                    <strong>Rule-aware review</strong>
+                  </div>
+                  <small>{{ getRecitationTajweedSummaryLabel(aiMemorisationCheckerResult) }}</small>
+                </div>
+                <div class="recitation-tajweed-grid">
+                  <article v-for="rule in getRecitationTajweedSummary(aiMemorisationCheckerResult)" :key="`memory-rule-${rule.key}`"
+                    class="recitation-tajweed-chip" :class="rule.tone" :title="rule.description">
+                    <span>{{ rule.group }}</span>
+                    <strong>{{ rule.label }}</strong>
+                    <small>{{ rule.issueCount ? `${rule.issueCount} affected` : `${rule.count} marker${rule.count === 1 ? '' : 's'}` }}</small>
+                  </article>
+                </div>
+              </div>
               <div class="recitation-next-card">
                 <span>Recommendations</span>
                 <strong>{{ getRecitationRecommendationDisplay(aiMemorisationCheckerResult) }}</strong>
@@ -1974,6 +1991,24 @@
                       <small>{{ stat.description }}</small>
                     </article>
                   </div>
+                  <div v-if="getRecitationTajweedSummary(recitationCheckResult).length"
+                    class="recitation-tajweed-panel">
+                    <div class="recitation-tajweed-head">
+                      <div>
+                        <span>Tajweed & Quranic symbols</span>
+                        <strong>Rule-aware review</strong>
+                      </div>
+                      <small>{{ getRecitationTajweedSummaryLabel(recitationCheckResult) }}</small>
+                    </div>
+                    <div class="recitation-tajweed-grid">
+                      <article v-for="rule in getRecitationTajweedSummary(recitationCheckResult)" :key="rule.key"
+                        class="recitation-tajweed-chip" :class="rule.tone" :title="rule.description">
+                        <span>{{ rule.group }}</span>
+                        <strong>{{ rule.label }}</strong>
+                        <small>{{ rule.issueCount ? `${rule.issueCount} affected` : `${rule.count} marker${rule.count === 1 ? '' : 's'}` }}</small>
+                      </article>
+                    </div>
+                  </div>
                   <div class="recitation-next-card">
                     <span>What next?</span>
                     <strong>{{ getRecitationRecommendationDisplay(recitationCheckResult) }}</strong>
@@ -2021,6 +2056,23 @@
                     <strong>{{ stat.value }}</strong>
                     <small>{{ stat.description }}</small>
                   </article>
+                </div>
+                <div v-if="getRecitationTajweedSummary(recitationCheckResult).length" class="recitation-tajweed-panel">
+                  <div class="recitation-tajweed-head">
+                    <div>
+                      <span>Tajweed & Quranic symbols</span>
+                      <strong>Rule-aware review</strong>
+                    </div>
+                    <small>{{ getRecitationTajweedSummaryLabel(recitationCheckResult) }}</small>
+                  </div>
+                  <div class="recitation-tajweed-grid">
+                    <article v-for="rule in getRecitationTajweedSummary(recitationCheckResult)" :key="`saved-rule-${rule.key}`"
+                      class="recitation-tajweed-chip" :class="rule.tone" :title="rule.description">
+                      <span>{{ rule.group }}</span>
+                      <strong>{{ rule.label }}</strong>
+                      <small>{{ rule.issueCount ? `${rule.issueCount} affected` : `${rule.count} marker${rule.count === 1 ? '' : 's'}` }}</small>
+                    </article>
+                  </div>
                 </div>
                 <div v-if="getRecitationReviewArabic(recitationCheckResult, selfCheckModalVerse)"
                   class="recitation-review-ayah" dir="rtl"
@@ -6934,6 +6986,7 @@ export default {
         transcript: result.transcript,
         targetText: result.targetText,
         wordStatuses: result.wordStatuses,
+        tajweedRules: result.tajweedRules || [],
         recommendation: result.recommendation,
         mistakeBreakdown: result.mistakes,
         reviewMetadata: result.reviewMetadata,
@@ -7765,6 +7818,7 @@ export default {
         transcript: result.transcript || '',
         targetText: result.targetText || this.getRecitationTargetText(targets),
         wordStatuses: result.wordStatuses || [],
+        tajweedRules: result.tajweedRules || [],
         recommendation: result.recommendation || '',
         mistakeBreakdown: result.mistakes || result.mistakeBreakdown || null,
         reviewMetadata: result.reviewMetadata || null,
@@ -8480,10 +8534,248 @@ export default {
         { key: 'incorrect', label: 'Red', value: incorrect + missing + extra, description: 'Words to revisit slowly.', tone: 'tone-review' }
       ]
     },
+    getTajweedRuleCatalog() {
+      return {
+        noon_idhaar: { label: 'Idhaar', group: 'Noon Sakinah & Tanween', order: 10, description: 'Clear noon sakinah or tanween before throat letters.' },
+        noon_idghaam: { label: 'Idghaam', group: 'Noon Sakinah & Tanween', order: 20, description: 'Merged noon sakinah or tanween.' },
+        noon_iqlaab: { label: 'Iqlaab', group: 'Noon Sakinah & Tanween', order: 30, description: 'Noon sakinah or tanween converted before baa.' },
+        noon_ikhfaa: { label: 'Ikhfaa', group: 'Noon Sakinah & Tanween', order: 40, description: 'Hidden noon sakinah or tanween.' },
+        ghunnah: { label: 'Noon & Meem Mushaddad', group: 'Ghunnah', order: 50, description: 'Held nasal sound on noon or meem mushaddad.' },
+        meem_ikhfaa_shafawy: { label: 'Ikhfaa Shafawy', group: 'Meem Sakinah', order: 60, description: 'Hidden meem sakinah before baa.' },
+        meem_idghaam_shafawy: { label: 'Idghaam Shafawy', group: 'Meem Sakinah', order: 70, description: 'Merged meem sakinah before meem.' },
+        meem_izhaar_shafawy: { label: 'Izhaar Shafawy', group: 'Meem Sakinah', order: 80, description: 'Clear meem sakinah before other letters.' },
+        qalqalah: { label: 'Qalqalah', group: 'Qalqalah', order: 90, description: 'Echoing articulation on qalqalah letters.' },
+        madd_two: { label: 'Two Beat Madd', group: 'Al-Madd', order: 100, description: 'Natural two-count elongation.' },
+        madd_flexible: { label: 'Flexible Madd', group: 'Al-Madd', order: 110, description: 'Madd that may be held two, four, or six counts.' },
+        madd_four: { label: 'Four Beat Madd', group: 'Al-Madd', order: 120, description: 'Required four-count elongation.' },
+        madd_six: { label: 'Six Beat Madd', group: 'Al-Madd', order: 130, description: 'Required six-count elongation.' },
+        quranic_symbols: { label: 'Quranic Symbols', group: 'Mushaf marks', order: 140, description: 'Hamzatul-wasl, silent marks, small letters, or stopping symbols affecting reading.' }
+      }
+    },
+    getTajweedClassRuleKey(className) {
+      const key = String(className || '').replace(/^tajweed-/, '')
+      const map = {
+        ham_wasl: 'quranic_symbols',
+        slnt: 'quranic_symbols',
+        madda_normal: 'madd_two',
+        madda_permissible: 'madd_flexible',
+        madda_obligatory: 'madd_four',
+        madda_pbligatory: 'madd_four',
+        madda_necessary: 'madd_six',
+        qlq: 'qalqalah',
+        lqlq: 'qalqalah',
+        ikhf_shfw: 'meem_ikhfaa_shafawy',
+        ikhf: 'noon_ikhfaa',
+        idghm_shfw: 'meem_idghaam_shafawy',
+        idgh_shfw: 'meem_idghaam_shafawy',
+        iqlb: 'noon_iqlaab',
+        idgh_ghn: 'noon_idghaam',
+        idgh_w_ghn: 'noon_idghaam',
+        idgh_mus: 'noon_idghaam',
+        ghn: 'ghunnah'
+      }
+      return map[key] || ''
+    },
+    extractTajweedRuleUnits(node, inheritedRules = []) {
+      if (!node) return []
+      if (node.nodeType === 3) {
+        return Array.from(node.textContent || '').map(char => ({
+          text: char,
+          rules: [...new Set(inheritedRules)]
+        }))
+      }
+      if (node.nodeType !== 1) return []
+      const ownRules = Array.from(node.classList || [])
+        .map(className => this.getTajweedClassRuleKey(className))
+        .filter(Boolean)
+      const rules = [...new Set([...inheritedRules, ...ownRules])]
+      return Array.from(node.childNodes || []).flatMap(child => this.extractTajweedRuleUnits(child, rules))
+    },
+    extractMarkedTajweedRuleOccurrencesForVerse(verse, wordOffset = 0) {
+      if (!verse?.arabic_tajweed || typeof document === 'undefined') return []
+      const tempDiv = document.createElement('div')
+      tempDiv.innerHTML = this.normalizeTajweedMarkup(verse.arabic_tajweed)
+      const units = Array.from(tempDiv.childNodes).flatMap(node => this.extractTajweedRuleUnits(node))
+      const words = this.tokenizeRecitationDisplayWords(this.getPlainVerseArabicForCheck(verse))
+      const occurrences = []
+      let cursor = 0
+
+      words.forEach((word, wordIndex) => {
+        while (cursor < units.length && /^\s$/.test(units[cursor].text || '')) cursor += 1
+        const targetChars = Array.from(this.normalizeArabicForRecitation(word)).filter(char => this.isArabicBaseLetterForTajweed(char))
+        const ruleKeys = new Set()
+        let collected = 0
+
+        while (cursor < units.length && collected < targetChars.length) {
+          const unit = units[cursor]
+          cursor += 1
+          if (/^\s$/.test(unit.text || '')) continue
+          ;(unit.rules || []).forEach(rule => ruleKeys.add(rule))
+          if (this.isArabicBaseLetterForTajweed(unit.text)) collected += 1
+        }
+
+        ruleKeys.forEach(ruleKey => {
+          occurrences.push({
+            ruleKey,
+            verseKey: verse.key,
+            wordIndex,
+            globalWordIndex: wordOffset + wordIndex,
+            word
+          })
+        })
+      })
+
+      return occurrences
+    },
+    getFirstArabicBaseLetter(word) {
+      const match = String(word || '').match(/[\u0621-\u064A\u0671]/u)
+      return match ? match[0] : ''
+    },
+    getNoonTanweenRuleKey(word, nextWord) {
+      const current = String(word || '')
+      const hasNoonSakinah = /ن[\u0652ْ]/u.test(current)
+      const hasTanween = /[\u064B-\u064D]/u.test(current)
+      if (!hasNoonSakinah && !hasTanween) return ''
+      const sameWordNext = current.match(/ن[\u0652ْ][\u0610-\u061A\u064B-\u065F\u0670]*([\u0621-\u064A\u0671])/u)?.[1] || ''
+      const nextLetter = sameWordNext || this.getFirstArabicBaseLetter(nextWord)
+      if (!nextLetter) return ''
+      if (/[ءأإآؤئههعحغخ]/u.test(nextLetter)) return 'noon_idhaar'
+      if (/ب/u.test(nextLetter)) return 'noon_iqlaab'
+      if (/[يرملون]/u.test(nextLetter)) return 'noon_idghaam'
+      if (/[تثجدذزسشصضطظفقك]/u.test(nextLetter)) return 'noon_ikhfaa'
+      return ''
+    },
+    getMeemSakinahRuleKey(word, nextWord) {
+      const current = String(word || '')
+      if (!/م[\u0652ْ]/u.test(current)) return ''
+      const sameWordNext = current.match(/م[\u0652ْ][\u0610-\u061A\u064B-\u065F\u0670]*([\u0621-\u064A\u0671])/u)?.[1] || ''
+      const nextLetter = sameWordNext || this.getFirstArabicBaseLetter(nextWord)
+      if (!nextLetter) return ''
+      if (/ب/u.test(nextLetter)) return 'meem_ikhfaa_shafawy'
+      if (/م/u.test(nextLetter)) return 'meem_idghaam_shafawy'
+      return 'meem_izhaar_shafawy'
+    },
+    extractHeuristicTajweedRuleOccurrencesForVerse(verse, wordOffset = 0) {
+      const rawText = this.stripTajweedMarkup(verse?.arabic_tajweed || verse?.arabic || '')
+      const rawWords = rawText ? rawText.split(/\s+/).filter(Boolean) : []
+      const displayWords = this.tokenizeRecitationDisplayWords(this.getPlainVerseArabicForCheck(verse))
+      const count = Math.max(rawWords.length, displayWords.length)
+      const occurrences = []
+      const addRule = (ruleKey, index) => {
+        if (!ruleKey) return
+        occurrences.push({
+          ruleKey,
+          verseKey: verse.key,
+          wordIndex: index,
+          globalWordIndex: wordOffset + index,
+          word: displayWords[index] || this.cleanRecitationDisplayText(rawWords[index] || '')
+        })
+      }
+
+      for (let index = 0; index < count; index += 1) {
+        const word = rawWords[index] || displayWords[index] || ''
+        const nextWord = rawWords[index + 1] || displayWords[index + 1] || ''
+        addRule(this.getNoonTanweenRuleKey(word, nextWord), index)
+        addRule(this.getMeemSakinahRuleKey(word, nextWord), index)
+        if (/[نم][\u0610-\u061A\u064B-\u065F\u0670]*[\u0651ّ]/u.test(word)) addRule('ghunnah', index)
+        if (/[قطبجد][\u0610-\u061A\u064B-\u065F\u0670]*[\u0652ْ]/u.test(word)) addRule('qalqalah', index)
+        if (/[\u0670\u06D6-\u06EDٱۥۦ]/u.test(word)) addRule('quranic_symbols', index)
+      }
+
+      return occurrences
+    },
+    extractTajweedRuleOccurrencesForVerse(verse, wordOffset = 0) {
+      const occurrences = [
+        ...this.extractMarkedTajweedRuleOccurrencesForVerse(verse, wordOffset),
+        ...this.extractHeuristicTajweedRuleOccurrencesForVerse(verse, wordOffset)
+      ]
+      const seen = new Set()
+      return occurrences.filter(item => {
+        const signature = `${item.ruleKey}:${item.globalWordIndex}`
+        if (seen.has(signature)) return false
+        seen.add(signature)
+        return true
+      })
+    },
+    buildRecitationTajweedReview(targetVerses = [], wordStatuses = []) {
+      const catalog = this.getTajweedRuleCatalog()
+      const verses = Array.isArray(targetVerses) ? targetVerses.filter(Boolean) : []
+      const statuses = Array.isArray(wordStatuses) ? wordStatuses : []
+      const grouped = new Map()
+      let wordOffset = 0
+
+      verses.forEach(verse => {
+        const words = this.tokenizeRecitationDisplayWords(this.getPlainVerseArabicForCheck(verse))
+        this.extractTajweedRuleOccurrencesForVerse(verse, wordOffset).forEach(item => {
+          if (!catalog[item.ruleKey]) return
+          if (!grouped.has(item.ruleKey)) {
+            grouped.set(item.ruleKey, {
+              key: item.ruleKey,
+              ...catalog[item.ruleKey],
+              count: 0,
+              issueCount: 0,
+              issueWords: []
+            })
+          }
+          const entry = grouped.get(item.ruleKey)
+          const status = statuses[item.globalWordIndex]?.status || ''
+          const isIssue = status && status !== 'correct'
+          entry.count += 1
+          if (isIssue) {
+            entry.issueCount += 1
+            if (item.word) entry.issueWords.push(item.word)
+          }
+        })
+        wordOffset += words.length
+      })
+
+      return Array.from(grouped.values())
+        .map(item => ({
+          ...item,
+          issueWords: [...new Set(item.issueWords)].slice(0, 4),
+          tone: item.issueCount ? 'tone-review' : 'tone-excellent'
+        }))
+        .sort((left, right) => (left.order || 999) - (right.order || 999))
+    },
+    getRecitationTargetVersesForResult(result = null) {
+      const keys = Array.isArray(result?.ayahRange?.keys) ? result.ayahRange.keys : []
+      const pool = [...(this.mushafDisplayVerses || []), ...(this.verses || [])]
+      if (keys.length) {
+        return keys
+          .map(key => pool.find(verse => verse?.key === key))
+          .filter(Boolean)
+      }
+      const resultKey = result?.ayahKey || result?.selectedAyah?.key || ''
+      if (resultKey) {
+        const match = pool.find(verse => verse?.key === resultKey)
+        if (match) return [match]
+      }
+      if (this.recitationCheckPendingTargets?.length) return this.recitationCheckPendingTargets
+      if (this.aiMemorisationCheckerTargets?.length) return this.aiMemorisationCheckerTargets
+      const verse = this.getVerseForRecitationReview(result, this.selfCheckModalVerse)
+      return verse ? [verse] : []
+    },
+    getRecitationTajweedSummary(result = null) {
+      if (Array.isArray(result?.tajweedRules)) return result.tajweedRules
+      const targets = this.getRecitationTargetVersesForResult(result)
+      return this.buildRecitationTajweedReview(targets, this.getRecitationWordStatuses(result || {}))
+    },
+    getRecitationTajweedSummaryLabel(result = null) {
+      const rules = this.getRecitationTajweedSummary(result)
+      const issueCount = rules.reduce((sum, rule) => sum + Number(rule.issueCount || 0), 0)
+      if (issueCount) return `${issueCount} rule-linked issue${issueCount === 1 ? '' : 's'}`
+      const markerCount = rules.reduce((sum, rule) => sum + Number(rule.count || 0), 0)
+      return `${markerCount} checked marker${markerCount === 1 ? '' : 's'}`
+    },
     getRecitationNextStep(result) {
       const mistakes = result?.mistakeBreakdown || result?.mistakes || {}
       const reviewCount = (mistakes.incorrect?.length || 0) + (mistakes.missing?.length || 0)
       const extraCount = mistakes.extra?.length || 0
+      const tajweedIssues = this.getRecitationTajweedSummary(result).filter(rule => rule.issueCount).slice(0, 2)
+      if (reviewCount && tajweedIssues.length) {
+        const labels = tajweedIssues.map(rule => rule.label).join(' and ')
+        return `Focus on ${reviewCount} highlighted word${reviewCount === 1 ? '' : 's'} and apply the ${labels} rule${tajweedIssues.length === 1 ? '' : 's'} on the affected section before retrying.`
+      }
       if (reviewCount) return `Focus on ${reviewCount} highlighted word${reviewCount === 1 ? '' : 's'} in the ayah display, replay the ayah once, then run another Recite Check.`
       if (extraCount) return 'Slow the pace and remove the extra wording before checking again.'
       if (Number(result?.accuracyScore || 0) >= 100) return 'Save the attempt, then recite it once more without looking before moving on.'
@@ -8509,6 +8801,7 @@ export default {
       const correctScore = wordStatuses.filter(word => word.status === 'correct').length
       const extraPenalty = (mistakes.extra.length || 0) * 0.25
       const accuracyScore = Math.max(0, Math.min(100, Math.round(((correctScore - extraPenalty) / targetCount) * 100)))
+      const tajweedRules = this.buildRecitationTajweedReview(targetVerses, wordStatuses)
 
       return {
         id: `recitation-${Date.now()}`,
@@ -8518,8 +8811,9 @@ export default {
         accuracyScore,
         mistakes,
         wordStatuses,
+        tajweedRules,
         recommendation: this.getRecitationRecommendation(accuracyScore, mistakes),
-        reviewMetadata: this.buildRecitationReviewMetadata(accuracyScore, mistakes)
+        reviewMetadata: this.buildRecitationReviewMetadata(accuracyScore, mistakes, tajweedRules)
       }
     },
     getRecitationRecommendation(score, mistakes) {
@@ -8535,17 +8829,22 @@ export default {
       if (score >= 85) return 'Mostly clean. Recheck once before saving.'
       return 'Replay the ayah once, recite without looking, then run another Recite Check.'
     },
-    buildRecitationReviewMetadata(score, mistakes) {
+    buildRecitationReviewMetadata(score, mistakes, tajweedRules = []) {
       const issueCount = mistakes.missing.length + mistakes.extra.length + mistakes.incorrect.length + (mistakes.partial?.length || 0)
-      const intervalDays = score >= 100 && issueCount === 0 ? 7 : score >= 85 ? 3 : 1
+      const tajweedIssueCount = Array.isArray(tajweedRules)
+        ? tajweedRules.reduce((sum, rule) => sum + Number(rule.issueCount || 0), 0)
+        : 0
+      const totalIssueCount = issueCount + tajweedIssueCount
+      const intervalDays = score >= 100 && totalIssueCount === 0 ? 7 : score >= 85 ? 3 : 1
       const dueAt = new Date()
       dueAt.setDate(dueAt.getDate() + intervalDays)
       return {
-        priority: score >= 100 && issueCount === 0 ? 'low' : score >= 85 ? 'medium' : 'high',
+        priority: score >= 100 && totalIssueCount === 0 ? 'low' : score >= 85 ? 'medium' : 'high',
         intervalDays,
         dueAt: dueAt.toISOString(),
-        mistakeCount: issueCount,
-        reason: score >= 100 && issueCount === 0 ? 'high-accuracy' : score >= 85 ? 'partial-review' : 'needs-review'
+        mistakeCount: totalIssueCount,
+        tajweedIssueCount,
+        reason: score >= 100 && totalIssueCount === 0 ? 'high-accuracy' : score >= 85 ? 'partial-review' : 'needs-review'
       }
     },
     mutqinSessionsStorageKey() {
@@ -8591,6 +8890,7 @@ export default {
         accuracyScore: result.accuracyScore,
         mistakeBreakdown: result.mistakes,
         wordStatuses: result.wordStatuses,
+        tajweedRules: result.tajweedRules || [],
         reviewMetadata: result.reviewMetadata,
         audioSrc: result.audioSrc || ''
       }
@@ -32934,7 +33234,7 @@ button:active {
 
 .self-check-modal .self-check-modal-ayah {
   min-height: 270px !important;
-  display: flex !important;
+  padding-bottom:20px;
   align-items: center !important;
   justify-content: center !important;
   padding: 20px !important;
@@ -33974,10 +34274,123 @@ button:active {
   color: var(--text);
 }
 
+.recitation-tajweed-panel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--border) 86%, #2f6f58 14%);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-strong) 92%, #2f6f58 8%);
+}
+
+.recitation-tajweed-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.recitation-tajweed-head div {
+  display: grid;
+  gap: 3px;
+}
+
+.recitation-tajweed-head span,
+.recitation-tajweed-chip span {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.recitation-tajweed-head strong {
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.recitation-tajweed-head small {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border: 1px solid rgba(47, 111, 88, 0.18);
+  border-radius: 999px;
+  background: rgba(47, 111, 88, 0.1);
+  color: #2f6f58;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.recitation-tajweed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.recitation-tajweed-chip {
+  display: grid;
+  gap: 4px;
+  min-height: 82px;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.recitation-tajweed-chip strong {
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.18;
+}
+
+.recitation-tajweed-chip small {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+.recitation-tajweed-chip.tone-excellent {
+  border-color: rgba(47, 111, 88, 0.22);
+  background: rgba(47, 111, 88, 0.07);
+}
+
+.recitation-tajweed-chip.tone-review {
+  border-color: rgba(177, 63, 50, 0.26);
+  background: rgba(177, 63, 50, 0.09);
+}
+
+.recitation-tajweed-chip.tone-review strong,
+.recitation-tajweed-chip.tone-review small {
+  color: #9f3429;
+}
+
+.recording-tajweed-panel {
+  padding: 12px;
+}
+
+[data-theme="dark"] .recitation-tajweed-panel {
+  background: rgba(47, 111, 88, 0.08);
+  border-color: rgba(107, 199, 155, 0.2);
+}
+
+[data-theme="dark"] .recitation-tajweed-head small {
+  background: rgba(107, 199, 155, 0.12);
+  border-color: rgba(107, 199, 155, 0.26);
+  color: #d9f7e7;
+}
+
+[data-theme="dark"] .recitation-tajweed-chip {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] .recitation-tajweed-chip.tone-review strong,
+[data-theme="dark"] .recitation-tajweed-chip.tone-review small {
+  color: #ffc6bc;
+}
+
 .self-check-modal .self-check-modal-ayah,
 .memorisation-checker-modal .memorisation-checker-ayah {
-  max-height: min(48dvh, 460px) !important;
-  overflow: auto !important;
+  
 }
 
 .memorisation-checker-modal .memorisation-checker-body {
@@ -33996,6 +34409,10 @@ button:active {
 
   .memorisation-checker-modal .memorisation-checker-body {
     grid-template-columns: 1fr !important;
+  }
+
+  .recitation-tajweed-head {
+    display: grid;
   }
 }
 
