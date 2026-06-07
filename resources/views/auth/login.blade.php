@@ -54,9 +54,16 @@
                                     <span data-i18n="login">{{ __('ui.login') }}</span>
                                 </button>
 
-                                <!-- Google Sign In Button -->
-                                <a href="{{ route('auth.google.redirect') }}" class="btn btn-outline-danger w-100 mt-2">
-                                    <i class="fab fa-google"></i> <span data-i18n="continueGoogle">{{ __('ui.continue_google') }}</span>
+                                <a href="{{ route('auth.google.redirect') }}" class="auth-google-btn" aria-label="{{ __('ui.continue_google') }}">
+                                    <picture class="auth-google-btn__picture">
+                                        <source media="(prefers-color-scheme: dark)" srcset="{{ asset('images/btn_google_signin_dark_normal_web.png') }}">
+                                        <img
+                                            src="{{ asset('images/btn_google_signin_light_normal_web.png') }}"
+                                            alt="{{ __('ui.continue_google') }}"
+                                            class="auth-google-btn__image"
+                                            loading="lazy"
+                                        >
+                                    </picture>
                                 </a>
 
                                 @if (Route::has('password.request'))

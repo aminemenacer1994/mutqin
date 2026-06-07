@@ -68,16 +68,16 @@ Route::post('/logout', function () {
 
 // Public routes
 Route::get('/', function () {
-    if (Auth::check()) {
-        return redirect()->route('memorisation');
-    }
-
     return view('home');
 })->name('home');
 
 Route::get('/onboarding', function () {
     return redirect()->route('home');
 })->name('onboarding.page');
+
+Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
+Route::post('/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
+Route::get('/billing/success', [BillingController::class, 'success'])->name('billing.success');
 
 Route::get('/memorisation', function () {
     return view('memorisation');
@@ -202,9 +202,6 @@ Route::post('/memorisation/recitation-check/transcribe', function (Request $requ
 // Protected routes (require authentication)
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\HomeController::class, 'index'])->name('dashboard');
-    Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
-    Route::post('/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
-    Route::get('/billing/success', [BillingController::class, 'success'])->name('billing.success');
     Route::post('/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
     Route::get('/memorisation/sync-state', [MemorisationSyncController::class, 'show'])->name('memorisation.sync.show');
     Route::put('/memorisation/sync-state', [MemorisationSyncController::class, 'update'])->name('memorisation.sync.update');

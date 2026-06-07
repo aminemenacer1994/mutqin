@@ -10,8 +10,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ __('ui.app_title') }}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" media="(prefers-color-scheme: dark)">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
@@ -164,23 +165,38 @@
 
         .nav-link {
             padding: 10px 20px;
-            border-radius: 12px;
+            border-radius: 0;
             font-weight: 500;
             font-size: var(--text-sm);
             color: var(--text-muted);
             transition: all 0.2s ease;
             text-decoration: none;
+            background: transparent;
+            position: relative;
         }
 
         .nav-link:hover {
             color: var(--accent);
-            background: var(--accent-light);
+            background: transparent;
         }
 
         .nav-link.active {
             color: var(--accent);
-            background: var(--accent-light);
+            background: transparent;
             font-weight: 600;
+        }
+
+        .nav-link.active::after,
+        .nav-link:hover::after {
+            content: '';
+            position: absolute;
+            left: 20px;
+            right: 20px;
+            bottom: 4px;
+            height: 2px;
+            background: var(--accent);
+            border-radius: 999px;
+            opacity: 0.7;
         }
 
         .app-navbar-actions {
@@ -663,6 +679,12 @@
             border: 1px solid rgba(178, 59, 59, 0.2);
         }
 
+        .billing-alert-info {
+            background: var(--accent-light);
+            color: var(--accent-strong);
+            border: 1px solid rgba(154, 103, 56, 0.18);
+        }
+
         .billing-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -680,6 +702,11 @@
         .billing-card-featured {
             border-color: var(--accent);
             box-shadow: var(--shadow-md);
+        }
+
+        .billing-card-selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light), var(--shadow-md);
         }
 
         .billing-pill {
@@ -779,6 +806,10 @@
             margin-top: 8px;
         }
 
+        .billing-plan-selected-action {
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
         @media (max-width: 900px) {
             .billing-confirmation {
                 flex-direction: column;
@@ -824,8 +855,7 @@
 
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <div class="navbar-nav nav-links-desktop me-auto">
-                    <!-- <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="/">Home</a>
-                    <a class="nav-link {{ request()->is('memorisation') ? 'active' : '' }}" href="/memorisation">Memorisation</a> -->
+                    <a class="nav-link nav-link-home {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Home</a>
                 </div>
 
                 <div class="d-flex align-items-center gap-3 ms-auto app-navbar-actions">
@@ -857,12 +887,6 @@
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li> -->
-                                <li>
-                                    <a class="dropdown-item" href="{{ route('billing.index') }}" role="menuitem">
-                                        <i class="bi bi-credit-card" aria-hidden="true"></i> Billing
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form method="POST" action="{{ route('logout') }}" id="logoutForm">
                                         @csrf

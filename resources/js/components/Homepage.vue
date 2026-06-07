@@ -1,16 +1,6 @@
 <template>
     <div class="vue-onboarding" :data-theme="currentTheme">
-      <!-- Quran Ticker -->
-      <div class="verse-ticker">
-        <div class="ticker-track">
-          <span>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</span>
-          <span>وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا</span>
-          <span>إِنَّا نَحْنُ نَزَّلْنَا الذِّكْرَ وَإِنَّا لَهُ لَحَافِظُونَ</span>
-          <span>اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ</span>
-          <span>رَبِّ زِدْنِي عِلْمًا</span>
-          <span>وَأَحْسِنْ تَرْتِيلِي</span>
-        </div>
-      </div>
+     
   
       <!-- Hero Section -->
       <section class="hero">
@@ -19,7 +9,7 @@
             <div class="hero-badge">
               <i class="bi bi-moon-stars"></i> AI-Powered Quran Learning
             </div>
-            <h1 class="hero-title">You recite. But <span>do you know</span> where you're making mistakes?</h1>
+            <h1 class="hero-title"><span>You recite. But do you know where you're making mistakes?</span></h1>
             <p class="hero-desc">Mutqin listens to every letter. Instantly detects tajweed errors. Schedules perfect reviews. No guesswork.</p>
             
             <div class="problem-solution">
@@ -34,12 +24,6 @@
               <button @click="scrollToFeatures" class="btn-secondary"><i class="bi bi-arrow-down"></i> See Features</button>
             </div>
             
-            <div class="hero-stats">
-              <div class="stat-card" v-for="stat in stats" :key="stat.label">
-                <div class="stat-number"><AnimatedCounter :target="stat.value" :duration="2000" />{{ stat.suffix }}</div>
-                <div class="stat-label">{{ stat.label }}</div>
-              </div>
-            </div>
           </div>
           
           <div class="hero-image" data-aos="fade-left">
@@ -65,13 +49,18 @@
       <!-- Features Section -->
       <section id="features" class="features-section" ref="featuresSection">
         <div class="section-container">
+          <div class="section-kicker"><i class="bi bi-soundwave"></i> Built for daily recitation</div>
           <h2 class="section-title">Everything you need to master recitation</h2>
-          <p class="section-subtitle">Clear tools. Real AI feedback. Zero fluff.</p>
+          <p class="section-subtitle">From first recording to long-term revision, each tool closes a real feedback gap.</p>
           <div class="features-grid">
             <div class="feature-card" v-for="feature in features" :key="feature.title" data-aos="zoom-in">
-              <div class="feature-icon"><i :class="feature.icon"></i></div>
-              <h3>{{ feature.title }} <span :class="['feature-badge', feature.badgeType]">{{ feature.badge }}</span></h3>
+              <div class="feature-topline">
+                <div class="feature-icon"><i :class="feature.icon"></i></div>
+                <span :class="['feature-badge', feature.badgeType]">{{ feature.badge }}</span>
+              </div>
+              <h3>{{ feature.title }}</h3>
               <p>{{ feature.description }}</p>
+              <strong>{{ feature.result }}</strong>
             </div>
           </div>
         </div>
@@ -80,15 +69,20 @@
       <div class="divider"><i class="bi bi-star-fill"></i> ۞ <i class="bi bi-star-fill"></i></div>
   
       <!-- How It Works -->
-      <section id="how-it-works">
+      <section id="how-it-works" class="steps-section">
         <div class="section-container">
+          <div class="section-kicker"><i class="bi bi-route"></i> The practice loop</div>
           <h2 class="section-title">Three steps to fluent recitation</h2>
+          <p class="section-subtitle">A short loop you can repeat every day: recite, diagnose, review exactly what needs work.</p>
           <div class="steps-grid">
             <div class="step-card" v-for="(step, idx) in steps" :key="idx" data-aos="flip-up" :data-aos-delay="idx * 100">
-              <div class="step-number">{{ idx + 1 }}</div>
-              <i :class="step.icon" class="step-icon"></i>
+              <div class="step-head">
+                <div class="step-number">0{{ idx + 1 }}</div>
+                <i :class="step.icon" class="step-icon"></i>
+              </div>
               <h3>{{ step.title }}</h3>
               <p>{{ step.description }}</p>
+              <span>{{ step.microcopy }}</span>
             </div>
           </div>
         </div>
@@ -99,11 +93,19 @@
       <!-- Testimonials -->
       <section id="testimonials" class="testimonials-section">
         <div class="section-container">
-          <h2 class="section-title">Trusted by thousands</h2>
+          <div class="section-kicker"><i class="bi bi-chat-heart"></i> Real learning signals</div>
+          <h2 class="section-title">Trusted by focused students and teachers</h2>
           <div class="testimonials-grid">
             <div class="testimonial-card" v-for="(testimonial, idx) in testimonials" :key="idx" data-aos="fade-up" :data-aos-delay="idx * 100">
-              <i class="bi bi-chat-quote-fill"></i>
+              <div class="testimonial-rating">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+              </div>
               <p>"{{ testimonial.quote }}"</p>
+              <div class="testimonial-proof">{{ testimonial.proof }}</div>
               <div class="testimonial-author">
                 <div class="author-avatar">{{ testimonial.initials }}</div>
                 <div class="author-info">
@@ -121,25 +123,29 @@
       <!-- Pricing Section -->
       <section id="pricing" class="pricing-section" ref="pricingSection">
         <div class="section-container">
+          <div class="section-kicker"><i class="bi bi-credit-card-2-front"></i> Pricing that scales with practice</div>
           <h2 class="section-title">Simple, transparent pricing</h2>
-          <p class="section-subtitle">Start free. Upgrade when you want deeper memorisation tools.</p>
+          <p class="section-subtitle">Start free. Upgrade only when you need deeper recitation feedback, history, and coaching tools.</p>
           <div class="pricing-grid">
             <!-- Freemium Plan -->
             <div class="pricing-card" data-aos="flip-right">
+              <div class="plan-label">Starter</div>
               <div class="pricing-icon"><i class="bi bi-flower1"></i></div>
               <h3>Free</h3>
               <div class="price">£0</div>
+              <p class="pricing-alt">For trying the workflow</p>
               <ul class="pricing-features">
                 <li v-for="feature in freeFeatures" :key="feature">
                   <i class="bi bi-check-circle-fill"></i>
                   {{ feature }}
                 </li>
               </ul>
-              <a href="/register" class="btn-secondary">Start Free <i class="bi bi-arrow-right"></i></a>
+              <a href="/billing?plan=free" class="btn-secondary">Start Free <i class="bi bi-arrow-right"></i></a>
             </div>
             <!-- Premium Plan -->
             <div class="pricing-card featured" data-aos="flip-left">
               <div class="featured-tag"><i class="bi bi-gift-fill"></i> 7-DAY FREE TRIAL</div>
+              <div class="plan-label">Most useful</div>
               <div class="pricing-icon"><i class="bi bi-stars"></i></div>
               <h3>Premium</h3>
               <div class="price">£2.99 <span>/month</span></div>
@@ -149,11 +155,15 @@
                   <i class="bi bi-check-circle-fill"></i> {{ feature }}
                 </li>
               </ul>
-              <a href="/register" class="btn-primary">Try Premium <i class="bi bi-gift-fill"></i></a>
+              <div class="pricing-actions">
+                <a href="/billing?plan=premium_monthly" class="btn-primary">Monthly <i class="bi bi-gift-fill"></i></a>
+                <a href="/billing?plan=premium_yearly" class="btn-secondary">Yearly <i class="bi bi-calendar-check"></i></a>
+              </div>
             </div>
             <!-- Pro Plan -->
             <div class="pricing-card" data-aos="flip-left">
               <div class="featured-tag"><i class="bi bi-gift-fill"></i> 7-DAY FREE TRIAL</div>
+              <div class="plan-label">Teacher-ready</div>
               <div class="pricing-icon"><i class="bi bi-gem"></i></div>
               <h3>Pro</h3>
               <div class="price">£5.99 <span>/month</span></div>
@@ -163,7 +173,37 @@
                   <i class="bi bi-check-circle-fill"></i> {{ feature }}
                 </li>
               </ul>
-              <a href="/register" class="btn-secondary">Try Pro <i class="bi bi-arrow-right"></i></a>
+              <div class="pricing-actions">
+                <a href="/billing?plan=pro_monthly" class="btn-primary">Monthly <i class="bi bi-gem"></i></a>
+                <a href="/billing?plan=pro_yearly" class="btn-secondary">Yearly <i class="bi bi-calendar-check"></i></a>
+              </div>
+            </div>
+          </div>
+
+          <div class="pricing-comparison">
+            <div class="comparison-header">
+              <h3>Feature comparison</h3>
+              <p>Everything included in each subscription at a glance.</p>
+            </div>
+            <div class="comparison-table-wrap">
+              <table class="comparison-table">
+                <thead>
+                  <tr>
+                    <th>Feature</th>
+                    <th>Free</th>
+                    <th>Premium</th>
+                    <th>Pro</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in comparisonRows" :key="row.feature">
+                    <th scope="row">{{ row.feature }}</th>
+                    <td>{{ row.free }}</td>
+                    <td>{{ row.premium }}</td>
+                    <td>{{ row.pro }}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -171,23 +211,15 @@
   
       <!-- CTA Section -->
       <div class="cta-block">
-        <div class="cta-icon"><i class="bi bi-heart-fill"></i></div>
-        <h2>Stop repeating the same mistakes.</h2>
-        <p>Get AI feedback that actually improves your tajweed and memorization — starting today.</p>
-        <a href="/register" class="btn-primary"><i class="bi bi-person-badge"></i> Create Free Account</a>
-      </div>
-  
-      <!-- Theme Switcher -->
-      <div class="theme-switcher">
-        <button @click="setTheme('light')" :class="{ active: currentTheme === 'light' }" aria-label="Light mode">
-          <i class="bi bi-brightness-high-fill"></i>
-        </button>
-        <button @click="setTheme('dark')" :class="{ active: currentTheme === 'dark' }" aria-label="Dark mode">
-          <i class="bi bi-moon-fill"></i>
-        </button>
-        <button @click="setTheme('sepia')" :class="{ active: currentTheme === 'sepia' }" aria-label="Sepia mode">
-          <i class="bi bi-book-half"></i>
-        </button>
+        <div class="cta-copy">
+          <div class="cta-icon"><i class="bi bi-heart-fill"></i></div>
+          <h2>Stop repeating the same mistakes.</h2>
+          <p>Record one verse, see the weak points, and turn them into a review plan before they become habits.</p>
+        </div>
+        <div class="cta-actions">
+          <a href="/register" class="btn-primary"><i class="bi bi-person-badge"></i> Create Free Account</a>
+          <span>No card needed for Free.</span>
+        </div>
       </div>
   
       <!-- Footer - full width, bottom fixed position -->
@@ -239,42 +271,10 @@
   </template>
   
   <script>
-  import { ref, onMounted, onUnmounted } from 'vue';
-  
-  // Animated Counter Component
-  const AnimatedCounter = {
-    props: { target: Number, duration: { type: Number, default: 2000 } },
-    setup(props) {
-      const current = ref(0);
-      let animationId = null;
-      
-      onMounted(() => {
-        const startTime = performance.now();
-        const updateCounter = (now) => {
-          const elapsed = now - startTime;
-          const progress = Math.min(elapsed / props.duration, 1);
-          current.value = Math.floor(progress * props.target);
-          if (progress < 1) {
-            animationId = requestAnimationFrame(updateCounter);
-          } else {
-            current.value = props.target;
-          }
-        };
-        animationId = requestAnimationFrame(updateCounter);
-      });
-      
-      onUnmounted(() => {
-        if (animationId) cancelAnimationFrame(animationId);
-      });
-      
-      return { current };
-    },
-    template: '<span>{{ current }}</span>'
-  };
+  import { ref, onMounted } from 'vue';
   
   export default {
     name: 'OnboardingPage',
-    components: { AnimatedCounter },
     setup() {
       // Theme management
       const currentTheme = ref('light');
@@ -311,12 +311,6 @@
       };
       
       // Data
-      const stats = ref([
-        { value: 15000, suffix: '+', label: 'Active Students' },
-        { value: 94, suffix: '%', label: 'Tajweed Improvement' },
-        { value: 280, suffix: 'k+', label: 'Errors Corrected' }
-      ]);
-      
       const floatingBadges = ref([
         { icon: 'bi bi-check-circle-fill', text: 'Tajweed score: +27%' },
         { icon: 'bi bi-graph-up', text: 'Weak verses auto-scheduled' },
@@ -324,44 +318,70 @@
       ]);
       
       const features = ref([
-        { icon: 'bi bi-mic', title: 'AI Recitation Checker', badge: 'Free', badgeType: '', description: 'Letter-by-letter Tajweed analysis, mistake heatmaps, instant audio feedback. 25 free checks/day.' },
-        { icon: 'bi bi-brain', title: 'Smart Memorization', badge: 'Pro', badgeType: 'pro', description: 'Spaced repetition + forgetting curve AI. Tests weak verses before you forget.' },
-        { icon: 'bi bi-journal-bookmark-fill', title: 'Interactive Mushaf', badge: 'Free', badgeType: '', description: 'Tajweed color-coding, tafsir, transliteration, audio from 5 renowned Qaris.' },
-        { icon: 'bi bi-link', title: 'Memory Linking', badge: 'Pro', badgeType: 'pro', description: 'AI selects anchor/story method based on your retention style.' },
-        { icon: 'bi bi-collection-play', title: 'Personal Library', badge: 'Free (limited)', badgeType: '', description: 'Save last 15 recordings + basic analytics. Pro: unlimited history.' },
-        { icon: 'bi bi-graph-up', title: 'Weakness Analytics', badge: 'Pro', badgeType: 'pro', description: 'Heatmap of recurring errors, rule-based recommendations, monthly progress reports.' }
+        { icon: 'bi bi-mic', title: 'AI Recitation Checker', badge: 'Free', badgeType: '', description: 'Letter-by-letter tajweed analysis with mistake heatmaps and instant audio feedback.', result: '25 daily checks included.' },
+        { icon: 'bi bi-brain', title: 'Smart Memorization', badge: 'Pro', badgeType: 'pro', description: 'Spaced repetition and forgetting-curve planning for weak verses before they fade.', result: 'Review what is due, not everything.' },
+        { icon: 'bi bi-journal-bookmark-fill', title: 'Interactive Mushaf', badge: 'Free', badgeType: '', description: 'Tajweed color-coding, tafsir, transliteration, and audio from renowned qaris.', result: 'Study and recite in one place.' },
+        { icon: 'bi bi-link', title: 'Memory Linking', badge: 'Pro', badgeType: 'pro', description: 'Anchor difficult passages to meaning, rhythm, and personal retention patterns.', result: 'Turn weak spots into cues.' },
+        { icon: 'bi bi-collection-play', title: 'Personal Library', badge: 'Free limited', badgeType: '', description: 'Save recordings and basic analytics so progress is visible over time.', result: 'Pro unlocks unlimited history.' },
+        { icon: 'bi bi-graph-up', title: 'Weakness Analytics', badge: 'Pro', badgeType: 'pro', description: 'See recurring errors by rule, passage, and month with targeted recommendations.', result: 'Know exactly what to fix next.' }
       ]);
       
       const steps = ref([
-        { title: 'Record', description: 'Recite any verse directly in your browser.', icon: 'bi bi-mic' },
-        { title: 'AI Analysis', description: 'Get letter‑level tajweed report within 3 seconds.', icon: 'bi bi-cpu' },
-        { title: 'Fix & Review', description: 'Actionable corrections + smart revision scheduler.', icon: 'bi bi-check2-circle' }
+        { title: 'Record', description: 'Recite any verse directly in your browser.', icon: 'bi bi-mic', microcopy: 'No upload friction' },
+        { title: 'AI Analysis', description: 'Get a letter-level tajweed report within seconds.', icon: 'bi bi-cpu', microcopy: 'Makharij and rule feedback' },
+        { title: 'Fix & Review', description: 'Convert corrections into a smart revision schedule.', icon: 'bi bi-check2-circle', microcopy: 'Weak verses resurface automatically' }
       ]);
       
       const testimonials = ref([
-        { quote: "Mutqin fixed my 'ض' in 2 weeks after 5 years of struggle. Alhamdulillah.", author: "Abdullah Khan", role: "12 Juz Memorized", initials: "AK" },
-        { quote: "Spaced repetition saved my hifdh. I don't forget anymore. Essential for every hafidh.", author: "Fatima El-Sayed", role: "Hafidha in Progress", initials: "FE" },
-        { quote: "As a tajweed teacher, I use Mutqin to track students' weak spots instantly.", author: "Ustadh Hisham", role: "Certified Qari", initials: "UH" }
+        { quote: "Mutqin fixed my 'ض' in 2 weeks after 5 years of struggle. Alhamdulillah.", proof: 'Focused makharij feedback', author: "Abdullah Khan", role: "12 Juz Memorized", initials: "AK" },
+        { quote: "Spaced repetition saved my hifdh. I don't forget anymore. Essential for every hafidh.", proof: 'Daily weak-verse review', author: "Fatima El-Sayed", role: "Hafidha in Progress", initials: "FE" },
+        { quote: "As a tajweed teacher, I use Mutqin to track students' weak spots instantly.", proof: 'Teacher visibility', author: "Ustadh Hisham", role: "Certified Qari", initials: "UH" }
       ]);
       
       const freeFeatures = ref([
-        'Core memorisation planner',
-        'Basic progress tracking',
-        'Limited recitation checks'
+        'Full basic session setup',
+        '3 saved sessions',
+        'Basic analytics',
+        'Focus mode'
       ]);
 
       const premiumFeatures = ref([
-        'Unlimited memorisation planning',
-        'Smart revision support',
-        'Full progress history',
-        '7-day free trial'
+        'Full basic session setup',
+        '5 saved sessions',
+        'Focus mode',
+        'Blurring method',
+        'Chaining method',
+        'Anchor mode',
+        'Basic analytics',
+        'Manual self-assessment recording'
       ]);
       
       const proFeatures = ref([
-        'Advanced recitation workflow',
-        'Detailed analytics',
-        'Priority feature access',
-        '7-day free trial'
+        'Full basic session setup',
+        'Unlimited saved sessions',
+        'All memorisation techniques included',
+        'AI recitation',
+        'AI memorisation checker',
+        'Manual self-assessment recording + self recording',
+        'Advanced analysis',
+        'Download for offline listening'
+      ]);
+
+      const comparisonRows = ref([
+        { feature: 'Full basic session setup', free: '✅', premium: '✅', pro: '✅' },
+        { feature: 'Saved sessions', free: '✅ 3', premium: '✅ 5', pro: '✅ Unlimited' },
+        { feature: 'Basic analytics', free: '✅', premium: '✅', pro: '✅' },
+        { feature: 'Focus mode', free: '✅', premium: '✅', pro: '✅' },
+        { feature: 'Blurring method', free: '❌', premium: '✅', pro: '✅' },
+        { feature: 'Chaining method', free: '❌', premium: '✅', pro: '✅' },
+        { feature: 'Anchor mode', free: '❌', premium: '✅', pro: '✅' },
+        { feature: 'Manual self-assessment recording', free: '❌', premium: '✅', pro: '✅' },
+        { feature: 'All memorisation techniques included', free: '❌', premium: '❌', pro: '✅' },
+        { feature: 'AI recitation', free: '❌', premium: '❌', pro: '✅' },
+        { feature: 'AI memorisation checker', free: '❌', premium: '❌', pro: '✅' },
+        { feature: 'Self recording', free: '❌', premium: '❌', pro: '✅' },
+        { feature: 'Advanced analysis', free: '❌', premium: '❌', pro: '✅' },
+        { feature: 'Download for offline listening', free: '❌', premium: '❌', pro: '✅' }
       ]);
       
       // Intersection Observer for animations
@@ -391,14 +411,14 @@
         pricingSection,
         scrollToFeatures,
         scrollToPricing,
-        stats,
         floatingBadges,
         features,
         steps,
         testimonials,
         freeFeatures,
         premiumFeatures,
-        proFeatures
+        proFeatures,
+        comparisonRows
       };
     }
   };
@@ -509,7 +529,7 @@
     min-height: 100vh;
     display: flex;
     align-items: center;
-    padding: 6rem 2rem 4rem;
+    padding: 6.5rem 2.75rem 4rem;
     position: relative;
     overflow: hidden;
   }
@@ -557,30 +577,33 @@
   }
   
   .hero-title {
-    font-size: 3.5rem;
-    font-weight: 800;
-    line-height: 1.15;
-    margin-bottom: 1.5rem;
-    letter-spacing: -0.03em;
+    font-size: clamp(4.4rem, 8.2vw, 7.6rem);
+    font-weight: 720;
+    line-height: 0.94;
+    margin-bottom: 1.35rem;
+    letter-spacing: -0.065em;
   }
   
   .hero-title span {
-    color: var(--accent);
-    border-bottom: 2px solid var(--accent);
+    background: linear-gradient(135deg, var(--accent-strong), var(--accent) 45%, #d9a86f 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
   
   .hero-desc {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     color: var(--text-muted);
-    margin-bottom: 2rem;
-    line-height: 1.6;
+    margin-bottom: 1.8rem;
+    line-height: 1.75;
+    max-width: 760px;
   }
   
   .problem-solution {
     background: var(--surface);
     border-radius: var(--radius);
-    padding: 1.5rem;
-    margin: 1.5rem 0;
+    padding: 1.25rem;
+    margin: 1.15rem 0 1.25rem;
     border: 1px solid var(--border);
     backdrop-filter: blur(10px);
   }
@@ -612,27 +635,7 @@
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
-  }
-  
-  .hero-stats {
-    display: flex;
-    gap: 2.5rem;
-    margin-top: 2rem;
-    flex-wrap: wrap;
-  }
-  
-  .stat-card .stat-number {
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--accent);
-    line-height: 1.2;
-  }
-  
-  .stat-card .stat-label {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
+    margin-top: 0.2rem;
   }
   
   /* Hero Image */
@@ -641,7 +644,7 @@
   }
   
   .demo-card {
-    background: var(--surface-strong);
+    background: linear-gradient(180deg, var(--surface-strong), var(--surface));
     border-radius: 28px;
     padding: 2rem;
     text-align: center;
@@ -724,18 +727,59 @@
   }
   
   /* Section Styles */
+  .features-section,
+  .steps-section,
+  .pricing-section {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .features-section::before,
+  .pricing-section::before {
+    content: '';
+    position: absolute;
+    width: 420px;
+    height: 420px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--accent-light), transparent 70%);
+    top: 12%;
+    right: -160px;
+    pointer-events: none;
+  }
+
   .section-container {
     max-width: 1280px;
     margin: 0 auto;
-    padding: 4rem 2rem;
+    padding: 4.8rem 2.75rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .section-kicker {
+    width: fit-content;
+    margin: 0 auto 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--accent-light);
+    color: var(--accent-strong);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.45rem 1rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
   
   .section-title {
     text-align: center;
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
+    font-size: clamp(2rem, 3vw, 3.1rem);
+    font-weight: 760;
+    margin-bottom: 0.85rem;
     color: var(--text);
+    letter-spacing: -0.04em;
+    line-height: 1.08;
   }
   
   .section-title::before,
@@ -751,36 +795,87 @@
   .section-subtitle {
     text-align: center;
     color: var(--text-muted);
-    margin-bottom: 3rem;
+    margin-bottom: 2.6rem;
     font-size: 1.1rem;
+    max-width: 680px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.65;
   }
   
   /* Features Grid */
   .features-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
-    gap: 2rem;
+    gap: 1.6rem;
   }
   
   .feature-card {
-    background: var(--surface);
-    backdrop-filter: blur(4px);
-    border-radius: var(--radius);
+    background: linear-gradient(145deg, var(--surface-strong), var(--surface));
+    backdrop-filter: blur(8px);
+    border-radius: 30px;
     padding: 2rem;
     border: 1px solid var(--border);
     transition: all 0.3s ease;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .feature-card::after {
+    content: '';
+    position: absolute;
+    inset: auto 1.4rem 1.4rem 1.4rem;
+    height: 4px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    opacity: 0.35;
   }
   
   .feature-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-6px);
     border-color: var(--accent);
     box-shadow: var(--shadow-md);
   }
+
+  .feature-topline {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.7rem;
+  }
   
   .feature-icon {
-    font-size: 2.5rem;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 22px;
+    background: var(--accent-light);
+    font-size: 2rem;
     color: var(--accent);
-    margin-bottom: 1.2rem;
+  }
+
+  .feature-card h3 {
+    font-size: 1.35rem;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.02em;
+  }
+
+  .feature-card p {
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+  }
+
+  .feature-card strong {
+    margin-top: auto;
+    color: var(--accent-strong);
+    font-size: 0.9rem;
   }
   
   .feature-badge {
@@ -800,20 +895,28 @@
   }
   
   /* Steps Grid */
+  .steps-section {
+    background:
+      linear-gradient(90deg, transparent 0 31%, var(--border) 31% 31.2%, transparent 31.2% 65%, var(--border) 65% 65.2%, transparent 65.2%),
+      var(--bg);
+  }
+
   .steps-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
+    gap: 1.6rem;
     margin-top: 2rem;
   }
   
   .step-card {
-    text-align: center;
-    padding: 1.5rem;
-    background: var(--surface);
-    border-radius: var(--radius);
+    text-align: left;
+    padding: 2rem;
+    background: var(--surface-strong);
+    border-radius: 30px;
     border: 1px solid var(--border);
     transition: all 0.3s ease;
+    min-height: 260px;
+    box-shadow: var(--shadow-sm);
   }
   
   .step-card:hover {
@@ -822,56 +925,105 @@
     box-shadow: var(--shadow-md);
   }
   
-  .step-number {
-    width: 72px;
-    height: 72px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-    border-radius: 72px;
+  .step-head {
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 2rem;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+
+  .step-number {
+    font-size: 3rem;
     font-weight: 800;
-    color: white;
-    margin: 0 auto 1rem;
-    box-shadow: var(--shadow-md);
+    color: var(--accent);
+    letter-spacing: -0.07em;
+    opacity: 0.35;
   }
   
   .step-icon {
-    font-size: 2rem;
+    width: 58px;
+    height: 58px;
+    border-radius: 20px;
+    background: var(--accent-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
     color: var(--accent);
-    margin: 0.5rem 0;
-    display: inline-block;
+  }
+
+  .step-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.7rem;
+  }
+
+  .step-card p {
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 1.3rem;
+  }
+
+  .step-card span {
+    display: inline-flex;
+    border-top: 1px solid var(--border);
+    padding-top: 0.9rem;
+    color: var(--accent-strong);
+    font-size: 0.85rem;
+    font-weight: 700;
   }
   
   /* Testimonials */
   .testimonials-section {
-    background: var(--accent-wash);
+    background:
+      linear-gradient(135deg, var(--accent-wash), transparent 58%),
+      var(--bg);
   }
   
   .testimonials-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
+    gap: 1.6rem;
   }
   
   .testimonial-card {
     background: var(--surface-strong);
-    border-radius: var(--radius);
+    border-radius: 30px;
     padding: 2rem;
     border: 1px solid var(--border);
     transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
   }
   
-  .testimonial-card i {
-    font-size: 2rem;
+  .testimonial-rating {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .testimonial-rating i {
+    font-size: 0.95rem;
     color: var(--accent);
-    opacity: 0.6;
   }
   
   .testimonial-card:hover {
     transform: translateY(-3px);
     box-shadow: var(--shadow-md);
+  }
+
+  .testimonial-card > p {
+    font-size: 1.05rem;
+    line-height: 1.65;
+  }
+
+  .testimonial-proof {
+    width: fit-content;
+    margin-top: 1.1rem;
+    border-radius: 999px;
+    padding: 0.35rem 0.8rem;
+    background: var(--accent-light);
+    color: var(--accent-strong);
+    font-size: 0.75rem;
+    font-weight: 800;
   }
   
   .testimonial-author {
@@ -908,9 +1060,80 @@
   .pricing-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
+    gap: 1.6rem;
     max-width: 1180px;
     margin: 0 auto;
+    align-items: stretch;
+  }
+
+  .pricing-comparison {
+    max-width: 1180px;
+    margin: 2.5rem auto 0;
+    background: var(--surface-strong);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .comparison-header {
+    text-align: center;
+    margin-bottom: 1.2rem;
+  }
+
+  .comparison-header h3 {
+    font-size: 1.45rem;
+    margin-bottom: 0.35rem;
+    letter-spacing: -0.03em;
+  }
+
+  .comparison-header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  .comparison-table-wrap {
+    overflow-x: auto;
+  }
+
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 720px;
+  }
+
+  .comparison-table thead th {
+    text-align: left;
+    padding: 1rem 1rem;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .comparison-table tbody th,
+  .comparison-table tbody td {
+    padding: 1rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  .comparison-table tbody th {
+    font-weight: 600;
+    color: var(--text);
+    width: 44%;
+  }
+
+  .comparison-table tbody td {
+    text-align: center;
+    font-size: 1rem;
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .comparison-table tbody tr:nth-child(even) {
+    background: rgba(154, 103, 56, 0.03);
   }
   
   .pricing-card {
@@ -920,13 +1143,43 @@
     border: 1px solid var(--border);
     transition: all 0.3s ease;
     position: relative;
-    text-align: center;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    min-height: 560px;
+  }
+
+  .pricing-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .plan-label {
+    width: fit-content;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.35rem 0.8rem;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 800;
+    margin-bottom: 1.4rem;
   }
   
   .pricing-icon {
-    font-size: 2.5rem;
+    width: 60px;
+    height: 60px;
+    border-radius: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-light);
+    font-size: 2rem;
     color: var(--accent);
     margin-bottom: 1rem;
+  }
+
+  .pricing-card h3 {
+    font-size: 1.5rem;
   }
   
   .pricing-card.featured {
@@ -954,9 +1207,10 @@
   
   .price {
     font-size: 3rem;
-    font-weight: 800;
+    font-weight: 760;
     color: var(--accent);
-    margin: 1rem 0;
+    margin: 1rem 0 0.4rem;
+    letter-spacing: -0.05em;
   }
   
   .price span {
@@ -974,6 +1228,7 @@
     list-style: none;
     margin: 1.5rem 0;
     text-align: left;
+    flex: 1;
   }
   
   .pricing-features li {
@@ -987,32 +1242,138 @@
   
   .pricing-features i.bi-check-circle-fill { color: var(--accent); font-size: 1rem; }
   .pricing-features i.bi-x-circle { color: #c9b6a0; font-size: 1rem; }
+
+  .pricing-card .btn-primary,
+  .pricing-card .btn-secondary {
+    width: 100%;
+  }
+
+  [data-theme="dark"] .hero-badge,
+  [data-theme="dark"] .section-kicker,
+  [data-theme="dark"] .feature-badge,
+  [data-theme="dark"] .testimonial-proof,
+  [data-theme="dark"] .plan-label {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  [data-theme="dark"] .problem-solution,
+  [data-theme="dark"] .feature-card,
+  [data-theme="dark"] .step-card,
+  [data-theme="dark"] .testimonial-card,
+  [data-theme="dark"] .pricing-card,
+  [data-theme="dark"] .demo-card {
+    background: rgba(31, 27, 24, 0.96);
+    border-color: rgba(255, 236, 216, 0.14);
+  }
+
+  [data-theme="dark"] .hero-desc,
+  [data-theme="dark"] .problem-text,
+  [data-theme="dark"] .solution-text,
+  [data-theme="dark"] .feature-card p,
+  [data-theme="dark"] .step-card p,
+  [data-theme="dark"] .testimonial-card > p,
+  [data-theme="dark"] .pricing-alt,
+  [data-theme="dark"] .pricing-features li,
+  [data-theme="dark"] .author-info p {
+    color: #d8cabb;
+  }
+
+  [data-theme="dark"] .section-title,
+  [data-theme="dark"] .hero-title,
+  [data-theme="dark"] .step-card h3,
+  [data-theme="dark"] .feature-card h3,
+  [data-theme="dark"] .testimonial-card h4,
+  [data-theme="dark"] .pricing-card h3,
+  [data-theme="dark"] .comparison-header h3 {
+    color: #f8efe3;
+  }
+
+  [data-theme="dark"] .pricing-comparison {
+    background: rgba(31, 27, 24, 0.96);
+    border-color: rgba(255, 236, 216, 0.14);
+  }
+
+  [data-theme="dark"] .comparison-table thead th,
+  [data-theme="dark"] .comparison-header p {
+    color: #d8cabb;
+  }
+
+  [data-theme="dark"] .comparison-table tbody th,
+  [data-theme="dark"] .comparison-table tbody td {
+    color: #f8efe3;
+    border-bottom-color: rgba(255, 236, 216, 0.12);
+  }
+
+  [data-theme="dark"] .comparison-table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .pricing-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
   
   /* CTA Block */
   .cta-block {
     max-width: 1000px;
     margin: 2rem auto 3rem;
-    background: linear-gradient(135deg, var(--accent-wash), var(--surface-strong));
+    background:
+      radial-gradient(circle at 12% 20%, rgba(255,255,255,0.32), transparent 24%),
+      linear-gradient(135deg, var(--accent-strong), var(--accent));
     border-radius: 48px;
-    text-align: center;
+    color: white;
     padding: 3rem;
-    border: 1px solid var(--border);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: var(--shadow-lg);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 2rem;
   }
   
   .cta-icon {
-    font-size: 3rem;
-    color: var(--accent);
+    width: 58px;
+    height: 58px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.16);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.7rem;
+    color: white;
     margin-bottom: 1rem;
   }
   
   .cta-block h2 {
-    font-size: 2rem;
+    font-size: clamp(2rem, 4vw, 3.1rem);
     margin-bottom: 1rem;
+    letter-spacing: -0.05em;
   }
   
   .cta-block p {
-    margin-bottom: 1.5rem;
-    color: var(--text-muted);
+    margin-bottom: 0;
+    color: rgba(255,255,255,0.82);
+    max-width: 600px;
+    line-height: 1.65;
+  }
+
+  .cta-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+  }
+
+  .cta-actions .btn-primary {
+    background: white;
+    color: var(--accent-strong);
+  }
+
+  .cta-actions span {
+    color: rgba(255,255,255,0.75);
+    font-size: 0.85rem;
   }
   
   /* Buttons */
@@ -1051,47 +1412,6 @@
     background: var(--accent-light);
     border-color: var(--accent);
     transform: translateY(-1px);
-  }
-  
-  /* Theme Switcher */
-  .theme-switcher {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    display: flex;
-    gap: 8px;
-    background: var(--surface-strong);
-    padding: 8px 12px;
-    border-radius: 60px;
-    box-shadow: var(--shadow-md);
-    border: 1px solid var(--border);
-    z-index: 1000;
-    backdrop-filter: blur(10px);
-  }
-  
-  .theme-switcher button {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: none;
-    background: transparent;
-    color: var(--text-muted);
-    cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .theme-switcher button.active {
-    background: var(--accent);
-    color: white;
-  }
-  
-  .theme-switcher button:hover:not(.active) {
-    background: var(--accent-light);
-    color: var(--accent);
   }
   
   /* Footer - Full Width, Bottom Fixed */
@@ -1243,16 +1563,26 @@
       text-align: center;
       gap: 2rem;
     }
-    .hero-title { font-size: 2.2rem; }
-    .hero-stats { justify-content: center; }
+    .hero-title { font-size: clamp(3.6rem, 15vw, 5rem); }
+    .hero { padding: 5rem 1.2rem 2.5rem; }
     .steps-grid, .testimonials-grid, .pricing-grid { grid-template-columns: 1fr; }
     .pricing-card.featured { transform: scale(1); }
+    .pricing-card { min-height: auto; }
     .floating-card { display: none; }
     .section-title { font-size: 1.8rem; }
     .section-title::before,
     .section-title::after { display: none; }
-    .section-container { padding: 2rem 1.2rem; }
-    .theme-switcher { bottom: 10px; right: 10px; }
+    .section-container { padding: 3rem 1.2rem; }
+    .feature-card, .step-card, .testimonial-card { min-height: auto; }
+    .steps-section { background: var(--bg); }
+    .cta-block {
+      grid-template-columns: 1fr;
+      margin: 1rem 1.2rem 2rem;
+      padding: 2rem;
+      border-radius: 30px;
+    }
+    .pricing-actions { grid-template-columns: 1fr; }
+    .pricing-comparison { margin-top: 1.6rem; padding: 1rem; border-radius: 24px; }
     .footer-grid { grid-template-columns: 1fr; text-align: center; }
     .footer-brand { max-width: 100%; text-align: center; }
     .footer-logo { justify-content: center; }

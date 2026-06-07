@@ -11,11 +11,15 @@ use Illuminate\Validation\Rule;
 
 class BillingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $selectedPlan = (string) $request->query('plan', '');
+        $availablePlans = array_keys(config('billing.plans'));
+
         return view('billing', [
             'plans' => config('billing.plans'),
             'stripePublishableKey' => config('services.stripe.publishable_key'),
+            'selectedPlan' => in_array($selectedPlan, $availablePlans, true) ? $selectedPlan : null,
         ]);
     }
 
@@ -27,25 +31,29 @@ class BillingController extends Controller
 
         $user = $request->user();
         $plan = config("billing.plans.$planKey");
-        $customerId = $this->ensureStripeCustomer($user);
         $priceId = $plan['price_id'] ?? null;
 
         abort_unless($priceId, 500, 'Stripe price is not configured.');
 
-        $session = $this->stripePost('checkout/sessions', [
+        $checkoutData = [
             'mode' => 'subscription',
-            'customer' => $customerId,
-            'client_reference_id' => (string) $user->id,
             'success_url' => route('billing.success') . '?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => route('billing.index'),
-            'metadata[user_id]' => (string) $user->id,
+            'cancel_url' => route('billing.index', ['plan' => $planKey]),
             'metadata[plan]' => $planKey,
             'subscription_data[trial_period_days]' => $plan['trial_days'],
-            'subscription_data[metadata][user_id]' => (string) $user->id,
             'subscription_data[metadata][plan]' => $planKey,
             'line_items[0][quantity]' => 1,
             'line_items[0][price]' => $priceId,
-        ]);
+        ];
+
+        if ($user) {
+            $checkoutData['customer'] = $this->ensureStripeCustomer($user);
+            $checkoutData['client_reference_id'] = (string) $user->id;
+            $checkoutData['metadata[user_id]'] = (string) $user->id;
+            $checkoutData['subscription_data[metadata][user_id]'] = (string) $user->id;
+        }
+
+        $session = $this->stripePost('checkout/sessions', $checkoutData);
 
         return redirect()->away($session['url']);
     }
@@ -57,7 +65,9 @@ class BillingController extends Controller
         if ($sessionId !== '') {
             $session = $this->stripeGet("checkout/sessions/$sessionId");
 
-            if (($session['client_reference_id'] ?? null) === (string) $request->user()->id) {
+            $user = $request->user();
+
+            if ($user && ($session['client_reference_id'] ?? null) === (string) $user->id) {
                 $this->syncSubscriptionFromStripe((string) ($session['subscription'] ?? ''));
             }
         }
