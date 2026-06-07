@@ -521,6 +521,284 @@
         .auth-shell, .landing-page {
             animation: fadeIn 0.4s ease-out;
         }
+
+        .billing-page {
+            padding-block: 42px 64px;
+        }
+
+        .billing-debug {
+            display: grid;
+            gap: 6px;
+            margin-bottom: 18px;
+            padding: 14px 16px;
+            border-radius: 8px;
+            border: 1px dashed var(--border);
+            background: rgba(255, 255, 255, 0.6);
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .billing-debug strong {
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .billing-hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+            gap: 24px;
+            align-items: stretch;
+            margin-bottom: 28px;
+        }
+
+        .billing-kicker {
+            display: inline-flex;
+            margin-bottom: 12px;
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+
+        .billing-hero h1 {
+            max-width: 760px;
+            font-size: clamp(32px, 4vw, 56px);
+            line-height: 1.02;
+            margin-bottom: 14px;
+            letter-spacing: 0;
+        }
+
+        .billing-hero p,
+        .billing-status-panel small,
+        .billing-card small {
+            color: var(--text-muted);
+        }
+
+        .billing-status-panel,
+        .billing-card {
+            background: var(--surface-strong);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .billing-status-panel {
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .billing-status-panel span {
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .billing-status-panel strong {
+            font-size: 30px;
+            line-height: 1;
+        }
+
+        .billing-alert {
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            font-weight: 600;
+        }
+
+        .billing-confirmation {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 8px;
+            padding: 20px 22px;
+            margin-bottom: 18px;
+            background: rgba(24, 128, 86, 0.11);
+            color: #146c46;
+            border: 1px solid rgba(24, 128, 86, 0.2);
+        }
+
+        .billing-confirmation h2 {
+            margin: 4px 0 8px;
+            font-size: 22px;
+            color: inherit;
+        }
+
+        .billing-confirmation p {
+            margin: 0;
+            color: inherit;
+            opacity: 0.85;
+        }
+
+        .billing-confirmation-kicker {
+            display: inline-flex;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .billing-confirmation-actions {
+            display: grid;
+            gap: 10px;
+            min-width: 240px;
+        }
+
+        .billing-confirmation-actions form {
+            margin: 0;
+        }
+
+        .billing-alert-success {
+            background: rgba(24, 128, 86, 0.11);
+            color: #146c46;
+            border: 1px solid rgba(24, 128, 86, 0.2);
+        }
+
+        .billing-alert-error {
+            background: rgba(178, 59, 59, 0.1);
+            color: #913232;
+            border: 1px solid rgba(178, 59, 59, 0.2);
+        }
+
+        .billing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .billing-card {
+            position: relative;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            min-height: 430px;
+        }
+
+        .billing-card-featured {
+            border-color: var(--accent);
+            box-shadow: var(--shadow-md);
+        }
+
+        .billing-pill {
+            align-self: flex-start;
+            border-radius: 999px;
+            background: var(--accent-light);
+            color: var(--accent-strong);
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 800;
+            margin-bottom: 14px;
+        }
+
+        .billing-card-head i {
+            color: var(--accent);
+            font-size: 28px;
+        }
+
+        .billing-card h2 {
+            margin: 12px 0 8px;
+            font-size: 24px;
+        }
+
+        .billing-price {
+            color: var(--accent);
+            font-size: 34px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .billing-price span {
+            color: var(--text-muted);
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .billing-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 22px 0;
+            display: grid;
+            gap: 12px;
+        }
+
+        .billing-card li {
+            display: flex;
+            gap: 10px;
+            color: var(--text-muted);
+            line-height: 1.35;
+        }
+
+        .billing-card li i {
+            color: var(--accent);
+            flex: 0 0 auto;
+        }
+
+        .billing-actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .billing-actions form {
+            min-width: 0;
+        }
+
+        .billing-primary-btn,
+        .billing-secondary-btn,
+        .billing-link-btn {
+            min-height: 44px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 800;
+            text-decoration: none;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .billing-primary-btn {
+            border: 1px solid var(--accent);
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .billing-secondary-btn,
+        .billing-link-btn {
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+        }
+
+        .billing-link-btn {
+            margin-top: 8px;
+        }
+
+        @media (max-width: 900px) {
+            .billing-confirmation {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .billing-confirmation-actions {
+                min-width: 0;
+                width: 100%;
+            }
+
+            .billing-hero,
+            .billing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .billing-card {
+                min-height: auto;
+            }
+        }
     </style>
 
 
@@ -579,6 +857,12 @@
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li> -->
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('billing.index') }}" role="menuitem">
+                                        <i class="bi bi-credit-card" aria-hidden="true"></i> Billing
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form method="POST" action="{{ route('logout') }}" id="logoutForm">
                                         @csrf

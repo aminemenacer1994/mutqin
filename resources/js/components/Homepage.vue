@@ -119,36 +119,51 @@
       <div class="divider"><i class="bi bi-star-fill"></i> ۞ <i class="bi bi-star-fill"></i></div>
   
       <!-- Pricing Section -->
-      <section id="pricing" class="pricing-section">
+      <section id="pricing" class="pricing-section" ref="pricingSection">
         <div class="section-container">
           <h2 class="section-title">Simple, transparent pricing</h2>
-          <p class="section-subtitle">No hidden fees. Just free or full power.</p>
+          <p class="section-subtitle">Start free. Upgrade when you want deeper memorisation tools.</p>
           <div class="pricing-grid">
             <!-- Freemium Plan -->
             <div class="pricing-card" data-aos="flip-right">
               <div class="pricing-icon"><i class="bi bi-flower1"></i></div>
-              <h3>Freemium</h3>
-              <div class="price">$0</div>
+              <h3>Free</h3>
+              <div class="price">£0</div>
               <ul class="pricing-features">
                 <li v-for="feature in freeFeatures" :key="feature">
-                  <i :class="feature.includes('Smart') || feature.includes('Unlimited') ? 'bi bi-x-circle' : 'bi bi-check-circle-fill'"></i>
+                  <i class="bi bi-check-circle-fill"></i>
                   {{ feature }}
                 </li>
               </ul>
               <a href="/register" class="btn-secondary">Start Free <i class="bi bi-arrow-right"></i></a>
             </div>
-            <!-- Pro Plan -->
+            <!-- Premium Plan -->
             <div class="pricing-card featured" data-aos="flip-left">
-              <div class="featured-tag"><i class="bi bi-star-fill"></i> MOST POPULAR</div>
+              <div class="featured-tag"><i class="bi bi-gift-fill"></i> 7-DAY FREE TRIAL</div>
+              <div class="pricing-icon"><i class="bi bi-stars"></i></div>
+              <h3>Premium</h3>
+              <div class="price">£2.99 <span>/month</span></div>
+              <p class="pricing-alt">or £17.99 yearly</p>
+              <ul class="pricing-features">
+                <li v-for="feature in premiumFeatures" :key="feature">
+                  <i class="bi bi-check-circle-fill"></i> {{ feature }}
+                </li>
+              </ul>
+              <a href="/register" class="btn-primary">Try Premium <i class="bi bi-gift-fill"></i></a>
+            </div>
+            <!-- Pro Plan -->
+            <div class="pricing-card" data-aos="flip-left">
+              <div class="featured-tag"><i class="bi bi-gift-fill"></i> 7-DAY FREE TRIAL</div>
               <div class="pricing-icon"><i class="bi bi-gem"></i></div>
-              <h3>Pro · Full Quran</h3>
-              <div class="price">$9.99 <span>/month</span></div>
+              <h3>Pro</h3>
+              <div class="price">£5.99 <span>/month</span></div>
+              <p class="pricing-alt">or £49.99 yearly</p>
               <ul class="pricing-features">
                 <li v-for="feature in proFeatures" :key="feature">
                   <i class="bi bi-check-circle-fill"></i> {{ feature }}
                 </li>
               </ul>
-              <a href="/register" class="btn-primary">Try 7 days free <i class="bi bi-gift-fill"></i></a>
+              <a href="/register" class="btn-secondary">Try Pro <i class="bi bi-arrow-right"></i></a>
             </div>
           </div>
         </div>
@@ -330,20 +345,23 @@
       ]);
       
       const freeFeatures = ref([
-        'AI recitation (25/day)',
-        "Juz 'Amma + 5 surahs",
+        'Core memorisation planner',
         'Basic progress tracking',
-        'Smart memorization AI',
-        'Unlimited library'
+        'Limited recitation checks'
+      ]);
+
+      const premiumFeatures = ref([
+        'Unlimited memorisation planning',
+        'Smart revision support',
+        'Full progress history',
+        '7-day free trial'
       ]);
       
       const proFeatures = ref([
-        'Unlimited AI recitation',
-        'Entire Quran + 10 Qira\'at',
-        'Smart memorization engine',
-        'Unlimited recordings & library',
-        'Weakness heatmaps + analytics',
-        'Priority support & monthly PDF'
+        'Advanced recitation workflow',
+        'Detailed analytics',
+        'Priority feature access',
+        '7-day free trial'
       ]);
       
       // Intersection Observer for animations
@@ -379,6 +397,7 @@
         steps,
         testimonials,
         freeFeatures,
+        premiumFeatures,
         proFeatures
       };
     }
@@ -888,9 +907,9 @@
   /* Pricing */
   .pricing-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 2rem;
-    max-width: 1000px;
+    max-width: 1180px;
     margin: 0 auto;
   }
   
@@ -943,6 +962,12 @@
   .price span {
     font-size: 1rem;
     color: var(--text-muted);
+  }
+
+  .pricing-alt {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-top: -0.5rem;
   }
   
   .pricing-features {

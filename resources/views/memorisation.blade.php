@@ -7,6 +7,9 @@
             'id' => Auth::id(),
             'email' => Auth::user()?->email,
             'name' => Auth::user()?->name,
+            'subscription_tier' => Auth::user()?->subscription_tier ?? 'free',
+            'subscription_status' => Auth::user()?->subscription_status ?? 'free',
+            'has_paid_access' => Auth::user()?->hasPaidAccess() ?? false,
         ];
     @endphp
 

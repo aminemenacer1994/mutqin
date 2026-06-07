@@ -25,6 +25,13 @@ class User extends Authenticatable
         'google_id',
         'avatar',
         'password',
+        'stripe_customer_id',
+        'stripe_subscription_id',
+        'subscription_tier',
+        'subscription_plan',
+        'subscription_status',
+        'subscription_trial_ends_at',
+        'subscription_current_period_ends_at',
     ];
 
     /**
@@ -47,11 +54,18 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'subscription_trial_ends_at' => 'datetime',
+            'subscription_current_period_ends_at' => 'datetime',
         ];
     }
 
     public function memorisationSyncState(): HasOne
     {
         return $this->hasOne(MemorisationSyncState::class);
+    }
+
+    public function hasPaidAccess(): bool
+    {
+        return in_array($this->subscription_status, ['trialing', 'active'], true);
     }
 }

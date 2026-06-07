@@ -6,6 +6,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MemorisationSyncController;
@@ -17,12 +18,24 @@ use Laravel\Socialite\Facades\Socialite;
 Auth::routes();
 
 Route::get('/auth/redirect', function () {
-    return Socialite::driver('google')->stateless()->redirect();
+    $provider = Socialite::driver('google');
+
+    if (method_exists($provider, 'stateless')) {
+        $provider = $provider->stateless();
+    }
+
+    return $provider->redirect();
 })->name('auth.google.redirect');
 
 Route::get('/auth/callback', function () {
     try {
-        $googleUser = Socialite::driver('google')->stateless()->user();
+        $provider = Socialite::driver('google');
+
+        if (method_exists($provider, 'stateless')) {
+            $provider = $provider->stateless();
+        }
+
+        $googleUser = $provider->user();
         
         $user = User::updateOrCreate(
             ['email' => $googleUser->email],
@@ -42,7 +55,7 @@ Route::get('/auth/callback', function () {
     } catch (\Exception $e) {
         return redirect()->route('login')->with('error', 'Google login failed: ' . $e->getMessage());
     }
-});
+})->name('auth.google.callback');
 
 // Logout Route
 Route::post('/logout', function () {
@@ -189,6 +202,10 @@ Route::post('/memorisation/recitation-check/transcribe', function (Request $requ
 // Protected routes (require authentication)
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\HomeController::class, 'index'])->name('dashboard');
+    Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::post('/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
+    Route::get('/billing/success', [BillingController::class, 'success'])->name('billing.success');
+    Route::post('/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
     Route::get('/memorisation/sync-state', [MemorisationSyncController::class, 'show'])->name('memorisation.sync.show');
     Route::put('/memorisation/sync-state', [MemorisationSyncController::class, 'update'])->name('memorisation.sync.update');
 });
