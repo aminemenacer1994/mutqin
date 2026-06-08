@@ -26,6 +26,9 @@ return [
     'confirm_password' => 'Confirm Password',
     'remember_me' => 'Remember Me',
     'continue_google' => 'Continue with Google',
+    'auth_or' => 'or',
+    'auth_new_to_mutqin' => 'New to Mutqin?',
+    'auth_already_account' => 'Already have an account?',
     'forgot_password' => 'Forgot Your Password?',
     'name' => 'Name',
 ];

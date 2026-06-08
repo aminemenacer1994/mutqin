@@ -25,8 +25,12 @@ bootstrapApp();
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch((error) => {
-            console.warn('Failed to register service worker:', error);
-        });
+        navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+                registration.update().catch(() => {});
+            })
+            .catch((error) => {
+                console.warn('Failed to register service worker:', error);
+            });
     });
 }

@@ -9,13 +9,13 @@
             <div class="hero-badge">
               <i class="bi bi-moon-stars"></i> AI-Powered Quran Learning
             </div>
-            <h1 class="hero-title"><span>You recite. But do you know where you're making mistakes?</span></h1>
-            <p class="hero-desc">Mutqin listens to every letter. Instantly detects tajweed errors. Schedules perfect reviews. No guesswork.</p>
+            <h1 class="hero-title"><span>Memorise the Quran with a calmer, sharper practice loop.</span></h1>
+            <p class="hero-desc">Mutqin brings your ayahs, recordings, AI checks, revision flow, and weak-spot insights into one focused workspace so every session ends with a clear next step.</p>
             
             <div class="problem-solution">
-              <p class="problem-text"><i class="bi bi-exclamation-triangle-fill"></i> <strong>The problem:</strong> Years of repeating the same tajweed mistakes. Fading memorization. No one catches every error.</p>
+              <p class="problem-text"><i class="bi bi-exclamation-triangle-fill"></i> <strong>The problem:</strong> Memorisation breaks down when weak ayahs, recordings, and review plans live in separate places.</p>
               <div class="solution-highlight">
-                <p class="solution-text"><i class="bi bi-check-lg"></i> <strong>The solution:</strong> AI pinpoints your exact makharij issues. Smart spaced repetition locks verses in memory. Real-time feedback after every recitation.</p>
+                <p class="solution-text"><i class="bi bi-check-lg"></i> <strong>The solution:</strong> Practise in small ranges, check recitation and recall, then review the exact ayahs that need attention.</p>
               </div>
             </div>
             
@@ -198,9 +198,9 @@
                 <tbody>
                   <tr v-for="row in comparisonRows" :key="row.feature">
                     <th scope="row">{{ row.feature }}</th>
-                    <td>{{ row.free }}</td>
-                    <td>{{ row.premium }}</td>
-                    <td>{{ row.pro }}</td>
+                    <td><span :class="comparisonValueClass(row.free)">{{ row.free }}</span></td>
+                    <td><span :class="comparisonValueClass(row.premium)">{{ row.premium }}</span></td>
+                    <td><span :class="comparisonValueClass(row.pro)">{{ row.pro }}</span></td>
                   </tr>
                 </tbody>
               </table>
@@ -213,8 +213,8 @@
       <div class="cta-block">
         <div class="cta-copy">
           <div class="cta-icon"><i class="bi bi-heart-fill"></i></div>
-          <h2>Stop repeating the same mistakes.</h2>
-          <p>Record one verse, see the weak points, and turn them into a review plan before they become habits.</p>
+          <h2>Turn weak ayahs into a clear review path.</h2>
+          <p>Record a verse, review the highlighted issues, and keep the next session focused on what actually needs work.</p>
         </div>
         <div class="cta-actions">
           <a href="/register" class="btn-primary"><i class="bi bi-person-badge"></i> Create Free Account</a>
@@ -231,7 +231,7 @@
                 <i class="bi bi-moon-stars"></i>
                 <h3>Mutqin</h3>
               </div>
-              <p>AI that corrects your tajweed & locks memorization. Rooted in tradition, powered by innovation.</p>
+              <p>Focused Quran memorisation tools for recitation checks, review planning, and steady daily practice.</p>
             </div>
             <div class="footer-links">
               <h4><i class="bi bi-grid-3x3-gap-fill"></i> Product</h4>
@@ -309,6 +309,13 @@
       const scrollToPricing = () => {
         pricingSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       };
+
+      const comparisonValueClass = (value) => {
+        const text = String(value || '').toLowerCase();
+        if (text.includes('not included')) return 'comparison-value comparison-value-muted';
+        if (text.includes('unlimited') || text.includes('included')) return 'comparison-value comparison-value-included';
+        return 'comparison-value comparison-value-limited';
+      };
       
       // Data
       const floatingBadges = ref([
@@ -318,18 +325,18 @@
       ]);
       
       const features = ref([
-        { icon: 'bi bi-mic', title: 'AI Recitation Checker', badge: 'Free', badgeType: '', description: 'Letter-by-letter tajweed analysis with mistake heatmaps and instant audio feedback.', result: '25 daily checks included.' },
-        { icon: 'bi bi-brain', title: 'Smart Memorization', badge: 'Pro', badgeType: 'pro', description: 'Spaced repetition and forgetting-curve planning for weak verses before they fade.', result: 'Review what is due, not everything.' },
-        { icon: 'bi bi-journal-bookmark-fill', title: 'Interactive Mushaf', badge: 'Free', badgeType: '', description: 'Tajweed color-coding, tafsir, transliteration, and audio from renowned qaris.', result: 'Study and recite in one place.' },
-        { icon: 'bi bi-link', title: 'Memory Linking', badge: 'Pro', badgeType: 'pro', description: 'Anchor difficult passages to meaning, rhythm, and personal retention patterns.', result: 'Turn weak spots into cues.' },
-        { icon: 'bi bi-collection-play', title: 'Personal Library', badge: 'Free limited', badgeType: '', description: 'Save recordings and basic analytics so progress is visible over time.', result: 'Pro unlocks unlimited history.' },
-        { icon: 'bi bi-graph-up', title: 'Weakness Analytics', badge: 'Pro', badgeType: 'pro', description: 'See recurring errors by rule, passage, and month with targeted recommendations.', result: 'Know exactly what to fix next.' }
+        { icon: 'bi bi-mic-fill', title: 'AI Recitation Review', badge: 'Free', badgeType: '', description: 'Record an ayah and compare your attempt against the text with clear word-level feedback.', result: 'Spot the section to repeat next.' },
+        { icon: 'bi bi-lightning-charge-fill', title: 'Smart Memorisation', badge: 'Pro', badgeType: 'pro', description: 'Use blur, chaining, anchors, and review signals to strengthen recall without clutter.', result: 'Practise the ayahs that need attention.' },
+        { icon: 'bi bi-journal-bookmark-fill', title: 'Stacked, Mushaf & Madani Views', badge: 'Free', badgeType: '', description: 'Move between clean ayah cards and compact mushaf layouts while keeping controls nearby.', result: 'Read, listen, and self-check in one flow.' },
+        { icon: 'bi bi-link-45deg', title: 'Transition Training', badge: 'Pro', badgeType: 'pro', description: 'Build confidence between neighbouring ayahs with linking and cumulative repetition.', result: 'Reduce pauses between verses.' },
+        { icon: 'bi bi-collection-play', title: 'Recording Library', badge: 'Free limited', badgeType: '', description: 'Save attempts by surah and ayah so older reviews remain easy to find.', result: 'Keep your recitation history organised.' },
+        { icon: 'bi bi-graph-up-arrow', title: 'Review Analytics', badge: 'Pro', badgeType: 'pro', description: 'Track weak ayahs, repeated attempts, and review priority across your sessions.', result: 'Know what to fix before the next session.' }
       ]);
       
       const steps = ref([
-        { title: 'Record', description: 'Recite any verse directly in your browser.', icon: 'bi bi-mic', microcopy: 'No upload friction' },
-        { title: 'AI Analysis', description: 'Get a letter-level tajweed report within seconds.', icon: 'bi bi-cpu', microcopy: 'Makharij and rule feedback' },
-        { title: 'Fix & Review', description: 'Convert corrections into a smart revision schedule.', icon: 'bi bi-check2-circle', microcopy: 'Weak verses resurface automatically' }
+        { title: 'Record', description: 'Recite the selected ayah or session directly in the browser.', icon: 'bi bi-mic-fill', microcopy: 'Fast self-checks without uploads' },
+        { title: 'Review', description: 'See which words were strong, close, or missed after the recitation.', icon: 'bi bi-stars', microcopy: 'Clear feedback you can act on' },
+        { title: 'Repeat', description: 'Use blur, chaining, anchors, and saved attempts to revisit weak ayahs.', icon: 'bi bi-arrow-repeat', microcopy: 'Practice follows your weak spots' }
       ]);
       
       const testimonials = ref([
@@ -368,20 +375,18 @@
       ]);
 
       const comparisonRows = ref([
-        { feature: 'Full basic session setup', free: '✅', premium: '✅', pro: '✅' },
-        { feature: 'Saved sessions', free: '✅ 3', premium: '✅ 5', pro: '✅ Unlimited' },
-        { feature: 'Basic analytics', free: '✅', premium: '✅', pro: '✅' },
-        { feature: 'Focus mode', free: '✅', premium: '✅', pro: '✅' },
-        { feature: 'Blurring method', free: '❌', premium: '✅', pro: '✅' },
-        { feature: 'Chaining method', free: '❌', premium: '✅', pro: '✅' },
-        { feature: 'Anchor mode', free: '❌', premium: '✅', pro: '✅' },
-        { feature: 'Manual self-assessment recording', free: '❌', premium: '✅', pro: '✅' },
-        { feature: 'All memorisation techniques included', free: '❌', premium: '❌', pro: '✅' },
-        { feature: 'AI recitation', free: '❌', premium: '❌', pro: '✅' },
-        { feature: 'AI memorisation checker', free: '❌', premium: '❌', pro: '✅' },
-        { feature: 'Self recording', free: '❌', premium: '❌', pro: '✅' },
-        { feature: 'Advanced analysis', free: '❌', premium: '❌', pro: '✅' },
-        { feature: 'Download for offline listening', free: '❌', premium: '❌', pro: '✅' }
+        { feature: 'Session setup and ayah range tools', free: 'Included', premium: 'Included', pro: 'Included' },
+        { feature: 'Saved sessions', free: '3', premium: '5', pro: 'Unlimited' },
+        { feature: 'Stacked, Mushaf, and Madani layouts', free: 'Included', premium: 'Included', pro: 'Included' },
+        { feature: 'Focus mode', free: 'Included', premium: 'Included', pro: 'Included' },
+        { feature: 'Blur memorisation method', free: 'Not included', premium: 'Included', pro: 'Included' },
+        { feature: 'Chaining and transition practice', free: 'Not included', premium: 'Included', pro: 'Included' },
+        { feature: 'Anchor mode', free: 'Not included', premium: 'Included', pro: 'Included' },
+        { feature: 'Manual self-assessment recording', free: 'Not included', premium: 'Included', pro: 'Included' },
+        { feature: 'AI recitation review', free: 'Not included', premium: 'Not included', pro: 'Included' },
+        { feature: 'AI memorisation checker', free: 'Not included', premium: 'Not included', pro: 'Included' },
+        { feature: 'Advanced review analytics', free: 'Not included', premium: 'Not included', pro: 'Included' },
+        { feature: 'Offline audio downloads', free: 'Not included', premium: 'Not included', pro: 'Included' }
       ]);
       
       // Intersection Observer for animations
@@ -411,6 +416,7 @@
         pricingSection,
         scrollToFeatures,
         scrollToPricing,
+        comparisonValueClass,
         floatingBadges,
         features,
         steps,
@@ -447,14 +453,14 @@
   }
   
   [data-theme="dark"] {
-    --bg: #14110f;
-    --surface: rgba(31, 27, 24, 0.92);
-    --surface-strong: rgba(43, 37, 32, 0.96);
+    --bg: #101114;
+    --surface: rgba(25, 23, 21, 0.94);
+    --surface-strong: rgba(32, 29, 26, 0.98);
     --border: rgba(255, 236, 216, 0.16);
-    --text: #f7ebdf;
-    --text-muted: #d1c2b3;
-    --accent: #d0a06b;
-    --accent-strong: #efc18d;
+    --text: #fff7ee;
+    --text-muted: #d8cec2;
+    --accent: #e0ad72;
+    --accent-strong: #ffd19b;
     --accent-soft: #5f4530;
     --accent-light: rgba(208, 160, 107, 0.14);
     --accent-wash: rgba(208, 160, 107, 0.08);
@@ -491,10 +497,19 @@
   }
   
   .vue-onboarding {
-    
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    background:
+      radial-gradient(circle at 12% 10%, rgba(154, 103, 56, 0.12), transparent 26%),
+      var(--bg);
+    color: var(--text);
+  }
+
+  [data-theme="dark"].vue-onboarding {
+    background:
+      radial-gradient(circle at 18% 8%, rgba(224, 173, 114, 0.12), transparent 28%),
+      linear-gradient(180deg, #101114 0%, #15120f 100%);
   }
   
   /* Verse Ticker */
@@ -532,6 +547,7 @@
     padding: 6.5rem 2.75rem 4rem;
     position: relative;
     overflow: hidden;
+    color: var(--text);
   }
   
   .hero::before {
@@ -553,11 +569,11 @@
   }
   
   .hero-container {
-    max-width: 1280px;
+    max-width: 1320px;
     margin: 0 auto;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 5rem;
+    gap: 4rem;
     align-items: center;
     position: relative;
     z-index: 1;
@@ -567,36 +583,43 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: var(--accent-light);
+    background: color-mix(in srgb, var(--accent-light) 78%, var(--surface-strong));
     color: var(--accent);
     padding: 0.3rem 1rem;
     border-radius: 40px;
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 0.84rem;
+    font-weight: 750;
     margin-bottom: 1.5rem;
   }
   
   .hero-title {
-    font-size: clamp(4.4rem, 8.2vw, 7.6rem);
-    font-weight: 720;
-    line-height: 0.94;
+    font-size: clamp(4.8rem, 8.8vw, 8.4rem);
+    font-weight: 780;
+    line-height: 0.9;
     margin-bottom: 1.35rem;
     letter-spacing: -0.065em;
   }
   
   .hero-title span {
-    background: linear-gradient(135deg, var(--accent-strong), var(--accent) 45%, #d9a86f 100%);
+    background: linear-gradient(135deg, var(--text), var(--accent-strong) 46%, var(--accent) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
   
   .hero-desc {
-    font-size: 1.2rem;
-    color: var(--text-muted);
+    font-size: clamp(1.35rem, 2vw, 1.78rem);
+    color: color-mix(in srgb, var(--text) 78%, var(--text-muted));
     margin-bottom: 1.8rem;
     line-height: 1.75;
-    max-width: 760px;
+    max-width: 820px;
+    font-weight: 500;
+  }
+
+  [data-theme="dark"] .hero-title span {
+    background: linear-gradient(135deg, #fff7ee, #ffd19b 62%, #e0ad72 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
   }
   
   .problem-solution {
@@ -1069,20 +1092,20 @@
   .pricing-comparison {
     max-width: 1180px;
     margin: 2.5rem auto 0;
-    background: var(--surface-strong);
+    background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
     border: 1px solid var(--border);
     border-radius: 28px;
-    padding: 1.5rem;
+    padding: 1.35rem;
     box-shadow: var(--shadow-sm);
   }
 
   .comparison-header {
     text-align: center;
-    margin-bottom: 1.2rem;
+    margin-bottom: 1rem;
   }
 
   .comparison-header h3 {
-    font-size: 1.45rem;
+    font-size: clamp(1.55rem, 2.4vw, 2rem);
     margin-bottom: 0.35rem;
     letter-spacing: -0.03em;
   }
@@ -1094,17 +1117,21 @@
 
   .comparison-table-wrap {
     overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--surface) 70%, transparent);
   }
 
   .comparison-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     min-width: 720px;
   }
 
   .comparison-table thead th {
     text-align: left;
-    padding: 1rem 1rem;
+    padding: 0.9rem 1rem;
     font-size: 0.82rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -1112,9 +1139,13 @@
     border-bottom: 1px solid var(--border);
   }
 
+  .comparison-table thead th:not(:first-child) {
+    text-align: center;
+  }
+
   .comparison-table tbody th,
   .comparison-table tbody td {
-    padding: 1rem 1rem;
+    padding: 0.92rem 1rem;
     border-bottom: 1px solid var(--border);
     vertical-align: middle;
   }
@@ -1122,18 +1153,49 @@
   .comparison-table tbody th {
     font-weight: 600;
     color: var(--text);
-    width: 44%;
+    width: 42%;
+    text-align: left;
   }
 
   .comparison-table tbody td {
     text-align: center;
-    font-size: 1rem;
+    font-size: 0.92rem;
     color: var(--text);
     font-weight: 700;
   }
 
   .comparison-table tbody tr:nth-child(even) {
     background: rgba(154, 103, 56, 0.03);
+  }
+
+  .comparison-value {
+    min-width: 7.8rem;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 0.38rem 0.7rem;
+    border: 1px solid var(--border);
+    font-size: 0.82rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .comparison-value-included {
+    color: var(--accent-strong);
+    background: var(--accent-light);
+    border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+  }
+
+  .comparison-value-limited {
+    color: var(--text);
+    background: var(--surface-strong);
+  }
+
+  .comparison-value-muted {
+    color: var(--text-muted);
+    background: transparent;
   }
   
   .pricing-card {
@@ -1246,6 +1308,11 @@
   .pricing-card .btn-primary,
   .pricing-card .btn-secondary {
     width: 100%;
+    height: 52px;
+    min-height: 52px;
+    padding: 0 1rem;
+    border-radius: 999px;
+    font-size: 0.94rem;
   }
 
   [data-theme="dark"] .hero-badge,
@@ -1309,10 +1376,58 @@
     background: rgba(255, 255, 255, 0.03);
   }
 
+  [data-theme="dark"] .comparison-table-wrap {
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  [data-theme="dark"] .comparison-value-included {
+    color: #ffd19b;
+    background: rgba(224, 173, 114, 0.13);
+    border-color: rgba(224, 173, 114, 0.28);
+  }
+
+  [data-theme="dark"] .comparison-value-limited {
+    color: #fff7ee;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  [data-theme="dark"] .comparison-value-muted {
+    color: #a99c8e;
+    border-color: rgba(255, 236, 216, 0.1);
+  }
+
   .pricing-actions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.75rem;
+  }
+
+  .pricing-actions .btn-secondary,
+  .pricing-card > .btn-secondary {
+    background: color-mix(in srgb, var(--surface-strong) 88%, white);
+    color: var(--text);
+    border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
+  }
+
+  .pricing-actions .btn-secondary:hover,
+  .pricing-card > .btn-secondary:hover {
+    color: var(--accent-strong);
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  [data-theme="dark"] .pricing-actions .btn-secondary,
+  [data-theme="dark"] .pricing-card > .btn-secondary {
+    background: rgba(255, 255, 255, 0.075);
+    color: #f8efe3;
+    border-color: rgba(255, 236, 216, 0.22);
+  }
+
+  [data-theme="dark"] .pricing-actions .btn-secondary:hover,
+  [data-theme="dark"] .pricing-card > .btn-secondary:hover {
+    background: rgba(224, 173, 114, 0.16);
+    color: #ffd19b;
+    border-color: rgba(224, 173, 114, 0.42);
   }
   
   /* CTA Block */
@@ -1320,10 +1435,10 @@
     max-width: 1000px;
     margin: 2rem auto 3rem;
     background:
-      radial-gradient(circle at 12% 20%, rgba(255,255,255,0.32), transparent 24%),
-      linear-gradient(135deg, var(--accent-strong), var(--accent));
-    border-radius: 48px;
-    color: white;
+      radial-gradient(circle at 12% 20%, rgba(255,255,255,0.3), transparent 24%),
+      linear-gradient(135deg, #6e4726, #b97c44);
+    border-radius: 40px;
+    color: #fffaf4;
     padding: 3rem;
     border: 1px solid rgba(255, 255, 255, 0.22);
     box-shadow: var(--shadow-lg);
@@ -1347,7 +1462,7 @@
   }
   
   .cta-block h2 {
-    font-size: clamp(2rem, 4vw, 3.1rem);
+    font-size: clamp(2.2rem, 4.4vw, 3.5rem);
     margin-bottom: 1rem;
     letter-spacing: -0.05em;
   }
@@ -1369,11 +1484,26 @@
   .cta-actions .btn-primary {
     background: white;
     color: var(--accent-strong);
+    height: 52px;
+    min-height: 52px;
+    padding: 0 1.2rem;
   }
 
   .cta-actions span {
     color: rgba(255,255,255,0.75);
     font-size: 0.85rem;
+  }
+
+  [data-theme="dark"] .cta-block {
+    background:
+      radial-gradient(circle at 12% 20%, rgba(255, 209, 155, 0.16), transparent 24%),
+      linear-gradient(135deg, #1f1b18, #3a2b20 46%, #7d5435);
+    border-color: rgba(255, 236, 216, 0.18);
+  }
+
+  [data-theme="dark"] .cta-block p,
+  [data-theme="dark"] .cta-actions span {
+    color: rgba(255, 247, 238, 0.78);
   }
   
   /* Buttons */

@@ -26,6 +26,9 @@ return [
     'confirm_password' => 'تأكيد كلمة المرور',
     'remember_me' => 'تذكرني',
     'continue_google' => 'المتابعة باستخدام Google',
+    'auth_or' => 'أو',
+    'auth_new_to_mutqin' => 'جديد على متقن؟',
+    'auth_already_account' => 'لديك حساب بالفعل؟',
     'forgot_password' => 'هل نسيت كلمة المرور؟',
     'name' => 'الاسم',
 ];

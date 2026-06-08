@@ -14,6 +14,7 @@
       'tools-open': showTools,
       'player-visible': playerVisible,
       'mushaf-mode-active': readingViewMode === 'mushaf',
+      'madani-mode-active': readingViewMode === 'madani',
       'focus-mode-active': focusModeEnabled,
       'blur-mode-active': blurModeEnabled,
       'flow-practice': guidedUiStep === 'practice',
@@ -68,6 +69,10 @@
               :aria-expanded="showTools ? 'true' : 'false'" @click="openToolsPanel()" title="Open controls"
               aria-label="Open session setup controls">
               <i class="bi bi-toggles2" aria-hidden="true"></i>
+            </button>
+            <button class="cta cta-ghost setup-search-pill" type="button" @click="openQuranSearchModal"
+              title="Search the Quran" aria-label="Open Quran search">
+              <i class="bi bi-search" aria-hidden="true"></i>
             </button>
             <p class="offcanvas-launcher-copy">
               {{ t('home.controlsHint') }}
@@ -141,8 +146,6 @@
                 <div class="workspace-shell-title-row">
                   <h1>{{ currentChapter ? currentChapter.name_simple : activeChapterName }}</h1>
                 </div>
-                <p>{{ t('sessionStatus.progress', { current: currentPosition, total: totalVerses, percent: progressPercent }) }}<span
-                    v-if="etaLabel"> · {{ t('sessionStatus.left', { eta: etaLabel }) }}</span></p>
                 <div v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
                   <span v-if="reviewPriorityLabel">{{ reviewPriorityLabel }}</span>
                 </div>
@@ -158,10 +161,9 @@
                     <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
                     <span>{{ isPlaying ? t('common.pause') : t('common.startSession') }}</span>
                   </button>
-                  <button class="action-btn action-btn-secondary action-btn-recordings" type="button"
-                    @click="openRecordingsLibrary" title="Open recordings library" aria-label="Open recordings library">
-                    <i class="bi bi-collection-play" aria-hidden="true"></i>
-                    <span>{{ t('recordings.viewAll') }}</span>
+                  <button class="action-btn action-btn-secondary action-btn-search" type="button"
+                    @click="openQuranSearchModal" title="Search the Quran" aria-label="Open Quran search">
+                    <i class="bi bi-search" aria-hidden="true"></i>
                   </button>
                   <!-- <button class="action-btn action-btn-secondary action-btn-recitation-check" type="button" @click="toggleRecitationCheck"
                     :disabled="recitationCheckPreparing || !activeVerseRef || !supportsSelfCheckRecording()"
@@ -174,6 +176,34 @@
                     <i class="bi bi-sliders" aria-hidden="true"></i>
                     <span>{{ t('common.controls') }}</span>
                   </button>
+                  <div class="top-card-menu-wrap" @click.stop>
+                    <button class="top-card-ellipsis" type="button" @click="toggleTopCardMenu"
+                      aria-label="Open reading options">
+                      <i class="bi bi-three-dots"></i>
+                    </button>
+                    <transition name="dropdown-fade">
+                      <div v-if="topCardMenuOpen" class="top-card-menu">
+                        <button type="button" :class="{ active: showTranslation }" @click="toggleReadingOption('translation')">
+                          <i class="bi bi-translate"></i><span>Translation</span>
+                        </button>
+                        <button type="button" :class="{ active: showTransliteration }" @click="toggleReadingOption('transliteration')">
+                          <i class="bi bi-type"></i><span>Transliteration</span>
+                        </button>
+                        <button type="button" :class="{ active: tajweedEnabled }" @click="toggleTajweed">
+                          <i class="bi bi-palette"></i><span>Tajweed</span>
+                        </button>
+                        <button type="button" @click="cycleQuranFont">
+                          <i class="bi bi-fonts"></i><span>Font: {{ getCurrentFontLabel() }}</span>
+                        </button>
+                        <button type="button" @click="openRecordingsLibrary">
+                          <i class="bi bi-collection-play"></i><span>View live recording</span>
+                        </button>
+                        <button type="button" @click="openOnboardingFromTopMenu">
+                          <i class="bi bi-compass"></i><span>Onboarding</span>
+                        </button>
+                      </div>
+                    </transition>
+                  </div>
                   <button v-if="hasSessionStarted" class="action-btn action-btn-secondary action-btn-exit" type="button"
                     @click="openSessionExitModal" title="End session" aria-label="End session">
                     <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
@@ -274,6 +304,27 @@
             </div>
             <div v-show="!mainCardCollapsed" class="workspace-quick-controls" aria-label="Quick reading controls">
               <div class="quick-pill-group-list">
+                <div class="quick-left-pills">
+                  <div class="view-mode-toggle" role="group" aria-label="Reading layout">
+                    <button type="button" class="view-mode-btn" :class="{ active: readingViewMode === 'stacked' }"
+                      @click="setReadingViewMode('stacked')" title="Show each ayah in a stacked card layout">
+                      <i class="bi bi-view-stacked"></i>
+                      <span>Stacked</span>
+                    </button>
+                    <button type="button" class="view-mode-btn" :class="{ active: readingViewMode === 'mushaf' }"
+                      @click="setReadingViewMode('mushaf')" title="Show ayahs in an interactive mushaf-style page">
+                      <i class="bi bi-book"></i>
+                      <span>Mushaf</span>
+                    </button>
+                  </div>
+                  <div class="workspace-applied-pills" aria-label="Live session settings">
+                    <span v-for="item in topCardAppliedPills" :key="item.key" class="workspace-applied-pill"
+                      :class="{ muted: item.muted }">
+                      <i class="bi" :class="item.icon" aria-hidden="true"></i>
+                      <span>{{ item.label }}</span>
+                    </span>
+                  </div>
+                </div>
                 <div class="quick-ai-actions" aria-label="AI practice tools">
                   <button type="button" class="quick-ai-action quick-ai-memory"
                     @click="openAiMemorisationCheckerForSession"
@@ -292,101 +343,39 @@
                     <small>Friendly recitation check and review</small>
                   </button>
                 </div>
-                <div class="view-mode-toggle" role="group" aria-label="Reading layout">
-                  <button type="button" class="view-mode-btn" :class="{ active: readingViewMode === 'stacked' }"
-                    @click="setReadingViewMode('stacked')" title="Show each ayah in a stacked card layout">
-                    <i class="bi bi-view-stacked"></i>
-                    <span>Stacked</span>
-                  </button>
-                  <button type="button" class="view-mode-btn" :class="{ active: readingViewMode === 'mushaf' }"
-                    @click="setReadingViewMode('mushaf')" title="Show ayahs in an interactive mushaf-style page">
-                    <i class="bi bi-book"></i>
-                    <span>Mushaf</span>
-                  </button>
-                </div>
-                <button class="toolbar-chip toolbar-chip-sm"  :class="{ active: showTranslation }"
-                  @click="toggleReadingOption('translation')" type="button">Translation</button>
-                <button class="toolbar-chip toolbar-chip-sm" :class="{ active: showTransliteration }"
-                  @click="toggleReadingOption('transliteration')" type="button">Transliteration</button>
-                <!-- <button class="toolbar-chip toolbar-chip-sm" :class="{ active: showWordByWord }"
-                  @click="toggleReadingOption('wbw')" type="button">Word by word</button> -->
-                <!-- <button class="toolbar-chip toolbar-chip-sm" :class="{ active: wordByWordAudioEnabled }"
-                  @click="toggleWordAudio()" type="button">Word audio</button> -->
-                <button class="toolbar-chip toolbar-chip-sm" :class="{ active: tajweedEnabled }" @click="toggleTajweed"
-                  type="button">Tajweed</button>
-                <div class="font-dropdown quick-font-dropdown">
-                  <button class="toolbar-chip toolbar-chip-sm font-dropdown-trigger" @click.stop="toggleFontDropdown"
-                    type="button" title="Change Quran font">
-                    <span>Font: {{ getCurrentFontLabel() }}</span>
-                    <i class="bi" :class="fontDropdownOpen ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
-                  </button>
-                  <transition name="dropdown-fade">
-                    <div v-if="fontDropdownOpen" class="font-dropdown-menu quick-font-menu">
-                      <button v-for="font in quranFontOptions" :key="font.value" class="font-option"
-                        :class="{ active: quranFont === font.value }" @click="selectFont(font.value)">
-                        <i class="bi" :class="getFontIcon(font.value)"></i>
-                        <span>{{ font.label }}</span>
-                        <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon"></i>
-                      </button>
-                    </div>
-                  </transition>
-                </div>
               </div>
             </div>
           </section>
 
           <main id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
             aria-label="Memorisation workspace">
-            <div v-if="readingViewMode === 'mushaf'" class="mushaf-workspace">
+            <div v-if="!isSessionCompleted && (readingViewMode === 'mushaf' || readingViewMode === 'madani')" class="mushaf-workspace"
+              :class="{ 'madani-workspace': readingViewMode === 'madani' }">
               <div class="mushaf-frame">
-                <div class="mushaf-sheet-tools mushaf-sheet-tools-global" aria-label="Mushaf controls">
-                  <div class="mushaf-toolbar-group mushaf-toolbar-reading">
-                    <span class="mushaf-toolbar-title">Reading</span>
-                    <div class="mushaf-font-controls">
-                    <button type="button" @click.stop="decreaseMushafFontSize" title="Decrease mushaf font size">
-                      <i class="bi bi-dash-lg"></i>
-                    </button>
-                    <span>{{ getTextScalePercent() }}%</span>
-                    <button type="button" @click.stop="increaseMushafFontSize" title="Increase mushaf font size">
-                      <i class="bi bi-plus-lg"></i>
-                    </button>
-                    </div>
-                  </div>
-                  <div class="mushaf-toolbar-group mushaf-toolbar-page">
-                    <span class="mushaf-toolbar-title">Page</span>
-                    <div class="mushaf-bg-picker" title="Change mushaf background">
-                    <button v-for="option in mushafBackgroundOptions" :key="option.value" type="button"
-                      class="mushaf-bg-swatch"
-                      :class="[`mushaf-bg-swatch-${option.value}`, { active: mushafBackground === option.value }]"
-                      @click.stop="setMushafBackground(option.value)"
-                      :aria-label="`Use ${option.label} background`"></button>
-                    </div>
-                  </div>
-                  <div v-if="activeVerseRef" class="mushaf-toolbar-group mushaf-toolbar-ai">
-                    <span class="mushaf-toolbar-title">AI practice</span>
-                    <div class="mushaf-ai-button-row">
-                      <button class="mushaf-ai-button mushaf-ai-memory" type="button"
-                        @click.stop="openAiMemorisationCheckerForVerse(activeVerseRef)"
-                        :class="{ active: aiMemorisationCheckerRecording }"
-                        :disabled="aiMemorisationCheckerPreparing || !supportsSelfCheckRecording()"
-                        :title="aiMemorisationCheckerRecording ? 'AI memorisation checker is active' : 'Open AI memorisation checker'">
-                        <i class="bi" :class="aiMemorisationCheckerRecording ? 'bi-stop-circle' : 'bi-eye-slash'"></i>
-                        <span>{{ aiMemorisationCheckerRecording ? 'Stop Memory' : 'AI Memory' }}</span>
-                        <small>Recall without looking</small>
-                      </button>
-                      <button class="mushaf-ai-button mushaf-ai-recite" type="button"
-                        @click.stop="openAiRecitationCheckForVerse(activeVerseRef)"
-                        :class="{ active: recitationCheckRecording }"
-                        :disabled="recitationCheckPreparing || !supportsSelfCheckRecording()"
-                        :title="recitationCheckRecording ? 'AI recitation check is active' : 'Open AI recitation check'">
-                        <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-stars'"></i>
-                        <span>{{ recitationCheckRecording ? 'Stop Recite' : 'AI Recite' }}</span>
-                        <small>Detect mistakes</small>
-                      </button>
-                    </div>
-                  </div>
+                <div v-if="activeVerseRef" class="mushaf-pill-bar" :class="{ 'madani-pill-bar': readingViewMode === 'madani' }"
+                  aria-label="Mushaf practice actions">
+                  <button class="mushaf-pill" type="button" @click.stop="toggleSelfCheckAyahPlayback(activeVerseRef)"
+                    :class="{ active: activeSelfCheckAyahPlaybackKey === activeVerseRef.key }">
+                    <i class="bi" :class="activeSelfCheckAyahPlaybackKey === activeVerseRef.key ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                    <span>Play</span>
+                  </button>
+                  <button class="mushaf-pill" type="button"
+                    @click.stop="openAiMemorisationCheckerForVerse(activeVerseRef)"
+                    :class="{ active: aiMemorisationCheckerRecording }"
+                    :disabled="aiMemorisationCheckerPreparing || !supportsSelfCheckRecording()">
+                    <i class="bi" :class="aiMemorisationCheckerRecording ? 'bi-stop-circle' : 'bi-eye-slash'"></i>
+                    <span>{{ aiMemorisationCheckerRecording ? 'Stop Memory' : 'AI Memory' }}</span>
+                  </button>
+                  <button class="mushaf-pill" type="button"
+                    @click.stop="openAiRecitationCheckForVerse(activeVerseRef)"
+                    :class="{ active: recitationCheckRecording }"
+                    :disabled="recitationCheckPreparing || !supportsSelfCheckRecording()">
+                    <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-stars'"></i>
+                    <span>{{ recitationCheckRecording ? 'Stop Recite' : 'AI Recite' }}</span>
+                  </button>
                 </div>
-                <div ref="mushafViewport" class="mushaf-viewport" :class="`mushaf-bg-${mushafBackground}`">
+                <div ref="mushafViewport" class="mushaf-viewport"
+                  :class="[readingViewMode === 'madani' ? 'madani-viewport' : '', `mushaf-bg-${mushafBackground}`]">
                   <div v-if="!mushafPages.length" class="mushaf-empty-page">
                     <i class="bi bi-book"></i>
                     <strong>Mushaf page is preparing</strong>
@@ -395,33 +384,15 @@
                   </div>
                   <div class="mushaf-track" :style="mushafTrackStyle">
                     <article v-for="(page, pageIndex) in mushafPages" :key="page.id" class="mushaf-page"
-                      :class="[`mushaf-bg-${mushafBackground}`, `mushaf-border-${mushafBorder}`, { active: pageIndex === safeMushafPageIndex }]"
+                      :class="[`mushaf-bg-${mushafBackground}`, `mushaf-border-${mushafBorder}`, { active: pageIndex === safeMushafPageIndex, 'madani-page': readingViewMode === 'madani' }]"
                       :aria-hidden="pageIndex === safeMushafPageIndex ? 'false' : 'true'">
-                      <div class="mushaf-sheet-tools" aria-label="Mushaf controls">
-                        <div class="mushaf-font-controls">
-                          <button type="button" @click.stop="decreaseMushafFontSize" title="Decrease mushaf font size">
-                            <i class="bi bi-dash-lg"></i>
-                          </button>
-                          <span>{{ getTextScalePercent() }}%</span>
-                          <button type="button" @click.stop="increaseMushafFontSize" title="Increase mushaf font size">
-                            <i class="bi bi-plus-lg"></i>
-                          </button>
-                        </div>
-                        <div class="mushaf-bg-picker" title="Change mushaf background">
-                          <button v-for="option in mushafBackgroundOptions" :key="option.value" type="button"
-                            class="mushaf-bg-swatch"
-                            :class="[`mushaf-bg-swatch-${option.value}`, { active: mushafBackground === option.value }]"
-                            @click.stop="setMushafBackground(option.value)"
-                            :aria-label="`Use ${option.label} background`"></button>
-                        </div>
-                      </div>
-                      <header class="mushaf-page-header" dir="rtl">
+                      <header class="mushaf-page-header" :class="{ 'madani-page-header': readingViewMode === 'madani' }" dir="rtl">
                         <h2>{{ mushafSurahTitle }}</h2>
                         <div v-if="showMushafBismillah" class="mushaf-bismillah" aria-label="Bismillah">
                           بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
                         </div>
                       </header>
-                      <div class="mushaf-page-body" dir="rtl">
+                      <div class="mushaf-page-body" :class="{ 'madani-page-body': readingViewMode === 'madani' }" dir="rtl">
                         <span v-for="verse in page.verses" :key="verse.key" role="button" tabindex="0"
                           :data-verse-key="verse.key" class="mushaf-ayah" :class="{
                             active: effectiveActiveVerseKey === verse.key,
@@ -436,6 +407,7 @@
                           @touchmove.passive="clearTouchPeek"
                           @touchend.passive="onVerseTouchEnd($event, verse.key)" @touchcancel.passive="clearTouchPeek">
                           <span class="mushaf-ayah-text" v-html="getDisplayArabic(verse)" :class="{
+                            'madani-ayah-text': readingViewMode === 'madani',
                             'tajweed-enabled': tajweedEnabled,
                             'word-highlight-enabled': true,
                             'verse-weak': isWeakAyah(verse.key),
@@ -445,16 +417,37 @@
                               'font-family': quranFontFamily
                             }"></span>
                           <span class="mushaf-ayah-number"
-                            :class="`mushaf-ayah-number-digits-${Math.min(3, String(verse.number || '').length || 1)}`"
+                            :class="[{ 'madani-ayah-number': readingViewMode === 'madani' }, `mushaf-ayah-number-digits-${Math.min(3, String(verse.number || '').length || 1)}`]"
                             :style="getMushafAyahNumberStyle(verse.number)">{{ verse.number }}</span>
                         </span>
                       </div>
+                      <footer class="mushaf-page-footer" :class="{ 'madani-page-footer': readingViewMode === 'madani' }">
+                        <span>Page {{ pageIndex + 1 }} / {{ mushafPages.length }}</span>
+                        <span>Ayahs {{ page.startNumber }}-{{ page.endNumber }}</span>
+                      </footer>
                     </article>
                   </div>
                 </div>
+                <nav v-if="mushafPages.length > 1" class="mushaf-page-pills" aria-label="Quran pages">
+                  <button class="mushaf-page-pill" type="button" :disabled="!canGoPreviousMushafPage"
+                    @click="goToPreviousMushafPage">
+                    <i class="bi bi-chevron-left"></i>
+                    <span>Prev</span>
+                  </button>
+                  <button v-for="(page, pageIndex) in mushafPages" :key="`mushaf-page-pill-${page.id}`"
+                    class="mushaf-page-pill" type="button" :class="{ active: pageIndex === safeMushafPageIndex }"
+                    @click="goToMushafPage(pageIndex)">
+                    <span>{{ pageIndex + 1 }}</span>
+                  </button>
+                  <button class="mushaf-page-pill" type="button" :disabled="!canGoNextMushafPage"
+                    @click="goToNextMushafPage">
+                    <span>Next</span>
+                    <i class="bi bi-chevron-right"></i>
+                  </button>
+                </nav>
               </div>
             </div>
-            <div v-else class="verses-grid">
+            <div v-else-if="!isSessionCompleted" class="verses-grid">
               <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" class="verse-card" :class="{
                 active: effectiveActiveVerseKey === verse.key,
                 'serious-training': false,
@@ -475,37 +468,6 @@
                     <span v-if="effectiveActiveVerseKey === verse.key" class="verse-status-badge">Active Ayah</span>
                   </div>
                   <div class="verse-actions">
-                    <div class="verse-font-inline-controls" @click.stop>
-                      <button class="verse-font-inline-btn" @click="decreaseTextScale($event)"
-                        title="Decrease text size" type="button" aria-label="Decrease ayah text size">
-                        <i class="bi bi-dash-lg" aria-hidden="true"></i>
-                      </button>
-                      <span class="verse-font-inline-value">{{ getTextScalePercent() }}%</span>
-                      <button class="verse-font-inline-btn" @click="increaseTextScale($event)"
-                        title="Increase text size" type="button" aria-label="Increase ayah text size">
-                        <i class="bi bi-plus-lg" aria-hidden="true"></i>
-                      </button>
-                      <button class="verse-font-inline-btn" @click="resetTextScale($event)"
-                        title="Reset text size" type="button" aria-label="Reset ayah text size">
-                        <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
-                      </button>
-                    </div>
-                    <!-- Small play button next to play pill -->
-                    <button class="verse-small-play-btn" @click.stop="playVerse(verse)"
-                      :title="hasSessionFeedback ? (activeVerseKey === verse.key && isPlaying ? 'Pause' : 'Play current ayah') : 'Preview this ayah (does not start a session)'"
-                      type="button"
-                      :aria-label="hasSessionFeedback ? (activeVerseKey === verse.key && isPlaying ? `Pause ayah ${verse.number}` : `Play ayah ${verse.number}`) : `Preview ayah ${verse.number}`">
-                      <i class="bi"
-                        :class="activeVerseKey === verse.key && isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-                    </button>
-
-                    <!-- Download button for every verse -->
-                    <button class="verse-download-btn" @click.stop="downloadVerseAudio(verse)" :disabled="!verse.audio"
-                      title="Download audio for offline listening" type="button"
-                      :aria-label="`Download audio for ayah ${verse.number}`">
-                      <i class="bi bi-download" aria-hidden="true"></i>
-                    </button>
-
                     <button class="verse-self-check-btn verse-ai-check-btn"
                       :class="{ active: aiMemorisationCheckerVerseKey === verse.key }"
                       @click.stop="openAiMemorisationCheckerForVerse(verse)"
@@ -524,6 +486,36 @@
                       <span>AI Recite</span>
                       <em v-if="getAyahRecordingCount(verse.key)">{{ getAyahRecordingCount(verse.key) }}</em>
                     </button>
+                    <div class="verse-menu-wrap" @click.stop>
+                      <button class="verse-ellipsis-btn" type="button" @click="toggleVerseActionMenu(verse.key)"
+                        aria-label="Open ayah actions">
+                        <i class="bi bi-three-dots"></i>
+                      </button>
+                      <transition name="dropdown-fade">
+                        <div v-if="openVerseActionKey === verse.key" class="verse-action-menu">
+                          <button type="button" @click="playVerse(verse)">
+                            <i class="bi" :class="activeVerseKey === verse.key && isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                            <span>{{ activeVerseKey === verse.key && isPlaying ? 'Pause' : 'Play' }}</span>
+                          </button>
+                          <button type="button" @click="downloadVerseAudio(verse)" :disabled="!verse.audio">
+                            <i class="bi bi-download"></i>
+                            <span>Download</span>
+                          </button>
+                          <div class="verse-menu-font-row">
+                            <span>Font size</span>
+                            <div>
+                              <button type="button" @click="decreaseTextScale($event)" aria-label="Decrease ayah text size">
+                                <i class="bi bi-dash-lg"></i>
+                              </button>
+                              <em>{{ getTextScalePercent() }}%</em>
+                              <button type="button" @click="increaseTextScale($event)" aria-label="Increase ayah text size">
+                                <i class="bi bi-plus-lg"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </transition>
+                    </div>
                   </div>
                 </div>
 
@@ -568,6 +560,11 @@
                   </div>
                 </div>
               </div>
+            </div>
+            <div v-else class="session-complete-empty">
+              <i class="bi bi-check2-circle"></i>
+              <strong>Session complete</strong>
+              <span>The ayah stack is hidden. Open Controls for insights or start a new range.</span>
             </div>
           </main>
         </div>
@@ -1011,7 +1008,30 @@
             <div class="stats-sessions-container">
               <div class="saved-header">
                 <h3><i class="bi bi-bar-chart-line"></i> Insights</h3>
-                <p>Quick, calm insights from your saved memorisation sessions</p>
+                <p>Simple session signals first, detailed analytics when you need them.</p>
+              </div>
+              <div class="controls-insight-chart" aria-label="Current session progress chart">
+                <div class="controls-insight-chart-head">
+                  <span>Session progress</span>
+                  <strong>{{ progressPercent }}%</strong>
+                </div>
+                <div class="controls-insight-ring" :style="{ '--insight-progress': `${progressPercent}%` }">
+                  <span>{{ currentPosition }}/{{ totalVerses }}</span>
+                </div>
+                <div class="controls-insight-bars">
+                  <div v-for="item in controlsAnalyticsCards" :key="`bar-${item.key}`" class="controls-insight-bar">
+                    <span>{{ item.label }}</span>
+                    <div><em :style="{ width: `${getControlsInsightPercent(item)}%` }"></em></div>
+                    <strong>{{ item.value }}</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="controls-analytics-grid" aria-label="Current session analytics">
+                <article v-for="item in controlsAnalyticsCards" :key="item.key" class="controls-analytics-card">
+                  <span>{{ item.label }}</span>
+                  <strong>{{ item.value }}</strong>
+                  <small>{{ item.description }}</small>
+                </article>
               </div>
               <div v-if="savedSessions.length === 0" class="empty-state">
                 <i class="bi bi-activity"></i>
@@ -1641,9 +1661,24 @@
             <header class="memorisation-checker-section-head">
               <span>Live workspace</span>
               <strong>{{ aiMemorisationCheckerScope === 'session' ? 'Recite the selected session while Mutqin listens' : 'Recite this ayah while Mutqin listens' }}</strong>
+              <p>AI review is a support tool and may not be 100% accurate. Confirm important mistakes yourself.</p>
             </header>
 
             <div class="memorisation-checker-live">
+              <div class="ai-recitation-options" aria-label="AI recitation options">
+                <button class="ai-recitation-toggle" type="button" :class="{ active: aiRecitationStrictProgression }"
+                  :aria-pressed="aiRecitationStrictProgression ? 'true' : 'false'"
+                  @click="setAiRecitationProgressionMode('strict')">
+                  <i class="bi bi-lock-fill"></i>
+                  <span>Fix mistakes before moving on</span>
+                </button>
+                <button class="ai-recitation-toggle" type="button" :class="{ active: !aiRecitationStrictProgression }"
+                  :aria-pressed="!aiRecitationStrictProgression ? 'true' : 'false'"
+                  @click="setAiRecitationProgressionMode('end')">
+                  <i class="bi bi-flag"></i>
+                  <span>Continue to the end, then show results</span>
+                </button>
+              </div>
               <div class="recitation-live-head">
                 <span>{{ aiMemorisationCheckerLiveSummary }}</span>
                 <strong v-if="!aiMemorisationCheckerResult" class="memorisation-checker-live-pill"
@@ -1657,12 +1692,16 @@
                   Recognized words will appear here as you recite.
                 </span>
                 <span v-for="word in aiMemorisationCheckerVisibleLiveWords" :key="word.key"
-                  class="recitation-word-chip word-live">
+                  class="recitation-word-chip word-live" :class="`word-${word.status || 'pending'}`" :title="word.note">
                   {{ word.text }}
                 </span>
               </transition-group>
               <p v-if="aiMemorisationCheckerRecording" class="memorisation-checker-hint memorisation-checker-recording-hint">
-                Listening. Results appear after stop.
+                {{ getAiRecitationLiveGuidance(aiMemorisationCheckerLiveWords) }}
+              </p>
+              <p v-else-if="!aiMemorisationCheckerResult && !aiMemorisationCheckerPreparing"
+                class="memorisation-checker-hint memorisation-checker-recording-hint idle">
+                Press Start Check when you are ready. The microphone will not record until you start it.
               </p>
               <div v-if="aiMemorisationCheckerError" class="recitation-check-error">
                 {{ aiMemorisationCheckerError }}
@@ -1687,7 +1726,9 @@
               </div>
               <div class="recitation-word-stream memorisation-checker-word-stream memorisation-checker-final-words" dir="rtl">
                 <span v-for="(word, index) in getRecitationWordStatuses(aiMemorisationCheckerResult)" :key="`memory-final-${index}`"
-                  class="recitation-word-chip" :class="`word-${word.status || 'pending'}`" :title="word.note">
+                  class="recitation-word-chip" :class="[`word-${word.status || 'pending'}`, { 'can-correct-ai': word.status && word.status !== 'correct' }]"
+                  :title="word.status && word.status !== 'correct' ? `${word.note || ''} Mark as AI mistake.` : word.note"
+                  @click="markAiRecitationWordAsCorrect(aiMemorisationCheckerResult, index)">
                   {{ word.text }}
                 </span>
               </div>
@@ -1699,9 +1740,13 @@
                 <span>What to do next?</span>
                 <p>{{ getAiMemorisationCheckerNextStep(aiMemorisationCheckerResult) }}</p>
               </div>
+              <div class="recitation-next-card memorisation-checker-next-card">
+                <span>AI review check</span>
+                <p>{{ getAiRecitationPostReviewMessage(aiMemorisationCheckerResult) }}</p>
+              </div>
               <div v-if="aiMemorisationCheckerSavedNotice" class="self-check-status self-check-status-success memorisation-checker-saved-notice">
                 <i class="bi bi-check2-circle"></i>
-                <span>Saved to the recordings library.</span>
+                <span>Saved to your recordings library for this ayah.</span>
                 <button class="self-check-library-link" type="button" @click="openAiMemorisationCheckerRecordingsLibrary">
                   <i class="bi bi-collection-play"></i>
                   <span>Open Library</span>
@@ -1732,6 +1777,7 @@
             <header class="memorisation-checker-section-head">
               <span>{{ aiMemorisationCheckerScope === 'session' ? 'Session ayahs' : 'Selected ayah' }}</span>
               <strong>{{ aiMemorisationCheckerTargetLabel }}</strong>
+              <p>Use Play to hear the ayah, Hidden to practise recall, and Peek only when you need a quick prompt.</p>
             </header>
             <div class="memorisation-checker-ayah-actions" aria-label="Ayah quick actions">
               <button class="self-check-ayah-action" type="button" @click.stop="toggleSelfCheckAyahPlayback(aiMemorisationCheckerVerse)"
@@ -1883,6 +1929,10 @@
                 <i class="bi bi-check2-circle"></i>
                 <span>Saved to your recordings library for this ayah.</span>
               </div>
+              <div class="self-check-status self-check-status-warning ai-recitation-disclaimer">
+                <i class="bi bi-info-circle"></i>
+                <span>AI recitation feedback is not 100% accurate. Use it as a guide, then verify against the ayah.</span>
+              </div>
 
               <div v-if="selfCheckError && selfCheckVerseKey === selfCheckModalVerse.key"
                 class="self-check-status self-check-status-warning">
@@ -1921,7 +1971,7 @@
                 </div>
                 <div v-if="recitationCheckRecording" class="recitation-check-status">
                   <i class="bi bi-record-circle" aria-hidden="true"></i>
-                  <span>Listening now. Words update as you recite.</span>
+                  <span>{{ getAiRecitationLiveGuidance(recitationLiveWords) }}</span>
                 </div>
                 <div v-if="recitationCheckRecording" class="recitation-live-review recitation-live-review-compact"
                   aria-label="Live recitation word check">
@@ -1931,7 +1981,7 @@
                   </div>
                   <transition-group name="memory-word" tag="div" class="recitation-word-stream recitation-live-word-stream" dir="rtl">
                     <span v-for="word in getVisibleRecitationLiveWords()" :key="word.key"
-                      class="recitation-word-chip word-live" :title="word.note">
+                      class="recitation-word-chip word-live" :class="`word-${word.status || 'pending'}`" :title="word.note">
                       {{ word.text }}
                     </span>
                   </transition-group>
@@ -1963,9 +2013,14 @@
                     <strong>{{ getRecitationRecommendationDisplay(recitationCheckResult) }}</strong>
                     <p>{{ getRecitationNextStep(recitationCheckResult) }}</p>
                   </div>
+                  <div class="recitation-next-card">
+                    <span>AI review check</span>
+                    <p>{{ getAiRecitationPostReviewMessage(recitationCheckResult) }}</p>
+                  </div>
                   <div v-if="getRecitationReviewArabic(recitationCheckResult, selfCheckModalVerse)"
                     class="recitation-review-ayah" dir="rtl"
-                    v-html="getRecitationReviewArabic(recitationCheckResult, selfCheckModalVerse)"></div>
+                    v-html="getRecitationReviewArabic(recitationCheckResult, selfCheckModalVerse)"
+                    @click="handleRecitationReviewWordClick($event, recitationCheckResult)"></div>
                   <div class="recitation-result-actions">
                     <button class="btn-secondary self-check-action-btn" type="button" @click="discardRecitationCheckAttempt">
                       <i class="bi bi-x-circle"></i>
@@ -2292,6 +2347,20 @@
           <ul v-if="onboardingStepContent.points?.length" class="post-onboarding-points">
             <li v-for="item in onboardingStepContent.points" :key="item">{{ item }}</li>
           </ul>
+          <div v-if="onboardingStepContent.preview" class="post-onboarding-preview">
+            <div class="post-onboarding-preview-head">
+              <span class="post-onboarding-preview-icon"><i class="bi" :class="onboardingStepContent.preview.icon"></i></span>
+              <div>
+                <strong>{{ onboardingStepContent.preview.title }}</strong>
+                <small>{{ onboardingStepContent.preview.subtitle }}</small>
+              </div>
+            </div>
+            <div class="post-onboarding-preview-grid">
+              <span v-for="item in onboardingStepContent.preview.items" :key="item">
+                <i class="bi bi-check2"></i>{{ item }}
+              </span>
+            </div>
+          </div>
           <div v-if="onboardingStepContent.duas?.length" class="dua-onboarding-grid">
             <article v-for="dua in onboardingStepContent.duas" :key="dua.title" class="dua-onboarding-card">
               <span class="dua-onboarding-title">{{ dua.title }}</span>
@@ -2309,7 +2378,9 @@
           <button class="btn-secondary" @click="skipOnboarding">Skip</button>
           <button v-if="onboardingStepIndex < onboardingSteps.length - 1" class="btn-primary"
             @click="nextOnboardingStep">Next</button>
-          <button v-else class="btn-primary" @click="completeOnboardingAndStart">Finish</button>
+          <button v-else class="btn-primary" @click="completeOnboardingAndStart">
+            {{ onboardingManualLaunch ? 'Finish' : 'Use sample session' }}
+          </button>
         </div>
       </div>
     </div>
@@ -2366,6 +2437,113 @@
     <audio ref="audio" style="display:none"></audio>
     <audio ref="recordingsAudio" style="display:none"></audio>
 
+    <div v-if="showQuranSearchModal" class="quran-search-modal-backdrop" role="presentation"
+      @click.self="closeQuranSearchModal">
+      <section class="quran-search-modal" role="dialog" aria-modal="true" aria-labelledby="quranSearchTitle">
+        <header class="quran-search-header">
+          <div>
+            <span class="quran-search-kicker">Quran Search</span>
+            <h2 id="quranSearchTitle">Find passages across the Quran</h2>
+          </div>
+          <button class="quran-search-close pill-control" type="button" @click="closeQuranSearchModal"
+            aria-label="Close Quran search">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </header>
+
+        <div class="quran-search-input-row">
+          <label class="quran-search-input-shell" for="quranSearchInput">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input id="quranSearchInput" ref="quranSearchInput" v-model.trim="quranSearchQuery" type="search"
+              dir="auto" placeholder="Type at least 3 words in Arabic or English"
+              @keydown.enter.prevent="runQuranSearch" />
+          </label>
+          <button class="pill-control quran-search-voice" :class="{ active: quranSearchVoiceActive }" type="button"
+            @click="toggleQuranVoiceSearch" :disabled="!supportsQuranVoiceSearch"
+            :title="supportsQuranVoiceSearch ? 'Voice search' : 'Voice search is not supported in this browser'">
+            <i class="bi" :class="quranSearchVoiceActive ? 'bi-mic-fill' : 'bi-mic'" aria-hidden="true"></i>
+            <span>{{ quranSearchVoiceActive ? 'Listening' : 'Voice' }}</span>
+          </button>
+          <button class="pill-control quran-search-submit" type="button" @click="runQuranSearch"
+            :disabled="quranSearchLoading || quranSearchWordCount < 3">
+            <i class="bi bi-arrow-return-left" aria-hidden="true"></i>
+            <span>{{ quranSearchLoading ? 'Searching' : 'Search' }}</span>
+          </button>
+        </div>
+
+        <p class="quran-search-hint" :class="{ warning: quranSearchQuery && quranSearchWordCount < 3 }">
+          Enter a minimum of 3 words. Results match the same passage in Arabic text or translation.
+        </p>
+
+        <div class="quran-search-controls">
+          <div class="quran-search-filter-grid">
+            <label>
+              <span>Filter</span>
+              <select v-model="quranSearchFilterType" class="quran-search-select">
+                <option v-for="filter in quranSearchFilterOptions" :key="filter.value" :value="filter.value">
+                  {{ filter.label }}
+                </option>
+              </select>
+            </label>
+            <label v-if="quranSearchFilterType !== 'all'">
+              <span>{{ quranSearchFilterLabel }}</span>
+              <input v-if="quranSearchFilterType !== 'surah'" v-model.number="quranSearchFilterValue"
+                class="quran-search-filter-input" type="number" min="1" :max="quranSearchFilterMax"
+                :placeholder="quranSearchFilterPlaceholder" />
+              <select v-else v-model.number="quranSearchFilterValue" class="quran-search-select">
+                <option value="">Any surah</option>
+                <option v-for="chapter in chapters" :key="chapter.id" :value="chapter.id">
+                  {{ chapter.id }}. {{ chapter.name_simple }}
+                </option>
+              </select>
+            </label>
+          </div>
+          <div class="quran-search-pill-row" aria-label="Search display options">
+            <button class="pill-control" :class="{ active: quranSearchShowTranslation }" type="button"
+              @click="quranSearchShowTranslation = !quranSearchShowTranslation">
+              <i class="bi bi-translate" aria-hidden="true"></i>
+              <span>{{ quranSearchShowTranslation ? 'Translation on' : 'Translation off' }}</span>
+            </button>
+            <button class="pill-control" type="button" @click="adjustQuranSearchFont(-4)">
+              <i class="bi bi-dash-lg" aria-hidden="true"></i>
+              <span>Font</span>
+            </button>
+            <span class="quran-search-font-pill">{{ quranSearchFontSize }}px</span>
+            <button class="pill-control" type="button" @click="adjustQuranSearchFont(4)">
+              <i class="bi bi-plus-lg" aria-hidden="true"></i>
+              <span>Font</span>
+            </button>
+          </div>
+        </div>
+
+        <div v-if="quranSearchError" class="quran-search-status error">{{ quranSearchError }}</div>
+        <div v-else-if="quranSearchLoading" class="quran-search-status">
+          <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+          <span>Loading Quran search index...</span>
+        </div>
+        <div v-else-if="quranSearchHasRun && !filteredQuranSearchResults.length" class="quran-search-status">
+          No matching ayahs found for this passage and filter.
+        </div>
+
+        <div v-if="filteredQuranSearchResults.length" class="quran-search-results" aria-live="polite">
+          <div class="quran-search-results-head">
+            <strong>{{ filteredQuranSearchResults.length }} ayah{{ filteredQuranSearchResults.length === 1 ? '' : 's' }} found</strong>
+            <span>{{ quranSearchFilterSummary }}</span>
+          </div>
+          <article v-for="result in filteredQuranSearchResults" :key="result.key" class="quran-search-result-card">
+            <div class="quran-search-result-meta">
+              <span>{{ result.surahName }} · Ayah {{ result.ayah }}</span>
+              <small>Juz {{ result.juz }} · Hizb {{ result.hizb }} · Page {{ result.page }} · Word {{ result.firstWordIndex || 1 }}</small>
+            </div>
+            <p class="quran-search-arabic" dir="rtl" :style="{ fontSize: `${quranSearchFontSize}px`, fontFamily: quranFontFamily }"
+              v-html="highlightQuranSearchMatch(result.arabic, result.matchSource === 'arabic')"></p>
+            <p v-if="quranSearchShowTranslation && result.translation" class="quran-search-translation"
+              v-html="highlightQuranSearchMatch(result.translation, result.matchSource === 'translation')"></p>
+          </article>
+        </div>
+      </section>
+    </div>
+
   </div>
 </template>
 
@@ -2373,7 +2551,7 @@
 import axios from 'axios'
 import diff from 'fast-diff'
 import { toRaw } from 'vue'
-import { getEditions, getSurahEdition, getSurahEditions } from '../lib/quranApis'
+import { getEditions, getQuranEdition, getSurahEdition, getSurahEditions } from '../lib/quranApis'
 import { loadMutqinState, saveMutqinState, watchMutqinState } from '../composables/useMutqinPersistence'
 import { seedAyahs } from '../composables/useAyahState'
 import { buildSessionQueue, startMutqinSession, moveMutqinSession, completeMutqinSession } from '../composables/useSessionEngine'
@@ -2643,6 +2821,8 @@ export default {
       isBootstrapping: true,
       isDataReady: false,
       fontDropdownOpen: false,
+      topCardMenuOpen: false,
+      openVerseActionKey: '',
       verseFontSizes: {},
       defaultFontSize: 120,
       fontSizeStep: 10,
@@ -2723,42 +2903,85 @@ export default {
       onboardingStepIndex: 0,
       onboardingDemoSnapshot: null,
       onboardingDemoActive: false,
+      onboardingManualLaunch: false,
       onboardingSteps: [
         {
-          title: 'Welcome to Mutqin',
-          stepLabel: 'Big picture',
-          body: 'Mutqin is built around short memorisation sessions. Pick a small range, listen with structure, then return for recall and review.',
-          points: ['Short sessions', 'Clear repetition', 'Simple review']
+          title: 'Set up your first short session',
+          stepLabel: 'Session basics',
+          body: 'Start with a small range so the controls make sense. Mutqin has prepared a sample session with Surah Al-Ikhlas, ayahs 1-4.',
+          points: ['Surah Al-Ikhlas selected', 'Ayahs 1-4 keeps the first session focused', 'Alafasy recitation is ready'],
+          preview: {
+            icon: 'bi-book-half',
+            title: 'Sample session',
+            subtitle: 'A short range is easier to repeat, test, and review.',
+            items: ['Surah 112', 'Ayahs 1-4', 'One clean reciter']
+          }
         },
         {
-          title: 'How Sessions Work',
-          stepLabel: 'Step 1',
-          body: 'Each session starts with a surah, a focused ayah range, and the reciter you want to work with.',
-          points: ['Choose the surah', 'Keep the range small', 'Start with intention']
+          title: 'Choose how the ayahs appear',
+          stepLabel: 'Reading layout',
+          body: 'Use Stacked for focused ayah cards, Mushaf for page-style reading, or Madani when you want compact text with the tools still nearby.',
+          points: ['Stacked is easiest for learning one ayah at a time', 'Mushaf and Madani help when reviewing flow', 'Translation and transliteration can stay hidden until needed'],
+          preview: {
+            icon: 'bi-layout-text-window-reverse',
+            title: 'Clean reading modes',
+            subtitle: 'The same memorisation tools follow you across each layout.',
+            items: ['Stacked', 'Mushaf', 'Madani']
+          }
         },
         {
-          title: 'Repetition System',
-          stepLabel: 'Step 2',
-          body: 'Repetition gives the session its rhythm. Set a realistic repeat count and let the audio pace stay calm and accurate.',
-          points: ['Choose a realistic repeat count', 'Use speed only when needed', 'Let the rhythm stay steady']
+          title: 'Set a simple repetition rhythm',
+          stepLabel: 'Playback',
+          body: 'Start at normal speed, keep repeats realistic, and avoid rushing. The goal is consistency before intensity.',
+          points: ['Speed set to 1x', 'Five repetitions gives a clear first rhythm', 'Auto playback keeps the session moving'],
+          preview: {
+            icon: 'bi-arrow-repeat',
+            title: 'Recommended first rhythm',
+            subtitle: 'Simple settings make the first session predictable.',
+            items: ['1x speed', '5 repeats', 'Auto play']
+          }
         },
         {
-          title: 'Memorisation Flow',
-          stepLabel: 'Step 3',
-          body: 'Move from listening, to repeating, to reciting from memory. Techniques like Focus, Blur, and Chaining only support that flow.',
-          points: ['Listen first', 'Repeat with attention', 'Use techniques only when helpful']
+          title: 'Add one memorisation technique',
+          stepLabel: 'Practice tools',
+          body: 'Turn on one method at a time. Blur hides support for recall, chaining trains transitions, and anchors give difficult passages a memory hook.',
+          points: ['Blur for reciting from memory', 'Chaining for connecting neighbouring ayahs', 'Anchors for difficult starts or endings'],
+          preview: {
+            icon: 'bi-tools',
+            title: 'Technique rule',
+            subtitle: 'One method at a time keeps practice clean.',
+            items: ['Blur', 'Chaining', 'Anchors']
+          }
         },
         {
-          title: 'Self-Check',
-          stepLabel: 'Step 4',
-          body: 'Self-check is simple: recite first, then confirm. Blur Mode helps you hide support until you actually need it.',
-          points: ['Recite before revealing', 'Use Blur for recall', 'Return gently to weak spots']
+          title: 'Use AI Recite after practice',
+          stepLabel: 'AI recitation',
+          body: 'After listening and repeating, record the ayah. AI Recite marks strong, close, and missed words so you know what to repeat.',
+          points: ['Record only when you are ready', 'Green means strong match', 'Amber and red become review targets'],
+          preview: {
+            icon: 'bi-stars',
+            title: 'AI Recite',
+            subtitle: 'Use it as a review aid, not as a replacement for a teacher.',
+            items: ['Word review', 'Accuracy score', 'Saved attempts']
+          }
         },
         {
-          title: 'Before you recite',
-          stepLabel: 'Before reciting',
-          body: 'Begin simply. Seek refuge in Allah, start with Bismillah, then use a short dua if it helps you settle into the session.',
-          points: [],
+          title: 'Use AI Memory for recall',
+          stepLabel: 'AI memorisation',
+          body: 'AI Memory is for reciting without looking. It helps you check order, missing words, and whether the ayah is ready to move forward.',
+          points: ['Use after you have repeated the ayah', 'Keep strict progression on if you want no skipping', 'Review mistakes before moving on'],
+          preview: {
+            icon: 'bi-eye-slash',
+            title: 'AI Memory',
+            subtitle: 'A recall check for selected ayahs or the full session.',
+            items: ['Wrong order detection', 'Missing words', 'Post-recitation review']
+          }
+        },
+        {
+          title: 'Begin the session',
+          stepLabel: 'Ready',
+          body: 'The sample setup is ready. New users can keep it and press Start Session; returning users can reopen this guide later from the top-right ellipsis.',
+          points: ['Start with the sample session', 'Change the surah and ayah range any time', 'Find this guide under the top-card ellipsis'],
           duas: [
             {
               title: 'Seeking refuge',
@@ -2784,7 +3007,13 @@ export default {
               translation: 'My Lord, expand my chest and make my task easy.',
               source: 'Qur\'an 20:25-26'
             }
-          ]
+          ],
+          preview: {
+            icon: 'bi-play-circle',
+            title: 'What to do next',
+            subtitle: 'Close the guide, review the setup, then start.',
+            items: ['Check setup', 'Press Start Session', 'Recite and review']
+          }
         }
       ],
       showConfirmModal: false,
@@ -2854,6 +3083,9 @@ export default {
       recitationSpeechRecognition: null,
       recitationSpeechTranscript: '',
       recitationSpeechInterim: '',
+      aiRecitationStrictProgression: true,
+      aiRecitationPersistMistakes: false,
+      persistentAiRecitationReviews: {},
       selfCheckSavedAttemptsVisible: false,
       selfCheckSavedAttemptsFilter: 'all',
       themeObserver: null,
@@ -3091,6 +3323,28 @@ export default {
       // AlQuran
       alquranAudioEditions: [],
       alquranEdition: '',
+      showQuranSearchModal: false,
+      quranSearchQuery: '',
+      quranSearchLoading: false,
+      quranSearchHasRun: false,
+      quranSearchError: '',
+      quranSearchIndex: [],
+      quranSearchResults: [],
+      quranSearchFilterType: 'all',
+      quranSearchFilterValue: '',
+      quranSearchShowTranslation: true,
+      quranSearchFontSize: 34,
+      quranSearchRecognition: null,
+      quranSearchVoiceActive: false,
+      quranSearchFilterOptions: [
+        { value: 'all', label: 'Full Quran' },
+        { value: 'juz', label: 'Juz' },
+        { value: 'hizb', label: 'Hizb' },
+        { value: 'page', label: 'Page' },
+        { value: 'surah', label: 'Surah' },
+        { value: 'ayah', label: 'Ayah' },
+        { value: 'word', label: 'Word' }
+      ],
 
       // Misc
       currentVerseIndex: 0,
@@ -3109,6 +3363,69 @@ export default {
   },
 
   computed: {
+    quranSearchWordCount() {
+      return this.normalizeQuranSearchText(this.quranSearchQuery)
+        .split(/\s+/)
+        .filter(Boolean).length
+    },
+    supportsQuranVoiceSearch() {
+      if (typeof window === 'undefined') return false
+      return Boolean(window.SpeechRecognition || window.webkitSpeechRecognition)
+    },
+    quranSearchFilterLabel() {
+      const labels = {
+        juz: 'Juz number',
+        hizb: 'Hizb number',
+        page: 'Page number',
+        surah: 'Surah',
+        ayah: 'Ayah number',
+        word: 'Word position'
+      }
+      return labels[this.quranSearchFilterType] || 'Filter value'
+    },
+    quranSearchFilterPlaceholder() {
+      const placeholders = {
+        juz: '1-30',
+        hizb: '1-60',
+        page: '1-604',
+        ayah: 'Ayah number',
+        word: 'Word number'
+      }
+      return placeholders[this.quranSearchFilterType] || ''
+    },
+    quranSearchFilterMax() {
+      const max = {
+        juz: 30,
+        hizb: 60,
+        page: 604,
+        ayah: 286,
+        word: 80
+      }
+      return max[this.quranSearchFilterType] || 604
+    },
+    filteredQuranSearchResults() {
+      const type = this.quranSearchFilterType
+      const rawValue = this.quranSearchFilterValue
+      if (type === 'all' || rawValue === '' || rawValue === null || rawValue === undefined) {
+        return this.quranSearchResults
+      }
+      const value = Number(rawValue)
+      if (!Number.isFinite(value) || value <= 0) return this.quranSearchResults
+      return this.quranSearchResults.filter(result => {
+        if (type === 'juz') return Number(result.juz) === value
+        if (type === 'hizb') return Number(result.hizb) === value
+        if (type === 'page') return Number(result.page) === value
+        if (type === 'surah') return Number(result.surah) === value
+        if (type === 'ayah') return Number(result.ayah) === value
+        if (type === 'word') return Number(result.firstWordIndex || 0) === value
+        return true
+      })
+    },
+    quranSearchFilterSummary() {
+      if (this.quranSearchFilterType === 'all' || !this.quranSearchFilterValue) return 'Full Quran'
+      const option = this.quranSearchFilterOptions.find(item => item.value === this.quranSearchFilterType)
+      return `${option?.label || 'Filter'} ${this.quranSearchFilterValue}`
+    },
     actualGapDelay() {
       if (this.gapBetweenVerses === "none") return 0;
       if (this.gapBetweenVerses === "3s") return 3;
@@ -3171,6 +3488,34 @@ export default {
         success_rate: `${successRate}%`
       }
     },
+    controlsAnalyticsCards() {
+      return [
+        {
+          key: 'progress',
+          label: 'Progress',
+          value: `${this.currentPosition}/${Math.max(1, this.totalVerses)}`,
+          description: `${this.progressPercent}% through selected ayahs.`
+        },
+        {
+          key: 'plays',
+          label: 'Audio plays',
+          value: this.totalVersePlayCountValue,
+          description: 'Total ayah playback starts this session.'
+        },
+        {
+          key: 'time',
+          label: 'Session time',
+          value: this.liveSessionStats.session_time,
+          description: 'Focused time since the session started.'
+        },
+        {
+          key: 'checks',
+          label: 'AI checks',
+          value: this.recordingsLibrary.filter(item => this.isAiCheckRecording(item)).length,
+          description: 'Saved AI recitation or memorisation checks.'
+        }
+      ]
+    },
     dueCount() {
       // "Due" is surfaced only as a count; scheduling/intervals remain invisible.
       const stats = this.mutqinState?.stats || {}
@@ -3227,6 +3572,41 @@ export default {
         })
       }
       return items
+    },
+    topCardAppliedPills() {
+      const pills = [
+        {
+          key: 'progress',
+          icon: 'bi-activity',
+          label: `${this.currentPosition} of ${this.totalVerses} ayahs`
+        },
+        {
+          key: 'percent',
+          icon: 'bi-pie-chart',
+          label: `${this.progressPercent}% complete`
+        }
+      ]
+      if (this.etaLabel) {
+        pills.push({
+          key: 'eta',
+          icon: 'bi-clock-history',
+          label: `Audio time ${this.etaLabel} left`
+        })
+      }
+      if (this.blurModeEnabled) {
+        pills.push({ key: 'blur', icon: 'bi-cloud-haze2', label: `Blur ${this.blurIntensity}px` })
+      }
+      if (this.chainingEnabled) {
+        const method = this.chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking'
+        pills.push({ key: 'chaining', icon: 'bi-link-45deg', label: `${method} chaining · ${this.chainingRepetitions}x` })
+      }
+      if (this.focusModeEnabled) {
+        pills.push({ key: 'focus', icon: 'bi-bullseye', label: `Focus ${this.focusDimPercent}%` })
+      }
+      if (this.anchorModeEnabled) {
+        pills.push({ key: 'anchor', icon: 'bi-pin-angle-fill', label: `Anchors ${this.anchorCount}` })
+      }
+      return pills
     },
     appStyleVars() {
       return {
@@ -4357,8 +4737,14 @@ export default {
     },
 
     mushafPageSize() {
-      if (typeof window !== 'undefined' && window.innerWidth < 680) return 5
-      return 7
+      if (this.readingViewMode === 'madani') {
+        if (typeof window !== 'undefined' && window.innerWidth < 680) return 6
+        if (typeof window !== 'undefined' && window.innerWidth < 980) return 8
+        return 12
+      }
+      if (typeof window !== 'undefined' && window.innerWidth < 680) return 3
+      if (typeof window !== 'undefined' && window.innerWidth < 980) return 4
+      return 5
     },
 
     mushafDisplayVerses() {
@@ -4370,12 +4756,18 @@ export default {
     mushafPages() {
       const sourceVerses = this.mushafDisplayVerses
       if (!sourceVerses.length) return []
-      return [{
-        id: `mushaf-${sourceVerses[0].key}-${sourceVerses[sourceVerses.length - 1].key}`,
-        verses: sourceVerses,
-        startNumber: sourceVerses[0].number,
-        endNumber: sourceVerses[sourceVerses.length - 1].number
-      }]
+      const pageSize = Math.max(1, Number(this.mushafPageSize || 5))
+      const pages = []
+      for (let index = 0; index < sourceVerses.length; index += pageSize) {
+        const verses = sourceVerses.slice(index, index + pageSize)
+        pages.push({
+          id: `mushaf-${verses[0].key}-${verses[verses.length - 1].key}`,
+          verses,
+          startNumber: verses[0].number,
+          endNumber: verses[verses.length - 1].number
+        })
+      }
+      return pages
     },
 
     mushafSurahTitle() {
@@ -4469,7 +4861,7 @@ export default {
       }
     })
     this.$watch('effectiveActiveVerseKey', () => {
-      if (this.readingViewMode === 'mushaf') this.syncMushafPageToActiveVerse()
+      if (this.readingViewMode === 'mushaf' || this.readingViewMode === 'madani') this.syncMushafPageToActiveVerse()
     })
     this.$watch(() => this.mushafPages.length, () => {
       this.syncMushafPageToActiveVerse()
@@ -4753,10 +5145,194 @@ export default {
   },
 
   methods: {
+    getControlsInsightPercent(item = {}) {
+      if (item.key === 'progress') return Math.max(0, Math.min(100, Number(this.progressPercent || 0)))
+      if (item.key === 'plays') return Math.max(8, Math.min(100, Number(this.totalVersePlayCountValue || 0) * 12))
+      if (item.key === 'checks') {
+        const checks = this.recordingsLibrary.filter(recording => this.isAiCheckRecording(recording)).length
+        return Math.max(8, Math.min(100, checks * 18))
+      }
+      if (item.key === 'time') {
+        const started = this.sessionStartedAt ? Math.max(0, (Number(this.statsTick || Date.now()) - Number(this.sessionStartedAt)) / 1000) : 0
+        return Math.max(8, Math.min(100, Math.round((started / 900) * 100)))
+      }
+      return 35
+    },
     t(key, params = {}) {
       const translator = this.$t
       if (typeof translator !== 'function') return key
       return translator(key, params)
+    },
+
+    openQuranSearchModal() {
+      this.showQuranSearchModal = true
+      this.syncBodyScrollLock(true)
+      this.$nextTick(() => {
+        if (this.$refs.quranSearchInput) this.$refs.quranSearchInput.focus({ preventScroll: true })
+      })
+    },
+
+    closeQuranSearchModal() {
+      this.stopQuranVoiceSearch()
+      this.showQuranSearchModal = false
+      this.syncBodyScrollLock(false)
+    },
+
+    normalizeQuranSearchText(value) {
+      return String(value || '')
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, '')
+        .replace(/[إأآٱ]/g, 'ا')
+        .replace(/ى/g, 'ي')
+        .replace(/ؤ/g, 'و')
+        .replace(/ئ/g, 'ي')
+        .replace(/ة/g, 'ه')
+        .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+    },
+
+    async ensureQuranSearchIndex() {
+      if (this.quranSearchIndex.length) return
+      this.quranSearchLoading = true
+      this.quranSearchError = ''
+      try {
+        const [arabicRes, translationRes] = await Promise.all([
+          getQuranEdition('quran-uthmani'),
+          getQuranEdition('en.asad')
+        ])
+        const arabicSurahs = arabicRes.data?.data?.surahs || []
+        const translationSurahs = translationRes.data?.data?.surahs || []
+        const translationMap = new Map()
+        translationSurahs.forEach(surah => {
+          ;(surah.ayahs || []).forEach(ayah => {
+            translationMap.set(`${surah.number}:${ayah.numberInSurah}`, this.cleanTranslationText(ayah.text || ''))
+          })
+        })
+
+        this.quranSearchIndex = arabicSurahs.flatMap(surah => {
+          const chapter = this.chapters.find(item => Number(item.id) === Number(surah.number))
+          return (surah.ayahs || []).map(ayah => {
+            const key = `${surah.number}:${ayah.numberInSurah}`
+            const arabic = this.removeBasmala(ayah.text || '')
+            const translation = translationMap.get(key) || ''
+            return {
+              key,
+              surah: Number(surah.number),
+              surahName: chapter?.name_simple || surah.englishName || `Surah ${surah.number}`,
+              ayah: Number(ayah.numberInSurah),
+              juz: Number(ayah.juz || 0),
+              page: Number(ayah.page || 0),
+              hizb: Math.max(1, Math.ceil(Number(ayah.hizbQuarter || 1) / 4)),
+              arabic,
+              translation,
+              arabicNormalized: this.normalizeQuranSearchText(arabic),
+              translationNormalized: this.normalizeQuranSearchText(translation)
+            }
+          })
+        })
+      } catch (error) {
+        console.error('Failed to load Quran search index:', error)
+        this.quranSearchError = 'Unable to load Quran search right now. Please check your connection and try again.'
+      } finally {
+        this.quranSearchLoading = false
+      }
+    },
+
+    async runQuranSearch() {
+      this.quranSearchHasRun = true
+      this.quranSearchError = ''
+      const query = this.normalizeQuranSearchText(this.quranSearchQuery)
+      const words = query.split(/\s+/).filter(Boolean)
+      if (words.length < 3) {
+        this.quranSearchResults = []
+        this.quranSearchError = 'Please enter at least 3 words before searching.'
+        return
+      }
+      await this.ensureQuranSearchIndex()
+      if (this.quranSearchError) return
+
+      const phrase = words.join(' ')
+      const results = []
+      for (const item of this.quranSearchIndex) {
+        const arabicIndex = item.arabicNormalized.indexOf(phrase)
+        const translationIndex = item.translationNormalized.indexOf(phrase)
+        if (arabicIndex === -1 && translationIndex === -1) continue
+        const matchSource = arabicIndex !== -1 ? 'arabic' : 'translation'
+        const sourceText = matchSource === 'arabic' ? item.arabicNormalized : item.translationNormalized
+        const beforeMatch = sourceText.slice(0, matchSource === 'arabic' ? arabicIndex : translationIndex).trim()
+        results.push({
+          ...item,
+          matchSource,
+          firstWordIndex: beforeMatch ? beforeMatch.split(/\s+/).length + 1 : 1
+        })
+        if (results.length >= 150) break
+      }
+      this.quranSearchResults = results
+    },
+
+    highlightQuranSearchMatch(text, shouldHighlight) {
+      const escaped = escapeHtml(text)
+      if (!shouldHighlight) return escaped
+      const normalizedQuery = this.normalizeQuranSearchText(this.quranSearchQuery)
+      const firstNeedle = normalizedQuery.split(/\s+/).filter(Boolean)[0]
+      if (!firstNeedle) return escaped
+      const originalWords = String(text || '').split(/(\s+)/)
+      let marked = false
+      return originalWords.map(part => {
+        if (marked || !part.trim()) return escapeHtml(part)
+        const normalizedPart = this.normalizeQuranSearchText(part)
+        if (!normalizedPart || normalizedPart !== firstNeedle) return escapeHtml(part)
+        marked = true
+        return `<mark>${escapeHtml(part)}</mark>`
+      }).join('')
+    },
+
+    adjustQuranSearchFont(delta) {
+      const next = Number(this.quranSearchFontSize || 34) + Number(delta || 0)
+      this.quranSearchFontSize = Math.max(24, Math.min(58, next))
+    },
+
+    toggleQuranVoiceSearch() {
+      if (!this.supportsQuranVoiceSearch) {
+        this.quranSearchError = 'Voice search is not supported in this browser.'
+        return
+      }
+      if (this.quranSearchVoiceActive) {
+        this.stopQuranVoiceSearch()
+        return
+      }
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+      const recognition = new SpeechRecognition()
+      recognition.lang = this.activeLocale === 'ar' ? 'ar-SA' : 'en-US'
+      recognition.interimResults = true
+      recognition.continuous = false
+      recognition.onresult = event => {
+        const transcript = Array.from(event.results || [])
+          .map(result => result[0]?.transcript || '')
+          .join(' ')
+          .trim()
+        if (transcript) this.quranSearchQuery = transcript
+      }
+      recognition.onerror = event => {
+        this.quranSearchError = event?.error ? `Voice search stopped: ${event.error}` : 'Voice search stopped.'
+        this.quranSearchVoiceActive = false
+      }
+      recognition.onend = () => {
+        this.quranSearchVoiceActive = false
+      }
+      this.quranSearchRecognition = recognition
+      this.quranSearchVoiceActive = true
+      recognition.start()
+    },
+
+    stopQuranVoiceSearch() {
+      if (this.quranSearchRecognition) {
+        try { this.quranSearchRecognition.stop() } catch { }
+      }
+      this.quranSearchRecognition = null
+      this.quranSearchVoiceActive = false
     },
 
     playUiTone(kind = 'tap') {
@@ -4803,6 +5379,7 @@ export default {
       document.body.classList.toggle('tools-panel-open', !!locked)
       const hasBlockingOverlay = this.showRecordingsLibrary
         || this.showSelfCheckModal
+        || this.showQuranSearchModal
         || this.showConfirmModal
         || this.showSessionExitModal
         || this.showResumeModal
@@ -4814,6 +5391,7 @@ export default {
         || this.showTools
         || this.showRecordingsLibrary
         || this.showSelfCheckModal
+        || this.showQuranSearchModal
         || this.showConfirmModal
         || this.showSessionExitModal
         || this.showResumeModal
@@ -5819,6 +6397,7 @@ export default {
     },
     openOnboardingModal(force = false) {
       if (!this.isLoggedIn && !force) return
+      this.onboardingManualLaunch = !!force
       this.onboardingStepIndex = 0
       if (!force && this.hasCompletedOnboarding()) return
       if (!this.onboardingDemoActive) this.prepareOnboardingDemo()
@@ -5829,6 +6408,10 @@ export default {
         this.applyOnboardingStep(0)
       }, 50)
     },
+    openOnboardingFromTopMenu() {
+      this.topCardMenuOpen = false
+      this.openOnboardingModal(true)
+    },
     nextOnboardingStep() {
       this.onboardingStepIndex = Math.min(this.onboardingSteps.length - 1, this.onboardingStepIndex + 1)
       this.applyOnboardingStep(this.onboardingStepIndex)
@@ -5838,13 +6421,26 @@ export default {
       this.showPostLoginOnboarding = false
       this.onboardingStepIndex = 0
       this.restoreOnboardingDemo()
+      this.onboardingManualLaunch = false
     },
-    completeOnboardingAndStart() {
+    async completeOnboardingAndStart() {
       this.markOnboardingCompleted()
       this.showPostLoginOnboarding = false
       this.onboardingStepIndex = 0
       this.applyOnboardingStep(this.onboardingSteps.length - 1)
-      this.restoreOnboardingDemo()
+      if (this.onboardingManualLaunch) {
+        this.restoreOnboardingDemo()
+        this.onboardingManualLaunch = false
+        return
+      }
+      this.restoreOnboardingDemo({ keepCurrentSession: true })
+      this.onboardingManualLaunch = false
+      this.currentMode = 'advanced'
+      this.tab = 'tools'
+      this.showTools = true
+      if (this.chapterId) {
+        await this.loadChapter(this.currentMode)
+      }
     },
     prepareOnboardingDemo() {
       const snapshot = {
@@ -5870,10 +6466,12 @@ export default {
         blurIntensity: this.blurIntensity,
         anchorModeEnabled: this.anchorModeEnabled,
         anchorCount: this.anchorCount,
+        readingViewMode: this.readingViewMode,
         sectionOpen: deepClone(this.sectionOpen || {})
       }
       this.onboardingDemoSnapshot = snapshot
       this.onboardingDemoActive = true
+      this.currentMode = 'advanced'
       const demoChapter = this.chapters.find(chapter => Number(chapter.id) === 112) || this.chapters[0] || null
       if (demoChapter) {
         this.chapterId = Number(demoChapter.id)
@@ -5894,6 +6492,7 @@ export default {
       this.blurIntensity = 10
       this.anchorModeEnabled = false
       this.anchorCount = 2
+      this.readingViewMode = 'stacked'
       this.tab = 'tools'
       this.showTools = true
     },
@@ -5925,6 +6524,7 @@ export default {
       this.blurIntensity = snapshot.blurIntensity || this.blurIntensity
       this.anchorModeEnabled = snapshot.anchorModeEnabled
       this.anchorCount = snapshot.anchorCount
+      this.readingViewMode = snapshot.readingViewMode || this.readingViewMode
       this.sectionOpen = deepClone(snapshot.sectionOpen || this.sectionOpen)
       this.persistUiState()
     },
@@ -5932,18 +6532,25 @@ export default {
       if (!this.onboardingDemoActive) return
       const step = Math.max(0, Math.min(this.onboardingSteps.length - 1, Number(stepIndex || 0)))
       const stepConfig = [
-        { tab: 'tools', section: 'advanced_setup' },
-        { tab: 'tools', section: 'advanced_setup' },
-        { tab: 'tools', section: 'advanced_playback' },
-        { tab: 'techniques', section: 'blur_mode' },
-        { tab: 'tools', section: null }
+        { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: true, anchor: false },
+        { tab: 'settings', section: 'display_settings', mode: 'madani', blur: false, chaining: true, anchor: false },
+        { tab: 'tools', section: 'advanced_playback', mode: 'stacked', blur: false, chaining: true, anchor: false },
+        { tab: 'techniques', section: 'blur_mode', mode: 'stacked', blur: true, chaining: true, anchor: true },
+        { tab: 'tools', section: null, mode: 'stacked', blur: false, chaining: true, anchor: false },
+        { tab: 'tools', section: null, mode: 'stacked', blur: true, chaining: true, anchor: false },
+        { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: true, anchor: false }
       ][step] || { tab: 'tools', section: 'advanced_setup' }
       this.tab = stepConfig.tab
       this.showTools = true
+      if (stepConfig.mode) this.readingViewMode = stepConfig.mode
+      this.blurModeEnabled = !!stepConfig.blur
+      this.chainingEnabled = stepConfig.chaining !== false
+      this.anchorModeEnabled = !!stepConfig.anchor
       if (stepConfig.section) {
         const openMap = {
           advanced_setup: true,
           advanced_playback: false,
+          display_settings: false,
           focus_mode: false,
           blur_mode: false,
           chaining: false,
@@ -7144,6 +7751,7 @@ export default {
       if (!ayahKey) return false
       if (this.recitationCheckTargetVerseKey === ayahKey) return true
       return (this.recitationCheckPendingTargets || []).some(verse => verse?.key === ayahKey)
+        || !!this.persistentAiRecitationReviews?.[ayahKey]
     },
     getRecitationWordOffsetForVerse(ayahKey) {
       if (!ayahKey || !this.recitationCheckPendingTargets?.length) return 0
@@ -7156,10 +7764,109 @@ export default {
     },
     getRecitationWordStatusForVerse(ayahKey, index) {
       if (!this.isRecitationCheckTargetVerse(ayahKey)) return ''
-      if (!this.recitationCheckResult) return ''
-      const source = this.getRecitationWordStatuses(this.recitationCheckResult)
-      const status = source?.[this.getRecitationWordOffsetForVerse(ayahKey) + index]?.status || ''
+      const persistent = this.persistentAiRecitationReviews?.[ayahKey]
+      const result = this.recitationCheckResult || this.aiMemorisationCheckerResult || persistent || null
+      if (!result) return ''
+      const source = this.getRecitationWordStatuses(result)
+      const offset = persistent && !this.recitationCheckPendingTargets?.length ? 0 : this.getRecitationWordOffsetForVerse(ayahKey)
+      const status = source?.[offset + index]?.status || ''
       return ['pending', 'correct', 'partial', 'incorrect'].includes(status) ? status : ''
+    },
+    toggleAiRecitationStrictProgression() {
+      this.aiRecitationStrictProgression = !this.aiRecitationStrictProgression
+      this.persistUiState()
+    },
+    setAiRecitationProgressionMode(mode = 'strict') {
+      this.aiRecitationStrictProgression = mode !== 'end'
+      this.persistUiState()
+    },
+    toggleAiRecitationPersistMistakes() {
+      this.aiRecitationPersistMistakes = !this.aiRecitationPersistMistakes
+      if (!this.aiRecitationPersistMistakes) this.persistentAiRecitationReviews = {}
+      this.persistUiState()
+    },
+    getAiRecitationLiveGuidance(words = []) {
+      const list = Array.isArray(words) ? words : []
+      const issue = list.find(word => ['incorrect', 'partial'].includes(word.status))
+      if (this.aiRecitationStrictProgression && issue) {
+        return `Mistake detected at ${issue.text}. Recite it correctly before moving on.`
+      }
+      if (this.aiRecitationStrictProgression) {
+        return 'Listening now. Each word must turn green before the next word unlocks.'
+      }
+      return 'Listening now. Recite to the end; final colours are confirmed after you stop.'
+    },
+    rebuildRecitationResultFromStatuses(result = null) {
+      if (!result) return null
+      const statuses = this.getRecitationWordStatuses(result).map(word => ({ ...word }))
+      const mistakes = this.buildRecitationMistakesFromStatuses(
+        statuses,
+        this.tokenizeRecitationWords(result.transcript || ''),
+        statuses.map(word => this.tokenizeRecitationWords(word.text)[0] || ''),
+        result?.mistakeBreakdown?.extra || result?.mistakes?.extra || []
+      )
+      const total = Math.max(1, statuses.length)
+      const correctScore = statuses.filter(word => word.status === 'correct').length
+      const partialScore = statuses.filter(word => word.status === 'partial').length * 0.45
+      const wrongOrderPenalty = statuses.filter(word => word.outOfOrder).length * 0.35
+      const extraPenalty = (mistakes.extra.length || 0) * 0.35
+      result.wordStatuses = statuses
+      result.mistakes = mistakes
+      result.mistakeBreakdown = mistakes
+      result.accuracyScore = Math.max(0, Math.min(100, Math.round(((correctScore + partialScore - wrongOrderPenalty - extraPenalty) / total) * 100)))
+      result.recommendation = this.getRecitationRecommendation(result.accuracyScore, mistakes)
+      result.reviewMetadata = this.buildRecitationReviewMetadata(result.accuracyScore, mistakes, result.tajweedRules || [])
+      return result
+    },
+    markAiRecitationWordAsCorrect(result = null, index = -1) {
+      if (!result || index < 0) return
+      const statuses = this.getRecitationWordStatuses(result).map(word => ({ ...word }))
+      if (!statuses[index] || statuses[index].status === 'correct') return
+      statuses[index] = {
+        ...statuses[index],
+        status: 'correct',
+        note: 'Marked correct after user review.',
+        actual: statuses[index].actual || ''
+      }
+      result.wordStatuses = statuses
+      this.rebuildRecitationResultFromStatuses(result)
+      this.recitationLiveWords = this.recitationCheckResult === result ? statuses : this.recitationLiveWords
+      this.aiMemorisationCheckerLiveWords = this.aiMemorisationCheckerResult === result ? statuses : this.aiMemorisationCheckerLiveWords
+      this.persistAiRecitationReviewHighlights(result, this.getRecitationTargetVersesForResult(result))
+      this.persistAiMemorisationCheckerSession()
+      this.showBanner('AI highlight marked correct. Results updated.', 'success', 1400)
+    },
+    handleRecitationReviewWordClick(event, result = null) {
+      const target = event?.target?.closest?.('[data-recitation-word-index]')
+      if (!target) return
+      this.markAiRecitationWordAsCorrect(result, Number(target.dataset.recitationWordIndex))
+    },
+    persistAiRecitationReviewHighlights(result = null, targetVerses = []) {
+      if (!this.aiRecitationPersistMistakes || !result) return
+      const statuses = this.getRecitationWordStatuses(result)
+      const targets = Array.isArray(targetVerses) && targetVerses.length
+        ? targetVerses
+        : this.getRecitationTargetVersesForResult(result)
+      let offset = 0
+      const next = { ...this.persistentAiRecitationReviews }
+      targets.forEach(verse => {
+        const count = this.tokenizeRecitationDisplayWords(this.getPlainVerseArabicForCheck(verse)).length
+        const verseStatuses = statuses.slice(offset, offset + count)
+        if (verse?.key && verseStatuses.some(word => word.status && word.status !== 'correct')) {
+          next[verse.key] = {
+            ...result,
+            wordStatuses: verseStatuses,
+            targetText: this.getPlainVerseArabicForCheck(verse),
+            ayahKey: verse.key,
+            ayahRange: this.buildRecitationAyahRangePayload([verse])
+          }
+        } else if (verse?.key) {
+          delete next[verse.key]
+        }
+        offset += count
+      })
+      this.persistentAiRecitationReviews = next
+      this.persistUiState()
     },
     focusSelfCheckSavedAttempts(kind = '') {
       this.selfCheckSavedAttemptsVisible = true
@@ -7263,7 +7970,7 @@ export default {
       this.showAiMemorisationCheckerModal = false
       this.aiMemorisationCheckerPeekActive = false
       this.aiMemorisationCheckerError = ''
-      this.aiMemorisationCheckerTargetVerses = []
+      if (!this.aiRecitationPersistMistakes) this.aiMemorisationCheckerTargetVerses = []
       this.aiMemorisationCheckerScope = 'ayah'
       this.stopRecordingsPlayback({ clearSource: true })
       this.syncBodyScrollLock(false)
@@ -7344,9 +8051,6 @@ export default {
         status: statuses[index]?.status || 'pending',
         note: statuses[index]?.note || 'Waiting for this word.'
       }))
-      if (this.aiMemorisationCheckerRecording && this.isAiMemorisationCheckerLiveComplete()) {
-        this.stopAiMemorisationCheckerRecording()
-      }
     },
     startAiMemorisationCheckerSpeechRecognition() {
       const SpeechRecognition = this.getSpeechRecognitionConstructor()
@@ -7482,7 +8186,6 @@ export default {
         recorder.ondataavailable = event => {
           if (event.data?.size) {
             this.aiMemorisationCheckerChunks.push(event.data)
-            this.queueAiMemorisationCheckerLiveChunk(event.data)
           }
         }
         recorder.onerror = () => {
@@ -7521,7 +8224,7 @@ export default {
             this.cleanupAiMemorisationCheckerMedia()
           }
         }
-        recorder.start(700)
+        recorder.start(1000)
         this.aiMemorisationCheckerStartedAt = Date.now()
         this.aiMemorisationCheckerRecording = true
         this.aiMemorisationCheckerPreparing = false
@@ -7543,6 +8246,9 @@ export default {
       try {
         const transcript = await this.transcribeAiMemorisationCheckerBlob(blob, 'memorisation-check', targetVerses)
         const mergedTranscript = this.mergeRecitationTranscripts(transcript, fallbackTranscript, targetVerses)
+        if (!this.tokenizeRecitationWords(mergedTranscript).length) {
+          throw new Error('No clear Arabic words were detected. Record again closer to the microphone.')
+        }
         this.completeAiMemorisationCheckerFromTranscript(
           mergedTranscript,
           targetVerses,
@@ -7568,6 +8274,10 @@ export default {
       return String(response?.data?.text || '').trim()
     },
     completeAiMemorisationCheckerFromTranscript(transcript, targetVerses, source = 'groq whisper', audioSrc = '') {
+      if (!this.tokenizeRecitationWords(transcript).length) {
+        this.aiMemorisationCheckerError = 'No clear Arabic words were detected. Record again closer to the microphone.'
+        return null
+      }
       const result = {
         ...this.assessRecitationTranscript(transcript, targetVerses),
         id: `memorisation-check-${Date.now()}`,
@@ -7583,6 +8293,7 @@ export default {
         : word)
       this.aiMemorisationCheckerResult = result
       this.aiMemorisationCheckerLiveWords = Array.isArray(result.wordStatuses) ? result.wordStatuses : []
+      this.persistAiRecitationReviewHighlights(result, targetVerses)
       this.aiMemorisationCheckerError = ''
       this.aiMemorisationCheckerSavedNotice = false
       this.playUiTone('complete')
@@ -7621,6 +8332,15 @@ export default {
       if (partial.length) return `Slow down and sharpen: ${partial.join('، ')}. These were close but not clean.`
       if (Number(result?.accuracyScore || 0) >= 100) return 'Save this attempt to the recordings library, then run one clean recall without peeking.'
       return this.getRecitationNextStep(result)
+    },
+    getAiRecitationPostReviewMessage(result) {
+      const statuses = this.getRecitationWordStatuses(result || {})
+      const red = statuses.filter(word => ['incorrect', 'pending'].includes(word.status)).length
+      const amber = statuses.filter(word => word.status === 'partial').length
+      const outOfOrder = statuses.filter(word => word.outOfOrder).length
+      if (!red && !amber) return 'AI did not detect a word-level mistake. Still verify the ayah yourself before saving.'
+      if (outOfOrder) return `AI detected ${outOfOrder} word order issue${outOfOrder === 1 ? '' : 's'}. Tap any false highlight to mark it correct and update the results.`
+      return `AI detected ${red + amber} possible issue${red + amber === 1 ? '' : 's'}. Tap any amber or red word that AI got wrong to turn it green and update the analysis.`
     },
     aiMemorisationCheckerStorageKey() {
       return 'mutqin_ai_memorisation_checker'
@@ -7922,8 +8642,12 @@ export default {
         transcriptionSource: source,
         audioSrc
       }
+      result.wordStatuses = (result.wordStatuses || []).map(word => word.status === 'pending'
+        ? { ...word, status: 'incorrect', note: word.note === 'Not heard yet.' ? 'Missed word.' : word.note }
+        : word)
       this.recitationCheckResult = result
       this.recitationLiveWords = Array.isArray(result.wordStatuses) ? result.wordStatuses : []
+      this.persistAiRecitationReviewHighlights(result, targetVerses)
       this.recitationCheckAutoStopArmed = false
       this.recitationCheckError = ''
       this.playUiTone('complete')
@@ -8094,7 +8818,7 @@ export default {
           }
         }
 
-        recorder.start(700)
+        recorder.start(1000)
         this.recitationCheckStartedAt = Date.now()
         this.recitationCheckRecording = true
         this.recitationCheckPreparing = false
@@ -8138,8 +8862,12 @@ export default {
       const result = this.assessRecitationTranscript(mergedTranscript, targetVerses)
       result.audioSrc = audioSrc
       result.transcriptionSource = transcript ? 'groq whisper' : 'browser speech recognition'
+      result.wordStatuses = (result.wordStatuses || []).map(word => word.status === 'pending'
+        ? { ...word, status: 'incorrect', note: word.note === 'Not heard yet.' ? 'Missed word.' : word.note }
+        : word)
       this.recitationCheckResult = result
       this.recitationLiveWords = Array.isArray(result.wordStatuses) ? result.wordStatuses : []
+      this.persistAiRecitationReviewHighlights(result, targetVerses)
       this.recitationCheckAutoStopArmed = false
       this.playUiTone('complete')
       this.showBanner(`Recite Check complete: ${result.accuracyScore}%`, 'success', 2200)
@@ -8244,7 +8972,7 @@ export default {
         const secondLooksPartial = secondWords.length >= 2
           && secondWords.length < firstWords.length * 0.72
           && secondCoverage < firstCoverage - 0.12
-        if (firstLooksCompleted && secondLooksPartial) return second
+        if (firstLooksCompleted && secondLooksPartial) return first
       }
       if (secondWords.length > firstWords.length + 2) return second
       if (firstWords.length <= 2 && secondWords.length > firstWords.length) return second
@@ -8317,14 +9045,29 @@ export default {
       const distance = matrix[a.length][b.length]
       return 1 - (distance / Math.max(a.length, b.length))
     },
+    getRecitationElapsedSeconds(result = null) {
+      const started = Number(result?.startedAt || this.recitationCheckStartedAt || this.aiMemorisationCheckerStartedAt || 0)
+      const ended = Number(result?.endedAt || Date.now())
+      if (!started || !ended || ended <= started) return 0
+      return Math.max(0, Math.round((ended - started) / 1000))
+    },
+    getRecitationSpeedReview(result = null) {
+      const statuses = this.getRecitationWordStatuses(result || {})
+      const seconds = Number(result?.durationSeconds || this.getRecitationElapsedSeconds(result) || 0)
+      if (!statuses.length || !seconds) return { tone: 'unknown', label: 'Pace not measured', wordsPerMinute: 0 }
+      const wordsPerMinute = Math.round((statuses.length / seconds) * 60)
+      if (wordsPerMinute > 125) return { tone: 'fast', label: `Fast pace (${wordsPerMinute} wpm)`, wordsPerMinute }
+      if (wordsPerMinute < 45) return { tone: 'slow', label: `Slow pace (${wordsPerMinute} wpm)`, wordsPerMinute }
+      return { tone: 'steady', label: `Steady pace (${wordsPerMinute} wpm)`, wordsPerMinute }
+    },
     classifyRecitationWordMatch(displayText, targetWord, actualWord, similarity = null) {
       const expected = String(targetWord || '')
       const actual = String(actualWord || '')
       const score = similarity === null ? this.getRecitationWordSimilarity(expected, actual) : Number(similarity || 0)
-      if (expected && expected === actual) {
+      if (expected && (expected === actual || score >= 0.9)) {
         return { text: displayText, status: 'correct', note: 'Correct.', actual, similarity: 1 }
       }
-      if (expected && actual && score >= 0.66) {
+      if (expected && actual && score >= 0.35) {
         return {
           text: displayText,
           status: 'partial',
@@ -8333,13 +9076,24 @@ export default {
           similarity: score
         }
       }
+      const outOfOrderIndex = arguments.length > 4 ? arguments[4] : -1
       return {
         text: displayText,
         status: 'incorrect',
-        note: actual ? `Expected ${displayText}; heard ${actual}.` : 'Incorrect word.',
+        note: outOfOrderIndex >= 0
+          ? `Wrong order. ${displayText} was heard later or earlier than expected.`
+          : (actual ? `Expected ${displayText}; heard ${actual}.` : 'Incorrect word.'),
         actual,
-        similarity: score
+        similarity: score,
+        outOfOrder: outOfOrderIndex >= 0
       }
+    },
+    findRecitationWordLaterIndex(words = [], word = '', fromIndex = 0) {
+      if (!word) return -1
+      for (let index = Math.max(0, fromIndex); index < words.length; index += 1) {
+        if (words[index] === word) return index
+      }
+      return -1
     },
     buildRecitationWordStatuses(targetWords, mistakes) {
       const missing = new Map()
@@ -8387,7 +9141,7 @@ export default {
           const targetWord = normalizedTargetWords[targetIndex - 1]
           const heardWord = transcriptWords[heardIndex - 1]
           const similarity = this.getRecitationWordSimilarity(targetWord, heardWord)
-          const matchCost = targetWord === heardWord ? 0 : similarity >= 0.78 ? 0.34 : similarity >= 0.66 ? 0.64 : 1.12
+          const matchCost = targetWord === heardWord ? 0 : similarity >= 0.9 ? 0.16 : similarity >= 0.35 ? 0.68 : 1.34
           const candidates = [
             { cost: matrix[targetIndex - 1][heardIndex - 1].cost + matchCost, prev: [targetIndex - 1, heardIndex - 1], op: 'match', similarity },
             { cost: matrix[targetIndex - 1][heardIndex].cost + 1.02, prev: [targetIndex - 1, heardIndex], op: 'missing' },
@@ -8407,11 +9161,15 @@ export default {
         if (cell.op === 'match') {
           const displayText = displayWords[targetIndex - 1] || normalizedTargetWords[targetIndex - 1]
           const actual = transcriptWords[heardIndex - 1] || ''
+          const laterIndex = actual && normalizedTargetWords[targetIndex - 1] !== actual
+            ? this.findRecitationWordLaterIndex(normalizedTargetWords, actual, targetIndex)
+            : -1
           statuses[targetIndex - 1] = this.classifyRecitationWordMatch(
             displayText,
             normalizedTargetWords[targetIndex - 1],
             actual,
-            cell.similarity
+            cell.similarity,
+            laterIndex
           )
         } else if (cell.op === 'extra') {
           extra.unshift(transcriptWords[heardIndex - 1])
@@ -8419,10 +9177,35 @@ export default {
         ;[targetIndex, heardIndex] = cell.prev || [0, 0]
       }
 
+      const sameWordsDifferentOrder = targetCount === heardCount
+        && normalizedTargetWords.length > 1
+        && normalizedTargetWords.some((word, index) => word !== transcriptWords[index])
+        && [...normalizedTargetWords].sort().join('|') === [...transcriptWords].sort().join('|')
+      if (sameWordsDifferentOrder) {
+        normalizedTargetWords.forEach((word, index) => {
+          if (word === transcriptWords[index]) return
+          statuses[index] = {
+            text: displayWords[index] || word,
+            status: 'incorrect',
+            note: `Wrong order. Expected ${displayWords[index] || word}; heard ${transcriptWords[index] || ''}.`,
+            actual: transcriptWords[index] || '',
+            similarity: this.getRecitationWordSimilarity(word, transcriptWords[index] || ''),
+            outOfOrder: true
+          }
+        })
+      }
+
       return { statuses, extra }
     },
     buildSequentialRecitationWordStatuses(displayWords, normalizedTargetWords, transcriptWords) {
-      return this.buildRecitationAlignment(displayWords, normalizedTargetWords, transcriptWords).statuses
+      const alignment = this.buildRecitationAlignment(displayWords, normalizedTargetWords, transcriptWords).statuses
+      if (!this.aiRecitationStrictProgression) return alignment
+      const firstNonGreen = alignment.findIndex(word => word.status !== 'correct')
+      if (firstNonGreen < 0) return alignment
+      return alignment.map((word, index) => {
+        if (index <= firstNonGreen) return word
+        return { ...word, status: 'pending', note: 'Locked until the previous word is green.' }
+      })
     },
     buildRecitationMistakesFromStatuses(statuses, transcriptWords, normalizedTargetWords, extraWords = []) {
       return {
@@ -8473,7 +9256,9 @@ export default {
       return words.map((word, index) => {
         const status = statuses[index]?.status || 'pending'
         const note = statuses[index]?.note || ''
-        return `<word class="wbw-word recitation-word-${this.escapeHtml(status)}" title="${this.escapeHtml(note)}">${this.escapeHtml(word)}</word>`
+        const canCorrect = status && status !== 'correct' ? ' can-correct-ai' : ''
+        const title = status && status !== 'correct' ? `${note} Mark as AI mistake.` : note
+        return `<word class="wbw-word recitation-word-${this.escapeHtml(status)}${canCorrect}" data-recitation-word-index="${index}" title="${this.escapeHtml(title)}">${this.escapeHtml(word)}</word>`
       }).join(' ')
     },
     getRecitationIssueReviewArabic(result = null, fallbackVerse = null) {
@@ -8497,12 +9282,15 @@ export default {
       const missing = statuses.filter(word => word.status === 'pending').length
       const extra = Array.isArray(mistakes.extra) ? mistakes.extra.length : 0
       const total = Math.max(1, statuses.length)
+      const redCount = Math.min(total, incorrect + missing + extra)
       const percent = value => `${Math.round((Number(value || 0) / total) * 100)}%`
+      const speedReview = result?.speedReview || this.getRecitationSpeedReview(result)
       return [
         { key: 'score', label: 'Accuracy', value: `${Number(result?.accuracyScore || 0)}%`, description: 'Overall weighted match against the ayah.', tone: this.getRecitationScoreTone(result?.accuracyScore || 0) },
         { key: 'correct', label: 'Green', value: `${correct}/${total}`, description: `${percent(correct)} exact words.`, tone: 'tone-excellent' },
         { key: 'partial', label: 'Amber', value: `${partial}/${total}`, description: `${percent(partial)} close words with partial credit.`, tone: 'tone-good' },
-        { key: 'incorrect', label: 'Red', value: `${incorrect + missing + extra}/${total}`, description: `${percent(incorrect + missing + extra)} missing, changed, or extra words.`, tone: 'tone-review' }
+        { key: 'incorrect', label: 'Red', value: `${redCount}/${total}`, description: `${percent(redCount)} missing, wrong order, changed, or extra words.`, tone: redCount ? 'tone-review' : 'tone-excellent' },
+        { key: 'pace', label: 'Pace', value: speedReview.label.replace(/\s*\(.+\)$/, ''), description: speedReview.wordsPerMinute ? `${speedReview.wordsPerMinute} words/minute.` : 'Measured after recording.', tone: speedReview.tone === 'steady' ? 'tone-excellent' : 'tone-good' }
       ]
     },
     getTajweedRuleCatalog() {
@@ -8764,16 +9552,20 @@ export default {
       const transcriptWords = this.tokenizeRecitationWords(transcript)
       const alignment = this.buildRecitationAlignment(displayWords, targetWords, transcriptWords)
       const wordStatuses = alignment.statuses
-      const heardAllInOrder = wordStatuses.length > 0 && wordStatuses.every(word => word.status === 'correct')
+      const heardAllInOrder = wordStatuses.length > 0
+        && wordStatuses.every(word => word.status === 'correct')
+        && !alignment.extra.length
       const mistakes = heardAllInOrder
         ? { correct: [...displayWords], missing: [], extra: alignment.extra, partial: [], incorrect: [] }
         : this.buildRecitationMistakesFromStatuses(wordStatuses, transcriptWords, targetWords, alignment.extra)
       const targetCount = Math.max(1, targetWords.length)
       const correctScore = wordStatuses.filter(word => word.status === 'correct').length
-      const partialScore = wordStatuses.filter(word => word.status === 'partial').length * 0.62
-      const extraPenalty = (mistakes.extra.length || 0) * 0.25
-      const accuracyScore = Math.max(0, Math.min(100, Math.round(((correctScore + partialScore - extraPenalty) / targetCount) * 100)))
+      const partialScore = wordStatuses.filter(word => word.status === 'partial').length * 0.45
+      const wrongOrderPenalty = wordStatuses.filter(word => word.outOfOrder).length * 0.35
+      const extraPenalty = (mistakes.extra.length || 0) * 0.35
+      const accuracyScore = Math.max(0, Math.min(100, Math.round(((correctScore + partialScore - wrongOrderPenalty - extraPenalty) / targetCount) * 100)))
       const tajweedRules = this.buildRecitationTajweedReview(targetVerses, wordStatuses)
+      const speedReview = this.getRecitationSpeedReview({ wordStatuses, startedAt: this.recitationCheckStartedAt || this.aiMemorisationCheckerStartedAt, endedAt: Date.now() })
 
       return {
         id: `recitation-${Date.now()}`,
@@ -8785,6 +9577,10 @@ export default {
         mistakes,
         wordStatuses,
         tajweedRules,
+        startedAt: this.recitationCheckStartedAt || this.aiMemorisationCheckerStartedAt || 0,
+        endedAt: Date.now(),
+        durationSeconds: this.getRecitationElapsedSeconds({ startedAt: this.recitationCheckStartedAt || this.aiMemorisationCheckerStartedAt, endedAt: Date.now() }),
+        speedReview,
         recommendation: this.getRecitationRecommendation(accuracyScore, mistakes),
         reviewMetadata: this.buildRecitationReviewMetadata(accuracyScore, mistakes, tajweedRules)
       }
@@ -9339,10 +10135,11 @@ export default {
       return sizes[digits] || sizes[3]
     },
     setReadingViewMode(mode) {
-      const nextMode = mode === 'mushaf' ? 'mushaf' : 'stacked'
+      const allowedModes = ['stacked', 'mushaf', 'madani']
+      const nextMode = allowedModes.includes(mode) ? mode : 'stacked'
       if (this.readingViewMode === nextMode) return
       this.readingViewMode = nextMode
-      if (nextMode === 'mushaf') this.syncMushafPageToActiveVerse()
+      if (nextMode === 'mushaf' || nextMode === 'madani') this.syncMushafPageToActiveVerse()
       this.persistUiState()
     },
     syncMushafPageToActiveVerse() {
@@ -10547,6 +11344,27 @@ export default {
     toggleFontDropdown() {
       this.fontDropdownOpen = !this.fontDropdownOpen
     },
+    toggleTopCardMenu() {
+      this.topCardMenuOpen = !this.topCardMenuOpen
+      if (this.topCardMenuOpen) {
+        this.openVerseActionKey = ''
+        this.fontDropdownOpen = false
+      }
+    },
+    toggleVerseActionMenu(verseKey) {
+      this.openVerseActionKey = this.openVerseActionKey === verseKey ? '' : verseKey
+      if (this.openVerseActionKey) {
+        this.topCardMenuOpen = false
+        this.fontDropdownOpen = false
+      }
+    },
+    cycleQuranFont() {
+      const options = this.quranFontOptions || []
+      const index = options.findIndex(font => font.value === this.quranFont)
+      const next = options[(index + 1 + options.length) % Math.max(1, options.length)]
+      if (next?.value) this.setQuranFont(next.value)
+      this.topCardMenuOpen = false
+    },
     selectFont(fontValue) {
       this.quranFont = fontValue
       this.fontDropdownOpen = false
@@ -10600,6 +11418,12 @@ export default {
     handleClickOutside(event) {
       if (this.fontDropdownOpen && !event.target.closest('.font-dropdown')) {
         this.fontDropdownOpen = false
+      }
+      if (this.topCardMenuOpen && !event.target.closest('.top-card-menu-wrap')) {
+        this.topCardMenuOpen = false
+      }
+      if (this.openVerseActionKey && !event.target.closest('.verse-menu-wrap')) {
+        this.openVerseActionKey = ''
       }
     },
 
@@ -12812,8 +13636,13 @@ export default {
             this.showTransliteration = state.showTransliteration ?? this.showTransliteration
             this.showWordByWord = state.showWordByWord ?? this.showWordByWord
             this.wordByWordAudioEnabled = state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
-            this.readingViewMode = 'stacked'
+            this.readingViewMode = ['stacked', 'mushaf', 'madani'].includes(state.readingViewMode)
+              ? state.readingViewMode
+              : 'stacked'
             this.mushafPageIndex = 0
+            this.aiRecitationStrictProgression = state.aiRecitationStrictProgression !== false
+            this.aiRecitationPersistMistakes = false
+            this.persistentAiRecitationReviews = {}
           this.mushafBackground = ['warm', 'paper', 'contrast', 'mist', 'night'].includes(state.mushafBackground) ? state.mushafBackground : this.mushafBackground
           this.mushafBorder = ['classic', 'fine', 'layered', 'emerald', 'ink'].includes(state.mushafBorder) ? state.mushafBorder : this.mushafBorder
             this.focusModeEnabled = !!state.focusModeEnabled
@@ -12891,6 +13720,9 @@ export default {
           showTransliteration: this.showTransliteration,
           showWordByWord: this.showWordByWord,
           wordByWordAudioEnabled: this.wordByWordAudioEnabled,
+          aiRecitationStrictProgression: this.aiRecitationStrictProgression,
+          aiRecitationPersistMistakes: this.aiRecitationPersistMistakes,
+          persistentAiRecitationReviews: this.persistentAiRecitationReviews,
         readingViewMode: this.readingViewMode,
         mushafBackground: this.mushafBackground,
         mushafBorder: this.mushafBorder,
@@ -26338,6 +27170,73 @@ html {
   line-height: 1.45;
 }
 
+.post-onboarding-preview {
+  margin-top: 16px;
+  border: 1px solid rgba(104, 160, 143, 0.18);
+  border-radius: 16px;
+  padding: 14px;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(90, 165, 143, 0.18), transparent 38%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.post-onboarding-preview-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.post-onboarding-preview-icon {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: rgba(90, 165, 143, 0.16);
+  color: #9dd7c5;
+  font-size: 1.18rem;
+}
+
+.post-onboarding-preview-head strong {
+  display: block;
+  color: #f1f7f4;
+  font-size: 1rem;
+}
+
+.post-onboarding-preview-head small {
+  display: block;
+  margin-top: 2px;
+  color: #b9cbc4;
+  line-height: 1.45;
+}
+
+.post-onboarding-preview-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.post-onboarding-preview-grid span {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(104, 160, 143, 0.18);
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: rgba(90, 165, 143, 0.1);
+  color: #d7e3de;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.post-onboarding-preview-grid i {
+  color: #9dd7c5;
+}
+
 .post-onboarding-progress {
   margin-top: 14px;
   display: flex;
@@ -29348,6 +30247,33 @@ html {
 [data-theme="sepia"] .post-onboarding-body p,
 [data-theme="light"] .post-onboarding-points,
 [data-theme="sepia"] .post-onboarding-points {
+  color: var(--text-muted);
+}
+
+[data-theme="light"] .post-onboarding-preview,
+[data-theme="sepia"] .post-onboarding-preview {
+  background:
+    radial-gradient(circle at 12% 10%, rgba(112, 78, 43, 0.12), transparent 38%),
+    rgba(255, 248, 239, 0.72);
+  border-color: rgba(160, 120, 76, 0.16);
+}
+
+[data-theme="light"] .post-onboarding-preview-icon,
+[data-theme="sepia"] .post-onboarding-preview-icon,
+[data-theme="light"] .post-onboarding-preview-grid span,
+[data-theme="sepia"] .post-onboarding-preview-grid span {
+  background: var(--accent-light);
+  border-color: rgba(160, 120, 76, 0.14);
+  color: var(--accent-strong);
+}
+
+[data-theme="light"] .post-onboarding-preview-head strong,
+[data-theme="sepia"] .post-onboarding-preview-head strong {
+  color: var(--text);
+}
+
+[data-theme="light"] .post-onboarding-preview-head small,
+[data-theme="sepia"] .post-onboarding-preview-head small {
   color: var(--text-muted);
 }
 
@@ -35815,6 +36741,1689 @@ button:active {
 
   .self-check-modal .self-check-ayah-actions {
     width: 100% !important;
+  }
+}
+
+/* AI recitation final tuning: strict scoring UI, mobile stability, and cleaner library hierarchy. */
+.memorisation-checker-modal .self-check-modal-head-copy h2,
+.self-check-modal .self-check-modal-head-copy h2,
+.recordings-library-head-copy h2 {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: clamp(1.05rem, 1.6vw, 1.42rem) !important;
+  font-weight: 650 !important;
+  letter-spacing: 0 !important;
+}
+
+.ai-recitation-options {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.5rem !important;
+  margin-bottom: 0.62rem !important;
+}
+
+.ai-recitation-toggle {
+  min-height: 38px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 0.45rem !important;
+  padding: 0.42rem 0.62rem !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--border) !important;
+  background: var(--surface-strong) !important;
+  color: var(--text) !important;
+  font-size: 0.78rem !important;
+  font-weight: 560 !important;
+}
+
+.ai-recitation-toggle.active {
+  border-color: rgba(47, 111, 88, 0.38) !important;
+  background: rgba(47, 111, 88, 0.12) !important;
+  color: var(--accent-strong) !important;
+}
+
+.ai-recitation-disclaimer {
+  margin-top: 0.5rem !important;
+}
+
+.memorisation-checker-recording-hint.idle {
+  border-color: rgba(47, 111, 88, 0.22) !important;
+  background: rgba(47, 111, 88, 0.07) !important;
+  color: var(--text-secondary) !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-live {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-live::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: auto 0 0 !important;
+  height: 3px !important;
+  background: linear-gradient(90deg, rgba(47, 111, 88, 0), rgba(47, 111, 88, 0.8), rgba(47, 111, 88, 0)) !important;
+  transform: translateX(-100%) !important;
+  animation: aiLiveSweep 2.2s ease-in-out infinite !important;
+  opacity: 0.55 !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-start-btn,
+.self-check-modal .self-check-ayah-action-ai,
+.quick-ai-recite,
+.mushaf-ai-button:first-child {
+  background: linear-gradient(135deg, #23624e, #2f7d62) !important;
+  border-color: rgba(35, 98, 78, 0.66) !important;
+  color: #fff !important;
+  box-shadow: 0 10px 22px rgba(47, 111, 88, 0.18) !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-start-btn:hover:not(:disabled),
+.self-check-modal .self-check-ayah-action-ai:hover:not(:disabled) {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 14px 28px rgba(47, 111, 88, 0.24) !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah,
+.self-check-modal .self-check-modal-ayah-shell {
+  align-items: flex-start !important;
+  justify-content: center !important;
+  min-height: min(52dvh, 520px) !important;
+  height: auto !important;
+  max-height: none !important;
+  overscroll-behavior: contain !important;
+}
+
+.self-check-modal .self-check-modal-ayah {
+  padding-block: 0.5rem 1rem !important;
+}
+
+.recitation-result-stat strong {
+  font-variant-numeric: tabular-nums !important;
+  white-space: nowrap !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+}
+
+.recitation-result-stat.tone-review strong,
+.recitation-result-stat.tone-review small,
+.recording-result-pill.tone-review,
+.recordings-library-ai-score.tone-review,
+.recitation-check-score.tone-review {
+  color: #8f2f24 !important;
+}
+
+.recitation-result-stat.tone-review {
+  border-color: rgba(177, 63, 50, 0.24) !important;
+  background: rgba(177, 63, 50, 0.055) !important;
+}
+
+.recitation-word-chip.word-incorrect,
+.recitation-word-incorrect {
+  background: rgba(177, 63, 50, 0.13) !important;
+  color: #9d3025 !important;
+  border-color: rgba(177, 63, 50, 0.28) !important;
+}
+
+.recordings-library-surah-group {
+  padding-left: 0 !important;
+}
+
+.recordings-library-surah-title {
+  padding: 0.42rem 0.55rem !important;
+  border-radius: 8px !important;
+  background: rgba(141, 116, 88, 0.08) !important;
+}
+
+.recordings-library-ayah-group {
+  margin-left: 0.7rem !important;
+  padding-left: 0.7rem !important;
+  border-left: 1px solid rgba(141, 116, 88, 0.18) !important;
+}
+
+.recordings-library-recordings {
+  margin-left: 0.75rem !important;
+  padding-left: 0.75rem !important;
+  border-left: 1px dashed rgba(141, 116, 88, 0.22) !important;
+}
+
+.recordings-library-recording-item {
+  margin-top: 0.35rem !important;
+}
+
+@keyframes aiLiveSweep {
+  0% { transform: translateX(-100%); }
+  55%, 100% { transform: translateX(100%); }
+}
+
+@media (max-width: 720px) {
+  .memorisation-checker-modal,
+  .self-check-modal,
+  .recordings-library-modal {
+    width: 100vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+  }
+
+  .memorisation-checker-modal .memorisation-checker-header,
+  .self-check-modal .self-check-modal-header,
+  .recordings-library-header {
+    padding: 0.72rem !important;
+  }
+
+  .memorisation-checker-modal .memorisation-checker-body,
+  .self-check-modal .self-check-modal-body,
+  .recordings-library-body {
+    max-height: calc(100dvh - 68px) !important;
+    overflow: auto !important;
+    padding: 0.62rem !important;
+  }
+
+  .ai-recitation-options,
+  .memorisation-checker-modal .memorisation-checker-results .memorisation-checker-result-grid.recitation-result-stats,
+  .recitation-check-results .recitation-result-stats,
+  .recitation-check-panel .recitation-result-stats,
+  .memorisation-checker-modal .recitation-result-actions,
+  .recitation-check-panel .recitation-result-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .memorisation-checker-modal .memorisation-checker-ayah,
+  .self-check-modal .self-check-modal-ayah-shell {
+    min-height: auto !important;
+    max-height: none !important;
+    padding: 0.85rem !important;
+  }
+
+  .self-check-modal .self-check-modal-ayah {
+    font-size: clamp(1.45rem, 8vw, 2.2rem) !important;
+    line-height: 2.05 !important;
+  }
+
+  .memorisation-checker-modal .memorisation-checker-ayah {
+    font-size: clamp(1.35rem, 7vw, 2.05rem) !important;
+    line-height: 2.15 !important;
+  }
+
+  .self-check-modal .self-check-ayah-actions {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .self-check-modal .self-check-reciter-select {
+    width: min(190px, 52vw) !important;
+  }
+}
+
+/* Mushaf cleanup: compact pages, no toolbar, light pill actions. */
+.mushaf-sheet-tools,
+.mushaf-sheet-tools-global,
+.mushaf-toolbar-group {
+  display: none !important;
+}
+
+.mushaf-frame {
+  width: min(100%, 980px) !important;
+  margin-inline: auto !important;
+  gap: 0.58rem !important;
+}
+
+.mushaf-pill-bar,
+.mushaf-page-pills {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+  gap: 0.42rem !important;
+  padding: 0.2rem 0 !important;
+}
+
+.mushaf-pill,
+.mushaf-page-pill {
+  min-height: 30px !important;
+  height: 30px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.32rem !important;
+  padding: 0 0.62rem !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(47, 111, 88, 0.18) !important;
+  background: rgba(255, 253, 248, 0.76) !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.76rem !important;
+  font-weight: 450 !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+}
+
+.mushaf-pill i,
+.mushaf-page-pill i {
+  font-size: 0.82rem !important;
+}
+
+.mushaf-pill.active,
+.mushaf-page-pill.active,
+.mushaf-pill:hover:not(:disabled),
+.mushaf-page-pill:hover:not(:disabled) {
+  border-color: rgba(47, 111, 88, 0.32) !important;
+  background: rgba(47, 111, 88, 0.1) !important;
+  color: var(--accent-strong) !important;
+  transform: none !important;
+}
+
+.mushaf-page-pill:disabled {
+  opacity: 0.45 !important;
+}
+
+.mushaf-viewport {
+  width: min(100%, 900px) !important;
+  margin-inline: auto !important;
+}
+
+.mushaf-page {
+  min-height: auto !important;
+  max-width: 900px !important;
+  padding: clamp(1rem, 2.1vw, 1.7rem) !important;
+  border-width: 3px !important;
+}
+
+.mushaf-page-header {
+  margin-bottom: 0.7rem !important;
+}
+
+.mushaf-page-header h2 {
+  font-size: clamp(1rem, 1.6vw, 1.35rem) !important;
+  font-weight: 520 !important;
+}
+
+.mushaf-bismillah {
+  font-size: clamp(1rem, 1.8vw, 1.45rem) !important;
+  margin-top: 0.4rem !important;
+}
+
+.mushaf-page-body {
+  font-size: clamp(1.25rem, 2.15vw, 2.1rem) !important;
+  line-height: 2.05 !important;
+  gap: 0.2rem !important;
+}
+
+.mushaf-ayah {
+  padding: 0.08rem 0.12rem !important;
+}
+
+.mushaf-ayah-text {
+  font-size: inherit !important;
+  line-height: inherit !important;
+  font-weight: 430 !important;
+}
+
+.mushaf-ayah-number {
+  transform: scale(0.86) !important;
+  margin-inline: 0.16rem !important;
+}
+
+.mushaf-page-footer {
+  display: flex !important;
+  justify-content: space-between !important;
+  gap: 0.8rem !important;
+  margin-top: 1rem !important;
+  padding-top: 0.55rem !important;
+  border-top: 1px solid color-mix(in srgb, var(--mushaf-text, #111) 10%, transparent) !important;
+  color: var(--mushaf-muted, var(--text-muted)) !important;
+  font-size: 0.72rem !important;
+  font-weight: 420 !important;
+}
+
+[data-theme="dark"] .mushaf-pill,
+[data-theme="dark"] .mushaf-page-pill {
+  background: rgba(255, 246, 231, 0.07) !important;
+  border-color: rgba(255, 246, 231, 0.12) !important;
+}
+
+@media (max-width: 720px) {
+  .mushaf-frame,
+  .mushaf-viewport {
+    width: 100% !important;
+  }
+
+  .mushaf-page {
+    padding: 0.85rem !important;
+    border-width: 2px !important;
+  }
+
+  .mushaf-page-body {
+    font-size: clamp(1.08rem, 6vw, 1.55rem) !important;
+    line-height: 2 !important;
+  }
+
+  .mushaf-pill-bar,
+  .mushaf-page-pills {
+    justify-content: flex-start !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    padding-bottom: 0.3rem !important;
+  }
+
+  .mushaf-pill,
+  .mushaf-page-pill {
+    flex: 0 0 auto !important;
+  }
+}
+
+/* Controls/top card/ayah card cleanup. */
+.tools-tabs {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 0.42rem !important;
+}
+
+.tools-tabs button {
+  width: 100% !important;
+  min-width: 0 !important;
+  justify-content: center !important;
+}
+
+.controls-analytics-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.62rem !important;
+  margin-bottom: 0.85rem !important;
+}
+
+.controls-analytics-card {
+  min-height: 88px !important;
+  padding: 0.72rem !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 9px !important;
+  background: var(--surface-strong) !important;
+}
+
+.controls-analytics-card span,
+.controls-analytics-card small {
+  display: block !important;
+  color: var(--text-muted) !important;
+  font-size: 0.76rem !important;
+  line-height: 1.3 !important;
+}
+
+.controls-analytics-card strong {
+  display: block !important;
+  margin: 0.25rem 0 !important;
+  color: var(--text) !important;
+  font-size: 1.35rem !important;
+  line-height: 1 !important;
+  font-weight: 620 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.workspace-applied-pills {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 0.42rem !important;
+  margin-top: 0.48rem !important;
+}
+
+.workspace-applied-pill {
+  min-height: 28px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.32rem !important;
+  padding: 0 0.58rem !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(47, 111, 88, 0.22) !important;
+  background: rgba(47, 111, 88, 0.08) !important;
+  color: var(--accent-strong) !important;
+  font-size: 0.74rem !important;
+  font-weight: 520 !important;
+}
+
+.workspace-applied-pill.muted {
+  border-color: var(--border) !important;
+  background: var(--surface-strong) !important;
+  color: var(--text-muted) !important;
+}
+
+.view-mode-toggle {
+  min-height: 36px !important;
+  padding: 0.2rem !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--border) !important;
+  background: var(--surface-strong) !important;
+  box-shadow: none !important;
+}
+
+.view-mode-btn {
+  min-height: 30px !important;
+  padding: 0 0.7rem !important;
+  border-radius: 999px !important;
+  font-size: 0.76rem !important;
+  font-weight: 480 !important;
+  color: var(--text-muted) !important;
+}
+
+.view-mode-btn.active {
+  background: rgba(47, 111, 88, 0.12) !important;
+  color: var(--accent-strong) !important;
+  box-shadow: none !important;
+}
+
+.top-card-menu-wrap,
+.verse-menu-wrap {
+  position: relative !important;
+}
+
+.top-card-ellipsis,
+.verse-ellipsis-btn {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--border) !important;
+  background: var(--surface-strong) !important;
+  color: var(--text) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: none !important;
+}
+
+.top-card-menu,
+.verse-action-menu {
+  position: absolute !important;
+  top: calc(100% + 0.45rem) !important;
+  right: 0 !important;
+  z-index: 40 !important;
+  min-width: 210px !important;
+  padding: 0.42rem !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  background: var(--surface) !important;
+  box-shadow: 0 16px 34px rgba(47, 31, 18, 0.12) !important;
+}
+
+.top-card-menu button,
+.verse-action-menu button {
+  width: 100% !important;
+  min-height: 34px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 0.48rem !important;
+  padding: 0 0.52rem !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: var(--text) !important;
+  font-size: 0.8rem !important;
+  font-weight: 480 !important;
+}
+
+.top-card-menu button:hover,
+.top-card-menu button.active,
+.verse-action-menu button:hover {
+  background: rgba(47, 111, 88, 0.08) !important;
+  color: var(--accent-strong) !important;
+}
+
+.verse-header {
+  align-items: center !important;
+  gap: 0.75rem !important;
+}
+
+.verse-actions {
+  margin-left: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 0.46rem !important;
+}
+
+.verse-font-inline-controls,
+.verse-small-play-btn,
+.verse-download-btn {
+  display: none !important;
+}
+
+.verse-ai-check-btn {
+  min-height: 40px !important;
+  height: 40px !important;
+  min-width: 116px !important;
+  max-width: none !important;
+  padding: 0 0.82rem !important;
+  border-radius: 999px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(47, 111, 88, 0.28) !important;
+  background: rgba(47, 111, 88, 0.08) !important;
+  color: var(--accent-strong) !important;
+  font-size: 0.8rem !important;
+  font-weight: 520 !important;
+  box-shadow: none !important;
+}
+
+.verse-ai-check-btn::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: -1px !important;
+  border-radius: inherit !important;
+  border: 1px solid rgba(47, 111, 88, 0.22) !important;
+  opacity: 0.35 !important;
+  animation: subtlePillBorder 2.6s ease-in-out infinite !important;
+  pointer-events: none !important;
+}
+
+.verse-ai-check-btn i {
+  font-size: 0.88rem !important;
+}
+
+.verse-ai-check-btn em {
+  min-width: 18px !important;
+  height: 18px !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(47, 111, 88, 0.14) !important;
+  font-size: 0.66rem !important;
+  font-style: normal !important;
+}
+
+.verse-menu-font-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  padding: 0.38rem 0.52rem !important;
+  color: var(--text-muted) !important;
+  font-size: 0.78rem !important;
+}
+
+.verse-menu-font-row > div {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.3rem !important;
+}
+
+.verse-menu-font-row button {
+  width: 28px !important;
+  min-width: 28px !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  border: 1px solid var(--border) !important;
+  background: var(--surface-strong) !important;
+}
+
+.verse-menu-font-row em {
+  min-width: 38px !important;
+  text-align: center !important;
+  color: var(--text) !important;
+  font-style: normal !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.verse-card {
+  border-radius: 10px !important;
+}
+
+@keyframes subtlePillBorder {
+  0%, 100% { opacity: 0.18; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(1.025); }
+}
+
+@media (max-width: 720px) {
+  .tools-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .controls-analytics-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .quick-pill-group-list {
+    align-items: flex-start !important;
+  }
+
+  .verse-header {
+    align-items: flex-start !important;
+  }
+
+  .verse-actions {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+  }
+
+  .verse-menu-wrap {
+    margin-left: auto !important;
+  }
+}
+/* Madani mushaf layout: compact page view with integrated practice tools. */
+.main.madani-mode-active .workspace-main {
+  overflow: visible !important;
+}
+
+.quick-pill-group-list .view-mode-toggle {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.madani-workspace {
+  --madani-green: #2f6f58;
+  --madani-rose: #b96b7d;
+  --madani-gold: #d3a55a;
+  --madani-ink: #201713;
+  padding: clamp(0.4rem, 1vw, 0.85rem) !important;
+}
+
+.madani-workspace .mushaf-frame {
+  max-width: 820px !important;
+  margin-inline: auto !important;
+}
+
+.madani-pill-bar {
+  justify-content: center !important;
+  gap: 0.45rem !important;
+  margin: 0 auto 0.7rem !important;
+  padding: 0.35rem !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--surface-strong) 88%, transparent) !important;
+  border: 1px solid rgba(47, 111, 88, 0.16) !important;
+}
+
+.madani-pill-bar .mushaf-pill {
+  min-height: 34px !important;
+  border-radius: 999px !important;
+  padding: 0.42rem 0.7rem !important;
+  font-size: 0.78rem !important;
+  font-weight: 650 !important;
+}
+
+.madani-viewport {
+  border-radius: 16px !important;
+  padding: clamp(0.45rem, 1.2vw, 0.9rem) !important;
+  background:
+    linear-gradient(90deg, rgba(47, 111, 88, 0.06), transparent 14%, transparent 86%, rgba(47, 111, 88, 0.06)),
+    #fbf7ec !important;
+}
+
+.mushaf-page.madani-page {
+  position: relative !important;
+  min-height: clamp(620px, 82vh, 920px) !important;
+  aspect-ratio: 0.68 !important;
+  width: min(100%, 610px) !important;
+  margin: 0 auto !important;
+  padding: clamp(2.1rem, 4vw, 3.2rem) clamp(1.35rem, 3vw, 2.15rem) !important;
+  border: 10px double rgba(47, 111, 88, 0.72) !important;
+  border-radius: 8px !important;
+  background:
+    linear-gradient(#fffdf6, #fffaf0) padding-box,
+    repeating-linear-gradient(45deg, rgba(47, 111, 88, 0.86) 0 8px, rgba(185, 107, 125, 0.76) 8px 15px, rgba(211, 165, 90, 0.74) 15px 21px) border-box !important;
+  box-shadow: 0 20px 54px rgba(44, 31, 18, 0.14) !important;
+  color: var(--madani-ink) !important;
+}
+
+.mushaf-page.madani-page::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0.9rem !important;
+  pointer-events: none !important;
+  border: 2px solid rgba(185, 107, 125, 0.55) !important;
+  border-radius: 4px !important;
+  box-shadow:
+    inset 0 0 0 4px rgba(47, 111, 88, 0.16),
+    inset 0 0 0 9px rgba(211, 165, 90, 0.1) !important;
+}
+
+.madani-page-header {
+  position: relative !important;
+  z-index: 1 !important;
+  display: grid !important;
+  gap: 0.35rem !important;
+  justify-items: center !important;
+  margin: 0 0 0.7rem !important;
+  padding: 0.45rem 1rem !important;
+  border: 1px solid rgba(47, 111, 88, 0.26) !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, rgba(47, 111, 88, 0.12), rgba(185, 107, 125, 0.08), rgba(47, 111, 88, 0.12)) !important;
+}
+
+.madani-page-header h2 {
+  margin: 0 !important;
+  color: var(--madani-green) !important;
+  font-size: clamp(1.05rem, 2vw, 1.45rem) !important;
+  font-weight: 700 !important;
+}
+
+.madani-page-header .mushaf-bismillah {
+  margin: 0 !important;
+  color: var(--madani-ink) !important;
+  font-size: clamp(1rem, 1.7vw, 1.22rem) !important;
+}
+
+.madani-page-body {
+  position: relative !important;
+  z-index: 1 !important;
+  align-content: start !important;
+  display: block !important;
+  text-align: justify !important;
+  text-align-last: center !important;
+  line-height: 2.05 !important;
+  padding: 0.3rem 0.15rem !important;
+}
+
+.madani-page-body .mushaf-ayah {
+  display: inline !important;
+  margin: 0 !important;
+  padding: 0.04rem 0.05rem !important;
+  border: 0 !important;
+  border-radius: 0.35rem !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.madani-page-body .mushaf-ayah.active,
+.madani-page-body .mushaf-ayah:hover {
+  background: rgba(47, 111, 88, 0.08) !important;
+}
+
+.madani-ayah-text {
+  --verse-font-percent: min(var(--verse-font-percent, 120), 142) !important;
+  color: var(--madani-ink) !important;
+  font-size: clamp(1.2rem, 2.25vw, 1.72rem) !important;
+  line-height: inherit !important;
+}
+
+.madani-ayah-number {
+  display: inline-flex !important;
+  vertical-align: middle !important;
+  margin: 0 0.18rem !important;
+  border: 1px solid rgba(47, 111, 88, 0.48) !important;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.92) 38%, rgba(47, 111, 88, 0.12) 39% 100%) !important;
+  color: var(--madani-green) !important;
+  box-shadow: 0 0 0 2px rgba(185, 107, 125, 0.13) !important;
+}
+
+.madani-page-footer {
+  position: absolute !important;
+  left: 1.3rem !important;
+  right: 1.3rem !important;
+  bottom: 0.9rem !important;
+  z-index: 1 !important;
+  justify-content: center !important;
+  gap: 0.9rem !important;
+  color: rgba(32, 23, 19, 0.62) !important;
+  font-size: 0.75rem !important;
+}
+
+.madani-workspace .mushaf-page-pills {
+  justify-content: center !important;
+  margin-top: 0.75rem !important;
+}
+
+.madani-workspace .mushaf-page-pill {
+  min-height: 34px !important;
+  border-radius: 999px !important;
+  padding: 0.4rem 0.72rem !important;
+  font-size: 0.78rem !important;
+  background: var(--surface-strong) !important;
+}
+
+[data-theme="dark"] .mushaf-page.madani-page {
+  background:
+    linear-gradient(rgba(252, 245, 229, 0.96), rgba(246, 235, 214, 0.96)) padding-box,
+    repeating-linear-gradient(45deg, rgba(47, 111, 88, 0.86) 0 8px, rgba(185, 107, 125, 0.76) 8px 15px, rgba(211, 165, 90, 0.74) 15px 21px) border-box !important;
+}
+
+@media (max-width: 720px) {
+  .quick-pill-group-list .view-mode-toggle {
+    grid-template-columns: 1fr !important;
+  }
+
+  .mushaf-page.madani-page {
+    min-height: 78vh !important;
+    padding: 1.85rem 1rem 2.4rem !important;
+    border-width: 7px !important;
+  }
+
+  .madani-ayah-text {
+    font-size: clamp(1.08rem, 5vw, 1.35rem) !important;
+  }
+
+  .madani-pill-bar {
+    justify-content: flex-start !important;
+    overflow-x: auto !important;
+  }
+}
+
+.setup-search-pill {
+  gap: 0.45rem !important;
+  border-radius: 999px !important;
+  padding: 0.75rem 1rem !important;
+}
+
+.action-btn-search {
+  border-radius: 999px !important;
+}
+
+.quran-search-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2600;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  background: rgba(20, 17, 14, 0.46);
+  backdrop-filter: blur(12px);
+}
+
+.quran-search-modal {
+  width: min(1040px, 100%);
+  max-height: min(92vh, 940px);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--surface-strong);
+  color: var(--text);
+  box-shadow: 0 28px 84px rgba(20, 17, 14, 0.28);
+}
+
+.quran-search-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.25rem 0;
+}
+
+.quran-search-kicker {
+  color: var(--accent);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.quran-search-header h2 {
+  margin: 0.25rem 0 0;
+  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  line-height: 1.1;
+}
+
+.pill-control {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.62rem 0.9rem;
+  background: rgba(255, 255, 255, 0.58);
+  color: var(--text);
+  font-weight: 650;
+  text-decoration: none;
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.pill-control:hover:not(:disabled),
+.pill-control.active {
+  border-color: rgba(47, 111, 88, 0.34);
+  background: rgba(47, 111, 88, 0.1);
+  box-shadow: 0 10px 24px rgba(47, 111, 88, 0.08);
+  transform: translateY(-1px);
+}
+
+.pill-control:disabled {
+  opacity: 0.52;
+}
+
+.quran-search-close {
+  width: 44px;
+  min-width: 44px;
+  padding: 0;
+}
+
+.quran-search-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 0.75rem;
+  padding: 0 1.25rem;
+}
+
+.quran-search-input-shell {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 1rem;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.quran-search-input-shell input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.quran-search-hint {
+  margin: -0.25rem 1.35rem 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.quran-search-hint.warning,
+.quran-search-status.error {
+  color: #a13d32;
+}
+
+.quran-search-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.85rem;
+  align-items: end;
+  padding: 0 1.25rem;
+}
+
+.quran-search-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(150px, 220px) minmax(150px, 260px);
+  gap: 0.75rem;
+}
+
+.quran-search-filter-grid label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.quran-search-select,
+.quran-search-filter-input {
+  min-height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.55rem 0.85rem;
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.quran-search-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.quran-search-font-pill {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.55rem 0.85rem;
+  background: rgba(47, 111, 88, 0.1);
+  color: var(--text);
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.quran-search-status {
+  margin: 0 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.48);
+  color: var(--text-muted);
+}
+
+.quran-search-results {
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  gap: 0.8rem;
+  padding: 0 1.25rem 1.25rem;
+}
+
+.quran-search-results-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.65rem 0.9rem;
+  background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.quran-search-results-head span {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.quran-search-result-card {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.quran-search-result-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.quran-search-result-meta span {
+  color: var(--text);
+  font-weight: 750;
+}
+
+.quran-search-arabic {
+  margin: 0.8rem 0 0;
+  direction: rtl;
+  line-height: 2.1;
+  text-align: right;
+}
+
+.quran-search-translation {
+  margin: 0.75rem 0 0;
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.quran-search-modal mark {
+  border-radius: 0.35em;
+  padding: 0.05em 0.16em;
+  background: rgba(224, 171, 91, 0.34);
+  color: inherit;
+}
+
+[data-theme="dark"] .quran-search-modal,
+[data-theme="dark"] .quran-search-input-shell,
+[data-theme="dark"] .quran-search-select,
+[data-theme="dark"] .quran-search-filter-input,
+[data-theme="dark"] .pill-control,
+[data-theme="dark"] .quran-search-status,
+[data-theme="dark"] .quran-search-result-card {
+  background: rgba(24, 23, 21, 0.94);
+}
+
+@media (max-width: 760px) {
+  .quran-search-modal-backdrop {
+    align-items: stretch;
+    padding: 0;
+  }
+
+  .quran-search-modal {
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .quran-search-input-row,
+  .quran-search-controls,
+  .quran-search-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quran-search-pill-row {
+    justify-content: flex-start;
+  }
+
+  .quran-search-result-meta,
+  .quran-search-results-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* AI recitation and memorisation workspace final overrides. */
+.memorisation-checker-modal,
+.memorisation-checker-modal *,
+.self-check-modal .recitation-check-panel,
+.self-check-modal .recitation-check-panel *,
+.recordings-library-modal,
+.recordings-library-modal * {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+}
+
+.memorisation-checker-modal .modal-context-badge,
+.memorisation-checker-modal .memorisation-checker-section-head span,
+.recitation-check-kicker,
+.recording-history-kicker,
+.recordings-library-detail-kicker,
+.recordings-library-nav-kicker {
+  font-weight: 480 !important;
+}
+
+.memorisation-checker-modal h2,
+.memorisation-checker-modal h3,
+.memorisation-checker-modal strong,
+.self-check-modal .recitation-check-panel h2,
+.self-check-modal .recitation-check-panel strong,
+.recordings-library-modal h2,
+.recordings-library-modal h3,
+.recordings-library-modal strong {
+  font-weight: 460 !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-body {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.74fr) !important;
+}
+
+.memorisation-checker-modal.is-session-check .memorisation-checker-body {
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr) !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-workspace,
+.memorisation-checker-modal .memorisation-checker-live,
+.memorisation-checker-modal .memorisation-checker-results,
+.self-check-modal .recitation-check-panel,
+.self-check-modal .recitation-check-results,
+.recording-history-ai-detail {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-word-stream.recitation-word-stream,
+.recitation-live-word-stream.recitation-word-stream,
+.memorisation-checker-modal .memorisation-checker-final-words.recitation-word-stream {
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: clamp(92px, 17dvh, 180px) !important;
+  max-height: none !important;
+  overflow: auto !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah,
+.self-check-modal .self-check-modal-ayah-shell {
+  min-height: clamp(220px, 42dvh, 560px) !important;
+  max-height: none !important;
+  overflow: auto !important;
+}
+
+.memorisation-checker-modal.is-session-check .memorisation-checker-ayah {
+  min-height: clamp(280px, 50dvh, 680px) !important;
+}
+
+.recitation-check-status:has(.bi-record-circle),
+.memorisation-checker-recording-hint,
+.memorisation-checker-live-pill.recording {
+  border-color: rgba(47, 111, 88, 0.32) !important;
+  background: rgba(47, 111, 88, 0.11) !important;
+  color: #255f4d !important;
+}
+
+.recitation-check-status .bi-record-circle {
+  color: #2f6f58 !important;
+}
+
+[data-theme="dark"] .recitation-check-status:has(.bi-record-circle),
+[data-theme="dark"] .memorisation-checker-recording-hint,
+[data-theme="dark"] .memorisation-checker-live-pill.recording {
+  border-color: rgba(107, 199, 155, 0.42) !important;
+  background: rgba(107, 199, 155, 0.15) !important;
+  color: #d9f7e7 !important;
+}
+
+.ai-recitation-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.ai-recitation-toggle {
+  min-width: 0 !important;
+  white-space: normal !important;
+  text-align: left !important;
+  font-weight: 430 !important;
+}
+
+.recitation-word-chip.can-correct-ai,
+.recitation-review-ayah .can-correct-ai {
+  cursor: pointer !important;
+  outline: 1px dashed rgba(47, 111, 88, 0.42) !important;
+  outline-offset: 2px !important;
+}
+
+.recitation-word-chip.can-correct-ai:hover,
+.recitation-review-ayah .can-correct-ai:hover {
+  border-color: rgba(47, 111, 88, 0.46) !important;
+  background: rgba(47, 111, 88, 0.14) !important;
+  color: #255f4d !important;
+}
+
+.recitation-result-stat.tone-excellent strong,
+.recitation-result-stat.tone-excellent small {
+  color: #255f4d !important;
+}
+
+.recording-history-card {
+  border-radius: 10px !important;
+}
+
+.recording-history-top,
+.recording-history-actions,
+.memorisation-checker-saved-notice,
+.self-check-recorder-meta-compact {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  flex-wrap: nowrap !important;
+}
+
+.recording-history-actions {
+  justify-content: flex-start !important;
+}
+
+.recording-history-action,
+.self-check-library-link,
+.self-check-library-link-inline {
+  min-height: 34px !important;
+  height: 34px !important;
+  border-radius: 8px !important;
+  white-space: nowrap !important;
+}
+
+.memorisation-checker-saved-notice .self-check-library-link {
+  margin-left: auto !important;
+}
+
+@media (max-width: 900px) {
+  .memorisation-checker-modal .memorisation-checker-body,
+  .memorisation-checker-modal.is-session-check .memorisation-checker-body {
+    grid-template-columns: 1fr !important;
+  }
+
+  .recording-history-top,
+  .recording-history-actions,
+  .memorisation-checker-saved-notice,
+  .self-check-recorder-meta-compact {
+    flex-wrap: wrap !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .ai-recitation-options,
+  .memorisation-checker-modal .memorisation-checker-results .memorisation-checker-result-grid.recitation-result-stats,
+  .recitation-check-results .recitation-result-stats,
+  .recitation-check-panel .recitation-result-stats,
+  .memorisation-checker-modal .recitation-result-actions,
+  .recitation-check-panel .recitation-result-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Main workspace polish: top card, Mushaf pills, verse cards, and insights. */
+.workspace-shell {
+  position: relative !important;
+  padding-bottom: 4.8rem !important;
+}
+
+.workspace-shell-head {
+  align-items: flex-start !important;
+}
+
+.workspace-shell-actions {
+  margin-left: auto !important;
+}
+
+.action-buttons-group {
+  align-items: center !important;
+}
+
+.action-btn-search {
+  width: 38px !important;
+  min-width: 38px !important;
+  padding: 0 !important;
+}
+
+.action-btn-search span {
+  display: none !important;
+}
+
+.action-buttons-group > .top-card-menu-wrap {
+  order: 20 !important;
+}
+
+.workspace-quick-controls {
+  position: absolute !important;
+  left: 1rem !important;
+  right: 1rem !important;
+  bottom: 0.78rem !important;
+}
+
+.quick-pill-group-list {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: end !important;
+  gap: 0.75rem !important;
+}
+
+.quick-left-pills {
+  min-width: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 0.48rem !important;
+  flex-wrap: wrap !important;
+}
+
+.quick-pill-group-list .view-mode-toggle {
+  display: inline-flex !important;
+  width: auto !important;
+  min-height: 32px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  gap: 0.38rem !important;
+}
+
+.quick-pill-group-list .view-mode-btn,
+.workspace-applied-pill {
+  min-height: 32px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(47, 111, 88, 0.18) !important;
+  background: rgba(47, 111, 88, 0.07) !important;
+  color: var(--accent-strong) !important;
+  white-space: nowrap !important;
+}
+
+.quick-pill-group-list .view-mode-btn.active {
+  background: rgba(47, 111, 88, 0.14) !important;
+  border-color: rgba(47, 111, 88, 0.34) !important;
+}
+
+.workspace-applied-pills {
+  margin: 0 !important;
+  gap: 0.38rem !important;
+}
+
+.quick-ai-actions {
+  justify-self: end !important;
+  align-self: end !important;
+  display: inline-flex !important;
+  gap: 0.52rem !important;
+}
+
+.quick-ai-action,
+.mushaf-pill,
+.verse-ai-check-btn {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.quick-ai-action {
+  min-width: 152px !important;
+  height: 42px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #245f4d, #36a070) !important;
+  border-color: rgba(47, 111, 88, 0.46) !important;
+  color: #fff !important;
+  box-shadow: 0 12px 28px rgba(47, 111, 88, 0.2) !important;
+}
+
+.quick-ai-action::before,
+.mushaf-pill:nth-child(n + 2)::before,
+.verse-ai-check-btn::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: linear-gradient(110deg, transparent 0 34%, rgba(255, 255, 255, 0.35) 48%, transparent 62% 100%) !important;
+  transform: translateX(-120%) !important;
+  animation: aiPillSheen 3.2s ease-in-out infinite !important;
+  pointer-events: none !important;
+}
+
+.quick-ai-action span,
+.mushaf-pill span,
+.verse-ai-check-btn span {
+  position: relative !important;
+  z-index: 1 !important;
+  opacity: 1 !important;
+}
+
+.top-card-menu {
+  display: grid !important;
+  gap: 0.28rem !important;
+}
+
+.top-card-menu button {
+  margin: 0 !important;
+}
+
+.top-card-menu button.active {
+  box-shadow: inset 0 0 0 1px rgba(47, 111, 88, 0.2) !important;
+}
+
+.mushaf-pill-bar {
+  justify-content: flex-end !important;
+  gap: 0.58rem !important;
+  padding: 0.45rem !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(47, 111, 88, 0.14) !important;
+  background: rgba(255, 255, 255, 0.72) !important;
+}
+
+.mushaf-pill {
+  min-width: 118px !important;
+  min-height: 42px !important;
+  border-radius: 999px !important;
+  font-size: 0.84rem !important;
+}
+
+.mushaf-pill:nth-child(n + 2) {
+  min-width: 148px !important;
+  background: linear-gradient(135deg, rgba(35, 98, 78, 0.96), rgba(47, 125, 98, 0.96)) !important;
+  color: #fff !important;
+  border-color: rgba(47, 111, 88, 0.48) !important;
+  box-shadow: 0 12px 28px rgba(47, 111, 88, 0.2) !important;
+}
+
+.verse-card {
+  border-radius: 12px !important;
+  padding: clamp(1rem, 2vw, 1.35rem) !important;
+}
+
+.verse-header {
+  align-items: flex-start !important;
+}
+
+.verse-badges {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.verse-number {
+  font-size: clamp(1rem, 1.7vw, 1.3rem) !important;
+  font-weight: 520 !important;
+}
+
+.verse-actions {
+  flex: 0 0 auto !important;
+  margin-left: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 0.52rem !important;
+}
+
+.verse-ai-check-btn {
+  min-width: 132px !important;
+  height: 44px !important;
+  padding: 0 1rem !important;
+  border-radius: 999px !important;
+  color: #245f4d !important;
+  background: rgba(47, 111, 88, 0.1) !important;
+  border-color: rgba(47, 111, 88, 0.28) !important;
+}
+
+.verse-ellipsis-btn {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+}
+
+.session-complete-empty {
+  min-height: 280px !important;
+  display: grid !important;
+  place-items: center !important;
+  align-content: center !important;
+  gap: 0.45rem !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  background: var(--surface-strong) !important;
+  color: var(--text-muted) !important;
+  text-align: center !important;
+}
+
+.session-complete-empty i,
+.session-complete-empty strong {
+  color: var(--accent-strong) !important;
+}
+
+.session-complete-empty i {
+  font-size: 2rem !important;
+}
+
+.controls-insight-chart {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  gap: 0.85rem !important;
+  align-items: center !important;
+  margin-bottom: 0.85rem !important;
+  padding: 0.85rem !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  background: var(--surface-strong) !important;
+}
+
+.controls-insight-chart-head {
+  grid-column: 1 / -1 !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  color: var(--text-muted) !important;
+  font-size: 0.82rem !important;
+}
+
+.controls-insight-chart-head strong {
+  color: var(--accent-strong) !important;
+}
+
+.controls-insight-ring {
+  --insight-progress: 0%;
+  width: 78px !important;
+  height: 78px !important;
+  border-radius: 50% !important;
+  display: grid !important;
+  place-items: center !important;
+  background: conic-gradient(#2f6f58 var(--insight-progress), rgba(47, 111, 88, 0.12) 0) !important;
+}
+
+.controls-insight-ring span {
+  width: 58px !important;
+  height: 58px !important;
+  border-radius: 50% !important;
+  display: grid !important;
+  place-items: center !important;
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  font-size: 0.82rem !important;
+}
+
+.controls-insight-bars {
+  display: grid !important;
+  gap: 0.42rem !important;
+}
+
+.controls-insight-bar {
+  display: grid !important;
+  grid-template-columns: 82px minmax(0, 1fr) auto !important;
+  gap: 0.42rem !important;
+  align-items: center !important;
+  color: var(--text-muted) !important;
+  font-size: 0.72rem !important;
+}
+
+.controls-insight-bar div {
+  height: 7px !important;
+  overflow: hidden !important;
+  border-radius: 999px !important;
+  background: rgba(47, 111, 88, 0.1) !important;
+}
+
+.controls-insight-bar em {
+  display: block !important;
+  height: 100% !important;
+  border-radius: inherit !important;
+  background: linear-gradient(90deg, #2f6f58, #b87f43) !important;
+}
+
+@keyframes aiPillSheen {
+  0%, 58% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+
+@media (max-width: 900px) {
+  .workspace-shell {
+    padding-bottom: 7.4rem !important;
+  }
+
+  .quick-pill-group-list {
+    grid-template-columns: 1fr !important;
+  }
+
+  .quick-ai-actions {
+    justify-self: start !important;
+  }
+
+  .verse-actions {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+  }
+
+  .verse-menu-wrap {
+    margin-left: auto !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .workspace-shell {
+    padding-bottom: 10.2rem !important;
+  }
+
+  .quick-ai-actions,
+  .quick-ai-action {
+    width: 100% !important;
+  }
+
+  .controls-insight-chart,
+  .controls-insight-bar {
+    grid-template-columns: 1fr !important;
   }
 }
 
