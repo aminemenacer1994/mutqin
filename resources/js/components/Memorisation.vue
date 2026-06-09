@@ -194,6 +194,12 @@
                         <button type="button" :class="{ active: tajweedEnabled }" @click="toggleTajweed">
                           <i class="bi bi-palette"></i><span>Tajweed</span>
                         </button>
+                        <button type="button" :class="{ active: keyboardShortcuts }" @click="toggleKeyboardShortcuts">
+                          <i class="bi bi-keyboard"></i><span>Keyboard shortcuts</span>
+                        </button>
+                        <button type="button" :class="{ active: fullScreen }" @click="toggleFullScreen">
+                          <i class="bi bi-keyboard"></i><span>Full screen</span>
+                        </button>
                         <button type="button" @click="cycleQuranFont">
                           <i class="bi bi-fonts"></i><span>Font: {{ getCurrentFontLabel() }}</span>
                         </button>
@@ -311,21 +317,19 @@
                   </div>
                 </div>
                 <div class="quick-ai-actions" aria-label="AI practice tools">
-                  <button type="button" class="quick-ai-action quick-ai-memory"
+                  <button type="button" class="ai-pill ai-memory"
                     @click="openAiMemorisationCheckerForSession"
                     :disabled="aiMemorisationCheckerPreparing || aiMemorisationCheckerRecording || !supportsSelfCheckRecording()"
                     title="Check memorisation across the selected session">
                     <i class="bi bi-eye-slash"></i>
                     <span>Session Memory</span>
-                    <small>Recall the selected ayah range</small>
                   </button>
-                  <button type="button" class="quick-ai-action quick-ai-recite"
+                  <button type="button" class="ai-pill ai-recite"
                     @click="openAiRecitationCheckForSession"
                     :disabled="recitationCheckPreparing || recitationCheckRecording || !supportsSelfCheckRecording()"
                     title="Check recitation across the whole selected session">
                     <i class="bi bi-stars"></i>
                     <span>AI Recite</span>
-                    <small>Friendly recitation check and review</small>
                   </button>
                 </div>
               </div>
@@ -543,19 +547,27 @@
               </div>
             </div>
             <div v-else class="session-complete-empty">
-              <i class="bi bi-check2-circle"></i>
-              <strong>Session complete</strong>
-              <span>Choose the next step for this completed range.</span>
+              <div class="completion-stats">
+                <div class="stat-circle">
+                  <span class="stat-percent">{{ progressPercent }}%</span>
+                  <span class="stat-label">completed</span>
+                </div>
+                <div class="stat-details">
+                  <div><strong>{{ currentPosition }}/{{ totalVerses }}</strong> ayahs covered</div>
+                  <div><i class="bi bi-clock"></i> {{ liveSessionStats.session_time }}</div>
+                  <div><i class="bi bi-ear"></i> {{ totalVersePlayCountValue }} plays</div>
+                </div>
+              </div>
               <div class="session-complete-actions">
-                <button type="button" class="btn-primary" @click="openInsightsPanel">
+                <button type="button" class="action-card" @click="openInsightsPanel">
                   <i class="bi bi-bar-chart-line"></i>
                   <span><strong>Review insights</strong><small>Open the Insights tab</small></span>
                 </button>
-                <button type="button" class="btn-secondary" @click="saveCurrentSessionWithName">
+                <button type="button" class="action-card" @click="saveCurrentSessionWithName">
                   <i class="bi bi-save"></i>
                   <span><strong>Save session</strong><small>Keep this range</small></span>
                 </button>
-                <button type="button" class="btn-secondary" @click="startSessionWithCountdown">
+                <button type="button" class="action-card" @click="startSessionWithCountdown">
                   <i class="bi bi-arrow-repeat"></i>
                   <span><strong>Reset range</strong><small>Replay after countdown</small></span>
                 </button>
@@ -944,45 +956,30 @@
                 <span>Save your current session to get started</span>
               </div>
               <div v-else class="sessions-list">
-                <div v-for="session in savedSessions" :key="session.id" class="session-item"
-                  :class="{ 'session-item-active': sessionMatchesCurrentLiveConfig(session) }">
+                <div v-for="session in savedSessions" :key="session.id" class="session-item" :class="{ 'session-item-active': sessionMatchesCurrentLiveConfig(session) }">
                   <div class="session-info" @click="loadSavedSession(session.id)">
-                    <div class="session-name">
-                      <i class="bi bi-bookmark-fill"></i>
-                      <span>{{ getSessionPrimaryLabel(session) }}</span>
-                      <span v-if="session.archived" class="session-archive-badge">Archived</span>
-                      <span v-if="sessionMatchesCurrentLiveConfig(session)" class="session-live-badge">Active now</span>
-                      <span class="session-status-badge"
-                        :class="`session-status-${getSavedSessionState(session).tone}`">{{
-                        getSavedSessionState(session).label }}</span>
+                    <div class="session-info" @click="loadSavedSession(session.id)">
+                      <div class="session-name">
+                        <i class="bi bi-bookmark-fill"></i>
+                        <span>{{ getSessionPrimaryLabel(session) }}</span>
+                        <span v-if="session.archived" class="session-archive-badge">Archived</span>
+                      </div>
+                      <div class="session-details">
+                        <span><i class="bi bi-clock"></i> {{ formatDate(session.savedAt) }}</span>
+                        <span><i class="bi bi-arrow-repeat"></i> {{ buildSessionResumeSummary(session) }}</span>
+                      </div>
                     </div>
-                    <div v-if="session.name && session.name !== getSessionPrimaryLabel(session)"
-                      class="session-subtitle">
-                      {{ session.name }}
-                    </div>
-                    <div class="session-details">
-                      <span><i class="bi bi-clock"></i> Saved {{ formatDate(session.savedAt) }}</span>
-                      <span><i class="bi bi-arrow-repeat"></i> {{ buildSessionResumeSummary(session) }}</span>
-                    </div>
-                  </div>
-                  <div class="session-actions">
-                    <div class="session-primary-action">
-                      <button class="session-resume-btn" @click="loadSavedSession(session.id)" type="button"
-                        :disabled="isLoadingSession(session.id)">
-                        <i class="bi"
-                          :class="isLoadingSession(session.id) ? 'bi-arrow-repeat spin' : 'bi-play-fill'"></i>
+                    <div class="session-actions">
+                      <button class="session-resume-btn" @click="loadSavedSession(session.id)" :disabled="isLoadingSession(session.id)">
+                        <i class="bi" :class="isLoadingSession(session.id) ? 'bi-arrow-repeat spin' : 'bi-play-fill'"></i>
                         <span>{{ isLoadingSession(session.id) ? 'Opening…' : 'Open Session' }}</span>
                       </button>
-                    </div>
-                    <div class="session-secondary-actions">
-                      <button class="delete-btn session-delete-btn" @click.stop="deleteSavedSession(session.id)"
-                        title="Remove saved session">
+                      <button class="session-delete-btn" @click.stop="deleteSavedSession(session.id)" title="Remove saved session">
                         <i class="bi bi-trash3"></i>
                         <span>Remove</span>
                       </button>
                     </div>
                   </div>
-                </div>
               </div>
               <div v-if="hasVerses" class="save-section">
                 <div class="current-info">
@@ -999,7 +996,7 @@
             </div>
           </div>
 
-          <div v-else-if="isLoggedIn && tab === 'stats'" class="sheet">
+          <div v-if="isLoggedIn && tab === 'stats'" class="sheet">
             <div class="stats-sessions-container">
               <div class="saved-header">
                 <h3><i class="bi bi-bar-chart-line"></i> Insights</h3>
@@ -14809,6 +14806,210 @@ export default {
 </script>
 
 <style>
+
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 1rem 1.2rem;
+  transition: all 0.2s;
+}
+
+.session-info {
+  flex: 1;
+  cursor: pointer;
+}
+
+.session-name {
+  font-weight: 700;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.session-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.session-actions {
+  display: flex;
+  gap: 12px;
+  margin-left: 1rem;
+}
+
+.session-resume-btn,
+.session-delete-btn {
+  padding: 10px 20px;
+  border-radius: 40px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+}
+
+.session-resume-btn {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 4px 12px rgba(154,103,56,0.2);
+}
+
+.session-resume-btn:hover {
+  transform: translateY(-2px);
+  background: var(--accent-strong);
+}
+
+.session-delete-btn {
+  background: rgba(220,53,69,0.1);
+  color: #dc3545;
+  border: 1px solid rgba(220,53,69,0.3);
+}
+
+.session-delete-btn:hover {
+  background: #dc3545;
+  color: white;
+}
+
+@media (max-width: 640px) {
+  .session-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .session-actions {
+    margin-left: 0;
+    justify-content: stretch;
+  }
+  .session-resume-btn, .session-delete-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+.session-complete-empty {
+  background: linear-gradient(145deg, #ffffff, #fefaf5) !important;
+  border-radius: 28px;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 20px 35px -12px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+.completion-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.stat-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: conic-gradient(var(--accent) 0deg var(--progress-deg, 0deg), #e9e4dc 0deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3efe8;
+  box-shadow: inset 0 0 0 6px white, 0 8px 20px rgba(0,0,0,0.05);
+}
+
+.stat-percent {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.stat-details {
+  display: grid;
+  gap: 0.5rem;
+  text-align: left;
+  background: #f9f5ef;
+  padding: 0.8rem 1.5rem;
+  border-radius: 32px;
+}
+
+.stat-details div {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.session-complete-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.action-card {
+  flex: 1;
+  min-width: 180px;
+  background: white;
+  border: 1px solid rgba(154,103,56,0.2);
+  border-radius: 20px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.action-card i {
+  font-size: 1.8rem;
+  color: var(--accent);
+}
+
+.action-card strong {
+  display: block;
+  font-size: 1rem;
+}
+.action-card small {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 30px -12px rgba(0,0,0,0.1);
+  border-color: var(--accent);
+  background: #fffcf7;
+}
+
+@media (max-width: 680px) {
+  .completion-stats { flex-direction: column; text-align: center; }
+  .stat-details { text-align: center; }
+  .action-card { justify-content: center; }
+}
 /* Fix AI recitation check - clear text, no blur */
 .self-check-modal-ayah.recitation-word-review-active,
 .verse-arabic.recitation-word-review-active {
@@ -18930,12 +19131,14 @@ export default {
 
 /* Login Hero Section */
 .login-hero {
+  padding-top: calc(80px + env(safe-area-inset-top, 0px)) !important;
   min-height: calc(100vh - 100px);
   padding: 34px 20px 48px;
   align-items: stretch;
 }
 
 .guest-shell {
+  margin-top: 0 !important;
   width: min(1180px, 100%);
   margin: 0 auto;
   display: grid;
@@ -38430,12 +38633,6 @@ button:active {
 }
 
 .quick-left-pills {
-  min-width: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  gap: 0.48rem !important;
-  flex-wrap: wrap !important;
 }
 
 .quick-pill-group-list .view-mode-toggle {
@@ -39067,7 +39264,6 @@ button:active {
 
 .quick-left-pills {
   width: 100% !important;
-  justify-content: center !important;
   order: 2 !important;
 }
 

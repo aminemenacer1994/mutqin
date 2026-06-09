@@ -593,10 +593,10 @@
   }
   
   .hero-title {
-    font-size: clamp(4.8rem, 8.8vw, 8.4rem);
+    font-size: clamp(2.8rem, 4.8vw, 4.4rem);
     font-weight: 780;
     line-height: 0.9;
-    margin-bottom: 1.35rem;
+    /* margin-bottom: 1.35rem; */
     letter-spacing: -0.065em;
   }
   
@@ -608,12 +608,12 @@
   }
   
   .hero-desc {
-    font-size: clamp(1.35rem, 2vw, 1.78rem);
+    font-size: clamp(1rem, 2vw, 1.48rem);
     color: color-mix(in srgb, var(--text) 78%, var(--text-muted));
     margin-bottom: 1.8rem;
     line-height: 1.75;
     max-width: 820px;
-    font-weight: 500;
+    font-weight: 200;
   }
 
   [data-theme="dark"] .hero-title span {
