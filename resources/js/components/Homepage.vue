@@ -327,7 +327,7 @@
       const features = ref([
         { icon: 'bi bi-mic-fill', title: 'AI Recitation Review', badge: 'Free', badgeType: '', description: 'Record an ayah and compare your attempt against the text with clear word-level feedback.', result: 'Spot the section to repeat next.' },
         { icon: 'bi bi-lightning-charge-fill', title: 'Smart Memorisation', badge: 'Pro', badgeType: 'pro', description: 'Use blur, chaining, anchors, and review signals to strengthen recall without clutter.', result: 'Practise the ayahs that need attention.' },
-        { icon: 'bi bi-journal-bookmark-fill', title: 'Stacked, Mushaf & Madani Views', badge: 'Free', badgeType: '', description: 'Move between clean ayah cards and compact mushaf layouts while keeping controls nearby.', result: 'Read, listen, and self-check in one flow.' },
+        { icon: 'bi bi-journal-bookmark-fill', title: 'Stacked & Mushaf Views', badge: 'Free', badgeType: '', description: 'Move between clean ayah cards and page-style mushaf layouts while keeping controls nearby.', result: 'Read, listen, and self-check in one flow.' },
         { icon: 'bi bi-link-45deg', title: 'Transition Training', badge: 'Pro', badgeType: 'pro', description: 'Build confidence between neighbouring ayahs with linking and cumulative repetition.', result: 'Reduce pauses between verses.' },
         { icon: 'bi bi-collection-play', title: 'Recording Library', badge: 'Free limited', badgeType: '', description: 'Save attempts by surah and ayah so older reviews remain easy to find.', result: 'Keep your recitation history organised.' },
         { icon: 'bi bi-graph-up-arrow', title: 'Review Analytics', badge: 'Pro', badgeType: 'pro', description: 'Track weak ayahs, repeated attempts, and review priority across your sessions.', result: 'Know what to fix before the next session.' }
@@ -377,7 +377,7 @@
       const comparisonRows = ref([
         { feature: 'Session setup and ayah range tools', free: 'Included', premium: 'Included', pro: 'Included' },
         { feature: 'Saved sessions', free: '3', premium: '5', pro: 'Unlimited' },
-        { feature: 'Stacked, Mushaf, and Madani layouts', free: 'Included', premium: 'Included', pro: 'Included' },
+        { feature: 'Stacked and Mushaf layouts', free: 'Included', premium: 'Included', pro: 'Included' },
         { feature: 'Focus mode', free: 'Included', premium: 'Included', pro: 'Included' },
         { feature: 'Blur memorisation method', free: 'Not included', premium: 'Included', pro: 'Included' },
         { feature: 'Chaining and transition practice', free: 'Not included', premium: 'Included', pro: 'Included' },

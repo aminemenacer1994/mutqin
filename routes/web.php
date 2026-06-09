@@ -2,7 +2,6 @@
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -117,92 +116,36 @@ Route::get('/memorisation/audio-download', function (Request $request) {
     ]);
 })->name('memorisation.audio-download');
 
-Route::post('/memorisation/recitation-check/transcribe', function (Request $request) {
-    $request->validate([
-        'audio' => ['required', 'file', 'max:25600'],
-        'target_text' => ['nullable', 'string', 'max:8000'],
-    ]);
-
-    $file = $request->file('audio');
-    $targetText = trim((string) $request->input('target_text', ''));
-    $targetWords = $targetText !== ''
-        ? (preg_split('/\s+/u', $targetText, -1, PREG_SPLIT_NO_EMPTY) ?: [])
-        : [];
-    $promptTargetText = implode(' ', array_slice($targetWords, 0, 220));
-    $groqApiKey = config('services.groq.api_key');
-    
-    if (!$groqApiKey) {
-        return response()->json([
-            'message' => 'Groq API key is not configured.',
-        ], 422);
-    }
-
-    if (!$file || !$file->isValid() || !is_readable($file->getRealPath())) {
-        return response()->json([
-            'message' => 'The recording could not be read. Please record again.',
-        ], 422);
-    }
-
-    try {
-        $filename = $file->getClientOriginalName() ?: 'recitation-check.webm';
-        $mimeType = $file->getMimeType() ?: 'audio/webm';
-        $prompt = $promptTargetText
-            ? implode(' ', [
-                'Arabic Quran recitation transcription.',
-                'Return only the Arabic words that are clearly audible, in order.',
-                'Do not infer missing words, do not complete the ayah, do not add Quran verse numbers, and do not correct misread words.',
-                'Ignore silence, room noise, breath, fillers, and repeated non-recited sounds.',
-                'Use this reference only to spell words that were actually heard:',
-                $promptTargetText,
-            ])
-            : 'Arabic Quran recitation transcription. Return only the Arabic words that are clearly audible, in order. Do not infer, complete, add, or correct missing or misread words.';
-
-        $response = Http::withToken($groqApiKey)
-            ->retry(2, 350)
-            ->timeout(120)
-            ->attach('file', file_get_contents($file->getRealPath()), $filename, [
-                'Content-Type' => $mimeType,
-            ])
-            ->post('https://api.groq.com/openai/v1/audio/transcriptions', array_filter([
-                'model' => 'whisper-large-v3-turbo',
-                'response_format' => 'json',
-                'language' => 'ar',
-                'temperature' => '0',
-                'prompt' => $prompt,
-            ], fn ($value) => $value !== null && $value !== ''));
-        
-        if (!$response->successful()) {
-            $error = $response->json();
-            $message = $error['error']['message'] ?? 'Groq API transcription failed';
-            
-            return response()->json([
-                'message' => $message,
-            ], $response->status());
-        }
-        
-        $data = $response->json();
-        $transcript = trim($data['text'] ?? '');
-        
-        return response()->json([
-            'text' => $transcript,
-            'word_count' => $transcript === '' ? 0 : count(preg_split('/\s+/u', $transcript, -1, PREG_SPLIT_NO_EMPTY) ?: []),
-        ]);
-        
-    } catch (ConnectionException $error) {
-        return response()->json([
-            'message' => 'Unable to reach Groq API. Please try again.',
-        ], 502);
-    } catch (\Throwable $error) {
-        return response()->json([
-            'message' => 'Transcription failed: ' . $error->getMessage(),
-        ], 500);
-    }
-})->name('memorisation.recitation-check.transcribe');
-
 // Protected routes (require authentication)
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\HomeController::class, 'index'])->name('dashboard');
     Route::post('/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
+    Route::post('/memorisation/deepgram-token', function () {
+        $apiKey = config('services.deepgram.api_key');
+
+        if (!$apiKey) {
+            return response()->json([
+                'message' => 'Deepgram API key is not configured.',
+            ], 422);
+        }
+
+        $response = Http::withToken($apiKey, 'Token')
+            ->timeout(12)
+            ->post('https://api.deepgram.com/v1/auth/grant', [
+                'ttl_seconds' => 120,
+            ]);
+
+        if (!$response->successful()) {
+            return response()->json([
+                'message' => $response->json('err_msg') ?: $response->json('message') ?: 'Deepgram token request failed.',
+            ], $response->status() ?: 502);
+        }
+
+        return response()->json([
+            'access_token' => $response->json('access_token'),
+            'expires_in' => $response->json('expires_in'),
+        ]);
+    })->name('memorisation.deepgram-token');
     Route::get('/memorisation/sync-state', [MemorisationSyncController::class, 'show'])->name('memorisation.sync.show');
     Route::put('/memorisation/sync-state', [MemorisationSyncController::class, 'update'])->name('memorisation.sync.update');
 });
