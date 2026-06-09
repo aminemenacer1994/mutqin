@@ -194,12 +194,6 @@
                         <button type="button" :class="{ active: tajweedEnabled }" @click="toggleTajweed">
                           <i class="bi bi-palette"></i><span>Tajweed</span>
                         </button>
-                        <button type="button" :class="{ active: keyboardShortcuts }" @click="toggleKeyboardShortcuts">
-                          <i class="bi bi-keyboard"></i><span>Keyboard shortcuts</span>
-                        </button>
-                        <button type="button" :class="{ active: fullScreen }" @click="toggleFullScreen">
-                          <i class="bi bi-keyboard"></i><span>Full screen</span>
-                        </button>
                         <button type="button" @click="cycleQuranFont">
                           <i class="bi bi-fonts"></i><span>Font: {{ getCurrentFontLabel() }}</span>
                         </button>
@@ -317,19 +311,21 @@
                   </div>
                 </div>
                 <div class="quick-ai-actions" aria-label="AI practice tools">
-                  <button type="button" class="ai-pill ai-memory"
+                  <button type="button" class="quick-ai-action quick-ai-memory"
                     @click="openAiMemorisationCheckerForSession"
                     :disabled="aiMemorisationCheckerPreparing || aiMemorisationCheckerRecording || !supportsSelfCheckRecording()"
                     title="Check memorisation across the selected session">
                     <i class="bi bi-eye-slash"></i>
                     <span>Session Memory</span>
+                    <small>Recall the selected ayah range</small>
                   </button>
-                  <button type="button" class="ai-pill ai-recite"
+                  <button type="button" class="quick-ai-action quick-ai-recite"
                     @click="openAiRecitationCheckForSession"
                     :disabled="recitationCheckPreparing || recitationCheckRecording || !supportsSelfCheckRecording()"
                     title="Check recitation across the whole selected session">
                     <i class="bi bi-stars"></i>
                     <span>AI Recite</span>
+                    <small>Friendly recitation check and review</small>
                   </button>
                 </div>
               </div>
@@ -958,28 +954,42 @@
               <div v-else class="sessions-list">
                 <div v-for="session in savedSessions" :key="session.id" class="session-item" :class="{ 'session-item-active': sessionMatchesCurrentLiveConfig(session) }">
                   <div class="session-info" @click="loadSavedSession(session.id)">
-                    <div class="session-info" @click="loadSavedSession(session.id)">
-                      <div class="session-name">
-                        <i class="bi bi-bookmark-fill"></i>
-                        <span>{{ getSessionPrimaryLabel(session) }}</span>
-                        <span v-if="session.archived" class="session-archive-badge">Archived</span>
-                      </div>
-                      <div class="session-details">
-                        <span><i class="bi bi-clock"></i> {{ formatDate(session.savedAt) }}</span>
-                        <span><i class="bi bi-arrow-repeat"></i> {{ buildSessionResumeSummary(session) }}</span>
-                      </div>
+                    <div class="session-name">
+                      <i class="bi bi-bookmark-fill"></i>
+                      <span>{{ getSessionPrimaryLabel(session) }}</span>
+                      <span v-if="session.archived" class="session-archive-badge">Archived</span>
+                      <span v-if="sessionMatchesCurrentLiveConfig(session)" class="session-live-badge">Active now</span>
+                      <span class="session-status-badge"
+                        :class="`session-status-${getSavedSessionState(session).tone}`">{{
+                        getSavedSessionState(session).label }}</span>
                     </div>
-                    <div class="session-actions">
-                      <button class="session-resume-btn" @click="loadSavedSession(session.id)" :disabled="isLoadingSession(session.id)">
-                        <i class="bi" :class="isLoadingSession(session.id) ? 'bi-arrow-repeat spin' : 'bi-play-fill'"></i>
+                    <div v-if="session.name && session.name !== getSessionPrimaryLabel(session)"
+                      class="session-subtitle">
+                      {{ session.name }}
+                    </div>
+                    <div class="session-details">
+                      <span><i class="bi bi-clock"></i> Saved {{ formatDate(session.savedAt) }}</span>
+                      <span><i class="bi bi-arrow-repeat"></i> {{ buildSessionResumeSummary(session) }}</span>
+                    </div>
+                  </div>
+                  <div class="session-actions">
+                    <div class="session-primary-action">
+                      <button class="session-resume-btn" @click="loadSavedSession(session.id)" type="button"
+                        :disabled="isLoadingSession(session.id)">
+                        <i class="bi"
+                          :class="isLoadingSession(session.id) ? 'bi-arrow-repeat spin' : 'bi-play-fill'"></i>
                         <span>{{ isLoadingSession(session.id) ? 'Opening…' : 'Open Session' }}</span>
                       </button>
-                      <button class="session-delete-btn" @click.stop="deleteSavedSession(session.id)" title="Remove saved session">
+                    </div>
+                    <div class="session-secondary-actions">
+                      <button class="delete-btn session-delete-btn" @click.stop="deleteSavedSession(session.id)"
+                        title="Remove saved session">
                         <i class="bi bi-trash3"></i>
                         <span>Remove</span>
                       </button>
                     </div>
                   </div>
+                </div>
               </div>
               <div v-if="hasVerses" class="save-section">
                 <div class="current-info">
@@ -996,80 +1006,82 @@
             </div>
           </div>
 
-          <div v-if="isLoggedIn && tab === 'stats'" class="sheet">
-            <div class="stats-sessions-container">
-              <div class="saved-header">
-                <h3><i class="bi bi-bar-chart-line"></i> Insights</h3>
-                <p>Simple session signals first, detailed analytics when you need them.</p>
-              </div>
-              <div class="controls-insight-chart" aria-label="Current session progress chart">
-                <div class="controls-insight-chart-head">
-                  <span>Session progress</span>
-                  <strong>{{ progressPercent }}%</strong>
+          <div v-else-if="isLoggedIn && tab === 'stats'" class="sheet">
+            <div v-if="tab === 'stats'" class="sheet">
+              <div class="stats-sessions-container">
+                <div class="saved-header">
+                  <h3><i class="bi bi-bar-chart-line"></i> Insights</h3>
+                  <p>Simple session signals first, detailed analytics when you need them.</p>
                 </div>
-                <div class="controls-insight-ring" :style="{ '--insight-progress': `${progressPercent}%` }">
-                  <span>{{ currentPosition }}/{{ totalVerses }}</span>
-                </div>
-                <div class="controls-insight-bars">
-                  <div v-for="item in controlsAnalyticsCards" :key="`bar-${item.key}`" class="controls-insight-bar">
-                    <span>{{ item.label }}</span>
-                    <div><em :style="{ width: `${getControlsInsightPercent(item)}%` }"></em></div>
-                    <strong>{{ item.value }}</strong>
+                <div class="controls-insight-chart" aria-label="Current session progress chart">
+                  <div class="controls-insight-chart-head">
+                    <span>Session progress</span>
+                    <strong>{{ progressPercent }}%</strong>
+                  </div>
+                  <div class="controls-insight-ring" :style="{ '--insight-progress': `${progressPercent}%` }">
+                    <span>{{ currentPosition }}/{{ totalVerses }}</span>
+                  </div>
+                  <div class="controls-insight-bars">
+                    <div v-for="item in controlsAnalyticsCards" :key="`bar-${item.key}`" class="controls-insight-bar">
+                      <span>{{ item.label }}</span>
+                      <div><em :style="{ width: `${getControlsInsightPercent(item)}%` }"></em></div>
+                      <strong>{{ item.value }}</strong>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div class="controls-analytics-grid" aria-label="Current session analytics">
-                <article v-for="item in controlsAnalyticsCards" :key="item.key" class="controls-analytics-card">
-                  <span>{{ item.label }}</span>
-                  <strong>{{ item.value }}</strong>
-                  <small>{{ item.description }}</small>
-                </article>
-              </div>
-              <div v-if="savedSessions.length === 0" class="empty-state">
-                <i class="bi bi-activity"></i>
-                <p>No insights yet</p>
-                <span>Save a session and you’ll see a simple summary here.</span>
-              </div>
-              <div v-else class="stats-panel">
-                <div v-if="selectedStatsSessionRecord" class="stats-detail">
-                  <div class="stats-detail-head stats-detail-head-hero">
-                    <div>
-                      <h4>{{ getSessionPrimaryLabel(selectedStatsSessionRecord) }}</h4>
-                      <p
-                        v-if="selectedStatsSessionRecord.name && selectedStatsSessionRecord.name !== getSessionPrimaryLabel(selectedStatsSessionRecord)">
-                        {{ selectedStatsSessionRecord.name }}</p>
-                      <div class="stats-summary">{{ buildStatsSummary(selectedStatsSessionRecord) }}</div>
-                      <div v-if="sortedSavedSessions.length > 1" class="stats-session-select-wrap">
-                        <label class="stats-session-select-label" for="statsSessionSelect">Saved sessions</label>
-                        <select id="statsSessionSelect" class="stats-session-select"
-                          :value="selectedStatsSessionRecord.id" @change="selectStatsSession($event.target.value)">
-                          <option v-for="session in sortedSavedSessions" :key="`stats-${session.id}`"
-                            :value="session.id">
-                            {{ getSessionPrimaryLabel(session) }} · {{ formatDate(session.savedAt) }}
-                          </option>
-                        </select>
+                <div class="controls-analytics-grid" aria-label="Current session analytics">
+                  <article v-for="item in controlsAnalyticsCards" :key="item.key" class="controls-analytics-card">
+                    <span>{{ item.label }}</span>
+                    <strong>{{ item.value }}</strong>
+                    <small>{{ item.description }}</small>
+                  </article>
+                </div>
+                <div v-if="savedSessions.length === 0" class="empty-state">
+                  <i class="bi bi-activity"></i>
+                  <p>No insights yet</p>
+                  <span>Save a session and you’ll see a simple summary here.</span>
+                </div>
+                <div v-else class="stats-panel">
+                  <div v-if="selectedStatsSessionRecord" class="stats-detail">
+                    <div class="stats-detail-head stats-detail-head-hero">
+                      <div>
+                        <h4>{{ getSessionPrimaryLabel(selectedStatsSessionRecord) }}</h4>
+                        <p
+                          v-if="selectedStatsSessionRecord.name && selectedStatsSessionRecord.name !== getSessionPrimaryLabel(selectedStatsSessionRecord)">
+                          {{ selectedStatsSessionRecord.name }}</p>
+                        <div class="stats-summary">{{ buildStatsSummary(selectedStatsSessionRecord) }}</div>
+                        <div v-if="sortedSavedSessions.length > 1" class="stats-session-select-wrap">
+                          <label class="stats-session-select-label" for="statsSessionSelect">Saved sessions</label>
+                          <select id="statsSessionSelect" class="stats-session-select"
+                            :value="selectedStatsSessionRecord.id" @change="selectStatsSession($event.target.value)">
+                            <option v-for="session in sortedSavedSessions" :key="`stats-${session.id}`"
+                              :value="session.id">
+                              {{ getSessionPrimaryLabel(session) }} · {{ formatDate(session.savedAt) }}
+                            </option>
+                          </select>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div class="stats-detail-actions stats-detail-actions-prominent">
-                    <button type="button" class="session-export-btn stats-full-analytics-btn"
-                      @click="openSessionAnalyticsModal(selectedStatsSessionRecord)">
-                      <i class="bi bi-graph-up-arrow"></i>
-                      <span>View Full Analytics</span>
-                    </button>
-                  </div>
-                  <div class="stats-grid stats-grid-hero">
-                    <div v-for="item in buildStatsBreakdown(selectedStatsSessionRecord)" :key="item.key"
-                      class="stats-card">
-                      <i class="bi stats-card-icon" :class="item.icon"></i>
-                      <em class="stats-card-value">{{ item.value }}</em>
-                      <span>{{ item.label }}</span>
+                    <div class="stats-detail-actions stats-detail-actions-prominent">
+                      <button type="button" class="session-export-btn stats-full-analytics-btn"
+                        @click="openSessionAnalyticsModal(selectedStatsSessionRecord)">
+                        <i class="bi bi-graph-up-arrow"></i>
+                        <span>View Full Analytics</span>
+                      </button>
                     </div>
-                  </div>
-                  <div class="stats-detail-footer">
-                    <span>Saved {{ formatDate(selectedStatsSessionRecord.savedAt) }}</span>
-                    <span v-if="selectedStatsSessionRecord.archived">Archived auto-save</span>
-                    <span v-else>Manual save</span>
+                    <div class="stats-grid stats-grid-hero">
+                      <div v-for="item in buildStatsBreakdown(selectedStatsSessionRecord)" :key="item.key"
+                        class="stats-card">
+                        <i class="bi stats-card-icon" :class="item.icon"></i>
+                        <em class="stats-card-value">{{ item.value }}</em>
+                        <span>{{ item.label }}</span>
+                      </div>
+                    </div>
+                    <div class="stats-detail-footer">
+                      <span>Saved {{ formatDate(selectedStatsSessionRecord.savedAt) }}</span>
+                      <span v-if="selectedStatsSessionRecord.archived">Archived auto-save</span>
+                      <span v-else>Manual save</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3474,33 +3486,16 @@ export default {
         success_rate: `${successRate}%`
       }
     },
+    // In computed section - modify controlsAnalyticsCards to show/hide based on data
     controlsAnalyticsCards() {
+      const hasData = this.savedSessions.length > 0 || this.totalVersePlayCountValue > 0;
+      if (!hasData) return [];
       return [
-        {
-          key: 'progress',
-          label: 'Progress',
-          value: `${this.currentPosition}/${Math.max(1, this.totalVerses)}`,
-          description: `${this.progressPercent}% through selected ayahs.`
-        },
-        {
-          key: 'plays',
-          label: 'Audio plays',
-          value: this.totalVersePlayCountValue,
-          description: 'Total ayah playback starts this session.'
-        },
-        {
-          key: 'time',
-          label: 'Session time',
-          value: this.liveSessionStats.session_time,
-          description: 'Focused time since the session started.'
-        },
-        {
-          key: 'checks',
-          label: 'AI checks',
-          value: this.recordingsLibrary.filter(item => this.isAiCheckRecording(item)).length,
-          description: 'Saved AI recitation or memorisation checks.'
-        }
-      ]
+        { key: 'progress', label: 'Progress', value: `${this.currentPosition}/${this.totalVerses}`, description: `${this.progressPercent}% through selected ayahs.` },
+        { key: 'plays', label: 'Audio plays', value: this.totalVersePlayCountValue, description: 'Total ayah playback starts.' },
+        { key: 'time', label: 'Session time', value: this.liveSessionStats.session_time, description: 'Focused time since start.' },
+        { key: 'checks', label: 'AI checks', value: this.recordingsLibrary.filter(i => this.isAiCheckRecording(i)).length, description: 'Saved AI recitation checks.' }
+      ];
     },
     dueCount() {
       // "Due" is surfaced only as a count; scheduling/intervals remain invisible.
@@ -14806,103 +14801,6 @@ export default {
 </script>
 
 <style>
-
-.sessions-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.session-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 1rem 1.2rem;
-  transition: all 0.2s;
-}
-
-.session-info {
-  flex: 1;
-  cursor: pointer;
-}
-
-.session-name {
-  font-weight: 700;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.session-details {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.session-actions {
-  display: flex;
-  gap: 12px;
-  margin-left: 1rem;
-}
-
-.session-resume-btn,
-.session-delete-btn {
-  padding: 10px 20px;
-  border-radius: 40px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
-  cursor: pointer;
-  border: none;
-}
-
-.session-resume-btn {
-  background: var(--accent);
-  color: white;
-  box-shadow: 0 4px 12px rgba(154,103,56,0.2);
-}
-
-.session-resume-btn:hover {
-  transform: translateY(-2px);
-  background: var(--accent-strong);
-}
-
-.session-delete-btn {
-  background: rgba(220,53,69,0.1);
-  color: #dc3545;
-  border: 1px solid rgba(220,53,69,0.3);
-}
-
-.session-delete-btn:hover {
-  background: #dc3545;
-  color: white;
-}
-
-@media (max-width: 640px) {
-  .session-item {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-  .session-actions {
-    margin-left: 0;
-    justify-content: stretch;
-  }
-  .session-resume-btn, .session-delete-btn {
-    flex: 1;
-    justify-content: center;
-  }
-}
 .session-complete-empty {
   background: linear-gradient(145deg, #ffffff, #fefaf5) !important;
   border-radius: 28px;
@@ -19132,6 +19030,7 @@ export default {
 /* Login Hero Section */
 .login-hero {
   padding-top: calc(80px + env(safe-area-inset-top, 0px)) !important;
+  margin-top: 0 !important;
   min-height: calc(100vh - 100px);
   padding: 34px 20px 48px;
   align-items: stretch;
@@ -19186,7 +19085,8 @@ export default {
 
 .guest-hero-copy h1 {
   margin: 0;
-  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-size: clamp(2.5rem, 5vw, 4rem) !important;
+  margin-top: 0 !important;
   line-height: 1.06;
   letter-spacing: -0.04em;
   color: var(--text);
@@ -19217,6 +19117,7 @@ export default {
 }
 
 .guest-action-row {
+  margin-top: 1rem;
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
@@ -37818,25 +37719,25 @@ button:active {
 
 .controls-analytics-grid {
   display: grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  gap: 0.62rem !important;
-  margin-bottom: 0.85rem !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 0.75rem !important;
+  margin-bottom: 1rem !important;
 }
 
 .controls-analytics-card {
-  min-height: 88px !important;
-  padding: 0.72rem !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 9px !important;
-  background: var(--surface-strong) !important;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem;
+  text-align: center;
 }
 
 .controls-analytics-card span,
 .controls-analytics-card small {
-  display: block !important;
-  color: var(--text-muted) !important;
-  font-size: 0.76rem !important;
-  line-height: 1.3 !important;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .controls-analytics-card strong {
