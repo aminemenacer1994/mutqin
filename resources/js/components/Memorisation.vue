@@ -175,7 +175,7 @@
                   <div class="top-card-menu-wrap" @click.stop>
                     <button class="top-card-ellipsis" type="button" @click="toggleTopCardMenu"
                       aria-label="Open reading options">
-                      <i class="bi bi-three-dots"></i>
+                      <i class="bi bi-three-dots-vertical"></i>
                     </button>
                     <transition name="dropdown-fade">
                       <div v-if="topCardMenuOpen" class="top-card-menu">
@@ -470,7 +470,7 @@
                     <div class="verse-menu-wrap" @click.stop>
                       <button class="verse-ellipsis-btn" type="button" @click="toggleVerseActionMenu(verse.key)"
                         aria-label="Open ayah actions">
-                        <i class="bi bi-three-dots"></i>
+                        <i class="bi bi-three-dots-vertical"></i>
                       </button>
                       <transition name="dropdown-fade">
                         <div v-if="openVerseActionKey === verse.key" class="verse-action-menu">
@@ -545,19 +545,19 @@
             <div v-else class="session-complete-empty">
               <i class="bi bi-check2-circle"></i>
               <strong>Session complete</strong>
-              <span>Review your insights, save the range, or restart with a countdown when you are ready.</span>
+              <span>Choose the next step for this completed range.</span>
               <div class="session-complete-actions">
-                <button type="button" class="btn-primary" @click="openAdvancedControls">
+                <button type="button" class="btn-primary" @click="openInsightsPanel">
                   <i class="bi bi-bar-chart-line"></i>
-                  <span>Review insights</span>
+                  <span><strong>Review insights</strong><small>Open the Insights tab</small></span>
                 </button>
                 <button type="button" class="btn-secondary" @click="saveCurrentSessionWithName">
                   <i class="bi bi-save"></i>
-                  <span>Save session</span>
+                  <span><strong>Save session</strong><small>Keep this range</small></span>
                 </button>
                 <button type="button" class="btn-secondary" @click="startSessionWithCountdown">
                   <i class="bi bi-arrow-repeat"></i>
-                  <span>Restart range</span>
+                  <span><strong>Reset range</strong><small>Replay after countdown</small></span>
                 </button>
               </div>
             </div>
@@ -2976,39 +2976,13 @@ export default {
         {
           title: 'Begin the session',
           stepLabel: 'Ready',
-          body: 'The sample setup is ready. New users can keep it and press Start Session; returning users can reopen this guide later from the top-right ellipsis.',
-          points: ['Start with the sample session', 'Change the surah and ayah range any time', 'Find this guide under the top-card ellipsis'],
-          duas: [
-            {
-              title: 'Seeking refuge',
-              arabic: 'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ',
-              translation: 'I seek refuge in Allah from the accursed Shaytan.',
-              source: 'Qur\'an 16:98'
-            },
-            {
-              title: 'Bismillah',
-              arabic: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-              translation: 'In the name of Allah, the Most Compassionate, the Most Merciful.',
-              source: 'Qur\'an 1:1'
-            },
-            {
-              title: 'Increase me in knowledge',
-              arabic: 'رَبِّ زِدْنِي عِلْمًا',
-              translation: 'My Lord, increase me in knowledge.',
-              source: 'Qur\'an 20:114'
-            },
-            {
-              title: 'Ease my task',
-              arabic: 'رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي',
-              translation: 'My Lord, expand my chest and make my task easy.',
-              source: 'Qur\'an 20:25-26'
-            }
-          ],
+          body: 'Your sample session is ready. Finish this guide to close the panel and begin with a short countdown. No memorisation technique is applied by default.',
+          points: ['Surah Al-Ikhlas, ayahs 1-4', 'Plain playback with techniques off', 'You can reopen onboarding from the top-card menu'],
           preview: {
             icon: 'bi-play-circle',
-            title: 'What to do next',
-            subtitle: 'Close the guide, review the setup, then start.',
-            items: ['Check setup', 'Press Start Session', 'Recite and review']
+            title: 'Start clean',
+            subtitle: 'A focused first run starts after the countdown.',
+            items: ['Finish guide', 'Countdown starts', 'Recite and review']
           }
         }
       ],
@@ -3601,13 +3575,6 @@ export default {
           label: `${this.progressPercent}% complete`
         }
       ]
-      if (this.etaLabel) {
-        pills.push({
-          key: 'eta',
-          icon: 'bi-clock-history',
-          label: `Audio time ${this.etaLabel} left`
-        })
-      }
       if (this.blurModeEnabled) {
         pills.push({ key: 'blur', icon: 'bi-cloud-haze2', label: `Blur ${this.blurIntensity}px` })
       }
@@ -4705,7 +4672,7 @@ export default {
       const delaySeconds = (this.delay || 1) * (remainingItems.length - 1)
       totalSeconds += delaySeconds
       const minutes = Math.max(0, Math.ceil(totalSeconds / 60))
-      return `Audio time ≈ ${minutes} min`
+      return `≈ ${minutes} min`
     },
 
     etaLabelAudioOnly() {
@@ -4718,7 +4685,7 @@ export default {
       })
 
       const minutes = Math.max(0, Math.ceil(totalAudioSeconds / 60))
-      return `Audio time ≈ ${minutes} min`
+      return `≈ ${minutes} min`
     },
 
     currentChainPhase() {
@@ -6456,6 +6423,10 @@ export default {
       this.tab = 'tools'
       this.showTools = false
       if (this.chapterId) {
+        this.focusModeEnabled = false
+        this.blurModeEnabled = false
+        this.chainingEnabled = false
+        this.anchorModeEnabled = false
         await this.loadChapter(this.currentMode)
         this.$nextTick(() => {
           this.startSessionWithCountdown()
@@ -10495,11 +10466,17 @@ export default {
     },
 
     openToolsPanel(options = {}) {
-      const { verseKey = null, mode = this.currentMode, scroll = false } = options
+      const { verseKey = null, mode = this.currentMode, scroll = false, tab = 'tools' } = options
       this.toolsReturnFocusEl = document.activeElement instanceof HTMLElement ? document.activeElement : null
       this.currentMode = mode
-      this.tab = 'tools'
+      this.tab = ['tools', 'techniques', 'saved', 'stats', 'settings'].includes(tab) ? tab : 'tools'
       this.syncSettingsDraft()
+      if (this.tab === 'saved' || this.tab === 'stats') {
+        this.loadSavedSessions()
+        if (this.tab === 'stats' && !this.selectedStatsSessionId && this.savedSessions[0]?.id) {
+          this.selectedStatsSessionId = this.savedSessions[0].id
+        }
+      }
 
       if (verseKey) {
         this.focusLinkedAyah(verseKey, { mode, scroll })
@@ -10527,6 +10504,9 @@ export default {
     openAdvancedControls() {
       // Keep power features accessible, but behind a tertiary surface.
       this.openToolsPanel()
+    },
+    openInsightsPanel() {
+      this.openToolsPanel({ tab: 'stats' })
     },
     setLoopCount(value) {
       const nextValue = value === 'infinite' ? 'infinite' : Math.max(1, Number(value || 1))
@@ -39050,6 +39030,282 @@ button:active {
   }
 
   .quick-ai-actions,
+  .session-item {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Force-fix pass for screenshot regressions. */
+.workspace-shell,
+.verse-card,
+.verse-header,
+.workspace-shell-head,
+.workspace-shell-actions,
+.action-buttons-group,
+.top-card-menu-wrap,
+.verse-menu-wrap {
+  overflow: visible !important;
+}
+
+.workspace-shell-actions,
+.action-buttons-group,
+.top-card-menu-wrap,
+.verse-menu-wrap {
+  position: relative !important;
+  z-index: 60 !important;
+}
+
+.workspace-quick-controls {
+  z-index: 5 !important;
+}
+
+.quick-pill-group-list {
+  grid-template-columns: 1fr !important;
+  justify-items: center !important;
+  gap: 0.9rem !important;
+}
+
+.quick-left-pills {
+  width: 100% !important;
+  justify-content: center !important;
+  order: 2 !important;
+}
+
+.quick-ai-actions {
+  order: 1 !important;
+  width: min(100%, 640px) !important;
+  justify-self: center !important;
+  margin-inline: auto !important;
+  grid-template-columns: repeat(2, minmax(180px, 1fr)) !important;
+  gap: 1rem !important;
+}
+
+.quick-ai-action {
+  min-height: 56px !important;
+  height: 56px !important;
+  border-radius: 999px !important;
+  padding: 0 1.35rem !important;
+  font-size: 1rem !important;
+  font-weight: 760 !important;
+  letter-spacing: 0 !important;
+  box-shadow: 0 18px 40px rgba(31, 112, 79, 0.24) !important;
+}
+
+.quick-ai-action i {
+  font-size: 1.2rem !important;
+  min-width: 24px !important;
+}
+
+.top-card-ellipsis,
+.verse-ellipsis-btn {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  aspect-ratio: 1 / 1 !important;
+  border-radius: 50% !important;
+  padding: 0 !important;
+}
+
+.top-card-menu,
+.verse-action-menu {
+  z-index: 2400 !important;
+  min-width: 250px !important;
+  padding: 0.7rem !important;
+  border: 1px solid rgba(65, 45, 25, 0.18) !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  color: #181512 !important;
+  box-shadow: 0 24px 68px rgba(32, 23, 14, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: none !important;
+}
+
+.top-card-menu button,
+.verse-action-menu button {
+  min-height: 44px !important;
+  border-radius: 10px !important;
+  color: #181512 !important;
+  background: transparent !important;
+  font-size: 0.96rem !important;
+}
+
+.top-card-menu button:hover,
+.top-card-menu button.active,
+.verse-action-menu button:hover {
+  background: rgba(160, 120, 76, 0.12) !important;
+  color: #6a4423 !important;
+  box-shadow: inset 0 0 0 1px rgba(160, 120, 76, 0.18) !important;
+}
+
+[data-theme="dark"] .top-card-menu,
+[data-theme="dark"] .verse-action-menu {
+  background: #121815 !important;
+  color: #f7fff9 !important;
+}
+
+[data-theme="dark"] .top-card-menu button,
+[data-theme="dark"] .verse-action-menu button {
+  color: #f7fff9 !important;
+}
+
+.tools-tabs {
+  background: rgba(160, 120, 76, 0.12) !important;
+  border-color: rgba(160, 120, 76, 0.22) !important;
+}
+
+.tools-tabs button[aria-selected="true"],
+.tools-tabs button.active {
+  background: #8b5a2c !important;
+  color: #fff !important;
+  box-shadow: 0 14px 28px rgba(139, 90, 44, 0.24) !important;
+}
+
+.tools-tabs button[aria-selected="true"] i,
+.tools-tabs button.active i {
+  color: inherit !important;
+}
+
+[data-theme="dark"] .tools-tabs button[aria-selected="true"],
+[data-theme="dark"] .tools-tabs button.active {
+  background: #78dda2 !important;
+  color: #07150f !important;
+}
+
+.session-complete-empty {
+  gap: 0.8rem !important;
+}
+
+.session-complete-actions {
+  width: min(100%, 860px) !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.9rem !important;
+}
+
+.session-complete-actions button {
+  min-height: 86px !important;
+  justify-content: flex-start !important;
+  padding: 1rem 1.1rem !important;
+  gap: 0.85rem !important;
+  border-radius: 14px !important;
+  text-align: left !important;
+}
+
+.session-complete-actions button > i {
+  width: 42px !important;
+  height: 42px !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 10px !important;
+  font-size: 1.45rem !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+}
+
+.session-complete-actions button > span {
+  display: grid !important;
+  gap: 0.18rem !important;
+}
+
+.session-complete-actions strong,
+.session-complete-actions small {
+  display: block !important;
+  line-height: 1.2 !important;
+}
+
+.session-complete-actions strong {
+  font-size: 1rem !important;
+}
+
+.session-complete-actions small {
+  color: currentColor !important;
+  opacity: 0.72 !important;
+  font-size: 0.78rem !important;
+}
+
+.saved-sessions-container {
+  gap: 1rem !important;
+}
+
+.session-item {
+  grid-template-columns: minmax(0, 1fr) minmax(170px, auto) !important;
+  padding: 1.05rem !important;
+  border-radius: 14px !important;
+  align-items: center !important;
+}
+
+.session-info {
+  padding: 0 !important;
+}
+
+.session-name {
+  font-size: 1rem !important;
+  font-weight: 720 !important;
+}
+
+.session-details {
+  display: grid !important;
+  gap: 0.42rem !important;
+  font-size: 0.86rem !important;
+}
+
+.saved-sessions-container .session-actions {
+  width: 100% !important;
+  justify-content: stretch !important;
+}
+
+.session-primary-action,
+.session-resume-btn {
+  width: 100% !important;
+}
+
+.session-resume-btn {
+  min-height: 56px !important;
+  padding: 0.8rem 1.1rem !important;
+  border-radius: 13px !important;
+  gap: 0.7rem !important;
+  font-size: 0.96rem !important;
+  line-height: 1.12 !important;
+}
+
+.session-resume-btn i {
+  font-size: 1.05rem !important;
+}
+
+.controls-analytics-grid {
+}
+
+.controls-analytics-card {
+  width: 100% !important;
+  min-height: 118px !important;
+  display: grid !important;
+  align-content: center !important;
+  justify-items: center !important;
+  text-align: center !important;
+}
+
+.post-onboarding-kicker,
+.post-onboarding-step-label,
+.dua-onboarding-title,
+.dua-onboarding-source {
+  color: #8b5a2c !important;
+}
+
+.post-onboarding-kicker {
+  background: rgba(139, 90, 44, 0.12) !important;
+}
+
+.post-onboarding-preview-icon,
+.post-onboarding-preview-grid i {
+  color: #8b5a2c !important;
+}
+
+@media (max-width: 900px) {
+  .quick-ai-actions,
+  .session-complete-actions,
+  .controls-analytics-grid {
+    grid-template-columns: 1fr !important;
+  }
+
   .session-item {
     grid-template-columns: 1fr !important;
   }
