@@ -123,15 +123,13 @@
           </div>
         </div>
 
-
-
         <!-- Verses Grid -->
-        <div v-if="!isDataReady" class="loading-spinner">
+        <div v-if="!isDataReady" class="loading-spinner" >
           <i class="bi bi-hourglass-split"></i>
           <span>{{ t('common.loading') }}</span>
         </div>
-        <div v-else-if="hasVerses" class="workspace">
-          <section class="workspace-shell" :class="{ collapsed: mainCardCollapsed }" aria-label="Session overview">
+        <div v-else-if="hasVerses" class="workspace" style="border: 2px solid var(--color-text-secondary);">
+          <section class="workspace-shell" style="border: 1px solid #b5723c; background-color:#d8c1a8;" :class="{ collapsed: mainCardCollapsed }" aria-label="Session overview">
             <div class="workspace-shell-head">
               <div class="workspace-shell-copy">
                 <span class="workspace-shell-kicker">
@@ -139,7 +137,7 @@
                   }}
                 </span>
                 <div class="workspace-shell-title-row">
-                  <h1>{{ currentChapter ? currentChapter.name_simple : activeChapterName }}</h1>
+                  Surah Name: <h1>{{ currentChapter ? currentChapter.name_simple : activeChapterName }}</h1>
                 </div>
                 <div v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
                   <span v-if="reviewPriorityLabel">{{ reviewPriorityLabel }}</span>
@@ -353,25 +351,58 @@
             aria-label="Memorisation workspace">
             <div v-if="!isSessionCompleted && readingViewMode === 'mushaf'" class="mushaf-workspace">
               <div class="mushaf-frame">
-                <div v-if="activeVerseRef" class="mushaf-pill-bar" aria-label="Mushaf practice actions">
-                  <button class="mushaf-pill" type="button" @click.stop="toggleSelfCheckAyahPlayback(activeVerseRef)"
-                    :class="{ active: activeSelfCheckAyahPlaybackKey === activeVerseRef.key }">
-                    <i class="bi" :class="activeSelfCheckAyahPlaybackKey === activeVerseRef.key ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-                    <span>Play</span>
-                  </button>
-                  <button class="mushaf-pill" type="button"
-                    @click.stop="openAiMemorisationCheckerForVerse(activeVerseRef)"
+                <div v-if="activeVerseRef" class="mushaf-pill-bar" style="display: flex; gap: 10px; align-items: center; padding: 8px 16px; background: var(--surface); border-radius: 60px; margin-bottom: 16px;">
+                  <!-- Font Dropdown -->
+                  <div style="position: relative;">
+                    <button @click.stop="fontOpen = !fontOpen" type="button" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--surface-strong); border: 1px solid var(--border); border-radius: 40px; cursor: pointer; color: var(--text);">
+                      <i class="bi bi-type"></i>
+                      <span>{{ getCurrentFontLabel() }}</span>
+                      <i class="bi bi-chevron-down" :style="{ transform: fontOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }"></i>
+                    </button>
+                    <div v-if="fontOpen" @click.stop style="position: absolute; top: 100%; left: 0; margin-top: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; min-width: 180px; z-index: 1000; box-shadow: 0 8px 24px rgba(0,0,0,0.15); overflow: hidden;">
+                      <button v-for="f in quranFontOptions" :key="f.value" @click="quranFont = f.value; fontOpen = false" style="display: block; width: 100%; padding: 12px 16px; background: transparent; border: none; cursor: pointer; text-align: left; color: var(--text); transition: background 0.15s;" @mouseenter="e => e.target.style.background = 'var(--accent-light)'" @mouseleave="e => e.target.style.background = 'transparent'">
+                        {{ f.label }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Theme Dropdown -->
+                  <div style="position: relative;">
+                    <button @click.stop="bgOpen = !bgOpen" type="button" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--surface-strong); border: 1px solid var(--border); border-radius: 40px; cursor: pointer; color: var(--text);">
+                      <i class="bi bi-palette"></i>
+                      <span>Theme</span>
+                      <i class="bi bi-chevron-down" :style="{ transform: bgOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }"></i>
+                    </button>
+                    <div v-if="bgOpen" @click.stop style="position: absolute; top: 100%; left: 0; margin-top: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; min-width: 180px; z-index: 1000; box-shadow: 0 8px 24px rgba(0,0,0,0.15); overflow: hidden;">
+                      <button v-for="b in mushafBackgroundOptions" :key="b.value" @click="mushafBackground = b.value; bgOpen = false" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 16px; background: transparent; border: none; cursor: pointer; color: var(--text); transition: background 0.15s;" @mouseenter="e => e.target.style.background = 'var(--accent-light)'" @mouseleave="e => e.target.style.background = 'transparent'">
+                        <span :style="{ width: '20px', height: '20px', borderRadius: '6px', background: b.value === 'warm' ? '#f1ede8' : b.value === 'paper' ? '#fffaf0' : b.value === 'contrast' ? '#ffffff' : b.value === 'mist' ? '#f5f7f3' : '#1a1a2e', border: '1px solid rgba(0,0,0,0.1)' }"></span>
+                        {{ b.label }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- AI Memory Button -->
+                  <button class="mushaf-pill" type="button" @click.stop="openAiMemorisationCheckerForVerse(activeVerseRef)"
                     :class="{ active: aiMemorisationCheckerRecording }"
-                    :disabled="aiMemorisationCheckerPreparing || !supportsSelfCheckRecording()">
+                    :disabled="aiMemorisationCheckerPreparing || !supportsSelfCheckRecording()"
+                    style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: #ef4444; border: none; border-radius: 40px; cursor: pointer; color: white; font-weight: 500;">
                     <i class="bi" :class="aiMemorisationCheckerRecording ? 'bi-stop-circle' : 'bi-eye-slash'"></i>
-                    <span>{{ aiMemorisationCheckerRecording ? 'Stop Memory' : 'AI Memory' }}</span>
+                    <span>{{ aiMemorisationCheckerRecording ? 'Stop' : 'AI Memory' }}</span>
                   </button>
-                  <button class="mushaf-pill" type="button"
-                    @click.stop="openAiRecitationCheckForVerse(activeVerseRef)"
+
+                  <!-- AI Recite Button -->
+                  <button class="mushaf-pill" type="button" @click.stop="openAiRecitationCheckForVerse(activeVerseRef)"
                     :class="{ active: recitationCheckRecording }"
-                    :disabled="recitationCheckPreparing || !supportsSelfCheckRecording()">
+                    :disabled="recitationCheckPreparing || !supportsSelfCheckRecording()"
+                    style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: #10b981; border: none; border-radius: 40px; cursor: pointer; color: white; font-weight: 500;">
                     <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-stars'"></i>
-                    <span>{{ recitationCheckRecording ? 'Stop Recite' : 'AI Recite' }}</span>
+                    <span>{{ recitationCheckRecording ? 'Stop' : 'AI Recite' }}</span>
+                  </button>
+
+                  <!-- Controls Button (different style) -->
+                  <button type="button" @click="openAdvancedControls" style="margin-left: auto; display: flex; align-items: center; gap: 8px; padding: 8px 20px; background: #3b82f6; border: none; border-radius: 40px; cursor: pointer; color: white; font-weight: 500;">
+                    <i class="bi bi-sliders2"></i>
+                    <span>Controls</span>
                   </button>
                 </div>
                 <div ref="mushafViewport" class="mushaf-viewport" :class="[`mushaf-bg-${mushafBackground}`]">
@@ -562,29 +593,50 @@
               </div>
             </div>
             <div v-else class="session-complete-empty">
-              <div class="completion-stats">
-                <div class="stat-circle">
-                  <span class="stat-percent">{{ progressPercent }}%</span>
-                  <span class="stat-label">completed</span>
-                </div>
-                <div class="stat-details">
-                  <div><strong>{{ currentPosition }}/{{ totalVerses }}</strong> ayahs covered</div>
-                  <div><i class="bi bi-clock"></i> {{ liveSessionStats.session_time }}</div>
-                  <div><i class="bi bi-ear"></i> {{ totalVersePlayCountValue }} plays</div>
-                </div>
-              </div>
               <div class="session-complete-actions">
-                <button type="button" class="action-card" @click="openInsightsPanel">
+                <button 
+                  type="button" 
+                  class="action-card" 
+                  @click="openInsightsPanel"
+                  aria-label="Review insights"
+                >
+                  <div class="card-glow"></div>
                   <i class="bi bi-bar-chart-line"></i>
-                  <span><strong>Review insights</strong><small>Open the Insights tab</small></span>
+                  <div class="action-text">
+                    <strong>Review insights</strong>
+                    <small>Open the Insights tab</small>
+                  </div>
+                  <span class="card-arrow">→</span>
                 </button>
-                <button type="button" class="action-card" @click="saveCurrentSessionWithName">
+
+                <button 
+                  type="button" 
+                  class="action-card" 
+                  @click="saveCurrentSessionWithName"
+                  aria-label="Save session"
+                >
+                  <div class="card-glow"></div>
                   <i class="bi bi-save"></i>
-                  <span><strong>Save session</strong><small>Keep this range</small></span>
+                  <div class="action-text">
+                    <strong>Save session</strong>
+                    <small>Keep this range</small>
+                  </div>
+                  <span class="card-arrow">→</span>
                 </button>
-                <button type="button" class="action-card" @click="startSessionWithCountdown">
+
+                <button 
+                  type="button" 
+                  class="action-card" 
+                  @click="startSessionWithCountdown"
+                  aria-label="Reset range"
+                >
+                  <div class="card-glow"></div>
                   <i class="bi bi-arrow-repeat"></i>
-                  <span><strong>Reset range</strong><small>Replay after countdown</small></span>
+                  <div class="action-text">
+                    <strong>Reset range</strong>
+                    <small>Replay after countdown</small>
+                  </div>
+                  <span class="card-arrow">→</span>
                 </button>
               </div>
             </div>
@@ -2828,7 +2880,9 @@ export default {
       // Feature 1: Repetitions
       repetitionsPerStep: 5,
       selectedLoopCount: 5,
-
+      fontOpen: false,
+      bgOpen: false,
+      
       // Feature 2: Gap between verses
       gapBetweenVerses: "1x", // Options: 'none', '1x', '3s', '5s', 'custom'
       customGapSeconds: 2,
@@ -4922,6 +4976,15 @@ export default {
     this.statsInterval = window.setInterval(() => {
       this.statsTick = Date.now()
     }, 250)
+    // Add this click handler to close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (this.fontOpen && !e.target.closest('.font-dropdown-region')) {
+        this.fontOpen = false
+      }
+      if (this.bgOpen && !e.target.closest('.bg-dropdown-region')) {
+        this.bgOpen = false
+      }
+    })
   },
 
   beforeUnmount() {
@@ -14820,6 +14883,132 @@ export default {
 </script>
 
 <style>
+
+.session-complete-empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  padding: 2rem;
+}
+
+.session-complete-actions {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.action-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.75rem;
+  border: none;
+  border-radius: 20px;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+  min-width: 220px;
+}
+
+.action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.action-card:active {
+  transform: translateY(0);
+}
+
+.action-card i {
+  font-size: 1.8rem;
+  transition: transform 0.2s ease;
+}
+
+.action-card:hover i {
+  transform: scale(1.05);
+}
+
+.action-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.action-text strong {
+  font-size: 1rem;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.action-text small {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: normal;
+}
+
+/* Individual card colors */
+.action-card.review i {
+  color: #3b82f6;
+}
+
+.action-card.save i {
+  color: #10b981;
+}
+
+.action-card.reset i {
+  color: #f59e0b;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .action-card {
+    background: #1e293b;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .action-text strong {
+    color: #f1f5f9;
+  }
+
+  .action-text small {
+    color: #94a3b8;
+  }
+}
+
+/* Mobile optimization */
+@media (max-width: 640px) {
+  .session-complete-empty {
+    padding: 1rem;
+  }
+
+  .session-complete-actions {
+    gap: 1rem;
+  }
+
+  .action-card {
+    padding: 1rem 1.25rem;
+    min-width: 180px;
+  }
+
+  .action-card i {
+    font-size: 1.4rem;
+  }
+
+  .action-text strong {
+    font-size: 0.9rem;
+  }
+
+  .action-text small {
+    font-size: 0.7rem;
+  }
+}
 /* Bootstrap grid overrides - prevent stacking */
 .row {
   display: flex;
@@ -25473,10 +25662,6 @@ html {
 
 /* Verses grid */
 .workspace {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 14px;
-  align-items: start;
   margin-top: 14px;
 }
 
@@ -38689,7 +38874,7 @@ button:active {
   padding: 0.45rem !important;
   border-radius: 999px !important;
   border: 1px solid rgba(47, 111, 88, 0.14) !important;
-  background: rgba(255, 255, 255, 0.72) !important;
+  /* background: rgba(255, 255, 255, 0.72) !important; */
 }
 
 .mushaf-pill {
