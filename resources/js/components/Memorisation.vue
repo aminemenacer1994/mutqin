@@ -206,11 +206,11 @@
                         <button type="button" :class="{ active: tajweedEnabled }" @click="toggleTajweed">
                           <i class="bi bi-palette"></i><span>Tajweed</span>
                         </button>
-                        <button type="button" @click="cycleQuranFont">
+                        <!-- <button type="button" @click="cycleQuranFont">
                           <i class="bi bi-fonts"></i><span>Font: {{ getCurrentFontLabel() }}</span>
-                        </button>
+                        </button> -->
                         <button type="button" @click="openRecordingsLibrary">
-                          <i class="bi bi-collection-play"></i><span>View live recording</span>
+                          <i class="bi bi-collection-play"></i><span>View Recording</span>
                         </button>
                         <button type="button" @click="openOnboardingFromTopMenu">
                           <i class="bi bi-compass"></i><span>Onboarding</span>
@@ -351,7 +351,7 @@
             aria-label="Memorisation workspace">
             <div v-if="!isSessionCompleted && readingViewMode === 'mushaf'" class="mushaf-workspace">
               <div class="mushaf-frame">
-                <div v-if="activeVerseRef" class="mushaf-pill-bar" style="display: flex; gap: 10px; align-items: center; padding: 8px 16px; background: var(--surface); border-radius: 60px; margin-bottom: 16px;">
+                <div v-if="activeVerseRef" class="mushaf-pill-bar" style="display: flex; gap: 10px; align-items: center; padding: 8px 16px; background: var(--surface); border-radius: 10px; margin-bottom: 16px;">
                   <!-- Font Dropdown -->
                   <div style="position: relative;">
                     <button @click.stop="fontOpen = !fontOpen" type="button" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--surface-strong); border: 1px solid var(--border); border-radius: 40px; cursor: pointer; color: var(--text);">
@@ -400,9 +400,8 @@
                   </button>
 
                   <!-- Controls Button (different style) -->
-                  <button type="button" @click="openAdvancedControls" style="margin-left: auto; display: flex; align-items: center; gap: 8px; padding: 8px 20px; background: #3b82f6; border: none; border-radius: 40px; cursor: pointer; color: white; font-weight: 500;">
+                  <button type="button" @click="openAdvancedControls" style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; border: none; border-radius: 40px; cursor: pointer; color: white; font-weight: 500;">
                     <i class="bi bi-sliders2"></i>
-                    <span>Controls</span>
                   </button>
                 </div>
                 <div ref="mushafViewport" class="mushaf-viewport" :class="[`mushaf-bg-${mushafBackground}`]">
@@ -33263,19 +33262,7 @@ html {
   max-width: none;
 }
 
-.main.mushaf-mode-active .workspace-main {
-  padding-inline: clamp(14px, 3vw, 42px);
-}
 
-.mushaf-frame {
-  width: min(100%, 1500px);
-  max-width: calc(100vw - clamp(32px, 5vw, 96px));
-}
-
-.main.mushaf-mode-active.tools-open .mushaf-frame {
-  width: min(100%, 1320px);
-  margin-inline: auto;
-}
 
 .mushaf-page > .mushaf-sheet-tools {
   display: none !important;
@@ -33367,7 +33354,7 @@ html {
 
 .mushaf-page {
   min-height: min(78vh, 900px);
-  padding-inline: clamp(2.2rem, 6.5vw, 6.5rem);
+  /* padding-inline: clamp(2.2rem, 6.5vw, 6.5rem); */
 }
 
 .mushaf-ayah-text {
@@ -38869,10 +38856,9 @@ button:active {
 }
 
 .mushaf-pill-bar {
-  justify-content: flex-end !important;
   gap: 0.58rem !important;
   padding: 0.45rem !important;
-  border-radius: 999px !important;
+  border-radius: 10px !important;
   border: 1px solid rgba(47, 111, 88, 0.14) !important;
   /* background: rgba(255, 255, 255, 0.72) !important; */
 }
@@ -39339,10 +39325,6 @@ button:active {
 
 .mushaf-workspace {
   padding-top: 0 !important;
-}
-
-.mushaf-frame {
-  padding-inline: clamp(0.25rem, 1vw, 0.75rem) !important;
 }
 
 .mushaf-pill-bar,
