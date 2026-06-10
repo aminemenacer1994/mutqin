@@ -151,6 +151,20 @@
                   <span>Session Completed</span>
                 </div> -->
                 <div class="action-buttons-group">
+                  <button type="button" class="action-btn verse-ai-check-btn  pr-2"
+                    @click="openAiMemorisationCheckerForSession"
+                    :disabled="aiMemorisationCheckerPreparing || aiMemorisationCheckerRecording || !supportsSelfCheckRecording()"
+                    title="Check memorisation across the selected session">
+                    <i class="bi bi-eye-slash"></i>
+                    <span>Session Memory</span>
+                  </button>
+                  <button type="button" class="action-btn verse-ai-check-btn pr-2"
+                    @click="openAiRecitationCheckForSession"
+                    :disabled="recitationCheckPreparing || recitationCheckRecording || !supportsSelfCheckRecording()"
+                    title="Check recitation across the whole selected session">
+                    <i class="bi bi-stars"></i>
+                    <span>AI Recite</span>
+                  </button>
                   <button class="action-btn action-btn-primary" type="button" @click="handlePrimaryAction"
                     :disabled="!isPlaying && !canStartSession">
                     <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
@@ -223,6 +237,7 @@
                     </div>
                   -->
                 </div>
+                
               </div>
             </div>
             <!-- Keyboard Shortcuts Modal -->
@@ -299,6 +314,7 @@
                 </div>
               </div>
             </div>
+            
             <div v-show="!mainCardCollapsed" class="workspace-quick-controls" aria-label="Quick reading controls">
                 <div class="quick-pill-group-list">
                 <div class="quick-left-pills">
@@ -310,7 +326,7 @@
                     </span>
                   </div>
                 </div>
-                <div class="quick-ai-actions" aria-label="AI practice tools">
+                <!-- <div class="quick-ai-actions" aria-label="AI practice tools">
                   <button type="button" class="quick-ai-action quick-ai-memory"
                     @click="openAiMemorisationCheckerForSession"
                     :disabled="aiMemorisationCheckerPreparing || aiMemorisationCheckerRecording || !supportsSelfCheckRecording()"
@@ -327,9 +343,10 @@
                     <span>AI Recite</span>
                     <small>Friendly recitation check and review</small>
                   </button>
-                </div>
+                </div> -->
               </div>
             </div>
+            
           </section>
 
           <main id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
@@ -448,8 +465,9 @@
                       class="verse-status-badge verse-status-badge-review">Review Due</span>
                     <span v-if="effectiveActiveVerseKey === verse.key" class="verse-status-badge">Active Ayah</span>
                   </div>
-                  <div class="verse-actions">
-                    <button class="verse-self-check-btn verse-ai-check-btn"
+                  <div class="row verse-actions">
+                    
+                    <button class="col-md-4 verse-self-check-btn verse-ai-check-btn"
                       :class="{ active: aiMemorisationCheckerVerseKey === verse.key }"
                       @click.stop="openAiMemorisationCheckerForVerse(verse)"
                       :disabled="aiMemorisationCheckerPreparing || aiMemorisationCheckerRecording || !supportsSelfCheckRecording()"
@@ -458,7 +476,7 @@
                       <span>AI Memory</span>
                     </button>
 
-                    <button class="verse-self-check-btn verse-ai-check-btn"
+                    <button class="col-md-4 verse-self-check-btn verse-ai-check-btn"
                       :class="{ active: isRecitationCheckTargetVerse(verse.key), saved: getAyahRecordingCount(verse.key) }"
                       @click.stop="openAiRecitationCheckForVerse(verse)"
                       :disabled="recitationCheckPreparing || recitationCheckRecording || !supportsSelfCheckRecording()"
@@ -467,11 +485,12 @@
                       <span>AI Recite</span>
                       <em v-if="getAyahRecordingCount(verse.key)">{{ getAyahRecordingCount(verse.key) }}</em>
                     </button>
-                    <div class="verse-menu-wrap" @click.stop>
-                      <button class="verse-ellipsis-btn" type="button" @click="toggleVerseActionMenu(verse.key)"
+                    <button class="verse-ellipsis-btn" type="button" @click="toggleVerseActionMenu(verse.key)"
                         aria-label="Open ayah actions">
                         <i class="bi bi-three-dots-vertical"></i>
                       </button>
+                    <div class="col-md-4 verse-menu-wrap" @click.stop>
+                      
                       <transition name="dropdown-fade">
                         <div v-if="openVerseActionKey === verse.key" class="verse-action-menu">
                           <button type="button" @click="playVerse(verse)">
@@ -14801,6 +14820,47 @@ export default {
 </script>
 
 <style>
+/* Bootstrap grid overrides - prevent stacking */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -12px;
+  margin-left: -12px;
+}
+
+[class*="col-"] {
+  flex: 0 0 auto;
+  padding-right: 12px;
+  padding-left: 12px;
+}
+
+/* Force columns to never stack below breakpoints */
+.col-12 { flex: 0 0 auto; width: 100%; }
+.col-sm-12 { width: 100%; }
+.col-md-6 { width: 50%; }
+.col-lg-4 { width: 33.333333%; }
+.col-lg-8 { width: 66.666667%; }
+.col-xl-3 { width: 25%; }
+.col-xl-9 { width: 75%; }
+
+/* Sticky behavior for tools panel */
+.tools-panel {
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+/* Responsive: maintain grid, never stack vertically */
+@media (max-width: 992px) {
+  .tools-panel {
+    order: 1 !important;
+  }
+  .order-lg-first {
+    order: 2 !important;
+  }
+}
 .session-complete-empty {
   background: linear-gradient(145deg, #ffffff, #fefaf5) !important;
   border-radius: 28px;
@@ -37966,7 +38026,6 @@ button:active {
 
 @media (max-width: 720px) {
   .tools-tabs {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
   .controls-analytics-grid {
