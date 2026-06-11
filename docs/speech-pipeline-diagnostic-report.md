@@ -77,3 +77,13 @@ Generated before the speech-pipeline refactor.
 - Move scoring, completion, mistakes, recommendations, and retention signals to alignment-derived output.
 - Persist raw stream events, stabilised words, word buffer state, alignment state, confidence values, audio, analysis, metadata, and session history in IndexedDB.
 - Add replay tests that prove repeated processing of the same recorded stream yields identical analysis output.
+
+## Post-Refactor Verification Status
+
+- The architecture has been refactored around a stabilisation layer, committed-word buffer, Quran-owned alignment, deterministic replay, and alignment-based analysis.
+- The implementation is internally consistent and deterministic under replay testing.
+- Stored AI checks now carry deterministic replay audit data derived from raw stream events, committed words, and stream-order variants.
+- The app can re-run a deterministic replay audit for saved AI checks when `sessionId` and `audioHash` metadata are available.
+- Live microphone + Deepgram sessions have not been validated end to end inside this sandbox.
+- Alignment quality has not yet been benchmarked against real recitations covering pauses, self-corrections, restarts, and noisy Arabic ASR output.
+- Current status should therefore be described as: architecture corrected and implementation stabilized, but live accuracy not yet fully proven.

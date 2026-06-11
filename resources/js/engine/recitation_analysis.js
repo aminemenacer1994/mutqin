@@ -109,7 +109,7 @@ export function stabilizeRecognitionEvent(state = createRecognitionState(), even
 
   const existingKey = findSupersededSegmentKey(next.bufferedSegments, rawEvent)
   const segmentKey = existingKey || rawEvent.segmentId
-  next.bufferedSegments[segmentKey] = {
+  const incomingSegment = {
     segmentId: segmentKey,
     provider: rawEvent.provider,
     sequence,
@@ -118,6 +118,8 @@ export function stabilizeRecognitionEvent(state = createRecognitionState(), even
     speechFinal: rawEvent.speechFinal,
     words: normalizedWords.map(word => ({ ...word, segmentId: segmentKey }))
   }
+  const currentSegment = next.bufferedSegments[segmentKey]
+  next.bufferedSegments[segmentKey] = selectPreferredRecognitionSegment(currentSegment, incomingSegment)
   next.interimWords = []
   next.committedWords = reconcileBufferedSegments(next.bufferedSegments)
   return next
@@ -384,6 +386,37 @@ function findSupersededSegmentKey(segments = {}, event = {}) {
     if (segment.provider !== event.provider) return false
     return finiteOrNull(segment.start) === start && finiteOrNull(segment.duration) === duration
   })?.[0] || ''
+}
+
+function selectPreferredRecognitionSegment(currentSegment = null, incomingSegment = null) {
+  if (!currentSegment) return incomingSegment
+  if (!incomingSegment) return currentSegment
+  const currentRank = getRecognitionSegmentRank(currentSegment)
+  const incomingRank = getRecognitionSegmentRank(incomingSegment)
+  for (let index = 0; index < currentRank.length; index += 1) {
+    if (incomingRank[index] === currentRank[index]) continue
+    return incomingRank[index] > currentRank[index] ? incomingSegment : currentSegment
+  }
+  return currentSegment
+}
+
+function getRecognitionSegmentRank(segment = {}) {
+  const words = Array.isArray(segment.words) ? segment.words : []
+  const confidenceSum = words.reduce((sum, word) => sum + Number(word.confidence || 0), 0)
+  const averageConfidence = words.length ? confidenceSum / words.length : 0
+  const coverageEnd = words.reduce((latest, word) => {
+    const end = finiteOrNull(word.end)
+    return end !== null ? Math.max(latest, end) : latest
+  }, 0)
+  const signature = words.map(word => `${word.word}:${Math.round(Number(word.confidence || 0) * 100)}`).join('|')
+  return [
+    Number(!!segment.speechFinal),
+    words.length,
+    Math.round(averageConfidence * 1000),
+    Math.round(confidenceSum * 1000),
+    Math.round(coverageEnd * 1000),
+    signature
+  ]
 }
 
 function reconcileBufferedSegments(segments = {}) {
