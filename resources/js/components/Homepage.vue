@@ -12,11 +12,11 @@
             <h1 class="hero-title"><span>Memorise the Quran with a calmer, sharper practice loop.</span></h1>
             <p class="hero-desc">Mutqin brings your ayahs, recordings, AI checks, revision flow, and weak-spot insights into one focused workspace so every session ends with a clear next step.</p>
             
-            <div class="problem-solution">
-              <p class="problem-text"><i class="bi bi-exclamation-triangle-fill"></i> <strong>The problem:</strong> Memorisation breaks down when weak ayahs, recordings, and review plans live in separate places.</p>
-              <div class="solution-highlight">
-                <p class="solution-text"><i class="bi bi-check-lg"></i> <strong>The solution:</strong> Practise in small ranges, check recitation and recall, then review the exact ayahs that need attention.</p>
-              </div>
+            <div class="hero-workflow" aria-label="Mutqin practice workflow">
+              <span><i class="bi bi-volume-up"></i> Listen</span>
+              <span><i class="bi bi-arrow-repeat"></i> Repeat</span>
+              <span><i class="bi bi-eye-slash"></i> Recall</span>
+              <span><i class="bi bi-graph-up-arrow"></i> Revise</span>
             </div>
             
             <div class="hero-buttons">
@@ -27,13 +27,29 @@
           </div>
           
           <div class="hero-image" data-aos="fade-left">
-            <div class="demo-card">
-              <i class="bi bi-mic"></i>
-              <h3>Live AI Analysis</h3>
-              <p>"Ikhfa' weak — hold nasalization 2 beats."</p>
+            <div class="demo-card landing-session-preview">
+              <div class="preview-topline">
+                <span>Today</span>
+                <strong>Al-Mulk · Ayahs 1-5</strong>
+              </div>
+              <div class="preview-ayah" dir="rtl">تَبَارَكَ الَّذِي بِيَدِهِ الْمُلْكُ</div>
+              <div class="preview-grid">
+                <div>
+                  <span>Recall</span>
+                  <strong>86%</strong>
+                </div>
+                <div>
+                  <span>Repeats</span>
+                  <strong>18</strong>
+                </div>
+                <div>
+                  <span>Revise next</span>
+                  <strong>2 ayahs</strong>
+                </div>
+              </div>
               <div class="demo-wave">
                 <i class="bi bi-soundwave"></i>
-                <span>Recording... → 96% accuracy</span>
+                <span>AI Recite check saved · 96%</span>
               </div>
             </div>
             <div class="floating-card" v-for="(badge, idx) in floatingBadges" :key="idx" :style="{ animationDelay: `${idx * 0.8}s` }">
@@ -263,7 +279,7 @@
             </div>
           </div>
           <div class="footer-bottom">
-            <p><i class="bi bi-c-circle"></i> 2025 Mutqin · "And recite the Quran with measured recitation." 🤍</p>
+            <p><i class="bi bi-c-circle"></i> 2025 Mutqin · "And recite the Quran with measured recitation."</p>
           </div>
         </div>
       </footer>
@@ -630,6 +646,33 @@
     border: 1px solid var(--border);
     backdrop-filter: blur(10px);
   }
+
+  .hero-workflow {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, auto));
+    gap: 0.65rem;
+    align-items: center;
+    margin: 1.15rem 0 1.25rem;
+  }
+
+  .hero-workflow span {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface-strong) 82%, transparent);
+    color: var(--text);
+    font-size: 0.84rem;
+    font-weight: 720;
+  }
+
+  .hero-workflow i {
+    color: var(--accent);
+  }
   
   .problem-text, .solution-text {
     font-size: 0.95rem;
@@ -673,6 +716,65 @@
     text-align: center;
     box-shadow: var(--shadow-lg);
     border: 1px solid var(--border);
+  }
+
+  .landing-session-preview {
+    display: grid;
+    gap: 1.05rem;
+    text-align: left;
+  }
+
+  .landing-session-preview .preview-topline {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .preview-topline span,
+  .preview-grid span {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 760;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .preview-topline strong {
+    color: var(--text);
+    font-size: 1.15rem;
+  }
+
+  .preview-ayah {
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 1.15rem;
+    background: color-mix(in srgb, var(--surface) 76%, white);
+    color: var(--text);
+    font-size: clamp(1.55rem, 3vw, 2.25rem);
+    line-height: 1.8;
+    text-align: center;
+  }
+
+  .preview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .preview-grid div {
+    display: grid;
+    gap: 0.3rem;
+    min-height: 84px;
+    align-content: center;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 0.85rem;
+    background: color-mix(in srgb, var(--surface-strong) 86%, transparent);
+  }
+
+  .preview-grid strong {
+    color: var(--accent-strong);
+    font-size: 1.4rem;
+    line-height: 1.05;
   }
   
   .demo-card i {
@@ -1687,14 +1789,58 @@
   [data-aos="flip-left"].aos-animate { transform: rotateY(0); }
   
   /* Responsive */
+  @media (min-width: 1200px) {
+    .hero {
+      min-height: calc(100vh - 28px);
+      padding-top: 6rem;
+    }
+
+    .hero-container,
+    .section-container,
+    .footer-container {
+      max-width: 1440px;
+    }
+
+    .pricing-grid,
+    .pricing-comparison {
+      max-width: 1360px;
+    }
+  }
+
+  @media (max-width: 1120px) {
+    .hero-container {
+      gap: 2.4rem;
+    }
+
+    .hero-workflow {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pricing-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pricing-card.featured {
+      transform: none;
+    }
+  }
+
   @media (max-width: 768px) {
     .hero-container {
       grid-template-columns: 1fr;
       text-align: center;
       gap: 2rem;
     }
-    .hero-title { font-size: clamp(3.6rem, 15vw, 5rem); }
-    .hero { padding: 5rem 1.2rem 2.5rem; }
+    .hero-title {
+      font-size: clamp(2.55rem, 12vw, 4.1rem);
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+    .hero-desc {
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    .hero { min-height: auto; padding: 4.6rem 1.2rem 2.5rem; }
     .steps-grid, .testimonials-grid, .pricing-grid { grid-template-columns: 1fr; }
     .pricing-card.featured { transform: scale(1); }
     .pricing-card { min-height: auto; }
@@ -1719,5 +1865,12 @@
     .footer-links a { justify-content: center; }
     .social-icons { justify-content: center; }
     .problem-text, .solution-text { flex-direction: column; text-align: left; }
+    .hero-workflow,
+    .preview-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .hero-buttons {
+      justify-content: center;
+    }
   }
   </style>

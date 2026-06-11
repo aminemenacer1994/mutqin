@@ -9,9 +9,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ __('ui.app_title') }}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon-light.svg" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/svg+xml" href="/favicon-dark.svg" media="(prefers-color-scheme: dark)">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" media="(prefers-color-scheme: light)">
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" media="(prefers-color-scheme: dark)">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -536,6 +536,107 @@
 
         .auth-shell, .landing-page {
             animation: fadeIn 0.4s ease-out;
+        }
+
+        .auth-shell {
+            min-height: calc(100dvh - var(--nav-h));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: clamp(32px, 6vw, 72px) var(--gutter) clamp(42px, 7vw, 84px);
+        }
+
+        .auth-card {
+            width: min(100%, 980px);
+            display: grid;
+            grid-template-columns: minmax(0, 0.9fr) minmax(340px, 1fr);
+            gap: clamp(24px, 4vw, 48px);
+            align-items: start;
+            padding: clamp(24px, 4vw, 44px);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface-strong);
+            box-shadow: var(--shadow-md);
+        }
+
+        .auth-card-sm {
+            max-width: 720px;
+            grid-template-columns: 1fr;
+        }
+
+        .auth-copy {
+            display: grid;
+            gap: 12px;
+            padding-top: 4px;
+        }
+
+        .auth-title {
+            margin: 0;
+            overflow: visible;
+            font-size: clamp(34px, 5vw, 58px);
+            line-height: 1.05;
+            letter-spacing: 0;
+            color: var(--text);
+        }
+
+        .auth-subtitle {
+            max-width: 42ch;
+            margin: 0;
+            color: var(--text-muted);
+            font-size: clamp(15px, 1.4vw, 18px);
+            line-height: 1.6;
+        }
+
+        .auth-form-wrap {
+            min-width: 0;
+            padding: clamp(18px, 3vw, 28px);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface);
+        }
+
+        .auth-form-wrap .form-label {
+            color: var(--text);
+            font-weight: 650;
+        }
+
+        .auth-form-wrap .form-control {
+            min-height: 46px;
+            border-radius: 8px;
+            border-color: var(--border);
+            background: var(--surface-strong);
+            color: var(--text);
+        }
+
+        .auth-google-btn,
+        .auth-btn-primary {
+            min-height: 46px;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 860px) {
+            .auth-shell {
+                align-items: flex-start;
+                padding-top: calc(var(--nav-h) + clamp(20px, 5vw, 42px));
+            }
+
+            .auth-card {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .auth-shell {
+                padding-inline: 14px;
+            }
+
+            .auth-card {
+                padding: 18px;
+            }
+
+            .auth-form-wrap {
+                padding: 16px;
+            }
         }
 
         .billing-page {

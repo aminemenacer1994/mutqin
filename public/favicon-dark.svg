@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Mutqin favicon">
+  <rect x="40" y="40" width="432" height="432" rx="124" fill="#111317"/>
+  <rect x="68" y="68" width="376" height="376" rx="104" fill="none" stroke="#e4b98c" stroke-width="14"/>
+  <path fill="#f6e7d7" d="M182 334V190c0-13 11-24 24-24h18c8 0 15 4 20 11l24 35 24-35c5-7 12-11 20-11h18c13 0 24 11 24 24v144h-28V205l-29 42c-4 6-10 9-17 9s-13-3-17-9l-29-42v129z"/>
+  <circle cx="256" cy="372" r="18" fill="#e4b98c"/>
+</svg>
