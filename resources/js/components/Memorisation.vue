@@ -10,7 +10,7 @@
     </div>
 
     <!-- Main Content -->
-    <div v-if="appReady && isLoggedIn" class="main container" :class="{
+    <div v-if="appReady && isLoggedIn" class="main container-fluid" :class="{
       'tools-open': showTools,
       'player-visible': playerVisible,
       'mushaf-mode-active': readingViewMode === 'mushaf',
@@ -137,7 +137,7 @@
                   }}
                 </span>
                 <div class="workspace-shell-title-row">
-                  Surah Name: <h1>{{ currentChapter ? currentChapter.name_simple : activeChapterName }}</h1>
+                  <h1>{{ currentChapter ? currentChapter.name_simple : activeChapterName }}</h1>
                 </div>
                 <div v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
                   <span v-if="reviewPriorityLabel">{{ reviewPriorityLabel }}</span>
@@ -191,12 +191,6 @@
                     </button>
                     <transition name="dropdown-fade">
                       <div v-if="topCardMenuOpen" class="top-card-menu">
-                        <button type="button" :class="{ active: readingViewMode === 'stacked' }" @click="setReadingViewMode('stacked')">
-                          <i class="bi bi-view-stacked"></i><span>Stacked mode</span>
-                        </button>
-                        <button type="button" :class="{ active: readingViewMode === 'mushaf' }" @click="setReadingViewMode('mushaf')">
-                          <i class="bi bi-book"></i><span>Mushaf mode</span>
-                        </button>
                         <button type="button" :class="{ active: showTranslation }" @click="toggleReadingOption('translation')">
                           <i class="bi bi-translate"></i><span>Translation</span>
                         </button>
@@ -324,6 +318,37 @@
                     </span>
                   </div>
                 </div>
+                <div class="quick-right-controls" aria-label="View and font controls">
+                  <div class="view-mode-toggle" role="group" aria-label="Reading view mode">
+                    <button type="button" class="view-mode-btn" :class="{ active: readingViewMode === 'stacked' }"
+                      @click="setReadingViewMode('stacked')" aria-label="Use stacked view">
+                      <i class="bi bi-view-stacked" aria-hidden="true"></i>
+                      <span>Stacked</span>
+                    </button>
+                    <button type="button" class="view-mode-btn" :class="{ active: readingViewMode === 'mushaf' }"
+                      @click="setReadingViewMode('mushaf')" aria-label="Use mushaf view">
+                      <i class="bi bi-book" aria-hidden="true"></i>
+                      <span>Mushaf</span>
+                    </button>
+                  </div>
+                  <div class="font-dropdown quick-font-dropdown" @click.stop>
+                    <button class="font-dropdown-trigger" type="button" @click="toggleFontDropdown" title="Change Quranic font">
+                      <i class="bi bi-text-paragraph" aria-hidden="true"></i>
+                      <span>{{ getCurrentFontLabel() }}</span>
+                      <i class="bi bi-chevron-down" :class="{ rotated: fontDropdownOpen }" aria-hidden="true"></i>
+                    </button>
+                    <transition name="dropdown-fade">
+                      <div v-if="fontDropdownOpen" class="font-dropdown-menu quick-font-menu">
+                        <button v-for="font in quranFontOptions" :key="font.value" type="button" class="font-option"
+                          :class="{ active: quranFont === font.value }" @click="selectFont(font.value)">
+                          <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
+                          <span>{{ font.label }}</span>
+                          <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                        </button>
+                      </div>
+                    </transition>
+                  </div>
+                </div>
                 <!-- <div class="quick-ai-actions" aria-label="AI practice tools">
                   <button type="button" class="quick-ai-action quick-ai-memory"
                     @click="openAiMemorisationCheckerForSession"
@@ -351,7 +376,7 @@
             aria-label="Memorisation workspace">
             <div v-if="!isSessionCompleted && readingViewMode === 'mushaf'" class="mushaf-workspace">
               <div class="mushaf-frame">
-                <div v-if="activeVerseRef" class="mushaf-pill-bar" style="display: flex; gap: 10px; align-items: center; padding: 8px 16px; background: var(--surface); border-radius: 10px; margin-bottom: 16px;">
+                <div v-if="activeVerseRef" class="mushaf-pill-bar mushaf-pill-toolbar">
                   <!-- Font Dropdown -->
                   <div style="position: relative;">
                     <button @click.stop="fontOpen = !fontOpen" type="button" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--surface-strong); border: 1px solid var(--border); border-radius: 40px; cursor: pointer; color: var(--text);">
@@ -555,7 +580,7 @@
                     'word-highlight-enabled': true,
                     'verse-weak': isWeakAyah(verse.key),
                     'verse-mastered': isMasteredAyah(verse.key),
-                    'recitation-word-review-active': isRecitationCheckTargetVerse(verse.key)
+                    'recitation-word-review-active': shouldShowRecitationReviewHighlights(verse.key)
                   }" :style="{
                     '--verse-font-percent': getVerseFontSize(verse.key),
                     'font-family': quranFontFamily
@@ -593,9 +618,9 @@
             </div>
             <div v-else class="session-complete-empty">
               <div class="session-complete-actions">
-                <button 
-                  type="button" 
-                  class="action-card" 
+                <button
+                  type="button"
+                  class="action-card session-complete-action-card"
                   @click="openInsightsPanel"
                   aria-label="Review insights"
                 >
@@ -603,14 +628,14 @@
                   <i class="bi bi-bar-chart-line"></i>
                   <div class="action-text">
                     <strong>Review insights</strong>
-                    <small>Open the Insights tab</small>
+                    <small>Open the insights tab</small>
                   </div>
                   <span class="card-arrow">→</span>
                 </button>
 
-                <button 
-                  type="button" 
-                  class="action-card" 
+                <button
+                  type="button"
+                  class="action-card session-complete-action-card"
                   @click="saveCurrentSessionWithName"
                   aria-label="Save session"
                 >
@@ -618,14 +643,14 @@
                   <i class="bi bi-save"></i>
                   <div class="action-text">
                     <strong>Save session</strong>
-                    <small>Keep this range</small>
+                    <small>Keep this completed range</small>
                   </div>
                   <span class="card-arrow">→</span>
                 </button>
 
-                <button 
-                  type="button" 
-                  class="action-card" 
+                <button
+                  type="button"
+                  class="action-card session-complete-action-card"
                   @click="startSessionWithCountdown"
                   aria-label="Reset range"
                 >
@@ -634,6 +659,20 @@
                   <div class="action-text">
                     <strong>Reset range</strong>
                     <small>Replay after countdown</small>
+                  </div>
+                  <span class="card-arrow">→</span>
+                </button>
+                <button
+                  type="button"
+                  class="action-card session-complete-action-card session-complete-action-card-primary"
+                  @click="openNewSessionSetup"
+                  aria-label="Create new session"
+                >
+                  <div class="card-glow"></div>
+                  <i class="bi bi-plus-square"></i>
+                  <div class="action-text">
+                    <strong>Create new session</strong>
+                    <small>Open session setup in the side panel</small>
                   </div>
                   <span class="card-arrow">→</span>
                 </button>
@@ -1287,7 +1326,7 @@
       </aside>
     </div>
 
-    <div v-else-if="appReady && !isLoggedIn" class="main container">
+    <div v-else-if="appReady && !isLoggedIn" class="main container-fluid">
       <div class="login-hero">
         <div class="guest-shell">
           <section class="guest-hero">
@@ -1739,7 +1778,7 @@
           <section class="memorisation-checker-workspace">
             <header class="memorisation-checker-section-head">
               <span>Live workspace</span>
-              <strong>{{ aiMemorisationCheckerScope === 'session' ? 'Recite the selected session while Mutqin listens' : 'Recite this ayah while Mutqin listens' }}</strong>
+              <strong>{{ aiMemorisationCheckerScope === 'session' ? 'Session AI memorisation check' : 'Ayah AI memorisation check' }}</strong>
               <p>AI review is a support tool and may not be 100% accurate. Confirm important mistakes yourself.</p>
             </header>
 
@@ -1790,7 +1829,7 @@
             <section v-if="aiMemorisationCheckerResult" ref="aiMemorisationCheckerResults" class="recitation-check-results memorisation-checker-results">
               <header class="memorisation-checker-section-head memorisation-checker-results-head">
                 <span>Results</span>
-                <strong>{{ aiMemorisationCheckerTargetLabel }} · {{ aiMemorisationCheckerResult.accuracyScore }}%</strong>
+                <strong>{{ aiMemorisationCheckerTargetLabel }}</strong>
                 <p :class="getRecitationScoreTone(aiMemorisationCheckerResult.accuracyScore)">
                   {{ getAiMemorisationCheckerScoreLabel(aiMemorisationCheckerResult) }}
                 </p>
@@ -1811,17 +1850,19 @@
                   {{ word.text }}
                 </span>
               </div>
-              <div class="recitation-next-card">
-                <span>Recommendation</span>
-                <strong>{{ getRecitationRecommendationDisplay(aiMemorisationCheckerResult) }}</strong>
-              </div>
-              <div class="recitation-next-card memorisation-checker-next-card">
-                <span>What to do next?</span>
-                <p>{{ getAiMemorisationCheckerNextStep(aiMemorisationCheckerResult) }}</p>
-              </div>
-              <div class="recitation-next-card memorisation-checker-next-card">
-                <span>AI review check</span>
-                <p>{{ getAiRecitationPostReviewMessage(aiMemorisationCheckerResult) }}</p>
+              <div class="recitation-insights-grid">
+                <div class="recitation-next-card">
+                  <span>Recommendation</span>
+                  <strong>{{ getRecitationRecommendationDisplay(aiMemorisationCheckerResult) }}</strong>
+                </div>
+                <div class="recitation-next-card memorisation-checker-next-card">
+                  <span>What to do next?</span>
+                  <p>{{ getAiMemorisationCheckerNextStep(aiMemorisationCheckerResult) }}</p>
+                </div>
+                <div class="recitation-next-card memorisation-checker-next-card ai-review-card">
+                  <span>AI review check</span>
+                  <p>{{ getAiRecitationPostReviewMessage(aiMemorisationCheckerResult) }}</p>
+                </div>
               </div>
               <div v-if="aiMemorisationCheckerSavedNotice" class="self-check-status self-check-status-success memorisation-checker-saved-notice">
                 <i class="bi bi-check2-circle"></i>
@@ -1895,7 +1936,7 @@
       <div class="modal-content self-check-modal" role="dialog" aria-modal="true" aria-labelledby="selfCheckModalTitle">
         <div class="modal-header self-check-modal-header">
           <div class="self-check-modal-head-copy">
-            <div class="modal-context-badge">Per-ayah recorder</div>
+            <div class="modal-context-badge">{{ recitationCheckPanelOpen || recitationCheckRecording || recitationCheckPreparing || recitationCheckResult ? recitationCheckPromptLabel : 'Per-ayah recorder' }}</div>
             <h2 id="selfCheckModalTitle">{{ selfCheckModalTitle }}</h2>
           </div>
           <button class="modal-close-btn" @click="closeSelfCheckModal" aria-label="Close self-check">
@@ -1922,45 +1963,57 @@
             </div>
 
             <div class="self-check-ayah-actions" aria-label="Ayah quick actions">
-              <button class="self-check-ayah-action self-check-ayah-action-ai" type="button"
-                @click.stop="toggleRecitationCheckForVerse(selfCheckModalVerse)"
-                :disabled="isSelfCheckRecording || recitationCheckPreparing || !supportsSelfCheckRecording()"
-                :class="{ recording: recitationCheckRecording }"
-                :title="recitationCheckRecording ? 'Stop AI recitation check' : 'Start AI recitation check'"
-                aria-label="AI recitation check">
-                <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-stars'"></i>
-              </button>
-              <button class="self-check-ayah-action self-check-ayah-action-manual" type="button"
-                @click.stop="toggleManualSelfCheckRecording(selfCheckModalVerse)"
-                :disabled="recitationCheckRecording || recitationCheckPreparing"
-                :class="{ recording: isSelfCheckRecording }"
-                :title="isSelfCheckRecording ? 'Stop manual recording' : 'Start manual recording'"
-                aria-label="Manual recording">
-                <i class="bi" :class="isSelfCheckRecording ? 'bi-stop-circle' : 'bi-mic-fill'"></i>
-              </button>
-              <button class="self-check-ayah-action" type="button"
-                @click.stop="resetDisplayedRecitationAyah"
-                :disabled="recitationCheckRecording || recitationCheckPreparing"
-                title="Reset displayed ayah review" aria-label="Reset displayed ayah review">
-                <i class="bi bi-arrow-counterclockwise"></i>
-              </button>
-              <select :value="reciterId" @change="handleSelfCheckReciterChange" class="self-check-reciter-select"
-                title="Select reciter" aria-label="Select reciter">
-                <option v-for="r in reciters" :key="`self-check-reciter-${r.id}`" :value="r.id">{{ r.name }}</option>
-              </select>
-              <button class="self-check-ayah-action" type="button" @click.stop="toggleSelfCheckTajweed"
-                :class="{ active: selfCheckTajweedEnabled }"
-                :title="selfCheckTajweedEnabled ? 'Hide tajweed colours' : 'Show tajweed colours'"
-                :aria-pressed="selfCheckTajweedEnabled ? 'true' : 'false'" aria-label="Toggle tajweed colours">
-                <i class="bi bi-palette"></i>
-              </button>
-              <button class="self-check-ayah-action" type="button"
-                @click.stop="toggleSelfCheckAyahPlayback(selfCheckModalVerse)"
-                :title="activeSelfCheckAyahPlaybackKey === selfCheckModalVerse.key ? 'Pause ayah' : 'Play ayah once'"
-                aria-label="Play ayah once">
-                <i class="bi"
-                  :class="activeSelfCheckAyahPlaybackKey === selfCheckModalVerse.key ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-              </button>
+              <div class="self-check-toolbar-group self-check-toolbar-group-primary">
+                <button class="self-check-ayah-action self-check-ayah-action-ai self-check-ayah-action-wide" type="button"
+                  @click.stop="toggleRecitationCheckForVerse(selfCheckModalVerse)"
+                  :disabled="isSelfCheckRecording || recitationCheckPreparing || !supportsSelfCheckRecording()"
+                  :class="{ recording: recitationCheckRecording }"
+                  :title="recitationCheckRecording ? 'Stop AI recitation check' : 'Start AI recitation check'"
+                  aria-label="AI recitation check">
+                  <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-stars'"></i>
+                  <span>{{ recitationCheckRecording ? 'Stop AI Recite' : 'AI Recite' }}</span>
+                </button>
+                <button class="self-check-ayah-action self-check-ayah-action-manual self-check-ayah-action-wide" type="button"
+                  @click.stop="toggleManualSelfCheckRecording(selfCheckModalVerse)"
+                  :disabled="recitationCheckRecording || recitationCheckPreparing"
+                  :class="{ recording: isSelfCheckRecording }"
+                  :title="isSelfCheckRecording ? 'Stop manual recording' : 'Start manual recording'"
+                  aria-label="Manual recording">
+                  <i class="bi" :class="isSelfCheckRecording ? 'bi-stop-circle' : 'bi-mic-fill'"></i>
+                  <span>{{ isSelfCheckRecording ? 'Stop Manual' : 'Manual' }}</span>
+                </button>
+                <button class="self-check-ayah-action self-check-ayah-action-wide" type="button"
+                  @click.stop="resetDisplayedRecitationAyah"
+                  :disabled="recitationCheckRecording || recitationCheckPreparing"
+                  title="Reset displayed ayah review" aria-label="Reset displayed ayah review">
+                  <i class="bi bi-arrow-counterclockwise"></i>
+                  <span>Reset</span>
+                </button>
+              </div>
+              <div class="self-check-toolbar-group self-check-toolbar-group-secondary">
+                <label class="self-check-reciter-field">
+                  <span>Reciter</span>
+                  <select :value="reciterId" @change="handleSelfCheckReciterChange" class="self-check-reciter-select"
+                    title="Select reciter" aria-label="Select reciter">
+                    <option v-for="r in reciters" :key="`self-check-reciter-${r.id}`" :value="r.id">{{ r.name }}</option>
+                  </select>
+                </label>
+                <button class="self-check-ayah-action self-check-ayah-action-wide" type="button" @click.stop="toggleSelfCheckTajweed"
+                  :class="{ active: selfCheckTajweedEnabled }"
+                  :title="selfCheckTajweedEnabled ? 'Hide tajweed colours' : 'Show tajweed colours'"
+                  :aria-pressed="selfCheckTajweedEnabled ? 'true' : 'false'" aria-label="Toggle tajweed colours">
+                  <i class="bi bi-palette"></i>
+                  <span>{{ selfCheckTajweedEnabled ? 'Tajweed On' : 'Tajweed Off' }}</span>
+                </button>
+                <button class="self-check-ayah-action self-check-ayah-action-wide" type="button"
+                  @click.stop="toggleSelfCheckAyahPlayback(selfCheckModalVerse)"
+                  :title="activeSelfCheckAyahPlaybackKey === selfCheckModalVerse.key ? 'Pause ayah' : 'Play ayah once'"
+                  aria-label="Play ayah once">
+                  <i class="bi"
+                    :class="activeSelfCheckAyahPlaybackKey === selfCheckModalVerse.key ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                  <span>{{ activeSelfCheckAyahPlaybackKey === selfCheckModalVerse.key ? 'Pause Ayah' : 'Play Ayah' }}</span>
+                </button>
+              </div>
             </div>
 
             <div class="self-check-modal-ayah-shell"
@@ -1968,7 +2021,7 @@
               @mousedown="startSelfCheckPeek" @mouseup="stopSelfCheckPeek" @mouseleave="stopSelfCheckPeek"
               @touchstart.prevent="startSelfCheckPeek" @touchend="stopSelfCheckPeek" @touchcancel="stopSelfCheckPeek">
               <div class="self-check-modal-ayah" dir="rtl" :style="getSelfCheckAyahDisplayStyle()"
-              :class="{ 'tajweed-enabled': selfCheckTajweedEnabled, 'recitation-word-review-active': isRecitationCheckTargetVerse(selfCheckModalVerse.key), 'self-check-session-ayat': recitationCheckScope === 'session' && recitationCheckPendingTargets.length > 1 }"
+              :class="{ 'tajweed-enabled': selfCheckTajweedEnabled, 'recitation-word-review-active': shouldShowRecitationReviewHighlights(selfCheckModalVerse.key), 'self-check-session-ayat': recitationCheckScope === 'session' && recitationCheckPendingTargets.length > 1 }"
                 v-html="getSelfCheckDisplayArabic(selfCheckModalVerse)"></div>
             </div>
 
@@ -2001,16 +2054,6 @@
                   <i class="bi bi-collection-play"></i>
                   <span>Open recordings</span>
                 </button>
-              </div>
-
-              <div v-if="selfCheckLastSavedAyahKey === selfCheckModalVerse.key"
-                class="self-check-status self-check-status-success">
-                <i class="bi bi-check2-circle"></i>
-                <span>Saved to your recordings library for this ayah.</span>
-              </div>
-              <div class="self-check-status self-check-status-warning ai-recitation-disclaimer">
-                <i class="bi bi-info-circle"></i>
-                <span>AI recitation feedback is not 100% accurate. Use it as a guide, then verify against the ayah.</span>
               </div>
 
               <div v-if="selfCheckError && selfCheckVerseKey === selfCheckModalVerse.key"
@@ -2078,6 +2121,19 @@
                 <div v-if="recitationCheckError" class="recitation-check-error">
                   {{ recitationCheckError }}
                 </div>
+                <div v-if="!recitationCheckRecording && !recitationCheckPreparing && !recitationCheckResult && !recitationCheckError"
+                  class="recitation-check-idle">
+                  <div class="recitation-check-idle-copy">
+                    <span class="recitation-check-section-label">{{ recitationCheckPromptLabel }}</span>
+                    <strong>{{ recitationCheckScope === 'session' ? 'Open the microphone only when you are ready to recite the full selected range.' : 'Start the microphone when you are ready to recite this ayah.' }}</strong>
+                    <p>The live colours update in real time, but red only appears after confirmed speech so the review stays stable.</p>
+                  </div>
+                  <button class="btn-primary self-check-action-btn recitation-check-idle-btn" type="button"
+                    @click="startRecitationCheckRecording">
+                    <i class="bi bi-mic-fill"></i>
+                    <span>Start AI Recite</span>
+                  </button>
+                </div>
                 <div v-if="recitationCheckResult" class="recitation-check-body recitation-check-results">
                   <div class="recitation-result-stats">
                     <article v-for="stat in getRecitationResultStats(recitationCheckResult)" :key="stat.key"
@@ -2087,19 +2143,32 @@
                       <small>{{ stat.description }}</small>
                     </article>
                   </div>
-                  <div class="recitation-next-card">
-                    <span>What next?</span>
-                    <strong>{{ getRecitationRecommendationDisplay(recitationCheckResult) }}</strong>
-                    <p>{{ getRecitationNextStep(recitationCheckResult) }}</p>
-                  </div>
-                  <div class="recitation-next-card">
-                    <span>AI review check</span>
-                    <p>{{ getAiRecitationPostReviewMessage(recitationCheckResult) }}</p>
+                  <div class="recitation-insights-grid">
+                    <div class="recitation-next-card">
+                      <span>What next?</span>
+                      <strong>{{ getRecitationRecommendationDisplay(recitationCheckResult) }}</strong>
+                      <p>{{ getRecitationNextStep(recitationCheckResult) }}</p>
+                    </div>
+                    <div class="recitation-next-card ai-review-card">
+                      <span>AI review check</span>
+                      <p>{{ getAiRecitationPostReviewMessage(recitationCheckResult) }}</p>
+                    </div>
                   </div>
                   <div v-if="getRecitationReviewArabic(recitationCheckResult, selfCheckModalVerse)"
                     class="recitation-review-ayah" dir="rtl"
                     v-html="getRecitationReviewArabic(recitationCheckResult, selfCheckModalVerse)"
                     @click="handleRecitationReviewWordClick($event, recitationCheckResult)"></div>
+                  <div class="recitation-check-footnotes">
+                    <div v-if="selfCheckLastSavedAyahKey === selfCheckModalVerse.key"
+                      class="self-check-status self-check-status-success recitation-check-footnote">
+                      <i class="bi bi-check2-circle"></i>
+                      <span>Saved to your recordings library for this ayah.</span>
+                    </div>
+                    <div class="self-check-status self-check-status-warning ai-recitation-disclaimer recitation-check-footnote">
+                      <i class="bi bi-info-circle"></i>
+                      <span>AI recitation feedback is a guide. Verify important mistakes against the ayah before you save or reset.</span>
+                    </div>
+                  </div>
                   <div class="recitation-result-actions">
                     <button class="btn-secondary self-check-action-btn" type="button" @click="discardRecitationCheckAttempt">
                       <i class="bi bi-x-circle"></i>
@@ -2683,8 +2752,13 @@ const RECITATION_ANALYSIS_VERSION = '2026-06-11-deterministic-live-v1'
 const RECITATION_CONFIDENCE_THRESHOLD = DEFAULT_RECITATION_CONFIDENCE_THRESHOLD
 const RECITATION_SILENCE_THROTTLE_MS = 3500
 const RECITATION_CHUNK_TIMESLICE_MS = 500
-const RECITATION_DEEPGRAM_SETTLE_TIMEOUT_MS = 4000
-const RECITATION_DEEPGRAM_SETTLE_QUIET_MS = 1200
+const RECITATION_TRANSCRIPTION_SETTLE_TIMEOUT_MS = 4000
+const RECITATION_TRANSCRIPTION_SETTLE_QUIET_MS = 1200
+const SPEECHMATICS_PARTIAL_CONFIDENCE = 0.76
+const SPEECHMATICS_AUDIO_BUFFER_SIZE = 4096
+const SPEECHMATICS_MAX_DELAY_SECONDS = 0.58
+const SPEECHMATICS_END_OF_UTTERANCE_SECONDS = 0.85
+const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0.84
 
 function tokenizeArabicText(text) {
   const raw = String(text || '').trim()
@@ -2715,6 +2789,88 @@ function deepClone(value) {
   }
 
   return JSON.parse(JSON.stringify(rawValue))
+}
+
+function sanitizeForIndexedDb(value, seen = new WeakMap()) {
+  if (value === null || value === undefined) return value
+  if (typeof value === 'function' || typeof value === 'symbol') return undefined
+  if (typeof value !== 'object') return value
+
+  const rawValue = toRaw(value)
+  if (rawValue instanceof Date) return new Date(rawValue.getTime())
+  if (rawValue instanceof Blob) return rawValue
+  if (rawValue instanceof ArrayBuffer) return rawValue.slice(0)
+  if (ArrayBuffer.isView(rawValue)) return new rawValue.constructor(rawValue)
+
+  if (seen.has(rawValue)) return seen.get(rawValue)
+
+  if (Array.isArray(rawValue)) {
+    const clone = []
+    seen.set(rawValue, clone)
+    rawValue.forEach(item => {
+      const sanitized = sanitizeForIndexedDb(item, seen)
+      clone.push(sanitized === undefined ? null : sanitized)
+    })
+    return clone
+  }
+
+  const clone = {}
+  seen.set(rawValue, clone)
+  Object.keys(rawValue).forEach(key => {
+    const sanitized = sanitizeForIndexedDb(rawValue[key], seen)
+    if (sanitized !== undefined) clone[key] = sanitized
+  })
+  return clone
+}
+
+function normalizeForIndexedDbJson(value) {
+  if (value === null || value === undefined) return value
+  const rawValue = toRaw(value)
+  if (rawValue instanceof Blob) return rawValue
+  if (rawValue instanceof Date) return rawValue.toISOString()
+  if (rawValue instanceof ArrayBuffer) return Array.from(new Uint8Array(rawValue))
+  if (ArrayBuffer.isView(rawValue)) return Array.from(rawValue)
+  try {
+    return JSON.parse(JSON.stringify(rawValue))
+  } catch {
+    return null
+  }
+}
+
+function stripNonCloneablePersistenceFields(value) {
+  if (Array.isArray(value)) {
+    return value.map(item => stripNonCloneablePersistenceFields(item))
+  }
+  if (!value || typeof value !== 'object') return value
+  const next = {}
+  Object.keys(value).forEach(key => {
+    if (key === 'raw') {
+      next[key] = null
+      return
+    }
+    next[key] = stripNonCloneablePersistenceFields(value[key])
+  })
+  return next
+}
+
+function prepareIndexedDbPayload(value) {
+  const primary = sanitizeForIndexedDb(value)
+  if (isStructuredCloneSafe(primary)) return primary
+
+  const downgraded = stripNonCloneablePersistenceFields(normalizeForIndexedDbJson(value))
+  if (isStructuredCloneSafe(downgraded)) return downgraded
+
+  throw new Error('Unable to prepare a structured-clone-safe IndexedDB payload.')
+}
+
+function isStructuredCloneSafe(value) {
+  if (typeof structuredClone !== 'function') return true
+  try {
+    structuredClone(value)
+    return true
+  } catch {
+    return false
+  }
 }
 
 function slugifySessionFilePart(value) {
@@ -2900,11 +3056,379 @@ function createAdvancedState() {
   }
 }
 
-function createDeepgramRecognitionMeta() {
+function mergeArrayBuffers(buffers = []) {
+  const validBuffers = (Array.isArray(buffers) ? buffers : []).filter(buffer => buffer && Number(buffer.byteLength || 0) > 0)
+  if (!validBuffers.length) return null
+  const totalBytes = validBuffers.reduce((sum, buffer) => sum + Number(buffer.byteLength || 0), 0)
+  const merged = new Uint8Array(totalBytes)
+  let offset = 0
+  validBuffers.forEach(buffer => {
+    const view = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer)
+    merged.set(view, offset)
+    offset += view.byteLength
+  })
+  return merged.buffer
+}
+
+function float32ToPcm16Buffer(samples = []) {
+  const input = Array.isArray(samples) ? Float32Array.from(samples) : samples
+  const pcm = new Int16Array(input.length)
+  for (let index = 0; index < input.length; index += 1) {
+    const sample = Math.max(-1, Math.min(1, Number(input[index] || 0)))
+    pcm[index] = sample < 0 ? sample * 0x8000 : sample * 0x7fff
+  }
+  return pcm.buffer
+}
+
+function extractSpeechmaticsTranscriptWords(message = {}, { isPartial = false } = {}) {
+  return (Array.isArray(message?.results) ? message.results : [])
+    .filter(item => item?.type === 'word')
+    .map(item => {
+      const alternative = Array.isArray(item?.alternatives) ? item.alternatives[0] : null
+      const word = String(alternative?.content || '').trim()
+      const confidence = Number(alternative?.confidence)
+      return {
+        word,
+        confidence: Number.isFinite(confidence) ? confidence : (isPartial ? SPEECHMATICS_PARTIAL_CONFIDENCE : 0),
+        start: Number.isFinite(Number(item?.start_time)) ? Number(item.start_time) : null,
+        end: Number.isFinite(Number(item?.end_time)) ? Number(item.end_time) : null
+      }
+    })
+    .filter(item => item.word)
+}
+
+function createRealtimeTranscriptionMeta() {
   return {
     lastMessageAt: 0,
     lastFinalAt: 0,
+    endOfTranscriptAt: 0,
     messageCount: 0
+  }
+}
+
+function createTranscriptionAudioBridge(stream = null) {
+  const AudioContextCtor = typeof window !== 'undefined'
+    ? (window.AudioContext || window.webkitAudioContext)
+    : null
+  if (!stream || !AudioContextCtor) return null
+
+  const audioContext = new AudioContextCtor()
+  const createProcessor = typeof audioContext.createScriptProcessor === 'function'
+    ? audioContext.createScriptProcessor.bind(audioContext)
+    : null
+  if (!createProcessor) {
+    try { audioContext.close() } catch { }
+    return null
+  }
+
+  const source = audioContext.createMediaStreamSource(stream)
+  const processor = createProcessor(SPEECHMATICS_AUDIO_BUFFER_SIZE, 1, 1)
+  const sink = audioContext.createGain()
+  sink.gain.value = 0
+  const pendingBuffers = []
+
+  processor.onaudioprocess = event => {
+    const samples = event?.inputBuffer?.getChannelData?.(0)
+    if (!samples?.length) return
+    pendingBuffers.push(float32ToPcm16Buffer(samples))
+  }
+
+  source.connect(processor)
+  processor.connect(sink)
+  sink.connect(audioContext.destination)
+  audioContext.resume?.().catch(() => {})
+
+  return {
+    sampleRate: Number(audioContext.sampleRate || 48000),
+    flush() {
+      const merged = mergeArrayBuffers(pendingBuffers)
+      pendingBuffers.length = 0
+      return merged
+    },
+    stop() {
+      const remaining = this.flush()
+      try { processor.onaudioprocess = null } catch { }
+      try { source.disconnect() } catch { }
+      try { processor.disconnect() } catch { }
+      try { sink.disconnect() } catch { }
+      try { audioContext.close() } catch { }
+      return remaining
+    }
+  }
+}
+
+function createSpeechmaticsRealtimeProvider(options = {}) {
+  const noop = () => { }
+  let socket = null
+  let transcriptHandler = noop
+  let errorHandler = noop
+  let disconnectHandler = noop
+  let readyResolve = null
+  let readyReject = null
+  let readySettled = false
+  let handshakeTimer = null
+  let intentionallyClosing = false
+  let endOfStreamSent = false
+  let sentSeqNo = 0
+  let acknowledgedSeqNo = 0
+  let recognitionId = ''
+
+  const clearHandshakeTimer = () => {
+    if (handshakeTimer) window.clearTimeout(handshakeTimer)
+    handshakeTimer = null
+  }
+
+  const createProviderError = (message, details = {}) => {
+    const error = new Error(message)
+    Object.assign(error, details)
+    return error
+  }
+
+  const settleReady = (resolver, payload) => {
+    if (readySettled || typeof resolver !== 'function') return
+    readySettled = true
+    clearHandshakeTimer()
+    resolver(payload)
+  }
+
+  const normalizeProviderError = (payload = {}, fallbackMessage = 'Unable to start live streaming right now.', fallbackCategory = 'connection') => {
+    const type = String(payload?.type || '').trim().toLowerCase()
+    let message = fallbackMessage
+    let category = fallbackCategory
+
+    if (type === 'not_authorised') {
+      message = 'Live transcription authorisation failed.'
+      category = 'auth'
+    } else if (['invalid_audio_type', 'invalid_config', 'invalid_message', 'protocol_error'].includes(type)) {
+      message = 'Live transcription could not process the audio stream.'
+      category = 'stream'
+    } else if (['quota_exceeded', 'timelimit_exceeded', 'job_error'].includes(type)) {
+      message = 'Live transcription is temporarily unavailable.'
+      category = 'connection'
+    } else if (type === 'invalid_language' || type === 'invalid_model') {
+      message = 'Live transcription configuration is invalid.'
+      category = 'connection'
+    }
+
+    return createProviderError(message, {
+      category,
+      providerType: type,
+      providerCode: Number.isFinite(Number(payload?.code)) ? Number(payload.code) : null,
+      providerReason: String(payload?.reason || '').trim(),
+      raw: payload
+    })
+  }
+
+  const emitError = error => {
+    try { errorHandler(error) } catch { }
+  }
+
+  const handleTranscriptMessage = message => {
+    const isFinal = message?.message === 'AddTranscript'
+    const start = Number.isFinite(Number(message?.metadata?.start_time)) ? Number(message.metadata.start_time) : null
+    const end = Number.isFinite(Number(message?.metadata?.end_time)) ? Number(message.metadata.end_time) : null
+    transcriptHandler({
+      type: isFinal ? 'final' : 'partial',
+      provider: 'speechmatics',
+      isFinal,
+      speechFinal: isFinal,
+      transcript: String(message?.metadata?.transcript || '').trim(),
+      confidence: null,
+      start,
+      duration: start !== null && end !== null ? Math.max(0, end - start) : null,
+      segmentId: recognitionId && start !== null && end !== null
+        ? `speechmatics:${recognitionId}:${start}:${end}`
+        : '',
+      words: extractSpeechmaticsTranscriptWords(message, { isPartial: !isFinal }),
+      raw: message
+    })
+  }
+
+  return {
+    onTranscript(callback) {
+      transcriptHandler = typeof callback === 'function' ? callback : noop
+      return this
+    },
+    onError(callback) {
+      errorHandler = typeof callback === 'function' ? callback : noop
+      return this
+    },
+    onDisconnect(callback) {
+      disconnectHandler = typeof callback === 'function' ? callback : noop
+      return this
+    },
+    async connect() {
+      const auth = await options.getAccessToken?.()
+      const accessToken = String(auth?.accessToken || auth?.access_token || '').trim()
+      const websocketHost = String(auth?.websocketHost || auth?.websocket_host || '').trim()
+      const sampleRate = Number(options.getSampleRate?.() || 0)
+
+      if (!accessToken || !websocketHost || !sampleRate) {
+        throw createProviderError('Unable to start live streaming right now.', { category: 'connection' })
+      }
+
+      readySettled = false
+      intentionallyClosing = false
+      endOfStreamSent = false
+      sentSeqNo = 0
+      acknowledgedSeqNo = 0
+      recognitionId = ''
+
+      return await new Promise((resolve, reject) => {
+        readyResolve = resolve
+        readyReject = reject
+        socket = new WebSocket(`wss://${websocketHost}/v2?jwt=${encodeURIComponent(accessToken)}`)
+        socket.binaryType = 'arraybuffer'
+
+        handshakeTimer = window.setTimeout(() => {
+          const error = createProviderError('Unable to start live streaming right now.', { category: 'connection' })
+          settleReady(readyReject, error)
+          try { socket?.close() } catch { }
+        }, Number(options.handshakeTimeoutMs || 3500))
+
+        socket.onopen = () => {
+          try {
+            socket.send(JSON.stringify({
+              message: 'StartRecognition',
+              audio_format: {
+                type: 'raw',
+                encoding: 'pcm_s16le',
+                sample_rate: sampleRate
+              },
+              transcription_config: {
+                language: 'ar',
+                enable_partials: true,
+                max_delay: SPEECHMATICS_MAX_DELAY_SECONDS,
+                max_delay_mode: 'fixed',
+                conversation_config: {
+                  end_of_utterance_silence_trigger: SPEECHMATICS_END_OF_UTTERANCE_SECONDS
+                }
+              }
+            }))
+          } catch (error) {
+            const wrapped = createProviderError('Unable to start live streaming right now.', {
+              category: 'connection',
+              raw: error
+            })
+            settleReady(readyReject, wrapped)
+            emitError(wrapped)
+            try { socket?.close() } catch { }
+          }
+        }
+
+        socket.onmessage = event => {
+          let message = null
+          try {
+            message = JSON.parse(String(event?.data || '{}'))
+          } catch {
+            return
+          }
+
+          if (message?.message === 'RecognitionStarted') {
+            recognitionId = String(message?.id || '').trim()
+            settleReady(readyResolve, true)
+            return
+          }
+
+          if (message?.message === 'AudioAdded') {
+            const seqNo = Number(message?.seq_no)
+            if (Number.isFinite(seqNo)) acknowledgedSeqNo = seqNo
+            return
+          }
+
+          if (message?.message === 'AddPartialTranscript' || message?.message === 'AddTranscript') {
+            handleTranscriptMessage(message)
+            return
+          }
+
+          if (message?.message === 'EndOfTranscript') {
+            transcriptHandler({
+              type: 'end-of-transcript',
+              provider: 'speechmatics',
+              raw: message
+            })
+            return
+          }
+
+          if (message?.message === 'Error') {
+            const error = normalizeProviderError(message, 'Live transcription disconnected unexpectedly.', readySettled ? 'stream' : 'connection')
+            settleReady(readyReject, error)
+            emitError(error)
+          }
+        }
+
+        socket.onerror = () => {
+          if (!readySettled) {
+            settleReady(readyReject, createProviderError('Unable to start live streaming right now.', { category: 'connection' }))
+          }
+        }
+
+        socket.onclose = event => {
+          clearHandshakeTimer()
+          const wasIntentional = intentionallyClosing
+          const closeCode = Number(event?.code || 0)
+          const category = closeCode === 4001 ? 'auth' : (readySettled ? 'stream' : 'connection')
+          const message = category === 'auth'
+            ? 'Live transcription authorisation failed.'
+            : (readySettled ? 'Live transcription disconnected unexpectedly.' : 'Unable to start live streaming right now.')
+
+          if (!wasIntentional) {
+            const error = createProviderError(message, {
+              category,
+              closeCode,
+              closeReason: String(event?.reason || '').trim(),
+              raw: event
+            })
+            settleReady(readyReject, error)
+            if (readySettled) emitError(error)
+          }
+
+          socket = null
+          intentionallyClosing = false
+          try { disconnectHandler({ event, intentional: wasIntentional }) } catch { }
+        }
+      })
+    },
+    streamAudioChunk(chunk) {
+      if (!socket || socket.readyState !== WebSocket.OPEN || endOfStreamSent) return false
+      const buffer = chunk instanceof ArrayBuffer ? chunk : mergeArrayBuffers([chunk])
+      if (!buffer?.byteLength) return false
+      try {
+        socket.send(buffer)
+        sentSeqNo += 1
+        return true
+      } catch (error) {
+        emitError(createProviderError('Live transcription could not process the audio stream.', {
+          category: 'stream',
+          raw: error
+        }))
+        return false
+      }
+    },
+    endStream() {
+      if (!socket || socket.readyState !== WebSocket.OPEN || endOfStreamSent) return false
+      try {
+        socket.send(JSON.stringify({
+          message: 'EndOfStream',
+          last_seq_no: Math.max(acknowledgedSeqNo, sentSeqNo)
+        }))
+        endOfStreamSent = true
+        return true
+      } catch {
+        return false
+      }
+    },
+    disconnect() {
+      intentionallyClosing = true
+      clearHandshakeTimer()
+      if (!socket) return
+      try {
+        socket.close()
+      } catch { }
+    },
+    isOpen() {
+      return !!socket && socket.readyState === WebSocket.OPEN
+    }
   }
 }
 
@@ -3175,6 +3699,7 @@ export default {
       recitationCheckPendingTargets: [],
       recitationCheckTargetVerseKey: '',
       recitationCheckScope: 'ayah',
+      recitationCheckPanelOpen: false,
       recitationLiveWords: [],
       recitationCheckAutoStopArmed: false,
       recitationSpeechRecognition: null,
@@ -3185,9 +3710,10 @@ export default {
       recitationRawTranscriptStream: [],
       recitationWordBuffer: [],
       recitationAlignmentState: null,
-      recitationDeepgramSocket: null,
-      recitationDeepgramClosing: false,
-      recitationDeepgramMeta: createDeepgramRecognitionMeta(),
+      recitationTranscriptionProvider: null,
+      recitationTranscriptionClosing: false,
+      recitationTranscriptionMeta: createRealtimeTranscriptionMeta(),
+      recitationTranscriptionAudioBridge: null,
       recitationInputSessionId: '',
       recitationInputAudioHash: '',
       recitationSessionCacheDb: null,
@@ -3346,9 +3872,10 @@ export default {
       aiMemorisationCheckerRawTranscriptStream: [],
       aiMemorisationCheckerWordBuffer: [],
       aiMemorisationCheckerAlignmentState: null,
-      aiMemorisationCheckerDeepgramSocket: null,
-      aiMemorisationCheckerDeepgramClosing: false,
-      aiMemorisationCheckerDeepgramMeta: createDeepgramRecognitionMeta(),
+      aiMemorisationCheckerTranscriptionProvider: null,
+      aiMemorisationCheckerTranscriptionClosing: false,
+      aiMemorisationCheckerTranscriptionMeta: createRealtimeTranscriptionMeta(),
+      aiMemorisationCheckerTranscriptionAudioBridge: null,
       aiMemorisationCheckerLiveTranscript: '',
       aiMemorisationCheckerLiveChunkInFlight: false,
       aiMemorisationCheckerLiveChunkQueue: [],
@@ -3694,8 +4221,33 @@ export default {
           key: 'percent',
           icon: 'bi-pie-chart',
           label: `${this.progressPercent}% complete`
+        },
+        {
+          key: 'view',
+          icon: this.readingViewMode === 'mushaf' ? 'bi-book' : 'bi-view-stacked',
+          label: this.readingViewMode === 'mushaf' ? 'Mushaf view' : 'Stacked view'
+        },
+        {
+          key: 'font',
+          icon: 'bi-text-paragraph',
+          label: this.getCurrentFontLabel()
         }
       ]
+      if (this.tajweedEnabled) {
+        pills.push({ key: 'tajweed', icon: 'bi-palette', label: 'Tajweed' })
+      }
+      if (this.showTranslation) {
+        pills.push({ key: 'translation', icon: 'bi-translate', label: 'Translation' })
+      }
+      if (this.showTransliteration) {
+        pills.push({ key: 'transliteration', icon: 'bi-type', label: 'Transliteration' })
+      }
+      if (this.showWordByWord) {
+        pills.push({ key: 'wbw', icon: 'bi-grid-3x2-gap', label: 'Word by word' })
+      }
+      if (this.wordByWordAudioEnabled) {
+        pills.push({ key: 'word-audio', icon: 'bi-volume-up', label: 'Word audio' })
+      }
       if (this.blurModeEnabled) {
         pills.push({ key: 'blur', icon: 'bi-cloud-haze2', label: `Blur ${this.blurIntensity}px` })
       }
@@ -3708,6 +4260,19 @@ export default {
       }
       if (this.anchorModeEnabled) {
         pills.push({ key: 'anchor', icon: 'bi-pin-angle-fill', label: `Anchors ${this.anchorCount}` })
+      }
+      if (
+        !this.tajweedEnabled
+        && !this.showTranslation
+        && !this.showTransliteration
+        && !this.showWordByWord
+        && !this.wordByWordAudioEnabled
+        && !this.blurModeEnabled
+        && !this.chainingEnabled
+        && !this.focusModeEnabled
+        && !this.anchorModeEnabled
+      ) {
+        pills.push({ key: 'fallback', icon: 'bi-sliders', label: 'Standard aids', muted: true })
       }
       return pills
     },
@@ -3769,13 +4334,15 @@ export default {
       return this.mushafDisplayVerses.find(v => v.key === this.effectiveActiveVerseKey) || null
     },
     recitationCheckVisible() {
-      return this.recitationCheckRecording
+      return this.recitationCheckPanelOpen
+        || this.recitationCheckRecording
         || this.recitationCheckPreparing
         || !!this.recitationCheckError
         || !!this.recitationCheckResult
     },
     selfCheckReviewVisible() {
-      return !!this.recitationCheckResult
+      return this.recitationCheckPanelOpen
+        || !!this.recitationCheckResult
         || !!this.recitationCheckError
         || !!this.selfCheckActiveDraft
         || !!this.selfCheckError
@@ -3789,6 +4356,10 @@ export default {
       const last = targets[targets.length - 1]?.number
       const surah = this.currentChapter?.name_simple || this.activeChapterName || 'Session'
       return first === last ? `${surah} · Ayah ${first}` : `${surah} · Ayahs ${first}-${last}`
+    },
+    recitationCheckPromptLabel() {
+      if (this.recitationCheckScope === 'session') return 'Session AI Recite'
+      return 'Ayah AI Recite'
     },
     activeMutqinAyah() {
       return this.effectiveActiveVerseKey ? this.mutqinState.ayahs?.[this.effectiveActiveVerseKey] || null : null
@@ -3912,12 +4483,15 @@ export default {
       const targets = this.recitationCheckScope === 'session' && this.recitationCheckPendingTargets.length
         ? this.recitationCheckPendingTargets
         : [this.selfCheckModalVerse].filter(Boolean)
+      const prefix = this.recitationCheckPanelOpen || this.recitationCheckRecording || this.recitationCheckPreparing || this.recitationCheckResult
+        ? 'AI Recite'
+        : 'Self-Check'
       if (targets.length > 1) {
         const first = targets[0]?.number || String(targets[0]?.key || '').split(':')[1] || ''
         const last = targets[targets.length - 1]?.number || String(targets[targets.length - 1]?.key || '').split(':')[1] || ''
-        return `Self-Check for Ayahs ${first}-${last}`
+        return `${prefix} for Ayahs ${first}-${last}`
       }
-      return `Self-Check for Ayah ${this.selfCheckModalVerse?.number || ''}`.trim()
+      return `${prefix} for Ayah ${this.selfCheckModalVerse?.number || ''}`.trim()
     },
     aiMemorisationCheckerVerse() {
       if (!this.aiMemorisationCheckerVerseKey) return null
@@ -7666,6 +8240,11 @@ export default {
       return hints[option] || ''
     },
     getSelfCheckRecorderDescription() {
+      if (this.recitationCheckPanelOpen && !this.recitationCheckRecording && !this.recitationCheckPreparing && !this.recitationCheckResult) {
+        return this.recitationCheckScope === 'session'
+          ? 'Review the selected range, choose the reciter you want to hear, then start AI Recite when you are ready.'
+          : 'Set the reciter if needed, then start AI Recite when you are ready to recite this ayah.'
+      }
       if (this.isSelfCheckRecording) {
         return 'Your microphone is active. Recite the ayah aloud, then stop when you are finished.'
       }
@@ -7744,6 +8323,7 @@ export default {
       this.selfCheckPeekActive = false
       this.selfCheckModeChoiceVisible = false
       this.selfCheckSavedAttemptsVisible = false
+      this.recitationCheckPanelOpen = false
       this.syncBodyScrollLock(true)
     },
     closeSelfCheckModal() {
@@ -7812,7 +8392,7 @@ export default {
     },
     getSelfCheckModalArabic(verse) {
       if (!verse?.arabic) return ''
-      if (this.isRecitationCheckTargetVerse(verse.key)) {
+      if (this.shouldShowRecitationReviewHighlights(verse.key)) {
         return this.splitRecitationDisplayIntoWords(verse)
       }
       if (this.selfCheckTajweedEnabled && verse.arabic_tajweed) {
@@ -7906,6 +8486,12 @@ export default {
     getAyahRecordingCount(ayahKey) {
       if (!ayahKey) return 0
       return this.recordingsLibrary.filter(recording => recording.ayahKey === ayahKey).length
+    },
+    shouldShowRecitationReviewHighlights(ayahKey) {
+      if (!this.isRecitationCheckTargetVerse(ayahKey)) return false
+      if (this.recitationCheckRecording || this.recitationCheckPreparing || this.recitationCheckResult) return true
+      if (this.aiMemorisationCheckerRecording || this.aiMemorisationCheckerPreparing || this.aiMemorisationCheckerResult) return true
+      return false
     },
     isRecitationCheckTargetVerse(ayahKey) {
       if (!ayahKey) return false
@@ -8043,6 +8629,10 @@ export default {
       if (!verse?.key) return
       this.recitationCheckScope = 'ayah'
       this.openSelfCheckModal(verse)
+      this.recitationCheckPanelOpen = true
+      this.recitationCheckError = ''
+      this.recitationCheckResult = null
+      this.seedRecitationLiveWords([verse])
     },
     openAiRecitationCheckForSession() {
       if (this.recitationCheckRecording || this.recitationCheckPreparing) return
@@ -8056,9 +8646,12 @@ export default {
       this.selfCheckVerseRef = this.buildSelfCheckVerseRef(targets[0])
       this.selfCheckVerseKey = targets[0].key
       this.selfCheckSavedAttemptsVisible = false
+      this.recitationCheckPanelOpen = true
+      this.recitationCheckError = ''
+      this.recitationCheckResult = null
+      this.seedRecitationLiveWords(targets)
       this.showSelfCheckModal = true
       this.syncBodyScrollLock(true)
-      this.startRecitationCheckRecording()
     },
     openAiMemorisationCheckerForVerse(verse) {
       if (!verse?.key) return
@@ -8234,8 +8827,9 @@ export default {
     },
     cleanupAiMemorisationCheckerMedia() {
       this.stopAiMemorisationCheckerSpeechRecognition()
-      this.stopDeepgramRecognition('memorisation')
-      this.resetDeepgramMeta('memorisation')
+      this.stopTranscriptionRecognition('memorisation')
+      this.resetTranscriptionMeta('memorisation')
+      this.stopTranscriptionAudioBridge('memorisation')
       this.stopRecitationVad()
       if (this.aiMemorisationCheckerMediaStream) {
         try { this.aiMemorisationCheckerMediaStream.getTracks().forEach(track => track.stop()) } catch { }
@@ -8287,12 +8881,16 @@ export default {
         this.aiMemorisationCheckerMediaStream = stream
         this.aiMemorisationCheckerMediaRecorder = recorder
         this.aiMemorisationCheckerChunks = []
-        const deepgramReady = await this.startDeepgramRecognition('memorisation')
-        if (!deepgramReady) this.startAiMemorisationCheckerSpeechRecognition()
+        const bridgeReady = this.startTranscriptionAudioBridge('memorisation', stream)
+        const transcriptionReady = bridgeReady && await this.startTranscriptionRecognition('memorisation')
+        if (!transcriptionReady) {
+          this.stopTranscriptionAudioBridge('memorisation')
+          this.startAiMemorisationCheckerSpeechRecognition()
+        }
         recorder.ondataavailable = event => {
           if (event.data?.size) {
             this.aiMemorisationCheckerChunks.push(event.data)
-            this.sendDeepgramAudioChunk('memorisation', event.data)
+            this.streamTranscriptionAudioChunk('memorisation', event.data)
           }
         }
         recorder.onerror = () => {
@@ -8303,7 +8901,7 @@ export default {
         }
         recorder.onstop = async () => {
           const chunks = [...this.aiMemorisationCheckerChunks]
-          await this.finalizeDeepgramRecognition('memorisation')
+          await this.finalizeTranscriptionRecognition('memorisation')
           this.stopAiMemorisationCheckerSpeechRecognition()
           if (this.aiMemorisationCheckerDiscardOnStop) {
             this.aiMemorisationCheckerDiscardOnStop = false
@@ -8363,7 +8961,7 @@ export default {
       const result = this.completeAiMemorisationCheckerFromRecognitionWords(
         committedWords,
         targetVerses,
-        provider === 'deepgram' ? 'deepgram streaming' : 'browser speech recognition',
+        provider === 'speechmatics' ? 'speechmatics streaming' : 'browser speech recognition',
         audioSrc,
         { sessionId, audioHash, id: `memorisation-check-${audioHash.slice(0, 16)}` }
       )
@@ -8427,12 +9025,6 @@ export default {
       this.playUiTone('complete')
       this.persistAiMemorisationCheckerSession()
       this.showBanner('Loaded cached memorisation analysis.', 'success', 1800)
-      this.$nextTick(() => {
-        const el = this.$refs.aiMemorisationCheckerResults
-        window.setTimeout(() => {
-          if (el?.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        }, 120)
-      })
       return result
     },
     completeAiMemorisationCheckerFromRecognitionWords(recognitionWords = [], targetVerses, source = 'stabilised speech input', audioSrc = '', options = {}) {
@@ -8450,9 +9042,6 @@ export default {
         selectedAyah: this.buildAiMemorisationCheckerSelectedAyah(targetVerses[0]),
         transcriptionSource: source
       }
-      result.wordStatuses = (result.wordStatuses || []).map(word => word.status === 'pending'
-        ? { ...word, status: 'incorrect', note: word.note === 'Not heard yet.' ? 'Missed word.' : word.note }
-        : word)
       this.aiMemorisationCheckerResult = result
       this.aiMemorisationCheckerLiveWords = Array.isArray(result.wordStatuses) ? result.wordStatuses : []
       this.persistAiRecitationReviewHighlights(result, targetVerses)
@@ -8460,12 +9049,6 @@ export default {
       this.aiMemorisationCheckerSavedNotice = false
       this.playUiTone('complete')
       this.persistAiMemorisationCheckerSession()
-      this.$nextTick(() => {
-        const el = this.$refs.aiMemorisationCheckerResults
-        window.setTimeout(() => {
-          if (el?.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        }, 120)
-      })
       return result
     },
     buildAiMemorisationCheckerSelectedAyah(verse) {
@@ -8692,23 +9275,62 @@ export default {
       const targetWords = this.tokenizeRecitationDisplayWords(this.getRecitationTargetText(targetVerses))
       this.recitationLiveWords = targetWords.map(text => ({ text, status: 'pending', note: 'Waiting for this word.' }))
     },
+    getRecognitionWordsForLiveAlignment(kind = 'recitation') {
+      const state = this.getRecognitionPipelineState(kind)
+      const committedWords = Array.isArray(state?.committedWords) ? state.committedWords : []
+      const interimWords = Array.isArray(state?.interimWords) ? state.interimWords : []
+      const confidentInterim = interimWords.filter(word => Number(word?.confidence || 0) >= RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD)
+      return {
+        committedWords,
+        displayWords: confidentInterim.length
+          ? [...committedWords, ...confidentInterim]
+          : committedWords
+      }
+    },
+    mergeLiveRecitationStatuses(committedStatuses = [], displayStatuses = []) {
+      const committed = Array.isArray(committedStatuses) ? committedStatuses : []
+      const display = Array.isArray(displayStatuses) ? displayStatuses : []
+      const maxLength = Math.max(committed.length, display.length)
+      return Array.from({ length: maxLength }, (_, index) => {
+        const confirmed = committed[index] || null
+        if (confirmed && confirmed.status && confirmed.status !== 'pending') return confirmed
+        const live = display[index] || confirmed || null
+        if (!live) return { status: 'pending', note: 'Waiting for this word.' }
+        if (['correct', 'partial'].includes(live.status)) return live
+        return {
+          ...live,
+          status: 'pending',
+          note: confirmed?.note || 'Waiting for confirmation.'
+        }
+      })
+    },
     updateLiveWordsFromCommittedRecognition(kind = 'recitation') {
       const targetVerses = kind === 'memorisation'
         ? this.aiMemorisationCheckerTargets
         : (this.recitationCheckPendingTargets?.length ? this.recitationCheckPendingTargets : this.getRecitationCheckTargetVerses())
       const targetText = this.getRecitationTargetText(targetVerses)
-      const committedWords = this.getCommittedRecognitionWords(kind)
       if (!targetText) return
-      const alignment = buildQuranAlignment(targetText, committedWords, {
+      const { committedWords, displayWords } = this.getRecognitionWordsForLiveAlignment(kind)
+      const committedAlignment = buildQuranAlignment(targetText, committedWords, {
         strictProgression: this.aiRecitationStrictProgression,
         metadata: {
           sessionId: this.getCurrentRecitationSessionId(),
           audioHash: kind === 'recitation' ? this.recitationInputAudioHash : ''
         }
       })
-      const statuses = alignment.progression?.visibleStatuses || alignment.wordStatuses || []
+      const liveAlignment = buildQuranAlignment(targetText, displayWords, {
+        strictProgression: this.aiRecitationStrictProgression,
+        metadata: {
+          sessionId: this.getCurrentRecitationSessionId(),
+          audioHash: kind === 'recitation' ? this.recitationInputAudioHash : ''
+        }
+      })
+      const statuses = this.mergeLiveRecitationStatuses(
+        committedAlignment.progression?.visibleStatuses || committedAlignment.wordStatuses || [],
+        liveAlignment.progression?.visibleStatuses || liveAlignment.wordStatuses || []
+      )
       if (kind === 'memorisation') {
-        this.aiMemorisationCheckerAlignmentState = alignment.progression
+        this.aiMemorisationCheckerAlignmentState = committedAlignment.progression
         if (this.aiMemorisationCheckerLiveWords.length) {
           this.aiMemorisationCheckerLiveWords = this.aiMemorisationCheckerLiveWords.map((word, index) => ({
             ...word,
@@ -8717,9 +9339,12 @@ export default {
             confidence: statuses[index]?.confidence ?? word.confidence
           }))
         }
+        if (this.aiMemorisationCheckerRecording && committedAlignment.progression?.complete) {
+          this.stopAiMemorisationCheckerRecording()
+        }
         return
       }
-      this.recitationAlignmentState = alignment.progression
+      this.recitationAlignmentState = committedAlignment.progression
       if (this.recitationLiveWords.length) {
         this.recitationLiveWords = this.recitationLiveWords.map((word, index) => ({
           ...word,
@@ -8728,9 +9353,19 @@ export default {
           confidence: statuses[index]?.confidence ?? word.confidence
         }))
       }
-      if (this.recitationCheckRecording && alignment.progression?.complete) {
-        this.recitationCheckAutoStopArmed = false
+      if (this.recitationCheckRecording && committedAlignment.progression?.complete) {
         this.stopRecitationCheckRecording()
+      }
+    },
+    handleAiRecitationSilenceAutoStop() {
+      const recitationReadyToStop = this.recitationCheckRecording && this.getCommittedRecognitionWords('recitation').length > 0
+      const memorisationReadyToStop = this.aiMemorisationCheckerRecording && this.getCommittedRecognitionWords('memorisation').length > 0
+      if (recitationReadyToStop) {
+        this.stopRecitationCheckRecording()
+        return
+      }
+      if (memorisationReadyToStop) {
+        this.stopAiMemorisationCheckerRecording()
       }
     },
     chooseRecorderMimeType() {
@@ -8788,36 +9423,46 @@ export default {
     async writeRecitationSessionCache(entry = {}) {
       const db = await this.openRecitationSessionDb()
       if (!db || !entry?.sessionId || !entry?.audioHash) return null
-      const payload = {
+      const payload = prepareIndexedDbPayload({
         ...entry,
         cacheKey: this.recitationSessionCacheKey(entry.sessionId, entry.audioHash),
         analysisVersion: entry.analysisVersion || RECITATION_ANALYSIS_VERSION,
         cachedAt: new Date().toISOString()
-      }
+      })
       return await new Promise(resolve => {
-        const request = db.transaction(RECITATION_IDB_STORE, 'readwrite')
-          .objectStore(RECITATION_IDB_STORE)
-          .put(payload)
-        request.onsuccess = () => resolve(payload)
-        request.onerror = () => resolve(null)
+        try {
+          const request = db.transaction(RECITATION_IDB_STORE, 'readwrite')
+            .objectStore(RECITATION_IDB_STORE)
+            .put(payload)
+          request.onsuccess = () => resolve(payload)
+          request.onerror = () => resolve(null)
+        } catch (error) {
+          console.error('Failed to persist recitation session cache:', error)
+          resolve(null)
+        }
       })
     },
     async writeRecitationSessionHistory(entry = {}) {
       const db = await this.openRecitationSessionDb()
       if (!db || !entry?.sessionId) return null
-      const payload = {
+      const payload = prepareIndexedDbPayload({
         ...entry,
         id: entry.id || `${entry.sessionId}-${entry.audioHash || 'no-audio'}-${entry.kind || 'recitation'}`,
         analysisVersion: entry.analysisVersion || RECITATION_ANALYSIS_VERSION,
         recordedAt: entry.recordedAt || entry.analysisResult?.timestamp || new Date().toISOString(),
         savedAt: new Date().toISOString()
-      }
+      })
       return await new Promise(resolve => {
-        const request = db.transaction(RECITATION_HISTORY_IDB_STORE, 'readwrite')
-          .objectStore(RECITATION_HISTORY_IDB_STORE)
-          .put(payload)
-        request.onsuccess = () => resolve(payload)
-        request.onerror = () => resolve(null)
+        try {
+          const request = db.transaction(RECITATION_HISTORY_IDB_STORE, 'readwrite')
+            .objectStore(RECITATION_HISTORY_IDB_STORE)
+            .put(payload)
+          request.onsuccess = () => resolve(payload)
+          request.onerror = () => resolve(null)
+        } catch (error) {
+          console.error('Failed to persist recitation session history:', error)
+          resolve(null)
+        }
       })
     },
     buildRecognitionValidationForResult(kind = 'recitation', targetVerses = [], result = null, options = {}) {
@@ -8997,46 +9642,72 @@ export default {
       }
       return entries
     },
-    getDeepgramSocket(kind = 'recitation') {
-      return kind === 'memorisation' ? this.aiMemorisationCheckerDeepgramSocket : this.recitationDeepgramSocket
+    getTranscriptionProvider(kind = 'recitation') {
+      return kind === 'memorisation' ? this.aiMemorisationCheckerTranscriptionProvider : this.recitationTranscriptionProvider
     },
-    setDeepgramSocket(kind = 'recitation', socket = null) {
-      if (kind === 'memorisation') this.aiMemorisationCheckerDeepgramSocket = socket
-      else this.recitationDeepgramSocket = socket
+    setTranscriptionProvider(kind = 'recitation', provider = null) {
+      if (kind === 'memorisation') this.aiMemorisationCheckerTranscriptionProvider = provider
+      else this.recitationTranscriptionProvider = provider
     },
-    getDeepgramMeta(kind = 'recitation') {
+    getTranscriptionAudioBridge(kind = 'recitation') {
+      return kind === 'memorisation' ? this.aiMemorisationCheckerTranscriptionAudioBridge : this.recitationTranscriptionAudioBridge
+    },
+    setTranscriptionAudioBridge(kind = 'recitation', bridge = null) {
+      if (kind === 'memorisation') this.aiMemorisationCheckerTranscriptionAudioBridge = bridge
+      else this.recitationTranscriptionAudioBridge = bridge
+    },
+    startTranscriptionAudioBridge(kind = 'recitation', stream = null) {
+      this.stopTranscriptionAudioBridge(kind)
+      const bridge = createTranscriptionAudioBridge(stream)
+      if (!bridge) return false
+      this.setTranscriptionAudioBridge(kind, bridge)
+      return true
+    },
+    flushTranscriptionAudioBridge(kind = 'recitation') {
+      const bridge = this.getTranscriptionAudioBridge(kind)
+      return bridge?.flush?.() || null
+    },
+    stopTranscriptionAudioBridge(kind = 'recitation') {
+      const bridge = this.getTranscriptionAudioBridge(kind)
+      if (!bridge) return null
+      const remaining = bridge.stop?.() || null
+      this.setTranscriptionAudioBridge(kind, null)
+      return remaining
+    },
+    getTranscriptionMeta(kind = 'recitation') {
       return kind === 'memorisation'
-        ? (this.aiMemorisationCheckerDeepgramMeta || createDeepgramRecognitionMeta())
-        : (this.recitationDeepgramMeta || createDeepgramRecognitionMeta())
+        ? (this.aiMemorisationCheckerTranscriptionMeta || createRealtimeTranscriptionMeta())
+        : (this.recitationTranscriptionMeta || createRealtimeTranscriptionMeta())
     },
-    setDeepgramMeta(kind = 'recitation', meta = createDeepgramRecognitionMeta()) {
-      if (kind === 'memorisation') this.aiMemorisationCheckerDeepgramMeta = meta
-      else this.recitationDeepgramMeta = meta
+    setTranscriptionMeta(kind = 'recitation', meta = createRealtimeTranscriptionMeta()) {
+      if (kind === 'memorisation') this.aiMemorisationCheckerTranscriptionMeta = meta
+      else this.recitationTranscriptionMeta = meta
     },
-    resetDeepgramMeta(kind = 'recitation') {
-      this.setDeepgramMeta(kind, createDeepgramRecognitionMeta())
+    resetTranscriptionMeta(kind = 'recitation') {
+      this.setTranscriptionMeta(kind, createRealtimeTranscriptionMeta())
     },
-    markDeepgramMessage(kind = 'recitation', { isFinal = false } = {}) {
-      const previous = this.getDeepgramMeta(kind)
+    markTranscriptionMessage(kind = 'recitation', { isFinal = false, endOfTranscript = false } = {}) {
+      const previous = this.getTranscriptionMeta(kind)
       const now = Date.now()
-      this.setDeepgramMeta(kind, {
+      this.setTranscriptionMeta(kind, {
         ...previous,
         lastMessageAt: now,
         lastFinalAt: isFinal ? now : Number(previous.lastFinalAt || 0),
+        endOfTranscriptAt: endOfTranscript ? now : Number(previous.endOfTranscriptAt || 0),
         messageCount: Number(previous.messageCount || 0) + 1
       })
     },
-    async waitForDeepgramSettlement(kind = 'recitation', options = {}) {
-      const timeoutMs = Number(options.timeoutMs || RECITATION_DEEPGRAM_SETTLE_TIMEOUT_MS)
-      const quietMs = Number(options.quietMs || RECITATION_DEEPGRAM_SETTLE_QUIET_MS)
+    async waitForTranscriptionSettlement(kind = 'recitation', options = {}) {
+      const timeoutMs = Number(options.timeoutMs || RECITATION_TRANSCRIPTION_SETTLE_TIMEOUT_MS)
+      const quietMs = Number(options.quietMs || RECITATION_TRANSCRIPTION_SETTLE_QUIET_MS)
       const startedAt = Date.now()
       return await new Promise(resolve => {
         const check = () => {
-          const meta = this.getDeepgramMeta(kind)
+          const meta = this.getTranscriptionMeta(kind)
           const now = Date.now()
           const silenceDuration = Number(meta.lastMessageAt || 0) ? now - Number(meta.lastMessageAt || 0) : now - startedAt
-          const sawFinal = Number(meta.lastFinalAt || 0) >= startedAt
-          if (!this.getDeepgramSocket(kind) || sawFinal || silenceDuration >= quietMs || now - startedAt >= timeoutMs) {
+          const sawEndOfTranscript = Number(meta.endOfTranscriptAt || 0) >= startedAt
+          if (!this.getTranscriptionProvider(kind) || sawEndOfTranscript || silenceDuration >= quietMs || now - startedAt >= timeoutMs) {
             resolve(meta)
             return
           }
@@ -9045,72 +9716,85 @@ export default {
         check()
       })
     },
-    setDeepgramClosing(kind = 'recitation', closing = false) {
-      if (kind === 'memorisation') this.aiMemorisationCheckerDeepgramClosing = closing
-      else this.recitationDeepgramClosing = closing
+    setTranscriptionClosing(kind = 'recitation', closing = false) {
+      if (kind === 'memorisation') this.aiMemorisationCheckerTranscriptionClosing = closing
+      else this.recitationTranscriptionClosing = closing
     },
-    isDeepgramClosing(kind = 'recitation') {
-      return kind === 'memorisation' ? this.aiMemorisationCheckerDeepgramClosing : this.recitationDeepgramClosing
+    isTranscriptionClosing(kind = 'recitation') {
+      return kind === 'memorisation' ? this.aiMemorisationCheckerTranscriptionClosing : this.recitationTranscriptionClosing
     },
-    async fetchDeepgramAccessToken() {
-      const response = await axios.post('/memorisation/deepgram-token')
-      return String(response?.data?.access_token || '').trim()
+    describeTranscriptionTokenFailure(error) {
+      const source = error?.response ? error : (error?.cause?.response ? error.cause : error)
+      const status = Number(source?.response?.status || 0)
+      const data = source?.response?.data || {}
+      const message = String(data?.message || error?.message || source?.message || '').trim()
+      const providerMessage = String(data?.speechmatics_message || '').trim()
+      const keySuffix = String(data?.configured_key_suffix || '').trim()
+      const lowered = `${message} ${providerMessage}`.toLowerCase()
+
+      if (status === 422 && lowered.includes('api key is not configured')) {
+        return 'Speechmatics is not configured on the server. Add SPEECHMATICS_API_KEY, then run php artisan config:clear and restart the app.'
+      }
+
+      if (status === 422 && lowered.includes('region is not configured')) {
+        return 'Speechmatics region is not configured on the server. Add SPEECHMATICS_REGION, then run php artisan config:clear and restart the app.'
+      }
+
+      if ([401, 403].includes(status) || lowered.includes('not author')) {
+        const suffixNote = keySuffix ? ` Laravel is currently using the key ending in ${keySuffix}.` : ''
+        return `Speechmatics rejected the server key for live token creation.${suffixNote} Use a key that can create realtime temporary keys, then run php artisan config:clear and restart the app.`
+      }
+
+      if (message) return message
+      return 'Unable to start live streaming right now.'
     },
-    buildDeepgramListenUrl(token) {
-      const params = new URLSearchParams({
-        token,
-        model: 'nova-3',
-        language: 'ar',
-        interim_results: 'true',
-        punctuate: 'false',
-        smart_format: 'false',
-        vad_events: 'true',
-        endpointing: '300',
-        utterance_end_ms: '1000'
-      })
-      return `wss://api.deepgram.com/v1/listen?${params.toString()}`
+    async fetchTranscriptionAccessToken() {
+      try {
+        const response = await axios.post('/memorisation/transcription-token')
+        return {
+          accessToken: String(response?.data?.access_token || '').trim(),
+          websocketHost: String(response?.data?.websocket_host || '').trim()
+        }
+      } catch (error) {
+        const wrapped = new Error(this.describeTranscriptionTokenFailure(error))
+        wrapped.cause = error
+        throw wrapped
+      }
     },
-    async startDeepgramRecognition(kind = 'recitation') {
-      this.stopDeepgramRecognition(kind)
+    async startTranscriptionRecognition(kind = 'recitation') {
+      this.stopTranscriptionRecognition(kind)
       if (typeof WebSocket === 'undefined') return false
 
+      const bridge = this.getTranscriptionAudioBridge(kind)
+      if (!bridge?.sampleRate) return false
+
       try {
-        const token = await this.fetchDeepgramAccessToken()
-        if (!token) return false
-        const socket = new WebSocket(this.buildDeepgramListenUrl(token))
-        socket.binaryType = 'arraybuffer'
-        this.setDeepgramClosing(kind, false)
-        this.resetDeepgramMeta(kind)
-        this.setDeepgramSocket(kind, socket)
-
-        socket.onmessage = event => this.handleDeepgramMessage(kind, event)
-        socket.onerror = event => {
-          console.warn('Deepgram streaming error:', event)
-        }
-        socket.onclose = () => {
-          this.setDeepgramSocket(kind, null)
-          if (!this.isDeepgramClosing(kind)) this.startSpeechRecognitionFallbackForKind(kind)
-          this.setDeepgramClosing(kind, false)
-        }
-
-        const ready = await new Promise(resolve => {
-          const timeout = window.setTimeout(() => resolve(false), 3500)
-          socket.onopen = () => {
-            window.clearTimeout(timeout)
-            this.resetDeepgramMeta(kind)
-            resolve(true)
-          }
-          socket.onerror = event => {
-            console.warn('Deepgram streaming error:', event)
-            window.clearTimeout(timeout)
-            resolve(false)
-          }
+        const provider = createSpeechmaticsRealtimeProvider({
+          getAccessToken: () => this.fetchTranscriptionAccessToken(),
+          getSampleRate: () => Number(bridge.sampleRate || 0),
+          handshakeTimeoutMs: 3500
         })
-        if (!ready) this.stopDeepgramRecognition(kind)
-        return ready
+          .onTranscript(payload => this.handleTranscriptionProviderMessage(kind, payload))
+          .onError(error => {
+            console.warn('Speechmatics streaming error:', error)
+          })
+          .onDisconnect(() => {
+            this.setTranscriptionProvider(kind, null)
+            if (!this.isTranscriptionClosing(kind)) this.startSpeechRecognitionFallbackForKind(kind)
+            this.setTranscriptionClosing(kind, false)
+          })
+
+        this.setTranscriptionClosing(kind, false)
+        this.resetTranscriptionMeta(kind)
+        this.setTranscriptionProvider(kind, provider)
+        const ready = await provider.connect()
+        if (!ready) this.stopTranscriptionRecognition(kind)
+        return !!ready
       } catch (error) {
-        console.warn('Unable to start Deepgram streaming:', error?.response?.data?.message || error?.message || error)
-        this.stopDeepgramRecognition(kind)
+        const message = this.describeTranscriptionTokenFailure(error)
+        console.warn('Unable to start Speechmatics streaming:', message, error)
+        this.showBanner(message, 'error', 5600)
+        this.stopTranscriptionRecognition(kind)
         return false
       }
     },
@@ -9125,78 +9809,67 @@ export default {
         this.startRecitationSpeechRecognition()
       }
     },
-    sendDeepgramAudioChunk(kind = 'recitation', blob = null) {
-      if (!blob?.size) return
-      const socket = this.getDeepgramSocket(kind)
-      if (socket?.readyState !== WebSocket.OPEN) return
-      try {
-        socket.send(blob)
-      } catch (error) {
-        console.warn('Failed to send Deepgram audio chunk:', error)
-      }
+    streamTranscriptionAudioChunk(kind = 'recitation', blob = null) {
+      if (blob && !blob.size) return
+      const provider = this.getTranscriptionProvider(kind)
+      if (!provider?.isOpen?.()) return
+      const pendingAudio = this.flushTranscriptionAudioBridge(kind)
+      if (!pendingAudio?.byteLength) return
+      provider.streamAudioChunk(pendingAudio)
     },
-    async finalizeDeepgramRecognition(kind = 'recitation') {
-      const socket = this.getDeepgramSocket(kind)
-      if (!socket) return wordsToTranscript(this.getCommittedRecognitionWords(kind))
-      this.setDeepgramClosing(kind, true)
-      try {
-        if (socket.readyState === WebSocket.OPEN) {
-          socket.send(JSON.stringify({ type: 'Finalize' }))
-          socket.send(new ArrayBuffer(0))
-        }
-      } catch { }
-      await this.waitForDeepgramSettlement(kind)
-      this.stopDeepgramRecognition(kind)
+    async finalizeTranscriptionRecognition(kind = 'recitation') {
+      const provider = this.getTranscriptionProvider(kind)
+      if (!provider) {
+        this.stopTranscriptionAudioBridge(kind)
+        return wordsToTranscript(this.getCommittedRecognitionWords(kind))
+      }
+
+      this.setTranscriptionClosing(kind, true)
+      const trailingAudio = this.stopTranscriptionAudioBridge(kind)
+      if (trailingAudio?.byteLength) provider.streamAudioChunk(trailingAudio)
+      provider.endStream()
+      await this.waitForTranscriptionSettlement(kind)
+      this.stopTranscriptionRecognition(kind)
       return wordsToTranscript(this.getCommittedRecognitionWords(kind))
     },
-    stopDeepgramRecognition(kind = 'recitation') {
-      const socket = this.getDeepgramSocket(kind)
-      this.setDeepgramClosing(kind, true)
-      if (socket) {
-        try {
-          socket.onmessage = null
-          socket.onerror = null
-          socket.onclose = null
-          if ([WebSocket.CONNECTING, WebSocket.OPEN].includes(socket.readyState)) socket.close()
-        } catch { }
+    stopTranscriptionRecognition(kind = 'recitation') {
+      const provider = this.getTranscriptionProvider(kind)
+      this.setTranscriptionClosing(kind, true)
+      if (provider) {
+        try { provider.disconnect() } catch { }
       }
-      this.setDeepgramSocket(kind, null)
+      this.setTranscriptionProvider(kind, null)
     },
-    handleDeepgramMessage(kind = 'recitation', event = null) {
-      let message = null
-      try {
-        message = JSON.parse(String(event?.data || '{}'))
-      } catch {
+    handleTranscriptionProviderMessage(kind = 'recitation', payload = {}) {
+      if (payload?.type === 'end-of-transcript') {
+        this.markTranscriptionMessage(kind, { endOfTranscript: true })
         return
       }
-      if (message?.type && message.type !== 'Results') return
-      const alternative = message?.channel?.alternatives?.[0] || {}
-      const rawWords = Array.isArray(alternative.words) && alternative.words.length
-        ? alternative.words
-        : this.tokenizeRecitationWords(alternative.transcript || '').map(word => ({
+
+      const rawWords = Array.isArray(payload?.words) && payload.words.length
+        ? payload.words
+        : this.tokenizeRecitationWords(payload?.transcript || '').map(word => ({
           word,
-          confidence: Number(alternative.confidence || 0)
+          confidence: payload?.isFinal ? 1 : SPEECHMATICS_PARTIAL_CONFIDENCE
         }))
       const entries = rawWords.map(item => ({
-        word: item.word || item.punctuated_word || '',
-        confidence: Number.isFinite(Number(item.confidence)) ? Number(item.confidence) : Number(alternative.confidence || 0),
+        word: item.word || '',
+        confidence: Number.isFinite(Number(item.confidence)) ? Number(item.confidence) : (payload?.isFinal ? 1 : SPEECHMATICS_PARTIAL_CONFIDENCE),
         start: item.start,
         end: item.end,
-        provider: 'deepgram'
-      }))
-      const isFinal = !!(message?.is_final || message?.speech_final)
-      this.markDeepgramMessage(kind, { isFinal })
+        provider: 'speechmatics'
+      })).filter(item => item.word)
+      const isFinal = !!payload?.isFinal
+      this.markTranscriptionMessage(kind, { isFinal })
       this.applyRecognizedEntries(kind, entries, isFinal, {
-        provider: 'deepgram',
-        speechFinal: !!message?.speech_final,
-        transcript: alternative.transcript || '',
-        confidence: Number(alternative.confidence || 0),
-        start: message?.start,
-        duration: message?.duration,
-        segmentId: message?.metadata?.request_id && Number.isFinite(Number(message?.start))
-          ? `deepgram:${message.metadata.request_id}:${message.start}:${message.duration || 0}`
-          : '',
-        raw: message
+        provider: 'speechmatics',
+        speechFinal: !!payload?.speechFinal,
+        transcript: payload?.transcript || '',
+        confidence: payload?.confidence,
+        start: payload?.start,
+        duration: payload?.duration,
+        segmentId: payload?.segmentId || '',
+        raw: payload?.raw || null
       })
     },
     applyRecognizedEntries(kind = 'recitation', entries = [], isFinal = false, metadata = {}) {
@@ -9220,8 +9893,8 @@ export default {
         carry[provider] = Number(carry[provider] || 0) + 1
         return carry
       }, {})
-      return Number(counts.deepgram || 0) >= Number(counts['web-speech'] || 0) && Number(counts.deepgram || 0) > 0
-        ? 'deepgram'
+      return Number(counts.speechmatics || 0) >= Number(counts['web-speech'] || 0) && Number(counts.speechmatics || 0) > 0
+        ? 'speechmatics'
         : 'web-speech'
     },
     startRecitationVad(stream) {
@@ -9264,8 +9937,9 @@ export default {
             vad.throttled = false
           } else {
             if (!vad.silenceStartedAt) vad.silenceStartedAt = now
-            if (!vad.throttled && now - vad.silenceStartedAt >= RECITATION_SILENCE_THROTTLE_MS) {
+            if (!vad.throttled && vad.lastSpeechAt && now - vad.silenceStartedAt >= RECITATION_SILENCE_THROTTLE_MS) {
               vad.throttled = true
+              this.handleAiRecitationSilenceAutoStop()
             }
           }
           vad.frame = window.requestAnimationFrame(tick)
@@ -9305,8 +9979,9 @@ export default {
     },
     cleanupRecitationCheckMedia() {
       this.stopRecitationSpeechRecognition()
-      this.stopDeepgramRecognition('recitation')
-      this.resetDeepgramMeta('recitation')
+      this.stopTranscriptionRecognition('recitation')
+      this.resetTranscriptionMeta('recitation')
+      this.stopTranscriptionAudioBridge('recitation')
       this.stopRecitationVad()
       if (this.recitationCheckMediaStream) {
         try {
@@ -9378,9 +10053,6 @@ export default {
         transcriptionSource: source,
         audioSrc
       }
-      result.wordStatuses = (result.wordStatuses || []).map(word => word.status === 'pending'
-        ? { ...word, status: 'incorrect', note: word.note === 'Not heard yet.' ? 'Missed word.' : word.note }
-        : word)
       this.recitationCheckResult = result
       this.recitationLiveWords = Array.isArray(result.wordStatuses) ? result.wordStatuses : []
       this.persistAiRecitationReviewHighlights(result, targetVerses)
@@ -9400,6 +10072,7 @@ export default {
         : this.getRecitationCheckTargetVerses(this.selfCheckModalVerse || null)
       this.recitationCheckResult = null
       this.recitationCheckError = ''
+      this.recitationCheckPanelOpen = true
       this.recitationSpeechTranscript = ''
       this.recitationSpeechInterim = ''
       this.recitationSpeechStableWords = []
@@ -9410,6 +10083,7 @@ export default {
     clearRecitationReviewState() {
       this.recitationCheckResult = null
       this.recitationCheckError = ''
+      this.recitationCheckPanelOpen = false
       this.recitationLiveWords = []
       this.recitationCheckAutoStopArmed = false
       this.recitationSpeechTranscript = ''
@@ -9492,6 +10166,7 @@ export default {
       this.recitationCheckPendingTargets = targets
       this.recitationCheckTargetVerseKey = targets[0]?.key || ''
       this.recitationCheckAutoStopArmed = false
+      this.recitationCheckPanelOpen = true
       this.selfCheckSavedAttemptsVisible = false
       this.seedRecitationLiveWords(targets)
       this.resetRecognitionPipelineState('recitation')
@@ -9518,13 +10193,17 @@ export default {
         this.recitationCheckMediaRecorder = recorder
         this.recitationCheckChunks = []
         this.recitationInputSessionId = this.getCurrentRecitationSessionId()
-        const deepgramReady = await this.startDeepgramRecognition('recitation')
-        if (!deepgramReady) this.startRecitationSpeechRecognition()
+        const bridgeReady = this.startTranscriptionAudioBridge('recitation', stream)
+        const transcriptionReady = bridgeReady && await this.startTranscriptionRecognition('recitation')
+        if (!transcriptionReady) {
+          this.stopTranscriptionAudioBridge('recitation')
+          this.startRecitationSpeechRecognition()
+        }
 
         recorder.ondataavailable = event => {
           if (event.data?.size) {
             this.recitationCheckChunks.push(event.data)
-            this.sendDeepgramAudioChunk('recitation', event.data)
+            this.streamTranscriptionAudioChunk('recitation', event.data)
           }
         }
         recorder.onerror = () => {
@@ -9535,7 +10214,7 @@ export default {
         }
         recorder.onstop = async () => {
           const chunks = [...this.recitationCheckChunks]
-          await this.finalizeDeepgramRecognition('recitation')
+          await this.finalizeTranscriptionRecognition('recitation')
           let audioSrc = ''
           this.stopRecitationSpeechRecognition()
           this.recitationCheckRecording = false
@@ -9625,7 +10304,7 @@ export default {
       })
       result.audioSrc = audioSrc
       const provider = this.getDominantRecognitionProvider(committedWords)
-      result.transcriptionSource = provider === 'deepgram' ? 'deepgram streaming' : 'browser speech recognition'
+      result.transcriptionSource = provider === 'speechmatics' ? 'speechmatics streaming' : 'browser speech recognition'
       result.validationReport = this.buildRecognitionValidationForResult('recitation', targetVerses, result, {
         sessionId,
         audioHash,
@@ -9634,9 +10313,6 @@ export default {
       result.analysisVersion = RECITATION_ANALYSIS_VERSION
       result.sessionId = sessionId
       result.audioHash = audioHash
-      result.wordStatuses = (result.wordStatuses || []).map(word => word.status === 'pending'
-        ? { ...word, status: 'incorrect', note: word.note === 'Not heard yet.' ? 'Missed word.' : word.note }
-        : word)
       this.recitationCheckResult = result
       this.recitationLiveWords = Array.isArray(result.wordStatuses) ? result.wordStatuses : []
       this.persistAiRecitationReviewHighlights(result, targetVerses)
@@ -10097,15 +10773,13 @@ export default {
       const missing = statuses.filter(word => word.status === 'pending').length
       const extra = Array.isArray(mistakes.extra) ? mistakes.extra.length : 0
       const total = Math.max(1, statuses.length)
-      const redCount = Math.min(total, incorrect + missing + extra)
+      const redCount = Math.min(total, incorrect + missing)
       const percent = value => `${Math.round((Number(value || 0) / total) * 100)}%`
-      const speedReview = result?.speedReview || this.getRecitationSpeedReview(result)
       return [
-        { key: 'score', label: 'Accuracy', value: `${Number(result?.accuracyScore || 0)}%`, description: 'Overall weighted match against the ayah.', tone: this.getRecitationScoreTone(result?.accuracyScore || 0) },
-        { key: 'correct', label: 'Green', value: `${correct}/${total}`, description: `${percent(correct)} exact words.`, tone: 'tone-excellent' },
-        { key: 'partial', label: 'Amber', value: `${partial}/${total}`, description: `${percent(partial)} close words with partial credit.`, tone: 'tone-good' },
-        { key: 'incorrect', label: 'Red', value: `${redCount}/${total}`, description: `${percent(redCount)} missing, wrong order, changed, or extra words.`, tone: redCount ? 'tone-review' : 'tone-excellent' },
-        { key: 'pace', label: 'Pace', value: speedReview.label.replace(/\s*\(.+\)$/, ''), description: speedReview.wordsPerMinute ? `${speedReview.wordsPerMinute} words/minute.` : 'Measured after recording.', tone: speedReview.tone === 'steady' ? 'tone-excellent' : 'tone-good' }
+        { key: 'score', label: 'Accuracy', value: `${Number(result?.accuracyScore || 0)}%`, description: 'Overall weighted match against the ayah.', tone: 'tone-neutral' },
+        { key: 'correct', label: 'Green', value: `${correct}/${total}`, description: `${percent(correct)} exact words.`, tone: 'tone-green' },
+        { key: 'partial', label: 'Amber', value: `${partial}/${total}`, description: `${percent(partial)} close words with partial credit.`, tone: 'tone-amber' },
+        { key: 'incorrect', label: 'Red', value: `${redCount}/${total}`, description: extra ? `${percent(redCount)} missing, wrong order, or changed words. ${extra} extra word${extra === 1 ? '' : 's'} heard separately.` : `${percent(redCount)} missing, wrong order, or changed words.`, tone: 'tone-red' }
       ]
     },
     getTajweedRuleCatalog() {
@@ -10844,6 +11518,9 @@ export default {
     openInsightsPanel() {
       this.openToolsPanel({ tab: 'stats' })
     },
+    openNewSessionSetup() {
+      this.openToolsPanel({ tab: 'tools' })
+    },
     setLoopCount(value) {
       const nextValue = value === 'infinite' ? 'infinite' : Math.max(1, Number(value || 1))
       this.selectedLoopCount = nextValue
@@ -10958,11 +11635,13 @@ export default {
       const nextMode = allowedModes.includes(mode) ? mode : 'stacked'
       if (this.readingViewMode === nextMode) {
         this.topCardMenuOpen = false
+        this.fontDropdownOpen = false
         return
       }
       this.readingViewMode = nextMode
       if (nextMode === 'mushaf') this.syncMushafPageToActiveVerse()
       this.topCardMenuOpen = false
+      this.fontDropdownOpen = false
       this.persistUiState()
     },
     syncMushafPageToActiveVerse() {
@@ -12079,6 +12758,7 @@ export default {
     toggleTajweed() {
       this.tajweedEnabled = !this.tajweedEnabled
 
+      this.syncSettingsDraft()
       this.persistUiState()
       this.persistCentralSessionState()
 
@@ -12166,6 +12846,10 @@ export default {
     },
     toggleFontDropdown() {
       this.fontDropdownOpen = !this.fontDropdownOpen
+      if (this.fontDropdownOpen) {
+        this.topCardMenuOpen = false
+        this.openVerseActionKey = ''
+      }
     },
     toggleTopCardMenu() {
       this.topCardMenuOpen = !this.topCardMenuOpen
@@ -12191,6 +12875,7 @@ export default {
     selectFont(fontValue) {
       this.quranFont = fontValue
       this.fontDropdownOpen = false
+      this.syncSettingsDraft()
       this.persistUiState()
     },
     getCurrentFontLabel() {
@@ -12523,7 +13208,7 @@ export default {
 
     getDisplayArabic(verse) {
       if (!verse?.arabic) return ''
-      if (this.isRecitationCheckTargetVerse(verse.key)) return this.splitRecitationDisplayIntoWords(verse)
+      if (this.shouldShowRecitationReviewHighlights(verse.key)) return this.splitRecitationDisplayIntoWords(verse)
       if (this.tajweedEnabled && verse.arabic_tajweed) return this.wrapTajweedWithWordHighlighting(verse, this.normalizeTajweedMarkup(verse.arabic_tajweed))
       if (this.wordByWordAudioEnabled || this.anchorModeEnabled) return this.splitArabicIntoWords(verse)
       return this.stripTajweedMarkup(verse.arabic)
@@ -14358,6 +15043,7 @@ export default {
       try {
         localStorage.setItem('telawa.defaultFontSize', JSON.stringify(this.defaultFontSize))
       } catch (e) { }
+      this.syncSettingsDraft()
       // Update all verses
       this.$forceUpdate()
       // Show feedback
@@ -14366,22 +15052,25 @@ export default {
 
     // UI methods
     toggleReadingOption(kind) {
+      let nextState = false
       if (kind === 'translation') {
         this.showTranslation = !this.showTranslation
-        this.persistUiState()
+        nextState = this.showTranslation
       }
       if (kind === 'transliteration') {
         this.showTransliteration = !this.showTransliteration
-        this.persistUiState()
+        nextState = this.showTransliteration
       }
       if (kind === 'wbw') {
         this.showWordByWord = !this.showWordByWord
-        this.persistUiState()
+        nextState = this.showWordByWord
         // Force re-render to apply word highlighting
         this.$forceUpdate()
       }
+      this.syncSettingsDraft()
+      this.persistUiState()
       // Show feedback that change was applied
-      this.showBanner(`${kind} ${this[kind === 'translation' ? 'showTranslation' : kind === 'transliteration' ? 'showTransliteration' : 'showWordByWord'] ? 'enabled' : 'disabled'}`, 'info', 800)
+      this.showBanner(`${kind} ${nextState ? 'enabled' : 'disabled'}`, 'info', 800)
     },
 
     setScriptMode(mode) {
@@ -25034,6 +25723,14 @@ html {
   align-items: center;
 }
 
+.quick-right-controls {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .quick-font-dropdown {
   position: relative;
 }
@@ -27516,7 +28213,8 @@ html {
 }
 
 /* Ensure main content doesn't go under navbar */
-.main.container {
+.main.container,
+.main.container-fluid {
   padding-top: calc(env(safe-area-inset-top, 0px) + 78px);
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
   min-height: 100dvh;
@@ -27530,7 +28228,8 @@ html {
     min-width: auto;
   }
 
-  .main.container {
+  .main.container,
+  .main.container-fluid {
     padding-top: calc(env(safe-area-inset-top, 0px) + 66px);
   }
 }
@@ -31200,10 +31899,15 @@ html {
   }
 
   .workspace-quick-controls .toolbar-chip,
+  .quick-right-controls,
   .quick-font-dropdown,
   .quick-font-dropdown .font-dropdown-trigger {
     width: 100%;
     min-width: 0;
+  }
+
+  .quick-right-controls {
+    justify-content: flex-start;
   }
 
   .session-quickstart-card {
@@ -39030,6 +39734,14 @@ button:active {
 .quick-left-pills {
 }
 
+.quick-right-controls {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-wrap: wrap !important;
+  gap: 0.5rem !important;
+}
+
 .quick-pill-group-list .view-mode-toggle {
   display: inline-flex !important;
   width: auto !important;
@@ -39605,6 +40317,12 @@ button:active {
     grid-template-columns: 1fr !important;
   }
 
+  .quick-right-controls {
+    width: 100% !important;
+    justify-self: stretch !important;
+    justify-content: flex-start !important;
+  }
+
   .quick-ai-actions {
     width: 100% !important;
     justify-self: stretch !important;
@@ -39643,53 +40361,67 @@ button:active {
 }
 
 .workspace-quick-controls {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  padding: 0 !important;
+  margin-top: 0.75rem !important;
   z-index: 5 !important;
 }
 
 .quick-pill-group-list {
-  grid-template-columns: 1fr !important;
-  justify-items: center !important;
-  gap: 0.9rem !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  justify-items: stretch !important;
+  gap: 0.7rem !important;
 }
 
 .quick-left-pills {
   width: 100% !important;
+  order: 1 !important;
+}
+
+.quick-right-controls {
   order: 2 !important;
+  width: auto !important;
+  justify-self: end !important;
+  margin-inline: 0 !important;
 }
 
 .quick-ai-actions {
-  order: 1 !important;
-  width: min(100%, 640px) !important;
-  justify-self: center !important;
-  margin-inline: auto !important;
-  grid-template-columns: repeat(2, minmax(180px, 1fr)) !important;
-  gap: 1rem !important;
+  order: 2 !important;
+  width: auto !important;
+  justify-self: end !important;
+  margin-inline: 0 !important;
+  grid-template-columns: repeat(2, minmax(156px, 1fr)) !important;
+  gap: 0.6rem !important;
 }
 
 .quick-ai-action {
-  min-height: 56px !important;
-  height: 56px !important;
-  border-radius: 999px !important;
-  padding: 0 1.35rem !important;
-  font-size: 1rem !important;
-  font-weight: 760 !important;
+  min-height: 42px !important;
+  height: 42px !important;
+  border-radius: 12px !important;
+  padding: 0 0.9rem !important;
+  font-size: 0.84rem !important;
+  font-weight: 560 !important;
   letter-spacing: 0 !important;
-  box-shadow: 0 18px 40px rgba(31, 112, 79, 0.24) !important;
+  box-shadow: none !important;
 }
 
 .quick-ai-action i {
-  font-size: 1.2rem !important;
-  min-width: 24px !important;
+  font-size: 0.94rem !important;
+  min-width: 18px !important;
 }
 
 .top-card-ellipsis,
 .verse-ellipsis-btn {
-  width: 44px !important;
-  height: 44px !important;
-  min-width: 44px !important;
-  min-height: 44px !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
   aspect-ratio: 1 / 1 !important;
-  border-radius: 50% !important;
+  border-radius: 10px !important;
   padding: 0 !important;
 }
 
@@ -39894,6 +40626,583 @@ button:active {
 
   .session-item {
     grid-template-columns: 1fr !important;
+  }
+}
+
+/* Final AI recite layout pass: cleaner toolbar, explicit start flow, and strict analysis colors. */
+.self-check-modal .self-check-modal-body,
+.memorisation-checker-modal .memorisation-checker-body {
+  gap: 1rem !important;
+}
+
+.self-check-modal .self-check-modal-stage,
+.self-check-modal .self-check-recorder-card,
+.memorisation-checker-modal .memorisation-checker-workspace,
+.memorisation-checker-modal .memorisation-checker-ayah-panel,
+.memorisation-checker-modal .memorisation-checker-live,
+.memorisation-checker-modal .memorisation-checker-results,
+.recitation-check-panel-inline {
+  border-radius: 18px !important;
+  border: 1px solid rgba(177, 136, 94, 0.18) !important;
+  background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(250, 244, 235, 0.96)) !important;
+  box-shadow: 0 18px 40px rgba(87, 57, 29, 0.08) !important;
+}
+
+.self-check-modal .self-check-ayah-actions {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.94fr) !important;
+  gap: 0.6rem !important;
+  padding: 0 !important;
+  margin: 0 0 0.75rem !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.self-check-toolbar-group {
+  display: grid !important;
+  gap: 0.5rem !important;
+  align-items: stretch !important;
+}
+
+.self-check-toolbar-group-primary {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.self-check-toolbar-group-secondary {
+  grid-template-columns: minmax(138px, 1.08fr) repeat(2, minmax(0, 1fr)) !important;
+}
+
+.self-check-modal .self-check-ayah-action.self-check-ayah-action-wide {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 44px !important;
+  height: 44px !important;
+  padding: 0 0.8rem !important;
+  justify-content: center !important;
+  gap: 0.45rem !important;
+  border-radius: 12px !important;
+  font-size: 0.8rem !important;
+  font-weight: 560 !important;
+  letter-spacing: 0.01em !important;
+  box-shadow: none !important;
+}
+
+.self-check-modal .self-check-ayah-action.self-check-ayah-action-wide span {
+  display: inline !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.self-check-reciter-field {
+  display: grid !important;
+  gap: 0.35rem !important;
+  min-width: 0 !important;
+}
+
+.self-check-reciter-field span {
+  font-size: 0.66rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.09em !important;
+  text-transform: uppercase !important;
+  color: #9e6e41 !important;
+}
+
+.self-check-modal .self-check-reciter-select {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 0.8rem !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(177, 136, 94, 0.26) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  color: #3a2717 !important;
+  font-size: 0.84rem !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
+
+.mushaf-pill-toolbar {
+  display: flex !important;
+  gap: 0.55rem !important;
+  align-items: center !important;
+  padding: 0.42rem 0.55rem !important;
+  background: var(--surface) !important;
+  border-radius: 12px !important;
+  margin-bottom: 0.7rem !important;
+  width: 100% !important;
+  overflow-x: auto !important;
+}
+
+.mushaf-pill-toolbar > div {
+  flex: 0 0 auto !important;
+}
+
+.mushaf-pill-toolbar button {
+  min-height: 38px !important;
+  padding: 0.42rem 0.75rem !important;
+  border-radius: 999px !important;
+  font-size: 0.78rem !important;
+  font-weight: 500 !important;
+}
+
+.verse-actions {
+  gap: 0.4rem !important;
+  flex-wrap: nowrap !important;
+}
+
+.verse-ai-check-btn {
+  min-width: 98px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 0.58rem !important;
+  gap: 0.28rem !important;
+  font-size: 0.72rem !important;
+  font-weight: 560 !important;
+}
+
+.verse-ai-check-btn span,
+.verse-number,
+.verse-status-badge {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.self-check-modal .self-check-modal-ayah-shell,
+.memorisation-checker-modal .memorisation-checker-ayah {
+  border-radius: 20px !important;
+  border: 1px solid rgba(177, 136, 94, 0.18) !important;
+  background:
+    radial-gradient(circle at top, rgba(255, 251, 243, 0.95), rgba(246, 236, 222, 0.92)) !important;
+}
+
+.self-check-modal .self-check-modal-ayah-shell {
+  min-height: 340px !important;
+}
+
+.self-check-modal .self-check-modal-ayah {
+  width: min(100%, 1120px) !important;
+}
+
+.recitation-check-panel-inline {
+  padding: 1rem !important;
+  display: grid !important;
+  gap: 0.9rem !important;
+}
+
+.recitation-check-head {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 0.9rem !important;
+}
+
+.recitation-check-head-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.55rem !important;
+}
+
+.recitation-check-idle {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 1rem !important;
+  align-items: center !important;
+  padding: 1rem 1.05rem !important;
+  border-radius: 16px !important;
+  border: 1px dashed rgba(47, 111, 88, 0.28) !important;
+  background: linear-gradient(135deg, rgba(239, 248, 244, 0.9), rgba(248, 252, 250, 0.96)) !important;
+}
+
+.recitation-check-idle-copy {
+  display: grid !important;
+  gap: 0.35rem !important;
+}
+
+.recitation-check-idle-copy strong {
+  font-size: 1.02rem !important;
+  font-weight: 760 !important;
+  color: #1f382d !important;
+}
+
+.recitation-check-idle-copy p {
+  margin: 0 !important;
+  font-size: 0.9rem !important;
+  line-height: 1.5 !important;
+  color: #53625c !important;
+}
+
+.recitation-check-idle-btn {
+  min-height: 50px !important;
+  padding: 0 1.1rem !important;
+  border-radius: 14px !important;
+  font-weight: 720 !important;
+}
+
+.recitation-check-results,
+.memorisation-checker-modal .memorisation-checker-results {
+  display: grid !important;
+  gap: 0.95rem !important;
+}
+
+.recitation-result-stats,
+.memorisation-checker-modal .memorisation-checker-results .memorisation-checker-result-grid.recitation-result-stats {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(164px, 1fr)) !important;
+  gap: 0.8rem !important;
+}
+
+.recitation-result-stat {
+  min-height: 128px !important;
+  min-width: 0 !important;
+  padding: 0.95rem 1rem !important;
+  border-radius: 18px !important;
+  border: 1px solid transparent !important;
+  display: grid !important;
+  align-content: start !important;
+  gap: 0.3rem !important;
+  overflow: hidden !important;
+}
+
+.recitation-result-stat span {
+  font-size: 0.74rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  line-height: 1.2 !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+}
+
+.recitation-result-stat strong {
+  font-size: clamp(1.9rem, 3vw, 2.7rem) !important;
+  font-weight: 650 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.03em !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+}
+
+.recitation-result-stat small {
+  font-size: 0.76rem !important;
+  line-height: 1.4 !important;
+  font-weight: 400 !important;
+  color: inherit !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+}
+
+.recitation-result-stat.tone-neutral {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 242, 235, 0.95)) !important;
+  border-color: rgba(177, 136, 94, 0.2) !important;
+  color: #38281d !important;
+}
+
+.recitation-result-stat.tone-green {
+  background: linear-gradient(180deg, rgba(239, 250, 244, 0.98), rgba(228, 245, 236, 0.96)) !important;
+  border-color: rgba(47, 111, 88, 0.28) !important;
+  color: #245d4a !important;
+}
+
+.recitation-result-stat.tone-amber {
+  background: linear-gradient(180deg, rgba(255, 248, 235, 0.98), rgba(253, 240, 213, 0.96)) !important;
+  border-color: rgba(188, 132, 39, 0.3) !important;
+  color: #946118 !important;
+}
+
+.recitation-result-stat.tone-red {
+  background: linear-gradient(180deg, rgba(255, 241, 238, 0.98), rgba(252, 229, 224, 0.96)) !important;
+  border-color: rgba(177, 63, 50, 0.3) !important;
+  color: #982f22 !important;
+}
+
+.recitation-insights-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+  gap: 0.8rem !important;
+}
+
+.recitation-next-card {
+  min-height: 128px !important;
+  padding: 1rem 1.05rem !important;
+  border-radius: 18px !important;
+  border: 1px solid rgba(177, 136, 94, 0.18) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(249, 243, 235, 0.95)) !important;
+  display: grid !important;
+  align-content: start !important;
+  gap: 0.42rem !important;
+}
+
+.recitation-next-card span {
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: #9e6e41 !important;
+}
+
+.recitation-next-card strong,
+.recitation-next-card p {
+  color: #34251a !important;
+}
+
+.recitation-next-card strong {
+  font-size: 1rem !important;
+  line-height: 1.35 !important;
+  font-weight: 620 !important;
+}
+
+.recitation-next-card p {
+  margin: 0 !important;
+  font-size: 0.88rem !important;
+  line-height: 1.5 !important;
+  font-weight: 400 !important;
+}
+
+.ai-review-card {
+  border-color: rgba(150, 88, 34, 0.24) !important;
+  background: linear-gradient(180deg, rgba(255, 248, 239, 0.98), rgba(250, 237, 220, 0.96)) !important;
+}
+
+.ai-review-card span {
+  color: #8d5521 !important;
+}
+
+.ai-review-card p {
+  font-size: 0.9rem !important;
+  line-height: 1.55 !important;
+  font-weight: 600 !important;
+}
+
+.recitation-review-ayah,
+.memorisation-checker-modal .memorisation-checker-final-words.recitation-word-stream {
+  padding: 1rem !important;
+  border-radius: 18px !important;
+  border: 1px solid rgba(177, 136, 94, 0.18) !important;
+  background: rgba(255, 252, 247, 0.94) !important;
+}
+
+.recitation-check-footnotes {
+  display: grid !important;
+  gap: 0.6rem !important;
+}
+
+.recitation-check-footnote {
+  margin-top: 0 !important;
+  border-radius: 14px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-body {
+  grid-template-columns: minmax(0, 1.18fr) minmax(320px, 0.82fr) !important;
+  align-items: start !important;
+}
+
+.memorisation-checker-section-head,
+.self-check-section-head,
+.recitation-check-head > div:first-child {
+  min-width: 0 !important;
+}
+
+.memorisation-checker-section-head span,
+.self-check-kicker,
+.recitation-check-kicker {
+  font-size: 0.72rem !important;
+  letter-spacing: 0.08em !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+}
+
+.memorisation-checker-section-head strong,
+.self-check-section-title,
+.recitation-check-head h2,
+.self-check-recorder-head strong {
+  margin: 0 !important;
+  font-size: clamp(1.02rem, 2vw, 1.28rem) !important;
+  line-height: 1.25 !important;
+  font-weight: 620 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.memorisation-checker-section-head p,
+.self-check-card-desc {
+  margin: 0 !important;
+  font-size: 0.86rem !important;
+  line-height: 1.5 !important;
+  font-weight: 400 !important;
+}
+
+.session-complete-actions {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+  gap: 1rem !important;
+  width: min(100%, 980px) !important;
+  margin: 0 auto !important;
+}
+
+.session-complete-action-card {
+  min-height: 172px !important;
+  padding: 1.15rem !important;
+  border-radius: 24px !important;
+  align-items: start !important;
+  justify-items: start !important;
+  text-align: left !important;
+  box-shadow: 0 20px 44px rgba(69, 44, 19, 0.11) !important;
+}
+
+.session-complete-action-card .action-text {
+  display: grid !important;
+  gap: 0.3rem !important;
+}
+
+.session-complete-action-card .action-text strong {
+  font-size: 1rem !important;
+  line-height: 1.3 !important;
+  font-weight: 620 !important;
+}
+
+.session-complete-action-card .action-text small {
+  font-size: 0.84rem !important;
+  line-height: 1.45 !important;
+  font-weight: 400 !important;
+  white-space: normal !important;
+}
+
+.session-complete-action-card .card-arrow {
+  margin-top: auto !important;
+}
+
+.session-complete-action-card-primary {
+  border-color: rgba(177, 136, 94, 0.3) !important;
+  background: linear-gradient(180deg, rgba(255, 250, 244, 0.99), rgba(247, 238, 226, 0.97)) !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-workspace,
+.memorisation-checker-modal .memorisation-checker-ayah-panel {
+  padding: 1rem !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah-panel {
+  position: sticky !important;
+  top: 0 !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.7rem !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah-actions .self-check-ayah-action {
+  min-height: 46px !important;
+  height: 46px !important;
+  border-radius: 14px !important;
+  font-weight: 650 !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-live,
+.memorisation-checker-modal .memorisation-checker-results {
+  padding: 1rem !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-word-stream.recitation-word-stream,
+.recitation-live-word-stream.recitation-word-stream {
+  min-height: 110px !important;
+  max-height: 230px !important;
+  border-radius: 16px !important;
+}
+
+.memorisation-checker-modal .recitation-word-chip.word-live,
+.recitation-live-word-stream .recitation-word-chip.word-live,
+.recitation-review-ayah .wbw-word,
+.recitation-review-ayah word {
+  font-weight: 650 !important;
+}
+
+[data-theme="dark"] .self-check-modal .self-check-modal-stage,
+[data-theme="dark"] .self-check-modal .self-check-recorder-card,
+[data-theme="dark"] .memorisation-checker-modal .memorisation-checker-workspace,
+[data-theme="dark"] .memorisation-checker-modal .memorisation-checker-ayah-panel,
+[data-theme="dark"] .memorisation-checker-modal .memorisation-checker-live,
+[data-theme="dark"] .memorisation-checker-modal .memorisation-checker-results,
+[data-theme="dark"] .recitation-check-panel-inline,
+[data-theme="dark"] .recitation-next-card,
+[data-theme="dark"] .recitation-result-stat.tone-neutral,
+[data-theme="dark"] .recitation-review-ayah,
+[data-theme="dark"] .memorisation-checker-modal .memorisation-checker-final-words.recitation-word-stream {
+  background: linear-gradient(180deg, rgba(30, 27, 24, 0.96), rgba(23, 21, 19, 0.94)) !important;
+  border-color: rgba(255, 233, 205, 0.12) !important;
+}
+
+[data-theme="dark"] .self-check-reciter-field span,
+[data-theme="dark"] .recitation-next-card span,
+[data-theme="dark"] .recitation-result-stat span {
+  color: #d9b583 !important;
+}
+
+[data-theme="dark"] .self-check-modal .self-check-reciter-select,
+[data-theme="dark"] .recitation-check-idle {
+  background: rgba(42, 37, 32, 0.95) !important;
+  border-color: rgba(255, 233, 205, 0.14) !important;
+  color: #f3eadc !important;
+}
+
+@media (max-width: 1180px) {
+  .memorisation-checker-modal .memorisation-checker-body {
+    grid-template-columns: 1fr !important;
+  }
+
+  .memorisation-checker-modal .memorisation-checker-ayah-panel {
+    position: static !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .self-check-modal .self-check-ayah-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .self-check-toolbar-group-primary,
+  .self-check-toolbar-group-secondary,
+  .recitation-check-idle {
+    grid-template-columns: 1fr !important;
+  }
+
+  .quick-pill-group-list,
+  .quick-ai-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .quick-ai-actions {
+    width: 100% !important;
+    justify-self: stretch !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .recitation-check-head {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .recitation-check-head-actions {
+    justify-content: flex-start !important;
+  }
+
+  .recitation-result-stats,
+  .memorisation-checker-modal .memorisation-checker-results .memorisation-checker-result-grid.recitation-result-stats,
+  .recitation-insights-grid,
+  .memorisation-checker-modal .recitation-result-actions,
+  .recitation-check-panel .recitation-result-actions,
+  .session-complete-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .verse-actions {
+    flex-wrap: wrap !important;
   }
 }
 

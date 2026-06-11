@@ -36,7 +36,7 @@ for (const fixture of recitationLiveValidationFixtures) {
     metadata: {
       sessionId: `fixture-${fixture.id}`,
       audioHash: `audio-${fixture.id}`,
-      provider: 'deepgram',
+      provider: 'speechmatics',
       kind: 'recitation',
       timestamp: '2026-06-11T00:00:00.000Z'
     }

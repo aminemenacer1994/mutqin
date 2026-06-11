@@ -35,8 +35,9 @@ return [
         ],
     ],
 
-    'deepgram' => [
-        'api_key' => env('DEEPGRAM_API_KEY'),
+    'speechmatics' => [
+        'api_key' => env('SPEECHMATICS_API_KEY'),
+        'region' => env('SPEECHMATICS_REGION'),
     ],
 
     'google' => [

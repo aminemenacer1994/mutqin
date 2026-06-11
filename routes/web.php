@@ -3,8 +3,9 @@
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\HomeController;
@@ -120,32 +121,100 @@ Route::get('/memorisation/audio-download', function (Request $request) {
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\HomeController::class, 'index'])->name('dashboard');
     Route::post('/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
-    Route::post('/memorisation/deepgram-token', function () {
-        $apiKey = config('services.deepgram.api_key');
+    Route::post('/memorisation/transcription-token', function () {
+        $apiKey = trim((string) config('services.speechmatics.api_key', ''));
+        $configuredRegion = strtolower(trim((string) config('services.speechmatics.region', '')));
+        $keySuffix = strlen($apiKey) >= 6 ? substr($apiKey, -6) : $apiKey;
+        $region = match ($configuredRegion) {
+            'eu', 'eu1', 'europe' => [
+                'code' => 'eu',
+                'host' => 'eu.rt.speechmatics.com',
+            ],
+            'us', 'us1', 'usa', 'united-states' => [
+                'code' => 'us',
+                'host' => 'us.rt.speechmatics.com',
+            ],
+            default => null,
+        };
 
         if (!$apiKey) {
             return response()->json([
-                'message' => 'Deepgram API key is not configured.',
+                'message' => 'Speechmatics API key is not configured.',
             ], 422);
         }
 
-        $response = Http::withToken($apiKey, 'Token')
-            ->timeout(12)
-            ->post('https://api.deepgram.com/v1/auth/grant', [
-                'ttl_seconds' => 120,
+        if (!$region) {
+            return response()->json([
+                'message' => 'Speechmatics region is not configured.',
+            ], 422);
+        }
+
+        try {
+            $response = Http::withToken($apiKey)
+                ->acceptJson()
+                ->timeout(12)
+                ->post('https://mp.speechmatics.com/v1/api_keys?type=rt', [
+                    'ttl' => 120,
+                ]);
+        } catch (\Throwable $error) {
+            Log::warning('Speechmatics token request failed before receiving a response.', [
+                'user_id' => optional(request()->user())->id,
+                'key_suffix' => $keySuffix ?: null,
+                'exception' => $error->getMessage(),
             ]);
 
-        if (!$response->successful()) {
             return response()->json([
-                'message' => $response->json('err_msg') ?: $response->json('message') ?: 'Deepgram token request failed.',
-            ], $response->status() ?: 502);
+                'message' => 'Speechmatics token request failed before Speechmatics responded.',
+            ], 502);
+        }
+
+        if (!$response->successful()) {
+            $payload = $response->json();
+            if (!is_array($payload)) {
+                $payload = [
+                    'raw_body' => trim((string) $response->body()),
+                ];
+            }
+
+            $status = $response->status() ?: 502;
+            $upstreamMessage = trim((string) ($payload['detail'] ?? $payload['message'] ?? $payload['reason'] ?? ''));
+            $message = $upstreamMessage !== '' ? $upstreamMessage : 'Speechmatics token request failed.';
+
+            if (in_array($status, [401, 403], true) || str_contains(strtolower($message), 'not author')) {
+                $message = 'Speechmatics rejected the configured server key for temporary token creation.';
+            }
+
+            Log::warning('Speechmatics token request was rejected.', [
+                'user_id' => optional(request()->user())->id,
+                'status' => $status,
+                'key_suffix' => $keySuffix ?: null,
+                'upstream_message' => $upstreamMessage ?: null,
+                'payload' => $payload,
+            ]);
+
+            $errorPayload = [
+                'message' => $message,
+            ];
+
+            if (config('app.debug')) {
+                $errorPayload['speechmatics_status'] = $status;
+                $errorPayload['speechmatics_message'] = $upstreamMessage ?: null;
+                $errorPayload['configured_key_suffix'] = $keySuffix ?: null;
+                if (in_array($status, [401, 403], true)) {
+                    $errorPayload['hint'] = 'Use a Speechmatics API key that can create realtime temporary keys, then run php artisan config:clear so Laravel stops using any older cached key.';
+                }
+            }
+
+            return response()->json(array_filter($errorPayload, fn ($value) => $value !== null && $value !== ''), $status);
         }
 
         return response()->json([
-            'access_token' => $response->json('access_token'),
-            'expires_in' => $response->json('expires_in'),
+            'access_token' => $response->json('key_value'),
+            'expires_in' => 120,
+            'region' => $region['code'],
+            'websocket_host' => $region['host'],
         ]);
-    })->name('memorisation.deepgram-token');
+    })->name('memorisation.transcription-token');
     Route::get('/memorisation/sync-state', [MemorisationSyncController::class, 'show'])->name('memorisation.sync.show');
     Route::put('/memorisation/sync-state', [MemorisationSyncController::class, 'update'])->name('memorisation.sync.update');
 });

@@ -89,6 +89,25 @@ includesAll('workspace application', [
   /'blur-upcoming': blurModeEnabled && isVerseBlurred\(verse\.key\)/
 ])
 
+includesAll('offcanvas main-card linkage', [
+  /topCardAppliedPills\(\) \{/,
+  /key: 'view'/,
+  /this\.readingViewMode === 'mushaf' \? 'Mushaf view' : 'Stacked view'/,
+  /key: 'font'/,
+  /label: this\.getCurrentFontLabel\(\)/,
+  /key: 'tajweed'/,
+  /key: 'translation'/,
+  /key: 'transliteration'/,
+  /key: 'wbw'/,
+  /key: 'word-audio'/,
+  /key: 'fallback'/,
+  /this\.syncSettingsDraft\(\)\s*this\.persistUiState\(\)/,
+  /toggleTajweed\(\) \{\s*this\.tajweedEnabled = !this\.tajweedEnabled\s*this\.syncSettingsDraft\(\)/s,
+  /selectFont\(fontValue\) \{\s*this\.quranFont = fontValue\s*this\.fontDropdownOpen = false\s*this\.syncSettingsDraft\(\)/s,
+  /updateDefaultFontSize\(\) \{[\s\S]*this\.syncSettingsDraft\(\)/,
+  /class="quick-right-controls"/
+])
+
 includesAll('offcanvas workspace sync', [
   /syncWorkspaceFromControls\(options = \{\}\)/,
   /applyWorkspaceControls\(options = \{\}\)/,

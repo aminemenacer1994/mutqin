@@ -27,7 +27,7 @@ const { replayRecognitionSession } = recitation.namespace
 const targetText = 'قل هو الله أحد'
 const finalEvents = [
   {
-    provider: 'deepgram',
+    provider: 'speechmatics',
     isFinal: true,
     start: 0,
     duration: 0.8,
@@ -38,7 +38,7 @@ const finalEvents = [
     ]
   },
   {
-    provider: 'deepgram',
+    provider: 'speechmatics',
     isFinal: true,
     start: 0.8,
     duration: 0.9,
@@ -51,7 +51,7 @@ const finalEvents = [
 
 const noisyEvents = [
   {
-    provider: 'deepgram',
+    provider: 'speechmatics',
     isFinal: false,
     start: 0,
     duration: 0.8,
@@ -63,7 +63,7 @@ const noisyEvents = [
   },
   finalEvents[1],
   {
-    provider: 'deepgram',
+    provider: 'speechmatics',
     isFinal: false,
     start: 0.8,
     duration: 0.9,

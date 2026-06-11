@@ -4,7 +4,7 @@ export const recitationLiveValidationFixtures = [
     targetText: 'قل هو الله أحد',
     events: [
       {
-        provider: 'deepgram',
+        provider: 'speechmatics',
         isFinal: false,
         start: 0,
         duration: 0.9,
@@ -16,7 +16,7 @@ export const recitationLiveValidationFixtures = [
         ]
       },
       {
-        provider: 'deepgram',
+        provider: 'speechmatics',
         isFinal: true,
         start: 0,
         duration: 0.9,
@@ -42,7 +42,7 @@ export const recitationLiveValidationFixtures = [
     targetText: 'رب اغفر لي',
     events: [
       {
-        provider: 'deepgram',
+        provider: 'speechmatics',
         isFinal: false,
         start: 0,
         duration: 0.7,
@@ -52,7 +52,7 @@ export const recitationLiveValidationFixtures = [
         ]
       },
       {
-        provider: 'deepgram',
+        provider: 'speechmatics',
         isFinal: true,
         start: 0,
         duration: 0.7,
@@ -62,7 +62,7 @@ export const recitationLiveValidationFixtures = [
         ]
       },
       {
-        provider: 'deepgram',
+        provider: 'speechmatics',
         isFinal: true,
         start: 1.4,
         duration: 0.8,
@@ -86,7 +86,7 @@ export const recitationLiveValidationFixtures = [
     targetText: 'سبح اسم ربك الأعلى',
     events: [
       {
-        provider: 'deepgram',
+        provider: 'speechmatics',
         isFinal: true,
         start: 0,
         duration: 1.2,
@@ -96,7 +96,7 @@ export const recitationLiveValidationFixtures = [
         ]
       },
       {
-        provider: 'deepgram',
+        provider: 'speechmatics',
         isFinal: true,
         start: 0,
         duration: 1.2,
@@ -122,7 +122,7 @@ export const recitationLiveValidationFixtures = [
     targetText: 'اهدنا الصراط المستقيم',
     events: [
       {
-        provider: 'deepgram',
+        provider: 'speechmatics',
         isFinal: false,
         start: 0,
         duration: 0.8,
@@ -132,7 +132,7 @@ export const recitationLiveValidationFixtures = [
         ]
       },
       {
-        provider: 'deepgram',
+        provider: 'speechmatics',
         isFinal: true,
         start: 0,
         duration: 1.1,
