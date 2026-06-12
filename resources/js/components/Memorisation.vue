@@ -9377,17 +9377,41 @@ export default {
       this.recitationLiveWords = targetWords.map(text => ({ text, status: 'pending', note: 'Waiting for this word.' }))
       this.recitationLiveAlignmentSignature = ''
     },
-    getRecognitionWordsForLiveAlignment(kind = 'recitation') {
+    getRecognitionWordsForLiveAlignment(kind = 'recitation', targetText = '') {
       const state = this.getRecognitionPipelineState(kind)
       const committedWords = Array.isArray(state?.committedWords) ? state.committedWords : []
       const interimWords = Array.isArray(state?.interimWords) ? state.interimWords : []
-      const confidentInterim = interimWords.filter(word => Number(word?.confidence || 0) >= RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD)
+      const safeInterimWords = this.getSequentialLiveInterimWords(committedWords, interimWords, targetText)
       return {
         committedWords,
-        displayWords: confidentInterim.length
-          ? [...committedWords, ...confidentInterim]
-          : committedWords
+        displayWords: safeInterimWords.length ? committedWords.concat(safeInterimWords) : committedWords
       }
+    },
+    getSequentialLiveInterimWords(committedWords = [], interimWords = [], targetText = '') {
+      if (!targetText || !Array.isArray(interimWords) || !interimWords.length) return []
+      const targetWords = this.tokenizeRecitationDisplayWords(targetText)
+        .map(word => this.tokenizeRecitationWords(word)[0] || '')
+        .filter(Boolean)
+      if (!targetWords.length) return []
+      const startIndex = Math.min(Array.isArray(committedWords) ? committedWords.length : 0, targetWords.length)
+      const safeWords = []
+      for (const interim of interimWords) {
+        const expected = targetWords[startIndex + safeWords.length]
+        if (!expected) break
+        const word = this.tokenizeRecitationWords(interim?.word || interim?.text || '')[0] || ''
+        const confidence = Number(interim?.confidence ?? 0)
+        if (!word || confidence < RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD) break
+        const similarity = this.getRecitationWordSimilarity(expected, word)
+        if (expected !== word && similarity < 0.9) break
+        safeWords.push({
+          ...interim,
+          word,
+          display: interim?.display || interim?.text || interim?.word || word,
+          confidence,
+          liveInterim: true
+        })
+      }
+      return safeWords
     },
     mergeLiveRecitationStatuses(committedStatuses = [], displayStatuses = []) {
       const committed = Array.isArray(committedStatuses) ? committedStatuses : []
@@ -9435,26 +9459,25 @@ export default {
         : (this.recitationCheckPendingTargets?.length ? this.recitationCheckPendingTargets : this.getRecitationCheckTargetVerses())
       const targetText = this.getRecitationTargetText(targetVerses)
       if (!targetText) return
-      const { committedWords, displayWords } = this.getRecognitionWordsForLiveAlignment(kind)
+      const { committedWords, displayWords } = this.getRecognitionWordsForLiveAlignment(kind, targetText)
       const signatureKey = kind === 'memorisation' ? 'aiMemorisationCheckerLiveAlignmentSignature' : 'recitationLiveAlignmentSignature'
       const signature = this.getLiveAlignmentInputSignature(kind, targetVerses, committedWords, displayWords)
       if (this[signatureKey] === signature) return
       this[signatureKey] = signature
-      const committedAlignment = buildQuranAlignment(targetText, committedWords, {
-        strictProgression: this.aiRecitationStrictProgression,
+      const liveAlignmentOptions = {
+        strictProgression: true,
         metadata: {
           sessionId: this.getCurrentRecitationSessionId(),
           audioHash: kind === 'recitation' ? this.recitationInputAudioHash : ''
         }
+      }
+      const committedAlignment = buildQuranAlignment(targetText, committedWords, {
+        ...liveAlignmentOptions
       })
       const liveAlignment = displayWords === committedWords || displayWords.length === committedWords.length
         ? committedAlignment
         : buildQuranAlignment(targetText, displayWords, {
-          strictProgression: this.aiRecitationStrictProgression,
-          metadata: {
-            sessionId: this.getCurrentRecitationSessionId(),
-            audioHash: kind === 'recitation' ? this.recitationInputAudioHash : ''
-          }
+          ...liveAlignmentOptions
         })
       const statuses = this.mergeLiveRecitationStatuses(
         committedAlignment.progression?.visibleStatuses || committedAlignment.wordStatuses || [],
@@ -16315,6 +16338,43 @@ export default {
   filter: none !important;
   font-size: 2.8rem !important;
   opacity: 1 !important;
+}
+
+/* STABLE AI RECITATION HIGHLIGHTS - RTL/LTR SAFE */
+.self-check-modal-ayah.recitation-word-review-active,
+.memorisation-checker-ayah.recitation-word-review-active,
+.verse-arabic.recitation-word-review-active {
+  filter: none !important;
+  opacity: 1 !important;
+  transform: scale(1) !important;
+  text-shadow: none !important;
+  -webkit-font-smoothing: antialiased;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* FIX WORD HIGHLIGHT SIZES - NO HALLUCINATION */
+.self-check-modal-ayah.recitation-word-review-active .wbw-word,
+.self-check-modal-ayah.recitation-word-review-active word,
+.memorisation-checker-ayah.recitation-word-review-active .wbw-word,
+.memorisation-checker-ayah.recitation-word-review-active word,
+.verse-arabic.recitation-word-review-active .wbw-word,
+.verse-arabic.recitation-word-review-active word {
+  display: inline !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  transform: none !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+/* FIX DIRECTIONAL SAFETY FOR HIGHLIGHTS */
+.is-rtl .self-check-modal-ayah.recitation-word-review-active,
+.is-rtl .memorisation-checker-ayah.recitation-word-review-active,
+.is-rtl .verse-arabic.recitation-word-review-active {
+  direction: rtl !important;
+  text-align: right !important;
+  unicode-bidi: embed !important;
 }
 
 .self-check-modal-ayah.recitation-word-review-active .wbw-word,
@@ -43970,6 +44030,29 @@ button:active {
   .memorisation-checker-modal .memorisation-checker-header-tools {
     grid-template-columns: 1fr 1fr !important;
   }
+}
+
+/* RTL-only live recitation colour stream: committed words only in script order. */
+.recitation-live-word-stream.recitation-word-stream,
+.memorisation-checker-word-stream.recitation-live-word-stream,
+.self-check-modal .recitation-live-word-stream.recitation-word-stream {
+  direction: rtl !important;
+  unicode-bidi: isolate !important;
+  text-align: right !important;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+}
+
+.recitation-live-word-stream .recitation-word-chip,
+.recitation-live-word-stream .recitation-word-chip.word-live {
+  direction: rtl !important;
+  unicode-bidi: isolate !important;
+  text-align: center !important;
+  order: 0 !important;
+  animation: none !important;
 }
 
 </style>

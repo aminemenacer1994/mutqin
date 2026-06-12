@@ -113,6 +113,10 @@ includesAll('ai recitation speechmatics stability', [
   /confidence: Number\.isFinite\(confidence\) \? confidence : \(isPartial \? SPEECHMATICS_PARTIAL_CONFIDENCE : 1\)/,
   /const words = extractSpeechmaticsTranscriptWords\(message, \{ isPartial: !isFinal \}\)/,
   /const transcript = String\(message\?\.metadata\?\.transcript \|\| ''\)\.trim\(\) \|\| words\.map\(item => item\.word\)\.join\(' '\)/,
+  /getSequentialLiveInterimWords\(committedWords, interimWords, targetText\)/,
+  /safeInterimWords\.length \? committedWords\.concat\(safeInterimWords\) : committedWords/,
+  /similarity < 0\.9/,
+  /const liveAlignmentOptions = \{\s*strictProgression: true,/,
   /@click\.stop="toggleVerseActionMenu\(verse\.key\)"/
 ])
 
