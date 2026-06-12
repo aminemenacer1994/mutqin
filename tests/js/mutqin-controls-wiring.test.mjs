@@ -91,10 +91,8 @@ includesAll('workspace application', [
 
 includesAll('offcanvas main-card linkage', [
   /topCardAppliedPills\(\) \{/,
-  /key: 'view'/,
-  /this\.readingViewMode === 'mushaf' \? 'Mushaf view' : 'Stacked view'/,
-  /key: 'font'/,
-  /label: this\.getCurrentFontLabel\(\)/,
+  /key: 'progress'/,
+  /key: 'percent'/,
   /key: 'tajweed'/,
   /key: 'translation'/,
   /key: 'transliteration'/,
@@ -113,12 +111,36 @@ includesAll('ai recitation speechmatics stability', [
   /confidence: Number\.isFinite\(confidence\) \? confidence : \(isPartial \? SPEECHMATICS_PARTIAL_CONFIDENCE : 1\)/,
   /const words = extractSpeechmaticsTranscriptWords\(message, \{ isPartial: !isFinal \}\)/,
   /const transcript = String\(message\?\.metadata\?\.transcript \|\| ''\)\.trim\(\) \|\| words\.map\(item => item\.word\)\.join\(' '\)/,
-  /getSequentialLiveInterimWords\(committedWords, interimWords, targetText\)/,
-  /safeInterimWords\.length \? committedWords\.concat\(safeInterimWords\) : committedWords/,
-  /similarity < 0\.9/,
+  /displayWords: Array\.isArray\(state\?\.interimWords\) && state\.interimWords\.length \? state\.interimWords : committedWords/,
   /const liveAlignmentOptions = \{\s*strictProgression: true,/,
   /@click\.stop="toggleVerseActionMenu\(verse\.key\)"/
 ])
+
+includesAll('ai recitation full-session recording', [
+  /isSessionRecitationCheckActive\(\)/,
+  /shouldAutoStopRecitationCheckFromAlignment\(alignment = null\)/,
+  /shouldAutoStopRecitationCheckFromSilence\(\)/,
+  /if \(this\.recitationCheckScope === 'session' && this\.recitationCheckPendingTargets\?\.length\) return this\.recitationCheckPendingTargets/,
+  /if \(!this\.isSessionRecitationCheckActive\(\)\) return true\s*return !!this\.recitationAlignmentState\?\.complete/s
+])
+
+includesAll('ai memorisation mirrors recitation modal', [
+  /aria-label="AI memorisation tools"/,
+  /Play Memorisation/,
+  /Blur Everything/,
+  /class="recitation-check-panel recitation-check-panel-inline memorisation-checker-panel"/,
+  /ref="aiMemorisationCheckerResults"/,
+  /v-if="isAiMemorisationCheckerReviewActive \|\| aiMemorisationCheckerError"/,
+  /Memorisation review/,
+  /showMarkers \|\| this\.aiMemorisationCheckerScope === 'session' \|\| this\.aiMemorisationCheckerTargets\.length > 1/,
+  /AI Memorisation uses the same modal structure and spacing as AI Recite/
+])
+
+assert.doesNotMatch(
+  source,
+  /<span class="recitation-check-section-label">AI memorisation check<\/span>/,
+  'AI memorisation idle check container should not render'
+)
 
 includesAll('ai recitation simplified workspace', [
   /class="self-check-header-tools"/,
