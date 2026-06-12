@@ -109,7 +109,7 @@ includesAll('offcanvas main-card linkage', [
 ])
 
 includesAll('ai recitation speechmatics stability', [
-  /const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0\.70/,
+  /const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0\.05/,
   /confidence: Number\.isFinite\(confidence\) \? confidence : \(isPartial \? SPEECHMATICS_PARTIAL_CONFIDENCE : 1\)/,
   /const words = extractSpeechmaticsTranscriptWords\(message, \{ isPartial: !isFinal \}\)/,
   /const transcript = String\(message\?\.metadata\?\.transcript \|\| ''\)\.trim\(\) \|\| words\.map\(item => item\.word\)\.join\(' '\)/,
@@ -118,12 +118,12 @@ includesAll('ai recitation speechmatics stability', [
 
 includesAll('ai recitation simplified workspace', [
   /class="self-check-header-tools"/,
-  /self-check-reciter-select-compact/,
+  /aria-label="Play ayah once"/,
   /key: 'pending', label: 'Grey'/,
   /tone: 'tone-grey'/,
   /const status = word\.status === 'pending' \? 'pending' : word\.status/,
   /recitation-review-ayah \.wbw-word/,
-  /recitation-result-stats,[\s\S]*grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/
+  /recitation-result-stats,[\s\S]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/
 ])
 
 assert.doesNotMatch(source, /Grey means the word was not heard yet/, 'obsolete grey description card should be removed')
