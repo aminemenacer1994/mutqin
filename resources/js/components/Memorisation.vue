@@ -414,14 +414,14 @@
                     :class="{ active: aiMemorisationCheckerRecording }"
                     :disabled="aiMemorisationCheckerPreparing || !supportsSelfCheckRecording()">
                     <i class="bi" :class="aiMemorisationCheckerRecording ? 'bi-stop-circle' : 'bi-eye-slash'"></i>
-                    <span style="color:black">{{ aiMemorisationCheckerRecording ? 'Stop' : 'AI Memory' }}</span>
+                    <span>{{ aiMemorisationCheckerRecording ? 'Stop' : 'AI Memory' }}</span>
                   </button>
 
                   <button class="mushaf-pill mushaf-ai-pill mushaf-ai-recite" type="button" @click.stop="openAiRecitationCheckForVerse(activeVerseRef)"
                     :class="{ active: recitationCheckRecording }"
                     :disabled="recitationCheckPreparing || !supportsSelfCheckRecording()">
                     <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-stars'"></i>
-                    <span style="color:black">{{ recitationCheckRecording ? 'Stop' : 'AI Recite' }}</span>
+                    <span>{{ recitationCheckRecording ? 'Stop' : 'AI Recite' }}</span>
                   </button>
 
                   <button type="button" class="mushaf-pill mushaf-controls-pill" @click="openAdvancedControls" aria-label="Open controls">
@@ -805,7 +805,7 @@
                     <label>Speed</label>
                     <div class="radio-group radio-group-tight">
                       <label class="radio" v-for="option in speedOptions" :key="`tool-speed-${option}`">
-                        <input type="radio" :value="option" :checked="Number(speed) === Number(option)"
+                        <input type="radio" name="session-playback-speed" :value="option" v-model.number="speed"
                           @change="setPlaybackSpeed(option)"> {{ option }}x
                       </label>
                     </div>
@@ -814,8 +814,8 @@
                   <div class="field">
                     <label>Auto-advance</label>
                     <div class="radio-group radio-group-tight">
-                      <label class="radio"><input type="radio" value="auto" v-model="playMode"> Yes</label>
-                      <label class="radio"><input type="radio" value="manual" v-model="playMode"> No</label>
+                      <label class="radio"><input type="radio" name="session-auto-advance" value="auto" v-model="playMode"> Yes</label>
+                      <label class="radio"><input type="radio" name="session-auto-advance" value="manual" v-model="playMode"> No</label>
                     </div>
                     <small class="field-hint">Auto moves to the next queue item when audio ends.</small>
                   </div>
@@ -1041,7 +1041,7 @@
 
           <!-- SAVED TAB -->
           <div v-else-if="tab === 'saved'" class="sheet">
-            <div class="saved-sessions-container">
+            <div class="saved-sessions-container saved-sessions-v2">
               <div class="saved-header">
                 <h3><i class="bi bi-bookmark-check"></i> Saved Sessions</h3>
                 <p>Your memorisation sessions, ready to resume</p>
@@ -1745,8 +1745,165 @@
 
     <div v-if="showAiMemorisationCheckerModal && aiMemorisationCheckerVerse" class="modal-overlay memorisation-checker-overlay"
       @click.self="closeAiMemorisationCheckerModal">
-      <div class="modal-content self-check-modal memorisation-checker-modal memorisation-checker-modal-blank"
-        role="dialog" aria-modal="true" aria-label="AI memorisation checker blank modal"></div>
+      <div class="modal-content self-check-modal memorisation-checker-modal" role="dialog" aria-modal="true"
+        aria-labelledby="aiMemorisationCheckerTitle">
+        <div class="modal-header self-check-modal-header memorisation-checker-header">
+          <div class="self-check-modal-head-copy">
+            <div class="modal-context-badge">AI memorisation review</div>
+            <h2 id="aiMemorisationCheckerTitle">{{ aiMemorisationCheckerTitle }}</h2>
+          </div>
+          <button class="modal-close-btn" @click="closeAiMemorisationCheckerModal" aria-label="Close AI memorisation checker">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <div class="modal-body self-check-modal-body memorisation-checker-body">
+          <section class="self-check-modal-stage memorisation-checker-stage">
+            <header class="self-check-section-head">
+              <div>
+                <span class="self-check-kicker">Ayah display</span>
+                <strong class="self-check-section-title">Recite from memory</strong>
+              </div>
+              <div class="self-check-header-tools memorisation-checker-header-tools" aria-label="AI memorisation tools">
+                <button class="self-check-toolbar-btn self-check-ayah-action-ai" type="button"
+                  @click.stop="toggleAiMemorisationCheckerRecording"
+                  :disabled="aiMemorisationCheckerPreparing || !supportsSelfCheckRecording()"
+                  :class="{ recording: aiMemorisationCheckerRecording }"
+                  :title="aiMemorisationCheckerRecording ? 'Stop memorisation check' : 'Play memorisation check'"
+                  aria-label="Play memorisation check">
+                  <i class="bi" :class="aiMemorisationCheckerRecording ? 'bi-stop-circle' : 'bi-stars'"></i>
+                  <span>{{ aiMemorisationCheckerRecording ? 'Stop' : 'Play Memorisation' }}</span>
+                </button>
+                <button class="self-check-toolbar-btn" type="button"
+                  @click.stop="toggleSelfCheckAyahPlayback(aiMemorisationCheckerVerse)"
+                  :title="activeSelfCheckAyahPlaybackKey === aiMemorisationCheckerVerse.key ? 'Pause ayah' : 'Play ayah once'"
+                  aria-label="Play ayah once">
+                  <i class="bi" :class="activeSelfCheckAyahPlaybackKey === aiMemorisationCheckerVerse.key ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                  <span>{{ activeSelfCheckAyahPlaybackKey === aiMemorisationCheckerVerse.key ? 'Pause' : 'Play' }}</span>
+                </button>
+                <button class="self-check-toolbar-btn" type="button" @click.stop="toggleAiMemorisationCheckerBlur"
+                  :class="{ active: aiMemorisationCheckerBlurEnabled }"
+                  :aria-pressed="aiMemorisationCheckerBlurEnabled ? 'true' : 'false'"
+                  title="Blur everything" aria-label="Blur everything">
+                  <i class="bi" :class="aiMemorisationCheckerBlurEnabled ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
+                  <span>Blur All</span>
+                </button>
+                <button class="self-check-toolbar-btn" type="button" @mousedown="startAiMemorisationCheckerPeek"
+                  @mouseup="stopAiMemorisationCheckerPeek" @mouseleave="stopAiMemorisationCheckerPeek"
+                  @touchstart.prevent="startAiMemorisationCheckerPeek" @touchend="stopAiMemorisationCheckerPeek"
+                  @touchcancel="stopAiMemorisationCheckerPeek" title="Peek ayah" aria-label="Peek ayah">
+                  <i class="bi bi-eye"></i>
+                  <span>Peek</span>
+                </button>
+              </div>
+            </header>
+
+            <div class="self-check-modal-ayah-shell"
+              :class="{ 'is-blurred': aiMemorisationCheckerBlurEnabled && !aiMemorisationCheckerPeekActive, 'is-peekable': aiMemorisationCheckerBlurEnabled }"
+              @mousedown="startAiMemorisationCheckerPeek" @mouseup="stopAiMemorisationCheckerPeek"
+              @mouseleave="stopAiMemorisationCheckerPeek" @touchstart.prevent="startAiMemorisationCheckerPeek"
+              @touchend="stopAiMemorisationCheckerPeek" @touchcancel="stopAiMemorisationCheckerPeek">
+              <div class="self-check-modal-ayah memorisation-checker-ayah" dir="rtl"
+                :class="{
+                  'self-check-session-ayat': aiMemorisationCheckerScope === 'session' && aiMemorisationCheckerTargets.length > 1,
+                  'recitation-word-review-active': isAiMemorisationCheckerReviewActive
+                }"
+                :style="getAiMemorisationCheckerAyahStyle(aiMemorisationCheckerVerse)"
+                v-html="getAiMemorisationCheckerArabic(aiMemorisationCheckerVerse)"></div>
+            </div>
+          </section>
+
+          <section v-if="isAiMemorisationCheckerReviewActive || aiMemorisationCheckerError"
+            class="self-check-modal-recorder-grid memorisation-checker-recorder-grid">
+            <article class="self-check-recorder-card memorisation-checker-workspace"
+              :class="{ recording: aiMemorisationCheckerRecording, reviewing: !!aiMemorisationCheckerResult }">
+              <div class="self-check-recorder-head">
+                <div>
+                  <span class="self-check-kicker">Memorisation review</span>
+                  <strong>{{ aiMemorisationCheckerResult ? 'Review before saving' : aiMemorisationCheckerRecording ? 'Listening now' : 'AI memorisation review' }}</strong>
+                  <p class="self-check-card-desc">{{ aiMemorisationCheckerStageDescription }}</p>
+                </div>
+              </div>
+
+              <div v-if="aiMemorisationCheckerRecording" class="recitation-live-review recitation-live-review-compact">
+                <div class="recitation-live-head">
+                  <span>{{ aiMemorisationCheckerLiveSummary }}</span>
+                  <strong>Live</strong>
+                </div>
+                <div class="recitation-word-stream recitation-live-word-stream memorisation-checker-word-stream" dir="rtl">
+                  <span v-for="word in aiMemorisationCheckerVisibleLiveWords" :key="word.key"
+                    class="recitation-word-chip word-live" :class="`word-${word.status || 'pending'}`" :title="word.note">
+                    {{ word.text }}
+                  </span>
+                </div>
+                <div class="recitation-check-actions">
+                  <button class="btn-primary self-check-action-btn" type="button" @click="stopAiMemorisationCheckerRecording">
+                    <i class="bi bi-stop-circle"></i>
+                    <span>Stop Check</span>
+                  </button>
+                </div>
+              </div>
+
+              <div v-else-if="aiMemorisationCheckerPreparing" class="recitation-check-status">
+                <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
+                <span>Checking the recording...</span>
+              </div>
+
+              <div v-if="aiMemorisationCheckerError" class="recitation-check-error">
+                {{ aiMemorisationCheckerError }}
+              </div>
+
+              <div v-if="aiMemorisationCheckerResult" class="recitation-check-body recitation-check-results memorisation-checker-results">
+                <div class="recitation-result-stats memorisation-checker-result-grid">
+                  <article v-for="stat in getAiMemorisationCheckerResultStats(aiMemorisationCheckerResult)" :key="stat.key"
+                    class="recitation-result-stat" :class="stat.tone">
+                    <span>{{ stat.label }}</span>
+                    <strong>{{ stat.value }}</strong>
+                    <small>{{ stat.description }}</small>
+                  </article>
+                </div>
+                <div class="recitation-insights-grid">
+                  <div class="recitation-next-card">
+                    <span>What next?</span>
+                    <strong>{{ getRecitationRecommendationDisplay(aiMemorisationCheckerResult) }}</strong>
+                    <p>{{ getAiMemorisationCheckerNextStep(aiMemorisationCheckerResult) }}</p>
+                  </div>
+                  <div class="recitation-next-card ai-review-card">
+                    <span>Metadata</span>
+                    <p>{{ getAiRecitationPostReviewMessage(aiMemorisationCheckerResult) }}</p>
+                  </div>
+                </div>
+                <div class="recitation-word-stream memorisation-checker-final-words" dir="rtl">
+                  <span v-for="(word, index) in getRecitationWordStatuses(aiMemorisationCheckerResult)" :key="`memory-final-${index}`"
+                    class="recitation-word-chip" :class="[`word-${word.status || 'pending'}`, { 'can-correct-ai': word.status && word.status !== 'correct' }]"
+                    :title="word.status && word.status !== 'correct' ? `${word.note || ''} Mark as AI mistake.` : word.note"
+                    @click="markAiRecitationWordAsCorrect(aiMemorisationCheckerResult, index)">
+                    {{ word.text }}
+                  </span>
+                </div>
+                <div class="recitation-result-actions">
+                  <button class="btn-secondary self-check-action-btn" type="button" @click="discardAiMemorisationCheckerAssessment">
+                    <i class="bi bi-x-circle"></i>
+                    <span>Discard</span>
+                  </button>
+                  <button class="btn-secondary self-check-action-btn" type="button" @click="resetAiMemorisationCheckerAssessment">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                    <span>Reset</span>
+                  </button>
+                  <button class="btn-secondary self-check-action-btn recitation-delete-btn" type="button" @click="deleteAiMemorisationCheckerAssessment">
+                    <i class="bi bi-trash3"></i>
+                    <span>Delete</span>
+                  </button>
+                  <button class="btn-primary self-check-action-btn" type="button" @click="saveAiMemorisationCheckerAssessment">
+                    <i class="bi bi-save2"></i>
+                    <span>Save Attempt</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+          </section>
+        </div>
+      </div>
     </div>
 
     <div v-if="showSelfCheckModal && selfCheckModalVerse" class="modal-overlay self-check-modal-overlay"
@@ -2536,15 +2693,15 @@ const RECITATION_IDB_STORE = 'sessions'
 const RECITATION_HISTORY_IDB_STORE = 'sessionHistory'
 const RECITATION_ANALYSIS_VERSION = '2026-06-11-deterministic-live-v1'
 const RECITATION_CONFIDENCE_THRESHOLD = DEFAULT_RECITATION_CONFIDENCE_THRESHOLD
-const RECITATION_SILENCE_THROTTLE_MS = 900
-const RECITATION_CHUNK_TIMESLICE_MS = 30
+const RECITATION_SILENCE_THROTTLE_MS = 1400
+const RECITATION_CHUNK_TIMESLICE_MS = 80
 const RECITATION_TRANSCRIPTION_SETTLE_TIMEOUT_MS = 4000
 const RECITATION_TRANSCRIPTION_SETTLE_QUIET_MS = 1200
-const SPEECHMATICS_PARTIAL_CONFIDENCE = 0.62
+const SPEECHMATICS_PARTIAL_CONFIDENCE = 0.72
 const SPEECHMATICS_AUDIO_BUFFER_SIZE = 2048
-const SPEECHMATICS_MAX_DELAY_SECONDS = 0.03
-const SPEECHMATICS_END_OF_UTTERANCE_SECONDS = 0.18
-const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0.05
+const SPEECHMATICS_MAX_DELAY_SECONDS = 0.08
+const SPEECHMATICS_END_OF_UTTERANCE_SECONDS = 0.25
+const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0.35
 
 function tokenizeArabicText(text) {
   const raw = String(text || '').trim()
@@ -3462,6 +3619,7 @@ export default {
       continueSessionPayload: null,
       showResumeModal: false,
       lastScrollY: 0,
+      scrollFrame: null,
       pendingDeleteId: '',
       verseRequestId: 0,
 
@@ -5452,6 +5610,11 @@ export default {
     this.clearTouchPeek()
     this.blurPeekHoldingSpace = false
     if (this.bannerTimer) clearTimeout(this.bannerTimer)
+    if (this.scrollFrame) {
+      if (typeof window.cancelAnimationFrame === 'function') window.cancelAnimationFrame(this.scrollFrame)
+      window.clearTimeout(this.scrollFrame)
+      this.scrollFrame = null
+    }
     if (this.loadVersesTimer) clearTimeout(this.loadVersesTimer)
     if (this.workspaceSyncTimer) clearTimeout(this.workspaceSyncTimer)
     if (this.playbackAdvanceTimer) clearTimeout(this.playbackAdvanceTimer)
@@ -8564,7 +8727,7 @@ export default {
       this.aiMemorisationCheckerTargetVerses = [this.aiMemorisationCheckerVerseRef]
       this.aiMemorisationCheckerMode = 'ayah'
       this.aiMemorisationCheckerTajweedEnabled = false
-      this.aiMemorisationCheckerBlurEnabled = false
+      this.aiMemorisationCheckerBlurEnabled = true
       this.aiMemorisationCheckerPeekActive = false
       this.aiMemorisationCheckerError = ''
       this.aiMemorisationCheckerResult = null
@@ -8594,7 +8757,7 @@ export default {
       this.aiMemorisationCheckerTargetVerses = builtTargets
       this.aiMemorisationCheckerMode = 'ayah'
       this.aiMemorisationCheckerTajweedEnabled = false
-      this.aiMemorisationCheckerBlurEnabled = false
+      this.aiMemorisationCheckerBlurEnabled = true
       this.aiMemorisationCheckerPeekActive = false
       this.aiMemorisationCheckerError = ''
       this.aiMemorisationCheckerResult = null
@@ -8636,6 +8799,13 @@ export default {
     toggleAiMemorisationCheckerTajweed() {
       this.aiMemorisationCheckerTajweedEnabled = !this.aiMemorisationCheckerTajweedEnabled
       this.persistAiMemorisationCheckerSession()
+    },
+    async toggleAiMemorisationCheckerRecording() {
+      if (this.aiMemorisationCheckerRecording) {
+        this.stopAiMemorisationCheckerRecording()
+        return
+      }
+      await this.startAiMemorisationCheckerRecording()
     },
     toggleAiMemorisationCheckerBlur() {
       this.aiMemorisationCheckerBlurEnabled = !this.aiMemorisationCheckerBlurEnabled
@@ -9570,16 +9740,14 @@ export default {
     scheduleLiveWordsUpdate(kind = 'recitation') {
       const timerKey = kind === 'memorisation' ? 'aiMemorisationCheckerLiveUpdateTimer' : 'recitationLiveUpdateTimer'
       if (this[timerKey]) return
-      this[timerKey] = true
+      const schedule = typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function'
+        ? window.requestAnimationFrame.bind(window)
+        : callback => window.setTimeout(callback, 16)
       const run = () => {
         this[timerKey] = null
         this.updateLiveWordsFromCommittedRecognition(kind)
       }
-      if (typeof queueMicrotask === 'function') {
-        queueMicrotask(run)
-      } else {
-        Promise.resolve().then(run)
-      }
+      this[timerKey] = schedule(run)
     },
     cancelLiveWordsUpdate(kind = 'recitation') {
       const timerKey = kind === 'memorisation' ? 'aiMemorisationCheckerLiveUpdateTimer' : 'recitationLiveUpdateTimer'
@@ -9587,6 +9755,10 @@ export default {
         this[timerKey] = null
         return
       }
+      if (typeof window !== 'undefined' && typeof window.cancelAnimationFrame === 'function') {
+        window.cancelAnimationFrame(this[timerKey])
+      }
+      if (typeof window !== 'undefined') window.clearTimeout(this[timerKey])
       this[timerKey] = null
     },
     getCommittedRecognitionWords(kind = 'recitation') {
@@ -12209,9 +12381,17 @@ export default {
     },
 
     handleWindowScroll() {
-      const current = window.scrollY || 0
-      this.playerCollapsed = current > this.lastScrollY && current > 120
-      this.lastScrollY = current
+      if (this.scrollFrame) return
+      const schedule = typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function'
+        ? window.requestAnimationFrame.bind(window)
+        : callback => window.setTimeout(callback, 16)
+      this.scrollFrame = schedule(() => {
+        this.scrollFrame = null
+        const current = window.scrollY || 0
+        const nextCollapsed = current > this.lastScrollY && current > 120
+        if (this.playerCollapsed !== nextCollapsed) this.playerCollapsed = nextCollapsed
+        this.lastScrollY = current
+      })
     },
 
     buildContinueSessionPayload() {
@@ -42453,6 +42633,7 @@ button:active {
   text-shadow: none !important;
 }
 
+
 .mushaf-pill-toolbar .mushaf-pill:not(.mushaf-controls-pill),
 .mushaf-pill-toolbar .mushaf-pill:not(.mushaf-controls-pill) span,
 .mushaf-pill-toolbar .mushaf-pill:not(.mushaf-controls-pill) i {
@@ -43624,6 +43805,170 @@ button:active {
 @media (max-width: 760px) {
   .saved-sessions-container .session-actions {
     grid-template-columns: 1fr !important;
+  }
+}
+
+/* Stable final layout: AI Memory mirrors AI Recitation, saved sessions use isolated v2 rules. */
+.saved-sessions-v2 {
+  display: grid !important;
+  gap: 0.9rem !important;
+  padding: 0 !important;
+}
+
+.saved-sessions-v2 .saved-header {
+  padding: 0 0 0.85rem !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 74%, transparent) !important;
+}
+
+.saved-sessions-v2 .saved-header h3 {
+  margin: 0 !important;
+  font-size: 1.18rem !important;
+  line-height: 1.2 !important;
+  color: var(--text) !important;
+}
+
+.saved-sessions-v2 .saved-header p {
+  display: block !important;
+  margin: 0.25rem 0 0 !important;
+  font-size: 0.84rem !important;
+  color: var(--text-muted) !important;
+}
+
+.saved-sessions-v2 .sessions-list {
+  display: grid !important;
+  gap: 0.8rem !important;
+}
+
+.saved-sessions-v2 .session-item {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 0.8rem !important;
+  padding: 0.95rem !important;
+  border-radius: 12px !important;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent) !important;
+  background: color-mix(in srgb, var(--surface) 94%, var(--accent) 6%) !important;
+  box-shadow: none !important;
+}
+
+.saved-sessions-v2 .session-info {
+  display: grid !important;
+  gap: 0.45rem !important;
+  min-width: 0 !important;
+}
+
+.saved-sessions-v2 .session-name {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 0.45rem !important;
+}
+
+.saved-sessions-v2 .session-name > span:first-of-type {
+  flex: 1 1 190px !important;
+  min-width: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.saved-sessions-v2 .session-details {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.35rem !important;
+  margin: 0 !important;
+  color: var(--text-muted) !important;
+}
+
+.saved-sessions-v2 .session-details span {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.45rem !important;
+  min-width: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.saved-sessions-v2 .session-actions {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(104px, 0.32fr) !important;
+  gap: 0.65rem !important;
+}
+
+.saved-sessions-v2 .session-primary-action,
+.saved-sessions-v2 .session-secondary-actions {
+  display: block !important;
+  min-width: 0 !important;
+}
+
+.saved-sessions-v2 .session-resume-btn,
+.saved-sessions-v2 .session-delete-btn {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  border-radius: 10px !important;
+  padding: 0 0.8rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.45rem !important;
+  white-space: nowrap !important;
+}
+
+.saved-sessions-v2 .save-section {
+  border-radius: 12px !important;
+  padding: 0.85rem !important;
+}
+
+[data-theme="dark"] .saved-sessions-v2 .session-item {
+  background: rgba(255, 255, 255, 0.055) !important;
+  border-color: rgba(255, 236, 216, 0.14) !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-stage,
+.memorisation-checker-modal .memorisation-checker-recorder-grid,
+.memorisation-checker-modal .memorisation-checker-workspace {
+  background: color-mix(in srgb, var(--surface-strong) 82%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent) !important;
+  border-radius: 14px !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-header-tools {
+  grid-template-columns: repeat(4, minmax(42px, auto)) !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah {
+  unicode-bidi: isolate !important;
+}
+
+.memorisation-checker-modal .recitation-live-word-stream,
+.self-check-modal .recitation-live-word-stream {
+  direction: rtl !important;
+  unicode-bidi: plaintext !important;
+  text-align: right !important;
+}
+
+.memorisation-checker-modal .recitation-word-chip.word-live,
+.self-check-modal .recitation-word-chip.word-live {
+  transition: background-color 0.08s ease, color 0.08s ease, border-color 0.08s ease !important;
+}
+
+[data-theme="dark"] .memorisation-checker-modal .memorisation-checker-stage,
+[data-theme="dark"] .memorisation-checker-modal .memorisation-checker-recorder-grid,
+[data-theme="dark"] .memorisation-checker-modal .memorisation-checker-workspace {
+  background: rgba(255, 255, 255, 0.055) !important;
+  border-color: rgba(255, 236, 216, 0.14) !important;
+}
+
+@media (max-width: 760px) {
+  .saved-sessions-v2 .session-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .memorisation-checker-modal .memorisation-checker-header-tools {
+    grid-template-columns: 1fr 1fr !important;
   }
 }
 

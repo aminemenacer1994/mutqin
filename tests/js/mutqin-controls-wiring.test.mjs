@@ -109,7 +109,7 @@ includesAll('offcanvas main-card linkage', [
 ])
 
 includesAll('ai recitation speechmatics stability', [
-  /const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0\.05/,
+  /const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0\.35/,
   /confidence: Number\.isFinite\(confidence\) \? confidence : \(isPartial \? SPEECHMATICS_PARTIAL_CONFIDENCE : 1\)/,
   /const words = extractSpeechmaticsTranscriptWords\(message, \{ isPartial: !isFinal \}\)/,
   /const transcript = String\(message\?\.metadata\?\.transcript \|\| ''\)\.trim\(\) \|\| words\.map\(item => item\.word\)\.join\(' '\)/,
