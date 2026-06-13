@@ -209,6 +209,13 @@
                         <button type="button" @click="openOnboardingFromTopMenu">
                           <i class="bi bi-compass"></i><span>Onboarding</span>
                         </button>
+                        <button  @click="toggleKeyboardShortcuts"
+                          type="button" >
+                          <i class="bi bi-keyboard" ></i><span>Keyboard Shortcuts</span>
+                        </button>
+                        <button @click="toggleFullScreen" type="button">
+                          <i class="bi bi-arrows-fullscreen"></i><span>Full Screen</span>
+                        </button>
                       </div>
                     </transition>
                   </div>

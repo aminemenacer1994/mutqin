@@ -22,7 +22,7 @@ async function loadModule(specifier, referrer = path.join(root, 'tests/js/recita
 }
 
 const recitation = await loadModule('resources/js/engine/recitation_analysis.js')
-const { replayRecognitionSession } = recitation.namespace
+const { buildDeterministicRecitationResult, createWordsFromTranscript, replayRecognitionSession } = recitation.namespace
 
 const targetText = 'قل هو الله أحد'
 const finalEvents = [
@@ -121,5 +121,20 @@ assert.deepEqual(reorderedFinals, baseline)
 assert.equal(baseline.mistakeCounts.extra, 1)
 assert.equal(baseline.scores.completionPercentage, 100)
 assert.ok(baseline.retentionSignals.needsReview)
+
+const tutorRecognitionWords = createWordsFromTranscript('قل غلط الله أحد')
+const reviewProgression = buildDeterministicRecitationResult(targetText, tutorRecognitionWords, {
+  strictProgression: false,
+  timestamp: '2026-06-11T00:00:00.000Z'
+})
+const tutorProgression = buildDeterministicRecitationResult(targetText, tutorRecognitionWords, {
+  strictProgression: true,
+  timestamp: '2026-06-11T00:00:00.000Z'
+})
+
+assert.equal(reviewProgression.accuracyScore, tutorProgression.accuracyScore)
+assert.equal(tutorProgression.alignmentState.visibleStatuses[1].status, 'incorrect')
+assert.equal(tutorProgression.alignmentState.visibleStatuses[2].status, 'pending')
+assert.notEqual(reviewProgression.alignmentState.visibleStatuses[2].status, 'pending')
 
 console.log('Recitation replay determinism tests passed')

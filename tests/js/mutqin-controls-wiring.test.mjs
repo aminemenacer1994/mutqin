@@ -112,7 +112,7 @@ includesAll('ai recitation speechmatics stability', [
   /const words = extractSpeechmaticsTranscriptWords\(message, \{ isPartial: !isFinal \}\)/,
   /const transcript = String\(message\?\.metadata\?\.transcript \|\| ''\)\.trim\(\) \|\| words\.map\(item => item\.word\)\.join\(' '\)/,
   /displayWords: Array\.isArray\(state\?\.interimWords\) && state\.interimWords\.length \? state\.interimWords : committedWords/,
-  /const liveAlignmentOptions = \{\s*strictProgression: true,/,
+  /const liveAlignmentOptions = \{\s*strictProgression: kind === 'memorisation' \|\| this\.isAiTutorModeActive\(\),/,
   /@click\.stop="toggleVerseActionMenu\(verse\.key\)"/
 ])
 
