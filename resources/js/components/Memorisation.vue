@@ -622,68 +622,74 @@
                 </div>
               </div>
             </div>
-            <div v-else class="session-complete-empty">
-              <div class="session-complete-actions">
-                <button
-                  type="button"
-                  class="action-card session-complete-action-card"
-                  @click="openInsightsPanel"
-                  aria-label="Review insights"
-                >
-                  <div class="card-glow"></div>
+            <!-- Session Complete Empty State with Clean Action Cards -->
+          <div v-else class="session-complete-empty">
+            <div class="session-complete-actions">
+              <!-- Review Insights Card -->
+              <button
+                type="button"
+                class="action-card"
+                @click="openInsightsPanel"
+              >
+                <div class="card-icon insights">
                   <i class="bi bi-bar-chart-line"></i>
-                  <div class="action-text">
-                    <strong>Review insights</strong>
-                    <small>Open the insights tab</small>
-                  </div>
-                  <span class="card-arrow">→</span>
-                </button>
+                </div>
+                <div class="action-content">
+                  <strong>Review insights</strong>
+                  <small>See your session analytics</small>
+                </div>
+                <span class="card-arrow">→</span>
+              </button>
 
-                <button
-                  type="button"
-                  class="action-card session-complete-action-card"
-                  @click="saveCurrentSessionWithName"
-                  aria-label="Save session"
-                >
-                  <div class="card-glow"></div>
+              <!-- Save Session Card -->
+              <button
+                type="button"
+                class="action-card"
+                @click="saveCurrentSessionWithName"
+              >
+                <div class="card-icon save">
                   <i class="bi bi-save"></i>
-                  <div class="action-text">
-                    <strong>Save session</strong>
-                    <small>Keep this completed range</small>
-                  </div>
-                  <span class="card-arrow">→</span>
-                </button>
+                </div>
+                <div class="action-content">
+                  <strong>Save session</strong>
+                  <small>Keep this completed range</small>
+                </div>
+                <span class="card-arrow">→</span>
+              </button>
 
-                <button
-                  type="button"
-                  class="action-card session-complete-action-card"
-                  @click="startSessionWithCountdown"
-                  aria-label="Reset range"
-                >
-                  <div class="card-glow"></div>
+              <!-- Reset Range Card -->
+              <button
+                type="button"
+                class="action-card"
+                @click="startSessionWithCountdown"
+              >
+                <div class="card-icon reset">
                   <i class="bi bi-arrow-repeat"></i>
-                  <div class="action-text">
-                    <strong>Reset range</strong>
-                    <small>Replay after countdown</small>
-                  </div>
-                  <span class="card-arrow">→</span>
-                </button>
-                <button
-                  type="button"
-                  class="action-card session-complete-action-card session-complete-action-card-primary"
-                  @click="openNewSessionSetup"
-                  aria-label="Create new session"
-                >
-                  <div class="card-glow"></div>
+                </div>
+                <div class="action-content">
+                  <strong>Reset range</strong>
+                  <small>Play same range again</small>
+                </div>
+                <span class="card-arrow">→</span>
+              </button>
+
+              <!-- New Session Card - Primary -->
+              <button
+                type="button"
+                class="action-card primary"
+                @click="openNewSessionSetup"
+              >
+                <div class="card-icon new">
                   <i class="bi bi-plus-square"></i>
-                  <div class="action-text">
-                    <strong>Create new session</strong>
-                    <small>Open session setup in the side panel</small>
-                  </div>
-                  <span class="card-arrow">→</span>
-                </button>
-              </div>
+                </div>
+                <div class="action-content">
+                  <strong>Create new session</strong>
+                  <small>Choose different surah or range</small>
+                </div>
+                <span class="card-arrow">→</span>
+              </button>
             </div>
+          </div>
           </main>
         </div>
       </div>
@@ -1658,6 +1664,74 @@
                   <p>{{ analyticsAiCheckSummary.validation.summary }}</p>
                 </div>
               </article>
+            </section>
+            <!-- Add this inside your session-analytics-modal template, after the existing analytics content -->
+            <!-- Confidence Heatmap inside Analytics Modal -->
+            <section class="session-analytics-section" v-if="analyticsModalData">
+              <div class="confidence-heatmap-inline">
+                <div class="heatmap-header">
+                  <h3><i class="bi bi-grid-3x3-gap-fill"></i> Recitation Confidence Heatmap</h3>
+                  <div class="heatmap-legend">
+                    <span class="legend-dot excellent"></span><span>90-100</span>
+                    <span class="legend-dot strong"></span><span>75-89</span>
+                    <span class="legend-dot needs"></span><span>60-74</span>
+                    <span class="legend-dot weak"></span><span>40-59</span>
+                    <span class="legend-dot critical"></span><span>&lt;40</span>
+                  </div>
+                </div>
+                
+                <div class="heatmap-grid">
+                  <div
+                    v-for="ayah in analyticsHeatmapData"
+                    :key="ayah.ayahNumber"
+                    class="heatmap-cell"
+                    :class="getHeatmapClass(ayah.confidenceScore)"
+                    @click="openAyahDetailFromHeatmap(ayah)"
+                    @mouseover="showHeatmapTooltip($event, ayahObject)"
+                    @mouseleave="heatmapTooltip.visible = false"
+                  >
+                    <span class="heatmap-ayah-num">{{ ayah.ayahNumber }}</span>
+                    <span class="heatmap-score">{{ ayah.confidenceScore }}%</span>
+                  </div>
+                </div>
+
+                <!-- Tooltip -->
+                <div 
+                  v-if="heatmapTooltip?.visible" 
+                  class="heatmap-tooltip" 
+                  :style="{ top: (heatmapTooltip?.y || 0) + 'px', left: (heatmapTooltip?.x || 0) + 'px' }"
+                >
+                  <div><strong>Ayah {{ heatmapTooltip?.data?.ayahNumber }}</strong></div>
+                  <div>Confidence: {{ heatmapTooltip?.data?.confidenceScore }}%</div>
+                  <div>Accuracy: {{ heatmapTooltip?.data?.accuracyPercentage }}%</div>
+                  <div>Mistakes: {{ heatmapTooltip?.data?.mistakeCount }}</div>
+                  <div>Tajweed Issues: {{ heatmapTooltip?.data?.tajweedIssueCount }}</div>
+                  <div>Attempts: {{ heatmapTooltip?.data?.attemptCount }}</div>
+                </div>
+
+                <!-- Trend Summary -->
+                <div v-if="heatmapTrends.improved.length || heatmapTrends.declined.length" class="heatmap-trends">
+                  <div class="trend-improved" v-if="heatmapTrends.improved.length">
+                    <i class="bi bi-arrow-up-circle-fill"></i> Most Improved: 
+                    <strong>Ayah {{ heatmapTrends.improved[0].ayahNumber }}</strong> (+{{ heatmapTrends.improved[0].change }}%)
+                  </div>
+                  <div class="trend-declined" v-if="heatmapTrends.declined.length">
+                    <i class="bi bi-arrow-down-circle-fill"></i> Needs Focus: 
+                    <strong>Ayah {{ heatmapTrends.declined[0].ayahNumber }}</strong> ({{ heatmapTrends.declined[0].change }}% decline)
+                  </div>
+                </div>
+
+                <!-- Focus Alert -->
+                <div v-if="heatmapFocusAreas.length" class="heatmap-focus">
+                  <i class="bi bi-exclamation-triangle-fill"></i>
+                  <span>Priority: {{ heatmapFocusAreas.length }} ayah{{ heatmapFocusAreas.length > 1 ? 's' : '' }} below 60% confidence</span>
+                  <div class="focus-chips">
+                    <span v-for="a in heatmapFocusAreas.slice(0,5)" :key="a.ayahNumber" class="focus-chip">
+                      Ayah {{ a.ayahNumber }} ({{ a.confidenceScore }}%)
+                    </span>
+                  </div>
+                </div>
+              </div>
             </section>
             <section class="session-analytics-section session-analytics-two-col">
               <article class="session-analytics-panel">
@@ -3420,7 +3494,11 @@ export default {
     auth: { type: Object, default: () => ({ check: false, id: null }) }
   },
   data() {
-    return {
+    return {  
+      heatmapTooltip: { visible: false, x: 0, y: 0, data: null },
+      analyticsHeatmapData: [],
+      heatmapTrends: { improved: [], declined: [] },
+      heatmapFocusAreas: [],
       nameError: '',
       nameSuggestions: [
         'Morning Review',
@@ -5674,6 +5752,14 @@ export default {
   },
 
   watch: {
+    analyticsModalRecord: {
+      handler() {
+        if (this.analyticsModalRecord) {
+          this.loadAnalyticsHeatmapData()
+        }
+      },
+      immediate: true
+    },
     theme(newVal) {
       this.persistUiState()
       if (this.readingViewMode === 'mushaf') this.applyMushafThemeDefault(newVal)
@@ -5853,6 +5939,97 @@ export default {
   },
 
   methods: {
+    // FIX: Update the loadAnalyticsHeatmapData method to handle missing data
+    async loadAnalyticsHeatmapData() {
+      const session = this.analyticsModalRecord
+      if (!session?.config) return
+      
+      const chapterId = session.config.chapterId || this.chapterId
+      const start = session.config.rangeStart || this.rangeStart || 1
+      const end = session.config.rangeEnd || this.rangeEnd || 7
+      const data = []
+      
+      for (let ayahNum = start; ayahNum <= end; ayahNum++) {
+        const ayahKey = `${chapterId}:${ayahNum}`
+        const recordings = (this.recordingsLibrary || []).filter(r => r.ayahKey === ayahKey && this.isAiCheckRecording(r))
+        
+        if (!recordings.length) {
+          data.push({
+            ayahNumber: ayahNum,
+            confidenceScore: 0,
+            accuracyPercentage: 0,
+            mistakeCount: 0,
+            tajweedIssueCount: 0,
+            attemptCount: 0,
+            history: []
+          })
+          continue
+        }
+        
+        const scores = recordings.map(r => r.accuracyScore || 0)
+        const avgScore = scores.reduce((a,b) => a + b, 0) / scores.length
+        const mistakes = recordings.flatMap(r => r.mistakeBreakdown?.missing || [])
+        const tajweed = recordings.flatMap(r => r.tajweedRules || []).filter(r => r.issueCount).length
+        
+        data.push({
+          ayahNumber: ayahNum,
+          confidenceScore: Math.round(avgScore),
+          accuracyPercentage: Math.round(avgScore * 0.9),
+          mistakeCount: mistakes.length,
+          tajweedIssueCount: tajweed,
+          attemptCount: recordings.length,
+          history: recordings.slice(0, 3).map(r => ({ score: Math.round(r.accuracyScore || 0), date: r.recordedAt }))
+        })
+      }
+      
+      this.analyticsHeatmapData = data
+      this.calculateHeatmapTrends(data)
+      this.heatmapFocusAreas = (data || []).filter(d => d.confidenceScore < 60 && d.attemptCount > 0)
+    },
+    calculateHeatmapTrends(data) {
+      const improved = []
+      const declined = []
+      
+      data.forEach(ayah => {
+        if (ayah.history.length >= 2) {
+          const first = ayah.history[ayah.history.length - 1].score
+          const last = ayah.history[0].score
+          const change = last - first
+          if (change > 5) improved.push({ ...ayah, change })
+          if (change < -5) declined.push({ ...ayah, change: Math.abs(change) })
+        }
+      })
+      
+      this.heatmapTrends = {
+        improved: improved.sort((a,b) => b.change - a.change).slice(0, 3),
+        declined: declined.sort((a,b) => b.change - a.change).slice(0, 3)
+      }
+    },
+  
+    getHeatmapClass(score) {
+      if (score >= 90) return 'heat-excellent'
+      if (score >= 75) return 'heat-strong'
+      if (score >= 60) return 'heat-needs'
+      if (score >= 40) return 'heat-weak'
+      return 'heat-critical'
+    },
+    
+    showHeatmapTooltip(event, ayah) {
+      if (!ayah) return // Add this guard
+      this.heatmapTooltip = {
+        visible: true,
+        x: event.clientX + 15,
+        y: event.clientY - 10,
+        data: ayah
+      }
+    },
+    
+    openAyahDetailFromHeatmap(ayah) {
+      const verse = this.verses.find(v => v.number === ayah.ayahNumber)
+      if (verse) {
+        this.openAiRecitationCheckForVerse(verse)
+      }
+    },
     isVerseVisuallyActive(verseKey) {
       if (!verseKey) return false
       const hasStarted = this.hasSessionStarted || this.isPlaying || this.manualOnlyPlayback
@@ -16070,12 +16247,163 @@ export default {
         this.showBanner('Unable to play this word right now.', 'error', 2200)
       }
     },
+    
   }
 }
 </script>
 
 <style>
+/* Add to your style section */
+.confidence-heatmap-inline {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 18px;
+  margin-top: 8px;
+}
 
+.heatmap-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.heatmap-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.heatmap-legend {
+  display: flex;
+  gap: 12px;
+  font-size: 0.7rem;
+  align-items: center;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  border-radius: 3px;
+  margin-right: 4px;
+}
+
+.legend-dot.excellent { background: #1b5e20; }
+.legend-dot.strong { background: #4caf50; }
+.legend-dot.needs { background: #ffc107; }
+.legend-dot.weak { background: #ff9800; }
+.legend-dot.critical { background: #f44336; }
+
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  gap: 6px;
+  margin-bottom: 16px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.heatmap-cell {
+  background: var(--surface-strong);
+  border-radius: 8px;
+  padding: 8px 4px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid var(--border);
+}
+
+.heatmap-cell:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.heatmap-ayah-num {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.heatmap-score {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.heat-excellent { background: #1b5e20; color: white; }
+.heat-strong { background: #4caf50; color: white; }
+.heat-needs { background: #ffc107; color: #333; }
+.heat-weak { background: #ff9800; color: #333; }
+.heat-critical { background: #f44336; color: white; }
+
+.heatmap-tooltip {
+  position: fixed;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.7rem;
+  z-index: 10000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: grid;
+  gap: 3px;
+  min-width: 140px;
+}
+
+.heatmap-trends {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+  font-size: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.trend-improved, .trend-declined {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+.trend-improved { background: rgba(76, 175, 80, 0.1); color: #4caf50; }
+.trend-declined { background: rgba(244, 67, 54, 0.1); color: #f44336; }
+
+.heatmap-focus {
+  background: rgba(244, 67, 54, 0.08);
+  border: 1px solid rgba(244, 67, 54, 0.2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.75rem;
+}
+
+.heatmap-focus i { color: #f44336; font-size: 0.9rem; }
+
+.focus-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.focus-chip {
+  background: rgba(244, 67, 54, 0.15);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
 .session-complete-empty {
   display: flex;
   justify-content: center;
